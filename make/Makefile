@@ -24,7 +24,7 @@
 #
 
 TOPDIR = ..
-BUILD_DIR = $(TOPDIR)/build
+BUILDDIR = $(TOPDIR)/build
 
 include Defs.gmk
 
@@ -82,6 +82,13 @@ debug:
 
 #----------------------------------------------------------------------
 #
+# build in agent mode
+
+all.agent build.agent test.agent:
+	JTREG_USE_AGENTVM_FOR_SAMEVM=true $(MAKE) BUILDDIR=$(BUILDDIR).agent $(subst .agent,,$@)
+
+#----------------------------------------------------------------------
+#
 # do an upfront check that an X Windows server is running,
 # in case it is needed by any tests.
 # WARNING: THIS HANGS IF THE WINDOW SYSTEM IS NOT AVAILABLE
@@ -97,7 +104,7 @@ debug:
 #	fi
 
 .DONE:
-	if [ -f $(BUILD_DIR)/.vnc/display ]; then sh display.sh -kill ; fi
+	if [ -f $(BUILDDIR)/.vnc/display ]; then sh display.sh -kill ; fi
 
 #----------------------------------------------------------------------
 

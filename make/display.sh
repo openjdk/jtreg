@@ -75,8 +75,7 @@ if [ $VNC = 1 ]; then
         vncserver -kill $DISPLAY
     else
         # echo debug: starting VNC 1>&2
-        BUILD_DIR=../build
-        VNC_SERVERLOG=$BUILD_DIR/vncserver.log
+        VNC_SERVERLOG=${BUILDDIR:-../build}/vncserver.log
         vncserver 2>&1 | tee $VNC_SERVERLOG 1>&2
         grep 'New .* desktop is' $VNC_SERVERLOG | \
             sed -e 's/^.*desktop is \(.*\)/\1/'

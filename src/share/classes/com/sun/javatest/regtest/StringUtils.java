@@ -24,7 +24,6 @@
  */
 package com.sun.javatest.regtest;
 
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -32,11 +31,14 @@ import java.util.List;
  * (Not restricted to -target 1.1)
  */
 public class StringUtils extends StringArray {
+    public static String join(List<String> list) {
+        return join(list, " ");
+    }
+
     public static String join(List<String> list, String sep) {
         StringBuilder sb = new StringBuilder();
-        for (Iterator<String> iter = list.iterator(); iter.hasNext(); ) {
-            String s = iter.next();
-            if (sb.length() > 1)
+        for (String s: list) {
+            if (sb.length() > 0)
                 sb.append(sep);
             sb.append(s);
         }

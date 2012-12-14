@@ -37,17 +37,18 @@ import java.util.Vector;
  */
 public class StringArray extends com.sun.javatest.util.StringArray
 {
+
     /**
      * Given two arrays of strings, return a single array which is the
-     * concatination of the two arrays.
+     * concatenation of the two arrays.
      *
      * @param s1   The first string array.
      * @param s2   The second string array.
      * @return     A single array which contains the elements of s1 followed by
      *             the elements of s2.
      */
-    public static String [] append(String [] s1, String [] s2) {
-        String [] retVal = new String[s1.length + s2.length];
+    public static String[] join(String[] s1, String[] s2) {
+        String[] retVal = new String[s1.length + s2.length];
         System.arraycopy(s1, 0, retVal, 0, s1.length);
         System.arraycopy(s2, 0, retVal, s1.length, s2.length);
         return retVal;
@@ -65,8 +66,8 @@ public class StringArray extends com.sun.javatest.util.StringArray
      *             to the left of "=", the second element contains characters to
      *             the right of the "=".  Whitespace not stripped.
      */
-    public static String [] splitEqual(String s) {
-        String [] retVal = new String[2];
+    public static String[] splitEqual(String s) {
+        String[] retVal = new String[2];
 
         int pos = s.indexOf("=");
         if (pos == -1) {
@@ -96,7 +97,7 @@ public class StringArray extends com.sun.javatest.util.StringArray
      *             s.  Whitespace not stripped.
      * @see #splitTerminator
      */
-    public static String [] splitSeparator(String sep, String s) {
+    public static String[] splitSeparator(String sep, String s) {
         Vector v = new Vector();
         int tokenStart = 0;
         int tokenEnd   = 0;
@@ -151,13 +152,13 @@ public class StringArray extends com.sun.javatest.util.StringArray
      * @return     An array of strings.  Each string in the array is determined
      *             by the presence of Character.isWhitespace().
      */
-    public static String [] splitWS(String s) {
+    public static String[] splitWS(String s) {
+        if (s == null)
+            return new String[0];
+
         Vector v = new Vector();
         int tokenStart = 0;
         int tokenEnd   = 0;
-
-        if (s == null)
-            return new String[0];
 
         while (true) {
             if (tokenStart == s.length())

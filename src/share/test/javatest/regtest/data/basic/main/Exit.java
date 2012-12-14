@@ -77,7 +77,7 @@
 
 /**
  * @test
- * @summary Failed: Executution passed unexpectedly
+ * @summary Failed: Execution passed unexpectedly
  * @run main/othervm/fail Exit
  */
 

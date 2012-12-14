@@ -73,6 +73,7 @@ public class RegressionSecurityManager extends JavaTestSecurityManager {
         }
     }
 
+    @Override
     public void checkExec(String cmd) {
         if (allowExec == false) {
             if (verbose) {
@@ -96,9 +97,9 @@ public class RegressionSecurityManager extends JavaTestSecurityManager {
         return prev;
     }
 
-    static private boolean allowExec = true; // no overrides on this one; API control only
+    private boolean allowExec = true; // no overrides on this one; API control only
 
-
+    @Override
     public void checkPermission(Permission perm) {
         // allow most stuff, but limit as appropriate
         if (perm instanceof RuntimePermission) {
@@ -106,31 +107,55 @@ public class RegressionSecurityManager extends JavaTestSecurityManager {
                 if (!allowSetIO)
                     // is this right or should we really restrict this more?
                     super.checkPermission(new java.lang.RuntimePermission("setIO"));
-            }
-            else if (perm.getName().equals("exitVM"))
+            } else if (perm.getName().equals("exitVM")) {
                 checkExit(0);
-            else if (perm.getName().equals("createSecurityManager"))
-                super.checkPermission(new java.lang.RuntimePermission("createSecurityManager"));
+            } else if (perm.getName().equals("createSecurityManager")) {
+                //super.checkPermission(new java.lang.RuntimePermission("createSecurityManager"));
+            } else if (perm.getName().equals("setSecurityManager")) {
+                if (!allowSetSecurityManager)
+                    forbid(perm);
+                //super.checkPermission(new java.lang.RuntimePermission("setSecurityManager"));
+                // if the security manager is changed, we have no way of tracking whether
+                // properties get modified, so we have to assume they may
+                propertiesModified = true;
+            }
         }
         else if (perm instanceof PropertyPermission) {
-            if (((PropertyPermission)(perm)).getActions().equals("read,write"))
-                checkPropertiesAccess();
+            //super.checkPermission(perm);
+            if (((PropertyPermission)(perm)).getActions().contains("write")) {
+                propertiesModified = true;
+            }
         }
     }
 
-    private boolean propertiesAccessed;
+    void forbid(Permission perm) throws SecurityException {
+        if (verbose) {
+            System.err.println(getClass().getName() + ": " + perm);
+            Thread.dumpStack();
+        }
+        throw new SecurityException("Action forbidden by jtreg: " + perm.getName());
+    }
 
+    private boolean propertiesModified;
+
+    @Override
     public synchronized void checkPropertiesAccess() {
         super.checkPropertiesAccess();
-        propertiesAccessed = true;
+        propertiesModified = true;
     }
 
-    boolean isPropertiesAccessed() {
-        return propertiesAccessed;
+    boolean isPropertiesModified() {
+        return propertiesModified;
     }
 
-    void resetPropertiesAccessed() {
-        propertiesAccessed = false;
+    @Override
+    public boolean setAllowPropertiesAccess(boolean b) {
+        return super.setAllowPropertiesAccess(b);
+
+    }
+
+    void resetPropertiesModified() {
+        propertiesModified = false;
     }
 
     public boolean setAllowSetIO(boolean bool) {
@@ -139,7 +164,15 @@ public class RegressionSecurityManager extends JavaTestSecurityManager {
         return prev;
     }
 
-    static private boolean allowSetIO = false;
+    private boolean allowSetIO = false;
+
+    public boolean setAllowSetSecurityManager(boolean bool) {
+        boolean prev = allowSetSecurityManager;
+        allowSetSecurityManager = bool;
+        return prev;
+    }
+
+    private boolean allowSetSecurityManager = false;
 
 
     static private boolean verbose =

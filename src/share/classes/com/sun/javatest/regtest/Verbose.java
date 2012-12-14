@@ -119,6 +119,7 @@ public class Verbose {
         time = t;
     }
 
+    @Override
     public String toString() {
         return "Verbose[p=" + passMode + ",f=" + failMode + ",e=" + errorMode + ",t=" + time + "]";
     }

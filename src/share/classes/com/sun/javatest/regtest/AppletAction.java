@@ -90,12 +90,12 @@ public class AppletAction extends Action
             } else if (optName.equals("othervm")) {
                 othervm = true;
             } else if (optName.equals("policy")) {
-                if (!script.isJDK11())
+                if (!script.isTestJDK11())
                     policyFN = parsePolicy(optValue);
                 else
                     throw new ParseException(PARSE_BAD_OPT_JDK + optName);
             } else if (optName.equals("secure")) {
-                if (!script.isJDK11())
+                if (!script.isTestJDK11())
                     secureFN = parseSecure(optValue);
                 else
                     throw new ParseException(PARSE_BAD_OPT_JDK + optName);
@@ -126,7 +126,7 @@ public class AppletAction extends Action
 
     @Override
     public File[] getSourceFiles() {
-        return new File[] { new File(script.absTestSrcDir() + FILESEP + htmlFN) };
+        return new File[] { new File(script.absTestSrcDir(), htmlFN) };
     }
 
     /**
@@ -183,15 +183,15 @@ public class AppletAction extends Action
 
     private Status runOtherJVM() throws TestRunException {
         // WRITE ARGUMENT FILE
-        String appArgFileName = script.absTestClsDir() + FILESEP + clsName
-            + RegressionScript.WRAPPEREXTN;
+        File appArgFileName = new File(script.absTestClsDir(),
+                clsName + RegressionScript.WRAPPEREXTN);
         FileWriter fw;
         try {
             fw = new FileWriter(appArgFileName);
             fw.write(clsName + "\0");
             fw.write(script.absTestSrcDir() + "\0");
             fw.write(script.absTestClsDir() + "\0");
-            fw.write(script.testClassPath() + "\0");
+            fw.write(script.getTestClassPath() + "\0");
             fw.write(manual + "\0");
             fw.write(htmlFileContents.getBody() + "\0");
             fw.write(dictionaryToString(htmlFileContents.getAppletParams()) + "\0");
@@ -210,14 +210,14 @@ public class AppletAction extends Action
         // available to main and applet actions via the system properties
         // "test.src" and "test.classes", respectively"
         List<String> command = new ArrayList<String>(6);
-        if (script.isJDK11()) {
-            command.add("CLASSPATH=" + script.getJavaTestClassPath() +
-                        PATHSEP + script.testClassPath());
+        Path cp = new Path().append(script.getJavaTestClassPath()).append(script.getTestClassPath());
+        if (script.isTestJDK11()) {
+            command.add("CLASSPATH=" + cp);
         }
         command.add(script.getJavaProg());
-        if (!script.isJDK11()) {
+        if (!script.isTestJDK11()) {
             command.add("-classpath");
-            command.add(script.getJavaTestClassPath() + PATHSEP + script.testClassPath());
+            command.add(cp.toString());
         }
 
         List<String> vmOpts = new ArrayList<String>();
@@ -260,7 +260,7 @@ public class AppletAction extends Action
 //      command.add("-Djava.security.debug=all");
 
         command.add("com.sun.javatest.regtest.AppletWrapper");
-        command.add(appArgFileName);
+        command.add(appArgFileName.getPath());
 
         // convert from List to String[]
         String[] tmpCmd = new String[command.size()];
@@ -268,14 +268,14 @@ public class AppletAction extends Action
             tmpCmd[i] = command.get(i);
 
         String[] envVars = script.getEnvVars();
-        String[] cmdArgs = StringArray.append(envVars, tmpCmd);
+        String[] cmdArgs = StringArray.join(envVars, tmpCmd);
 
         Status status;
         PrintWriter sysOut = section.createOutput("System.out");
         PrintWriter sysErr = section.createOutput("System.err");
         try {
             if (showCmd)
-                JTCmd("applet", cmdArgs, section);
+                showCmd("applet", cmdArgs, section);
 
             // RUN THE APPLET WRAPPER CLASS
             ProcessCommand cmd = new ProcessCommand();
@@ -382,7 +382,7 @@ public class AppletAction extends Action
             String line;
             StringBuilder sb = new StringBuilder();
             //String htmlFN = script.relTestSrcDir() + FILESEP + args[0];
-            htmlFN = script.absTestSrcDir() + FILESEP + htmlFN;
+            htmlFN = new File(script.absTestSrcDir(), htmlFN).getPath();
             try {
                 BufferedReader in = new BufferedReader(new FileReader(htmlFN));
                 while ((line = in.readLine()) != null) {
@@ -627,5 +627,5 @@ public class AppletAction extends Action
     private String clsName;
     private HTMLFileContents htmlFileContents;
     private TestResult.Section section;
-    private static Object appletLock = new Object();
+    private static final Object appletLock = new Object();
 }

@@ -32,7 +32,7 @@ package com.sun.javatest.regtest;
  */
 public class TestRunException extends Exception
 {
-    static final long serialVersionUID = 6404240514286146053L;
+    private static final long serialVersionUID = 6404240514286146053L;
     public TestRunException(String msg) {
         super(msg);
     } // TestRunException()

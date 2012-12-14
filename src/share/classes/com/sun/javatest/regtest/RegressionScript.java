@@ -28,6 +28,7 @@ package com.sun.javatest.regtest;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -43,6 +44,7 @@ import com.sun.javatest.Status;
 import com.sun.javatest.TestDescription;
 import com.sun.javatest.TestEnvironment;
 import com.sun.javatest.TestResult;
+import com.sun.javatest.util.I18NResourceBundle;
 
 /**
   * This class interprets the TestDescription as specified by the JDK tag
@@ -79,6 +81,9 @@ public class RegressionScript extends Script
         // actions != null -- should never happen since we have reasonable
         // defaults
 
+        testResult = getTestResult();
+        PrintWriter msgPW = testResult.getTestCommentWriter();
+
         try {
             setLibList(td.getParameter("library"));
 
@@ -92,17 +97,44 @@ public class RegressionScript extends Script
             if (needJUnit)
                 addClsLib(params.getJUnitJar());
 
-            initScratchDirectory();
-
-            testResult = getTestResult();
-            PrintWriter msgPW = testResult.getTestCommentWriter();
-            msgPW.println("JDK under test: " + getJavaFullVersion());
+            try {
+                initScratchDirectory();
+            } catch (TestRunException e) {
+                if (getExecMode() != ExecMode.AGENTVM)
+                    throw e;
+                // The following something of a last ditch measure.
+                // The most likely reason we can't init the scratch
+                // directory is that we're on Windows and the previous
+                // test has left a file open and we're not using -retain.
+                // (If we were using -retain, we'd have caught the problem
+                // while cleaning up after the last test.)
+                // So, since we no longer know which agents the previous test
+                // might have been using, close all agents, and try again.
+                // If that fixes the problem, write a warning message to
+                // stderr and let the test continue.
+                Agent.Pool.instance().close();
+                try {
+                    initScratchDirectory();
+                    // need to localize this
+                    System.err.println(i18n.getString("script.warn.openfiles", testResult.getTestName()));
+                } catch (TestRunException e2) {
+                    e2.initCause(e);
+                    throw e2;
+                }
+            }
 
             // if we got an error while parsing the TestDescription, return
             // error immediately
             if (td.getParameter("error") != null)
                 status = Status.error(td.getParameter("error"));
             else {
+                if (getTestJDK().equals(getCompileJDK())) {
+                    // output for default case unchanged
+                    msgPW.println("JDK under test: " + getTestJDK().getFullVersion(getTestVMOptions()));
+                } else {
+                    msgPW.println("compile JDK: " + getCompileJDK().getFullVersion(getTestToolVMOptions()));
+                    msgPW.println("test JDK: " + getTestJDK().getFullVersion(getTestVMOptions()));
+                }
                 while (! actionList.isEmpty()) {
                     Action action = actionList.remove();
                     status = action.run();
@@ -115,8 +147,16 @@ public class RegressionScript extends Script
         } catch (TestRunException e) {
             status = Status.error(e.getMessage());
         } finally {
-            if (params.isRetainEnabled())
-                retainScratchFiles(status);
+            if (params.isRetainEnabled()) {
+                boolean ok = retainScratchFiles(status);
+                if (!ok) {
+                    msgPW.println("Test result (overridden): " + status);
+                    status = Status.error("failed to clean up files after test");
+                    closeAgents();
+                }
+            }
+
+            releaseAgents();
         }
         return status;
     } // run()
@@ -291,39 +331,86 @@ public class RegressionScript extends Script
             throw new TestRunException(PATH_SCRATCH_CREATE + dir);
     }
 
-    private void retainScratchFiles(Status status) {
+    private boolean retainScratchFiles(Status status) {
+        // In sameVM mode, or in otherVM mode when no files need to be retained,
+        // the scratch directory is shared between all tests. In sameVM mode,
+        // this is because there is no way to change the current directory of the
+        // running process -- and jtreg requires the current directory to be a
+        // scratch directory. In otherVM mode, this is for historical compatibility.
+        //
+        // In otherVM mode, with retain enabled, we set the scratch directory to
+        // be the result directory, to reduce the cost of retaining files.
+        // This means that in this case, we delete the files we don't want, as
+        // compared to retaining the files we do way.
+
+        boolean ok;
         File scratchDir = absTestScratchDir();
         File resultDir = absTestResultDir();
 
-        if (params.getRetainStatus().contains(status.getType())) {
-            if (!scratchDir.equals(resultDir))
-                saveFiles(scratchDir, resultDir, null, false);
+        if (scratchDir.equals(resultDir)) {
+            // if scratchDir is the same as resultDir, we just need to delete
+            // the files we don't want to keep; the ones we want to keep are
+            // already in the right place.
+            if (params.getRetainStatus().contains(status.getType())) {
+                // all files to be retained; no need to delete any files
+                ok = true;
+            } else {
+                Pattern rp = params.getRetainFilesPattern();
+                if (rp != null) {
+                    // delete files which do not match pattern
+                    // extend pattern so as not to delete *.jtr files
+                    Pattern rp_jtr = Pattern.compile(".*\\.jtr|" + rp.pattern());
+                    ok = deleteFiles(resultDir, rp_jtr, false);
+                } else {
+                    // test result doesn't match status set, no patterns specified:
+                    // delete all except *.jtr files
+                    Pattern jtr = Pattern.compile(".*\\.jtr");
+                    ok = deleteFiles(resultDir, jtr, false);
+                }
+            }
         } else {
-            Pattern rp = params.getRetainFilesPattern();
-            if (scratchDir.equals(resultDir) || rp == null)
-                deleteFiles(resultDir, rp, false);
-            else if (rp != null)
-                saveFiles(scratchDir, resultDir, rp, true);
+            // if scratchDir is not the same as resultDir, we need to
+            // save the files we want and delete the rest.
+            if (params.getRetainStatus().contains(status.getType())) {
+                // save all files; no need to delete any files
+                ok = saveFiles(scratchDir, resultDir, null, false);
+            } else {
+                Pattern rp = params.getRetainFilesPattern();
+                if (rp != null) {
+                    // save files which need to be retained
+                    ok = saveFiles(scratchDir, resultDir, rp, true);
+                } else {
+                    // test result doesn't match status set, no patterns specified:
+                    // no files need saving
+                    ok = true;
+                }
+            }
+            // delete any files remaining in the scratch dir
+            ok &= deleteFiles(scratchDir, null, false);
         }
+
+        return ok;
     }
 
     /**
      * Copy all files in a directory that optionally match or don't match a pattern.
      **/
-    private void saveFiles(File fromDir, File toDir, Pattern p, boolean match) {
+    private boolean saveFiles(File fromDir, File toDir, Pattern p, boolean match) {
+        boolean result = true;
         boolean toDirExists = toDir.exists();
         if (toDirExists) {
             try {
                 cleanDirectoryContents(toDir);
             } catch (TestRunException e) {
                 System.err.println("warning: failed to empty " + toDir);
+                //result = false;
             }
         }
         for (File file: fromDir.listFiles()) {
             String fileName = file.getName();
             if (file.isDirectory()) {
                 File dest = new File(toDir, fileName);
-                saveFiles(file, dest, p, match);
+                result &= saveFiles(file, dest, p, match);
             } else {
                 boolean save = (p == null) || (p.matcher(fileName).matches() == match);
                 if (save) {
@@ -335,28 +422,39 @@ public class RegressionScript extends Script
                     if (dest.exists())
                         dest.delete();
                     boolean ok = file.renameTo(dest);
-                    if (!ok)
-                        System.err.println("warning: failed to rename " + file + " to " + dest);
+                    if (!ok) {
+                        System.err.println("error: failed to rename " + file + " to " + dest);
+                        result = false;
+                    }
                 }
             }
         }
+        return result;
     }
 
     /**
      * Delete all files in a directory that optionally match or don't
-     * match a pattern.  If all files in the directory are deleted,
-     * the directory is deleted as well.
-     * @returns true if the directory and all its contents are
-     * successfully deleted.
+     * match a pattern.
+     * @returns true if the contents of the directory are successfully deleted.
      */
     private boolean deleteFiles(File dir, Pattern p, boolean match) {
+        return deleteFiles(dir, p, match, false);
+    }
+
+    /**
+     * Delete all files in a directory that optionally match or don't
+     * match a pattern.  If deleteDir is set and all files in the directory
+     * are deleted, the directory is deleted as well.
+     * @returns true if all files and directories are deleted successfully.
+     */
+    private boolean deleteFiles(File dir, Pattern p, boolean match, boolean deleteDir) {
         if (!dir.exists())
             return true;
 
         boolean all = true;
         for (File file: dir.listFiles()) {
             if (file.isDirectory()) {
-                all &= deleteFiles(file, p, match);
+                all &= deleteFiles(file, p, match, true);
             } else {
                 boolean delete = (p == null) || (p.matcher(file.getName()).matches() == match);
                 if (delete) {
@@ -369,7 +467,7 @@ public class RegressionScript extends Script
                 }
             }
         }
-        if (all) {
+        if (all && deleteDir) {
             all = dir.delete();
             // warning if delete fails?
         }
@@ -568,7 +666,7 @@ public class RegressionScript extends Script
     private File cacheAbsTestScratchDir;
     File absTestScratchDir() {
         if (cacheAbsTestScratchDir == null) {
-            cacheAbsTestScratchDir = params.isRetainEnabled() && isOtherJVM()
+            cacheAbsTestScratchDir = params.isRetainEnabled() && getExecMode() == ExecMode.OTHERVM
                 ? absTestResultDir()
                 : workDir.getFile("scratch");
         }
@@ -654,30 +752,23 @@ public class RegressionScript extends Script
         return retVal;
     } // absTestClsDestDir()
 
-    String getStdJavaClassPath() {
-        return params.getStdJavaClassPath();
-    }
-
-    String getStdJDKClassPath() {
-        return params.getStdJDKClassPath();
-    }
-
-    private String cacheTestClassPath;
-    String testClassPath() throws TestClassException {
+    private Path cacheTestClassPath;
+    Path getTestClassPath() throws TestClassException {
         if (cacheTestClassPath == null) {
-            cacheTestClassPath = "";
-            if (isJDK11()) {
-                cacheTestClassPath = absTestClsDir() + PATHSEP +
-                    absTestSrcDir() + PATHSEP +
-                    absClsLibListStr() +
-                    getStdJavaClassPath() +
-                    getStdJDKClassPath();
-            } else { // isJDK12() or above
-                cacheTestClassPath = absTestClsDir() + PATHSEP +
-                    absTestSrcDir() + PATHSEP +
-                    absClsLibListStr() +
-                    absSrcJarLibListStr() +
-                    getStdJDKClassPath();
+            cacheTestClassPath = new Path();
+            JDK jdk = getTestJDK();
+            if (jdk.isVersion(JDK.Version.V1_1, params)) {
+                cacheTestClassPath.append(absTestClsDir());
+                cacheTestClassPath.append(absTestSrcDir());
+                cacheTestClassPath.append(absClsLibList());
+                cacheTestClassPath.append(jdk.getJavaClassPath());
+                cacheTestClassPath.append(jdk.getJDKClassPath());
+            } else { // isTestJDK12() or above
+                cacheTestClassPath.append(absTestClsDir());
+                cacheTestClassPath.append(absTestSrcDir()); // required??
+                cacheTestClassPath.append(absClsLibList());
+                cacheTestClassPath.append(absSrcJarLibList());
+                cacheTestClassPath.append(jdk.getJDKClassPath());
             }
 
             // handle cpa option to jtreg
@@ -688,23 +779,51 @@ public class RegressionScript extends Script
                     // the cpa we were passed always uses '/' as FILESEP, make
                     // sure to use the proper one for the platform
                     cpa = cpa.replace('/', File.separatorChar);
-                    cacheTestClassPath += PATHSEP + cpa;
+                    cacheTestClassPath.append(cpa);
                 }
             }
 
         }
         return cacheTestClassPath;
-    } // testClassPath()
+    } // getTestClassPath()
+
+    private Path cacheCompileClassPath;
+    Path getCompileClassPath() throws TestClassException {
+        if (cacheCompileClassPath == null) {
+            cacheCompileClassPath = new Path();
+            JDK jdk = getCompileJDK();
+            if (jdk.isVersion(JDK.Version.V1_1, params)) {
+                cacheCompileClassPath.append(absTestClsDir());
+                cacheCompileClassPath.append(absTestSrcDir());
+                cacheCompileClassPath.append(absClsLibList());
+                cacheCompileClassPath.append(jdk.getJavaClassPath());
+                cacheCompileClassPath.append(jdk.getJDKClassPath());
+            } else { // isTestJDK12() or above
+                cacheCompileClassPath.append(absTestClsDir());
+                cacheCompileClassPath.append(absTestSrcDir()); // required??
+                cacheCompileClassPath.append(absClsLibList());
+                cacheCompileClassPath.append(absSrcJarLibList());
+                cacheCompileClassPath.append(jdk.getJDKClassPath());
+            }
+
+            // handle cpa option to jtreg
+            String[] envVars = getEnvVars();
+            for (int i = 0; i < envVars.length; i++) {
+                if (envVars[i].startsWith("CPAPPEND")) {
+                    String cpa = (StringArray.splitEqual(envVars[i]))[1];
+                    // the cpa we were passed always uses '/' as FILESEP, make
+                    // sure to use the proper one for the platform
+                    cpa = cpa.replace('/', File.separatorChar);
+                    cacheCompileClassPath.append(cpa);
+                }
+            }
+
+        }
+        return cacheCompileClassPath;
+    } // getCompileClassPath()
 
     // necessary only for JDK1.2 and above
-    private String cacheTestSourcePath;
-    String testSourcePath() throws TestRunException {
-        if (cacheTestSourcePath == null) {
-            cacheTestSourcePath = absTestSrcDir() + PATHSEP +
-                absSrcLibListStr() + getStdJDKClassPath();
-        }
-        return cacheTestSourcePath;
-    } // testSourcePath()
+    private Path cacheCompileSourcePath;
 
     /**
      * Returns the fully-qualified directory name where the source resides.
@@ -714,6 +833,17 @@ public class RegressionScript extends Script
      *             contain the directory of the defining file of the test
      *             followed by the library list.
      */
+    Path getCompileSourcePath() throws TestRunException {
+        if (cacheCompileSourcePath == null) {
+            cacheCompileSourcePath = new Path();
+            JDK jdk = getCompileJDK();
+            cacheCompileSourcePath.append(absTestSrcDir());
+            cacheCompileSourcePath.append(absSrcLibList());
+            cacheCompileSourcePath.append(jdk.getJDKClassPath()); // required??
+        }
+        return cacheCompileSourcePath;
+    } // getCompileSourcePath()
+
     private Map<File,Set<String>> cacheDirContents = new HashMap<File,Set<String>>();
     private File locateFile(String fileName, File[] dirList)
         throws TestRunException
@@ -823,17 +953,17 @@ public class RegressionScript extends Script
     } // setLibList()
 
     private void addClsLib(File lib) {
-        assert cacheAbsClsLibListStr == null;
+        assert cacheAbsClsLibListPath == null;
         File[] newList = new File[cacheAbsClsLibList.length + 1];
         System.arraycopy(cacheAbsClsLibList, 0, newList, 0, cacheAbsClsLibList.length);
         newList[newList.length - 1] = lib;
         cacheAbsClsLibList = newList;
     } // addClsLib()
 
-    private String cacheAbsClsLibListStr;
-    String absClsLibListStr() throws TestClassException {
-        if (cacheAbsClsLibListStr == null) {
-            cacheAbsClsLibListStr = "";
+    private Path cacheAbsClsLibListPath;
+    Path absClsLibList() throws TestClassException {
+        if (cacheAbsClsLibListPath == null) {
+            cacheAbsClsLibListPath = new Path();
             for (int i = 0; i < cacheAbsClsLibList.length; i++) {
                 // It is not clear why the first of the following two statements
                 // was commented out in favor of the second. With the addition
@@ -841,95 +971,170 @@ public class RegressionScript extends Script
                 // instead of recalculating the entries from  cacheRelSrcLibList.
                 // It is possible the change was made as a defensive measure when
                 // "if (hasEnv()) { ..}" was added to setLibList for the benefit
-                // of the GUI (i.e. getSourceFiles()).  But, absClsLibListStr()
+                // of the GUI (i.e. getSourceFiles()).  But, absClsLibList()
                 // should only be called when hasEnv() is true, implying that
                 // cacheAbsClsLibList is already initialized correctly.
 //              String curr = cacheAbsClsLibList[i];
 //                File curr = new File(absTestClsDir(), cacheRelSrcLibList[i]);
                 File curr = cacheAbsClsLibList[i];
-                cacheAbsClsLibListStr += curr.getPath() + PATHSEP;
+                cacheAbsClsLibListPath.append(curr);
             }
         }
-        return cacheAbsClsLibListStr;
-    } // absClsLibListStr()
+        return cacheAbsClsLibListPath;
+    } // absClsLibList()
 
-    private String cacheAbsSrcLibListStr;
-    String absSrcLibListStr() {
-        if (cacheAbsSrcLibListStr == null) {
-            cacheAbsSrcLibListStr = "";
-            for (int i = 0; i < cacheAbsSrcLibList.length; i++) {
-                File curr = cacheAbsSrcLibList[i];
-                cacheAbsSrcLibListStr += curr + PATHSEP;
-            }
+    private Path cacheAbsSrcLibListPath;
+    Path absSrcLibList() {
+        if (cacheAbsSrcLibListPath == null) {
+            cacheAbsSrcLibListPath = new Path(cacheAbsSrcLibList);
         }
-        return cacheAbsSrcLibListStr;
-    } // absSrcLibListStr()
+        return cacheAbsSrcLibListPath;
+    } // absSrcLibList()
 
-    private String cacheAbsSrcJarLibListStr;
-    String absSrcJarLibListStr() {
-        if (cacheAbsSrcJarLibListStr == null) {
-            cacheAbsSrcJarLibListStr = "";
-            for (int i = 0; i < cacheAbsSrcLibList.length; i++) {
-                File curr = cacheAbsSrcLibList[i];
-                if (curr.getName().endsWith(".jar")) {
-                    if (curr.exists())
-                        cacheAbsSrcJarLibListStr += curr + PATHSEP;
+    private Path cacheAbsSrcJarLibListPath;
+    Path absSrcJarLibList() {
+        if (cacheAbsSrcJarLibListPath == null) {
+            cacheAbsSrcJarLibListPath = new Path();
+            for (File f: cacheAbsSrcLibList) {
+                if (f.getName().endsWith(".jar")) {
+                    if (f.exists())
+                        cacheAbsSrcJarLibListPath.append(f);
                 }
             }
         }
-        return cacheAbsSrcJarLibListStr;
-    } // absSrcJarLibListStr()
+        return cacheAbsSrcJarLibListPath;
+    } // absSrcJarLibList()
 
-    String getJavaTestClassPath() {
+    ExecMode getExecMode() {
+        return params.getExecMode();
+    }
+
+    Path getJavaTestClassPath() {
         return params.getJavaTestClassPath();
     }
 
-    String getJDK() {
-        return params.getJDK().getPath();
+    //--------------------------------------------------------------------------
+
+    JDK getTestJDK() {
+        return params.getTestJDK();
     }
 
-    boolean isOtherJVM() {
-        return params.isOtherJVM();
+    boolean isTestJDK11() {
+        return params.getTestJDK().isVersion(JDK.Version.V1_1, params);
     }
 
     String getJavaProg() {
-        return params.getJDK().getJavaProg().getPath();
+        return params.getTestJDK().getJavaProg().getPath();
+    }
+
+    //--------------------------------------------------------------------------
+
+    JDK getCompileJDK() {
+        return params.getCompileJDK();
+    }
+
+    boolean isCompileJDK11() {
+        return params.getCompileJDK().isVersion(JDK.Version.V1_1, params);
     }
 
     String getJavacProg() {
-        return params.getJDK().getJavacProg().getPath();
+        return params.getCompileJDK().getJavacProg().getPath();
+    }
+
+    //--------------------------------------------------------------------------
+
+    // Get the standard properties to be set for tests
+
+    Map<String,String> getTestProperties() throws TestClassException {
+        Map<String,String> p = new HashMap<String,String>();
+        // The following will be added to javac.class.path on the test JVM
+        switch (getExecMode()) {
+            case AGENTVM:
+            case SAMEVM:
+                Path path = new Path()
+                    .append(absTestClsDir(), absTestSrcDir())
+                    .append(absClsLibList());
+                p.put("test.class.path.prefix", path.toString());
+        }
+        p.put("test.src", absTestSrcDir().getPath());
+        p.put("test.classes", absTestClsDir().getPath());
+        p.put("test.vm.opts", StringUtils.join(getTestVMOptions(), " "));
+        p.put("test.tool.vm.opts", StringUtils.join(getTestToolVMOptions(), " "));
+        p.put("test.compiler.opts", StringUtils.join(getTestCompilerOptions(), " "));
+        p.put("test.java.opts", StringUtils.join(getTestJavaOptions(), " "));
+        p.put("test.jdk", getTestJDK().getPath());
+        p.put("compile.jdk", getCompileJDK().getPath());
+        return p;
+    }
+
+    //--------------------------------------------------------------------------
+
+    /*
+     * Get an agent for a VM with the given VM options.
+     */
+    Agent getAgent(JDK jdk, Path classpath, List<String> testVMOpts) throws IOException {
+        List<String> vmOpts = new ArrayList<String>();
+        vmOpts.add("-classpath");
+        vmOpts.add(classpath.toString());
+        vmOpts.addAll(testVMOpts);
+
+        /*
+         * A script only uses one agent at a time, and only one, maybe two,
+         * different agents overall, for actions that use agentVM mode (i.e.
+         * CompileAction and MainAction.) Therefore, use a simple list to
+         * record the agents that the script has already obtained for use.
+         */
+        for (Agent agent: agents) {
+            if (agent.matches(jdk, vmOpts))
+                return agent;
+        }
+
+        List<String> envVars = new ArrayList<String>();
+        envVars.addAll(Arrays.asList(getEnvVars()));
+        // some tests are inappropriately relying on the CLASSPATH environment
+        // variable being set, so ensure it is set. See equivalent code in MainAction
+        // and Main.execChild. Note we cannot set exactly the same classpath as
+        // for othervm, because we should not include test-specific info
+        Path cp = new Path(getJavaTestClassPath()).append(jdk.getToolsJar());
+        envVars.add("CLASSPATH=" + cp);
+
+        Agent.Pool p = Agent.Pool.instance();
+        Agent agent = p.getAgent(absTestScratchDir(), jdk, vmOpts, envVars);
+        agents.add(agent);
+        return agent;
     }
 
     /**
-     * Try to determine the version of Java that is being tested.  If a system
-     * has the "-fullversion" option, that string plus the appropriate
-     * java.home is returned.  Otherwise only java.home is returned.
+     * Close an agent, typically because an error has occurred while using it.
      */
-    String getJavaFullVersion() {
-        return params.getJavaFullVersion();
+    void closeAgent(Agent agent) {
+        agent.close();
+        agents.remove(agent);
     }
 
-    /**
-     * Attempt to distinguish whether the JDK under test is JDK1.1.* or JDK1.2.
-     *
-     * @return     If the test JDK is JDK1.1.*, then 1.1 is returned.  If the
-     *             test JDK is JDK1.2, then 1.2 is returned.
+    /*
+     * Close all the agents this script has obtained for use. This will
+     * terminate the VMs used by those agents.
      */
-    String javaVersion() {
-        return params.getJavaVersion();
+    void closeAgents() {
+        for (Agent agent: agents) {
+            agent.close();
+        }
+        agents.clear();
     }
 
-    boolean isJDK11() {
-        return javaVersion().equals("1.1");
+    /*
+     * Release all the agents this script has obtained for use.
+     * The agents are made available for future reuse.
+     */
+    void releaseAgents() {
+        Agent.Pool pool = Agent.Pool.instance();
+        for (Agent agent: agents) {
+            pool.save(agent);
+        }
     }
 
-    boolean isJDK12() {
-        return javaVersion().equals("1.2");
-    }
-
-    boolean isJDK13() {
-        return javaVersion().equals("1.3");
-    }
+    List<Agent> agents = new ArrayList<Agent>();
 
     //----------internal classes-----------------------------------------------
 
@@ -938,7 +1143,7 @@ public class RegressionScript extends Script
      * of class files generated by the actual tests.
      */
     public static class TestClassException extends TestRunException {
-        static final long serialVersionUID = -5087319602062056951L;
+        private static final long serialVersionUID = -5087319602062056951L;
         public TestClassException(String msg) {
             super("Test Class Exception: " + msg);
         } // TestClassException()
@@ -949,7 +1154,6 @@ public class RegressionScript extends Script
     static final String WRAPPEREXTN = ".jta";
 
     private static final String FILESEP  = System.getProperty("file.separator");
-    private static final String PATHSEP  = System.getProperty("path.separator");
     private static final String LINESEP  = System.getProperty("line.separator");
 
     private static final String
@@ -967,6 +1171,8 @@ public class RegressionScript extends Script
         CANT_FIND_SRC         = "Can't find source file: ",
         LIB_LIST              = " in directory-list: ",
         PROB_CANT_CANON       = "Unable to canonicalize file: ";
+
+    private static I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(RegressionScript.class);
 
     //----------member variables-----------------------------------------------
 

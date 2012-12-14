@@ -195,6 +195,10 @@ public class Main {
             boolean ok;
             try {
                 ok = m.run(args);
+                if (!ok && (m.outFile != null)) {
+                    // no need for an additional message if outFile == null
+                    err.println(i18n.getString("main.diffsFound"));
+                }
             } finally {
                 out.flush();
             }

@@ -189,7 +189,8 @@ public class ShellAction extends Action
                 tmpArgs.add(fixupSep(envVars[i]));
             tmpArgs.add("TESTSRC=" + fixupSep(script.absTestSrcDir()));
             tmpArgs.add("TESTCLASSES=" + fixupSep(script.absTestClsDir()));
-            tmpArgs.add("TESTJAVA=" + fixupSep(script.getJDK()));
+            tmpArgs.add("COMPILEJAVA=" + fixupSep(script.getCompileJDK().getPath()));
+            tmpArgs.add("TESTJAVA=" + fixupSep(script.getTestJDK().getPath()));
             List<String> vmOpts = script.getTestVMOptions();
             tmpArgs.add("TESTVMOPTS=" + fixupSep(StringUtils.join(vmOpts, " ")));
             List<String> toolVMOpts = script.getTestToolVMOptions();
@@ -208,7 +209,7 @@ public class ShellAction extends Action
             PrintWriter sysErr = section.createOutput("System.err");
             try {
                 if (showCmd)
-                    JTCmd("shell", cmdArgs, section);
+                    showCmd("shell", cmdArgs, section);
 
                 // RUN THE SHELL SCRIPT
                 ProcessCommand cmd = new ProcessCommand();
@@ -225,23 +226,28 @@ public class ShellAction extends Action
             }
 
             // EVALUATE RESULTS
-            boolean ok = status.isPassed();
-            int st   = status.getType();
-            String sr;
-            if (ok && reverseStatus) {
-                sr = EXEC_PASS_UNEXPECT;
-                st = Status.FAILED;
-            } else if (ok && !reverseStatus) {
-                sr = EXEC_PASS;
-            } else if (!ok && reverseStatus) {
-                sr = EXEC_FAIL_EXPECT;
-                st = Status.PASSED;
-            } else { /* !ok && !reverseStatus */
-                sr = EXEC_FAIL;
+
+            if (!status.isError()) {
+                boolean ok = status.isPassed();
+                int st = status.getType();
+                String sr;
+
+                if (ok && reverseStatus) {
+                    sr = EXEC_PASS_UNEXPECT;
+                    st = Status.FAILED;
+                } else if (ok && !reverseStatus) {
+                    sr = EXEC_PASS;
+                } else if (!ok && reverseStatus) {
+                    sr = EXEC_FAIL_EXPECT;
+                    st = Status.PASSED;
+                } else { /* !ok && !reverseStatus */
+                    sr = EXEC_FAIL;
+                }
+                if ((st == Status.FAILED) && !status.getReason().equals("")
+                    && !status.getReason().equals(EXEC_PASS))
+                    sr += ": " + status.getReason();
+                status = new Status(st, sr);
             }
-            if (st == Status.FAILED)
-                sr += ": " + status.getReason();
-            status = new Status(st, sr);
         }
 
         endAction(status, section);

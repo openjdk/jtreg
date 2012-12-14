@@ -25,14 +25,8 @@
 
 package com.sun.javatest.regtest;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import com.sun.javatest.Status;
-import com.sun.javatest.TestResult;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * This class implements the "junit" action, which is a variation of "main".
@@ -58,6 +52,7 @@ public class JUnitAction extends MainAction
      * @exception  ParseException If the options or arguments are not expected
      *             for the action or are improperly formated.
      */
+    @Override
     public void init(String[][] opts, String[] args, String reason,
                      RegressionScript script)
         throws ParseException
@@ -67,20 +62,27 @@ public class JUnitAction extends MainAction
 
         init(opts, args, reason, script, JUnitRunner.class.getName());
 
-        if (getMainArgs().length() != 0)
+        if (getMainArgs().size() != 0)
             throw new ParseException(JUNIT_BAD_MAIN_ARG);
 
     } // init()
 
+    @Override
     protected String getActionName() {
         return "junit";
     }
 
-    public static class JUnitRunner {
+    public static class JUnitRunner implements TestRunner {
         public static void main(String... args) throws Exception {
+            main(null, args);
+        }
+
+        public static void main(ClassLoader loader, String... args) throws Exception {
+            try { // debug
             if (args.length != 1)
                 throw new Error("wrong number of arguments");
-            Class<?> mainClass = Class.forName(args[0]);
+//            Class<?> mainClass = Class.forName(args[0], true, loader);
+            Class<?> mainClass = (loader == null) ? Class.forName(args[0]) : loader.loadClass(args[0]);
             org.junit.runner.Result result;
             try {
                 result = org.junit.runner.JUnitCore.runClasses(mainClass);
@@ -95,6 +97,10 @@ public class JUnitAction extends MainAction
                     System.err.println("JavaTest Message: JUnit Failure: "+failure);
                 }
                 throw new Exception("JUnit test failure");
+            }
+            } catch (Exception e) {
+                System.err.println("JUnitAction.main loader=" + loader + " e=" + e + " args=" + java.util.Arrays.asList(args) + " cp=" + System.getProperty("java.class.path"));
+                throw e;
             }
         }
     }

@@ -41,24 +41,24 @@ import com.sun.javatest.Status;
 public class MainWrapper
 {
     public static void main(String [] args) {
-        String [] mainArgs;
         try {
             FileReader in = new FileReader(args[0]);
 
             StringWriter out = new StringWriter();
-            char [] buf = new char[1024];
+            char[] buf = new char[1024];
             int howMany;
 
             while ((howMany = in.read(buf)) > 0)
                 out.write(buf, 0, howMany);
             out.close();
             in.close();
-            mainArgs = StringArray.splitTerminator("\0", out.toString());
+
+            String[] fileArgs = StringArray.splitTerminator("\0", out.toString());
 
             int i = 0;
-            buildFN                  = mainArgs[i++];
-            String stringifiedArgs   = mainArgs[i++];
-            allArgs = StringArray.splitWS(stringifiedArgs);
+            mainClassName            = fileArgs[i++];
+            String stringifiedArgs   = fileArgs[i++];
+            mainArgs = StringArray.splitWS(stringifiedArgs);
         } catch (IOException e) {
             Status.failed(MAIN_CANT_READ_ARGS).exit();
         }
@@ -85,10 +85,10 @@ public class MainWrapper
     {
         public void run() {
             try {
-                Class c = Class.forName(buildFN);
-                Class [] argTypes = {String[].class};
+                Class c = Class.forName(mainClassName);
+                Class[] argTypes = { String[].class };
                 Method method = c.getMethod("main", argTypes);
-                Object [] runArgs = {allArgs};
+                Object[] runArgs = { mainArgs };
 
                 // RUN JAVA PROGRAM
                 method.invoke(null, runArgs);
@@ -104,14 +104,14 @@ public class MainWrapper
                 e.printStackTrace();
                 System.err.println();
                 System.err.println("JavaTest Message: main() method must be in a public class named");
-                System.err.println("JavaTest Message: " + buildFN + " in file " + buildFN + ".java");
+                System.err.println("JavaTest Message: " + mainClassName + " in file " + mainClassName + ".java");
                 System.err.println();
                 Status.error(MAIN_CANT_LOAD_TEST + e).exit();
             } catch (NoSuchMethodException e) {
                 e.printStackTrace();
                 System.err.println();
                 System.err.println("JavaTest Message: main() method must be in a public class named");
-                System.err.println("JavaTest Message: " + buildFN + " in file " + buildFN + ".java");
+                System.err.println("JavaTest Message: " + mainClassName + " in file " + mainClassName + ".java");
                 System.err.println();
                 Status.error(MAIN_CANT_FIND_MAIN).exit();
             } catch (IllegalAccessException e) {
@@ -181,6 +181,6 @@ public class MainWrapper
         MAIN_CANT_LOAD_TEST   = "Can't load test: ",
         MAIN_CANT_FIND_MAIN   = "Can't find `main' method";
 
-    private static String buildFN;
-    private static String [] allArgs;
+    private static String mainClassName;
+    private static String [] mainArgs;
 }

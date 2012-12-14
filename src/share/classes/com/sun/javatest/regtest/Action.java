@@ -26,19 +26,23 @@
 package com.sun.javatest.regtest;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Properties;
 
-import com.sun.javatest.TestResult;
 import com.sun.javatest.Status;
+import com.sun.javatest.TestResult;
 
 /**
  * Action is an abstract base class providing the ability to control the
@@ -155,9 +159,7 @@ public abstract class Action
                         + script.absTestClsTopDir().getPath().replace('\\' + FILESEP, "{/}")
                         + "${/}-\"" + ", \"read\";" + LINESEP);
                 fw.write("};" + LINESEP);
-                String[] javatestClassPath = StringArray.splitSeparator(PATHSEP, script.getJavaTestClassPath());
-                for (int i = 0; i < javatestClassPath.length; i++) {
-                    File f = new File(javatestClassPath[i]);
+                for (File f: script.getJavaTestClassPath().split()) {
                     fw.write("grant codebase \"" + f.toURI().toURL() + "\" {" + LINESEP);
                     fw.write("    permission java.security.AllPermission;" + LINESEP);
                     fw.write("};" + LINESEP);
@@ -229,8 +231,8 @@ public abstract class Action
     //----------redirect streams------------------------------------------------
 
     // if we wanted to allow more concurrency, we could try and acquire a lock here
-    Status redirectOutput(PrintStream out, PrintStream err) {
-        synchronized(this) {
+    static Status redirectOutput(PrintStream out, PrintStream err) {
+        synchronized (System.class) {
             SecurityManager sc = System.getSecurityManager();
             if (sc instanceof RegressionSecurityManager) {
                 boolean prev = ((RegressionSecurityManager) sc).setAllowSetIO(true);
@@ -303,6 +305,8 @@ public abstract class Action
         section.setStatus(status);
     } // endAction()
 
+    //----------workarounds-------------------------------------------------------
+
     /**
      * This method pushes the full, constructed command for the action to the
      * log.  The constructed command contains the the action and its arguments
@@ -317,15 +321,18 @@ public abstract class Action
      * @param cmdArgs An array of the command to pass to ProcessCommand.
      * @see com.sun.javatest.lib.ProcessCommand#run
      */
-    protected void JTCmd(String action, String[] cmdArgs, TestResult.Section section) {
+    protected void showCmd(String action, String[] cmdArgs, TestResult.Section section) {
         PrintWriter pw = section.getMessageWriter();
         pw.println(LOG_JT_COMMAND + action);
         for (int i = 0; i < cmdArgs.length; i++)
             pw.print("'" + cmdArgs[i] + "' ");
         pw.println();
-    } // JTCmd()
+    } // showCmd()
 
-    //----------workarounds-------------------------------------------------------
+    protected void showMode(String action, ExecMode mode, TestResult.Section section) {
+        PrintWriter pw = section.getMessageWriter();
+        pw.println("Mode: " + mode);
+    }
 
     /**
      * Given a string, change "\\" into "\\\\" for windows platforms.  This method
@@ -384,19 +391,174 @@ public abstract class Action
 
     protected static Properties newProperties(Hashtable<?,?> h) {
         Properties p = new Properties();
-        for (Enumeration<?> e = h.keys(); e.hasMoreElements(); ) {
-            Object key = e.nextElement();
-            p.put(key, h.get(key));
-        }
+        p.putAll(h);
         return p;
+    }
+
+    //----------output handler--------------------------------------------------
+
+    /**
+     * OutputHandler provides an abstract way to get the streams used to record
+     * the output from an action of a test.
+     */
+    interface OutputHandler {
+        enum OutputKind {
+            LOG(""),
+            STDOUT("System.out"),
+            STDERR("System.err"),
+            DIRECT("direct"),
+            DIRECT_LOG("direct.log");
+            OutputKind(String name) { this.name = name; }
+            final String name;
+        };
+        PrintWriter createOutput(OutputKind kind);
+        void createOutput(OutputKind kind, String output);
+    }
+
+    static OutputHandler getOutputHandler(final TestResult.Section section) {
+        return new OutputHandler() {
+            public PrintWriter createOutput(OutputKind kind) {
+                if (kind == OutputKind.LOG)
+                    return section.getMessageWriter();
+                else
+                    return section.createOutput(kind.name);
+            }
+
+            public void createOutput(OutputKind kind, String output) {
+                PrintWriter pw = createOutput(kind);
+                pw.write(output);
+                pw.close();
+            }
+        };
+    }
+
+
+    //----------save state------------------------------------------------------
+
+    /**
+     * SaveState captures  important system state, such as the security manager,
+     * standard IO streams and system properties, and provides a way to
+     * subsequently restore that state.
+     */
+    static class SaveState {
+        SaveState() {
+            if (sysProps == null)
+                sysProps = copyProperties(System.getProperties());
+
+            // Save and setup streams for the test
+            stdOut = System.out;
+            stdErr = System.err;
+
+            // Save security manager in case changed by test
+            secMgr = System.getSecurityManager();
+
+            // If using default security manager, allow props access, and reset dirty bit
+            if (secMgr instanceof RegressionSecurityManager) {
+                RegressionSecurityManager rsm = (RegressionSecurityManager) secMgr;
+                rsm.setAllowPropertiesAccess(true);
+                rsm.resetPropertiesModified();
+            }
+        }
+
+        Status restore(String testName, Status status) {
+            Status cleanupStatus = null;
+
+            // Reset security manager, if necessary
+            // Do this first, to ensure we reset permissions
+            try {
+                if (System.getSecurityManager() != secMgr) {
+                    AccessController.doPrivileged(new PrivilegedAction<Object>() {
+                        public Object run() {
+                            System.setSecurityManager(secMgr);
+                            return null;
+                        }
+                    });
+                    //System.setSecurityManager(secMgr);
+                }
+            } catch (SecurityException e) {
+                // If we cannot reset the security manager, we might not be able to do
+                // much at all -- such as write files.  So, be very noisy to the
+                // primary system error stream about this badly behaved test.
+                stdErr.println();
+                stdErr.println("***");
+                stdErr.println("*** " + testName);
+                stdErr.println("*** Cannot reset security manager after test");
+                stdErr.println("*** " + e.getMessage());
+                stdErr.println("***");
+                stdErr.println();
+                cleanupStatus = Status.error(SAMEVM_CANT_RESET_SECMGR + ": " + e);
+            }
+
+            // Reset system properties, if necessary
+            // The default security manager tracks whether system properties may have
+            // been written: if so, we reset all the system properties, otherwise
+            // we just reset important props that were written in the test setup
+            boolean resetAllSysProps;
+            SecurityManager sm = System.getSecurityManager();
+            if (sm instanceof RegressionSecurityManager) {
+                resetAllSysProps = ((RegressionSecurityManager) sm).isPropertiesModified();
+            } else {
+                resetAllSysProps = true;
+            }
+            try {
+                if (resetAllSysProps) {
+                    System.setProperties(newProperties(sysProps));
+//                    System.err.println("reset properties");
+                } else {
+                    System.setProperty("java.class.path", (String) sysProps.get("java.class.path"));
+//                    System.err.println("no need to reset properties");
+                }
+            } catch (SecurityException e) {
+                if (cleanupStatus == null)
+                    cleanupStatus = Status.error(SAMEVM_CANT_RESET_PROPS + ": " + e);
+            }
+
+            // Reset output streams
+            Status stat = redirectOutput(stdOut, stdErr);
+            if (cleanupStatus == null && !stat.isPassed())
+                cleanupStatus = stat;
+
+            return (cleanupStatus != null ? cleanupStatus : status);
+        }
+
+        final SecurityManager secMgr;
+        final PrintStream stdOut;
+        final PrintStream stdErr;
+        static Hashtable<?,?> sysProps;
+    }
+
+    //----------in memory streams-----------------------------------------------
+
+    static class PrintByteArrayOutputStream extends PrintStream {
+        PrintByteArrayOutputStream() {
+            super(new ByteArrayOutputStream());
+            s = (ByteArrayOutputStream) out;
+        }
+
+        String getOutput() {
+            return s.toString();
+        }
+
+        private final ByteArrayOutputStream s;
+    }
+
+    static class PrintStringWriter extends PrintWriter {
+        PrintStringWriter() {
+            super(new StringWriter());
+            w = (StringWriter) out;
+        }
+
+        String getOutput() {
+            return w.toString();
+        }
+
+        private final StringWriter w;
     }
 
     //----------misc statics----------------------------------------------------
 
     protected static final String FILESEP  = System.getProperty("file.separator");
     protected static final String LINESEP  = System.getProperty("line.separator");
-    protected static final String PATHSEP  = System.getProperty("path.separator");
-    protected static final String JAVAHOME = System.getProperty("java.home");
 
     // This is a hack to deal with the fact that the implementation of
     // Runtime.exec() for Windows stringifies the arguments.
@@ -447,6 +609,13 @@ public abstract class Action
         EXEC_PASS_UNEXPECT    = "Execution passed unexpectedly",
         EXEC_ERROR_CLEANUP    = "Error while cleaning up threads after test",
         CHECK_PASS            = "Test description appears acceptable",
+
+        // used in:  compile, main
+        SAMEVM_CANT_RESET_SECMGR= "Cannot reset security manager",
+        SAMEVM_CANT_RESET_PROPS = "Cannot reset system properties",
+
+        // used in:compile, main
+        AGENTVM_CANT_GET_VM      = "Cannot get VM for test",
 
         UNEXPECT_SYS_EXIT     = "Unexpected exit from test",
         CANT_FIND_SRC         = "Can't file source file: ",
@@ -503,6 +672,8 @@ public abstract class Action
         COMPILE_PASS          = "Compilation successful",
         COMPILE_FAIL_EXPECT   = "Compilation failed as expected",
         COMPILE_FAIL          = "Compilation failed",
+        COMPILE_CANT_RESET_SECMGR= "Cannot reset security manager",
+        COMPILE_CANT_RESET_PROPS = "Cannot reset system properties",
 
         // ignore
         IGNORE_UNEXPECT_OPTS  = "Unexpected option(s) for `ignore'",
@@ -530,6 +701,8 @@ public abstract class Action
         MAIN_UNEXPECT_VMOPT   = ": vm option(s) found, need to specify /othervm",
         MAIN_POLICY_WRITE_PROB= "Problems writing new policy file: ",
         MAIN_POLICY_SM_PROB   = "Unable to create new policy file: ",
+        MAIN_CANT_RESET_SECMGR= "Cannot reset security manager",
+        MAIN_CANT_RESET_PROPS = "Cannot reset system properties",
 
         //    runOtherJVM
         MAIN_CANT_WRITE_ARGS  = "Can't write `main' argument file",
@@ -552,9 +725,15 @@ public abstract class Action
     private long   startTime;
 
     protected String reason;
-    protected RegressionScript script;
+    protected /*final*/ RegressionScript script;
 
-    protected static final boolean showCmd = Boolean.getBoolean("javatest.regtest.showCmd");
+    protected static final boolean showCmd = show("showCmd");
+    protected static final boolean showMode = show("showMode");
+    protected static final boolean showJDK = show("showJDK");
+    static boolean show(String name) {
+        return Boolean.getBoolean("javatest.regtest." + name)
+                || (System.getenv("JTREG_" + name.toUpperCase()) != null);
+    }
 }
 
 

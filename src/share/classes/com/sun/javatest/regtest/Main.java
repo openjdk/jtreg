@@ -28,8 +28,11 @@ package com.sun.javatest.regtest;
 import java.awt.EventQueue;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.DataInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -198,15 +201,18 @@ public class Main {
         new Option(OPT, MAIN, "", "retain") {
             @Override
             public String[] getChoices() {
-                return new String[] { "pass", "fail", "error", "all", "file-pattern" };
+                return new String[] { "none", "pass", "fail", "error", "all", "file-pattern" };
             }
-            public void process(String opt, String arg) {
+            public void process(String opt, String arg) throws BadArgs {
                 if (arg != null)
                     arg = arg.trim();
                 if (arg == null || arg.length() == 0)
                     retainArgs = Collections.singletonList("all");
                 else
                     retainArgs = Arrays.asList(arg.split(","));
+                if (retainArgs.contains("none") && retainArgs.size() > 1) {
+                    throw new BadArgs(i18n, "main.badRetainNone", arg);
+                }
                 childArgs.add(opt);
             }
         },
@@ -244,6 +250,18 @@ public class Main {
             }
         },
 
+        new Option(OPT, MAIN, "", "allowSetSecurityManager") {
+            @Override
+            public String[] getChoices() {
+                return new String[] { "yes", "no", "on", "off", "true", "false" };
+            }
+            public void process(String opt, String arg) {
+                boolean b = (arg == null || Arrays.asList("yes", "on", "true").contains(arg));
+                allowSetSecurityManagerFlag = b;
+                childArgs.add(opt);
+            }
+        },
+
         new Option(STD, SELECT, "", "status") {
             @Override
             public String[] getChoices() {
@@ -274,6 +292,7 @@ public class Main {
             public void process(String opt, String arg) {
                 observerClassName = arg;
                 childArgs.add(opt);
+                childArgs.add(arg);
             }
         },
 
@@ -389,21 +408,38 @@ public class Main {
 
         new Option(NONE, MODE, "svm-ovm", "ovm", "othervm") {
             public void process(String opt, String arg) {
-                sameJVMFlag = false;
+                execMode = ExecMode.OTHERVM;
                 childArgs.add(opt);
             }
         },
 
         new Option(NONE, MODE, "svm-ovm", "s", "svm", "samevm") {
             public void process(String opt, String arg) {
-                sameJVMFlag = true;
+                // allow backdoor way to treat samevm optioms as meaning agentvm
+                if (isTrue(System.getenv("JTREG_USE_AGENTVM_FOR_SAMEVM")))
+                    execMode = ExecMode.AGENTVM;
+                else
+                    execMode = ExecMode.SAMEVM;
+                childArgs.add(opt);
+            }
+        },
+
+        new Option(NONE, MODE, "svm-ovm", "avm", "agentvm") {
+            public void process(String opt, String arg) {
+                execMode = ExecMode.AGENTVM;
                 childArgs.add(opt);
             }
         },
 
         new Option(OLD, JDK, "", "jdk", "testjdk") {
             public void process(String opt, String arg) {
-                jdk = new JDK(arg);
+                testJDK = new JDK(arg);
+            }
+        },
+
+        new Option(OLD, JDK, "", "compilejdk") {
+            public void process(String opt, String arg) {
+                compileJDK = new JDK(arg);
             }
         },
 
@@ -417,6 +453,8 @@ public class Main {
                         continue;
                     classPathAppendArg.add(new File(f));
                 }
+                // needed in child for @compile
+                childArgs.add("-cpa:" + filesToAbsolutePath(pathToFiles(arg)));
             }
         },
 
@@ -624,6 +662,7 @@ public class Main {
         private String javaOption;
         private String javaOptions;
         private String verbose;
+        private boolean agentVM;
         private boolean sameVM;
         private boolean otherVM;
         private Boolean failOnError;  // yes, no, or unset
@@ -686,6 +725,10 @@ public class Main {
             this.verbose = verbose;
         }
 
+        public void setAgentVM(boolean yes) {
+            this.agentVM = yes;
+        }
+
         public void setSameVM(boolean yes) {
             this.sameVM = yes;
         }
@@ -733,6 +776,7 @@ public class Main {
                 decoder.process("workDir", workDir);
                 decoder.process("jdk", jdk);
                 decoder.process("verbose", verbose);
+                decoder.process("agentVM", agentVM);
                 decoder.process("sameVM", sameVM);
                 decoder.process("otherVM", otherVM);
                 decoder.process("vmoption", vmOption);
@@ -843,8 +887,12 @@ public class Main {
         } catch (InterruptedException e) {
             err.println(i18n.getString("main.interrupted"));
             exit(EXIT_EXCEPTION);
+        } catch (SecurityException e) {
+            err.println(i18n.getString("main.securityException", e.getMessage()));
+            e.printStackTrace();
+            exit(EXIT_EXCEPTION);
         } catch (Exception e) {
-            err.println(i18n.getString("main.unexpectedException"));
+            err.println(i18n.getString("main.unexpectedException", e.toString()));
             e.printStackTrace();
             exit(EXIT_EXCEPTION);
         }
@@ -859,9 +907,9 @@ public class Main {
         this.err = err;
 
         // FIXME: work around bug 6466752
-        File javatest_jar = findJar("javatest.jar", "lib/javatest.jar", com.sun.javatest.Harness.class);
-        if (javatest_jar != null)
-            System.setProperty("javatestClassDir", javatest_jar.getPath());
+        File jt_jar = findJar("javatest.jar", "lib/javatest.jar", com.sun.javatest.Harness.class);
+        if (jt_jar != null)
+            System.setProperty("javatestClassDir", jt_jar.getPath());
     }
 
     /**
@@ -883,12 +931,15 @@ public class Main {
             return EXIT_OK;
         }
 
-        if (sameJVMFlag && !testJavaOpts.isEmpty())
+        if (execMode == ExecMode.SAMEVM && !testJavaOpts.isEmpty())
             throw new Fault(i18n, "main.cant.mix.samevm.java.options");
 
-        if (jdk == null) {
+        if (execMode == ExecMode.SAMEVM && compileJDK != null)
+            throw new Fault(i18n, "main.cant.mix.samevm.compile.jdk.options");
+
+        if (testJDK == null) {
             String s = null;
-            if (!sameJVMFlag)
+            if (execMode != ExecMode.SAMEVM)
                 s = System.getenv("JAVA_HOME");
             if (s == null || s.length() == 0) {
                 s = System.getProperty("java.home");
@@ -896,14 +947,15 @@ public class Main {
                     throw new BadArgs(i18n, "main.jdk.not.set");
             }
             File f = new File(s);
-            if (f.getName().toLowerCase().equals("jre") &&
-                    f.getParentFile() != null)
+            if (compileJDK == null
+                    && f.getName().toLowerCase().equals("jre")
+                    && f.getParentFile() != null)
                 f = f.getParentFile();
-            jdk = new JDK(f);
+            testJDK = new JDK(f);
         }
 
         if (jitFlag == false) {
-            if (sameJVMFlag)
+            if (execMode == ExecMode.SAMEVM)
                 testVMOpts.add("-Djava.compiler=");
             else
                 envVarArgs.add("JAVA_COMPILER=");
@@ -911,12 +963,18 @@ public class Main {
 
         if (classPathAppendArg.size() > 0) {
             // TODO: store this separately in RegressionParameters, instead of in envVars
-            if (!sameJVMFlag)
-                envVarArgs.add("CPAPPEND=" + filesToAbsolutePath(classPathAppendArg));
+            // Even in sameVM mode, this needs to be stored stored in CPAPPEND for use
+            // by script.testClassPath for @compile -- however, note that in sameVM mode
+            // this means this value will be on JVM classpath and in URLClassLoader args
+            // (minor nit)
+            envVarArgs.add("CPAPPEND=" + filesToAbsolutePath(classPathAppendArg));
         }
 
-        if (!jdk.exists())
-            throw new Fault(i18n, "main.jdk.not.found", jdk);
+        if (compileJDK != null && !compileJDK.exists())
+            throw new Fault(i18n, "main.compile.jdk.not.found", compileJDK);
+
+        if (!testJDK.exists())
+            throw new Fault(i18n, "main.test.jdk.not.found", testJDK);
 
         File baseDir;
         if (baseDirArg == null) {
@@ -973,6 +1031,20 @@ public class Main {
         makeDir(workDirArg);
         makeDir(new File(workDirArg, "scratch"));
 
+        findSystemJarFiles();
+
+        if (allowSetSecurityManagerFlag) {
+            switch (execMode) {
+                case AGENTVM:
+                    initPolicyFile();
+                    Agent.Pool.instance().setSecurityPolicy(policyFile);
+                    break;
+                case SAMEVM:
+                    initPolicyFile();
+                case OTHERVM:
+            }
+        }
+
         if (!isThisVMOK())
             return execChild();
 
@@ -990,12 +1062,16 @@ public class Main {
         TestEnvironment.addDefaultPropTable("(system properties)", System.getProperties());
 
         // TODO: take SecurityManager into account for isThisVMOK
-        if (sameJVMFlag) {
+        if (execMode == ExecMode.SAMEVM) {
             RegressionSecurityManager.install();
-            SecurityManager sc = System.getSecurityManager();
-            if (sc instanceof RegressionSecurityManager) {
+            SecurityManager sm = System.getSecurityManager();
+            if (sm instanceof RegressionSecurityManager) {
+                RegressionSecurityManager rsm = (RegressionSecurityManager) sm;
+                rsm.setAllowPropertiesAccess(true);
+                if (allowSetSecurityManagerFlag)
+                    rsm.setAllowSetSecurityManager(true);
                 // experimental
-                ((RegressionSecurityManager) sc).setAllowSetIO(true);
+                rsm.setAllowSetIO(true);
             }
         }
 
@@ -1121,7 +1197,7 @@ public class Main {
     }
 
     private boolean isThisVMOK() {
-        if (reportOnlyFlag || checkFlag || !sameJVMFlag)
+        if (reportOnlyFlag || checkFlag || execMode != ExecMode.SAMEVM)
             return true;
 
         // sameVM tests can use this VM if
@@ -1129,6 +1205,7 @@ public class Main {
         // - the current VM is the required test VM
         // - there are no outstanding VM options
         // - there is no classpath append
+        // - don't allow setSecurityManager
 
         File scratchDir = canon(new File(workDirArg, "scratch"));
         File currDir = canon(new File(""));
@@ -1141,13 +1218,15 @@ public class Main {
         File currJDKHome = canon(new File(System.getProperty("java.home")));
         if (currJDKHome.getName().toLowerCase().equals("jre"))
             currJDKHome = currJDKHome.getParentFile();
-        if (!currJDKHome.equals(jdk.getCanonicalFile())) {
+        if (!currJDKHome.equals(testJDK.getCanonicalFile())) {
             if (debugChild)
-                System.err.println("jdk mismatch: " + currJDKHome + " " + jdk + " (" + jdk.getCanonicalFile() + ")");
+                System.err.println("jdk mismatch: " + currJDKHome + " " + testJDK + " (" + testJDK.getCanonicalFile() + ")");
             return false;
         }
 
-        if (System.getProperty("javatest.child") == null && !testVMOpts.isEmpty()) {
+        boolean isChild = (System.getProperty("javatest.child") != null);
+
+        if (!isChild && !testVMOpts.isEmpty()) {
             if (debugChild)
                 System.err.println("need VM opts: " + testVMOpts);
             return false;
@@ -1156,6 +1235,15 @@ public class Main {
         if (classPathAppendArg.size() > 0) {
             if (debugChild)
                 System.err.println("need classPathAppend: " + classPathAppendArg);
+            Path jcp = new Path(System.getProperty("java.class.path"));
+            Path cpa = filesToAbsolutePath(classPathAppendArg);
+            if (!(jcp.contains(cpa)))
+                return false;
+        }
+
+        if (!isChild && allowSetSecurityManagerFlag) {
+            if (debugChild)
+                System.err.println("need policy file for setSecurityManager");
             return false;
         }
 
@@ -1167,25 +1255,7 @@ public class Main {
         if (System.getProperty("javatest.child") != null)
             throw new AssertionError();
 
-        File javatest_jar = findJar("javatest.jar", "lib/javatest.jar", com.sun.javatest.Harness.class);
-        if (javatest_jar == null)
-            throw new Fault(i18n, "main.cantFind.javatest.jar");
-
-        File jtreg_jar = findJar("jtreg.jar", "lib/jtreg.jar", getClass());
-        if (jtreg_jar == null)
-            throw new Fault(i18n, "main.cantFind.jtreg.jar");
-
-        File junit_jar = null;
-        try {
-            junit_jar = findJar("junit.jar", "lib/junit.jar", org.junit.runner.JUnitCore.class);
-        } catch (NoClassDefFoundError ex) {
-        }
-        if (junit_jar == null) {
-            // Leave a place-holder for the optional jar.
-            junit_jar = new File(jtreg_jar.getParentFile(), "junit.jar");
-        }
-
-        File childJDKHome = jdk.getAbsoluteFile();
+        File childJDKHome = testJDK.getAbsoluteFile();
         File childJava = new File(new File(childJDKHome, "bin"), "java");
         File childTools  = new File(new File(childJDKHome, "lib"), "tools.jar");
         File scratchDir = canon(new File(workDirArg, "scratch"));
@@ -1196,11 +1266,15 @@ public class Main {
         c.add("-classpath");
         List<File> classpath = new ArrayList<File>();
         classpath.add(jtreg_jar);
-        classpath.add(childTools);
+        if (childTools.exists())
+            classpath.add(childTools);
         classpath.addAll(classPathAppendArg);
-        c.add(filesToAbsolutePath(classpath));
+        c.add(filesToAbsolutePath(classpath).toString());
 
         c.addAll(testVMOpts);
+
+        if (allowSetSecurityManagerFlag)
+            c.add("-Djava.security.policy=" + policyFile.toURI());
 
         // Tunnel Ant file args separately from command line tests, so that
         // they can be treated specially in the child VM:  invalid files
@@ -1250,19 +1324,17 @@ public class Main {
 
         try {
             try {
-
                 // strictly speaking, we do not need to set the CLASSPATH for the child VM,
                 // but we do it to maximize the consistency between sameVM and otherVM env.
                 // See similar code in MainAction for otherVM tests.
                 // Note the CLASSPATH will not be exactly the same as for otherVM tests,
                 // because it will not have (and cannot have) the test-specific values.
-                String cp = "CLASSPATH=" + javatest_jar + PATHSEP + jtreg_jar
-                        + PATHSEP + jdk.getToolsJar();
+                Path cp = new Path().append(javatest_jar, jtreg_jar, testJDK.getToolsJar());
 
                 String[] env = getEnvVars();
                 String[] env_cp = new String[env.length + 1];
                 System.arraycopy(env, 0, env_cp, 0, env.length);
-                env_cp[env_cp.length - 1] = cp;
+                env_cp[env_cp.length - 1] = ("CLASSPATH=" + cp);
 
                 p = r.exec(cmd, env_cp, execDir);
             } catch (IOException e) {
@@ -1307,6 +1379,53 @@ public class Main {
         } finally {
             if (p != null)
                 p.destroy();
+        }
+    }
+
+    void findSystemJarFiles() throws Fault {
+        javatest_jar = findJar("javatest.jar", "lib/javatest.jar", com.sun.javatest.Harness.class);
+        if (javatest_jar == null)
+            throw new Fault(i18n, "main.cantFind.javatest.jar");
+
+        jtreg_jar = findJar("jtreg.jar", "lib/jtreg.jar", getClass());
+        if (jtreg_jar == null)
+            throw new Fault(i18n, "main.cantFind.jtreg.jar");
+
+        String s = System.getProperty("junit.jar");
+        if (s != null)
+            junit_jar = new File(s);
+        else {
+            try {
+                junit_jar = findJar("junit.jar", "lib/junit.jar", org.junit.runner.JUnitCore.class);
+            } catch (NoClassDefFoundError ex) {
+            }
+        }
+        if (junit_jar == null) {
+            // Leave a place-holder for the optional jar.
+            junit_jar = new File(jtreg_jar.getParentFile(), "junit.jar");
+        }
+    }
+
+    void initPolicyFile() throws Fault {
+        // Write a policy file into the work directory granting all permissions
+        // to jtreg.
+        // Note: don't use scratch directory, which is cleared before tests run
+        File pfile = new File(workDirArg, "jtreg.policy");
+        try {
+            BufferedWriter pout = new BufferedWriter(new FileWriter(pfile));
+            try {
+                String LINESEP = System.getProperty("line.separator");
+                for (File f: new File[] { jtreg_jar, javatest_jar }) {
+                    pout.write("grant codebase \"" + f.toURI().toURL() + "\" {" + LINESEP);
+                    pout.write("    permission java.security.AllPermission;" + LINESEP);
+                    pout.write("};" + LINESEP);
+                }
+            } finally {
+                pout.close();
+            }
+            policyFile = pfile;
+        } catch (IOException e) {
+            throw new Fault(i18n, "main.cantWritePolicyFile", e);
         }
     }
 
@@ -1412,24 +1531,12 @@ public class Main {
         return files;
     }
 
-    private static String filesToAbsolutePath(List<File> files) {
-        StringBuffer sb = new StringBuffer();
+    private static Path filesToAbsolutePath(List<File> files) {
+        Path p = new Path();
         for (File f: files) {
-            if (sb.length() > 0)
-                sb.append(File.pathSeparator);
-            sb.append(f.getAbsolutePath());
+            p.append(f.getAbsolutePath());
         }
-        return sb.toString();
-    }
-
-    private static String join(Iterator<?> iter, String sep) {
-        StringBuilder sb = new StringBuilder();
-        while (iter.hasNext()) {
-            if (sb.length() > 0)
-                sb.append(" ");
-            sb.append(iter.next());
-        }
-        return sb.toString();
+        return p;
     }
 
     /**
@@ -1522,7 +1629,7 @@ public class Main {
 
             if (timeoutFactorArg != null) {
                 try {
-                    rp.setTimeoutFactor(Integer.parseInt(timeoutFactorArg));
+                    rp.setTimeoutFactor(Float.parseFloat(timeoutFactorArg));
                 } catch (NumberFormatException e) {
                     throw new BadArgs(i18n, "main.badTimeoutFactor");
                 }
@@ -1549,15 +1656,16 @@ public class Main {
                 rp.setTestJavaOptions(testJavaOpts);
 
             rp.setCheck(checkFlag);
-            rp.setSameJVM(sameJVMFlag);
+            rp.setExecMode(execMode);
             rp.setEnvVars(getEnvVars());
-            rp.setJDK(jdk);
+            rp.setCompileJDK((compileJDK != null) ? compileJDK : testJDK);
+            rp.setTestJDK(testJDK);
             if (ignoreKind != null)
                 rp.setIgnoreKind(ignoreKind);
 
-            String junit_jar = System.getProperty("junit.jar");
+//            String junit_jar = System.getProperty("junit.jar");
             if (junit_jar != null)
-                rp.setJUnitJar(new File(junit_jar));
+                rp.setJUnitJar(junit_jar);
 
             return rp;
         } catch (TestSuite.Fault f) {
@@ -1646,7 +1754,7 @@ public class Main {
      * Run the harness in batch mode, using the specified parameters.
      */
     private int batchHarness(InterviewParameters params)
-    throws Fault, Harness.Fault, InterruptedException {
+            throws Fault, Harness.Fault, InterruptedException {
         try {
             boolean ok;
 
@@ -1661,6 +1769,8 @@ public class Main {
                 Harness harness = createHarness();
                 harness.addObserver(new BatchObserver());
                 ok = harness.batch(params);
+                Agent.Pool.instance().close();
+                Alarm.finished();
             }
 
             showResultStats(testStats);
@@ -1669,8 +1779,17 @@ public class Main {
                     !noReportFlag && !Boolean.getBoolean("javatest.noReportRequired");
             List<String> reportKinds =
                     Arrays.asList(System.getProperty("javatest.report.kinds", "html text").split("[ ,]+"));
+            String backups = System.getProperty("javatest.report.backups"); // default: none
             if (reportRequired) {
                 try {
+                    if (Thread.interrupted()) {
+                        // It is important to ensure the interrupted bit is cleared before writing
+                        // a report, because Report.writeReport checks if the interrupted bit is set,
+                        // and will stop writing the report. This typically manifests itself as
+                        // writing the HTML files but /not/ writing the text/summary.txt file.
+                        out.println("WARNING: interrupt status cleared prior to writing report");
+                    }
+
                     Report r = new Report();
                     Report.Settings s = new Report.Settings(params);
                     if (reportKinds.contains("html")) {
@@ -1684,13 +1803,26 @@ public class Main {
                         s.setEnableXmlReport(true);
                     }
                     s.setFilter(new CompositeFilter(params.getFilters()));
+                    if (backups == null)
+                        s.setEnableBackups(false);
+                    else {
+                        try {
+                            s.setBackupLevels(Integer.parseInt(backups));
+                            s.setEnableBackups(true);
+                        } catch (NumberFormatException e) {
+                            // ignore
+                        }
+                    }
                     r.writeReport(s, reportDirArg);
+                    fixupReports(workDirArg, reportDirArg);
                     File report = new File(reportDirArg, "report.html"); // std through version 3.*
                     if (!report.exists())
                         report = new File(new File(reportDirArg, "html"), "report.html"); // version 4.*
                     if (report.exists())
                         out.println("Report written to " + report);
                 } catch (IOException e) {
+                    out.println("Error while writing report: " + e);
+                } catch (SecurityException e) {
                     out.println("Error while writing report: " + e);
                 }
             }
@@ -1825,6 +1957,13 @@ public class Main {
             addEnvVars(envVars, "PATH=/bin:/usr/bin");
         }
         addEnvVars(envVars, envVarArgs);
+        for (Map.Entry<String,String> e: System.getenv().entrySet()) {
+            String k = e.getKey();
+            String v = e.getValue();
+            if (k.startsWith("JTREG_")) {
+                envVars.put(k, k + "=" + v);
+            }
+        }
 
         return envVars.values().toArray(new String[envVars.size()]);
     }
@@ -1894,6 +2033,85 @@ public class Main {
         return null;
     }
 
+    /* If the work dir and report dir are equal or close to each other in the
+     * file system, rewrite HTML files in the report directory, replacing
+     * absolute paths for the work directory with relative paths.
+     */
+    private void fixupReports(File work, File report) {
+        File workParent = work.getParentFile();
+        String canonWorkPath;
+        try {
+            canonWorkPath = work.getCanonicalPath();
+        } catch (IOException e) {
+            canonWorkPath = work.getAbsolutePath();
+        }
+
+        File reportParent = report.getParentFile();
+        File reportHtmlDir = new File(report, "html");
+
+        if (equal(work, report)) {
+            fixupReportFiles(report,        canonWorkPath, ".");
+            fixupReportFiles(reportHtmlDir, canonWorkPath, "..");
+        } else if (equal(report, workParent)) {
+            fixupReportFiles(report,        canonWorkPath, work.getName());
+            fixupReportFiles(reportHtmlDir, canonWorkPath, "../" + work.getName());
+        } else if (equal(work, reportParent)) {
+            fixupReportFiles(report,        canonWorkPath, work.getName());
+            fixupReportFiles(reportHtmlDir, canonWorkPath, "../" + work.getName());
+        } else if (equal(workParent, reportParent)) {
+            fixupReportFiles(report,        canonWorkPath, "../" + work.getName());
+            fixupReportFiles(reportHtmlDir, canonWorkPath, "../../" + work.getName());
+        }
+    }
+
+    /* Rewrite html files in the given directory, replacing hrefs to the old path
+     * with references to the new path. */
+    private void fixupReportFiles(File dir, String oldPath, String newPath) {
+        String dirPath;
+        try {
+            dirPath = dir.getCanonicalPath();
+        } catch (IOException e) {
+            dirPath = dir.getAbsolutePath();
+        }
+
+        for (File f: dir.listFiles()) {
+            if (f.getName().endsWith(".html")) {
+                try {
+                    write(f, read(f)
+                            .replace("href=\"" + oldPath + "/", "href=\"" + newPath + "/")
+                            .replace("href=\"" + oldPath + "\"", "href=\"" + newPath + "\"")
+                            .replace("href=\"" + dirPath + "\"", "href=\".\""));
+                } catch (IOException e) {
+                    out.println("Error while updating report: " + e);
+                }
+            }
+        }
+    }
+
+    private String read(File f) throws IOException {
+        byte[] bytes = new byte[(int) f.length()];
+        DataInputStream fIn = new DataInputStream(new FileInputStream(f));
+        try {
+            fIn.readFully(bytes);
+            return new String(bytes);
+        } finally {
+            fIn.close();
+        }
+    }
+
+    private void write(File f, String s) throws IOException {
+        FileOutputStream fOut = new FileOutputStream(f);
+        try {
+            fOut.write(s.getBytes());
+        } finally {
+            fOut.close();
+        }
+    }
+
+    private static <T> boolean equal(T t1, T t2) {
+        return (t1 == null ? t2 == null : t1.equals(t2));
+    }
+
     /**
      * Call System.exit, taking care to get permission from the
      * JavaTestSecurityManager, if it is installed.
@@ -1905,6 +2123,11 @@ public class Main {
         if (sc instanceof JavaTestSecurityManager)
             ((JavaTestSecurityManager) sc).setAllowExit(true);
         System.exit(exitCode);
+    }
+
+    private static boolean isTrue(String s) {
+        return (s != null) &&
+                (s.equalsIgnoreCase("true") || s.equalsIgnoreCase("yes"));
     }
 
     // This is almost completely dead code; testStats appears unused
@@ -1966,11 +2189,13 @@ public class Main {
 
     // these args are jtreg extras
     private File baseDirArg;
-    private boolean sameJVMFlag;
-    private JDK jdk;
+    private ExecMode execMode = ExecMode.OTHERVM;
+    private JDK compileJDK;
+    private JDK testJDK;
     private boolean guiFlag;
     private boolean reportOnlyFlag;
     private boolean noReportFlag;
+    private boolean allowSetSecurityManagerFlag = true;
     private static Verbose  verbose;
     private boolean httpdFlag;
     private String observerClassName;
@@ -1985,6 +2210,10 @@ public class Main {
     private boolean jitFlag = true;
     private Help help;
 
+    File javatest_jar;
+    File jtreg_jar;
+    File junit_jar;
+    File policyFile;
 
     // the list of args to be passed down to a  child VM
     private List<String> childArgs = new ArrayList<String>();
@@ -2005,7 +2234,6 @@ public class Main {
     private static final String JAVATEST_ANT_FILE_LIST = "javatest.ant.file.list";
 
     private static boolean debugChild = Boolean.getBoolean("javatest.regtest.debugChild");
-    private static final String PATHSEP  = System.getProperty("path.separator");
 
     private static I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(Main.class);
 }

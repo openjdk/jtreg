@@ -56,8 +56,8 @@ public class Basic
 
     public Basic(String[] args) {
 
-        if (args.length != 5) {
-            failed("wrong number of args, expected 5, got " + args.length);
+        if (args.length != 6) {
+            failed("wrong number of args, expected 6, got " + args.length);
         }
 
         int argc = 0;
@@ -66,12 +66,14 @@ public class Basic
         String workDirPath   = args[argc++];
         String jdkPath       = args[argc++];
         String envVars       = args[argc++];
+        String modeOpt       = args[argc++];
 
         System.out.println("testsuite: " + testSuitePath);
         System.out.println("reportDir: " + reportDir);
         System.out.println("workDir:   " + workDirPath);
         System.out.println("jdk:       " + jdkPath);
         System.out.println("envVars:   " + envVars);
+        System.out.println("mode:      " + modeOpt);
 
         try {
             testSuite = new RegressionTestSuite(new File(testSuitePath));
@@ -89,6 +91,8 @@ public class Basic
                 "-r", reportDir,
                 "-jdk", jdkPath,
                 "-observer", Basic.Observer.class.getName(),
+                "-observerPath", System.getProperty("java.class.path"),
+                modeOpt,
                 testSuite.getPath()
             };
 
@@ -357,6 +361,7 @@ public class Basic
         File[] tests = stringsToFiles(p.getTests());
         TestFilter[] filters = p.getFilters();
 
+        trt.waitUntilReady(); // required for samevm mode
         return trt.getIterator(tests, filters);
     }
 

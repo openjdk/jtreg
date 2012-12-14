@@ -1,0 +1,8 @@
+This directory provides a collection of tests designed to exercise jtreg's 
+ability to handle tests that do not return or which kill the VM in which 
+they are executing.
+
+The tests can be run locally via the build/TimeoutTest.ok target.
+They can also be run on the JDK team's JPRT build-and-test system
+by executing make/jprt-timeout.sh.
+

@@ -36,8 +36,6 @@ public class RetainTest
         workDir = new File(args[1]);
         reportDir = new File(args[2]);
 
-        clear(workDir, false);
-
         PASS = new File(workDir, "PassTest/Pass.txt");
         FAIL = new File(workDir, "FailTest/Fail.txt");
         ERROR = new File(workDir, "ErrorTest/Error.txt");
@@ -47,6 +45,7 @@ public class RetainTest
 
         ignoreSet = new HashSet<File>();
         ignoreSet.add(new File(workDir, "logfile.log"));
+        ignoreSet.add(new File(workDir, "jtreg.policy"));
     }
 
     void run() {
@@ -62,34 +61,38 @@ public class RetainTest
         String tsp = testSuiteDir.getPath();
         Set<File> expectSet = new HashSet<File>();
 
-        clear(workDir, false);
         jtreg(mode, tsp);
-        verify();
+        verify(false);
 
         jtreg(mode, "-retain", tsp);
-        verify(PASS, FAIL, ERROR, APASS, AFAIL, AERROR);
+        verify(true, PASS, FAIL, ERROR, APASS, AFAIL, AERROR);
 
         jtreg(mode, "-retain:all", tsp);
-        verify(PASS, FAIL, ERROR, APASS, AFAIL, AERROR);
+        verify(true, PASS, FAIL, ERROR, APASS, AFAIL, AERROR);
 
         jtreg(mode, "-retain:pass", tsp);
-        verify(PASS, APASS);
+        verify(true, PASS, APASS);
 
         jtreg(mode, "-retain:fail", tsp);
-        verify(FAIL, AFAIL);
+        verify(true, FAIL, AFAIL);
 
         jtreg(mode, "-retain:error", tsp);
-        verify(ERROR, AERROR);
+        verify(true, ERROR, AERROR);
 
         jtreg(mode, "-retain:*a*", tsp);
-        verify(PASS, FAIL, APASS, AFAIL);
+        verify(true, PASS, FAIL, APASS, AFAIL);
 
         jtreg(mode, "-retain:fail,error", tsp);
-        verify(FAIL, ERROR, AFAIL, AERROR);
+        verify(true, FAIL, ERROR, AFAIL, AERROR);
+
+        jtreg(mode, "-retain:none", tsp);
+        verify(true);
 
     }
 
     void jtreg(String... args) {
+        clear(workDir, true);
+
         List<String> l = new ArrayList<String>();
         l.add("-w");
         l.add(workDir.getPath());
@@ -97,6 +100,7 @@ public class RetainTest
         l.add(reportDir.getPath());
         l.addAll(Arrays.asList(args));
 
+        System.err.println();
         System.err.println("jtreg " + l);
         try {
             com.sun.javatest.regtest.Main m = new com.sun.javatest.regtest.Main();
@@ -106,11 +110,11 @@ public class RetainTest
         }
     }
 
-    void verify(File... files) {
-        verify(new HashSet<File>(Arrays.asList(files)));
+    void verify(boolean expectEmptyScratch, File... files) {
+        verify(expectEmptyScratch, new HashSet<File>(Arrays.asList(files)));
     }
 
-    void verify(Set<File> files) {
+    void verify(boolean expectEmptyScratch, Set<File> files) {
         Set<File> s = new HashSet<File>();
         scan(workDir, s);
         for (File f: files) {
@@ -125,6 +129,15 @@ public class RetainTest
 
             if (!files.contains(f))
                 error("unexpected file found: " + f);
+        }
+
+        File[] scratchFiles = new File(workDir, "scratch").listFiles();
+        if (expectEmptyScratch) {
+            if (scratchFiles.length != 0)
+                error("unexpected files in scratch dir: " + Arrays.asList(scratchFiles));
+        } else {
+            if (scratchFiles.length == 0)
+                error("scratch dir empty");
         }
     }
 

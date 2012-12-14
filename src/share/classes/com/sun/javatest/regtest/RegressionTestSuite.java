@@ -140,6 +140,12 @@ public class RegressionTestSuite extends TestSuite
         return urls.toArray(new URL[urls.size()]);
     }
 
+    // @Override -- defined in JT Harness 4.2, needs to be overridden
+    //              because default impl broken for jtreg (NPE)
+    public boolean needServices() {
+        return false;
+    }
+
     private void setProperties() throws Fault {
         // get additional specified properties from TEST.ROOT
         File file = new File(getRoot(), "TEST.ROOT");

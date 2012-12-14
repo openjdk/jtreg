@@ -434,12 +434,6 @@ public class AppletWrapper
         private Applet applet;
     } // class AppletFrame
 
-    //----------misc static----------------------------------------------------
-
-    private static final String FILESEP  = System.getProperty("file.separator");
-    private static final String PATHSEP  = System.getProperty("path.separator");
-    private static final String JAVAHOME = System.getProperty("java.home");
-
     //----------member variables-----------------------------------------------
 
     private static Status status = Status.passed("");

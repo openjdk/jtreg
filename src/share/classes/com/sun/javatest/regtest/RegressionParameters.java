@@ -25,17 +25,17 @@
 
 package com.sun.javatest.regtest;
 
-import com.sun.interview.Interview;
-import com.sun.interview.Question;
-
 import java.io.File;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Pattern;
 
+import com.sun.interview.Interview;
+import com.sun.interview.Question;
 import com.sun.javatest.InterviewParameters;
 import com.sun.javatest.TestEnvironment;
 import com.sun.javatest.Parameters;
@@ -43,10 +43,6 @@ import com.sun.javatest.ProductInfo;
 import com.sun.javatest.Status;
 import com.sun.javatest.TestSuite;
 import com.sun.javatest.interview.BasicInterviewParameters;
-import com.sun.javatest.lib.ProcessCommand;
-import java.util.Map;
-import java.util.Set;
-import java.util.regex.Pattern;
 
 public class RegressionParameters
     extends BasicInterviewParameters
@@ -83,7 +79,7 @@ public class RegressionParameters
         mcp.setConcurrency(conc);
     }
 
-    public void setTimeoutFactor(int tfac) {
+    public void setTimeoutFactor(float tfac) {
         MutableTimeoutFactorParameters mtfp =
             (MutableTimeoutFactorParameters) getTimeoutFactorParameters();
         mtfp.setTimeoutFactor(tfac);
@@ -133,7 +129,7 @@ public class RegressionParameters
     private static final String ENVVARS = ".envVars";
     private static final String CHECK = ".check";
     private static final String JDK = ".jdk";
-    private static final String SAME_JVM = ".sameJVM";
+    private static final String EXEC_MODE = ".execMode";
     private static final String TEST_VM_OPTIONS = ".testVMOpts";
     private static final String TEST_COMPILER_OPTIONS = ".testCompilerOpts";
     private static final String TEST_JAVA_OPTIONS = ".testJavaOpts";
@@ -156,9 +152,9 @@ public class RegressionParameters
         if (v != null)
             setCheck(v.equals("true"));
 
-        v = (String) data.get(prefix + SAME_JVM);
+        v = (String) data.get(prefix + EXEC_MODE);
         if (v != null)
-            setSameJVM(v.equals("true"));
+            setExecMode(ExecMode.valueOf(v));
 
         v = (String) data.get(prefix + IGNORE);
         if (v != null)
@@ -166,7 +162,7 @@ public class RegressionParameters
 
         v = (String) data.get(prefix + JDK);
         if (v != null)
-            setJDK(new JDK(v));
+            setTestJDK(new JDK(v));
 
         v = (String) data.get(prefix + TEST_VM_OPTIONS);
         if (v != null)
@@ -203,11 +199,11 @@ public class RegressionParameters
             data.put(prefix + ENVVARS, StringArray.join(envVars, "\n"));
 
         data.put(prefix + CHECK, String.valueOf(check));
-        data.put(prefix + SAME_JVM, String.valueOf(sameJVM));
+        data.put(prefix + EXEC_MODE, String.valueOf(execMode));
         data.put(prefix + IGNORE, String.valueOf(ignoreKind));
 
-        if (jdk != null)
-            data.put(prefix + JDK, jdk.getPath());
+        if (testJDK != null)
+            data.put(prefix + JDK, testJDK.getPath());
 
         if (retainArgs != null)
             data.put(prefix + RETAIN_ARGS, StringUtils.join(retainArgs, "\n"));
@@ -258,19 +254,15 @@ public class RegressionParameters
 
     //---------------------------------------------------------------------
 
-    void setSameJVM(boolean sameJVM) {
-        this.sameJVM = sameJVM;
+    void setExecMode(ExecMode execMode) {
+        this.execMode = execMode;
     }
 
-    boolean isSameJVM() {
-        return sameJVM;
+    ExecMode getExecMode() {
+        return execMode;
     }
 
-    boolean isOtherJVM() {
-        return !sameJVM;
-    }
-
-    boolean sameJVM;
+    ExecMode execMode;
 
     //---------------------------------------------------------------------
 
@@ -287,16 +279,29 @@ public class RegressionParameters
 
     //---------------------------------------------------------------------
 
-    void setJDK(JDK jdk) {
-        jdk.getClass(); // null check
-        this.jdk = jdk;
+    void setCompileJDK(JDK compileJDK) {
+        compileJDK.getClass(); // null check
+        this.compileJDK = compileJDK;
     }
 
-    JDK getJDK() {
-        return jdk;
+    JDK getCompileJDK() {
+        return compileJDK;
     }
 
-    JDK jdk;
+    private JDK compileJDK;
+
+    //---------------------------------------------------------------------
+
+    void setTestJDK(JDK testJDK) {
+        testJDK.getClass(); // null check
+        this.testJDK = testJDK;
+    }
+
+    JDK getTestJDK() {
+        return testJDK;
+    }
+
+    private JDK testJDK;
 
     //---------------------------------------------------------------------
 
@@ -312,167 +317,26 @@ public class RegressionParameters
         }
         return junitJar;
     }
+
     private File junitJar;
 
     //---------------------------------------------------------------------
 
-    //@Deprecated
-    private File getJavaHome() {
-        if (javaHome == null)
-            initJavaHome();
-        return javaHome;
-    }
-
-    private void initJavaHome() {
-        String s;
-        String[] ev = getEnvVars();
-        s = System.getProperty("java.home");
-        for (int i = 0; i < ev.length; i++) {
-            if (ev[i].startsWith("TESTJAVAHOME")) {
-                String jh = (StringArray.splitEqual(ev[i]))[1];
-                if (!jh.equals("samevm"))
-                    s = jh;
-                break;
-            }
-        }
-        javaHome = new File(s);
-    }
-
-    private File javaHome;
-
-    //---------------------------------------------------------------------
-
-    String getJavaVersion() {
-        if (javaVersion == null) {
-            final String VERSION_PROPERTY = "java.specification.version";
-            String version = "unknown";
-            if (isOtherJVM()) {
-                // TODO: move to JDK
-                Status status = null;
-                // since we are trying to determine the Java version, we have to assume
-                // the worst, and use CLASSPATH.
-                String[] cmdArgs = new String[] {
-                    "CLASSPATH=" + getJavaTestClassPath(),
-                    jdk.getJavaProg().getPath(),
-                    "com.sun.javatest.regtest.GetSystemProperty",
-                    VERSION_PROPERTY
-                };
-
-                // PASS TO PROCESSCOMMAND
-                StringWriter outSW = new StringWriter();
-                StringWriter errSW = new StringWriter();
-
-                ProcessCommand cmd = new ProcessCommand();
-                //cmd.setExecDir(scratchDir());
-                status = cmd.run(cmdArgs, new PrintWriter(errSW), new PrintWriter(outSW));
-
-                // EVALUATE THE RESULTS
-                if (status.isPassed()) {
-                    // we sent everything to stdout
-                    String[] v = StringArray.splitEqual(outSW.toString().trim());
-                    if (v.length == 2 && v[0].equals(VERSION_PROPERTY))
-                        version = v[1];
-                }
-            } else
-                version = System.getProperty(VERSION_PROPERTY);
-
-            // java.java.specification.version is not defined in JDK1.1.*
-            if (version == null || version.length() == 0)
-                javaVersion = "1.1";
-            else
-                javaVersion = version;
-
-        }
-        return javaVersion;
-    }
-
-    private String javaVersion;
-
-    //---------------------------------------------------------------------
-
-    String getJavaFullVersion() {
-        if (javaFullVersion == null) {
-            Status status = null;
-            List<String> cmdArgs = new ArrayList<String>();
-            cmdArgs.add(jdk.getJavaProg().getPath());
-            cmdArgs.addAll(getTestVMOptions());
-            cmdArgs.add("-version");
-
-            // PASS TO PROCESSCOMMAND
-            StringWriter outSW = new StringWriter();
-            StringWriter errSW = new StringWriter();
-
-            ProcessCommand cmd = new ProcessCommand();
-            // no need to set execDir for "java -version"
-            status = cmd.run(cmdArgs.toArray(new String[cmdArgs.size()]),
-                            new PrintWriter(errSW), new PrintWriter(outSW));
-
-            // EVALUATE THE RESULTS
-            if (status.isPassed()) {
-                // some JDK's send the string to stderr, others to stdout
-                String version = errSW.toString().trim();
-                javaFullVersion = "(" + getJDK() + ")" + LINESEP;
-                if (version.length() == 0)
-                    javaFullVersion += outSW.toString().trim();
-                else
-                    javaFullVersion += version;
-            } else {
-                javaFullVersion = getJDK().getPath();
-            }
-        }
-        return javaFullVersion;
-    }
-
-    private String javaFullVersion;
-
-    //---------------------------------------------------------------------
-
-    // needed for JDK 1.1 only, for CLASSPATH; for JDK 1.2+ we use -classpath
-    // ?? is it even needed there?
-    String getStdJavaClassPath() {
-        if (stdJavaClassPath == null) {
-            File jh = getJavaHome();
-            File jh_lib = new File(jh, "lib");
-
-            stdJavaClassPath =
-                (new File(jh, "classes") + PATHSEP +
-                 new File(jh_lib, "classes") + PATHSEP +
-                 new File(jh_lib, "classes.zip"));
-        }
-        return stdJavaClassPath;
-    }
-
-    private String stdJavaClassPath;
-
-    //---------------------------------------------------------------------
-
-    String getStdJDKClassPath() {
-        if (stdJDKClassPath == null)
-            stdJDKClassPath = getJDK().getToolsJar().getPath();
-        return stdJDKClassPath;
-    }
-
-    private String stdJDKClassPath;
-
-    //---------------------------------------------------------------------
-
-    String getJavaTestClassPath() {
+    Path getJavaTestClassPath() {
         if (javaTestClassPath == null) {
             File jtClsDir = ProductInfo.getJavaTestClassDir();
-            javaTestClassPath = jtClsDir.getPath();
+            javaTestClassPath = new Path(jtClsDir);
 
-            int index = javaTestClassPath.indexOf("javatest.jar");
-            if (index > 0) {
-                String installDir = javaTestClassPath.substring(0, index);
+            if (jtClsDir.getName().equals("javatest.jar")) {
+                File installDir = jtClsDir.getParentFile();
                 // append jtreg.jar to the path
-                String jtregClassDir = installDir + "jtreg.jar";
-                javaTestClassPath += PATHSEP + jtregClassDir;
+                javaTestClassPath.append(new File(installDir, "jtreg.jar"));
             }
         }
         return javaTestClassPath;
     }
 
-    private String javaTestClassPath;
+    private Path javaTestClassPath;
 
     //---------------------------------------------------------------------
 
@@ -551,6 +415,7 @@ public class RegressionParameters
 
         retainStatusSet.clear();
         if (retainArgs == null) {
+            // equivalent to "none"
             retainFilesPattern = null;
             return;
         }
@@ -568,6 +433,9 @@ public class RegressionParameters
                 retainStatusSet.add(Status.FAILED);
             } else if (arg.equals("error")) {
                 retainStatusSet.add(Status.ERROR);
+            } else if (arg.equals("none")) {
+                // can only appear by itself
+                // no further action required
             } else if (arg.length() > 0) {
                 if (sb.length() > 0)
                     sb.append("|");
@@ -614,10 +482,5 @@ public class RegressionParameters
     private List<String> retainArgs;
     private Set<Integer> retainStatusSet = new HashSet<Integer>(4);
     private Pattern retainFilesPattern;
-
-    //---------------------------------------------------------------------
-
-    private static final String PATHSEP  = System.getProperty("path.separator");
-    private static final String LINESEP  = System.getProperty("line.separator");
 
 }

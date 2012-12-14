@@ -26,18 +26,16 @@
 package com.sun.javatest.regtest;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.StringReader;
-import java.io.StringWriter;
-import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Hashtable;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import com.sun.javatest.Status;
@@ -137,7 +135,7 @@ public class CompileAction extends Action {
                     if (!sourceFile.isAbsolute())
                         // User must have used @compile, so file must be
                         // in the same directory as the defining file.
-                        args[i] = script.absTestSrcDir() + FILESEP + currArg;
+                        args[i] = new File(script.absTestSrcDir(), currArg).getPath();
 //                  if (!sourceFile.exists())
 //                      throw new ParseException(CANT_FIND_SRC);
 
@@ -156,10 +154,11 @@ public class CompileAction extends Action {
                     // assume the next element provides the classpath, add
                     // test.classes and test.src and lib-list to it
                     if (script.hasEnv()) {
-                        args[i+1] = addPath(args[i+1],
-                                script.absTestClsDir() + PATHSEP +
-                                script.absTestSrcDir() + PATHSEP +
-                                script.absClsLibListStr());
+                        Path p = new Path(args[i+1])
+                                .append(script.absTestClsDir())
+                                .append(script.absTestSrcDir())
+                                .append(script.absClsLibList());
+                        args[i+1] = p.toString();
                     }
                     args[i+1] = singleQuoteString(args[i+1]);
                 }
@@ -173,9 +172,10 @@ public class CompileAction extends Action {
                     sourcepathp = true;
                     // assume the next element provides the sourcepath, add test.src
                     // and lib-list to it
-                    args[i+1] = addPath(args[i+1],
-                            script.absTestSrcDir() + PATHSEP +
-                            script.absSrcLibListStr());
+                    Path p = new Path(args[i+1])
+                            .append(script.absTestSrcDir())
+                            .append(script.absSrcLibList());
+                    args[i+1] = p.toString();
                     args[i+1] = singleQuoteString(args[i+1]);
                 }
             }
@@ -253,10 +253,19 @@ public class CompileAction extends Action {
         if (script.isCheck()) {
             status = Status.passed(CHECK_PASS);
         } else {
-            if (script.isOtherJVM())
-                status = runOtherJVM();
-            else
-                status = runSameJVM();
+            switch (script.getExecMode()) {
+                case AGENTVM:
+                    status = runAgentJVM();
+                    break;
+                case OTHERVM:
+                    status = runOtherJVM();
+                    break;
+                case SAMEVM:
+                    status = runSameJVM();
+                    break;
+                default:
+                    throw new AssertionError();
+            }
         }
 
         endAction(status, section);
@@ -267,7 +276,7 @@ public class CompileAction extends Action {
 
     private Status runOtherJVM() throws TestRunException {
         Status status;
-        final boolean jdk11 = script.isJDK11();
+        final boolean jdk11 = script.isCompileJDK11();
         final boolean useCLASSPATHEnv = jdk11;
         final boolean useClassPathOpt = !jdk11;
         final boolean useSourcePathOpt = !jdk11;
@@ -276,8 +285,9 @@ public class CompileAction extends Action {
         List<String> javacOpts = new ArrayList<String>();
 
         // Why JavaTest?
+        Path cp = new Path(script.getJavaTestClassPath(), script.getCompileClassPath());
         if (useCLASSPATHEnv) {
-            javacOpts.add("CLASSPATH=" + script.getJavaTestClassPath() + PATHSEP + script.testClassPath());
+            javacOpts.add("CLASSPATH=" + cp);
         }
 
         javacOpts.add(script.getJavacProg());
@@ -294,33 +304,32 @@ public class CompileAction extends Action {
         // JavaTest added, to match CLASSPATH, but not sure why JavaTest required at all
         if (!classpathp && useClassPathOpt) {
             javacOpts.add("-classpath");
-            javacOpts.add(script.getJavaTestClassPath() + PATHSEP + script.testClassPath());
+            javacOpts.add(cp.toString());
         }
 
         if (!sourcepathp && useSourcePathOpt) {
             javacOpts.add("-sourcepath");
-            javacOpts.add(script.testSourcePath());
+            javacOpts.add(script.getCompileSourcePath().toString());
         }
 
         // Set test.src and test.classes for the benefit of annotation processors
-        javacOpts.add("-J-Dtest.src=" + script.absTestSrcDir());
-        javacOpts.add("-J-Dtest.classes=" + script.absTestClsDir());
-        javacOpts.add("-J-Dtest.vm.opts=" + StringUtils.join(script.getTestVMOptions(), " "));
-        javacOpts.add("-J-Dtest.tool.vm.opts=" + StringUtils.join(script.getTestToolVMOptions(), " "));
-        javacOpts.add("-J-Dtest.compiler.opts=" + StringUtils.join(script.getTestCompilerOptions(), " "));
-        javacOpts.add("-J-Dtest.java.opts" + StringUtils.join(script.getTestJavaOptions(), " "));
+        for (Map.Entry<String,String> e: script.getTestProperties().entrySet()) {
+            javacOpts.add("-J-D" + e.getKey() + "=" + e.getValue());
+        }
 
         String[] envVars = script.getEnvVars();
         String[] jcOpts = javacOpts.toArray(new String[javacOpts.size()]);
-        String[] cmdArgs = StringArray.append(envVars, jcOpts);
-        cmdArgs = StringArray.append(cmdArgs, args);
+        String[] cmdArgs = StringArray.join(envVars, jcOpts);
+        cmdArgs = StringArray.join(cmdArgs, args);
 
+        if (showMode)
+            showMode("compile", ExecMode.OTHERVM, section);
         if (showCmd)
-            JTCmd("compile", cmdArgs, section);
+            showCmd("compile", cmdArgs, section);
 
         // PASS TO PROCESSCOMMAND
-        StringWriter outSW = new StringWriter();
-        StringWriter errSW = new StringWriter();
+        PrintStringWriter stdOut = new PrintStringWriter();
+        PrintStringWriter stdErr = new PrintStringWriter();
         try {
             ProcessCommand cmd = new ProcessCommand();
             cmd.setExecDir(script.absTestScratchDir());
@@ -328,91 +337,39 @@ public class CompileAction extends Action {
             if (timeout > 0)
                 script.setAlarm(timeout*1000);
 
-            status = cmd.run(cmdArgs, new PrintWriter(errSW), new  PrintWriter(outSW));
+            status = cmd.run(cmdArgs, stdErr, stdOut);
         } finally {
             script.setAlarm(0);
         }
 
-        // EVALUATE THE RESULTS
-        boolean ok = status.isPassed();
-        int st   = status.getType();
-        String sr;
-        if (ok && reverseStatus) {
-            sr = COMPILE_PASS_UNEXPECT;
-            st = Status.FAILED;
-        } else if (ok && !reverseStatus) {
-            sr = COMPILE_PASS;
-        } else if (!ok && reverseStatus) {
-            sr = COMPILE_FAIL_EXPECT;
-            st = Status.PASSED;
-        } else { /* !ok && !reverseStatus */
-            sr = COMPILE_FAIL;
-        }
-        status = new Status(st, sr);
-
-        String outString = outSW.toString();
-        String errString = errSW.toString();
         PrintWriter sysOut = section.createOutput("System.out");
+        sysOut.write(stdOut.getOutput());
+        sysOut.close();
+
         PrintWriter sysErr = section.createOutput("System.err");
-        try {
-            sysOut.write(outString);
-            sysErr.write(errString);
+        sysErr.write(stdErr.getOutput());
+        sysErr.close();
 
-            // COMPARE OUTPUT TO GOLDENFILE IF REQUIRED
-            // tag-spec says that "standard error is redirected to standard out
-            // so that /ref can be used."  Simulate this by concatenating streams.
+        // EVALUATE THE RESULTS
+        status = checkReverse(status, reverseStatus);
 
-            try {
-                if ((ref != null) && (status.getType() == Status.PASSED)) {
-                    File refFile = new File(script.absTestSrcDir(), ref);
-                    BufferedReader r1 = new BufferedReader(new StringReader(outString + errString));
-                    BufferedReader r2 = new BufferedReader(new FileReader(refFile));
-                    int lineNum;
-                    if ((lineNum = compareGoldenFile(r1, r2)) != 0)
-                        status = Status.failed(COMPILE_GOLD_FAIL + ref +
-                                COMPILE_GOLD_LINE + lineNum);
-                }
-            } catch (FileNotFoundException e) {
-                File refFile = new File(script.absTestSrcDir(), ref);
-                throw new TestRunException(COMPILE_CANT_FIND_REF + refFile);
-            }
-        } finally {
-            if (sysOut != null) sysOut.close();
-            if (sysErr != null) sysErr.close();
+        // COMPARE OUTPUT TO GOLDENFILE IF REQUIRED
+        // tag-spec says that "standard error is redirected to standard out
+        // so that /ref can be used."  Simulate this by concatenating streams.
+        if ((ref != null) && status.isPassed()) {
+            String combined = stdOut.getOutput() + stdErr.getOutput();
+            status = checkGoldenFile(combined, status);
         }
 
         return status;
     } // runOtherJVM()
 
-    private static Hashtable<?,?> savedSystemProperties;
 
     private Status runSameJVM() throws TestRunException {
         // TAG-SPEC:  "The source and class directories of a test are made
         // available to main and applet actions via the system properties
         // "test.src" and "test.classes", respectively"
-        synchronized(this) {
-            SecurityManager sc = System.getSecurityManager();
-            if (sc instanceof RegressionSecurityManager) {
-                ((RegressionSecurityManager) sc).setAllowPropertiesAccess(true);
-                Properties p = System.getProperties();
-                if (savedSystemProperties == null)
-                    savedSystemProperties = copyProperties(p);
-                p.put("test.src", script.absTestSrcDir().getPath());
-                p.put("test.classes", script.absTestClsDir().getPath());
-                p.put("test.vm.opts", StringUtils.join(script.getTestVMOptions(), " "));
-                p.put("test.tool.vm.opts", StringUtils.join(script.getTestToolVMOptions(), " "));
-                p.put("test.compiler.opts", StringUtils.join(script.getTestCompilerOptions(), " "));
-                p.put("test.java.opts", StringUtils.join(script.getTestJavaOptions(), " "));
-                System.setProperties(p);
-                //((RegressionSecurityManager) sc).setAllowPropertiesAccess(false);
-                ((RegressionSecurityManager) sc).resetPropertiesAccessed();
-            } else {
-                // XXX Commented out for the ChameleonTestFinderTest to succeed.
-                //return Status.error(MAIN_SECMGR_BAD);
-            }
-        }
-
-        Status status;
+        Map<String,String> p = script.getTestProperties();
 
         // CONSTRUCT THE COMMAND LINE
         List<String> javacOpts = new ArrayList<String>();
@@ -426,143 +383,210 @@ public class CompileAction extends Action {
 
         if (!classpathp) {
             javacOpts.add("-classpath");
-            javacOpts.add(script.testClassPath());
+            javacOpts.add(script.getCompileClassPath().toString());
         }
 
         if (!sourcepathp) { // must be JDK1.4 or greater, to even run JavaTest 3
             javacOpts.add("-sourcepath");
-            javacOpts.add(script.testSourcePath());
+            javacOpts.add(script.getCompileSourcePath().toString());
         }
 
         String[] jcOpts = javacOpts.toArray(new String[javacOpts.size()]);
-        String[] cmdArgs = StringArray.append(jcOpts, args);
+        String[] cmdArgs = StringArray.join(jcOpts, args);
 
+        if (showMode)
+            showMode("compile", ExecMode.SAMEVM, section);
         if (showCmd)
-            JTCmd("compile", cmdArgs, section);
+            showCmd("compile", cmdArgs, section);
 
-        // RUN THE COMPILER
+        Status status = runCompile(
+                script.getTestResult().getTestName(),
+                p,
+                cmdArgs,
+                timeout,
+                getOutputHandler(section));
 
-        // for direct use with JavaCompileCommand
-        StringWriter outSW = new StringWriter();
-        StringWriter errSW = new StringWriter();
-        PrintWriter outPW = new PrintWriter(outSW);
-        PrintWriter errPW = new PrintWriter(errSW);
-
-        // to catch sysout and syserr
-        ByteArrayOutputStream outOS = new ByteArrayOutputStream();
-        ByteArrayOutputStream errOS = new ByteArrayOutputStream();
-        PrintStream outPS = new PrintStream(outOS);
-        PrintStream errPS = new PrintStream(errOS);
-
-        PrintStream saveOut = System.out;
-        PrintStream saveErr = System.err;
-
-        try {
-            Status stat = redirectOutput(outPS, errPS);
-            if (!stat.isPassed())
-                return stat;
-
-            JavaCompileCommand jcc = new JavaCompileCommand();
-            if (timeout > 0)
-                script.setAlarm(timeout*1000);
-
-            status = jcc.run(cmdArgs, errPW, outPW);
-        } finally {
-            SecurityManager sm = System.getSecurityManager();
-            if (sm instanceof RegressionSecurityManager) {
-                RegressionSecurityManager rsm = (RegressionSecurityManager) sm;
-                if (rsm.isPropertiesAccessed()) {
-                    System.setProperties(newProperties(savedSystemProperties));
-                }
-                rsm.setAllowPropertiesAccess(false);
-            }
-
-            Status stat = redirectOutput(saveOut, saveErr);
-            if (!stat.isPassed())
-                return stat;
-
-            script.setAlarm(0);
-        }
-
-        outPW.close();
-        errPW.close();
-        outPS.close();
-        errPS.close();
-
-        String outString = outSW.toString();
-        String errString = errSW.toString();
-        String stdoutString = outOS.toString();
-        String stderrString = errOS.toString();
-
-        if (outString.length() > 0) {
-            PrintWriter pw = section.createOutput("direct");
-            pw.write(outString);
-            pw.close();
-        }
-
-        if (errString.length() > 0) {
-            // should never happen -- only if JavaCompilerCommand kicked into verbose mode
-            PrintWriter pw = section.createOutput("direct.log");
-            pw.write(outString);
-            pw.close();
-        }
-
-        if (stdoutString.length() > 0 || stderrString.length() > 0) {
-            // should never happen -- only if somehow using JDK 1.3 (but JavaTest assumes 1.4.2+)
-            PrintWriter pwOut = section.createOutput("System.out");
-            pwOut.write(stdoutString);
-            pwOut.close();
-            PrintWriter pwErr = section.createOutput("System.err");
-            pwErr.write(stderrString);
-            pwErr.close();
-        }
-
-        // XXX remember to comment out!
-//      System.out.println("compile command:");
-//      for (int i = 0; i < cmdArgs.length; i++)
-//          System.out.print("  " + cmdArgs[i]);
-//      System.out.println();
         // EVALUATE THE RESULTS
-        boolean ok = status.isPassed();
-        int st;
-        String sr;
-        if (ok && reverseStatus) {
-            sr = COMPILE_PASS_UNEXPECT;
-            st   = Status.FAILED;
-        } else if (ok && !reverseStatus) {
-            sr = COMPILE_PASS;
-            st   = Status.PASSED;
-        } else if (!ok && reverseStatus) {
-            sr = COMPILE_FAIL_EXPECT;
-            st   = Status.PASSED;
-        } else { /* !ok && !reverseStatus */
-            sr = COMPILE_FAIL + ": " + status;
-            st   = Status.FAILED;
-        }
-        status = new Status(st, sr);
+        status = checkReverse(status, reverseStatus);
 
         // COMPARE OUTPUT TO GOLDENFILE IF REQUIRED
         // tag-spec says that "standard error is redirected to standard out
         // so that /ref can be used."  Simulate this by concatenating streams.
-
-        try {
-            if ((ref != null) && (status.getType() == Status.PASSED)) {
-                File refFile = new File(script.absTestSrcDir(), ref);
-                String refName = refFile.getPath();
-                BufferedReader r1 = new BufferedReader(new StringReader(outString + errString + stdoutString + stderrString));
-                BufferedReader r2 = new BufferedReader(new FileReader(refName));
-                int lineNum;
-                if ((lineNum = compareGoldenFile(r1, r2)) != 0)
-                    status = Status.failed(COMPILE_GOLD_FAIL + ref +
-                            COMPILE_GOLD_LINE + lineNum);
-            }
-        } catch (FileNotFoundException e) {
-            File refFile = new File(script.absTestSrcDir(), ref);
-            throw new TestRunException(COMPILE_CANT_FIND_REF + refFile);
+        if ((ref != null) && status.isPassed()) {
+            String outString = getOutput(OutputHandler.OutputKind.DIRECT);
+            String errString = getOutput(OutputHandler.OutputKind.DIRECT_LOG);
+            String stdOutString = getOutput(OutputHandler.OutputKind.STDOUT);
+            String stdErrString = getOutput(OutputHandler.OutputKind.STDERR);
+            String combined = (outString + errString + stdOutString + stdErrString);
+            status = checkGoldenFile(combined, status);
         }
 
         return status;
     } // runSameJVM()
+
+
+    private Status runAgentJVM() throws TestRunException {
+        // TAG-SPEC:  "The source and class directories of a test are made
+        // available to main and applet actions via the system properties
+        // "test.src" and "test.classes", respectively"
+        Map<String,String> p = script.getTestProperties();
+
+        // CONSTRUCT THE COMMAND LINE
+        List<String> javacOpts = new ArrayList<String>();
+
+        javacOpts.addAll(script.getTestCompilerOptions());
+
+        if (destDir != null) {
+            javacOpts.add("-d");
+            javacOpts.add(destDir.toString());
+        }
+
+        if (!classpathp) {
+            javacOpts.add("-classpath");
+            javacOpts.add(script.getCompileClassPath().toString());
+        }
+
+        if (!sourcepathp) { // must be JDK1.4 or greater, to even run JavaTest 3
+            javacOpts.add("-sourcepath");
+            javacOpts.add(script.getCompileSourcePath().toString());
+        }
+
+        String[] jcOpts = javacOpts.toArray(new String[javacOpts.size()]);
+        String[] cmdArgs = StringArray.join(jcOpts, args);
+
+        if (showMode)
+            showMode("compile", ExecMode.AGENTVM, section);
+        if (showCmd)
+            showCmd("compile", cmdArgs, section);
+
+        Agent agent;
+        try {
+            JDK jdk = script.getCompileJDK();
+            Path classpath = new Path(script.getJavaTestClassPath(), jdk.getJDKClassPath());
+            agent = script.getAgent(jdk, classpath, script.getTestVMJavaOptions());
+        } catch (IOException e) {
+            return Status.error(AGENTVM_CANT_GET_VM + ": " + e);
+        }
+
+        Status status;
+        try {
+            status = agent.doCompileAction(
+                    script.getTestResult().getTestName(),
+                    p,
+                    Arrays.asList(cmdArgs),
+                    timeout,
+                    section);
+        } catch (Agent.Fault e) {
+            status = Status.error("Agent error: " + e.getCause());
+        }
+        if (status.isError()) {
+            script.closeAgent(agent);
+        }
+
+        // EVALUATE THE RESULTS
+        status = checkReverse(status, reverseStatus);
+
+        // COMPARE OUTPUT TO GOLDENFILE IF REQUIRED
+        // tag-spec says that "standard error is redirected to standard out
+        // so that /ref can be used."  Simulate this by concatenating streams.
+        if ((ref != null) && status.isPassed()) {
+            String outString = getOutput(OutputHandler.OutputKind.DIRECT);
+            String errString = getOutput(OutputHandler.OutputKind.DIRECT_LOG);
+            String stdOutString = getOutput(OutputHandler.OutputKind.STDOUT);
+            String stdErrString = getOutput(OutputHandler.OutputKind.STDERR);
+            String combined = (outString + errString + stdOutString + stdErrString);
+            status = checkGoldenFile(combined, status);
+        }
+
+        return status;
+    } // runAgentJVM()
+
+    private String getOutput(OutputHandler.OutputKind kind) {
+        String s = section.getOutput(kind.name);
+        return (s == null) ? "" : s;
+    }
+
+    static Status runCompile(String testName,
+            Map<String,String> props,
+            String[] cmdArgs,
+            int timeout,
+            OutputHandler outputHandler) {
+        SaveState saved = new SaveState();
+
+        Properties p = System.getProperties();
+        for (Map.Entry<String,String> e: props.entrySet()) {
+            String name = e.getKey();
+            String value = e.getValue();
+            if (name.equals("test.class.path.prefix")) {
+                Path cp = new Path(value, System.getProperty("java.class.path"));
+                p.put("java.class.path", cp.toString());
+            } else {
+                p.put(e.getKey(), e.getValue());
+            }
+        }
+        System.setProperties(p);
+
+        // RUN THE COMPILER
+
+        // Setup streams for the test
+
+        // to catch sysout and syserr
+        PrintByteArrayOutputStream sysOut = new PrintByteArrayOutputStream();
+        PrintByteArrayOutputStream sysErr = new PrintByteArrayOutputStream();
+
+        // for direct use with JavaCompileCommand
+        PrintStringWriter out = new PrintStringWriter();
+        PrintStringWriter err = new PrintStringWriter();
+
+        Status status = Status.error("");
+        try {
+            Status stat = redirectOutput(sysOut, sysErr);
+            if (!stat.isPassed())
+                return stat;
+
+            Alarm alarm = null;
+            if (timeout > 0) {
+                PrintWriter alarmOut = outputHandler.createOutput(OutputHandler.OutputKind.LOG);
+                alarm = new Alarm(timeout * 1000, Thread.currentThread(), testName, alarmOut);
+            }
+            try {
+                JavaCompileCommand jcc = new JavaCompileCommand();
+                status = jcc.run(cmdArgs, err, out);
+            } finally {
+                if (alarm != null)
+                    alarm.cancel();
+            }
+
+        } finally {
+            status = saved.restore(testName, status);
+        }
+
+        out.close();
+        String outOutput = out.getOutput();
+        if (outOutput.length() > 0) {
+            outputHandler.createOutput(OutputHandler.OutputKind.DIRECT, outOutput);
+        }
+
+        err.close();
+        String errOutput = err.getOutput();
+        if (errOutput.length() > 0) {
+            // should never happen -- only if JavaCompilerCommand kicked into verbose mode
+            outputHandler.createOutput(OutputHandler.OutputKind.DIRECT_LOG, errOutput);
+        }
+
+        sysOut.close();
+        String sysOutOutput = sysOut.getOutput();
+        sysErr.close();
+        String sysErrOutput = sysErr.getOutput();
+
+        if (sysOutOutput.length() > 0 || sysErrOutput.length() > 0) {
+            // should never happen -- only if somehow using JDK 1.3 (but JavaTest assumes 1.4.2+)
+            outputHandler.createOutput(OutputHandler.OutputKind.STDOUT, sysOutOutput);
+            outputHandler.createOutput(OutputHandler.OutputKind.STDERR, sysErrOutput);
+        }
+
+        return status;
+    }
 
     //----------internal methods------------------------------------------------
 
@@ -586,31 +610,53 @@ public class CompileAction extends Action {
         return value;
     } // parseRef()
 
-    /**
-     * This method returns a new path which is the appropriate append of the old
-     * and new paths.  The new path will have a trailing
-     * <code>File.separatorChar</code> only if the original path had one.
-     *
-     * @param oldPath The original path.
-     * @param path The path to append.
-     * @return A string containing the new and improved path.
-     *
-     */
-    private String addPath(String oldPath, String path) {
-        String newPath;
-        if (oldPath.endsWith(PATHSEP)) {
-            if (path.endsWith(PATHSEP))
-                newPath = oldPath + path;
-            else
-                newPath = oldPath + path + PATHSEP;
-        } else {
-            if (path.endsWith(PATHSEP))
-                newPath = oldPath + PATHSEP + path.substring(0, path.length() - 1);
-            else
-                newPath = oldPath + PATHSEP + path;
+    private Status checkReverse(Status status, boolean reverseStatus) {
+        if (!status.isError()) {
+            boolean ok = status.isPassed();
+            int st = status.getType();
+            String sr;
+            if (ok && reverseStatus) {
+                sr = COMPILE_PASS_UNEXPECT;
+                st = Status.FAILED;
+            } else if (ok && !reverseStatus) {
+                sr = COMPILE_PASS;
+            } else if (!ok && reverseStatus) {
+                sr = COMPILE_FAIL_EXPECT;
+                st = Status.PASSED;
+            } else { /* !ok && !reverseStatus */
+                sr = COMPILE_FAIL;
+            }
+            if ((st == Status.FAILED) && ! (status.getReason() == null) &&
+                    !status.getReason().equals(EXEC_PASS))
+                sr += ": " + status.getReason();
+            status = new Status(st, sr);
         }
-        return newPath;
-    } // addPath()
+        return status;
+    }
+
+    /**
+     * Compare output against a reference file.
+     * @param status default result if no differences found
+     * @param actual the text to be compared against the reference file
+     * @return a status indicating the first difference, or the default status
+     *          if no differences found
+     * @throws TestRunException if the reference file can't be found
+     */
+    private Status checkGoldenFile(String actual, Status status) throws TestRunException {
+        File refFile = new File(script.absTestSrcDir(), ref);
+        try {
+            BufferedReader r1 = new BufferedReader(new StringReader(actual));
+            BufferedReader r2 = new BufferedReader(new FileReader(refFile));
+            int lineNum;
+            if ((lineNum = compareGoldenFile(r1, r2)) != 0) {
+                return Status.failed(COMPILE_GOLD_FAIL + ref +
+                        COMPILE_GOLD_LINE + lineNum);
+            }
+            return status;
+        } catch (FileNotFoundException e) {
+            throw new TestRunException(COMPILE_CANT_FIND_REF + refFile);
+        }
+    }
 
     /**
      * Line by line comparison of compile output and a reference file.  If no

@@ -25,7 +25,6 @@
 
 package com.sun.javatest.regtest;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.File;
 import java.io.FileWriter;
@@ -38,8 +37,8 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import com.sun.javatest.Status;
@@ -55,6 +54,12 @@ import com.sun.javatest.lib.ProcessCommand;
  */
 public class MainAction extends Action
 {
+    /** Marker interface for test driver classes, which need to be passed a
+     *  class loader to load the classes for the test.
+     *  @see JUnitAction.JUnitRunner
+     */
+    interface TestRunner { }
+
     /**
      * This method does initial processing of the options and arguments for the
      * action.  Processing is determined by the requirements of run().
@@ -107,19 +112,18 @@ public class MainAction extends Action
             } else if (optName.equals("othervm")) {
                 othervm = true;
             } else if (optName.equals("policy")) {
-                if (!script.hasEnv() || !script.isJDK11())
+                if (!script.hasEnv() || !script.isTestJDK11())
                     policyFN = parsePolicy(optValue);
                 else
                     throw new ParseException(PARSE_BAD_OPT_JDK + optName);
             } else if (optName.equals("secure")) {
-                if (!script.hasEnv() || !script.isJDK11())
+                if (!script.hasEnv() || !script.isTestJDK11())
                     secureFN = parseSecure(optValue);
                 else
                     throw new ParseException(PARSE_BAD_OPT_JDK + optName);
             } else {
                 throw new ParseException(MAIN_BAD_OPT + optName);
             }
-
         }
 
         if (manual.equals("unset")) {
@@ -133,33 +137,30 @@ public class MainAction extends Action
         }
 
         if (driverClass != null) {
-            driverFN = driverClass;
+            this.driverClass = driverClass;
         }
 
         // separate the arguments into the options to java, the
         // classname and the parameters to the named class
         for (int i = 0; i < args.length; i++) {
-            if (buildFN == null) {
+            if (mainClassName == null) {
                 if (args[i].startsWith("-")) {
-                    javaArgs += " " + args[i];
+                    javaArgs.add(args[i]);
                     if ((args[i].equals("-cp") || args[i].equals("-classpath"))
                         && (i+1 < args.length))
-                        javaArgs += " " + args[++i];
+                        javaArgs.add(args[++i]);
                 } else {
-                    buildFN = args[i];
+                    mainClassName = args[i];
                 }
             } else {
-                if (mainArgs.equals(""))
-                    mainArgs = args[i];
-                else
-                    mainArgs += " " + args[i];
+                mainArgs.add(args[i]);
             }
         }
 
-        if (buildFN == null)
+        if (mainClassName == null)
             throw new ParseException(MAIN_NO_CLASSNAME);
         if (!othervm) {
-            if (!javaArgs.equals(""))
+            if (javaArgs.size() > 0)
                 throw new ParseException(javaArgs + MAIN_UNEXPECT_VMOPT);
             if (policyFN != null)
                 throw new ParseException(PARSE_POLICY_OTHERVM);
@@ -168,22 +169,22 @@ public class MainAction extends Action
         }
     } // init()
 
-    public String getJavaArgs() {
+    public List<String> getJavaArgs() {
         return javaArgs;
     }
-    public String getMainArgs() {
+    public List<String> getMainArgs() {
         return mainArgs;
     }
     public String getMainClassName() {
-        return buildFN;
+        return mainClassName;
     }
 
     @Override
     public File[] getSourceFiles() {
         List<File> l = new ArrayList<File>();
-        if (buildFN != null) {
+        if (mainClassName != null) {
             String[][] buildOpts = {};
-            String[]   buildArgs = {buildFN.replace(File.separatorChar, '.')};
+            String[]   buildArgs = {mainClassName.replace(File.separatorChar, '.')};
             try {
                 BuildAction ba = new BuildAction();
                 ba.init(buildOpts, buildArgs, SREASON_ASSUMED_BUILD, script);
@@ -224,25 +225,36 @@ public class MainAction extends Action
         // though an "@run build <class>" action had been inserted before
         // this action."
         String[][] buildOpts = {};
-        String[]   buildArgs = {buildFN.replace(File.separatorChar, '.')};
+        String[]   buildArgs = {mainClassName.replace(File.separatorChar, '.')};
         BuildAction ba = new BuildAction();
         if (!(status = ba.build(buildOpts, buildArgs, SREASON_ASSUMED_BUILD, script)).isPassed())
             return status;
 
-        section = startAction(getActionName(), javaArgs + buildFN + mainArgs, reason);
+        section = startAction(getActionName(), getActionArgs(), reason);
 
         if (script.isCheck()) {
             status = Status.passed(CHECK_PASS);
         } else {
-            if (othervm || script.isOtherJVM())
-                status = runOtherJVM();
-            else
-                status = runSameJVM();
+            switch (othervm ? ExecMode.OTHERVM : script.getExecMode()) {
+                case AGENTVM:
+                    status = runAgentJVM();
+                    break;
+                case OTHERVM:
+                    status = runOtherJVM();
+                    break;
+                case SAMEVM:
+                    status = runSameJVM();
+                    break;
+                default:
+                    throw new AssertionError();
+            }
         }
 
         endAction(status, section);
         return status;
     } // run()
+
+
 
     //----------internal methods------------------------------------------------
 
@@ -250,26 +262,36 @@ public class MainAction extends Action
         return "main";
     }
 
+    protected String[] getActionArgs() {
+        List<String> args = new ArrayList<String>();
+        args.addAll(javaArgs);
+        args.add(mainClassName);
+        args.addAll(mainArgs);
+        return args.toArray(new String[args.size()]);
+    }
+
     private Status runOtherJVM() throws TestRunException {
         // Arguments to wrapper:
-        String mainClass = buildFN;
-        String stringifiedArgs = (mainArgs == null ? "" : mainArgs);
-        if (driverFN != null) {
-            if (stringifiedArgs.equals(""))
-                stringifiedArgs = mainClass;
-            else
-                stringifiedArgs = mainClass + " " + stringifiedArgs;
-            mainClass = driverFN;
+        String runClassName;
+        List<String> runClassArgs;
+        if (driverClass == null) {
+            runClassName = mainClassName;
+            runClassArgs = mainArgs;
+        } else {
+            runClassName = driverClass;
+            runClassArgs = new ArrayList<String>();
+            runClassArgs.add(mainClassName);
+            runClassArgs.addAll(mainArgs);
         }
 
         // WRITE ARGUMENT FILE
-        String mainArgFileName = script.absTestClsDir() + FILESEP + buildFN
-            + RegressionScript.WRAPPEREXTN;
+        File mainArgFile =
+            new File(script.absTestClsDir(), mainClassName + RegressionScript.WRAPPEREXTN);
         FileWriter fw;
         try {
-            fw = new FileWriter(mainArgFileName);
-            fw.write(mainClass + "\0");
-            fw.write(stringifiedArgs + "\0" );
+            fw = new FileWriter(mainArgFile);
+            fw.write(runClassName + "\0");
+            fw.write(StringUtils.join(runClassArgs) + "\0" );
             fw.close();
         } catch (IOException e) {
             return Status.error(MAIN_CANT_WRITE_ARGS);
@@ -288,25 +310,21 @@ public class MainAction extends Action
         // some tests are inappropriately relying on the CLASSPATH environment
         // variable being set, so force the use here.
         final boolean useCLASSPATH = true;
-
-        if (useCLASSPATH || script.isJDK11()) {
-            command.add("CLASSPATH=" + script.getJavaTestClassPath() +
-                        PATHSEP + script.testClassPath());
+        Path cp = new Path(script.getJavaTestClassPath(), script.getTestClassPath());
+        if (useCLASSPATH || script.isTestJDK11()) {
+            command.add("CLASSPATH=" + cp);
         }
         command.add(script.getJavaProg());
-        if (!useCLASSPATH && !script.isJDK11()) {
+        if (!useCLASSPATH && !script.isTestJDK11()) {
             command.add("-classpath");
-            command.add(script.getJavaTestClassPath() + PATHSEP + script.testClassPath());
+            command.add(cp.toString());
         }
 
         command.addAll(script.getTestVMJavaOptions());
 
-        command.add("-Dtest.src=" + script.absTestSrcDir());
-        command.add("-Dtest.classes=" + script.absTestClsDir());
-        command.add("-Dtest.vm.opts=" + join(script.getTestVMOptions()));
-        command.add("-Dtest.tool.vm.opts=" + join(script.getTestToolVMOptions()));
-        command.add("-Dtest.javac.opts=" + join(script.getTestCompilerOptions()));
-        command.add("-Dtest.java.opts=" + join(script.getTestJavaOptions()));
+        for (Map.Entry<String,String> e: script.getTestProperties().entrySet()) {
+            command.add("-D" + e.getKey() + "=" + e.getValue());
+        }
 
         String newPolicyFN;
         if (policyFN != null) {
@@ -321,32 +339,26 @@ public class MainAction extends Action
             command.add("-Djava.security.manager=default");
 //      command.addElement("-Djava.security.debug=all");
 
-        String[] jArgs = StringArray.splitWS(javaArgs);
-        for (int i = 0; i < jArgs.length; i++)
-            command.add(jArgs[i]);
+        command.addAll(javaArgs);
 
         command.add("com.sun.javatest.regtest.MainWrapper");
-        command.add(mainArgFileName);
+        command.add(mainArgFile.getPath());
 
-        String[] mArgs = StringArray.splitWS(stringifiedArgs);
-        for (int i = 0; i < mArgs.length; i++)
-            command.add(mArgs[i]);
-
-        // convert from List to String[]
-        String[] tmpCmd = new String[command.size()];
-        for (int i = 0; i < command.size(); i++)
-            tmpCmd[i] = command.get(i);
+        command.addAll(runClassArgs);
 
         String[] envVars = script.getEnvVars();
-        String[] cmdArgs = StringArray.append(envVars, tmpCmd);
+        String[] tmpCmd = command.toArray(new String[command.size()]);
+        String[] cmdArgs = StringArray.join(envVars, tmpCmd);
 
         // PASS TO PROCESSCOMMAND
         Status status;
         PrintWriter sysOut = section.createOutput("System.out");
         PrintWriter sysErr = section.createOutput("System.err");
         try {
+            if (showMode)
+                showMode(getActionName(), ExecMode.OTHERVM, section);
             if (showCmd)
-                JTCmd(getActionName(), cmdArgs, section);
+                showCmd(getActionName(), cmdArgs, section);
 //          for (int i = 0; i < cmdArgs.length; i++)
 //              System.out.print(" " + cmdArgs[i]);
 //          System.out.println();
@@ -369,20 +381,269 @@ public class MainAction extends Action
                 script.setAlarm(timeout*1000);
 
             status = cmd.run(cmdArgs, sysErr, sysOut);
+
         } finally {
             script.setAlarm(0);
-            if (sysOut != null) sysOut.close();
-            if (sysErr != null) sysErr.close();
+            sysOut.close();
+            sysErr.close();
         }
 
         // EVALUATE THE RESULTS
+        status = checkReverse(status, reverseStatus);
 
+        return status;
+    } // runOtherJVM()
+
+    private Status runSameJVM() throws TestRunException {
+        Path runClasspath;
+        String runMainClass;
+        List<String> runMainArgs;
+        if (driverClass == null) {
+            runClasspath = script.getTestClassPath();
+            runMainClass = mainClassName;
+            runMainArgs = mainArgs;
+        } else {
+            runClasspath = script.getTestClassPath();
+            runMainClass = driverClass;
+            runMainArgs = new ArrayList<String>();
+            runMainArgs.add(mainClassName);
+            runMainArgs.addAll(mainArgs);
+        }
+
+        if (showMode)
+            showMode(getActionName(), ExecMode.SAMEVM, section);
+
+        // TAG-SPEC:  "The source and class directories of a test are made
+        // available to main and applet actions via the system properties
+        // "test.src" and "test.classes", respectively"
+        Map<String,String> p = script.getTestProperties();
+
+        // delegate actual work to shared method
+        Status status = runClass(
+                script.getTestResult().getTestName(),
+                p,
+                runClasspath,
+                runMainClass,
+                runMainArgs.toArray(new String[runMainArgs.size()]),
+                timeout,
+                getOutputHandler(section));
+
+        // EVALUATE THE RESULTS
+        status = checkReverse(status, reverseStatus);
+
+        return status;
+    } // runSameJVM
+
+    private Status runAgentJVM() throws TestRunException {
+        Path runClasspath;
+        String runMainClass;
+        List<String> runMainArgs;
+        if (driverClass == null) {
+            runClasspath = script.getTestClassPath();
+            runMainClass = mainClassName;
+            runMainArgs = mainArgs;
+        } else {
+            runClasspath = script.getTestClassPath();
+            runMainClass = driverClass;
+            runMainArgs = new ArrayList<String>();
+            runMainArgs.add(mainClassName);
+            runMainArgs.addAll(mainArgs);
+        }
+
+        if (showMode)
+            showMode(getActionName(), ExecMode.AGENTVM, section);
+
+        // TAG-SPEC:  "The source and class directories of a test are made
+        // available to main and applet actions via the system properties
+        // "test.src" and "test.classes", respectively"
+        Map<String,String> p = script.getTestProperties();
+
+        Agent agent;
+        try {
+            JDK jdk = script.getTestJDK();
+            Path classpath = new Path(script.getJavaTestClassPath(), jdk.getJDKClassPath());
+            agent = script.getAgent(jdk, classpath, script.getTestVMJavaOptions());
+        } catch (IOException e) {
+            return Status.error(AGENTVM_CANT_GET_VM + ": " + e);
+        }
+
+        Status status;
+        try {
+            status = agent.doMainAction(
+                    script.getTestResult().getTestName(),
+                    p,
+                    runClasspath,
+                    runMainClass,
+                    runMainArgs,
+                    timeout,
+                    section);
+        } catch (Agent.Fault e) {
+            status = Status.error("Agent error: " + e.getCause());
+        }
+        if (status.isError()) {
+            script.closeAgent(agent);
+        }
+
+        // EVALUATE THE RESULTS
+        status = checkReverse(status, reverseStatus);
+
+        return status;
+    } // runAgentJVM()
+
+    static Status runClass(
+            String testName,
+            Map<String,String> props,
+            Path classpath,
+            String classname,
+            String[] classArgs,
+            int timeout,
+            OutputHandler outputHandler) {
+        SaveState saved = new SaveState();
+
+        Properties p = System.getProperties();
+        for (Map.Entry<String,String> e: props.entrySet()) {
+            String name = e.getKey();
+            String value = e.getValue();
+            if (name.equals("test.class.path.prefix")) {
+                Path cp = new Path(value, System.getProperty("java.class.path"));
+                p.put("java.class.path", cp.toString());
+            } else {
+                p.put(e.getKey(), e.getValue());
+            }
+        }
+        System.setProperties(p);
+
+        PrintByteArrayOutputStream out = new PrintByteArrayOutputStream();
+        PrintByteArrayOutputStream err = new PrintByteArrayOutputStream();
+
+        Status status = Status.passed(EXEC_PASS);
+        try {
+            Class<?> c;
+            ClassLoader loader;
+            if (classpath != null) {
+                List<URL> urls = new ArrayList<URL>();
+                for (File f: new Path(classpath).split()) {
+                    try {
+                        urls.add(f.toURI().toURL());
+                    } catch (MalformedURLException e) {
+                    }
+                }
+                loader = new URLClassLoader(urls.toArray(new URL[urls.size()]));
+                c = loader.loadClass(classname);
+            } else {
+                loader = null;
+                c = Class.forName(classname);
+            }
+
+            // Select signature for main method depending on whether the class
+            // implements the TestRunner marker interface.
+            Class<?>[] argTypes;
+            Object[] methodArgs;
+            if (TestRunner.class.isAssignableFrom(c)) {
+                // Marker interface found: use main(ClassLoader, String...)
+                argTypes = new Class<?>[] { ClassLoader.class, String[].class };
+                methodArgs = new Object[] { loader, classArgs };
+            } else {
+                // Normal case: marker interface not found; use standard main method
+                argTypes = new Class<?>[] { String[].class };
+                methodArgs = new Object[] { classArgs };
+            }
+
+            Method method = c.getMethod("main", argTypes);
+
+            Status stat = redirectOutput(out, err);
+            if (!stat.isPassed()) {
+                return stat;
+            }
+
+            // RUN JAVA IN ANOTHER THREADGROUP
+
+            SameVMThreadGroup tg = new SameVMThreadGroup();
+            SameVMRunnable svmt = new SameVMRunnable(method, methodArgs, err);
+            Thread t = new Thread(tg, svmt, "SameVMThread");
+            Alarm alarm = null;
+            if (timeout > 0) {
+                PrintWriter alarmOut = outputHandler.createOutput(OutputHandler.OutputKind.LOG);
+                alarm = new Alarm(timeout * 1000, t, testName, alarmOut);
+            }
+            Throwable error = null;
+            t.start();
+            try {
+                t.join();
+            } catch (InterruptedException e) {
+                if (t.isInterrupted() && (tg.uncaughtThrowable == null)) {
+                    error = e;
+                    status = Status.error(MAIN_THREAD_INTR + e.getMessage());
+                }
+            } finally {
+                tg.cleanup();
+                if (alarm != null)
+                    alarm.cancel();
+            }
+
+            if (((svmt.t != null) || (tg.uncaughtThrowable != null)) && (error == null)) {
+                if (svmt.t == null)
+                    error = tg.uncaughtThrowable;
+                else
+                    error = svmt.t;
+                status = Status.failed(MAIN_THREW_EXCEPT + error.toString());
+            }
+
+            if (status.getReason().contains("java.lang.SecurityException: System.exit() forbidden")) {
+                status = Status.failed(UNEXPECT_SYS_EXIT);
+            } else if (!tg.cleanupOK) {
+                status = Status.error(EXEC_ERROR_CLEANUP);
+            }
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace(err);
+            err.println();
+            err.println("JavaTest Message: main() method must be in a public class named");
+            err.println("JavaTest Message: " + classname + " in file " + classname + ".java");
+            err.println();
+            status = Status.error(MAIN_CANT_LOAD_TEST + e);
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace(err);
+            err.println();
+            err.println("JavaTest Message: main() method must be in a public class named");
+            err.println("JavaTest Message: " + classname + " in file " + classname + ".java");
+            err.println();
+            status = Status.error(MAIN_CANT_FIND_MAIN);
+        } finally {
+            status = saved.restore(testName, status);
+        }
+
+        // Write test output
+        out.close();
+        outputHandler.createOutput(OutputHandler.OutputKind.STDOUT, out.getOutput());
+
+        err.close();
+        outputHandler.createOutput(OutputHandler.OutputKind.STDERR, err.getOutput());
+
+        return status;
+    }
+
+    //----------utility methods-------------------------------------------------
+
+    private String parseMainManual(String value) throws ParseException {
+        if (value != null)
+            throw new ParseException(MAIN_MANUAL_NO_VAL + value);
+        else
+            value = "novalue";
+        return value;
+    } // parseMainManual()
+
+    private Status checkReverse(Status status, boolean reverseStatus) {
+        // The standard rule is that /fail will invert Passed and Failed results
+        // but will leave Error results alone.  But, for historical reasons
+        // perpetuated by the Basic test program, a test calling System.exit
+        // is reported with a Failed result, whereas Error would really be
+        // more appropriate.  Therefore, we take care not to invert the
+        // status if System.exit was called to exit the test.
         if (!status.isError()
-            && !status.getReason().startsWith(UNEXPECT_SYS_EXIT)) {
+                && !status.getReason().startsWith(UNEXPECT_SYS_EXIT)) {
             boolean ok = status.isPassed();
             int st = status.getType();
             String sr;
-
             if (ok && reverseStatus) {
                 sr = EXEC_PASS_UNEXPECT;
                 st = Status.FAILED;
@@ -394,263 +655,48 @@ public class MainAction extends Action
             } else { /* !ok && !reverseStatus */
                 sr = EXEC_FAIL;
             }
-            if ((st == Status.FAILED) && !status.getReason().equals("")
-                && !status.getReason().equals(EXEC_PASS))
+            if ((st == Status.FAILED) && ! (status.getReason() == null) &&
+                    !status.getReason().equals(EXEC_PASS))
                 sr += ": " + status.getReason();
             status = new Status(st, sr);
         }
 
         return status;
-    } // runOtherJVM()
-
-    private static Hashtable<?,?> savedSystemProperties;
-
-    private Status runSameJVM() throws TestRunException {
-        // TAG-SPEC:  "The source and class directories of a test are made
-        // available to main and applet actions via the system properties
-        // "test.src" and "test.classes", respectively"
-        synchronized(this) {
-            SecurityManager sc = System.getSecurityManager();
-            if (sc instanceof RegressionSecurityManager) {
-                ((RegressionSecurityManager) sc).setAllowPropertiesAccess(true);
-                Properties p = System.getProperties();
-                if (savedSystemProperties == null)
-                    savedSystemProperties = copyProperties(p);
-                p.put("java.class.path",
-                        script.absTestClsDir() + PATHSEP +
-                        script.absTestSrcDir() + PATHSEP +
-                        script.absClsLibListStr() + PATHSEP +
-                        p.getProperty("java.class.path"));
-                p.put("test.src", script.absTestSrcDir().getPath());
-                p.put("test.classes", script.absTestClsDir().getPath());
-                p.put("test.vm.opts", StringUtils.join(script.getTestVMOptions(), " "));
-                p.put("test.tool.vm.opts", StringUtils.join(script.getTestToolVMOptions(), " "));
-                p.put("test.compiler.opts", StringUtils.join(script.getTestCompilerOptions(), " "));
-                p.put("test.java.opts", StringUtils.join(script.getTestJavaOptions(), " "));
-                System.setProperties(p);
-                //((RegressionSecurityManager) sc).setAllowPropertiesAccess(false);
-                ((RegressionSecurityManager) sc).resetPropertiesAccessed();
-            } else {
-                // XXX Commented out for the ChameleonTestFinderTest to succeed.
-                //return Status.error(MAIN_SECMGR_BAD);
-            }
-        }
-
-        String mainClass = buildFN;
-        String stringifiedArgs = (mainArgs == null ? "" : mainArgs);
-        if (driverFN != null) {
-            if (stringifiedArgs.equals(""))
-                stringifiedArgs = mainClass;
-            else
-                stringifiedArgs = mainClass + " " + stringifiedArgs;
-            mainClass = driverFN;
-        }
-
-        ByteArrayOutputStream newOut = new ByteArrayOutputStream();
-        ByteArrayOutputStream newErr = new ByteArrayOutputStream();
-        PrintStream psOut = new PrintStream(newOut);
-        PrintStream psErr = new PrintStream(newErr);
-
-        Status status;
-        PrintStream saveOut = System.out;
-        PrintStream saveErr = System.err;
-        try {
-            status = Status.passed(EXEC_PASS);
-
-            String[] classpath = StringArray.splitSeparator(PATHSEP, script.testClassPath());
-            List<URL> urls = new ArrayList<URL>();
-            for (int i = 0; i < classpath.length; i++) {
-                String p = classpath[i];
-                if (p.length() > 0) {
-                    try {
-                        urls.add(new File(p).toURI().toURL());
-                    } catch (MalformedURLException e) {
-                    }
-                }
-            }
-            Class<?> c;
-            if (driverFN == null) {
-                ClassLoader loader = new URLClassLoader(urls.toArray(new URL[urls.size()]));
-                c = loader.loadClass(buildFN);
-            } else {
-                c = Class.forName(driverFN);
-            }
-
-            Class<?>[] argTypes = { String[].class };
-            Method method = c.getMethod("main", argTypes);
-
-            // XXX 4/1 possible to use splitSeparator instead?
-            String[] tmpArgs = StringArray.splitWS(stringifiedArgs);
-            Object[] runArgs = {tmpArgs};
-
-            Status stat = redirectOutput(psOut, psErr);
-            if (!stat.isPassed()) {
-                return stat;
-            }
-
-            // RUN JAVA IN ANOTHER THREADGROUP
-
-            SameVMThreadGroup tg = new SameVMThreadGroup();
-            SameVMThread svmt = new SameVMThread(method, runArgs, psErr);
-            Thread t = new Thread(tg, svmt, "SameVMThread");
-            Throwable error = null;
-            t.start();
-            try {
-                t.join();
-            } catch (InterruptedException e) {
-                if (t.isInterrupted() && (tg.uncaughtThrowable == null)) {
-                    error = e;
-                    status = Status.error(MAIN_THREAD_INTR + e.getMessage());
-                }
-            }
-            tg.cleanup();
-
-            if (((svmt.t != null) || (tg.uncaughtThrowable != null)) && (error == null)) {
-                if (svmt.t == null)
-                    error = tg.uncaughtThrowable;
-                else
-                    error = svmt.t;
-                status = Status.failed(MAIN_THREW_EXCEPT + error.toString());
-            }
-
-            // EVALUATE RESULTS
-            if (status.getReason().endsWith("java.lang.SecurityException: System.exit() forbidden by JavaTest")) {
-                status = Status.failed(UNEXPECT_SYS_EXIT);
-            } else {
-
-                boolean ok = status.isPassed();
-                int st   = status.getType();
-                String sr;
-                if (!tg.cleanupOK) {
-                    // failure to cleanup threads is treated seriously
-                    // because it might affect subsequent tests
-                    sr = EXEC_ERROR_CLEANUP;
-                    st = Status.ERROR;
-                } else if (ok && reverseStatus) {
-                    sr = EXEC_PASS_UNEXPECT;
-                    st = Status.FAILED;
-                } else if (ok && !reverseStatus) {
-                    sr = EXEC_PASS;
-                } else if (!ok && reverseStatus) {
-                    sr = EXEC_FAIL_EXPECT;
-                    st = Status.PASSED;
-                } else { /* !ok && !reverseStatus */
-                    sr = EXEC_FAIL;
-                }
-                if ((st == Status.FAILED) && ! (status.getReason() == null) &&
-                        !status.getReason().equals(EXEC_PASS))
-                    sr += ": " + status.getReason();
-                status = new Status(st, sr);
-            }
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace(new PrintWriter(psErr, true));
-            psErr.println();
-            psErr.println("JavaTest Message: main() method must be in a public class named");
-            psErr.println("JavaTest Message: " + mainClass + " in file " + mainClass + ".java");
-            psErr.println();
-            status = Status.error(MAIN_CANT_LOAD_TEST + e);
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace(new PrintWriter(psErr, true));
-            psErr.println();
-            psErr.println("JavaTest Message: main() method must be in a public class named");
-            psErr.println("JavaTest Message: " + mainClass + " in file " + mainClass + ".java");
-            psErr.println();
-            status = Status.error(MAIN_CANT_FIND_MAIN);
-        } finally {
-            SecurityManager sm = System.getSecurityManager();
-            if (sm instanceof RegressionSecurityManager) {
-                RegressionSecurityManager rsm = (RegressionSecurityManager) sm;
-                if (rsm.isPropertiesAccessed()) {
-                    System.setProperties(newProperties(savedSystemProperties));
-//                    System.err.println("reset properties");
-                } else {
-                    System.setProperty("java.class.path", (String) savedSystemProperties.get("java.class.path"));
-//                    System.err.println("no need to reset properties");
-                }
-                rsm.setAllowPropertiesAccess(false);
-            }
-
-            Status stat = redirectOutput(saveOut, saveErr);
-            if (!stat.isPassed()) {
-                return stat;
-            }
-
-            psOut.close();
-            psErr.close();
-
-            String outString = newOut.toString();
-            String errString = newErr.toString();
-            PrintWriter sysOut = section.createOutput("System.out");
-            PrintWriter sysErr = section.createOutput("System.err");
-            try {
-                sysOut.write(outString);
-                sysErr.write(errString);
-            } finally {
-                if (sysOut != null) sysOut.close();
-                if (sysErr != null) sysErr.close();
-            }
-        }
-
-        return status;
-    } // runSameJVM()
-
-    private String parseMainManual(String value) throws ParseException {
-        if (value != null)
-            throw new ParseException(MAIN_MANUAL_NO_VAL + value);
-        else
-            value = "novalue";
-        return value;
-    } // parseMainManual()
-
-    private String join(List<String> list) {
-        StringBuffer sb = new StringBuffer();
-        for (String s: list) {
-            if (sb.length() > 0)
-                sb.append(" ");
-            sb.append(s);
-        }
-        return sb.toString();
     }
 
     //----------internal classes------------------------------------------------
 
-    class SameVMThread extends Thread
+    private static class SameVMRunnable implements Runnable
     {
-        public SameVMThread(Method m, Object[] args, PrintStream psErr) {
-            method      = m;
-            runArgs     = args;
-            this.psErr  = psErr;
-        } // SameVMThread()
+        public SameVMRunnable(Method m, Object[] args, PrintStream err) {
+            method    = m;
+            this.args = args;
+            this.err  = err;
+        } // SameVMRunnable()
 
-        @Override
         public void run() {
             try {
-                if (timeout > 0)
-                    script.setAlarm(timeout*1000);
-
                 // RUN JAVA PROGRAM
-                result = method.invoke(null, runArgs);
+                result = method.invoke(null, args);
 
                 System.err.println();
                 System.err.println("JavaTest Message:  Test complete.");
                 System.err.println();
             } catch (InvocationTargetException e) {
                 // main must have thrown an exception, so the test failed
-                e.getTargetException().printStackTrace(new PrintWriter(psErr, true));
+                e.getTargetException().printStackTrace(err);
                 t = e.getTargetException();
                 System.err.println();
                 System.err.println("JavaTest Message: Test threw exception: " + t.getClass().getName());
                 System.err.println("JavaTest Message: shutting down test");
                 System.err.println();
             } catch (IllegalAccessException e) {
-                e.printStackTrace(new PrintWriter(psErr, true));
+                e.printStackTrace(err);
                 t = e;
                 System.err.println();
                 System.err.println("JavaTest Message: Verify that the class defining the test is");
                 System.err.println("JavaTest Message: declared public (test invoked via reflection)");
                 System.err.println();
-            } finally {
-                script.setAlarm(0);
             }
         } // run()
 
@@ -658,8 +704,8 @@ public class MainAction extends Action
 
         public  Object result;
         private Method method;
-        private Object[] runArgs;
-        private PrintStream psErr;
+        private Object[] args;
+        private PrintStream err;
 
         Throwable t = null;
     }
@@ -752,10 +798,10 @@ public class MainAction extends Action
 
     //----------member variables------------------------------------------------
 
-    private String  javaArgs = "";
-    private String  mainArgs = "";
-    private String  driverFN = null;
-    private String  buildFN  = null;
+    private List<String>  javaArgs = new ArrayList<String>();
+    private List<String>  mainArgs = new ArrayList<String>();
+    private String  driverClass = null;
+    private String  mainClassName  = null;
     private String  policyFN = null;
     private String  secureFN = null;
 

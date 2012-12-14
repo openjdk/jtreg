@@ -446,11 +446,9 @@ public class Help {
         if (p != null)
             return p;
 
-        String cp = System.getProperty("java.class.path");
-        if (cp.indexOf(File.pathSeparator) == -1) {
-            File f = new File(cp);
-            if (f.getName().equals("jtreg.jar"))
-                return "java -jar jtreg.jar ";
+        File[] cp = new Path(System.getProperty("java.class.path")).split();
+        if (cp.length == 1 && cp[0].getName().equals("jtreg.jar")) {
+            return "java -jar jtreg.jar ";
         }
 
         return "java " + Main.class.getName();
