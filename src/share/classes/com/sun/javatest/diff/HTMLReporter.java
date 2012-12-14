@@ -31,8 +31,8 @@ import java.io.Writer;
 import java.util.Date;
 import java.util.Map;
 
-import com.sun.javatest.TestResult;
 import com.sun.javatest.Status;
+import com.sun.javatest.TestResult;
 import com.sun.javatest.util.I18NResourceBundle;
 
 import static com.sun.javatest.util.HTMLWriter.*;

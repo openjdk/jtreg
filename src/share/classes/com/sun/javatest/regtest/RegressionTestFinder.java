@@ -25,28 +25,24 @@
 
 package com.sun.javatest.regtest;
 
-import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.sun.javatest.finder.TagTestFinder;
+import com.sun.javatest.TestSuite;
 import com.sun.javatest.finder.HTMLCommentStream;
 import com.sun.javatest.finder.ShScriptCommentStream;
+import com.sun.javatest.finder.TagTestFinder;
 
 /**
   * This is a specific implementation of the TagTestFinder which is to be used
-  * for JDK regression testing.  It follows the test-tag sepcifications as given
-  * in http://javaweb.eng/jdk/test/tag-spec.
+  * for JDK regression testing.  It follows the test-tag specifications as given
+  * in http://openjdk.java.net/jtreg/tag-spec.txt.
   *
   * A test description consists of a single block comment in either Java files
   * or shell-script files.  A file may contain multiple test descriptions.
@@ -62,11 +58,12 @@ public class RegressionTestFinder extends TagTestFinder
       * for files to examine for test descriptions.  This constructor also sets
       * the allowable comment formats.
       */
-    public RegressionTestFinder(Set<String> validKeys, boolean checkBugID) {
-        this.rootValidKeys = validKeys;
-        this.checkBugID = checkBugID;
+    public RegressionTestFinder(TestProperties properties) {
+        this.properties = properties;
+        this.rootValidKeys = properties.validKeys;
+        this.checkBugID = properties.checkBugID;
 
-        validTagNames = new ValidTagNames(validKeys != null);
+        validTagNames = new ValidTagNames(rootValidKeys != null);
 
         exclude(excludeNames);
         addExtension(".sh", ShScriptCommentStream.class);
@@ -75,8 +72,7 @@ public class RegressionTestFinder extends TagTestFinder
 
     @Override
     protected void setRoot(File testSuiteRoot) throws Fault {
-        super.setRoot(testSuiteRoot = canon(testSuiteRoot));
-        validKeysTable = new ValidKeysTable(testSuiteRoot, rootValidKeys);
+        super.setRoot(canon(testSuiteRoot));
     }
 
     @Override protected void scanFile(File file) {
@@ -90,19 +86,18 @@ public class RegressionTestFinder extends TagTestFinder
         try {
             return f.getCanonicalFile();
         } catch (IOException e) {
-            return f.getAbsoluteFile();
+            return new File(f.getAbsoluteFile().toURI().normalize());
         }
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
+    @Override @SuppressWarnings({"unchecked", "rawtypes"})
     protected Map<String, String> normalize(Map tv) {
-        return normalize0((Map<String,String>) tv);
+        return normalize0((Map<String, String>) tv);
     }
 
-    private Map<String,String> normalize0(Map<String,String> tagValues) {
+    private Map<String, String> normalize0(Map<String, String> tagValues) {
         File currFile = getCurrentFile();
-        HashMap<String,String> newTagValues = new HashMap<String,String>();
+        HashMap<String, String> newTagValues = new HashMap<String, String>();
         String fileName = currFile.getName();
         String baseName = fileName.substring(0, fileName.lastIndexOf("."));
 
@@ -126,7 +121,7 @@ public class RegressionTestFinder extends TagTestFinder
             String name  = e.getKey();
             String value = e.getValue();
             if (name.equals("summary")) {
-                // the title is the first sentance of the provided summary
+                // the title is the first sentence of the provided summary
                 name = "title";
                 int pos = 0;
             loop:
@@ -141,7 +136,7 @@ public class RegressionTestFinder extends TagTestFinder
                     case '\t':
                     case '\f':
                     case '\b':
-                        value = value.substring(0, pos);
+                        value = value.substring(0, pos + 1);
                         break loop;
                     }
                     pos++;
@@ -235,11 +230,10 @@ public class RegressionTestFinder extends TagTestFinder
      * @param name      The name of the entry that has been read
      * @param value     The value of the entry that has been read
      */
-    @SuppressWarnings("unchecked")
-    @Override
+    @Override @SuppressWarnings({"unchecked", "rawtypes"})
     protected void processEntry(Map tv, String name, String value)
     {
-        Map<String,String> tagValues = (Map<String,String>) tv;
+        Map<String, String> tagValues = (Map<String, String>) tv;
 
         // check for valid tag name, don't produce error message for the
         // the SCCS sequence '%' 'W' '%'
@@ -270,6 +264,9 @@ public class RegressionTestFinder extends TagTestFinder
         } catch (ParseException e) {
             name  = "error";
             value = e.getMessage();
+        } catch (TestSuite.Fault e) {
+            name  = "error";
+            value = e.getMessage();
         }
 
         super.processEntry(tagValues, name, value);
@@ -289,7 +286,7 @@ public class RegressionTestFinder extends TagTestFinder
      *            the spec for the tag.
      * @return    A string which contains the new value for the "run" tag.
      */
-    private String parseRun(Map<String,String> tagValues, String value)
+    private String parseRun(Map<String, String> tagValues, String value)
         throws ParseException
     {
         String oldValue = tagValues.get("run");
@@ -310,7 +307,7 @@ public class RegressionTestFinder extends TagTestFinder
      *            the spec for the tag.
      * @return    A string which contains the new value for the "bug" tag.
      */
-    private String parseBug(Map<String,String> tagValues, String value)
+    private String parseBug(Map<String, String> tagValues, String value)
         throws ParseException
     {
         StringBuilder newValue = new StringBuilder();
@@ -353,10 +350,10 @@ public class RegressionTestFinder extends TagTestFinder
      *            the spec for the tag.
      * @return    A string which contains the new value for the "key" tag.
      */
-    private String parseKey(Map<String,String> tagValues, String value)
-        throws ParseException
+    private String parseKey(Map<String, String> tagValues, String value)
+        throws ParseException, TestSuite.Fault
   {
-        Set<String> validKeys = validKeysTable.getValidKeys(getCurrentFile());
+        Set<String> validKeys = properties.getValidKeys(getCurrentFile());
 
         // make sure that the provided keys are all valid
         if (value.trim().length() != 0) {
@@ -383,7 +380,7 @@ public class RegressionTestFinder extends TagTestFinder
      *            the spec for the tag.
      * @return    A string which contains the new value for the "library" tag.
      */
-    private String parseLibrary(Map tagValues, String value)
+    private String parseLibrary(Map<String, String> tagValues, String value)
         throws ParseException
     {
         String newValue = "";
@@ -391,7 +388,7 @@ public class RegressionTestFinder extends TagTestFinder
             // we haven't seen a "run" action yet
             if (value.trim().length() != 0) {
                 // multiple library tags allowed, prepend the new stuff
-                String oldValue = (String) tagValues.get("library");
+                String oldValue = tagValues.get("library");
                 if (oldValue != null)
                     newValue = value + " " + oldValue;
                 else
@@ -466,87 +463,6 @@ public class RegressionTestFinder extends TagTestFinder
         private Set<String> validTags;
     }
 
-    /**
-     * A table giving the set of valid keys for any file in the test suite.
-     * The keys are determined from TEST.ROOT and any TEST.properties
-     * files in any enclosing directories up to the root directory.
-     */
-    private static class ValidKeysTable {
-        ValidKeysTable(File rootDir, Set<String> rootKeys) {
-            rootCacheEntry = new CacheEntry(rootDir, rootKeys);
-        }
-
-        /**
-         * Get the set of valid keys for a particular file in the test suite.
-         * A cache is kept of the value for the directory of the last file
-         * read, to optimize the performance when processing a series of files
-         * in the same directory.
-         */
-        synchronized Set<String> getValidKeys(File file) {
-            if (!allowLocalKeys)
-                return rootCacheEntry.keys;
-            File dir = file.getParentFile();
-            if (lastCacheEntry == null || !lastCacheEntry.dir.equals(dir))
-                lastCacheEntry = getCacheEntry(dir);
-            return lastCacheEntry.keys;
-        }
-        // where
-        private CacheEntry lastCacheEntry;
-
-
-        private CacheEntry getCacheEntry(File dir) {
-            if (dir.equals(rootCacheEntry.dir))
-                return rootCacheEntry;
-
-            CacheEntry parent = getCacheEntry(dir.getParentFile());
-            CacheEntry child = parent.children == null ? null : parent.children.get(dir.getName());
-            if (child == null) {
-                child = new CacheEntry(dir, getLocalKeys(dir, parent.keys));
-                // for a full cache, add child into parent
-                //    if (parent.children == null)
-                //        parent.children = new HashMap<String,CacheEntry>();
-                //    parent.children.put(dir.getName(), child);
-                // for a small cache, just cache the current path by keeping the latest child
-                parent.children = Collections.singletonMap(dir.getName(), child);
-            }
-            return child;
-        }
-
-        private static Set<String> getLocalKeys(File dir, Set<String> parentKeys) {
-            File f = new File(dir, "TEST.properties");
-            if (f.canRead()) {
-                try {
-                    BufferedInputStream in = new BufferedInputStream(new FileInputStream(f));
-                    Properties p = new Properties();
-                    p.load(in);
-                    in.close();
-                    String k = p.getProperty("keys");
-                    if (k != null && k.trim().length() > 0) {
-                        Set<String> s = new HashSet<String>(parentKeys);
-                        s.addAll(Arrays.asList(StringArray.splitWS(k)));
-                        return s;
-                    }
-                } catch (IOException ignore) {
-                }
-            }
-            return parentKeys;
-        }
-
-        private static class CacheEntry {
-            CacheEntry(File dir, Set<String> keys) {
-                dir.getClass();
-                this.dir = dir;
-                this.keys = keys;
-            }
-
-            File dir;
-            Set<String> keys;
-            Map<String, CacheEntry> children;
-        }
-
-        private CacheEntry rootCacheEntry;
-
-    }
 
     //----------misc statics----------------------------------------------------
 
@@ -569,9 +485,6 @@ public class RegressionTestFinder extends TagTestFinder
         PARSE_LIB_EMPTY       = "No value provided for `@library'",
         PARSE_LIB_AFTER_RUN   = "`@library' must appear before first `@run'";
 
-    private static final boolean allowLocalKeys =
-            Boolean.parseBoolean(System.getProperty("javatest.regtest.allowLocalKeys", "true"));
-
     private static final Pattern
         OTHERVM_OPTION = Pattern.compile(".*/othervm[/ \t].*",    Pattern.DOTALL),
         MANUAL_OPTION  = Pattern.compile(".*/manual[/= \t].*",    Pattern.DOTALL),
@@ -583,6 +496,6 @@ public class RegressionTestFinder extends TagTestFinder
 
     private Set<String> rootValidKeys;
     private ValidTagNames validTagNames;
-    private ValidKeysTable validKeysTable;
+    private TestProperties properties;
     private boolean checkBugID;
 }

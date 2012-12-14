@@ -38,7 +38,9 @@ import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Date;
 import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Properties;
 
 import com.sun.javatest.Status;
@@ -301,7 +303,7 @@ public abstract class Action
     protected void endAction(Status status, TestResult.Section section) {
         long elapsedTime = (new Date()).getTime() - startTime;
         PrintWriter pw = section.getMessageWriter();
-        pw.println(LOG_ELAPSED_TIME + ((double)elapsedTime/1000.0));
+        pw.println(LOG_ELAPSED_TIME + ((double) elapsedTime/1000.0));
         section.setStatus(status);
     } // endAction()
 
@@ -350,7 +352,7 @@ public abstract class Action
         if (System.getProperty("file.separator").equals(bs)) {
             for (int i = 0; i < s.length; i++) {
                 String victim = s[i];
-                StringBuffer sb = new StringBuffer();
+                StringBuilder sb = new StringBuilder();
                 for (int j = 0; j < victim.length(); j++) {
                     String c = String.valueOf(victim.charAt(j));
                     sb.append(c);
@@ -373,15 +375,15 @@ public abstract class Action
      * @return     The same string, surrounded by "'".
      */
     String singleQuoteString(String s) {
-        StringBuffer b = new StringBuffer();
+        StringBuilder b = new StringBuilder();
         b.append("'").append(s).append("'");
         return(b.toString());
     } // singleQuoteString()
 
     //----------for saving/restoring properties---------------------------------
 
-    protected static Hashtable<?,?> copyProperties(Properties p) {
-        Hashtable<Object,Object> h = new Hashtable<Object,Object>();
+    protected static Map<?, ?> copyProperties(Properties p) {
+        Map<Object, Object> h = new HashMap<Object, Object>();
         for (Enumeration<?> e = p.propertyNames(); e.hasMoreElements(); ) {
             Object key = e.nextElement();
             h.put(key, p.get(key));
@@ -389,7 +391,7 @@ public abstract class Action
         return h;
     }
 
-    protected static Properties newProperties(Hashtable<?,?> h) {
+    protected static Properties newProperties(Map<?, ?> h) {
         Properties p = new Properties();
         p.putAll(h);
         return p;
@@ -448,6 +450,9 @@ public abstract class Action
             // Save and setup streams for the test
             stdOut = System.out;
             stdErr = System.err;
+
+            // Default Locale
+            locale = Locale.getDefault();
 
             // Save security manager in case changed by test
             secMgr = System.getSecurityManager();
@@ -518,13 +523,19 @@ public abstract class Action
             if (cleanupStatus == null && !stat.isPassed())
                 cleanupStatus = stat;
 
+            // Reset locale
+            if (locale != Locale.getDefault()) {
+                Locale.setDefault(locale);
+            }
+
             return (cleanupStatus != null ? cleanupStatus : status);
         }
 
         final SecurityManager secMgr;
         final PrintStream stdOut;
         final PrintStream stdErr;
-        static Hashtable<?,?> sysProps;
+        final Locale locale;
+        static Map<?, ?> sysProps;
     }
 
     //----------in memory streams-----------------------------------------------
@@ -614,8 +625,10 @@ public abstract class Action
         SAMEVM_CANT_RESET_SECMGR= "Cannot reset security manager",
         SAMEVM_CANT_RESET_PROPS = "Cannot reset system properties",
 
-        // used in:compile, main
+        // used in:  compile, main
         AGENTVM_CANT_GET_VM      = "Cannot get VM for test",
+        AGENTVM_IO_EXCEPTION     = "Agent communication error: %s; check console log for any additional details",
+        AGENTVM_EXCEPTION        = "Agent error: %s; check console log for any additional details",
 
         UNEXPECT_SYS_EXIT     = "Unexpected exit from test",
         CANT_FIND_SRC         = "Can't file source file: ",
@@ -711,6 +724,7 @@ public abstract class Action
         //    runSameJVM
         MAIN_SECMGR_BAD       = "JavaTest not running its own security manager",
         MAIN_THREAD_INTR      = "Thread interrupted: ",
+        MAIN_THREAD_TIMEOUT   = "Timeout",
         MAIN_THREW_EXCEPT     = "`main' threw exception: ",
         MAIN_CANT_LOAD_TEST   = "Can't load test: ",
         MAIN_CANT_FIND_MAIN   = "Can't find `main' method",

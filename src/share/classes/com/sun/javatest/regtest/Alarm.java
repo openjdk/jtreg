@@ -25,9 +25,10 @@
 
 package com.sun.javatest.regtest;
 
+import java.io.PrintWriter;
+
 import com.sun.javatest.util.I18NResourceBundle;
 import com.sun.javatest.util.Timer;
-import java.io.PrintWriter;
 
 /**
  * Provides a lightweight way of setting up and canceling timeouts.
@@ -52,10 +53,11 @@ class Alarm implements Timer.Timeable {
         }
 
     synchronized void cancel() {
-        if (debugAlarm)
+        if (debugAlarm) {
             System.err.println(i18n.getString("alarm.cancelled", this));
-            alarmTimer.cancel(entry);
         }
+        alarmTimer.cancel(entry);
+    }
 
     public synchronized void timeout() {
         if (count == 0)
@@ -79,6 +81,14 @@ class Alarm implements Timer.Timeable {
     @Override
     public String toString() {
         return ("Alarm[" + Integer.toHexString(hashCode()) + "," + delay + "," + threadToInterrupt + "," + testName + "]");
+    }
+
+    public enum State {
+        WAITING, FIRED, TIMEDOUT
+    }
+
+    public State getState() {
+        return (count == 0 ? State.WAITING : count < 1000 ? State.FIRED : State.TIMEDOUT);
     }
 
     private final String testName;

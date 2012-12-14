@@ -1,0 +1,6 @@
+#!/bin/sh
+
+# @test
+
+env
+

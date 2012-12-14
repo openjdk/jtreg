@@ -32,24 +32,25 @@
 
 package com.sun.javatest.diff;
 
-import com.sun.javatest.regtest.BadArgs;
 import java.io.File;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.tools.ant.BuildException;
+import org.apache.tools.ant.Project;
+import org.apache.tools.ant.taskdefs.MatchingTask;
+import org.apache.tools.ant.types.Commandline;
+
 import com.sun.javatest.regtest.AntOptionDecoder;
+import com.sun.javatest.regtest.BadArgs;
 import com.sun.javatest.regtest.Option;
 import com.sun.javatest.regtest.OptionDecoder;
 import com.sun.javatest.util.I18NResourceBundle;
 
 import static com.sun.javatest.regtest.Option.ArgType.*;
 
-import org.apache.tools.ant.BuildException;
-import org.apache.tools.ant.Project;
-import org.apache.tools.ant.taskdefs.MatchingTask;
-import org.apache.tools.ant.types.Commandline;
 
 /**
  * Main entry point for jtdiff.

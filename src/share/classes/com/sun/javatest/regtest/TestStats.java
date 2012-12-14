@@ -30,6 +30,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Map;
 
 import com.sun.javatest.Harness;
 import com.sun.javatest.Parameters;
@@ -38,7 +39,6 @@ import com.sun.javatest.TestDescription;
 import com.sun.javatest.TestResult;
 import com.sun.javatest.report.Report;
 import com.sun.javatest.util.I18NResourceBundle;
-import java.util.Map;
 
 /**
  * Track test status statistics
@@ -65,7 +65,7 @@ public class TestStats {
                 }
                 CachingTestFilter kf = params.getKeywordsFilter();
                 if (kf != null) {
-                    for (Map.Entry<TestDescription,Boolean> e: params.getKeywordsFilter().getCache().entrySet()) {
+                    for (Map.Entry<TestDescription, Boolean> e: params.getKeywordsFilter().getCache().entrySet()) {
                         TestDescription td = e.getKey();
                         boolean accepted = e.getValue();
                         if (!accepted && td.getKeywordTable().contains("ignore"))

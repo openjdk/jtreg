@@ -27,10 +27,10 @@ package com.sun.javatest.regtest;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.IOException;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Dictionary;
@@ -151,7 +151,7 @@ public class AppletAction extends Action
         // TAG-SPEC:  "The named <class> will be compiled on demand, just as
         // though an "@run build <class>" action had been inserted before
         // this action."
-        clsName = (String) htmlFileContents.getAppletAtts().get("code");
+        clsName = htmlFileContents.getAppletAtts().get("code");
         if (clsName.endsWith(".class"))
             clsName = clsName.substring(0, clsName.lastIndexOf(".class"));
         String[][] buildOpts = {};
@@ -353,10 +353,10 @@ public class AppletAction extends Action
         return value;
     } // parseAppletManual()
 
-    private static String dictionaryToString(Dictionary d) {
+    private static String dictionaryToString(Dictionary<String, ?> d) {
         StringBuilder retVal = new StringBuilder();
-        for (Enumeration e = d.keys(); e.hasMoreElements(); ) {
-            String key = (String) e.nextElement();
+        for (Enumeration<String> e = d.keys(); e.hasMoreElements(); ) {
+            String key = e.nextElement();
             retVal.append(key);
             retVal.append("\034");
             retVal.append(d.get(key));
@@ -452,7 +452,7 @@ public class AppletAction extends Action
             int[] paramPos;
             while ((paramPos = getTagPositions(appletBody, lowerAppletBody,
                                                "param", 0)) != null) {
-                Dictionary<String,String> d =
+                Dictionary<String, String> d =
                     attsToDictionary(appletBody.substring(paramPos[1],
                                                           paramPos[2]));
                 String name  = d.get("name");
@@ -470,11 +470,11 @@ public class AppletAction extends Action
             return body;
         } // getBody()
 
-        Dictionary getAppletParams() {
+        Dictionary<String, String> getAppletParams() {
             return appletParams;
         } // getAppletParams()
 
-        Dictionary getAppletAtts() {
+        Dictionary<String, String> getAppletAtts() {
             return appletAtts;
         } // getAppletAtts()
 
@@ -589,8 +589,8 @@ public class AppletAction extends Action
          * @param atts     A string containing HTML attributes.
          * @return Dictionary of HTML attributes (name/value pairs).
          */
-        private Dictionary<String,String> attsToDictionary (String atts) {
-            Dictionary<String,String> result = new Hashtable<String,String>(3);
+        private Dictionary<String, String> attsToDictionary (String atts) {
+            Dictionary<String, String> result = new Hashtable<String, String>(3);
 
             int[] positions;
             while ((positions = getAttPositions(atts)) != null) {
@@ -610,8 +610,8 @@ public class AppletAction extends Action
         //----------member variables--------------------------------------------
 
         String body;
-        Dictionary<String,String> appletParams = new Hashtable<String,String>(1);
-        Dictionary<String,String> appletAtts;
+        Dictionary<String, String> appletParams = new Hashtable<String, String>(1);
+        Dictionary<String, String> appletAtts;
     } // class HTMLFileContents
 
     //----------member variables------------------------------------------------

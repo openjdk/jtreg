@@ -23,6 +23,7 @@
 
 /*
  * @test
+ * @run main/timeout=10 SlowExitTest
  */
 
 public class SlowExitTest extends Thread {

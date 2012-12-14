@@ -31,6 +31,7 @@ import java.io.PrintWriter;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+
 import com.sun.javatest.Command;
 import com.sun.javatest.Status;
 import com.sun.javatest.util.PathClassLoader;
@@ -185,7 +186,7 @@ public class RegressionCompileCommand extends Command
             else
                 loader = new PathClassLoader(classpath);
 
-            Class compilerClass;
+            Class<?> compilerClass;
             if (compilerClassName != null) {
                 compilerClass = getClass(loader, compilerClassName);
                 if (compilerClass == null)
@@ -204,12 +205,12 @@ public class RegressionCompileCommand extends Command
 
             Object[] compileMethodArgs;
             Method compileMethod = getMethod(compilerClass, "compile", // JDK1.4+
-                                             new Class[] { String[].class, PrintWriter.class });
+                                             new Class<?>[] { String[].class, PrintWriter.class });
             if (compileMethod != null)
                 compileMethodArgs = new Object[] { args, ref };
             else {
                 compileMethod = getMethod(compilerClass, "compile",   // JDK1.1-3
-                                          new Class[] { String[].class });
+                                          new Class<?>[] { String[].class });
                 if (compileMethod != null)
                     compileMethodArgs = new Object[] { args };
                 else
@@ -221,12 +222,12 @@ public class RegressionCompileCommand extends Command
                 compiler =  null;
             else {
                 Object[] constrArgs;
-                Constructor constr = getConstructor(compilerClass, // JDK1.1-2
-                                                    new Class[] { OutputStream.class, String.class });
+                Constructor<?> constr = getConstructor(compilerClass, // JDK1.1-2
+                                                    new Class<?>[] { OutputStream.class, String.class });
                 if (constr != null)
                     constrArgs = new Object[] { new WriterStream(ref), compilerName };
                 else {
-                    constr = getConstructor(compilerClass, new Class[0]); // JDK1.3
+                    constr = getConstructor(compilerClass, new Class<?>[0]); // JDK1.3
                     if (constr != null)
                         constrArgs = new Object[0];
                     else
@@ -274,7 +275,7 @@ public class RegressionCompileCommand extends Command
         return (exitCode == 0 ? passed : failed);
     }
 
-    private Class getClass(ClassLoader loader, String name) {
+    private Class<?> getClass(ClassLoader loader, String name) {
         try {
             return (loader == null ? Class.forName(name) : loader.loadClass(name));
         }
@@ -283,7 +284,7 @@ public class RegressionCompileCommand extends Command
         }
     }
 
-    private Constructor getConstructor(Class<?> c, Class<?>[] argTypes) {
+    private Constructor<?> getConstructor(Class<?> c, Class<?>[] argTypes) {
         try {
             return c.getConstructor(argTypes);
         }

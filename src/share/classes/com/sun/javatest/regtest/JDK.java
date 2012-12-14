@@ -30,8 +30,8 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.sun.javatest.Status;
@@ -112,6 +112,10 @@ public class JDK {
         return jdk.getPath();
     }
 
+    public String getAbsolutePath() {
+        return absJDK.getPath();
+    }
+
     // only used for JDK 1.1
     public Path getJavaClassPath() {
         File jh = absJDK;
@@ -175,7 +179,7 @@ public class JDK {
 
     public String getFullVersion(List<String> vmOpts) {
         if (fullVersions == null)
-            fullVersions = new HashMap<List<String>,String>();
+            fullVersions = new HashMap<List<String>, String>();
 
         String fullVersion = fullVersions.get(vmOpts);
         if (fullVersion == null) {
@@ -234,7 +238,7 @@ public class JDK {
     private final File absJDK;
 
     private String version;
-    private Map<List<String>,String> fullVersions;
+    private Map<List<String>, String> fullVersions;
 
     private static final String LINESEP  = System.getProperty("line.separator");
 }

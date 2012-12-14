@@ -29,86 +29,43 @@ BUILDDIR = $(TOPDIR)/build
 include Defs.gmk
 include Platform.gmk
 
-#----------------------------------------------------------------------
+default: build
 
-all: build test $(BUILDDIR)/lockCheck.ok
-
-#----------------------------------------------------------------------
-
-include buildFiles.gmk
+all: build test
 
 #----------------------------------------------------------------------
-#
-# shared
 
-include doc.gmk
-include javatest.gmk
-include javahelp.gmk
-include junit.gmk
-
-#----------------------------------------------------------------------
-#
-# jtdiff support
-
-include classes_com_sun_javatest_diff.gmk
-#include doc_jtreg.gmk
-include bin_jtdiff.gmk
-
-#----------------------------------------------------------------------
-#
-# jtreg support
-
-include classes_com_sun_javatest_regtest.gmk
-include doc_jtreg.gmk
-include bin_jtreg.gmk
+include jtdiff.gmk
 include jtreg.gmk
-
-#----------------------------------------------------------------------
-
-include export.gmk
-
-#----------------------------------------------------------------------
-
-CLEANFILES += work report testWork testReport jtWork jtReport JTwork JTreport
-CLEANFILES += $(CLASSDIR) testClasses $(BUILDFILES) $(TESTS)
-
-#----------------------------------------------------------------------
+include tests/*.gmk
+include Rules.gmk
 
 build: $(BUILDFILES)
 
-test:  $(TESTS)
+test: $(INITIAL_TESTS) $(TESTS) $(FINAL_TESTS)
 
-debug: 
-	echo '$(BUILDFILES)'
+images: $(VERBOSEZIPFILES)
 
-#----------------------------------------------------------------------
-#
-# build in agent mode
+clean:
+	$(RM) $(BUILDDIR)
 
-all.agent build.agent test.agent:
-	JTREG_USE_AGENTVM_FOR_SAMEVM=true $(MAKE) BUILDDIR=$(BUILDDIR).agent $(subst .agent,,$@)
+.NO_PARALLEL: clean
 
-#----------------------------------------------------------------------
-#
-# do an upfront check that an X Windows server is running,
-# in case it is needed by any tests.
-# WARNING: THIS HANGS IF THE WINDOW SYSTEM IS NOT AVAILABLE
-#
-#.INIT:
-#	@display=$${DISPLAY:-`uname -n`:0.0} ; \
-#	if /usr/openwin/bin/xwininfo -root -display $$display 1>/dev/null 2>&1 ; then \
-#	    true ; \
-#	else \
-#	    echo "Cannot access display $$display" ; \
-#	    echo "Please make sure the window system is running and accessible." ; \
-#	    exit 1 ; \
-#	fi
-
-.DONE:
-	if [ -f $(BUILDDIR)/.vnc/display ]; then sh display.sh -kill ; fi
+sanity:
+	@echo "JDK15HOME      = $(JDK15HOME)"
+	@echo "JDK16HOME      = $(JDK16HOME)"
+	@echo "JAVAHELP_HOME  = $(JAVAHELP_HOME)"
+	@echo "JAVATEST_HOME  = $(JAVATEST_HOME)"
+ifneq ($(JTHARNESS_HOME), $(JAVATEST_HOME))
+	@echo "JTHARNESS_HOME = $(JTHARNESS_HOME)"
+endif
+	@echo "ANTHOME        = $(ANTHOME)"
+	@echo "XALANHOME      = $(XALANHOME)"
+	@echo "JUNIT_JAR      = $(JUNIT_JAR)"
+	@echo "LINKLINT       = $(LINKLINT)"
 
 #----------------------------------------------------------------------
 
-include Rules.gmk
 
+.PHONY: default all build test images clean sanity
 

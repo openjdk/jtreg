@@ -172,11 +172,11 @@ public class OptionDecoder {
     }
 
 
-    private Map<String,Option> simpleOptions = new HashMap<String,Option>();
+    private Map<String, Option> simpleOptions = new HashMap<String, Option>();
     private List<Option> matchOptions = new ArrayList<Option>();
     private Option fileOption;
 
-    private Map<String,String> locks = new HashMap<String,String>();
+    private Map<String, String> locks = new HashMap<String, String>();
     private boolean inFiles;
 
     protected static boolean debugOptions = Boolean.getBoolean("javatest.regtest.debugOptions");

@@ -24,18 +24,19 @@
  */
 package com.sun.javatest.regtest;
 
-import com.sun.javatest.TestDescription;
-import com.sun.javatest.TestFilter;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+
+import com.sun.javatest.TestDescription;
+import com.sun.javatest.TestFilter;
 
 /**
  * A test filter that caches the results of a delegate filter.
  */
 public class CachingTestFilter extends TestFilter {
     private TestFilter delegate;
-    private Map<TestDescription,Boolean> cache = new HashMap<TestDescription,Boolean>();
+    private Map<TestDescription, Boolean> cache = new HashMap<TestDescription, Boolean>();
 
     CachingTestFilter(TestFilter delegate) {
         if (delegate == null)
@@ -43,7 +44,7 @@ public class CachingTestFilter extends TestFilter {
         this.delegate = delegate;
     }
 
-    Map<TestDescription,Boolean> getCache() {
+    Map<TestDescription, Boolean> getCache() {
         return Collections.unmodifiableMap(cache);
     }
 

@@ -24,13 +24,6 @@
  */
 package com.sun.javatest.regtest;
 
-import com.sun.javatest.Harness.Fault;
-import com.sun.javatest.Status;
-import com.sun.javatest.TestDescription;
-import com.sun.javatest.TestResult;
-import com.sun.javatest.TestResult.ReloadFault;
-import com.sun.javatest.TestResult.ResultFileNotFoundFault;
-import com.sun.javatest.TestResult.Section;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -49,10 +42,20 @@ import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
+
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
+
 import org.xml.sax.InputSource;
 import org.xml.sax.XMLReader;
+
+import com.sun.javatest.Harness.Fault;
+import com.sun.javatest.Status;
+import com.sun.javatest.TestDescription;
+import com.sun.javatest.TestResult;
+import com.sun.javatest.TestResult.ReloadFault;
+import com.sun.javatest.TestResult.ResultFileNotFoundFault;
+import com.sun.javatest.TestResult.Section;
 
 /**
  *

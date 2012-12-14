@@ -39,7 +39,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Pattern;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.sun.javatest.Script;
@@ -47,7 +46,7 @@ import com.sun.javatest.Status;
 import com.sun.javatest.TestDescription;
 import com.sun.javatest.TestEnvironment;
 import com.sun.javatest.TestResult;
-import com.sun.javatest.util.I18NResourceBundle;
+import com.sun.javatest.TestSuite;
 
 /**
   * This class interprets the TestDescription as specified by the JDK tag
@@ -62,7 +61,7 @@ public class RegressionScript extends Script
      * The method that interprets the tags provided in the test description and
      * performs actions accordingly.
      *
-     * @param argv Any arguements that the RegressionScript may use.  Currently
+     * @param argv Any arguments that the RegressionScript may use.  Currently
      *             there are none (value ignored).
      * @param td   The current TestDescription.
      * @param env  The test environment giving the details of how to run the
@@ -78,6 +77,7 @@ public class RegressionScript extends Script
 
         regEnv = (RegressionEnvironment) env;
         params = regEnv.params;
+        testSuite = (RegressionTestSuite) params.getTestSuite();
 
         Status status = Status.passed("OK");
         String actions = td.getParameter("run");
@@ -94,51 +94,33 @@ public class RegressionScript extends Script
             hostname = "unknown";
         }
         testResult.putProperty("hostname", hostname);
+        String[] props = { "user.name" };
+        for (String p: props) {
+            testResult.putProperty(p, System.getProperty(p));
+        }
+        testResult.putProperty("jtregVersion", getVersion());
 
         PrintWriter msgPW = testResult.getTestCommentWriter();
 
         try {
+            // defaultExecMode may still be overridden in individual actions with /othervm
+            defaultExecMode = testSuite.useOtherVM(td) ? ExecMode.OTHERVM : params.getExecMode();
+
             setLibList(td.getParameter("library"));
 
             LinkedList<Action> actionList = parseActions(actions, true);
 
-            boolean needJUnit = false;
+            needJUnit = false;
             for (Action a: actionList) {
                 if (a instanceof JUnitAction)
                     needJUnit = true;
             }
-            if (needJUnit) {
-                if (params.isJUnitAvailable())
-                    addClsLib(params.getJUnitJar());
-                else
-                    throw new TestRunException("JUnit not available: see the FAQ or online help for details");
+            if (needJUnit && !params.isJUnitAvailable()) {
+                throw new TestRunException("JUnit not available: see the FAQ or online help for details");
             }
 
-            try {
-                initScratchDirectory();
-            } catch (TestRunException e) {
-                if (getExecMode() != ExecMode.AGENTVM)
-                    throw e;
-                // The following something of a last ditch measure.
-                // The most likely reason we can't init the scratch
-                // directory is that we're on Windows and the previous
-                // test has left a file open and we're not using -retain.
-                // (If we were using -retain, we'd have caught the problem
-                // while cleaning up after the last test.)
-                // So, since we no longer know which agents the previous test
-                // might have been using, close all agents, and try again.
-                // If that fixes the problem, write a warning message to
-                // stderr and let the test continue.
-                Agent.Pool.instance().close();
-                try {
-                    initScratchDirectory();
-                    // need to localize this
-                    System.err.println(i18n.getString("script.warn.openfiles", testResult.getTestName()));
-                } catch (TestRunException e2) {
-                    e2.initCause(e);
-                    throw e2;
-                }
-            }
+            scratchDirectory = ScratchDirectory.get(params, defaultExecMode, td);
+            scratchDirectory.init(msgPW);
 
             // if we got an error while parsing the TestDescription, return
             // error immediately
@@ -159,6 +141,15 @@ public class RegressionScript extends Script
                         break;
                 }
             }
+        } catch (InterruptedException e) {
+            status = Status.error("Interrupted! " + e.getLocalizedMessage());
+        } catch (ScratchDirectory.Fault e) {
+            String msg = e.getLocalizedMessage();
+            if (e.getCause() != null)
+                msg += " (" + e.getCause().getLocalizedMessage() + ")";
+            status = Status.error(msg);
+        } catch (TestSuite.Fault e) {
+            status = Status.error(e.getMessage());
         } catch (ParseActionsException e) {
             status = Status.error(e.getMessage());
         } catch (TestRunException e) {
@@ -172,7 +163,7 @@ public class RegressionScript extends Script
             testResult.putProperty("elapsed", String.format("%d %d:%02d:%02d.%03d",
                     elapsed, hours, mins, secs, millis));
             if (params.isRetainEnabled()) {
-                boolean ok = retainScratchFiles(status);
+                boolean ok = scratchDirectory.retainFiles(status, msgPW);
                 if (!ok) {
                     msgPW.println("Test result (overridden): " + status);
                     status = Status.error("failed to clean up files after test");
@@ -256,13 +247,13 @@ public class RegressionScript extends Script
 
             Class<?> c = null;
             try {
-                c = (Class<?>)(actionTable.get(verb));
+                c = (Class<?>) (actionTable.get(verb));
                 if (c == null) {
                     if (stopOnError)
                         throw new ParseActionsException(BAD_ACTION + verb);
                     continue;
                 }
-                Action action = (Action)(c.newInstance());
+                Action action = (Action) (c.newInstance());
                 action.init(opts, args, getReason(tokens), this);
                 actionList.add(action);
             } catch (InstantiationException e) {
@@ -327,9 +318,9 @@ public class RegressionScript extends Script
 
     /**
      * Set an alarm that will interrupt the calling thread after a specified
-     * delay (in milliseconds), and repeatedly thereafter until cancelled.  The
+     * delay (in milliseconds), and repeatedly thereafter until canceled.  The
      * testCommentWriter will contain a confirmation string indicating that a
-     * timeout has been signelled.
+     * timeout has been signaled.
      *
      * @param timeout The delay in milliseconds.
      */
@@ -339,202 +330,6 @@ public class RegressionScript extends Script
     }
 
     //----------internal methods------------------------------------------------
-
-    private void initScratchDirectory() throws TestRunException {
-        File dir = absTestScratchDir();
-        if (dir.exists()) {
-            if (dir.isDirectory()) {
-                cleanDirectoryContents(dir);
-                return;
-            } else {
-                if (!dir.delete())
-                    throw new TestRunException(CLEAN_RM_PROB + dir);
-            }
-        }
-        if (!dir.mkdirs())
-            throw new TestRunException(PATH_SCRATCH_CREATE + dir);
-    }
-
-    private boolean retainScratchFiles(Status status) {
-        // In sameVM mode, or in otherVM mode when no files need to be retained,
-        // the scratch directory is shared between all tests. In sameVM mode,
-        // this is because there is no way to change the current directory of the
-        // running process -- and jtreg requires the current directory to be a
-        // scratch directory. In otherVM mode, this is for historical compatibility.
-        //
-        // In otherVM mode, with retain enabled, we set the scratch directory to
-        // be the result directory, to reduce the cost of retaining files.
-        // This means that in this case, we delete the files we don't want, as
-        // compared to retaining the files we do way.
-
-        boolean ok;
-        File scratchDir = absTestScratchDir();
-        File resultDir = absTestResultDir();
-
-        if (scratchDir.equals(resultDir)) {
-            // if scratchDir is the same as resultDir, we just need to delete
-            // the files we don't want to keep; the ones we want to keep are
-            // already in the right place.
-            if (params.getRetainStatus().contains(status.getType())) {
-                // all files to be retained; no need to delete any files
-                ok = true;
-            } else {
-                Pattern rp = params.getRetainFilesPattern();
-                if (rp != null) {
-                    // delete files which do not match pattern
-                    // extend pattern so as not to delete *.jtr files
-                    Pattern rp_jtr = Pattern.compile(".*\\.jtr|" + rp.pattern());
-                    ok = deleteFiles(resultDir, rp_jtr, false);
-                } else {
-                    // test result doesn't match status set, no patterns specified:
-                    // delete all except *.jtr files
-                    Pattern jtr = Pattern.compile(".*\\.jtr");
-                    ok = deleteFiles(resultDir, jtr, false);
-                }
-            }
-        } else {
-            // if scratchDir is not the same as resultDir, we need to
-            // save the files we want and delete the rest.
-            if (params.getRetainStatus().contains(status.getType())) {
-                // save all files; no need to delete any files
-                ok = saveFiles(scratchDir, resultDir, null, false);
-            } else {
-                Pattern rp = params.getRetainFilesPattern();
-                if (rp != null) {
-                    // save files which need to be retained
-                    ok = saveFiles(scratchDir, resultDir, rp, true);
-                } else {
-                    // test result doesn't match status set, no patterns specified:
-                    // no files need saving
-                    ok = true;
-                }
-            }
-            // delete any files remaining in the scratch dir
-            ok &= deleteFiles(scratchDir, null, false);
-        }
-
-        return ok;
-    }
-
-    /**
-     * Copy all files in a directory that optionally match or don't match a pattern.
-     **/
-    private boolean saveFiles(File fromDir, File toDir, Pattern p, boolean match) {
-        boolean result = true;
-        boolean toDirExists = toDir.exists();
-        if (toDirExists) {
-            try {
-                cleanDirectoryContents(toDir);
-            } catch (TestRunException e) {
-                System.err.println("warning: failed to empty " + toDir);
-                //result = false;
-            }
-        }
-        for (File file: fromDir.listFiles()) {
-            String fileName = file.getName();
-            if (file.isDirectory()) {
-                File dest = new File(toDir, fileName);
-                result &= saveFiles(file, dest, p, match);
-            } else {
-                boolean save = (p == null) || (p.matcher(fileName).matches() == match);
-                if (save) {
-                    if (!toDirExists) {
-                        toDir.mkdirs();
-                        toDirExists = toDir.exists();
-                    }
-                    File dest = new File(toDir, fileName);
-                    if (dest.exists())
-                        dest.delete();
-                    boolean ok = file.renameTo(dest);
-                    if (!ok) {
-                        System.err.println("error: failed to rename " + file + " to " + dest);
-                        result = false;
-                    }
-                }
-            }
-        }
-        return result;
-    }
-
-    /**
-     * Delete all files in a directory that optionally match or don't
-     * match a pattern.
-     * @returns true if the contents of the directory are successfully deleted.
-     */
-    private boolean deleteFiles(File dir, Pattern p, boolean match) {
-        return deleteFiles(dir, p, match, false);
-    }
-
-    /**
-     * Delete all files in a directory that optionally match or don't
-     * match a pattern.  If deleteDir is set and all files in the directory
-     * are deleted, the directory is deleted as well.
-     * @returns true if all files and directories are deleted successfully.
-     */
-    private boolean deleteFiles(File dir, Pattern p, boolean match, boolean deleteDir) {
-        if (!dir.exists())
-            return true;
-
-        boolean all = true;
-        for (File file: dir.listFiles()) {
-            if (file.isDirectory()) {
-                all &= deleteFiles(file, p, match, true);
-            } else {
-                boolean delete = (p == null) || (p.matcher(file.getName()).matches() == match);
-                if (delete) {
-                    boolean ok = file.delete();
-                    if (!ok)
-                        System.err.println("warning: failed to delete " + file);
-                    all &= ok;
-                } else {
-                    all = false;
-                }
-            }
-        }
-        if (all && deleteDir) {
-            all = dir.delete();
-            // warning if delete fails?
-        }
-        return all;
-    }
-
-    private void cleanDirectoryContents(File dir) throws TestRunException {
-        if (dir.exists()) {
-            try {
-                cleanDirectoryContents0(dir.getCanonicalFile());
-            } catch (IOException e) {
-                throw new TestRunException(CLEAN_RM_PROB + dir);
-            }
-        }
-    }
-
-    private void cleanDirectoryContents0(File dir) throws TestRunException {
-        File[] children = dir.listFiles();
-        if (children != null) {
-            try {
-                for (int i = 0; i < children.length; i++) {
-                    File child = children[i];
-                    try {
-                        // check that file is a real directory, not a symbolic link to a directory
-                        if (child.isDirectory() && child.equals(child.getCanonicalFile())) {
-                            cleanDirectoryContents(child);
-                            File[] remaining = child.listFiles();
-                            if (remaining == null)
-                                throw new TestRunException(CLEAN_RM_PROB + child + " cannot determine remaining files");
-                            if (remaining.length > 0)
-                                throw new TestRunException(CLEAN_RM_PROB + child + " remaining: " + Arrays.asList(remaining));
-                        }
-                        if (!child.delete())
-                            throw new TestRunException(CLEAN_RM_PROB + child);
-                    } catch (IOException e) {
-                        throw new TestRunException(CLEAN_RM_PROB + child);
-                    }
-                }
-            } catch (SecurityException e) {
-                throw new TestRunException(CLEAN_SECMGR_PROB + Arrays.asList(children));
-            }
-        }
-    } // cleanDirectoryContents()
 
     private void populateActionTable() {
         addAction("applet", AppletAction.class);
@@ -687,27 +482,9 @@ public class RegressionScript extends Script
         return cacheAbsTestClsDir;
     } // absTestClsDir()
 
-    private File cacheAbsTestScratchDir;
     File absTestScratchDir() {
-        if (cacheAbsTestScratchDir == null) {
-            cacheAbsTestScratchDir = params.isRetainEnabled() && getExecMode() == ExecMode.OTHERVM
-                ? absTestResultDir()
-                : workDir.getFile(getThreadSafeDir("scratch").getPath());
-        }
-        return cacheAbsTestScratchDir;
+        return scratchDirectory.dir.getAbsoluteFile();
     } // absTestScratchDir()
-
-    private File cacheAbsTestResultDir;
-    File absTestResultDir() {
-        if (cacheAbsTestResultDir == null) {
-            String wrp = TestResult.getWorkRelativePath(getTestDescription());
-            // assert wrp.endsWith(".jtr")
-            if (wrp.endsWith(".jtr"))
-                wrp = wrp.substring(0, wrp.length() - 4);
-            cacheAbsTestResultDir = workDir.getFile(wrp);
-        }
-        return cacheAbsTestResultDir;
-    }
 
     private File cacheAbsTestClsTopDir;
     File absTestClsTopDir() throws TestClassException {
@@ -830,6 +607,9 @@ public class RegressionScript extends Script
                 cacheCompileClassPath.append(jdk.getJDKClassPath());
             }
 
+            if (needJUnit)
+                cacheCompileClassPath.append(params.getJUnitJar());
+
             // handle cpa option to jtreg
             String[] envVars = getEnvVars();
             for (int i = 0; i < envVars.length; i++) {
@@ -868,7 +648,7 @@ public class RegressionScript extends Script
         return cacheCompileSourcePath;
     } // getCompileSourcePath()
 
-    private Map<File,Set<String>> cacheDirContents = new HashMap<File,Set<String>>();
+    private Map<File, Set<String>> cacheDirContents = new HashMap<File, Set<String>>();
     private File locateFile(String fileName, File[] dirList)
         throws TestRunException
     {
@@ -1030,11 +810,30 @@ public class RegressionScript extends Script
     } // absSrcJarLibList()
 
     ExecMode getExecMode() {
-        return params.getExecMode();
+        return defaultExecMode;
     }
 
     Path getJavaTestClassPath() {
         return params.getJavaTestClassPath();
+    }
+
+    boolean isJUnitRequired() {
+        return needJUnit;
+    }
+
+    File getJUnitJar() {
+        return params.getJUnitJar();
+    }
+
+    Lock getLockIfRequired() throws TestRunException {
+        try {
+            if (!testSuite.needsExclusiveAccess(td))
+                return null;
+        } catch (TestSuite.Fault e) {
+            throw new TestRunException("Can't determine if lock required", e);
+        }
+
+        return Lock.get(params);
     }
 
     //--------------------------------------------------------------------------
@@ -1085,8 +884,8 @@ public class RegressionScript extends Script
 
     // Get the standard properties to be set for tests
 
-    Map<String,String> getTestProperties() throws TestClassException {
-        Map<String,String> p = new HashMap<String,String>();
+    Map<String, String> getTestProperties() throws TestClassException {
+        Map<String, String> p = new HashMap<String, String>();
         // The following will be added to javac.class.path on the test JVM
         switch (getExecMode()) {
             case AGENTVM:
@@ -1189,6 +988,24 @@ public class RegressionScript extends Script
         } // TestClassException()
     }
 
+    static String getVersion() {
+        if (version == null) {
+            StringBuilder sb = new StringBuilder();
+            Version v = Version.instance();
+            sb.append(v.product == null ? "jtreg" : v.product);
+            if (v.version != null)
+                sb.append(' ').append(v.version);
+            if (v.milestone != null)
+                sb.append(' ').append(v.milestone);
+            if (v.build != null)
+                sb.append(' ').append(v.build);
+            version = sb.toString();
+        }
+        return version;
+    }
+    // where
+    static String version;
+
     //----------misc statics---------------------------------------------------
 
     static final String WRAPPEREXTN = ".jta";
@@ -1201,42 +1018,41 @@ public class RegressionScript extends Script
         NOT_EXT_ACTION        = " does not extend Action",
         ILLEGAL_ACCESS_INIT   = "Illegal access to init method: ",
         BAD_ACTION            = "Bad action for script: ",
-        CLEAN_RM_PROB         = "Problem deleting file: ",
-        CLEAN_SECMGR_PROB     = "Problem deleting scratch directory: ",
         ADD_BAD_SUBTYPE       = "Class must be a subtype of ",
         PATH_TESTCLASS        = "Unable to locate test class directory!?",
-        PATH_SCRATCH_CREATE   = "Can't create test scratch directory: ",
         TEST_SRC              = "Test source: ",
         UNEXPECTED_LOC        = "does not reside in: ",
         CANT_FIND_SRC         = "Can't find source file: ",
         LIB_LIST              = " in directory-list: ",
         PROB_CANT_CANON       = "Unable to canonicalize file: ";
 
-    private static I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(RegressionScript.class);
-
     //----------member variables-----------------------------------------------
 
-    private Map<String,Class<?>> actionTable = new HashMap<String,Class<?>>();
+    private Map<String, Class<?>> actionTable = new HashMap<String, Class<?>>();
     private TestResult testResult;
     // the library-list resolved to the test-src directory
     //private String[] libList;
 
     private RegressionEnvironment regEnv;
     private RegressionParameters params;
+    private RegressionTestSuite testSuite;
+    private ExecMode defaultExecMode;
+    private boolean needJUnit;
+    private ScratchDirectory scratchDirectory;
 
     //----------thread safety-----------------------------------------------
 
     private static final AtomicInteger uniqueId = new AtomicInteger(0);
 
-    private static final ThreadLocal < Integer > uniqueNum =
-        new ThreadLocal < Integer > () {
+    private static final ThreadLocal<Integer> uniqueNum =
+        new ThreadLocal<Integer> () {
             @Override protected Integer initialValue() {
                 return uniqueId.getAndIncrement();
         }
     };
 
     File getThreadSafeDir(String name) {
-        return (regEnv.params.getConcurrency() == 1)
+        return (params.getConcurrency() == 1)
                 ? new File(name)
                 : new File(name, String.valueOf(getCurrentThreadId()));
     }

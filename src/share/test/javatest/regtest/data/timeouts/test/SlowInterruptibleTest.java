@@ -23,6 +23,7 @@
 
 /*
  * @test
+ * @run main/timeout=10 SlowInterruptibleTest
  */
 
 public class SlowInterruptibleTest {

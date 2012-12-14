@@ -25,10 +25,7 @@
 
 package com.sun.javatest.diff;
 
-import com.sun.javatest.Status;
-import com.sun.javatest.TestDescription;
-import com.sun.javatest.TestResult;
-import com.sun.javatest.util.I18NResourceBundle;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -37,6 +34,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+
+import com.sun.javatest.Status;
+import com.sun.javatest.TestDescription;
+import com.sun.javatest.TestResult;
+import com.sun.javatest.util.I18NResourceBundle;
 
 /**
  * Read a set of test results from summary.txt, possibly located in a

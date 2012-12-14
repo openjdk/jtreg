@@ -36,10 +36,10 @@ import java.util.TreeMap;
 /**
  * A Map from a key to a possibly sparse array of values.
  */
-public class MultiMap<K,V> implements Map<K, MultiMap.Entry<V>> {
+public class MultiMap<K, V> implements Map<K, MultiMap.Entry<V>> {
     public static class Entry<V> {
 
-        private Entry(MultiMap<?,?> t) {
+        private Entry(MultiMap<?, ?> t) {
             table = t;
         }
 
@@ -81,7 +81,7 @@ public class MultiMap<K,V> implements Map<K, MultiMap.Entry<V>> {
         }
 
         private List<V> list;
-        private MultiMap<?,?> table;
+        private MultiMap<?, ?> table;
     }
 
     /** Creates a new instance of MultiMap */
@@ -107,9 +107,9 @@ public class MultiMap<K,V> implements Map<K, MultiMap.Entry<V>> {
         addColumn(name, map.entrySet());
     }
 
-    void addColumn(String name, Iterable<Map.Entry<K,V>> iter) {
+    void addColumn(String name, Iterable<Map.Entry<K, V>> iter) {
         int index = addColumn(name);
-        for (Map.Entry<K,V> e: iter)
+        for (Map.Entry<K, V> e: iter)
             addRow(index, e.getKey(), e.getValue());
     }
 

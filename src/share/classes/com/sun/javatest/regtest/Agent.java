@@ -25,9 +25,6 @@
 
 package com.sun.javatest.regtest;
 
-import com.sun.javatest.Status;
-import com.sun.javatest.TestResult;
-import com.sun.javatest.util.Timer;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -45,14 +42,21 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 
+import com.sun.javatest.Status;
+import com.sun.javatest.TestResult;
+import com.sun.javatest.util.Timer;
+
 public class Agent {
     public static class Fault extends Exception {
+        private static final long serialVersionUID = 0;
         Fault(Throwable e) {
             super(e);
         }
@@ -79,7 +83,7 @@ public class Agent {
         try {
             new Server(args).run();
         } catch (Throwable e) {
-            e.printStackTrace();
+            e.printStackTrace(System.err);
             System.exit(1);
         }
     }
@@ -93,7 +97,7 @@ public class Agent {
 
         id = count++;
         this.jdk = jdk;
-        this.scatchDir = dir;
+        this.scratchDir = dir;
         this.vmOpts = vmOpts;
 
         List<String> cmd = new ArrayList<String>();
@@ -118,7 +122,7 @@ public class Agent {
 
         ProcessBuilder pb = new ProcessBuilder(cmd);
         pb.directory(dir);
-        Map<String,String> env = pb.environment();
+        Map<String, String> env = pb.environment();
         env.clear();
         for (String e: envVars) {
             int eq = e.indexOf("=");
@@ -177,11 +181,11 @@ public class Agent {
     }
 
     public boolean matches(File scratchDir, JDK jdk, List<String> vmOpts) {
-        return scratchDir.getName().equals(this.scatchDir.getName()) && this.jdk.equals(jdk) && this.vmOpts.equals(vmOpts);
+        return scratchDir.getName().equals(this.scratchDir.getName()) && this.jdk.equals(jdk) && this.vmOpts.equals(vmOpts);
     }
 
     public Status doCompileAction(String testName,
-            Map<String,String> testProps,
+            Map<String, String> testProps,
             List<String> cmdArgs,
             int timeout,
             TestResult.Section trs)
@@ -220,7 +224,7 @@ public class Agent {
 
     public Status doMainAction(
             String testName,
-            Map<String,String> testProps,
+            Map<String, String> testProps,
             Path testClassPath,
             String testClass,
             List<String> testArgs,
@@ -283,9 +287,12 @@ public class Agent {
         Alarm alarm = new Alarm(PROCESS_CLOSE_TIMEOUT, "Agent[" + id + "]", pw);
         try {
             int rc = process.waitFor();
+            if (rc != 0 || traceAgent)
+                System.err.println("Agent[" + id + "]: Exited, process exit code: " + rc);
         } catch (InterruptedException e) {
             if (traceAgent)
                 System.err.println("Agent[" + id + "]: Interrupted while closing");
+            System.err.println("Agent[" + id + "]: Killing process");
             process.destroy();
         } finally {
             alarm.cancel();
@@ -325,17 +332,17 @@ public class Agent {
         return (b == 0) ? null : in.readUTF();
     }
 
-    void writeProperties(Map<String,String> p) throws IOException {
+    void writeProperties(Map<String, String> p) throws IOException {
         out.writeShort(p.size());
-        for (Map.Entry<String,String> e: p.entrySet()) {
+        for (Map.Entry<String, String> e: p.entrySet()) {
             out.writeUTF(e.getKey());
             out.writeUTF(e.getValue());
         }
     }
 
-    static Map<String,String> readProperties(DataInputStream in) throws IOException {
+    static Map<String, String> readProperties(DataInputStream in) throws IOException {
         int n = in.readShort();
-        Map<String,String> p = new HashMap<String,String>(n, 1.0f);
+        Map<String, String> p = new HashMap<String, String>(n, 1.0f);
         for (int i = 0; i < n; i++) {
             String key = in.readUTF();
             String value = in.readUTF();
@@ -345,7 +352,7 @@ public class Agent {
     }
 
     Status readResults(TestResult.Section trs) throws IOException, InterruptedException {
-        Map<String,PrintWriter> streams = new HashMap<String,PrintWriter>();
+        Map<String, PrintWriter> streams = new HashMap<String, PrintWriter>();
         int op;
         while ((op = in.readByte()) != -1) {
             if (Thread.interrupted()) {
@@ -400,7 +407,7 @@ public class Agent {
 
     final JDK jdk;
     final List<String> vmOpts;
-    final File scatchDir;
+    final File scratchDir;
     final Process process;
     final DataInputStream in;
     final DataOutputStream out;
@@ -492,7 +499,7 @@ public class Agent {
             if (traceServer)
                 traceOut.println("Agent.Server.doCompile");
             String testName = in.readUTF();
-            Map<String,String> testProps = readProperties(in);
+            Map<String, String> testProps = readProperties(in);
             List<String> cmdArgs = readList(in);
             int timeout = in.readInt();
 
@@ -518,7 +525,7 @@ public class Agent {
             if (traceServer)
                 traceOut.println("Agent.Server.doMain");
             String testName = in.readUTF();
-            Map<String,String> testProps = readProperties(in);
+            Map<String, String> testProps = readProperties(in);
             Path classPath = new Path(in.readUTF());
             String className = in.readUTF();
             List<String> classArgs = readList(in);
@@ -561,7 +568,8 @@ public class Agent {
         private final DataInputStream in;
         private final DataOutputStream out;
         private final PrintStream traceOut = System.err;
-        private Map<OutputKind,PrintWriter> writers = new HashMap<OutputKind,PrintWriter>();
+        private Map<OutputKind, PrintWriter> writers =
+                new EnumMap<OutputKind, PrintWriter>(OutputKind.class);
 
         public PrintWriter createOutput(final OutputKind kind) {
             PrintWriter pw = writers.get(kind);
@@ -666,7 +674,7 @@ public class Agent {
      * A reusable collection of JVMs with varying VM options.
      */
     static class Pool {
-        static Pool instance;
+        private static Pool instance;
 
         static Pool instance() {
             if (instance == null)
@@ -675,7 +683,7 @@ public class Agent {
         }
 
         private Pool() {
-            map = new HashMap<String,Queue<Agent>>();
+            map = new HashMap<String, Queue<Agent>>();
         }
 
         void setSecurityPolicy(File policyFile) {
@@ -692,7 +700,7 @@ public class Agent {
         }
 
         synchronized void save(Agent agent) {
-            String key = getKey(agent.scatchDir, agent.jdk, agent.vmOpts);
+            String key = getKey(agent.scratchDir, agent.jdk, agent.vmOpts);
             Queue<Agent> agents = map.get(key);
             if (agents == null)
                 map.put(key, agents = new LinkedList<Agent>());
@@ -709,11 +717,26 @@ public class Agent {
             policyFile = null;
         }
 
+        /** Close all agents associated with a specific scratch directory. */
+        synchronized void close(File scratchDir) {
+            for (Iterator<Queue<Agent>> mapValuesIter = map.values().iterator(); mapValuesIter.hasNext(); ) {
+                Queue<Agent> agents = mapValuesIter.next();
+                for (Iterator<Agent> agentIter = agents.iterator(); agentIter.hasNext(); ) {
+                    Agent agent = agentIter.next();
+                    if (agent.scratchDir.equals(scratchDir))
+                        agentIter.remove();
+                }
+                if (agents.isEmpty()) {
+                    mapValuesIter.remove();
+                }
+            }
+        }
+
         private static String getKey(File dir, JDK jdk, List<String> vmOpts) {
             return (dir.getAbsolutePath() + " " + jdk.getAbsoluteFile() + " " + StringUtils.join(vmOpts, " "));
         }
 
-        private Map<String,Queue<Agent>> map;
+        private Map<String, Queue<Agent>> map;
         private File policyFile;
     }
 }

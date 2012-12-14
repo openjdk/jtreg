@@ -25,11 +25,6 @@
 
 package com.sun.javatest.diff;
 
-import com.sun.javatest.Status;
-import com.sun.javatest.TestResult;
-import com.sun.javatest.TestSuite;
-import com.sun.javatest.WorkDirectory;
-import com.sun.javatest.util.I18NResourceBundle;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -38,6 +33,12 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+
+import com.sun.javatest.Status;
+import com.sun.javatest.TestResult;
+import com.sun.javatest.TestSuite;
+import com.sun.javatest.WorkDirectory;
+import com.sun.javatest.util.I18NResourceBundle;
 
 public abstract class Diff {
 
@@ -68,7 +69,7 @@ public abstract class Diff {
             reporter.setReaders(list);
 
             List<int[]> testCounts = new ArrayList<int[]>();
-            MultiMap<String,TestResult> table = new MultiMap<String,TestResult>();
+            MultiMap<String, TestResult> table = new MultiMap<String, TestResult>();
             for (DiffReader r: list) {
                 int index = table.addColumn(r.getFile().getPath());
                 int[] counts = new int[Status.NUM_STATES];

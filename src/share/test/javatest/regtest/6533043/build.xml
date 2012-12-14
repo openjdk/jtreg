@@ -1,7 +1,7 @@
-<project name="props-test" default="go" basedir="../../../../../..">
+<project name="props-test" default="go" basedir="../../../../../../make">
 
-    <property name="build.jtreg" value="build/jtreg"/>
-    <property name="tests" value="src/share/test/javatest/regtest/6533043"/>
+    <property name="build.jtreg" value="../build/jtreg"/>
+    <property name="tests" value="../src/share/test/javatest/regtest/6533043"/>
 
     <property name="jtreg.jar" value="dist/lib/jtreg.jar"/>
     <property name="testjdk" value="/tl/jdk/1.6.0"/>
@@ -9,6 +9,10 @@
     <target name="go" depends="t-p,t-pf,t-pe,t-pfe"/>
 
     <target name="t-p" depends="defs">
+        <diagnostics/>
+<echo message="basedir=${basedir}"/>
+<echo message="build.jtreg=${build.jtreg}"/>
+<echo message="tests=${tests}"/>
         <jtreg
             jdk="${testjdk}"
             workDir="${build.jtreg}/6533043/work"

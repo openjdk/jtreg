@@ -1,10 +1,10 @@
 	      The JDK Test Framework: Tag Language Specification
-              Comments and questions to: jtreg-comments@sun.com
+              Comments and questions to: jtreg-use@openjdk.java.net
 			         1.26 09/10/10
 
 
 This is a specification document, not a tutorial.  For more basic information
-please consult the jtreg faq at http://openjdk.dev.java.net/jtreg.
+please consult the jtreg faq at http://openjdk.java.net/jtreg.
 
 
 LEADING COMMENTS AND DEFINING FILES

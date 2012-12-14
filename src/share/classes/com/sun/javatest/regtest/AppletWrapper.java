@@ -270,7 +270,7 @@ public class AppletWrapper
 
             { // the applet
                 GridBagConstraints c  = new GridBagConstraints();
-                c.insets = new Insets(3,3,3,3);
+                c.insets = new Insets(3, 3, 3, 3);
                 c.gridx  = 0;
                 c.gridy  = 1;
                 c.gridwidth = 2;
@@ -293,7 +293,7 @@ public class AppletWrapper
             if (! manual.equals("novalue") && ! manual.equals("unset")) {
                 { // "applet size:" label and CheckBoxGroup
                     GridBagConstraints c  = new GridBagConstraints();
-                    c.insets = new Insets(-3,-3,-3,-3);
+                    c.insets = new Insets(-3, -3, -3, -3);
                     c.gridx = 0;
                     c.gridy = 2;
                     c.gridwidth = 1;
@@ -316,7 +316,7 @@ public class AppletWrapper
 
                 { // The body of the html file.
                     GridBagConstraints c  = new GridBagConstraints();
-                    c.insets = new Insets(3,3,3,3);
+                    c.insets = new Insets(3, 3, 3, 3);
                     c.fill = GridBagConstraints.HORIZONTAL;
                     c.gridx = 0;
                     c.gridy = 4;
@@ -326,7 +326,7 @@ public class AppletWrapper
 
                 { // The buttons.
                     GridBagConstraints c  = new GridBagConstraints();
-                    c.insets = new Insets(3,3,3,3);
+                    c.insets = new Insets(3, 3, 3, 3);
                     c.gridx = 0;
                     c.gridy = 5;
                     if (manual.equals("yesno")) {

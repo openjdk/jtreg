@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="javac-opts" default="go" basedir="../../../../../..">
+<project name="javac-opts" default="go" basedir="../../../../../../make">
 
-    <property name="build.jtreg" value="build/jtreg"/>
-    <property name="tests" value="src/share/test/javatest/regtest/6533074"/>
+    <property name="build.jtreg" value="../build/jtreg"/>
+    <property name="tests" value="../src/share/test/javatest/regtest/6533074"/>
 
     <property name="jtreg.jar" value="dist/lib/jtreg.jar"/>
     <property name="testjdk" value="/tl/jdk/1.6.0"/>

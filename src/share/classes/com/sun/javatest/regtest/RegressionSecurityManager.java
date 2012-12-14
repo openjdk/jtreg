@@ -122,7 +122,7 @@ public class RegressionSecurityManager extends JavaTestSecurityManager {
         }
         else if (perm instanceof PropertyPermission) {
             //super.checkPermission(perm);
-            if (((PropertyPermission)(perm)).getActions().contains("write")) {
+            if (((PropertyPermission) (perm)).getActions().contains("write")) {
                 propertiesModified = true;
             }
         }

@@ -37,16 +37,11 @@ public class TestRunException extends Exception
         super(msg);
     } // TestRunException()
 
-    public TestRunException(Throwable t) {
-        super(t.getMessage());
-        this.t = t;
+    public TestRunException(String msg, Throwable t) {
+        super(msg, t);
     } // TestRunException()
 
-    public Throwable getThrowable() {
-        return t;
-    } // getThrowable()
-
-    //----------member variables------------------------------------------------
-
-    Throwable t = null;
+    public TestRunException(Throwable t) {
+        super(t.getMessage(), t);
+    } // TestRunException()
 }

@@ -29,5 +29,15 @@ package com.sun.javatest.regtest;
 public enum ExecMode {
     OTHERVM,
     SAMEVM,
-    AGENTVM
+    AGENTVM;
+
+    static ExecMode fromString(String s) {
+        if (s == null)
+            return null;
+        for (ExecMode m: values()) {
+            if (m.toString().equalsIgnoreCase(s))
+                return m;
+        }
+        return null;
+    }
 }

@@ -40,11 +40,13 @@
     <property name="src.doc.dir" location="src/share/doc"/>
     <property name="src.test.dir" location="src/share/test"/>
     <property name="build.dir" location="build"/>
+    <property name="build.checkstyle.dir" value="${build.dir}/checkstyle"/>
     <property name="build.classes.dir" location="${build.dir}/classes" />
     <property name="dist.dir" location="dist" />
     <property name="dist.jtreg.dir" location="${dist.dir}/jtreg" />
     <property name="dist.jtreg.zip" location="${dist.dir}/jtreg.zip" />
     <property name="dist.jtreg-no-junit.zip" location="${dist.dir}/jtreg-no-junit.zip" />
+    <property name="make.checkstyle.dir" value="make/checkstyle"/>
 
     <patternset id="helpset">
         <include name="*.hs"/>
@@ -176,7 +178,8 @@
             debug="true" debuglevel="source,lines"
             srcdir="${src.classes.dir}"
             destdir="${build.classes.dir}"
-            classpath="${build.classes.dir}:${javatest.jar}:${junit.jar}">
+            classpath="${build.classes.dir}:${javatest.jar}:${junit.jar}"
+            includeantruntime="false">
             <patternset refid="jtreg.jdk11.files"/>
             <compilerarg line="-Xlint:deprecation"/>
         </javac>
@@ -184,7 +187,8 @@
             debug="true" debuglevel="source,lines"
             srcdir="${src.classes.dir}"
             destdir="${build.classes.dir}"
-            classpath="${build.classes.dir}:${javatest.jar}:${junit.jar}">
+            classpath="${build.classes.dir}:${javatest.jar}:${junit.jar}"
+            includeantruntime="true">
             <compilerarg line="-Xlint:all"/>
             <patternset refid="jtreg.packages"/>
         </javac>
@@ -322,7 +326,8 @@
         <mkdir dir="${build.classes.dir}"/>
         <javac encoding="iso-8859-1" debug="true" source="1.4"
             srcdir="${src.classes.dir}"
-            destdir="${build.classes.dir}">
+            destdir="${build.classes.dir}"
+            includeantruntime="false">
             <compilerarg value="-Xlint"/>
             <include name="com/sun/jct/utils/glossarygen/**"/>
             <include name="com/sun/jct/utils/indexgen/**"/>
@@ -330,7 +335,8 @@
         </javac>
         <javac encoding="iso-8859-1" debug="true" source="1.5"
             srcdir="${src.classes.dir}"
-            destdir="${build.classes.dir}">
+            destdir="${build.classes.dir}"
+            includeantruntime="true">
             <compilerarg value="-Xlint"/>
             <include name="com/sun/jct/utils/i18ncheck/**"/>
             <include name="com/sun/jct/utils/texttohtml/**"/>
@@ -393,4 +399,85 @@
         </exec>
     </target>
 
+    <!-- checkstyle -->
+
+    <target name="checkstyle" depends="-def-checkstyle"
+        description="Generates reports for code convention violations.">
+        <mkdir dir="${build.checkstyle.dir}"/>
+
+        <checkstyle config="${make.checkstyle.dir}/checkstyle-jtreg.xml"
+            failureProperty="checkstyle.failure" failOnViolation="false">
+            <formatter type="xml" tofile="${build.checkstyle.dir}/checkstyle_report.xml"/>
+            <fileset dir="src/share/classes/" includes="**/*.java, **/*.properties"/>
+        </checkstyle>
+
+        <!-- transform the output to a simple html -->
+        <xslt in="${build.checkstyle.dir}/checkstyle_report.xml"
+            out="${build.checkstyle.dir}/checkstyle_report.html"
+            style="${checkstyle.home}/contrib/checkstyle-simple.xsl"/>
+
+        <!-- transform the output to a very simple emacs friendly text file -->
+        <xslt in="${build.checkstyle.dir}/checkstyle_report.xml"
+            out="${build.checkstyle.dir}/checkstyle_report.tmp"
+            style="${make.checkstyle.dir}/checkstyle-emacs.xsl"/>
+
+        <!-- beautify remove extra lines -->
+        <move file="${build.checkstyle.dir}/checkstyle_report.tmp"
+            toFile="${build.checkstyle.dir}/checkstyle_report.emacs.txt">
+            <filterchain>
+                <ignoreblank/>
+                <replaceregex byline="true" pattern="^File:" replace="${line.separator}File:"/>
+            </filterchain>
+        </move>
+    </target>
+
+    <!-- target can be invoked from an ide, the output of which can be used
+         to access and fix the errors directly.-->
+    <target name="checkstyle-ide" depends="checkstyle">
+        <concat>
+            <fileset file="${build.checkstyle.dir}/checkstyle_report.emacs.txt"/>
+        </concat>
+    </target>
+
+    <target name="-check-checkstyle.home" depends="-def-check">
+        <check name="checkstyle" property="checkstyle.home" marker="${checkstyle.name.version}.jar"/>
+    </target>
+
+    <target name="-def-checkstyle" unless="checkstyle.defined" depends="-check-checkstyle.home">
+        <taskdef resource="checkstyletask.properties">
+            <classpath>
+                <pathelement location="${checkstyle.home}/${checkstyle.name.version}-all.jar"/>
+            </classpath>
+        </taskdef>
+        <property name="checkstyle.defined" value="true"/>
+    </target>
+
+    <target name="-def-check">
+        <macrodef name="check">
+            <attribute name="name"/>
+            <attribute name="property"/>
+            <attribute name="marker" default=""/>
+            <sequential>
+                <fail message="Cannot locate @{name}: please set @{property} to its location">
+                    <condition>
+                        <not>
+                            <isset property="@{property}"/>
+                        </not>
+                    </condition>
+                </fail>
+                <fail message="@{name} is not installed in ${@{property}}">
+                    <condition>
+                        <and>
+                            <not>
+                                <equals arg1="@{marker}" arg2=""/>
+                            </not>
+                            <not>
+                                <available file="${@{property}}/@{marker}"/>
+                            </not>
+                        </and>
+                    </condition>
+                </fail>
+            </sequential>
+        </macrodef>
+    </target>
 </project>

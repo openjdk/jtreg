@@ -27,13 +27,13 @@
 
 package com.sun.javatest.diff;
 
-import com.sun.javatest.TestResult;
-import com.sun.javatest.Status;
-import com.sun.javatest.util.I18NResourceBundle;
-
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Map;
+
+import com.sun.javatest.Status;
+import com.sun.javatest.TestResult;
+import com.sun.javatest.util.I18NResourceBundle;
 
 /**
  * Write simple reports to a text file.

@@ -48,6 +48,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+
 import javax.help.DefaultHelpBroker;
 import javax.help.HelpSet;
 import javax.help.JHelpSearchNavigator;
@@ -266,10 +267,10 @@ public class Help {
         Set<String> groups = new LinkedHashSet<String>();
         for (Option o: options)
             groups.add(o.group);
-        Map<String, SortedMap<String,Option>> map =
-                new LinkedHashMap<String, SortedMap<String,Option>>();
+        Map<String, SortedMap<String, Option>> map =
+                new LinkedHashMap<String, SortedMap<String, Option>>();
         for (String g: groups)
-            map.put(g, new TreeMap<String,Option>(new CaseInsensitiveStringComparator()));
+            map.put(g, new TreeMap<String, Option>(new CaseInsensitiveStringComparator()));
         for (Option o: options) {
             if (o.names.length > 0)
                 map.get(o.group).put(o.names[0], o);
@@ -277,7 +278,7 @@ public class Help {
 
         // now build the help tree nodes and add then into the primary help node
         for (String g: groups) {
-            SortedMap<String,Option> optionsForGroup = map.get(g);
+            SortedMap<String, Option> optionsForGroup = map.get(g);
 //                continue;
             List<HelpTree.Node> nodesForGroup = new ArrayList<HelpTree.Node>();
             for (Option o: optionsForGroup.values())
@@ -463,7 +464,7 @@ public class Help {
             });
         }
 
-        private Component findComponent(Container cont, Class targetClass) {
+        private Component findComponent(Container cont, Class<?> targetClass) {
             for (int i = 0; i < cont.getComponentCount(); i++) {
                 Component c = cont.getComponent(i);
                 if (targetClass.isInstance(c))

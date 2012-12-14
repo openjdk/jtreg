@@ -43,7 +43,7 @@
                 non-JCK testsuites.  The JDK regression test suite is one such suite.</p>
 
                 <p>An open source version of the harness is available at
-                <code>http://jtharness.dev.java.net/</code>.
+                <code>http://jtharness.java.net/</code>.
                 </p>
 
             </answer>
@@ -59,7 +59,8 @@
                 <a href="tag-spec.txt">JDK Test Framework: Tag Language Specification</a>
                 provides the needed descriptions.
                 <code>regtest</code> refers to extensions for the JavaTest harness that
-                implement this specification.</p>
+                implement this specification, and is an older name for what is now known as
+                "jtreg".</p>
             </answer>
             <answer context="help">
                 <p>For the harness to execute tests in a given test suite, it needs
@@ -68,7 +69,8 @@
                 <a href="tag-spec.html">JDK Test Framework: Tag Language Specification</a>
                 provides the needed descriptions.
                 <code>regtest</code> refers to extensions for the JavaTest harness that
-                implement this specification.</p>
+                implement this specification, and is an older name for what is now known as
+                "jtreg".</p>
             </answer>
         </entry>
 
@@ -90,8 +92,8 @@
         <entry>
             <question>Where can I find a copy of jtreg?</question>
             <answer context="openjdk">
-                <p>You can find <b>jtreg</b> on
-                <a href="http://openjdk.java.net/">OpenJDK</a> web site.</p>
+                <p>You can find <b>jtreg</b> on the
+                <a href="http://openjdk.java.net/jtreg">OpenJDK</a> web site.</p>
             </answer>
         </entry>
 
@@ -286,7 +288,7 @@
 
                 <p>It is <em>strongly</em> recommended that you not catch general exceptions
                 such as <code>Throwable</code>, <code>Exception</code>, or <code>Error</code>.
-                Doing so can be potentially <a href="#G.7">problematic</a>.</p>
+                Doing so can be potentially <a href="#question4.11">problematic</a>.</p>
             </answer>
         </entry>
 
@@ -316,7 +318,7 @@
                 sensitive to the locale in which the are run, and may contain
                 other details which may be hard to maintain, such as line numbers.</p>
                 <p>While not part of the tag specification, some tests use the
-                string "<code>/nodynamiccopyright</code>" after the <code>@test</code> tag
+                string "<code>/nodynamiccopyright/</code>" after the <code>@test</code> tag
                 to indicate that that the file should not be subject to automated
                 copyright processing that might affect the operation of the test.</p>
             </answer>
@@ -326,7 +328,7 @@
             <question>What should I do with a test once
             I've written it?</question>
             <answer>
-                <p>Check it into the test directory in your workspace.</p>
+                <p>Check it into the test directory in your repository.</p>
 
                 <p>Yes, it really is that simple.</p>
             </answer>
@@ -335,17 +337,14 @@
         <entry>
             <question>Where is the test directory?</question>
             <answer>
-                <p>All JDK workspace beginning with JDK 1.1.5 contain a top-level directory
-                named <code>test</code>.  If your workspace doesn't yet contain this directory,
-                do a bringover from your integration workspace.</p>
+                <p>Within an OpenJDK forest, the langtools/ and jdk/ repositories
+                each have a test/ directory.  The directory and its contents
+                will be created automatically when you clone either of those
+                repositories.</p>
 
-                <dl><dt></dt><dd>
-                <pre>
-                    % bringover -p &lt;workspace&gt; test
-                </pre></dd></dl>
-
-                <p>This will bringover just the test directory from the parent workspace
-                &lt;workspace&gt;.</p>
+                <p>The jdk/test directory contains tests for the main JRE API
+                and related tools. The langtools/test directory contains tests
+                for the javac, javadoc, javah and javap tools.</p>
             </answer>
         </entry>
 
@@ -355,7 +354,7 @@
             <answer>
                 <p>Checking a test into the workspace against which it's first written
                 helps prevent spurious test failures.  In the case of a regression test, this
-                process ensures that a regression test will migrate upward in the workspace
+                process ensures that a regression test will migrate upward in the integration
                 hierarchy along with the fix for the corresponding bug.  If tests were managed
                 separately from fixes then it would be difficult to distinguish between a true
                 test failure and a failure due to version skew because the fix hadn't caught up
@@ -377,19 +376,6 @@
 
                 <p>Each class directory may contain a combination of single-file tests and
                 further subdirectories for tests that require more than one source file.</p>
-            </answer>
-        </entry>
-
-        <entry>
-            <question>What should I do if my test
-            directory is missing a subdirectory that I need?</question>
-            <answer>
-                <p>The test directory in your workspace may not contain a particular
-                subdirectory since the source code management system creates directories
-                only if they contain files that have been put under source code control.
-                If you run into this problem, just create the directory that you need and
-                check your test files into it. The source code management system
-                will take care of the rest.</p>
             </answer>
         </entry>
 
@@ -969,7 +955,7 @@
             <answer>
                 <p>Yes!  The <code>-reportOnly</code> option to <code>jtreg</code> will
                 generate the standard HTML reports for tests which have been previously
-                executed.  Tests will <em>not</em> be executed.  A <a href="#S.5">work
+                executed.  Tests will <em>not</em> be executed.  A <a href="#question3.6">work
                 directory</a> containing the results of the executed tests must be provided.
                 The default location is <code>./JTwork</code>.  An alternate directory may be
                 specified using <code>-workDir</code>.</p>
@@ -998,7 +984,8 @@
                 JDK regression test suite assume that MKS is available. So, when you
                 are writing tests for that test suite, you should make sure that your
                 test at least works with MKS. If you prefer to use Cygwin, and can make
-                your test run with both, so much the better.
+                your test run with both, so much the better. Note: as of JDK 8, the
+                tests assume the use of Cygwin by default.
             </answer>
         </entry>
 
@@ -1033,11 +1020,14 @@
             <question>How do I specify VM options to the test's JVM?
             </question>
             <answer>
-                <p>Most JVM options is recognized by <code>jtreg</code> and passed
-                to the test.  Note that these options are sentitive to both the platform and
+                <p>Many JVM options are recognized by <code>jtreg</code> and passed
+                to the test.  Note that these options are sensitive to both the platform and
                 the JDK being tested.  For example, Linux does not currently support 64-bit
                 operation.  Thus, the option <code>-d64</code> is not valid on
                 Linux and will be rejected.</p>
+                <p>You can also use the <code>-vmoption</code> or <code>-vmoptions</code>
+                option to pass one or a space-separated list of options to the JVM used
+                to run the test. </p>
             </answer>
         </entry>
     </group>
@@ -1132,6 +1122,16 @@
         </entry>
 
         <entry>
+            <question>What is "agent VM" mode, and why would I want to use it?</question>
+            <answer>
+                <p>It's like "same VM" mode, but better. By default, tests will run in
+                the same JVM. In between tests, jtreg will try to reset the JVM to
+                a standard state, and if it cannot, it will discard the JVM and
+                start another. </p>
+            </answer>
+        </entry>
+
+        <entry>
             <question>Should a test call the
             <code>System.exit</code> method?</question>
             <answer>
@@ -1168,24 +1168,18 @@
 
                 <dl><dt></dt><dd>
                 <pre>
-                    String arch = System.getProperty("os.arch");
                     String name = System.getProperty("os.name");
-                    if (arch.equals("sparc")) {
-                        System.out.println("SunOS, sparc");
-                    } else if (arch.equals("x86")) {
-                        if (name.equals("SunOS"))
-                            System.out.println("SunOS, x86");
-                        else if (name.startsWith("Windows"))
-                            System.out.println("windows");
-                        else
-                            throw new RuntimeException("unrecognized OS:" +
-                                " os.arch == " + arch +
-                                " os.name == " + name);
-                    } else if (arch.equals("i386")) {
-                        System.out.println("Linux, i386");
+                    if (name.equals("Linux")) {
+                        System.out.println("Linux");
+                    } else if (name.contains("OS X")) {
+                        System.out.println("(Mac) OS X");
+                    } else if (name.equals("SunOS")) {
+                        System.out.println("Solaris");
+                    } else if (name.startsWith("Windows")) {
+                        System.out.println("Windows");
                     } else {
-                        throw new RuntimeException("unrecognized system:" +
-                            " os.arch == " + arch);
+                        throw new RuntimeException("unrecognized OS:" +
+                                " os.name == " + name);
                     }
                 </pre></dd></dl>
 
@@ -1197,25 +1191,19 @@
                 <pre>
                     OS=`uname -s`
                     case "$OS" in
+                        CYGWIN* )
+                            echo "Windows (Cygwin)" ;;
+                        Darwin )
+                            echo "(Mac) OS X" ;;
                         Linux )
                             echo "Linux" ;;
                         SunOS )
-                            HARDWARE=`uname -m`
-                            case "$HARDWARE" in
-                                sun4u )
-                                    echo "SunOS, sparc" ;;
-                                i86pc )
-                                    echo "SunOS, x86" ;;
-                                * )
-                                    echo "unrecognized SunOS: $HARDWARE" ;;
-                            esac ;;
-                        Windows_* )
-                            echo "windows" ;;
+                            echo "Solaris" ;;
+                        Windows* )
+                            echo "Windows" ;;
                         * )
-                            echo "unrecognized system: $OS" ;;
+                            echo "unrecognized system: $OS" ; exit 1 ;;
                     esac
-
-                    exit $?
                 </pre></dd></dl>
             </answer>
         </entry>
@@ -1248,7 +1236,7 @@
             <question>Can I use <code>package</code>
             statements in my tests?</question>
             <answer>
-                <p>Yes&#8230;but you probably don't want to.  The harness  searches for class
+                <p>Yes&#8230; but you probably don't want to.  The harness  searches for class
                 files in a class directory with components which are parallel to the source
                 directory.  It will be unable to locate packaged class files when the test is
                 invoked via reflection.  Use of the <code>package</code> statement is not
@@ -1315,7 +1303,7 @@
                 <p>Note that this question indicates that the test itself can not determine
                 whether it passed or failed (i.e. it needs human intervention).  Thus, the test
                 uses the <code>manual</code> option.  The suggestions provided for the <a
-                href="#A.0"><code>applet</code> action</a> may apply.</p>
+                href="#group6"><code>applet</code> action</a> may apply.</p>
             </answer>
         </entry>
 
@@ -1333,7 +1321,7 @@
                 <code>java</code> and <code>javac</code>.</p>
 
                 <p><b>Warning!</b> All tests, including shell-script tests, may be run on
-                multiple platforms including Linux, Solaris, Windows NT, and Windows 95/98. The
+                multiple platforms including Linux, Solaris, Windows and Mac OS X. The
                 shell-script should be written to with this in mind.  The following code
                 fragment may be useful in defining various platform-dependent variables.</p>
 
@@ -1341,13 +1329,19 @@
                     <pre>
                         OS=`uname -s`
                         case "$OS" in
-                            SunOS | Linux )
+                            SunOS | Linux | *BSD | Darwin )
                                 NULL=/dev/null
                                 PATHSEP=":"
                                 FILESEP="/"
                                 TMP=/tmp
                                 ;;
-                            Windows_* )
+                            CYGWIN* )
+                                NULL=/dev/null
+                                PATHSEP=";"
+                                FILESEP="/"
+                                TMP=/tmp
+                                ;;
+                            Windows* )
                                 NULL=NUL
                                 PATHSEP=";"
                                 FILESEP="\\"
@@ -1865,7 +1859,7 @@
                 <p>A single directory contains more than one file with the same basename.</p>
 
                 <p><b>Answer</b>: The two files contain descriptions of tests and the harness is
-                unable to determine a unique <a href="#S.4"><code>.jtr</code></a> filename so
+                unable to determine a unique <a href="#question3.5"><code>.jtr</code></a> filename so
                 the harness will overwrite the results of the first test.  It is possible to have
                 a single directory with more than one file with the same basename; however,
                 only one of those files may have a test description (<code>@test</code> is the

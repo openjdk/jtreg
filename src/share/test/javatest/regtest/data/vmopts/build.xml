@@ -1,7 +1,7 @@
-<project name="vmopts-test" default="go" basedir="../../../../../../..">
+<project name="vmopts-test" default="go" basedir="../../../../../../../make">
 
-    <property name="build.jtreg" value="build/jtreg"/>
-    <property name="vmopts.tests" value="src/share/test/javatest/regtest/data/vmopts"/>
+    <property name="build.jtreg" value="../build/jtreg"/>
+    <property name="vmopts.tests" value="../src/share/test/javatest/regtest/data/vmopts"/>
 
     <property name="jtreg.jar" value="dist/lib/jtreg.jar"/>
     <property name="testjdk" value="/tl/jdk/1.6.0"/>

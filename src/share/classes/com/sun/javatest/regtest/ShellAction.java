@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2007, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2011, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -189,8 +189,8 @@ public class ShellAction extends Action
                 tmpArgs.add(fixupSep(envVars[i]));
             tmpArgs.add("TESTSRC=" + fixupSep(script.absTestSrcDir()));
             tmpArgs.add("TESTCLASSES=" + fixupSep(script.absTestClsDir()));
-            tmpArgs.add("COMPILEJAVA=" + fixupSep(script.getCompileJDK().getPath()));
-            tmpArgs.add("TESTJAVA=" + fixupSep(script.getTestJDK().getPath()));
+            tmpArgs.add("COMPILEJAVA=" + fixupSep(script.getCompileJDK().getAbsolutePath()));
+            tmpArgs.add("TESTJAVA=" + fixupSep(script.getTestJDK().getAbsolutePath()));
             List<String> vmOpts = script.getTestVMOptions();
             tmpArgs.add("TESTVMOPTS=" + fixupSep(StringUtils.join(vmOpts, " ")));
             List<String> toolVMOpts = script.getTestToolVMOptions();
@@ -207,6 +207,8 @@ public class ShellAction extends Action
             // PASS TO PROCESSCOMMAND
             PrintWriter sysOut = section.createOutput("System.out");
             PrintWriter sysErr = section.createOutput("System.err");
+            Lock lock = script.getLockIfRequired();
+            if (lock != null) lock.lock();
             try {
                 if (showCmd)
                     showCmd("shell", cmdArgs, section);
@@ -220,6 +222,7 @@ public class ShellAction extends Action
 
                 status = cmd.run(cmdArgs, sysErr, sysOut);
             } finally {
+                if (lock != null) lock.unlock();
                 script.setAlarm(0);
                 if (sysOut != null) sysOut.close();
                 if (sysErr != null) sysErr.close();

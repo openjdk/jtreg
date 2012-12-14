@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2011, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2012, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -50,14 +50,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Properties;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
 
@@ -67,10 +68,10 @@ import org.apache.tools.ant.Project;
 import org.apache.tools.ant.taskdefs.MatchingTask;
 import org.apache.tools.ant.types.Commandline;
 
-import com.sun.javatest.Keywords;
 import com.sun.javatest.Harness;
 import com.sun.javatest.InterviewParameters;
 import com.sun.javatest.JavaTestSecurityManager;
+import com.sun.javatest.Keywords;
 import com.sun.javatest.ProductInfo;
 import com.sun.javatest.Status;
 import com.sun.javatest.TestEnvironment;
@@ -193,7 +194,6 @@ public class Main {
 
         new Option(OLD, MAIN, "", "w", "workDir") {
             public void process(String opt, String arg) {
-
                 workDirArg = new File(arg);
                 childArgs.add("-w:" + workDirArg.getAbsolutePath());
             }
@@ -384,6 +384,20 @@ public class Main {
                 if (arg.length() == 0)
                     return;
                 envVarArgs.addAll(Arrays.asList(arg.split(",")));
+            }
+        },
+
+        new Option(STD, MAIN, "", "lock") {
+            public void process(String opt, String arg) throws BadArgs {
+                File f = new File(arg).getAbsoluteFile();
+                try {
+                    if (!(f.exists() ? f.isFile() && f.canRead() : f.createNewFile()))
+                        throw new BadArgs(i18n, "main.badLockFile", arg);
+                } catch (IOException e) {
+                    throw new BadArgs(i18n, "main.cantCreateLockFile", arg);
+                }
+                exclusiveLockArg = f;
+                childArgs.add("-lock:" + f);
             }
         },
 
@@ -790,8 +804,8 @@ public class Main {
             Project p = getProject();
 
             // import javatest.* properties as system properties
-            Map<?,?> properties = p.getProperties();
-            for (Map.Entry<?,?> e: properties.entrySet()) {
+            Map<?, ?> properties = p.getProperties();
+            for (Map.Entry<?, ?> e: properties.entrySet()) {
                 String key = (String) e.getKey();
                 if (key.startsWith("javatest."))
                     System.setProperty(key, (String) e.getValue());
@@ -936,9 +950,18 @@ public class Main {
         this.err = err;
 
         // FIXME: work around bug 6466752
-        File jt_jar = findJar("javatest.jar", "lib/javatest.jar", com.sun.javatest.Harness.class);
-        if (jt_jar != null)
-            System.setProperty("javatestClassDir", jt_jar.getPath());
+        javatest_jar = findJar("javatest.jar", "lib/javatest.jar", com.sun.javatest.Harness.class);
+        if (javatest_jar != null)
+            System.setProperty("javatestClassDir", javatest_jar.getPath());
+
+        jtreg_jar = findJar("jtreg.jar", "lib/jtreg.jar", getClass());
+        if (jtreg_jar != null) {
+            jcovManager = new JCovManager(jtreg_jar.getParentFile());
+            if (jcovManager.isJCovInstalled()) {
+                options = new ArrayList<Option>(options);
+                options.addAll(jcovManager.options);
+            }
+        }
     }
 
     /**
@@ -950,7 +973,12 @@ public class Main {
      */
     public final int run(String[] args) throws
             BadArgs, Fault, Harness.Fault, InterruptedException {
-        new OptionDecoder(options).decodeArgs(expandAtFiles(args));
+        if (args.length > 0)
+            new OptionDecoder(options).decodeArgs(expandAtFiles(args));
+        else {
+            help = new Help(options);
+            help.setCommandLineHelpQuery("");
+        }
         return run();
     }
 
@@ -958,6 +986,47 @@ public class Main {
         if (help != null) {
             guiFlag = help.show(out);
             return EXIT_OK;
+        }
+
+        File baseDir;
+        if (baseDirArg == null) {
+            baseDir = new File(System.getProperty("user.dir"));
+        } else {
+            if (!baseDirArg.exists())
+                throw new Fault(i18n, "main.cantFindFile", baseDirArg);
+            baseDir = baseDirArg.getAbsoluteFile();
+        }
+
+        String antFileList = System.getProperty(JAVATEST_ANT_FILE_LIST);
+        if (antFileList != null)
+            antFileArgs.addAll(readFileList(new File(antFileList)));
+
+        Map<File, Set<String>> testFileMap =
+                getTestFileMap(baseDir, join(testFileArgs, antFileArgs));
+        boolean multiRun = (testFileMap.size() > 1);
+
+        if (execMode == null) {
+            Set<ExecMode> modes = EnumSet.noneOf(ExecMode.class);
+            for (File f: testFileMap.keySet()) {
+                try {
+                    RegressionTestSuite ts = RegressionTestSuite.open(f);
+                    ExecMode m = ts.getDefaultExecMode();
+                    if (m != null)
+                        modes.add(m);
+                } catch (TestSuite.Fault e) {
+                    throw new Fault(i18n, "main.cantOpenTestSuite", f, e);
+                }
+            }
+            switch (modes.size()) {
+                case 0:
+                    execMode = ExecMode.OTHERVM;
+                    break;
+                case 1:
+                    execMode = modes.iterator().next();
+                    break;
+                default:
+                    throw new Fault(i18n, "main.cantDetermineExecMode");
+            }
         }
 
         if (execMode == ExecMode.SAMEVM && !testJavaOpts.isEmpty())
@@ -1008,23 +1077,6 @@ public class Main {
         if (!testJDK.exists())
             throw new Fault(i18n, "main.test.jdk.not.found", testJDK);
 
-        File baseDir;
-        if (baseDirArg == null) {
-            baseDir = new File(System.getProperty("user.dir"));
-        } else {
-            if (!baseDirArg.exists())
-                throw new Fault(i18n, "main.cantFindFile", baseDirArg);
-            baseDir = baseDirArg.getAbsoluteFile();
-        }
-
-        String antFileList = System.getProperty(JAVATEST_ANT_FILE_LIST);
-        if (antFileList != null)
-            antFileArgs.addAll(readFileList(new File(antFileList)));
-
-        Map<File, Set<String>> testFileMap =
-                getTestFileMap(baseDir, join(testFileArgs, antFileArgs));
-        boolean multiRun = (testFileMap.size() > 1);
-
         if (workDirArg == null) {
             workDirArg = new File("JTwork");
             childArgs.add(0, "-w:" + workDirArg.getAbsolutePath());
@@ -1051,84 +1103,134 @@ public class Main {
                     break;
                 case SAMEVM:
                     initPolicyFile();
+                    break;
                 case OTHERVM:
+                    break;
             }
         }
 
-        if (!isThisVMOK())
-            return execChild();
+        if (jcovManager.isEnabled()) {
+            jcovManager.setWorkDir(workDirArg.getAbsoluteFile());
+            jcovManager.setReportDir(reportDirArg.getAbsoluteFile());
+            boolean isChild = (System.getProperty("javatest.child") != null);
+            if (!isChild) {
+                jcovManager.instrumentClasses();
+                final String XBOOTCLASSPATH_P = "-Xbootclasspath/p:";
+                String insert = jcovManager.instrClasses + File.pathSeparator
+                                + jcovManager.jcov_implant_jar;
+                boolean done = false;
+                for (int i = 0; i < testVMOpts.size(); i++) {
+                    String opt = testVMOpts.get(i);
+                    if (opt.startsWith(XBOOTCLASSPATH_P)) {
+                        opt = opt.substring(0, XBOOTCLASSPATH_P.length())
+                                + insert + File.pathSeparator
+                                + opt.substring(XBOOTCLASSPATH_P.length());
+                        testVMOpts.set(i, opt);
+                        done = true;
+                        break;
+                    }
+                }
+                if (!done)
+                    testVMOpts.add(XBOOTCLASSPATH_P + insert);
 
-        Harness.setClassDir(ProductInfo.getJavaTestClassDir());
+                jcovManager.startGrabber();
+                testVMOpts.add("-Djcov.port=" + jcovManager.grabberPort);
 
-        // Allow keywords to begin with a numeric
-        Keywords.setAllowNumericKeywords(true);
+                if (JCovManager.showJCov)
+                    System.err.println("Modified VM opts: " + testVMOpts);
+            }
+        }
 
-        if (httpdFlag)
-            startHttpServer();
+        try {
 
-        boolean validate = (antFileArgs.size() > 0);
+            if (!isThisVMOK())
+                return execChild();
 
-        if (multiRun && guiFlag)
-            throw new Fault(i18n, "main.onlyOneTestSuiteInGuiMode");
+            Harness.setClassDir(ProductInfo.getJavaTestClassDir());
 
-        Map<File,String> subdirMap = getSubdirMap(testFileMap.keySet(), workDirArg);
+            // Allow keywords to begin with a numeric
+            Keywords.setAllowNumericKeywords(true);
 
-        testStats = new TestStats();
+            if (httpdFlag)
+                startHttpServer();
 
-        for (Map.Entry<File, Set<String>> e: testFileMap.entrySet()) {
-            File ts = e.getKey();
-            Set<String> tests = e.getValue();
-            String subdir = subdirMap.get(ts);
+            boolean validate = (antFileArgs.size() > 0);
 
-            if (multiRun && (verbose != null && verbose.multiRun))
-                out.println("Running tests in " + ts);
+            if (multiRun && guiFlag)
+                throw new Fault(i18n, "main.onlyOneTestSuiteInGuiMode");
 
-            RegressionParameters params = createParameters(ts, tests, subdir, validate);
+            Map<File, String> subdirMap = getSubdirMap(testFileMap.keySet(), workDirArg);
 
-            checkLockFiles(params.getWorkDirectory().getRoot(), "start");
+            testStats = new TestStats();
 
-            // Before we install our own security manager (which will restrict access
-            // to the system properties), take a copy of the system properties.
-            TestEnvironment.addDefaultPropTable("(system properties)", System.getProperties());
+            for (Map.Entry<File, Set<String>> e: testFileMap.entrySet()) {
+                File ts = e.getKey();
+                Set<String> tests = e.getValue();
+                String subdir = subdirMap.get(ts);
 
-            // TODO: take SecurityManager into account for isThisVMOK
-            if (execMode == ExecMode.SAMEVM) {
-                RegressionSecurityManager.install();
-                SecurityManager sm = System.getSecurityManager();
-                if (sm instanceof RegressionSecurityManager) {
-                    RegressionSecurityManager rsm = (RegressionSecurityManager) sm;
-                    rsm.setAllowPropertiesAccess(true);
-                    if (allowSetSecurityManagerFlag)
-                        rsm.setAllowSetSecurityManager(true);
-                    // experimental
-                    rsm.setAllowSetIO(true);
+                if (multiRun && (verbose != null && verbose.multiRun))
+                    out.println("Running tests in " + ts);
+
+                RegressionParameters params = createParameters(ts, tests, subdir, validate);
+
+                checkLockFiles(params.getWorkDirectory().getRoot(), "start");
+
+                // Before we install our own security manager (which will restrict access
+                // to the system properties), take a copy of the system properties.
+                TestEnvironment.addDefaultPropTable("(system properties)", System.getProperties());
+
+                // TODO: take SecurityManager into account for isThisVMOK
+                if (execMode == ExecMode.SAMEVM) {
+                    RegressionSecurityManager.install();
+                    SecurityManager sm = System.getSecurityManager();
+                    if (sm instanceof RegressionSecurityManager) {
+                        RegressionSecurityManager rsm = (RegressionSecurityManager) sm;
+                        rsm.setAllowPropertiesAccess(true);
+                        if (allowSetSecurityManagerFlag)
+                            rsm.setAllowSetSecurityManager(true);
+                        // experimental
+                        rsm.setAllowSetIO(true);
+                    }
+                }
+
+                if (guiFlag) {
+                    showTool(params);
+                    return EXIT_OK;
+                } else {
+                    try {
+                        boolean quiet = (multiRun && !(verbose != null && verbose.multiRun));
+                        testStats.addAll(batchHarness(params, quiet));
+                    } finally {
+                        checkLockFiles(params.getWorkDirectory().getRoot(), "done");
+                    }
                 }
             }
 
-            if (guiFlag) {
-                showTool(params);
-                return EXIT_OK;
-            } else {
-                try {
-                    boolean quiet = (multiRun && !(verbose != null && verbose.multiRun));
-                    testStats.addAll(batchHarness(params, quiet));
-                } finally {
-                    checkLockFiles(params.getWorkDirectory().getRoot(), "done");
+            if (multiRun) {
+                testStats.showResultStats(out);
+                RegressionReporter r = new RegressionReporter(workDirArg, reportDirArg, out);
+                r.report(subdirMap);
+                if (!reportOnlyFlag)
+                    out.println("Results written to " + canon(workDirArg));
+            }
+
+            return (testStats.counts[Status.ERROR] > 0 ? EXIT_TEST_ERROR
+                    : testStats.counts[Status.FAILED] > 0 ? EXIT_TEST_FAILED
+                    : EXIT_OK);
+
+        } finally {
+
+            if (jcovManager.isEnabled()) {
+                jcovManager.stopGrabber();
+                if (jcovManager.results.exists()) {
+                    jcovManager.writeReport();
+                    out.println("JCov report written to " + canon(new File(jcovManager.report, "index.html")));
+                } else {
+                    out.println("Note: no jcov results found; no report generated");
                 }
             }
-        }
 
-        if (multiRun) {
-            testStats.showResultStats(out);
-            RegressionReporter r = new RegressionReporter(workDirArg, reportDirArg, out);
-            r.report(subdirMap);
-            if (!reportOnlyFlag)
-                out.println("Results written to " + canon(workDirArg));
         }
-
-        return (testStats.counts[Status.ERROR] > 0 ? EXIT_TEST_ERROR
-                : testStats.counts[Status.FAILED] > 0 ? EXIT_TEST_FAILED
-                : EXIT_OK);
     }
 
     /**
@@ -1309,6 +1411,8 @@ public class Main {
         classpath.add(jtreg_jar);
         if (childTools.exists())
             classpath.add(childTools);
+        if (junit_jar.exists())
+            classpath.add(junit_jar);
         classpath.addAll(classPathAppendArg);
         c.add(filesToAbsolutePath(classpath).toString());
 
@@ -1331,7 +1435,7 @@ public class Main {
             }
         }
 
-        for (Map.Entry<?,?> e: System.getProperties().entrySet()) {
+        for (Map.Entry<?, ?> e: System.getProperties().entrySet()) {
             String name = (String) e.getKey();
             if (name.startsWith("javatest.") || name.startsWith("jtreg."))
                 c.add("-D" + name + "=" + e.getValue());
@@ -1424,13 +1528,17 @@ public class Main {
     }
 
     void findSystemJarFiles() throws Fault {
-        javatest_jar = findJar("javatest.jar", "lib/javatest.jar", com.sun.javatest.Harness.class);
-        if (javatest_jar == null)
-            throw new Fault(i18n, "main.cantFind.javatest.jar");
+        if (javatest_jar == null) {
+            javatest_jar = findJar("javatest.jar", "lib/javatest.jar", com.sun.javatest.Harness.class);
+            if (javatest_jar == null)
+                throw new Fault(i18n, "main.cantFind.javatest.jar");
+        }
 
-        jtreg_jar = findJar("jtreg.jar", "lib/jtreg.jar", getClass());
-        if (jtreg_jar == null)
-            throw new Fault(i18n, "main.cantFind.jtreg.jar");
+        if (jtreg_jar == null) {
+            jtreg_jar = findJar("jtreg.jar", "lib/jtreg.jar", getClass());
+            if (jtreg_jar == null)
+                throw new Fault(i18n, "main.cantFind.jtreg.jar");
+        }
 
         String s = System.getProperty("junit.jar");
         if (s != null)
@@ -1540,8 +1648,8 @@ public class Main {
      *  a test suite implies all tests in the test suite.
      */
     private Map<File, Set<String>> getTestFileMap(File baseDir, List<File> testFiles) throws Fault {
-        Map<File,Set<String>> results = new LinkedHashMap<File,Set<String>>();
-        Map<File, File> cache = new HashMap<File,File>();
+        Map<File, Set<String>> results = new LinkedHashMap<File, Set<String>>();
+        Map<File, File> cache = new HashMap<File, File>();
         for (File tf: testFiles) {
             File f = canon(tf.isAbsolute() ? tf : new File(baseDir, tf.getPath()));
             if (!f.exists())
@@ -1576,7 +1684,7 @@ public class Main {
      * @return the path for the enclosing directory containing TEST.ROOT,
      *      or null if these is no such directory
      */
-    private File getTestSuiteForTest(Map<File,File> cache, File file) {
+    private File getTestSuiteForTest(Map<File, File> cache, File file) {
         if (file == null)
             return null;
         if (file.isFile())
@@ -1719,7 +1827,7 @@ public class Main {
 
         try {
             // create a canonTestFile suite and work dir.
-            RegressionTestSuite testSuite = new RegressionTestSuite(ts);
+            RegressionTestSuite testSuite = RegressionTestSuite.open(ts);
             RegressionParameters rp = (RegressionParameters) (testSuite.createInterview());
 
             WorkDirectory workDir;
@@ -1730,6 +1838,9 @@ public class Main {
             else
                 workDir = WorkDirectory.create(wd, testSuite);
             rp.setWorkDirectory(workDir);
+
+            // JT Harness 4.3+ requires a config file to be set
+            rp.setFile(workDir.getFile("config.jti"));
 
             rp.setRetainArgs(retainArgs);
 
@@ -1787,6 +1898,9 @@ public class Main {
 
             if (rd != null)
                 rp.setReportDir(rd);
+
+            if (exclusiveLockArg != null)
+                rp.setExclusiveLock(exclusiveLockArg);
 
             if (!rp.isValid())
                 throw new Fault(i18n, "main.badParams", rp.getErrorMessage());
@@ -1904,8 +2018,8 @@ public class Main {
             ElapsedTimeHandler elapsedTimeHandler = null;
 
             if (reportOnlyFlag) {
-                for (Iterator iter = getResultsIterator(params); iter.hasNext(); ) {
-                    TestResult tr = (TestResult) (iter.next());
+                for (Iterator<TestResult> iter = getResultsIterator(params); iter.hasNext(); ) {
+                    TestResult tr = iter.next();
                     stats.add(tr);
                 }
                 ok = stats.isOK();
@@ -1946,6 +2060,7 @@ public class Main {
 
                 Agent.Pool.instance().close();
                 Alarm.finished();
+                Lock.get(params).close();
             }
 
             if (!quiet)
@@ -1971,7 +2086,8 @@ public class Main {
         }
     }
 
-    private Iterator getResultsIterator(InterviewParameters params) {
+    @SuppressWarnings("unchecked")
+    private Iterator<TestResult> getResultsIterator(InterviewParameters params) {
         TestResultTable trt = params.getWorkDirectory().getTestResultTable();
         trt.waitUntilReady();
 
@@ -2049,7 +2165,7 @@ public class Main {
 
     private String[] getEnvVars() {
 
-        Map<String,String> envVars = new TreeMap<String,String>();
+        Map<String, String> envVars = new TreeMap<String, String>();
         String osName = System.getProperty("os.name").toLowerCase();
         if (osName.startsWith("windows")) {
             addEnvVars(envVars, DEFAULT_WINDOWS_ENV_VARS);
@@ -2060,7 +2176,7 @@ public class Main {
             addEnvVars(envVars, "PATH=/bin:/usr/bin");
         }
         addEnvVars(envVars, envVarArgs);
-        for (Map.Entry<String,String> e: System.getenv().entrySet()) {
+        for (Map.Entry<String, String> e: System.getenv().entrySet()) {
             String k = e.getKey();
             String v = e.getValue();
             if (k.startsWith("JTREG_")) {
@@ -2071,15 +2187,15 @@ public class Main {
         return envVars.values().toArray(new String[envVars.size()]);
     }
 
-    private void addEnvVars(Map<String,String> table, String list) {
+    private void addEnvVars(Map<String, String> table, String list) {
         addEnvVars(table, list.split(","));
     }
 
-    private void addEnvVars(Map<String,String> table, String[] list) {
+    private void addEnvVars(Map<String, String> table, String[] list) {
         addEnvVars(table, Arrays.asList(list));
     }
 
-    private void addEnvVars(Map<String,String> table, List<String> list) {
+    private void addEnvVars(Map<String, String> table, List<String> list) {
         if (list == null)
             return;
 
@@ -2119,15 +2235,15 @@ public class Main {
         if (c != null)  {
             try {
                 String className = c.getName().replace(".", "/") + ".class";
-                // use URI to avoid encoding issues, e.g. Progtram%20Files
+                // use URI to avoid encoding issues, e.g. Program%20Files
                 URI uri = getClass().getClassLoader().getResource(className).toURI();
                 if (uri.getScheme().equals("jar")) {
                     String ssp = uri.getRawSchemeSpecificPart();
                     int sep = ssp.lastIndexOf("!");
                     uri = new URI(ssp.substring(0, sep));
-                    if (uri.getScheme().equals("file"))
-                        return new File(uri.getPath());
                 }
+                if (uri.getScheme().equals("file"))
+                    return new File(uri.getPath());
             } catch (URISyntaxException ignore) {
                 ignore.printStackTrace(System.err);
             }
@@ -2187,7 +2303,7 @@ public class Main {
 
     // these args are jtreg extras
     private File baseDirArg;
-    private ExecMode execMode = ExecMode.OTHERVM;
+    private ExecMode execMode;
     private JDK compileJDK;
     private JDK testJDK;
     private boolean guiFlag;
@@ -2210,11 +2326,14 @@ public class Main {
     private Help help;
     private boolean xmlFlag;
     private boolean xmlVerifyFlag;
+    private File exclusiveLockArg;
 
     File javatest_jar;
     File jtreg_jar;
     File junit_jar;
     File policyFile;
+
+    JCovManager jcovManager;
 
     // the list of args to be passed down to a  child VM
     private List<String> childArgs = new ArrayList<String>();
@@ -2225,7 +2344,8 @@ public class Main {
     private static final String MANUAL    = "manual";
 
     private static final String[] DEFAULT_UNIX_ENV_VARS = {
-        "DISPLAY", "HOME", "LANG", "LC_ALL", "LC_TYPE", "LPDEST", "PRINTER", "TZ", "XMODIFIERS"
+        "DISPLAY", "GNOME_DESKTOP_SESSION_ID", "HOME", "LANG",
+        "LC_ALL", "LC_TYPE", "LPDEST", "PRINTER", "TZ", "XMODIFIERS"
     };
 
     private static final String[] DEFAULT_WINDOWS_ENV_VARS = {

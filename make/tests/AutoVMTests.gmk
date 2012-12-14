@@ -1,0 +1,72 @@
+#
+# Copyright (c) 1997, 2011, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+#----------------------------------------------------------------------
+
+AUTOVM_FILES := $(shell find $(TESTDIR)/javatest/regtest/data/autovm -type f )
+		
+$(BUILDDIR)/autovm/tests.ok: $(AUTOVM_FILES) \
+	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	    $(JTREG_IMAGEDIR)/lib/jh.jar
+	for ts in none agentvm othervm samevm ; do \
+	    $(MKDIR) -p $(BUILDDIR)/autovm/tests/default.$$ts ; \
+	    rsync --recursive --delete $(TESTDIR)/javatest/regtest/data/autovm/ $(BUILDDIR)/autovm/tests/default.$$ts/ ; \
+	    if [ $$ts != none ]; then \
+		echo "defaultExecMode=$$ts" >> $(BUILDDIR)/autovm/tests/default.$$ts/TEST.ROOT ; \
+	    fi \
+	done ; \
+	for mode in none agentvm othervm samevm ; do for ts in none agentvm othervm samevm ; do \
+	    $(J2SEJAVA) -Djavatest.regtest.showMode=true -jar $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+		-jdk:$(J2SEHOME) \
+		-w $(BUILDDIR)/autovm/jtreg/mode.$$mode/ts.$$ts/work \
+		-r $(BUILDDIR)/autovm/jtreg/mode.$$mode/ts.$$ts/report \
+		`if [ $$mode != none ]; then echo "-$$mode" ; fi` \
+		$(BUILDDIR)/autovm/tests/default.$$ts ; \
+	done ; done ; \
+	find $(BUILDDIR)/autovm/jtreg/mode.*/ts.*/work -name \*.jtr | \
+	    grep -v Shell | while read file ; do \
+	    	echo $$file `grep '^Mode:' $$file | sort -u` ; \
+		found=`grep '^Mode:' $$file` ; \
+		case $$file in \
+		    */work/*/othervm/* ) expect_compile=OTHERVM ;; \
+		    */mode.agentvm/* | */mode.none/ts.agentvm/* ) expect_compile=AGENTVM ;; \
+		    */mode.none/ts.none/* | */mode.none/ts.othervm/* | */mode.othervm/* ) expect_compile=OTHERVM ;; \
+		    */mode.samevm/* | */mode.none/ts.samevm/* ) expect_compile=SAMEVM ;; \
+		    * ) echo "Can't match $$file" ; exit 1 ;; \
+		esac ; \
+		case $$file in \
+		    */work/*[Oo]ther* ) expect_run=OTHERVM ;; \
+		    * ) expect_run=$$expect_compile ;; \
+		esac ; \
+		expect=`echo "Mode: $$expect_compile" ; echo "Mode: $$expect_run"` ; \
+		if [ "$$found" != "$$expect" ]; then \
+		    echo "$$file: expected: $$expect, found: $$found" ; exit 1; \
+		fi \
+	    done
+	echo "test passed at `date`" > $@
+
+TESTS.jtreg += $(BUILDDIR)/autovm/tests.ok
+

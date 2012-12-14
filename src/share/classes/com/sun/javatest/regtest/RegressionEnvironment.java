@@ -26,12 +26,13 @@
 package com.sun.javatest.regtest;
 
 import java.util.Map;
+
 import com.sun.javatest.TestEnvironment;
 
 class RegressionEnvironment extends TestEnvironment
 {
     RegressionEnvironment(RegressionParameters params) throws Fault {
-        super("regtest", new Map[] { }, new String[] { });
+        super("regtest", new Map<?, ?>[] { }, new String[] { });
         this.params = params;
     }
 

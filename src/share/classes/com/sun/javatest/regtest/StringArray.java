@@ -145,7 +145,7 @@ public class StringArray extends com.sun.javatest.util.StringArray
     /**
      * Splits a string according to whitespace in the string.  Returns an array
      * of arbitrary length. Elements are delimited (start or end) by an
-     * arbitrary number of Character.isWhitespace().  The whitespace chareacters
+     * arbitrary number of Character.isWhitespace().  The whitespace characters
      * are removed.
      *
      * @param s    The string to split.

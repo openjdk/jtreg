@@ -1,0 +1,159 @@
+#
+# Copyright (c) 2011, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+# These tests run a set of 5 tests that each create an undeletable file
+# that will cause problems for jtreg cleaning up after a test.
+
+#####
+# In agentvm and othervm mode, jtreg should successfully run each test
+# by moving to a new scratch directory when it can't clear the previous one.
+
+$(BUILDDIR)/CleanupTests.agentvm.ok \
+$(BUILDDIR)/CleanupTests.othervm.ok: \
+	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	$(JTREG_IMAGEDIR)/solaris/bin/jtreg
+	if [ -d $(@:%.ok=%) ]; then $(CHMOD) -R +w $(@:%.ok=%) && $(RM) -rf $(@:%.ok=%) ; fi
+	$(MKDIR) $(@:%.ok=%)
+	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(J2SEHOME) \
+		$(@:$(BUILDDIR)/CleanupTests.%.ok=-%) \
+		$(TESTDIR)/javatest/regtest/data/cleanup \
+			> $(@:%.ok=%/jt.log) 2>&1 || \
+	    true "non-zero exit code from JavaTest intentionally ignored"
+	$(GREP) -s 'Test results: passed: 5' $(@:%.ok=%/jt.log)  > /dev/null
+	dirs=`cd $(@:%.ok=%)/work ; $(FIND) -type d -print | $(GREP) scratch | $(GREP) -v readonly | $(SORT)` ; \
+	echo $$dirs ; \
+	if [ `echo $$dirs | $(WC) -w` != 5 ]; then echo "wrong number of scratch directories found" ; exit 1 ; fi
+	$(CHMOD) -R +w $(@:%.ok=%)
+	echo "test passed at `date`" > $@
+
+#####
+# In samevm mode, jtreg cannot run the tests successfully. 
+# The first test will succeed; all subsequent ones will fail
+# because the scratch direectory cannot be cleared.
+
+$(BUILDDIR)/CleanupTests.samevm.ok: \
+	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	$(JTREG_IMAGEDIR)/solaris/bin/jtreg
+	if [ -d $(@:%.ok=%) ]; then $(CHMOD) -R +w $(@:%.ok=%) && $(RM) -rf $(@:%.ok=%) ; fi
+	$(MKDIR) $(@:%.ok=%)
+	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(J2SEHOME) \
+		$(@:$(BUILDDIR)/CleanupTests.%.ok=-%) \
+		$(TESTDIR)/javatest/regtest/data/cleanup \
+			> $(@:%.ok=%/jt.log) 2>&1 || \
+	    true "non-zero exit code from JavaTest intentionally ignored"
+	$(GREP) -s 'Test results: passed: 1; failed: ' $(@:%.ok=%/jt.log)  > /dev/null
+	$(CHMOD) -R +w $(@:%.ok=%)
+	echo "test passed at `date`" > $@
+
+
+#####
+# In agentvm and othervm mode using concurrency, jtreg should successfully 
+# run each test by moving to a new scratch directory when it can't clear 
+# the previous one.
+# You cannot use concurrency with samevm mode.
+
+$(BUILDDIR)/CleanupTests.agentvm.conc.ok \
+$(BUILDDIR)/CleanupTests.othervm.conc.ok: \
+	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	$(JTREG_IMAGEDIR)/solaris/bin/jtreg
+	if [ -d $(@:%.ok=%) ]; then $(CHMOD) -R +w $(@:%.ok=%) && $(RM) -rf $(@:%.ok=%) ; fi
+	$(MKDIR) $(@:%.ok=%)
+	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(J2SEHOME) \
+		$(@:$(BUILDDIR)/CleanupTests.%.conc.ok=-%) \
+		-conc:2 \
+		$(TESTDIR)/javatest/regtest/data/cleanup \
+			> $(@:%.ok=%/jt.log) 2>&1 || \
+	    true "non-zero exit code from JavaTest intentionally ignored"
+	$(GREP) -s 'Test results: passed: 5' $(@:%.ok=%/jt.log)  > /dev/null
+	dirs=`cd $(@:%.ok=%)/work ; $(FIND) -type d -print | $(GREP) scratch/ | $(GREP) -v readonly | $(SORT)` ; \
+	echo $$dirs ; \
+	if [ `echo $$dirs | $(WC) -w` != 5 ]; then echo "wrong number of scratch directories found" ; exit 1 ; fi
+	$(CHMOD) -R +w $(@:%.ok=%)
+	echo "test passed at `date`" > $@
+
+#####
+# In agent mode with -retain, the tests all return error
+# because the selected files annot be retained
+
+$(BUILDDIR)/CleanupTests.agentvm.retain.ok: \
+	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	$(JTREG_IMAGEDIR)/solaris/bin/jtreg
+	if [ -d $(@:%.ok=%) ]; then $(CHMOD) -R +w $(@:%.ok=%) && $(RM) -rf $(@:%.ok=%) ; fi
+	$(MKDIR) $(@:%.ok=%)
+	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(J2SEHOME) \
+		$(@:$(BUILDDIR)/CleanupTests.%.retain.ok=-%) \
+		-retain:readonly.txt \
+		$(TESTDIR)/javatest/regtest/data/cleanup \
+			> $(@:%.ok=%/jt.log) 2>&1 || \
+	    true "non-zero exit code from JavaTest intentionally ignored"
+	$(GREP) -s 'Test results: error: 5' $(@:%.ok=%/jt.log)  > /dev/null
+	dirs=`cd $(@:%.ok=%)/work ; $(FIND) -type d -print | $(GREP) scratch | $(GREP) -v readonly | $(SORT)` ; \
+	echo $$dirs ; \
+	if [ `echo $$dirs | $(WC) -w` != 5 ]; then echo "wrong number of scratch directories found" ; exit 1 ; fi
+	$(CHMOD) -R +w $(@:%.ok=%)
+	echo "test passed at `date`" > $@
+
+#####
+# In othervm mode with -retain, the tests pass because the
+# problem tests are written directly to the correct location 
+# and do not need to be moved.
+
+$(BUILDDIR)/CleanupTests.othervm.retain.ok: \
+	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	$(JTREG_IMAGEDIR)/solaris/bin/jtreg
+	if [ -d $(@:%.ok=%) ]; then $(CHMOD) -R +w $(@:%.ok=%) && $(RM) -rf $(@:%.ok=%) ; fi
+	$(MKDIR) $(@:%.ok=%)
+	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(J2SEHOME) \
+		$(@:$(BUILDDIR)/CleanupTests.%.retain.ok=-%) \
+		-retain:readonly.txt \
+		$(TESTDIR)/javatest/regtest/data/cleanup \
+			> $(@:%.ok=%/jt.log) 2>&1 || \
+	    true "non-zero exit code from JavaTest intentionally ignored"
+	$(GREP) -s 'Test results: passed: 5' $(@:%.ok=%/jt.log)  > /dev/null
+	dirs=`cd $(@:%.ok=%)/work ; $(FIND) -type d -print | $(GREP) scratch | $(GREP) -v readonly | $(SORT)` ; \
+	echo $$dirs ; \
+	if [ `echo $$dirs | $(WC) -w` != 1 ]; then echo "wrong number of scratch directories found" ; exit 1 ; fi
+	$(CHMOD) -R +w $(@:%.ok=%)
+	echo "test passed at `date`" > $@
+
+
+TESTS.jtreg += \
+	$(BUILDDIR)/CleanupTests.agentvm.ok \
+	$(BUILDDIR)/CleanupTests.agentvm.conc.ok \
+	$(BUILDDIR)/CleanupTests.agentvm.retain.ok \
+	$(BUILDDIR)/CleanupTests.othervm.ok \
+	$(BUILDDIR)/CleanupTests.othervm.conc.ok \
+	$(BUILDDIR)/CleanupTests.othervm.retain.ok \
+	$(BUILDDIR)/CleanupTests.samevm.ok

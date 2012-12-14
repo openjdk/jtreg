@@ -114,35 +114,12 @@ $(IMAGES_DIR)/%.jar: pkgsToFiles.sh
 	    $(JAR_EXTRAS)
 	$(CHMOD) -w $@
 
-# don't know how to include these in the preceding implicit rules
-$(JTREG_IMAGEJARDIR)/jtdiff.jar: $(TARGETS.JAR.jtdiff)
-$(JTREG_IMAGEJARDIR)/jtreg.jar: $(TARGETS.JAR.jtreg)
-
 #----------------------------------------------------------------------
 #
 # Build zips with verbose names
 
 %-$(VERBOSE_ZIP_SUFFIX).zip: %.zip 
 	cp $(@:%-$(VERBOSE_ZIP_SUFFIX).zip=%.zip) $@
-
-
-#---------------------------------------------------------------------
-#
-# check for leftover TestResultCache lock files.
-# leftover files may indicate a bug in the cache or its robustness
-
-$(BUILDDIR)/lockCheck.ok: 
-	@ ( \
-	lckfiles=`$(FIND) $(TOPDIR)/build -name ResultCache.jtw.lck -print` ; \
-	if [ ! -z "$$lckfiles" ] ; then \
-	    echo "JavaTest cache lock files remain, please investigate and fix:" ; \
-	    $(FIND) $(TOPDIR)/build -name \*.jtw.lck -ls ; \
-	    exit 1 ; \
-	else \
-	    echo "No leftover JavaTest cache lock files found." ; \
-	fi \
-	)
-	echo $@ passed at `date` > $@
 
 #----------------------------------------------------------------------
 #
@@ -164,13 +141,5 @@ $(BUILDDIR)/lockCheck.ok:
 %: %.mod
 %: %.sh
 
-#---------------------------------------------------------------------
-#
-# clean:
-
-clean:
-	$(RM) $(BUILDDIR)
-
-.NO_PARALLEL: clean
 
 

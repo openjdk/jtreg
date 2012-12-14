@@ -25,10 +25,14 @@
 
 package com.sun.javatest.diff;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.Writer;
 import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -43,10 +47,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 import com.sun.javatest.util.I18NResourceBundle;
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.PrintWriter;
-import java.text.SimpleDateFormat;
+
 import static com.sun.javatest.util.HTMLWriter.*;
 
 class SuperDiff extends Diff {
@@ -105,7 +106,7 @@ class SuperDiff extends Diff {
         File file = new File(outDir, platform + ".html");
         historyIndex.put(platform, file);
         String prefix = baseTitle == null ? "" : baseTitle + ": ";
-        return diff(pDirs, file, prefix + platform);// I18N a better title?
+        return diff(pDirs, file, prefix + platform); // I18N a better title?
     }
 
     private void writeIndex(File outDir, String title) throws Fault {
@@ -131,8 +132,8 @@ class SuperDiff extends Diff {
 
     private SuperTable table;
     private String baseTitle;
-    private Map<String,File> historyIndex = new LinkedHashMap<String,File>();
-    private Map<String,File> platformIndex = new LinkedHashMap<String,File>();
+    private Map<String, File> historyIndex = new LinkedHashMap<String, File>();
+    private Map<String, File> platformIndex = new LinkedHashMap<String, File>();
 
     private static DateFormat monthDayFormat = new SimpleDateFormat("MMM d");
     private static DateFormat mediumDateFormat = DateFormat.getDateInstance(DateFormat.MEDIUM);
@@ -187,13 +188,13 @@ class SuperDiff extends Diff {
             endReport();
         }
 
-        void writeMainIndexList(String head, Map<String,File> map) throws IOException {
+        void writeMainIndexList(String head, Map<String, File> map) throws IOException {
             out.startTag(H2);
             out.write(head);
             out.endTag(H2);
             out.startTag(P);
             String comma = "";
-            for (Map.Entry<String,File> e: map.entrySet()) {
+            for (Map.Entry<String, File> e: map.entrySet()) {
                 out.write(comma);
                 out.startTag(A);
                 out.writeAttr(HREF, e.getValue().getName());
@@ -280,7 +281,7 @@ class SuperDiff extends Diff {
         }
 
         final Set<String> platforms = new TreeSet<String>();
-        final Map<String,Info> infoTable = new HashMap<String, Info>();
+        final Map<String, Info> infoTable = new HashMap<String, Info>();
     }
 
     static class YearDay implements Comparable<YearDay> {

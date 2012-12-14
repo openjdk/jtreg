@@ -25,38 +25,48 @@
 
 package com.sun.javatest.regtest;
 
-import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.lang.ref.SoftReference;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Properties;
+import java.util.Map;
 
 import com.sun.javatest.InterviewParameters;
-import com.sun.javatest.util.BackupPolicy;
-import com.sun.javatest.util.I18NResourceBundle;
 import com.sun.javatest.Script;
 import com.sun.javatest.TestDescription;
 import com.sun.javatest.TestEnvironment;
 import com.sun.javatest.TestFinder;
 import com.sun.javatest.TestSuite;
 import com.sun.javatest.WorkDirectory;
-import java.util.Set;
+import com.sun.javatest.util.BackupPolicy;
+import com.sun.javatest.util.I18NResourceBundle;
 
 
 public class RegressionTestSuite extends TestSuite
 {
+    static Map<File, SoftReference<RegressionTestSuite>> cache;
+
+    public static RegressionTestSuite open(File testSuiteRoot) throws Fault {
+        if (cache == null)
+            cache = new HashMap<File, SoftReference<RegressionTestSuite>>();
+        SoftReference<RegressionTestSuite> ref = cache.get(testSuiteRoot);
+        RegressionTestSuite ts = (ref == null) ? null : ref.get();
+        if (ts == null) {
+            ts = new RegressionTestSuite(testSuiteRoot);
+            cache.put(testSuiteRoot, new SoftReference(ts));
+        }
+        return ts;
+    }
+
     /**
      * @throws Fault Thrown if there are problems reading TEST.ROOT.
      */
     public RegressionTestSuite(File testSuiteRoot) throws Fault {
         super(testSuiteRoot);
-        setProperties();
+        properties = new TestProperties(getRootDir());
         setTestFinder(createTestFinder());
     }
 
@@ -68,7 +78,7 @@ public class RegressionTestSuite extends TestSuite
     @Override
     protected TestFinder createTestFinder() throws Fault {
         try {
-            TestFinder f = new RegressionTestFinder(validKeys, checkBugID);
+            TestFinder f = new RegressionTestFinder(properties);
             f.init(new String[] { }, getRoot(), null);
             return f;
         } catch (TestFinder.Fault e) {
@@ -145,47 +155,25 @@ public class RegressionTestSuite extends TestSuite
         return urls.toArray(new URL[urls.size()]);
     }
 
-    // @Override -- defined in JT Harness 4.2, needs to be overridden
-    //              because default impl broken for jtreg (NPE)
+    // defined in JT Harness 4.2, needs to be overridden
+    // because default impl broken for jtreg (NPE)
+    @Override
     public boolean needServices() {
         return false;
     }
 
-    private void setProperties() throws Fault {
-        // get additional specified properties from TEST.ROOT
-        File file = new File(getRoot(), "TEST.ROOT");
-        if (file.exists()) {
-            Properties testRootProps = new Properties();
-            try {
-                BufferedInputStream in = new BufferedInputStream(new FileInputStream(file));
-                testRootProps.load(in);
+    ExecMode getDefaultExecMode() {
+        return properties.getDefaultExecMode();
+    }
 
-                // add the list of valid keys
-                String keys = testRootProps.getProperty("keys");
-                if ((keys != null) && (keys.trim().length() > 0)) {
-                    //sysProps.put("env.regtest.keys", keys);   // old way
-                    validKeys = new HashSet<String>(Arrays.asList(StringArray.splitWS(keys))); // new way
-                }
+    boolean useOtherVM(TestDescription td) throws TestSuite.Fault {
+        return properties.useOtherVM(td.getFile());
+    }
 
-                // determine whether we want to enforce bugid syntax
-                // the default is that we always do
-                String bug = testRootProps.getProperty("checkBugID");
-                if (bug != null) {
-                    bug = bug.trim();
-                    if (bug.equals("false")) {
-                        //sysProps.put("env.regtest.checkBugID", bug);  // old
-                        checkBugID = false;                             // new
-                    }
-                }
+    boolean needsExclusiveAccess(TestDescription td) throws TestSuite.Fault {
+        return properties.needsExclusiveAccess(td.getFile());
+    }
 
-                in.close();
-            } catch (IOException e) {
-                throw new Fault(i18n, "suite.cantRead", file);
-            }
-        }
-    } // setProperties()
-
-    private Set<String> validKeys;
-    private boolean checkBugID = true;
+    private final TestProperties properties;
     private static I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(RegressionTestSuite.class);
 }

@@ -25,12 +25,12 @@
 
 package com.sun.javatest.regtest;
 
-import com.sun.javatest.Harness;
 import java.io.PrintWriter;
 
+import com.sun.javatest.Harness;
+import com.sun.javatest.Status;
 import com.sun.javatest.TestDescription;
 import com.sun.javatest.TestResult;
-import com.sun.javatest.Status;
 
 // TODO: I18N
 

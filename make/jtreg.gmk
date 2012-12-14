@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2007, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1999, 2012, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -23,24 +23,373 @@
 # questions.
 #
 
+#----------------------------------------------------------------------
+#
+# compile com.sun.javatest.regtest
+
+REGTEST-JDK11-CLASSES = AppletWrapper GetSystemProperty MainWrapper StringArray
+JAVAFILES.com.sun.javatest.regtest-jdk11 = \
+	$(REGTEST-JDK11-CLASSES:%=$(JAVADIR)/com/sun/javatest/regtest/%.java)
+
+# TODO: set -bootclasspath to JDK 1.1 classes?
+$(BUILDDIR)/classes.com.sun.javatest.regtest-jdk11.ok: \
+		$(JAVAFILES.com.sun.javatest.regtest-jdk11) \
+		$(JAVATEST_JAR) \
+		$(CLASSDIR)
+	CLASSPATH=$(JAVADIR):$(CLASSDIR):$(JAVATEST_JAR):$(JUNIT_JAR) \
+	    $(J2SEJAVAC) -source 1.2 -target 1.1 -d $(CLASSDIR) \
+		$(JAVAFILES.com.sun.javatest.regtest-jdk11)
+	echo "classes built at `date`" > $@
+
+JAVAFILES.com.sun.javatest.regtest-j2se := \
+	$(filter-out $(JAVAFILES.com.sun.javatest.regtest-jdk11), $(shell find $(JAVADIR)/com/sun/javatest/regtest -name \*.java ))
+
+$(BUILDDIR)/classes.com.sun.javatest.regtest.ok: \
+		$(JAVAFILES.com.sun.javatest.regtest-j2se) \
+		$(BUILDDIR)/classes.com.sun.javatest.regtest-jdk11.ok
+	CLASSPATH=$(CLASSDIR):$(ANTHOME)/lib/ant.jar:$(JAVATEST_JAR):$(JUNIT_JAR):$(JAVAHELP_JAR) \
+	    $(J2SEJAVAC) -target $(J2SEJAVAC_TARGET) -encoding ISO8859-1 -d $(CLASSDIR) \
+		$(JAVAFILES.com.sun.javatest.regtest-j2se)
+	echo "classes built at `date`" > $@
+
+TARGETS.com.sun.javatest.regtest += $(BUILDDIR)/classes.com.sun.javatest.regtest.ok
+
+
+#----------------------------------------------------------------------
+#
+# resources required for com.sun.javatest.regtest
+
+RESOURCES.com.sun.javatest.regtest = \
+	$(CLASSDIR)/com/sun/javatest/regtest/i18n.properties
+
+TARGETS.com.sun.javatest.regtest += $(RESOURCES.com.sun.javatest.regtest)
+
+#----------------------------------------------------------------------
+# 
+# Misc. doc files
+
+JTREG_COPYRIGHT 	= $(JTREG_IMAGEDIR)/COPYRIGHT
+JTREG_LICENSE		= $(JTREG_IMAGEDIR)/LICENSE
+JTREG_README		= $(JTREG_IMAGEDIR)/README
+JTREG_FAQ 		= $(JTREG_IMAGEDIR)/doc/jtreg/faq.html
+JTREG_TAGSPEC 		= $(JTREG_IMAGEDIR)/doc/jtreg/tag-spec.txt
+JTREG_USAGE 		= $(JTREG_IMAGEDIR)/doc/jtreg/usage.txt
+#JTREG_DOCUMENT_CSS      = $(JTREG_IMAGEDIR)/doc/document.css
+
+JTREG_DOCS = \
+	$(JTREG_COPYRIGHT) \
+	$(JTREG_FAQ) \
+	$(JTREG_LICENSE) \
+	$(JTREG_README) \
+	$(JTREG_TAGSPEC) \
+	$(JTREG_USAGE) \
+	$(JTREG_DOCUMENT_CSS)
+
+$(JTREG_COPYRIGHT): $(TOPDIR)/COPYRIGHT
+	$(MKDIR) -p $(@D)
+	$(RM) $@
+	$(CP) $< $@
+
+$(JTREG_README): $(SRCJTREGDOCDIR)/README
+	$(MKDIR) -p $(@D)
+	$(RM) $@
+	$(CP) $< $@
+
+$(JTREG_TAGSPEC): $(JTREG_IMAGEDIR)/doc/jtreg/%: $(SRCJTREGDOCDIR)/% 
+	$(RM) $@
+	$(MKDIR) -p $(@D)
+	$(CP) $^ $@
+
+$(JTREG_USAGE): $(BUILDDIR)/jtreg-usage.txt
+	$(CP) $^ $@
+
+$(JTREG_LICENSE): $(TOPDIR)/LICENSE
+	$(MKDIR) -p $(@D)
+	$(CP) $^ $@
+
+$(JTREG_DOCUMENT_CSS): $(SRCDOCDIR)/document.css
+	$(RM) $@
+	$(MKDIR) -p $(@D)
+	$(CP) $< $@
+
+TARGETS.doc_jtreg += $(JTREG_DOCS)
+
+#----------------------------------------------------------------------
+#
+# JavaHelp data files
+
+REGTEST_HELP_AUX_FILES = \
+	jtreg.hs \
+	default/help.css \
+	default/index.html \
+	default/ant.html \
+	images/openbook.gif \
+	images/chapter.gif \
+	images/Back16.gif \
+	images/Up16.gif \
+	images/Forward16.gif
+
+TARGETS.JAR.jtreg += \
+	$(REGTEST_HELP_AUX_FILES:%=$(REGTEST_CLASSDIR)/help/%)
+
+REGTEST_CLASSDIR = $(CLASSDIR)/com/sun/javatest/regtest
+REGTEST_SRCDIR = $(SRCJTDOCDIR)/regtest
+
+$(REGTEST_CLASSDIR)/help/default/tag-spec.html: $(REGTEST_SRCDIR)/tag-spec.txt
+	$(MKDIR) -p $(@D)
+	$(RM) $@
+	( echo '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">' ; \
+	  echo '<html><head>'; \
+	  echo '<title>The JDK Test Framework: Tag Language Specification</title>'; \
+	  echo '<style type="text/css">body: { background-color: white; font-size: 12pt; font-family: SansSerif; margin-left: 3px }</style>'; \
+	  echo '</head><body>'; \
+	  echo '<pre>'; \
+	  sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g' $(REGTEST_SRCDIR)/tag-spec.txt; \
+	  echo '</pre>';\
+	  echo '</body></html>'; \
+	) >$@
+
+$(REGTEST_CLASSDIR)/help/default/usage.html: $(BUILDDIR)/jtreg-usage.txt
+	$(MKDIR) -p $(@D)
+	$(RM) $@
+	( echo '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">' ; \
+	  echo '<html><head>'; \
+	  echo '<title>jtreg: Command Line Usage</title>'; \
+	  echo '<style type="text/css">body: { background-color: white; font-size: 12pt; font-family: SansSerif; margin-left: 3px }</style>'; \
+	  echo '</head><body>'; \
+	  echo '<pre>'; \
+	  sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g' -e 's/$$0/jtreg/g' $^ ; \
+	  echo '</pre>'; \
+	  echo '</body></html>'; \
+	) >$@
+
+$(BUILDDIR)/jtreg-usage.txt: \
+		$(BUILDDIR)/classes.com.sun.javatest.regtest.ok \
+		$(BUILDDIR)/classes/com/sun/javatest/regtest/i18n.properties
+	$(J2SEJAVA) -cp $(CLASSDIR):$(JAVATEST_JAR):$(JAVAHELP_JAR) \
+	    -Dprogram=jtreg com.sun.javatest.regtest.Main -help all > $@
+
+XALAN_PATH = $(XALANHOME)/xalan.jar:$(XALANHOME)/serializer.jar:$(XALANHOME)/xml-apis.jar:$(XALANHOME)/xercesImpl.jar
+XALAN = CLASSPATH=$(XALAN_PATH) $(J2SEJAVA) org.apache.xalan.xslt.Process
+
+$(BUILDDIR)/regtest_help_dynfiles.ok: \
+		$(REGTEST_SRCDIR)/faq.xml \
+		$(REGTEST_CLASSDIR)/help/default/tag-spec.html \
+		$(REGTEST_CLASSDIR)/help/default/usage.html
+	$(RM) $(REGTEST_CLASSDIR)/help/default/faq*.html
+	$(XALAN) -in $(REGTEST_SRCDIR)/faq.xml \
+		-xsl $(REGTEST_SRCDIR)/faqtohelp-html.xsl \
+		-out $(REGTEST_CLASSDIR)/help/default/faq.html \
+		-param basedir . \
+		-param context help
+	$(XALAN) -in $(REGTEST_SRCDIR)/faq.xml \
+		-xsl $(REGTEST_SRCDIR)/faqtotoc.xsl \
+		-out $(REGTEST_CLASSDIR)/help/default/toc.xml 
+	$(XALAN) -in $(REGTEST_SRCDIR)/faq.xml \
+		-xsl $(REGTEST_SRCDIR)/faqtomap.xsl \
+		-out $(REGTEST_CLASSDIR)/help/default/map.xml 
+	cd  $(REGTEST_CLASSDIR)/help; \
+	    $(JHINDEXER) -verbose -db default/JavaHelpSearch  \
+		`find default -name \*.html -print `
+	echo "regtest help files created at `date`" > $@
+
+$(REGTEST_CLASSDIR)/help/default: $(CLASSDIR)
+	$(MKDIR) -p $@
+
+$(REGTEST_CLASSDIR)/%: $(REGTEST_SRCDIR)/%
+	$(MKDIR) -p $(@D)
+	$(RM) $@
+	$(CP) $(@:$(REGTEST_CLASSDIR)/%=$(REGTEST_SRCDIR)/%) $@
+
+TARGETS.JAR.jtreg += \
+	$(BUILDDIR)/regtest_help_dynfiles.ok 
+
+#----------------------------------------------------------------------
+#
+# jtreg FAQ
+
+jtreg-faqs: \
+	jtreg-faq-sun/jtreg-faq.html \
+	jtreg-faq-openjdk/jtreg-faq.html
+
+jtreg-faq-%/jtreg-faq.html: \
+		$(REGTEST_SRCDIR)/faq.xml \
+		$(REGTEST_SRCDIR)/faqtohtml.xsl 
+	$(MKDIR) -p $(@D)
+	$(XALAN) -in $(REGTEST_SRCDIR)/faq.xml \
+		-xsl $(REGTEST_SRCDIR)/faqtohtml.xsl \
+		-out $@ \
+		-param context $(@:jtreg-faq-%/jtreg-faq.html=%)
+
+$(JTREG_FAQ): \
+		$(REGTEST_SRCDIR)/faq.xml \
+		$(REGTEST_SRCDIR)/faqtohtml.xsl 
+	$(MKDIR) -p $(@D)
+	$(XALAN) -in $(REGTEST_SRCDIR)/faq.xml \
+		-xsl $(REGTEST_SRCDIR)/faqtohtml.xsl \
+		-out $@ \
+		-param context openjdk
+
+#----------------------------------------------------------------------
+#
+# add docs into standard macros
+
+TARGETS.ZIP.jtreg += $(TARGETS.doc_jtreg)
+TARGETS.JAR.jtreg += \
+	$(REGTEST_HELP_AUX_FILES:%=$(REGTEST_CLASSDIR)/help/%) \
+	$(BUILDDIR)/regtest_help_dynfiles.ok 
+
+FILES.JAR.jtreg += \
+	$(CLASSDIR)/com/sun/javatest/regtest/help
+
+#----------------------------------------------------------------------
+#
+# create jtreg.jar
+
+PKGS.JAR.jtreg += com.sun.javatest.regtest
+TARGETS.JAR.jtreg += $(TARGETS.com.sun.javatest.regtest)
+
+$(JTREG_IMAGEDIR)/lib/jtreg.jar: JAR_MAINCLASS = com.sun.javatest.regtest.Main
+$(JTREG_IMAGEDIR)/lib/jtreg.jar: JAR_CLASSPATH = javatest.jar jh.jar
+
+$(JTREG_IMAGEJARDIR)/jtreg.jar: \
+	$(JTREG_IMAGEDIR)/lib/javatest.jar \
+	$(JTREG_IMAGEJARDIR)/jh.jar \
+	$(TARGETS.JAR.jtreg)
+
+TARGETS.ZIP.jtreg += $(JTREG_IMAGEJARDIR)/jtreg.jar
+
+#----------------------------------------------------------------------
+#
+# import JavaTest or JT Harness
+
+TARGETS.com.sun.javatest.regtest += $(RESOURCES.com.sun.javatest.regtest)
+ifdef JTHARNESS_HOME
+    TARGETS.ZIP.jtreg += $(JTREG_IMAGEDIR)/legal/jtharness/copyright.txt
+    TARGETS.ZIP.jtreg += $(JTREG_IMAGEDIR)/legal/jtharness/license.txt
+else
+    TARGETS.ZIP.jtreg += $(JTREG_IMAGEDIR)/legal/javatest/copyright.html
+    TARGETS.ZIP.jtreg += $(JTREG_IMAGEDIR)/doc/javatest/javatestGUI.pdf
+endif
+
+$(JTREG_IMAGEDIR)/legal/jtharness/copyright.txt \
+$(JTREG_IMAGEDIR)/legal/jtharness/license.txt: \
+		$(JTREG_IMAGEDIR)/legal/jtharness/%: $(JTHARNESS_HOME)/legal/%
+	$(RM) -f $@
+	$(MKDIR) -p $(@D)
+	$(CP) $< $@
+
+$(JTREG_IMAGEDIR)/legal/javatest/copyright.html: \
+		$(JAVATEST_HOME)/COPYRIGHT-javatest.html
+	$(RM) -f $@
+	$(MKDIR) -p $(@D)
+	$(CP) $< $@
+
+$(JTREG_IMAGEDIR)/doc/javatest/javatestGUI.pdf: \
+		$(JTREG_IMAGEDIR)/%: $(JAVATEST_HOME)/%
+	$(RM) -f $@
+	$(MKDIR) -p $(@D)
+	$(CP) $< $@
+
+$(JTREG_IMAGEDIR)/lib/javatest.jar: $(JAVATEST_JAR)
+	$(RM) -f $@
+	$(MKDIR) -p $(@D)
+	$(CP) $(JAVATEST_JAR) $@
+
+TARGETS.ZIP.jtreg += $(JTREG_IMAGEJARDIR)/javatest.jar
+
+#----------------------------------------------------------------------
+#
+# import JavaHelp
+
+$(IMAGES_DIR)/%/jh.jar: $(JAVAHELP_JAR)
+	$(RM) -f $@
+	$(MKDIR) -p $(@D)
+	$(CP) $(JAVAHELP_JAR) $@
+
+TARGETS.ZIP.jtreg += $(JTREG_IMAGEJARDIR)/jh.jar
+
+#----------------------------------------------------------------------
+#
+# import JUnit
+
+$(JTREG_IMAGEDIR)/lib/junit.jar: $(JUNIT_JAR)
+	$(RM) -f $@
+	$(MKDIR) -p $(@D)
+	$(CP) $(JUNIT_JAR) $@
+
+TARGETS.ZIP.jtreg += $(JTREG_IMAGEJARDIR)/junit.jar
+
+#----------------------------------------------------------------------
+#
+# import JCov
+
+#ifdef JCOV_HOME
+
+$(JTREG_IMAGEDIR)/lib/jcov.jar: $(JCOV_HOME)/lib/jcov.jar
+	$(RM) -f $@
+	$(MKDIR) -p $(@D)
+	$(CP) $< $@
+
+$(JTREG_IMAGEDIR)/lib/jcov_implant.jar: $(JCOV_HOME)/lib/jcov_implant.jar
+	$(RM) -f $@
+	$(MKDIR) -p $(@D)
+	$(CP) $< $@
+
+TARGETS.ZIP.jtreg += \
+    $(JTREG_IMAGEDIR)/lib/jcov.jar \
+    $(JTREG_IMAGEDIR)/lib/jcov_implant.jar
+
+#endif JCOV_HOME
+
+#----------------------------------------------------------------------
+#
+# executable scripts
+# maybe one of these days we'll get rid of the somewhat unnecessary OS name
+
+$(JTREG_IMAGEDIR)/linux/bin/jtreg \
+$(JTREG_IMAGEDIR)/solaris/bin/jtreg \
+$(JTREG_IMAGEDIR)/win32/bin/jtreg: \
+		$(SRCSHAREBINDIR)/jtreg.sh 
+	$(MKDIR) -p $(@D)
+	$(RM) $@
+	$(CP) $<  $@
+	$(CHMOD) +x,-w $@
+
+TARGETS.ZIP.jtreg += \
+	$(JTREG_IMAGEDIR)/linux/bin/jtreg \
+	$(JTREG_IMAGEDIR)/solaris/bin/jtreg \
+	$(JTREG_IMAGEDIR)/win32/bin/jtreg 
+
+#----------------------------------------------------------------------
+#
+#  create jtreg.zip bundles
 
 JTREG_ZIP = $(IMAGES_DIR)/jtreg.zip
-JTREG_NO_JUNIT_ZIP = $(IMAGES_DIR)/jtreg-no-junit.zip
-	
-TARGETS.ZIP.jtreg += $(JTREG_IMAGEJARDIR)/javatest.jar
-TARGETS.ZIP.jtreg += $(JTREG_IMAGEJARDIR)/jh.jar
-TARGETS.ZIP.jtreg += $(JTREG_IMAGEJARDIR)/jtreg.jar
+OPEN_JTREG_ZIP = $(IMAGES_DIR)/open-jtreg.zip
 
 $(JTREG_ZIP): $(TARGETS.ZIP.jtreg)
 	$(RM) $@
 	dir=`pwd`; cd $(IMAGES_DIR); $(ZIP) -rq $$dir/$@ $(@F:%.zip=%)
 
-$(JTREG_NO_JUNIT_ZIP): $(JTREG_ZIP)
+$(OPEN_JTREG_ZIP): $(JTREG_ZIP)
 	$(RM) $@ $@-tmp.zip
 	$(CP) $(JTREG_ZIP) $@-tmp.zip
-	$(ZIP) -d $@-tmp.zip `(cd $(IMAGES_DIR); find jtreg -type f | grep -i junit)`
+	$(ZIP) -d $@-tmp.zip `(cd $(IMAGES_DIR); find jtreg -type f | egrep -i 'junit|jcov' )`
 	$(CP) $@-tmp.zip $@
 	$(RM) $@-tmp.zip
 
-TESTS += \
-	$(TESTS.jtreg) 
+JTREG_ZIPFILES = $(JTREG_ZIP)
+JTREG_ZIPFILES += $(OPEN_JTREG_ZIP)
+
+#----------------------------------------------------------------------
+
+BUILDFILES += $(JTREG_ZIPFILES)
+
+VERBOSEZIPFILES += $(JTREG_ZIPFILES:%.zip=%-$(VERBOSE_ZIP_SUFFIX).zip)
+
+#JTREG_JAVA_OPTS = -Ddebug.com.sun.javatest.TestResultCache=98
+#JTREG_OPTS = 	$(JTREG_JAVA_OPTS:%=-J%)
+
+TESTS += $(TESTS.jtreg) 
+

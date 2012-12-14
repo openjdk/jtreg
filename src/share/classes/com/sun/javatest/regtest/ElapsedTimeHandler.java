@@ -25,10 +25,6 @@
 
 package com.sun.javatest.regtest;
 
-import com.sun.javatest.Harness;
-import com.sun.javatest.Parameters;
-import com.sun.javatest.TestResult;
-import com.sun.javatest.report.Report;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -37,6 +33,11 @@ import java.io.Writer;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.WeakHashMap;
+
+import com.sun.javatest.Harness;
+import com.sun.javatest.Parameters;
+import com.sun.javatest.TestResult;
+import com.sun.javatest.report.Report;
 
 /**
  * Monitor the elapsed times of tests using a Harness.Observer and write a
@@ -56,7 +57,7 @@ public class ElapsedTimeHandler {
         h.addObserver(new BasicObserver() {
             @Override
             public void startingTestRun(Parameters p) {
-                startTimes = new WeakHashMap<TestResult,Long>();
+                startTimes = new WeakHashMap<TestResult, Long>();
             }
 
             @Override
@@ -77,7 +78,7 @@ public class ElapsedTimeHandler {
                 startTimes = null;
             }
 
-            private Map<TestResult,Long> startTimes;
+            private Map<TestResult, Long> startTimes;
         });
     }
 
@@ -96,7 +97,7 @@ public class ElapsedTimeHandler {
             else
                 out.write(String.format("%5s,%5s,%5s", "time", "blk", "count"));
 
-            for (Map.Entry<Integer,Integer> e: table.entrySet()) {
+            for (Map.Entry<Integer, Integer> e: table.entrySet()) {
                 int k = e.getKey();
                 int v = e.getValue();
                 if (resolution == 1)
@@ -120,7 +121,9 @@ public class ElapsedTimeHandler {
 
     private Table table;
 
-    class Table extends TreeMap<Integer,Integer> {
+    class Table extends TreeMap<Integer, Integer> {
+        private static final long serialVersionUID = 0;
+
         Table(int resolution) {
             this.resolution = resolution;
         }
@@ -153,6 +156,8 @@ public class ElapsedTimeHandler {
         }
 
         int getElapsedTime() {
+            if (earliest == 0 && latest == 0)
+                return 0;
             if (earliest == 0 || latest == 0)
                 throw new IllegalStateException();
             return (int) ((latest - earliest) / 1000);

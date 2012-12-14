@@ -27,8 +27,6 @@ package com.sun.javatest.regtest;
 
 import java.io.File;
 
-import com.sun.javatest.TestResult;
-import com.sun.javatest.Status;
 import java.io.PrintWriter;
 import java.text.DateFormat;
 import java.util.ArrayList;
@@ -36,6 +34,9 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.sun.javatest.Status;
+import com.sun.javatest.TestResult;
 
 /**
  * This class implements the "build" action as described by the JDK tag
@@ -146,7 +147,7 @@ public class BuildAction extends Action
         // to the value of the -d flag that will be required
         PrintWriter pw = section.getMessageWriter();
         long now = System.currentTimeMillis();
-        Map<File,List<File>> filesToCompile = new LinkedHashMap<File,List<File>>();
+        Map<File, List<File>> filesToCompile = new LinkedHashMap<File, List<File>>();
         for (int i = 0; i < args.length; i++) {
             // the argument to build is a classname
             String currFN = args[i].replace('.', File.separatorChar) + ".java";
@@ -178,7 +179,7 @@ public class BuildAction extends Action
                 File[] files = filesForDest.toArray(new File[filesForDest.size()]);
                 CompileAction ca = new CompileAction();
                 Status s =  ca.compile(opts, asStrings(files), SREASON_FILE_TOO_OLD, script);
-                if (s.isFailed()) {
+                if (!s.isPassed()) {
                     status = s;
                     break;
                 }

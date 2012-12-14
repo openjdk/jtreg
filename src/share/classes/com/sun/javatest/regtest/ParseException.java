@@ -41,7 +41,7 @@ public class ParseException extends TestRunException
 
     public ParseException(Throwable t) {
         super(PARSE_EXCEPTION + t.getMessage());
-        this.t = t;
+        initCause(t);
     } // ParseExeptionException()
 
     //----------misc statics----------------------------------------------------

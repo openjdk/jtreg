@@ -30,8 +30,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.StringReader;
 import java.io.PrintWriter;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -312,7 +312,7 @@ public class CompileAction extends Action {
         }
 
         // Set test.src and test.classes for the benefit of annotation processors
-        for (Map.Entry<String,String> e: script.getTestProperties().entrySet()) {
+        for (Map.Entry<String, String> e: script.getTestProperties().entrySet()) {
             javacOpts.add("-J-D" + e.getKey() + "=" + e.getValue());
         }
 
@@ -375,7 +375,7 @@ public class CompileAction extends Action {
         // TAG-SPEC:  "The source and class directories of a test are made
         // available to main and applet actions via the system properties
         // "test.src" and "test.classes", respectively"
-        Map<String,String> p = script.getTestProperties();
+        Map<String, String> p = script.getTestProperties();
 
         // CONSTRUCT THE COMMAND LINE
         List<String> javacOpts = new ArrayList<String>();
@@ -435,7 +435,7 @@ public class CompileAction extends Action {
         // TAG-SPEC:  "The source and class directories of a test are made
         // available to main and applet actions via the system properties
         // "test.src" and "test.classes", respectively"
-        Map<String,String> p = script.getTestProperties();
+        Map<String, String> p = script.getTestProperties();
 
         // CONSTRUCT THE COMMAND LINE
         List<String> javacOpts = new ArrayList<String>();
@@ -483,7 +483,10 @@ public class CompileAction extends Action {
                     timeout,
                     section);
         } catch (Agent.Fault e) {
-            status = Status.error("Agent error: " + e.getCause());
+            if (e.getCause() instanceof IOException)
+                status = Status.error(String.format(AGENTVM_IO_EXCEPTION, e.getCause()));
+            else
+                status = Status.error(String.format(AGENTVM_EXCEPTION, e.getCause()));
         }
         if (status.isError()) {
             script.closeAgent(agent);
@@ -513,14 +516,14 @@ public class CompileAction extends Action {
     }
 
     static Status runCompile(String testName,
-            Map<String,String> props,
+            Map<String, String> props,
             String[] cmdArgs,
             int timeout,
             OutputHandler outputHandler) {
         SaveState saved = new SaveState();
 
         Properties p = System.getProperties();
-        for (Map.Entry<String,String> e: props.entrySet()) {
+        for (Map.Entry<String, String> e: props.entrySet()) {
             String name = e.getKey();
             String value = e.getValue();
             if (name.equals("test.class.path.prefix")) {
@@ -702,7 +705,7 @@ public class CompileAction extends Action {
     throws TestRunException {
         try {
             int lineNum = 0;
-            for (;;) {
+            for ( ; ; ) {
                 String s1 = r1.readLine();
                 String s2 = r2.readLine();
                 lineNum++;

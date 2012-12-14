@@ -26,11 +26,11 @@
 package com.sun.javatest.diff;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 
 import com.sun.javatest.TestResult;
-import java.util.ArrayList;
-import java.util.List;
 
 
 /**
@@ -66,7 +66,7 @@ public abstract class Reporter {
         return diffs;
     }
 
-    abstract void write(MultiMap<String,TestResult> table) throws IOException;
+    abstract void write(MultiMap<String, TestResult> table) throws IOException;
 
     protected List<DiffReader> readers;
     protected List<int[]> testCounts = new ArrayList<int[]>();

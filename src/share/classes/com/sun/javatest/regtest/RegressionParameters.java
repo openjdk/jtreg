@@ -39,11 +39,11 @@ import com.sun.interview.Interview;
 import com.sun.interview.Question;
 import com.sun.javatest.ExcludeList;
 import com.sun.javatest.InterviewParameters;
-import com.sun.javatest.TestDescription;
-import com.sun.javatest.TestEnvironment;
 import com.sun.javatest.Parameters;
 import com.sun.javatest.ProductInfo;
 import com.sun.javatest.Status;
+import com.sun.javatest.TestDescription;
+import com.sun.javatest.TestEnvironment;
 import com.sun.javatest.TestFilter;
 import com.sun.javatest.TestSuite;
 import com.sun.javatest.interview.BasicInterviewParameters;
@@ -319,7 +319,8 @@ public class RegressionParameters
 
     private static final String ENVVARS = ".envVars";
     private static final String CHECK = ".check";
-    private static final String JDK = ".jdk";
+    private static final String COMPILE_JDK = ".compilejdk";
+    private static final String TEST_JDK = ".testjdk";
     private static final String EXEC_MODE = ".execMode";
     private static final String TEST_VM_OPTIONS = ".testVMOpts";
     private static final String TEST_COMPILER_OPTIONS = ".testCompilerOpts";
@@ -329,8 +330,9 @@ public class RegressionParameters
     private static final String JUNIT = ".junit";
     private static final String TIMELIMIT = ".timeLimit";
     private static final String REPORTDIR = ".reportDir";
+    private static final String EXCLUSIVE_LOCK = ".exclLock";
 
-    @Override
+    @Override @SuppressWarnings("rawtypes")
     public void load(Map data, boolean checkChecksum) throws Interview.Fault {
         super.load(data, checkChecksum);
         String prefix = getTag();
@@ -353,7 +355,11 @@ public class RegressionParameters
         if (v != null)
             setIgnoreKind(IgnoreKind.valueOf(v));
 
-        v = (String) data.get(prefix + JDK);
+        v = (String) data.get(prefix + COMPILE_JDK);
+        if (v != null)
+            setCompileJDK(new JDK(v));
+
+        v = (String) data.get(prefix + TEST_JDK);
         if (v != null)
             setTestJDK(new JDK(v));
 
@@ -384,16 +390,19 @@ public class RegressionParameters
         v = (String) data.get(prefix + REPORTDIR);
         if (v != null)
             setReportDir(new File(v));
+
+        v = (String) data.get(prefix + EXCLUSIVE_LOCK);
+        if (v != null)
+            setExclusiveLock(new File(v));
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
+    @Override @SuppressWarnings({"unchecked", "rawtypes"})
     public void save(Map data) {
-        save0((Map<String,String>) data);
+        save0((Map<String, String>) data);
         super.save(data);
     }
 
-    private void save0(Map<String,String> data) {
+    private void save0(Map<String, String> data) {
         String prefix = getTag();
 
         if (envVars != null)
@@ -404,7 +413,10 @@ public class RegressionParameters
         data.put(prefix + IGNORE, String.valueOf(ignoreKind));
 
         if (testJDK != null)
-            data.put(prefix + JDK, testJDK.getPath());
+            data.put(prefix + TEST_JDK, testJDK.getPath());
+
+        if (compileJDK != null)
+            data.put(prefix + COMPILE_JDK, compileJDK.getPath());
 
         if (retainArgs != null)
             data.put(prefix + RETAIN_ARGS, StringUtils.join(retainArgs, "\n"));
@@ -426,6 +438,9 @@ public class RegressionParameters
 
         if (reportDir != null)
             data.put(prefix + REPORTDIR, reportDir.getPath());
+
+        if (exclusiveLock != null)
+            data.put(prefix + EXCLUSIVE_LOCK, exclusiveLock.getPath());
     }
 
     //---------------------------------------------------------------------
@@ -718,6 +733,19 @@ public class RegressionParameters
     }
 
     private File reportDir;
+
+    //---------------------------------------------------------------------
+
+    void setExclusiveLock(File exclusiveLock) {
+        exclusiveLock.getClass(); // null check
+        this.exclusiveLock = exclusiveLock;
+    }
+
+    File getExclusiveLock() {
+        return exclusiveLock;
+    }
+
+    private File exclusiveLock;
 
     //---------------------------------------------------------------------
 

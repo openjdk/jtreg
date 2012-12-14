@@ -26,8 +26,9 @@
 package com.sun.javatest.diff;
 
 import java.util.Comparator;
-import com.sun.javatest.TestResult;
+
 import com.sun.javatest.Status;
+import com.sun.javatest.TestResult;
 
 /**
  * A comparator for the status contained in a test result.

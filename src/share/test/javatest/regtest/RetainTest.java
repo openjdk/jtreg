@@ -45,6 +45,8 @@ public class RetainTest
 
         ignoreSet = new HashSet<File>();
         ignoreSet.add(new File(workDir, "logfile.log"));
+        ignoreSet.add(new File(workDir, "logfile.log.log.index"));
+        ignoreSet.add(new File(workDir, "logfile.log.rec.index"));
         ignoreSet.add(new File(workDir, "jtreg.policy"));
     }
 

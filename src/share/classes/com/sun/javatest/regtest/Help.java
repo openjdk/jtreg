@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006, 2007, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2006, 2012, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -51,6 +51,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+
 import javax.help.DefaultHelpBroker;
 import javax.help.HelpSet;
 import javax.help.HelpSetException;
@@ -162,19 +163,17 @@ public class Help {
      * @param out the stream to which to write the information
      */
     void showVersion(PrintWriter out) {
-        Properties manifest = getManifestForClass(getClass());
-        if (manifest == null)
-            manifest = new Properties();
+        Version v = Version.instance();
 
         String unknown = i18n.getString("help.version.unknown");
 
         // build properties, from manifest
-        String product = manifest.getProperty("jtreg-Name", unknown);
-        String version = manifest.getProperty("jtreg-Version", unknown);
-        String milestone = manifest.getProperty("jtreg-Milestone", unknown);
-        String build = manifest.getProperty("jtreg-Build", unknown);
-        String buildJavaVersion = manifest.getProperty("jtreg-BuildJavaVersion", unknown);
-        String buildDate = manifest.getProperty("jtreg-BuildDate", unknown);
+        String product = v.getProperty("jtreg-Name", unknown);
+        String version = v.getProperty("jtreg-Version", unknown);
+        String milestone = v.getProperty("jtreg-Milestone", unknown);
+        String build = v.getProperty("jtreg-Build", unknown);
+        String buildJavaVersion = v.getProperty("jtreg-BuildJavaVersion", unknown);
+        String buildDate = v.getProperty("jtreg-BuildDate", unknown);
 
         String thisJavaHome = System.getProperty("java.home");
         String thisJavaVersion = System.getProperty("java.version");
@@ -324,10 +323,10 @@ public class Help {
         Set<String> groups = new LinkedHashSet<String>();
         for (Option o: options)
             groups.add(o.group);
-        Map<String, SortedMap<String,Option>> map =
-                new LinkedHashMap<String, SortedMap<String,Option>>();
+        Map<String, SortedMap<String, Option>> map =
+                new LinkedHashMap<String, SortedMap<String, Option>>();
         for (String g: groups)
-            map.put(g, new TreeMap<String,Option>(new CaseInsensitiveStringComparator()));
+            map.put(g, new TreeMap<String, Option>(new CaseInsensitiveStringComparator()));
         for (Option o: options) {
             if (o.names.length > 0)
                 map.get(o.group).put(o.names[0], o);
@@ -335,7 +334,7 @@ public class Help {
 
         // now build the help tree nodes and add then into the primary help node
         for (String g: groups) {
-            SortedMap<String,Option> optionsForGroup = map.get(g);
+            SortedMap<String, Option> optionsForGroup = map.get(g);
             if (optionsForGroup.isEmpty())
                 continue;
             List<HelpTree.Node> nodesForGroup = new ArrayList<HelpTree.Node>();
@@ -395,7 +394,7 @@ public class Help {
     }
 
     private HelpTree.Node createOptionHelpNode(Option o) {
-        String prefix = "help." + o.group.toString().toLowerCase() + "." + o.names[0];
+        String prefix = "help." + o.group.toString().toLowerCase() + "." + o.names[0].replaceAll("[^A-Za-z0-9.]+", "_");
         String arg = (o.argType == Option.ArgType.NONE ? null : i18n.getString(prefix + ".arg"));
         StringBuilder sb = new StringBuilder();
         for (String n: o.names) {
@@ -530,7 +529,7 @@ public class Help {
             });
         }
 
-        private Component findComponent(Container cont, Class targetClass) {
+        private Component findComponent(Container cont, Class<?> targetClass) {
             for (int i = 0; i < cont.getComponentCount(); i++) {
                 Component c = cont.getComponent(i);
                 if (targetClass.isInstance(c))

@@ -68,7 +68,7 @@
                 <h1>The "Regression Test Harness for the OpenJDK platform: jtreg" FAQ</h1>
                 
                 <p>This FAQ is a growing list of questions asked by developers writing tests
-                which will run using the regression test Harness for the OpenJDK platform, jtreg. 
+                which will run using the regression test harness for the OpenJDK platform, jtreg.
                 It is a supplement to the test-tag language <a href="tag-spec.html">specification</a>
                 and is intended to illuminate implications of the spec and to answer questions
                 about this implementation of the spec.</p>

@@ -40,6 +40,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.FileScanner;
 
@@ -57,7 +58,7 @@ public class Main {
             exit(ok ? 0 : 1);
         } catch (Exception e) {
             System.err.println(e.toString());
-            e.printStackTrace();
+            e.printStackTrace(System.err);
             exit(2);
         }
     }
@@ -192,8 +193,8 @@ public class Main {
 
     boolean report(Map<String, NameInfo> table) {
         // invert the data structure to get File -> Set<name>
-        Map<File,Set<String>> undefinedNames = new TreeMap<File,Set<String>>();
-        Map<File,Set<String>> unusedNames = new TreeMap<File,Set<String>>();
+        Map<File, Set<String>> undefinedNames = new TreeMap<File, Set<String>>();
+        Map<File, Set<String>> unusedNames = new TreeMap<File, Set<String>>();
         for (NameInfo e: table.values()) {
             if (e.definitions == null || e.definitions.size() == 0)
                 insert(undefinedNames, e.name, e.references);
@@ -207,7 +208,7 @@ public class Main {
         return (undefinedNames.size() == 0 && unusedNames.size() == 0);
     }
 
-    void insert(Map<File,Set<String>> table, String name, Set<File> files) {
+    void insert(Map<File, Set<String>> table, String name, Set<File> files) {
         for (File f: files) {
             Set<String> s = table.get(f);
             if (s == null)
@@ -216,10 +217,10 @@ public class Main {
         }
     }
 
-    void write(String title, Map<File,Set<String>> table) {
+    void write(String title, Map<File, Set<String>> table) {
         if (table.size() > 0) {
             System.err.println("The following files have " + title + " names");
-            for (Map.Entry<File,Set<String>> e: table.entrySet()) {
+            for (Map.Entry<File, Set<String>> e: table.entrySet()) {
                 System.err.println("  " + e.getKey());
                 for (String n: e.getValue())
                     System.err.println("     " + n);

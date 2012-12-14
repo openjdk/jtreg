@@ -138,7 +138,7 @@ public class CheckFiles
             return OTHER;
     }
 
-    private static Set<String> excludes;
+    private static final Set<String> excludes;
     static {
         excludes = new HashSet<String>();
         excludes.add("SCCS");

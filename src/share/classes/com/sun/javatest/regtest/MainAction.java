@@ -25,9 +25,9 @@
 
 package com.sun.javatest.regtest;
 
-import java.io.IOException;
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
@@ -235,18 +235,24 @@ public class MainAction extends Action
         if (script.isCheck()) {
             status = Status.passed(CHECK_PASS);
         } else {
-            switch (othervm ? ExecMode.OTHERVM : script.getExecMode()) {
-                case AGENTVM:
-                    status = runAgentJVM();
-                    break;
-                case OTHERVM:
-                    status = runOtherJVM();
-                    break;
-                case SAMEVM:
-                    status = runSameJVM();
-                    break;
-                default:
-                    throw new AssertionError();
+            Lock lock = script.getLockIfRequired();
+            if (lock != null) lock.lock();
+            try {
+                switch (othervm ? ExecMode.OTHERVM : script.getExecMode()) {
+                    case AGENTVM:
+                        status = runAgentJVM();
+                        break;
+                    case OTHERVM:
+                        status = runOtherJVM();
+                        break;
+                    case SAMEVM:
+                        status = runSameJVM();
+                        break;
+                    default:
+                        throw new AssertionError();
+                }
+            } finally {
+                if (lock != null) lock.unlock();
             }
         }
 
@@ -311,6 +317,8 @@ public class MainAction extends Action
         // variable being set, so force the use here.
         final boolean useCLASSPATH = true;
         Path cp = new Path(script.getJavaTestClassPath(), script.getTestClassPath());
+        if (script.isJUnitRequired())
+            cp.append(script.getJUnitJar());
         if (useCLASSPATH || script.isTestJDK11()) {
             command.add("CLASSPATH=" + cp);
         }
@@ -322,7 +330,7 @@ public class MainAction extends Action
 
         command.addAll(script.getTestVMJavaOptions());
 
-        for (Map.Entry<String,String> e: script.getTestProperties().entrySet()) {
+        for (Map.Entry<String, String> e: script.getTestProperties().entrySet()) {
             command.add("-D" + e.getKey() + "=" + e.getValue());
         }
 
@@ -416,7 +424,7 @@ public class MainAction extends Action
         // TAG-SPEC:  "The source and class directories of a test are made
         // available to main and applet actions via the system properties
         // "test.src" and "test.classes", respectively"
-        Map<String,String> p = script.getTestProperties();
+        Map<String, String> p = script.getTestProperties();
 
         // delegate actual work to shared method
         Status status = runClass(
@@ -456,12 +464,14 @@ public class MainAction extends Action
         // TAG-SPEC:  "The source and class directories of a test are made
         // available to main and applet actions via the system properties
         // "test.src" and "test.classes", respectively"
-        Map<String,String> p = script.getTestProperties();
+        Map<String, String> p = script.getTestProperties();
 
         Agent agent;
         try {
             JDK jdk = script.getTestJDK();
             Path classpath = new Path(script.getJavaTestClassPath(), jdk.getJDKClassPath());
+            if (script.isJUnitRequired())
+                classpath.append(script.getJUnitJar());
             agent = script.getAgent(jdk, classpath, script.getTestVMJavaOptions());
         } catch (IOException e) {
             return Status.error(AGENTVM_CANT_GET_VM + ": " + e);
@@ -478,7 +488,10 @@ public class MainAction extends Action
                     timeout,
                     section);
         } catch (Agent.Fault e) {
-            status = Status.error("Agent error: " + e.getCause());
+            if (e.getCause() instanceof IOException)
+                status = Status.error(String.format(AGENTVM_IO_EXCEPTION, e.getCause()));
+            else
+                status = Status.error(String.format(AGENTVM_EXCEPTION, e.getCause()));
         }
         if (status.isError()) {
             script.closeAgent(agent);
@@ -492,7 +505,7 @@ public class MainAction extends Action
 
     static Status runClass(
             String testName,
-            Map<String,String> props,
+            Map<String, String> props,
             Path classpath,
             String classname,
             String[] classArgs,
@@ -501,7 +514,7 @@ public class MainAction extends Action
         SaveState saved = new SaveState();
 
         Properties p = System.getProperties();
-        for (Map.Entry<String,String> e: props.entrySet()) {
+        for (Map.Entry<String, String> e: props.entrySet()) {
             String name = e.getKey();
             String value = e.getValue();
             if (name.equals("test.class.path.prefix")) {
@@ -577,8 +590,13 @@ public class MainAction extends Action
                 }
             } finally {
                 tg.cleanup();
-                if (alarm != null)
+                if (alarm != null) {
                     alarm.cancel();
+                    if (alarm.getState() != Alarm.State.WAITING && (error == null)) {
+                        error = new Error("timeout");
+                        status = Status.error(MAIN_THREAD_TIMEOUT);
+                    }
+                }
             }
 
             if (((svmt.t != null) || (tg.uncaughtThrowable != null)) && (error == null)) {

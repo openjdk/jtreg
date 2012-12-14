@@ -1,0 +1,2 @@
+othervm.dirs=othervm
+

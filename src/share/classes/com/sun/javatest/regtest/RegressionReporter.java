@@ -25,9 +25,6 @@
 
 package com.sun.javatest.regtest;
 
-import com.sun.javatest.CompositeFilter;
-import com.sun.javatest.report.Report;
-import com.sun.javatest.util.HTMLWriter;
 import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.File;
@@ -43,6 +40,10 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import com.sun.javatest.CompositeFilter;
+import com.sun.javatest.report.Report;
+import com.sun.javatest.util.HTMLWriter;
 
 /**
  * Handles the generation of reports for test runs.
@@ -110,7 +111,7 @@ public class RegressionReporter {
         }
     }
 
-    void report(Map<File,String> subdirMap) {
+    void report(Map<File, String> subdirMap) {
         File parent = getCommonParent(subdirMap.keySet());
         // ignore the case where the common parent is just the root directory
         if (parent != null && parent.getParentFile() == null)
@@ -146,7 +147,7 @@ public class RegressionReporter {
      * The page is a simple table containing rows
      *      testsuite (link to work subdir) (link to report subdir)
      */
-    void writeHTMLReport(Map<File,String> subdirMap, File parent) throws IOException {
+    void writeHTMLReport(Map<File, String> subdirMap, File parent) throws IOException {
         String title = (parent == null)
                 ? "MultiRun Report"
                 : "MultiRun Report: " + parent;
@@ -178,7 +179,7 @@ public class RegressionReporter {
                 html.endTag(HTMLWriter.TH);
             }
             html.startTag(HTMLWriter.TR);
-            for (Map.Entry<File,String> e: subdirMap.entrySet()) {
+            for (Map.Entry<File, String> e: subdirMap.entrySet()) {
                 File testSuite = e.getKey();
                 String subdir = e.getValue();
                 html.startTag(HTMLWriter.TR);
@@ -270,7 +271,7 @@ public class RegressionReporter {
         }
     }
 
-    private void writeCombinedSummary(Map<File,String> subdirMap) throws IOException {
+    private void writeCombinedSummary(Map<File, String> subdirMap) throws IOException {
         File textDir = new File(reportDirArg, "text");
         textDir.mkdirs();
         File report = new File(textDir, "summary.txt");

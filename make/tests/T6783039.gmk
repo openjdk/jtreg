@@ -1,0 +1,48 @@
+#
+# Copyright (c) 2007, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+#----------------------------------------------------------------------
+
+$(BUILDDIR)/T6783039.ok: \
+	$(JTREG_IMAGEDIR)/lib/javatest.jar \
+	$(JTREG_IMAGEDIR)/lib/jtreg.jar 
+	$(RM) $(BUILDDIR)/6783039/
+	for p in p1 p2 ; do for y in 2007 2008 ; do for d in 1 2 3 ; do \
+	    mkdir -p $(BUILDDIR)/6783039/$$p/$$y/$$d/JTreport/text/ ; touch $(BUILDDIR)/6783039/$$p/$$y/$$d/JTreport/text/summary.txt ; \
+	done ; done ; done
+	$(J2SEJAVA) -cp $(JTREG_IMAGEDIR)/lib/jtreg.jar com.sun.javatest.diff.Main \
+		$(BUILDDIR)/6783039/*/*/*/JTreport/text/summary.txt > $(BUILDDIR)/6783039/stdout
+	$(J2SEJAVA) -cp $(JTREG_IMAGEDIR)/lib/jtreg.jar com.sun.javatest.diff.Main \
+		-o $(BUILDDIR)/6783039/out.txt $(BUILDDIR)/6783039/*/*/*/JTreport/text/summary.txt
+	diff $(BUILDDIR)/6783039/stdout $(BUILDDIR)/6783039/out.txt
+	mkdir $(BUILDDIR)/6783039/super
+	$(J2SEJAVA) -cp $(JTREG_IMAGEDIR)/lib/jtreg.jar com.sun.javatest.diff.Main \
+		-o $(BUILDDIR)/6783039/super -super $(BUILDDIR)/6783039/
+	if [ `find $(BUILDDIR)/6783039/super -name \*.html | wc -l` != 9 ]; then \
+		echo "super output not as expected" ; exit 1 ; \
+	fi
+	echo $@ passed at `date` > $@
+
+TESTS.jtdiff += $(BUILDDIR)/T6783039.ok
