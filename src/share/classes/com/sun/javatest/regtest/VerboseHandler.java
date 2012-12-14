@@ -1,12 +1,12 @@
 /*
- * Copyright 2006-2007 Sun Microsystems, Inc.  All Rights Reserved.
+ * Copyright (c) 2006, 2011, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Sun designates this
+ * published by the Free Software Foundation.  Oracle designates this
  * particular file as subject to the "Classpath" exception as provided
- * by Sun in the LICENSE file that accompanied this code.
+ * by Oracle in the LICENSE file that accompanied this code.
  *
  * This code is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -18,49 +18,56 @@
  * 2 along with this work; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
  *
- * Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa Clara,
- * CA 95054 USA or visit www.sun.com if you need additional information or
- * have any questions.
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
  */
 
 package com.sun.javatest.regtest;
 
-import java.io.PrintWriter;
 import com.sun.javatest.Harness;
-import com.sun.javatest.Parameters;
+import java.io.PrintWriter;
+
 import com.sun.javatest.TestDescription;
 import com.sun.javatest.TestResult;
 import com.sun.javatest.Status;
 
 // TODO: I18N
 
-public class RegressionObserver implements Harness.Observer {
+public class VerboseHandler {
 
-    RegressionObserver(Verbose verbose, PrintWriter out, PrintWriter err) {
+    VerboseHandler(Verbose verbose, PrintWriter out, PrintWriter err) {
         this.verbose = verbose;
         this.out = out;
         this.err = err;
     }
 
-    public void startingTestRun(Parameters params) { }
-    public void stoppingTestRun() { }
-    public void finishedTesting() { }
-    public void finishedTestRun(boolean allOK) { }
+    void register(Harness h) {
+        h.addObserver(new BasicObserver() {
+            @Override
+            public synchronized void startingTest(TestResult tr) {
+                VerboseHandler.this.startingTest(tr);
+            }
+            @Override
+            public synchronized void finishedTest(TestResult tr) {
+                VerboseHandler.this.finishedTest(tr);
+            }
+        });
+    }
 
-
-    public synchronized void startingTest(TestResult tr) {
-        if (verbose == Verbose.DEFAULT) {
+    private void startingTest(TestResult tr) {
+        if (verbose.isDefault()) {
             try {
                 TestDescription td = tr.getDescription();
                 out.println("runner starting test: "
                         + td.getRootRelativeURL());
             } catch(TestResult.Fault e) {
-                e.printStackTrace();
+                e.printStackTrace(System.err);
             }
         }
     } // starting()
 
-    public synchronized void finishedTest(TestResult tr) {
+    private void finishedTest(TestResult tr) {
         Verbose.Mode m;
         switch (tr.getStatus().getType()) {
             case Status.PASSED:
@@ -89,7 +96,7 @@ public class RegressionObserver implements Harness.Observer {
                             + td.getRootRelativeURL());
                     out.println(tr.getStatus());
                 } catch (TestResult.Fault e) {
-                    e.printStackTrace();
+                    e.printStackTrace(System.err);
                 }
                 break;
 
@@ -134,7 +141,7 @@ public class RegressionObserver implements Harness.Observer {
                 printElapsedTimes(tr);
 
         } catch (TestResult.Fault e) {
-            e.printStackTrace();
+            e.printStackTrace(System.err);
         }
     } // printSummary()
 
@@ -160,7 +167,7 @@ public class RegressionObserver implements Harness.Observer {
 
             out.println("TEST RESULT: " + tr.getStatus());
         } catch (TestResult.Fault e) {
-            e.printStackTrace();
+            e.printStackTrace(System.err);
         }
 
         out.println(VERBOSE_TEST_SEP);
@@ -186,7 +193,7 @@ public class RegressionObserver implements Harness.Observer {
             out.println("TEST: " + td.getRootRelativeURL());
             out.println(getTestJDK(tr));
 
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             for (int i = 1; i < tr.getSectionCount(); i++) {
                 TestResult.Section section = tr.getSection(i);
                 sb.append(LINESEP);
@@ -201,11 +208,11 @@ public class RegressionObserver implements Harness.Observer {
                     String name = outputNames[n];
                     String output = section.getOutput(name);
                     if (name.equals("System.out"))
-                        sb.append("STDOUT:" + LINESEP + output);
+                        sb.append("STDOUT:").append(LINESEP).append(output);
                     else if (name.equals("System.err"))
-                        sb.append("STDERR:" + LINESEP + output);
+                        sb.append("STDERR:").append(LINESEP).append(output);
                     else
-                        sb.append(name + ":" + LINESEP + output);
+                        sb.append(name).append(":").append(LINESEP).append(output);
                 }
             }
             out.println(sb.toString());
@@ -213,7 +220,7 @@ public class RegressionObserver implements Harness.Observer {
             out.println("TEST RESULT: " + tr.getStatus());
             out.println(VERBOSE_TEST_SEP);
         } catch (TestResult.Fault e) {
-            e.printStackTrace();
+            e.printStackTrace(System.err);
         }
     } // printFullOutput()
 
@@ -225,7 +232,7 @@ public class RegressionObserver implements Harness.Observer {
      *         test's run.
      */
     private void printElapsedTimes(TestResult tr) {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         try {
             for (int i = 1; i < tr.getSectionCount(); i++) {
                 TestResult.Section section = tr.getSection(i);
@@ -234,7 +241,7 @@ public class RegressionObserver implements Harness.Observer {
             }
             out.print(sb.toString());
         } catch (TestResult.ReloadFault f) {
-            f.printStackTrace();
+            f.printStackTrace(System.err);
         }
     } // printElapsedTimes()
 
@@ -292,28 +299,10 @@ public class RegressionObserver implements Harness.Observer {
             if (pos >= 0)
                 return msg.substring(pos, msg.length() - 1);
         } catch (TestResult.ReloadFault f) {
-            f.printStackTrace();
+            f.printStackTrace(System.err);
         }
         return "???";
     } // getTestJDK()
-
-    //------methods from Log-----------------------------------------------
-
-    public synchronized void report(String s) {
-    }
-
-    public synchronized void report(String[] s) {
-    }
-
-    public synchronized void error(String s) {
-        err.println("Error: " + s);
-    }
-
-    public synchronized void error(String[] s) {
-        err.println("Error:");
-        for (int i = 0; i < s.length; i++)
-            err.println(s[i]);
-    }
 
     //----------member variables-------------------------------------------
 

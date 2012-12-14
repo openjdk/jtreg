@@ -1,0 +1,169 @@
+#
+# Copyright (c) 1995, 2011, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+# This file is an extract from jdk/test/Makefile to model the logic
+# for determining the platform keys used for ProblemList.txt
+
+CUT	= cut
+UNAME   = uname
+
+
+# Get OS name from uname
+UNAME_S := $(shell $(UNAME) -s)
+
+# Commands to run on paths to make mixed paths for java on windows
+GETMIXEDPATH=$(ECHO)
+
+# Location of developer shared files
+SLASH_JAVA = /java
+
+# Platform specific settings
+ifeq ($(UNAME_S), SunOS)
+  OS_NAME     = solaris
+  OS_ARCH    := $(shell $(UNAME) -p)
+  OS_VERSION := $(shell $(UNAME) -r)
+endif
+ifeq ($(UNAME_S), Linux)
+  OS_NAME     = linux
+  OS_ARCH    := $(shell $(UNAME) -m)
+  # Check for unknown arch, try uname -p if uname -m says unknown
+  ifeq ($(OS_ARCH),unknown)
+    OS_ARCH    := $(shell $(UNAME) -p)
+  endif
+  OS_VERSION := $(shell $(UNAME) -r)
+endif
+ifeq ($(OS_NAME),)
+  OS_NAME = windows
+  # GNU Make or MKS overrides $(PROCESSOR_ARCHITECTURE) to always
+  # return "x86". Use the first word of $(PROCESSOR_IDENTIFIER) instead.
+  ifeq ($(PROCESSOR_IDENTIFIER),)
+    PROC_ARCH:=$(shell $(UNAME) -m)
+  else
+    PROC_ARCH:=$(word 1, $(PROCESSOR_IDENTIFIER))
+  endif
+  OS_ARCH:=$(PROC_ARCH)
+  SLASH_JAVA = J:
+  EXESUFFIX = .exe
+  # These need to be different depending on MKS or CYGWIN
+  ifeq ($(findstring cygdrive,$(shell ($(CD) C:/ && $(PWD)))), )
+    GETMIXEDPATH  = dosname -s
+    OS_VERSION   := $(shell $(UNAME) -r)
+  else
+    GETMIXEDPATH  = cygpath -m -s
+    OS_VERSION   := $(shell $(UNAME) -s | $(CUT) -d'-' -f2)
+  endif
+endif
+
+# Only want major and minor numbers from os version
+OS_VERSION := $(shell $(ECHO) "$(OS_VERSION)" | $(CUT) -d'.' -f1,2)
+
+# Name to use for x86_64 arch (historically amd64, but should change someday)
+OS_ARCH_X64_NAME:=amd64
+#OS_ARCH_X64_NAME:=x64
+
+# Alternate arch names (in case this arch is known by a second name)
+#   PROBLEM_LISTS may use either name.
+OS_ARCH2-amd64:=x64
+#OS_ARCH2-x64:=amd64
+
+# Try and use the arch names consistently
+OS_ARCH:=$(patsubst x64,$(OS_ARCH_X64_NAME),$(OS_ARCH))
+OS_ARCH:=$(patsubst X64,$(OS_ARCH_X64_NAME),$(OS_ARCH))
+OS_ARCH:=$(patsubst AMD64,$(OS_ARCH_X64_NAME),$(OS_ARCH))
+OS_ARCH:=$(patsubst amd64,$(OS_ARCH_X64_NAME),$(OS_ARCH))
+OS_ARCH:=$(patsubst x86_64,$(OS_ARCH_X64_NAME),$(OS_ARCH))
+OS_ARCH:=$(patsubst 8664,$(OS_ARCH_X64_NAME),$(OS_ARCH))
+OS_ARCH:=$(patsubst EM64T,$(OS_ARCH_X64_NAME),$(OS_ARCH))
+OS_ARCH:=$(patsubst em64t,$(OS_ARCH_X64_NAME),$(OS_ARCH))
+OS_ARCH:=$(patsubst intel64,$(OS_ARCH_X64_NAME),$(OS_ARCH))
+OS_ARCH:=$(patsubst Intel64,$(OS_ARCH_X64_NAME),$(OS_ARCH))
+OS_ARCH:=$(patsubst INTEL64,$(OS_ARCH_X64_NAME),$(OS_ARCH))
+OS_ARCH:=$(patsubst IA64,ia64,$(OS_ARCH))
+OS_ARCH:=$(patsubst X86,i586,$(OS_ARCH))
+OS_ARCH:=$(patsubst x86,i586,$(OS_ARCH))
+OS_ARCH:=$(patsubst i386,i586,$(OS_ARCH))
+OS_ARCH:=$(patsubst i486,i586,$(OS_ARCH))
+OS_ARCH:=$(patsubst i686,i586,$(OS_ARCH))
+OS_ARCH:=$(patsubst 386,i586,$(OS_ARCH))
+OS_ARCH:=$(patsubst 486,i586,$(OS_ARCH))
+OS_ARCH:=$(patsubst 586,i586,$(OS_ARCH))
+OS_ARCH:=$(patsubst 686,i586,$(OS_ARCH))
+
+# Default  ARCH_DATA_MODEL settings
+ARCH_DATA_MODEL-i586 = 32
+ARCH_DATA_MODEL-$(OS_ARCH_X64_NAME) = 64
+ARCH_DATA_MODEL-ia64 = 64
+ARCH_DATA_MODEL-sparc = 32
+ARCH_DATA_MODEL-sparcv9 = 64
+
+# If ARCH_DATA_MODEL is not defined, try and pick a reasonable default
+ifndef ARCH_DATA_MODEL
+  ARCH_DATA_MODEL:=$(ARCH_DATA_MODEL-$(OS_ARCH))
+endif
+ifndef ARCH_DATA_MODEL
+  ARCH_DATA_MODEL=32
+endif
+
+# Platform directory name
+PLATFORM_OS = $(OS_NAME)-$(OS_ARCH)
+
+# Check ARCH_DATA_MODEL, adjust OS_ARCH accordingly on solaris
+ARCH_DATA_MODEL_ERROR= \
+  ARCH_DATA_MODEL=$(ARCH_DATA_MODEL) cannot be used with $(PLATFORM_OS)
+ifeq ($(ARCH_DATA_MODEL),64)
+  ifeq ($(PLATFORM_OS),solaris-i586)
+    OS_ARCH=$(OS_ARCH_X64_NAME)
+  endif
+  ifeq ($(PLATFORM_OS),solaris-sparc)
+    OS_ARCH=sparcv9
+  endif
+  ifeq ($(OS_ARCH),i586)
+    x:=$(warning "WARNING: $(ARCH_DATA_MODEL_ERROR)")
+  endif
+  ifeq ($(OS_ARCH),sparc)
+    x:=$(warning "WARNING: $(ARCH_DATA_MODEL_ERROR)")
+  endif
+else
+  ifeq ($(ARCH_DATA_MODEL),32)
+    ifeq ($(OS_ARCH),$(OS_ARCH_X64_NAME))
+      x:=$(warning "WARNING: $(ARCH_DATA_MODEL_ERROR)")
+    endif
+    ifeq ($(OS_ARCH),ia64)
+      x:=$(warning "WARNING: $(ARCH_DATA_MODEL_ERROR)")
+    endif
+    ifeq ($(OS_ARCH),sparcv9)
+      x:=$(warning "WARNING: $(ARCH_DATA_MODEL_ERROR)")
+    endif
+  else
+    x:=$(warning "WARNING: $(ARCH_DATA_MODEL_ERROR)")
+  endif
+endif
+
+# Alternate OS_ARCH name (defaults to OS_ARCH)
+OS_ARCH2:=$(OS_ARCH2-$(OS_ARCH))
+ifeq ($(OS_ARCH2),)
+  OS_ARCH2:=$(OS_ARCH)
+endif
+

@@ -1,12 +1,12 @@
 /*
- * Copyright 2007 Sun Microsystems, Inc.  All Rights Reserved.
+ * Copyright (c) 2007, 2011, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Sun designates this
+ * published by the Free Software Foundation.  Oracle designates this
  * particular file as subject to the "Classpath" exception as provided
- * by Sun in the LICENSE file that accompanied this code.
+ * by Oracle in the LICENSE file that accompanied this code.
  *
  * This code is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -18,9 +18,9 @@
  * 2 along with this work; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
  *
- * Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa Clara,
- * CA 95054 USA or visit www.sun.com if you need additional information or
- * have any questions.
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
  */
 
 package com.sun.javatest.regtest;
@@ -48,11 +48,22 @@ public class JDK {
         V1_4("1.4"),
         V1_5("1.5"),
         V1_6("1.6"),
-        V1_7("1.7");
+        V1_7("1.7"),
+        V1_8("1.8");
         Version(String name) {
             this.name = name;
         }
         final String name;
+        static Version forName(String name) {
+            for (Version v: values()) {
+                if (v.name.equals(name))
+                    return v;
+            }
+            return null;
+        }
+        static Version forThisJVM() {
+            return forName(System.getProperty("java.specification.version"));
+        }
     }
 
     /** Creates a new instance of JDK */
@@ -120,6 +131,7 @@ public class JDK {
         return (getVersion(params).equals(v.name));
     }
 
+    // params just used for execMode and javatestClassPath
     public String getVersion(RegressionParameters params) {
         if (version == null) {
             final String VERSION_PROPERTY = "java.specification.version";
@@ -127,7 +139,6 @@ public class JDK {
             if (params.getExecMode() == ExecMode.SAMEVM) {
                 version = System.getProperty(VERSION_PROPERTY);
             } else {
-                // TODO: move to JDK
                 Status status = null;
                 // since we are trying to determine the Java version, we have to assume
                 // the worst, and use CLASSPATH.

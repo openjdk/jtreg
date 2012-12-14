@@ -1,12 +1,12 @@
 #
-# Copyright 1997-2008 Sun Microsystems, Inc.  All Rights Reserved.
+# Copyright (c) 1997, 2011, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License version 2 only, as
-# published by the Free Software Foundation.  Sun designates this
+# published by the Free Software Foundation.  Oracle designates this
 # particular file as subject to the "Classpath" exception as provided
-# by Sun in the LICENSE file that accompanied this code.
+# by Oracle in the LICENSE file that accompanied this code.
 #
 # This code is distributed in the hope that it will be useful, but WITHOUT
 # ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -18,9 +18,9 @@
 # 2 along with this work; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa Clara,
-# CA 95054 USA or visit www.sun.com if you need additional information or
-# have any questions.
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
 #
 
 JAVAFILES.com.sun.javatest.regtest-jdk11 = \
@@ -36,10 +36,13 @@ JAVAFILES.com.sun.javatest.regtest-j2se = \
 	AntOptionDecoder.java \
 	AppletAction.java \
 	BadArgs.java \
+	BasicObserver.java \
 	BuildAction.java \
+	CachingTestFilter.java \
 	CheckFiles.java \
 	CleanAction.java \
 	CompileAction.java \
+	ElapsedTimeHandler.java \
 	ExecMode.java \
 	Help.java \
 	IgnoreAction.java \
@@ -48,13 +51,16 @@ JAVAFILES.com.sun.javatest.regtest-j2se = \
 	JUnitAction.java \
 	Main.java \
 	MainAction.java \
+	ObservableTestFilter.java \
 	Option.java \
 	OptionDecoder.java \
+	OS.java \
 	ParseException.java \
         Path.java \
+	RegressionCompileCommand.java \
 	RegressionEnvironment.java \
-	RegressionObserver.java \
 	RegressionParameters.java \
+	RegressionReporter.java \
 	RegressionScript.java \
 	RegressionTestFinder.java \
 	RegressionTestSuite.java \
@@ -62,7 +68,10 @@ JAVAFILES.com.sun.javatest.regtest-j2se = \
 	ShellAction.java \
         StringUtils.java \
 	TestRunException.java \
-	Verbose.java
+	TestStats.java \
+	Verbose.java \
+	VerboseHandler.java \
+        XMLWriter.java
 
 RESOURCES.com.sun.javatest.regtest = \
 	i18n.properties
@@ -82,7 +91,7 @@ $(BUILDDIR)/classes.com.sun.javatest.regtest-jdk11.ok: \
 
 $(BUILDDIR)/classes.com.sun.javatest.regtest.ok: \
 		$(JAVAFILES.com.sun.javatest.regtest-j2se:%=$(JAVADIR)/com/sun/javatest/regtest/%) \
-		$(BUILDDIR)/classes.com.sun.javatest.regtest-jdk11.ok 
+		$(BUILDDIR)/classes.com.sun.javatest.regtest-jdk11.ok
 	CLASSPATH=$(CLASSDIR):$(ANTHOME)/lib/ant.jar:$(JAVATEST_JAR):$(JUNIT_JAR):$(JAVAHELP_JAR) \
 		$(J2SEJAVAC) -target $(J2SEJAVAC_TARGET) -encoding ISO8859-1 -d $(CLASSDIR) $(JAVAFILES.com.sun.javatest.regtest-j2se:%=$(JAVADIR)/com/sun/javatest/regtest/%)
 	echo "classes built at `date`" > $@
@@ -120,7 +129,7 @@ regtest jtreg: \
 
 #JTREG_OPTS = 	-J"-Ddebug.com.sun.javatest.TestRunner=true" \
 #		-J"-Ddebug.com.sun.javatest.TestResultCache=true" \
-#		-J"-Ddebug.com.sun.javatest.TestResultTable=true" 
+#		-J"-Ddebug.com.sun.javatest.TestResultTable=true"
 
 JTREG_JAVA_OPTS = -Ddebug.com.sun.javatest.TestResultCache=98
 JTREG_OPTS = 	$(JTREG_JAVA_OPTS:%=-J%)
@@ -224,7 +233,7 @@ $(BUILDDIR)/T4499340.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(TESTDIR)/javatest/regtest/4499340/lib/HelloWorld.java \
 		$(TESTDIR)/javatest/regtest/4499340/test/dir/Test.java \
 		$(JTREG_IMAGEDIR)/solaris/bin/jtreg
-	$(RM) $(@:%.ok=%) 
+	$(RM) $(@:%.ok=%)
 	$(MKDIR) $(@:%.ok=%)
 	( cd $(TESTDIR)/javatest/regtest/4499340 ; find test -name SCCS -prune -o -type f -print ) | \
 		while read file ; do \
@@ -246,7 +255,7 @@ $(BUILDDIR)/T4730538.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(TESTDIR)/javatest/regtest/4730538/Test.java \
 		$(JTREG_IMAGEDIR)/solaris/bin/jtreg
-	$(RM) $(@:%.ok=%) 
+	$(RM) $(@:%.ok=%)
 	$(MKDIR) $(@:%.ok=%)
 	JTHOME=$(JTREG_IMAGEDIR) $(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
 		-samevm -w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report -v:fail \
@@ -263,13 +272,13 @@ TESTS.com.sun.javatest.regtest += $(BUILDDIR)/T4730538.ok
 $(BUILDDIR)/T6517728.ok:	$(TESTDIR)/javatest/regtest/6517728/T6517728A.java \
 		$(TESTDIR)/javatest/regtest/6517728/T6517728B.java \
 		$(JTREG_IMAGEDIR)/lib/javatest.jar \
-		$(JTREG_IMAGEDIR)/lib/jtreg.jar 
+		$(JTREG_IMAGEDIR)/lib/jtreg.jar
 	$(RM) $(@:%.ok=%)
 	$(J2SEJAVA) $(JTREG_JAVA_OPTS) -jar $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		-w $(@:%.ok=%)/work/ovm \
 		-r $(@:%.ok=%)/report/ovm \
 		-ovm \
-		$(TESTDIR)/javatest/regtest/6517728
+		$(TESTDIR)/javatest/regtest/6517728/T6517728A.java
 	$(J2SEJAVA) $(JTREG_JAVA_OPTS) -jar $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		-w $(@:%.ok=%)/work/svm \
 		-r $(@:%.ok=%)/report/svm \
@@ -289,7 +298,7 @@ T6517916-ENVIRONMENT-NORMALIZATIONS = \
 $(BUILDDIR)/T6517916.ok: \
 		$(TESTDIR)/javatest/regtest/6517916/T6517916.java \
 		$(JTREG_IMAGEDIR)/lib/javatest.jar \
-		$(JTREG_IMAGEDIR)/lib/jtreg.jar 
+		$(JTREG_IMAGEDIR)/lib/jtreg.jar
 	$(RM) $(@:%.ok=%)
 	$(J2SEJAVA) $(JTREG_JAVA_OPTS) \
 		-jar $(JTREG_IMAGEDIR)/lib/jtreg.jar \
@@ -323,7 +332,7 @@ TESTS.com.sun.javatest.regtest += $(BUILDDIR)/T6517916.ok
 
 $(BUILDDIR)/T6519296.ok:	$(TESTDIR)/javatest/regtest/6519296/T6519296.java \
 		$(JTREG_IMAGEDIR)/lib/javatest.jar \
-		$(JTREG_IMAGEDIR)/lib/jtreg.jar 
+		$(JTREG_IMAGEDIR)/lib/jtreg.jar
 	$(RM) $(@:%.ok=%)
 	$(J2SEJAVA) $(JTREG_JAVA_OPTS) -jar $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		-w $(@:%.ok=%)/work \
@@ -342,7 +351,7 @@ SUMMARY_TXT := $(shell case "$(JAVATEST_VERSION)" in 3* $(KET) $(ECHO) summary.t
 
 $(BUILDDIR)/T6527624.ok:\
 		$(JTREG_IMAGEDIR)/lib/javatest.jar \
-		$(JTREG_IMAGEDIR)/lib/jtreg.jar 
+		$(JTREG_IMAGEDIR)/lib/jtreg.jar
 	$(RM) $(@:%.ok=%)
 	- $(J2SEJAVA) $(JTREG_JAVA_OPTS) -jar $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		-w $(@:%.ok=%)/work \
@@ -422,7 +431,7 @@ $(BUILDDIR)/T6533136.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(TESTDIR)/javatest/regtest/data/basic/main/Pass.java \
 		$(JTREG_IMAGEDIR)/solaris/bin/jtreg
-	$(RM) $(@:%.ok=%) 
+	$(RM) $(@:%.ok=%)
 	$(MKDIR) $(@:%.ok=%)
 	( b=`pwd`; cd $(TESTDIR)/javatest/regtest/data/basic/ ; \
 	  JTHOME=$$b/$(JTREG_IMAGEDIR) $$b/$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
@@ -450,7 +459,7 @@ $(BUILDDIR)/T6590657.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(TESTDIR)/javatest/regtest/6590657/T6590657.java \
 		$(JTREG_IMAGEDIR)/solaris/bin/jtreg
-	$(RM) $(@:%.ok=%) 
+	$(RM) $(@:%.ok=%)
 	$(MKDIR) $(@:%.ok=%)
 	JTHOME=$(JTREG_IMAGEDIR) $(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
@@ -468,7 +477,7 @@ $(BUILDDIR)/T6622433.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(TESTDIR)/javatest/regtest/6622433/TestJava.java \
 		$(TESTDIR)/javatest/regtest/6622433/TestShell.sh \
 		$(JTREG_IMAGEDIR)/solaris/bin/jtreg
-	$(RM) $(@:%.ok=%) 
+	$(RM) $(@:%.ok=%)
 	$(MKDIR) $(@:%.ok=%)
 	JTHOME=$(JTREG_IMAGEDIR) $(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
@@ -500,7 +509,7 @@ $(BUILDDIR)/T6590671.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(TESTDIR)/javatest/regtest/6590671/T6590671.java \
 		$(JTREG_IMAGEDIR)/solaris/bin/jtreg
-	$(RM) $(@:%.ok=%) 
+	$(RM) $(@:%.ok=%)
 	$(MKDIR) -p $(@:%.ok=%)/test
 	$(CP) $(TESTDIR)/javatest/regtest/6590671/T6590671.java \
 		$(TESTDIR)/javatest/regtest/6590671/TEST.ROOT $(@:%.ok=%)/test
@@ -517,7 +526,7 @@ TESTS.com.sun.javatest.regtest += $(BUILDDIR)/T6590671.ok
 
 $(BUILDDIR)/TestRetainTest.ok:  $(TESTDIR)/javatest/regtest/RetainTest.java \
 		$(JTREG_IMAGEDIR)/lib/javatest.jar \
-		$(JTREG_IMAGEDIR)/lib/jtreg.jar 
+		$(JTREG_IMAGEDIR)/lib/jtreg.jar
 	$(RM) $(@:%.ok=%)
 	$(MKDIR) $(@:%.ok=%) $(@:%.ok=%)/classes
 	$(J2SEJAVAC) -d $(@:%.ok=%)/classes \
@@ -568,7 +577,7 @@ $(BUILDDIR)/TestWhiteSpaceFiles.ok:
 	$(RM) $(BUILDDIR)/tmp/$(@F:%.ok=%)
 	$(MKDIR) -p $(BUILDDIR)/tmp/$(@F:%.ok=%)
 	ln -s $(J2SEHOME) $(BUILDDIR)/tmp/$(@F:%.ok=%)/"j2se home"
-	ln -s $(shell cd $(JTREG_IMAGEDIR); pwd) $(BUILDDIR)/tmp/$(@F:%.ok=%)/"jtreg home" 
+	ln -s $(shell cd $(JTREG_IMAGEDIR); pwd) $(BUILDDIR)/tmp/$(@F:%.ok=%)/"jtreg home"
 	$(BUILDDIR)/tmp/$(@F:%.ok=%)/"jtreg home"/solaris/bin/jtreg $(JTREG_OPTS) \
 		-w $(@:%.ok=%/ovm/work) \
 		-r $(@:%.ok=%/ovm/report) \
@@ -589,7 +598,7 @@ TESTS.com.sun.javatest.regtest += $(BUILDDIR)/TestWhiteSpaceFiles.ok
 # 6783087: jtreg follows symlinks when cleaning a directory
 $(BUILDDIR)/T6783087.ok: \
 	$(JTREG_IMAGEDIR)/lib/javatest.jar \
-	$(JTREG_IMAGEDIR)/lib/jtreg.jar 
+	$(JTREG_IMAGEDIR)/lib/jtreg.jar
 	$(RM) $(BUILDDIR)/6783097/
 	$(MKDIR) -p $(BUILDDIR)/6783097/work/scratch
 	$(MKDIR) $(BUILDDIR)/6783097/doNotDelete
@@ -613,7 +622,7 @@ TESTS.com.sun.javatest.regtest += $(BUILDDIR)/T6783087.ok
 
 $(BUILDDIR)/T6799634.ok: \
 	$(JTREG_IMAGEDIR)/lib/javatest.jar \
-	$(JTREG_IMAGEDIR)/lib/jtreg.jar 
+	$(JTREG_IMAGEDIR)/lib/jtreg.jar
 	$(JDK16HOME)/bin/java -jar $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		-w $(BUILDDIR)/6799634/work/ -r $(BUILDDIR)/6799634/report/ \
 		$(TESTDIR)/javatest/regtest/6799634
@@ -626,7 +635,7 @@ TESTS.com.sun.javatest.regtest += $(BUILDDIR)/T6799634.ok
 # 6809055: Set test.src and test.classes information for @compile tasks
 $(BUILDDIR)/T6809055.ok: \
 	$(JTREG_IMAGEDIR)/lib/javatest.jar \
-	$(JTREG_IMAGEDIR)/lib/jtreg.jar 
+	$(JTREG_IMAGEDIR)/lib/jtreg.jar
 	$(JDK16HOME)/bin/java -jar $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		-w $(BUILDDIR)/6809055/work/ -r $(BUILDDIR)/6809055/report/ \
 		$(TESTDIR)/javatest/regtest/6809055
@@ -639,7 +648,7 @@ TESTS.com.sun.javatest.regtest += $(BUILDDIR)/T6809055.ok
 # 6811371: recategorize -e option as a general option instead of a JDK one
 $(BUILDDIR)/T6811371.ok: \
 	$(JTREG_IMAGEDIR)/lib/javatest.jar \
-	$(JTREG_IMAGEDIR)/lib/jtreg.jar 
+	$(JTREG_IMAGEDIR)/lib/jtreg.jar
 	$(J2SEJAVA) -jar $(JTREG_IMAGEDIR)/lib/jtreg.jar -help -e | grep "General Options"
 	echo $@ passed at `date` > $@
 
@@ -649,7 +658,7 @@ TESTS.com.sun.javatest.regtest += $(BUILDDIR)/T6811371.ok
 
 $(BUILDDIR)/GoodSecurityManagerTest.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	$(JTREG_IMAGEDIR)/solaris/bin/jtreg 
+	$(JTREG_IMAGEDIR)/solaris/bin/jtreg
 	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(J2SEHOME) \
@@ -664,7 +673,7 @@ TESTS.com.sun.javatest.regtest += \
 
 $(BUILDDIR)/BadSecurityManagerTest.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	$(JTREG_IMAGEDIR)/solaris/bin/jtreg 
+	$(JTREG_IMAGEDIR)/solaris/bin/jtreg
 	$(MKDIR) -p $(@:%.ok=%)/
 	- $(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
@@ -676,13 +685,13 @@ $(BUILDDIR)/BadSecurityManagerTest.ok: \
 	echo "test passed at `date`" > $@
 
 TESTS.com.sun.javatest.regtest += \
-	$(BUILDDIR)/BadSecurityManagerTest.ok 
+	$(BUILDDIR)/BadSecurityManagerTest.ok
 
 #----------------------------------------------------------------------
 
 $(BUILDDIR)/SecurityManagerTest_samevm_forbid.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	$(JTREG_IMAGEDIR)/solaris/bin/jtreg 
+	$(JTREG_IMAGEDIR)/solaris/bin/jtreg
 	$(MKDIR) -p $(@:%.ok=%)/
 	- $(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
@@ -700,7 +709,7 @@ TESTS.com.sun.javatest.regtest += \
 
 $(BUILDDIR)/SecurityManagerTest_othervm.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	$(JTREG_IMAGEDIR)/solaris/bin/jtreg 
+	$(JTREG_IMAGEDIR)/solaris/bin/jtreg
 	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(J2SEHOME) \
@@ -715,7 +724,7 @@ TESTS.com.sun.javatest.regtest += \
 
 $(BUILDDIR)/PropertyTest_samevm.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	$(JTREG_IMAGEDIR)/solaris/bin/jtreg 
+	$(JTREG_IMAGEDIR)/solaris/bin/jtreg
 	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(J2SEHOME) \
@@ -725,7 +734,7 @@ $(BUILDDIR)/PropertyTest_samevm.ok: \
 
 $(BUILDDIR)/PropertyTest_othervm.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	$(JTREG_IMAGEDIR)/solaris/bin/jtreg 
+	$(JTREG_IMAGEDIR)/solaris/bin/jtreg
 	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(J2SEHOME) \
@@ -746,7 +755,7 @@ TESTS.com.sun.javatest.regtest += \
 #
 $(BUILDDIR)/BadTests.othervm.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	$(JTREG_IMAGEDIR)/solaris/bin/jtreg 
+	$(JTREG_IMAGEDIR)/solaris/bin/jtreg
 	$(RM) -rf $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
@@ -771,7 +780,7 @@ $(BUILDDIR)/BadTests.othervm.ok: \
 #
 $(BUILDDIR)/BadTests.agentvm.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	$(JTREG_IMAGEDIR)/solaris/bin/jtreg 
+	$(JTREG_IMAGEDIR)/solaris/bin/jtreg
 	$(RM) -rf $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	JTREG_SHOWAGENT=true \
 	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
@@ -793,7 +802,7 @@ $(BUILDDIR)/BadTests.agentvm.ok: \
 #
 $(BUILDDIR)/BadTests.samevm.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	$(JTREG_IMAGEDIR)/solaris/bin/jtreg 
+	$(JTREG_IMAGEDIR)/solaris/bin/jtreg
 	$(RM) -rf $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	JTREG_USE_AGENTVM_FOR_SAMEVM=false \
 	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
@@ -803,9 +812,9 @@ $(BUILDDIR)/BadTests.samevm.ok: \
 		$(TESTDIR)/javatest/regtest/data/badtests \
 			> $(@:%.ok=%/jt.log) 2>&1 || \
 	( status=$$? ; \
-	  if [ $${status} -ne 57 ]; then echo "Unexpected exit from jtreg: $${status}" ; exit 1 ; fi ) 
+	  if [ $${status} -ne 57 ]; then echo "Unexpected exit from jtreg: $${status}" ; exit 1 ; fi )
 	( files=`$(FIND) $(@:%.ok=%)/work -name \*.jtr | wc -l` ; \
-	  if [ $${files} -ne 7 ]; then echo "Unexpected number of files: $${files}" ; exit 1 ; fi ) 
+	  if [ $${files} -ne 7 ]; then echo "Unexpected number of files: $${files}" ; exit 1 ; fi )
 	echo "test passed at `date`" > $@
 
 TESTS.com.sun.javatest.regtest += \
@@ -848,7 +857,7 @@ $(BUILDDIR)/CPAppend/othervm.ok: \
 		-jdk:$(J2SEHOME) \
 		-othervm \
 		-cpa:$(BUILDDIR)/CPAppend/classes \
-		$(TESTDIR)/javatest/regtest/cpappend/test 
+		$(TESTDIR)/javatest/regtest/cpappend/test
 	echo "test passed at `date`" > $@
 
 # Run test in -samevm mode
@@ -863,7 +872,7 @@ $(BUILDDIR)/CPAppend/samevm.ok: \
 		-jdk:$(J2SEHOME) \
 		-samevm -J-Djavatest.regtest.debugChild=true -va \
 		-cpa:$(BUILDDIR)/CPAppend/classes \
-		$(TESTDIR)/javatest/regtest/cpappend/test 
+		$(TESTDIR)/javatest/regtest/cpappend/test
 	echo "test passed at `date`" > $@
 
 # Run test in -agentvm mode
@@ -877,7 +886,7 @@ $(BUILDDIR)/CPAppend/agentvm.ok: \
 		-jdk:$(J2SEHOME) \
 		-agentvm \
 		-cpa:$(BUILDDIR)/CPAppend/classes \
-		$(TESTDIR)/javatest/regtest/cpappend/test 
+		$(TESTDIR)/javatest/regtest/cpappend/test
 	echo "test passed at `date`" > $@
 
 TESTS.com.sun.javatest.regtest += \
@@ -908,7 +917,7 @@ TESTS.com.sun.javatest.regtest += \
 	$(BUILDDIR)/javac/othervm.ok \
 	$(BUILDDIR)/javac/agentvm.ok \
 	$(BUILDDIR)/javac/samevm.ok
-	
+
 #----------------------------------------------------------------------
 
 $(BUILDDIR)/TimeoutTest.ok: \
@@ -918,13 +927,26 @@ $(BUILDDIR)/TimeoutTest.ok: \
 		TEST_OUTPUT_DIR=`pwd`/$(BUILDDIR)/$(@:%.ok=%) \
 		JT_JAVA=$(J2SEHOME) \
 		TESTJAVA=$(J2SEHOME) \
-		JTREG_HOME=`cd $(JTREG_IMAGEDIR); pwd` 
+		JTREG_HOME=`cd $(JTREG_IMAGEDIR); pwd`
 	echo "test passed at `date`" > $@
 
 # This test is not included by default because it is by its nature so
 # slow to run.
 # TESTS.com.sun.javatest.regtest += $(BUILDDIR)/TimeoutTest.ok
-	
+
+#----------------------------------------------------------------------
+
+$(BUILDDIR)/OSTest.ok: \
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	    $(JTREG_IMAGEDIR)/solaris/bin/jtreg
+	$(MKDIR) -p $(@:%.ok=%)/classes
+	$(J2SEJAVAC) -cp $(JTREG_IMAGEDIR)/lib/jtreg.jar -target $(J2SEJAVAC_TARGET) \
+		-encoding ISO8859-1 -d $(@:%.ok=%)/classes $(TESTDIR)/javatest/regtest/OSTest.java
+	$(J2SEJAVA) -cp $(@:%.ok=%)/classes:$(JTREG_IMAGEDIR)/lib/jtreg.jar OSTest
+	echo "test passed at `date`" > $@
+
+TESTS.com.sun.javatest.regtest += $(BUILDDIR)/OSTest.ok
+
 #----------------------------------------------------------------------
 
 # Test @compile with -compilejdk; use not-a-jdk for -testjdk
@@ -993,7 +1015,7 @@ $(BUILDDIR)/CompileTest.3.othervm.ok: \
 $(BUILDDIR)/CompileTest.4.agentvm.ok \
 $(BUILDDIR)/CompileTest.4.othervm.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	    $(JTREG_IMAGEDIR)/solaris/bin/jtreg 
+	    $(JTREG_IMAGEDIR)/solaris/bin/jtreg
 	$(RM) -rf $(@:%.ok=%)
 	JTREG_SHOWAGENT=true JTREG_SHOWCMD=true \
 	JT_JAVA=$(JDK16HOME) \
@@ -1008,7 +1030,7 @@ $(BUILDDIR)/CompileTest.4.othervm.ok: \
 # Verify shell test gets COMPILEJAVA set as well as TESTJAVA
 $(BUILDDIR)/CompileTest.5.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	    $(JTREG_IMAGEDIR)/solaris/bin/jtreg 
+	    $(JTREG_IMAGEDIR)/solaris/bin/jtreg
 	$(RM) -rf $(@:%.ok=%)
 	JT_JAVA=$(JDK16HOME) \
 		$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
@@ -1031,7 +1053,7 @@ $(BUILDDIR)/just-java/bin/java:
 	mkdir -p $(@D)
 	echo '$(JDK16HOME)/bin/java $$*' > $@
 	chmod +x $@
-	
+
 TESTS.com.sun.javatest.regtest += \
 	$(BUILDDIR)/CompileTest.1.agentvm.ok \
 	$(BUILDDIR)/CompileTest.1.othervm.ok \
@@ -1049,7 +1071,7 @@ TESTS.com.sun.javatest.regtest += \
 # Only othervm supported -- jtreg can't run samevm or agentvm on 1.1
 $(BUILDDIR)/JDK11Test.1.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	    $(JTREG_IMAGEDIR)/solaris/bin/jtreg 
+	    $(JTREG_IMAGEDIR)/solaris/bin/jtreg
 	$(RM) -rf $(@:%.ok=%)
 	JTREG_SHOWAGENT=true JTREG_SHOWCMD=true \
 	JT_JAVA=$(JDK16HOME) \
@@ -1062,7 +1084,7 @@ $(BUILDDIR)/JDK11Test.1.ok: \
 # Test split compilation using JDK 1.1
 $(BUILDDIR)/JDK11Test.2.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	    $(JTREG_IMAGEDIR)/solaris/bin/jtreg 
+	    $(JTREG_IMAGEDIR)/solaris/bin/jtreg
 	$(RM) -rf $(@:%.ok=%)
 	JTREG_SHOWAGENT=true JTREG_SHOWCMD=true \
 	JT_JAVA=$(JDK16HOME) \
@@ -1078,6 +1100,325 @@ TESTS.com.sun.javatest.regtest += \
 	$(BUILDDIR)/JDK11Test.1.ok \
 	$(BUILDDIR)/JDK11Test.2.ok
 endif
+
+#----------------------------------------------------------------------
+
+$(BUILDDIR)/timelimit.none.ok: \
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	    $(JTREG_IMAGEDIR)/solaris/bin/jtreg
+	$(RM) -rf $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(J2SEHOME) \
+		-samevm \
+		$(TESTDIR)/javatest/regtest/timelimit/  \
+			> $(@:%.ok=%/jt.log) 2>&1
+	$(GREP) -s 'Test results: passed: 3' $(@:%.ok=%/jt.log)  > /dev/null
+	echo "test passed at `date`" > $@
+
+TESTS.com.sun.javatest.regtest += $(BUILDDIR)/timelimit.none.ok
+
+$(BUILDDIR)/timelimit.150.ok: \
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	    $(JTREG_IMAGEDIR)/solaris/bin/jtreg
+	$(RM) -rf $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(J2SEHOME) \
+		-samevm \
+		-timelimit:150 \
+		$(TESTDIR)/javatest/regtest/timelimit/  \
+			> $(@:%.ok=%/jt.log) 2>&1
+	$(GREP) -s 'Test results: passed: 1' $(@:%.ok=%/jt.log)  > /dev/null
+	echo "test passed at `date`" > $@
+
+TESTS.com.sun.javatest.regtest += $(BUILDDIR)/timelimit.150.ok
+
+$(BUILDDIR)/timelimit.300.ok: \
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	    $(JTREG_IMAGEDIR)/solaris/bin/jtreg
+	$(RM) -rf $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(J2SEHOME) \
+		-samevm \
+		-timelimit:300 \
+		$(TESTDIR)/javatest/regtest/timelimit/  \
+			> $(@:%.ok=%/jt.log) 2>&1
+	$(GREP) -s 'Test results: passed: 2' $(@:%.ok=%/jt.log)  > /dev/null
+	echo "test passed at `date`" > $@
+
+TESTS.com.sun.javatest.regtest += $(BUILDDIR)/timelimit.300.ok
+
+$(BUILDDIR)/timelimit.500.ok: \
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	    $(JTREG_IMAGEDIR)/solaris/bin/jtreg
+	$(RM) -rf $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(J2SEHOME) \
+		-samevm \
+		-timelimit:500 \
+		$(TESTDIR)/javatest/regtest/timelimit/  \
+			> $(@:%.ok=%/jt.log) 2>&1
+	$(GREP) -s 'Test results: passed: 3' $(@:%.ok=%/jt.log)  > /dev/null
+	echo "test passed at `date`" > $@
+
+TESTS.com.sun.javatest.regtest += $(BUILDDIR)/timelimit.500.ok
+
+$(BUILDDIR)/timelimit.bad.ok: \
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	    $(JTREG_IMAGEDIR)/solaris/bin/jtreg
+	$(RM) -rf $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(J2SEHOME) \
+		-samevm \
+		-timelimit:bad \
+		$(TESTDIR)/javatest/regtest/timelimit/  \
+			> $(@:%.ok=%/jt.log) 2>&1  || \
+	    true "non-zero exit code from JavaTest intentionally ignored"
+	$(GREP) -s 'Error: Bad value for -timeLimit' $(@:%.ok=%/jt.log)  > /dev/null
+	echo "test passed at `date`" > $@
+
+TESTS.com.sun.javatest.regtest += $(BUILDDIR)/timelimit.bad.ok
+
+#----------------------------------------------------------------------
+
+$(BUILDDIR)/javacExitCodes.jdk5.samevm.ok: \
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	    $(JTREG_IMAGEDIR)/solaris/bin/jtreg
+	$(RM) -rf $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(JDK15HOME) \
+		-samevm \
+		$(TESTDIR)/javatest/regtest/testJavacExitCodes/  \
+			> $(@:%.ok=%/jt.log) 2>&1 || \
+	    true "non-zero exit code from JavaTest intentionally ignored"
+	$(GREP) -s 'Test results: passed: 4; failed: 4' $(@:%.ok=%/jt.log)  > /dev/null
+	echo "test passed at `date`" > $@
+
+$(BUILDDIR)/javacExitCodes.jdk5.othervm.ok: \
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	    $(JTREG_IMAGEDIR)/solaris/bin/jtreg
+	$(RM) -rf $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(JDK15HOME) \
+		-othervm \
+		$(TESTDIR)/javatest/regtest/testJavacExitCodes/  \
+			> $(@:%.ok=%/jt.log) 2>&1 || \
+	    true "non-zero exit code from JavaTest intentionally ignored"
+	$(GREP) -s 'Test results: passed: 4; failed: 4' $(@:%.ok=%/jt.log)  > /dev/null
+	echo "test passed at `date`" > $@
+
+$(BUILDDIR)/javacExitCodes.jdk6.samevm.ok: \
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	    $(JTREG_IMAGEDIR)/solaris/bin/jtreg
+	$(RM) -rf $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(JDK16HOME) \
+		-samevm \
+		$(TESTDIR)/javatest/regtest/testJavacExitCodes/  \
+			> $(@:%.ok=%/jt.log) 2>&1 || \
+	    true "non-zero exit code from JavaTest intentionally ignored"
+	$(GREP) -s 'Test results: passed: 2; failed: 2; error: 4' $(@:%.ok=%/jt.log)  > /dev/null
+	echo "test passed at `date`" > $@
+
+$(BUILDDIR)/javacExitCodes.jdk6.othervm.ok: \
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	    $(JTREG_IMAGEDIR)/solaris/bin/jtreg
+	$(RM) -rf $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(JDK16HOME) \
+		-othervm \
+		$(TESTDIR)/javatest/regtest/testJavacExitCodes/  \
+			> $(@:%.ok=%/jt.log) 2>&1 || \
+	    true "non-zero exit code from JavaTest intentionally ignored"
+	$(GREP) -s 'Test results: passed: 2; failed: 2; error: 4' $(@:%.ok=%/jt.log)  > /dev/null
+	echo "test passed at `date`" > $@
+
+TESTS.com.sun.javatest.regtest += \
+	$(BUILDDIR)/javacExitCodes.jdk5.samevm.ok \
+	$(BUILDDIR)/javacExitCodes.jdk5.othervm.ok \
+	$(BUILDDIR)/javacExitCodes.jdk6.samevm.ok \
+	$(BUILDDIR)/javacExitCodes.jdk6.othervm.ok
+
+#----------------------------------------------------------------------
+
+$(BUILDDIR)/no-junit.ok: $(IMAGES_DIR)/jtreg-no-junit.zip
+	$(RM) -rf $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	$(UNZIP) -d $(@:%.ok=%) $(IMAGES_DIR)/jtreg-no-junit.zip
+	$(@:%.ok=%)/jtreg/linux/bin/jtreg \
+		-w $(@:%.ok=%)/JTwork  \
+		-r $(@:%.ok=%)/JTreport \
+		$(TESTDIR)/javatest/regtest/data/basic/junit \
+			> $(@:%.ok=%/jt.log) 2>&1 || \
+	    true "non-zero exit code from JavaTest intentionally ignored"
+	$(GREP) -s 'Test results: error: 29' $(@:%.ok=%/jt.log)  > /dev/null
+	if [ -n "`cat $(@:%.ok=%)/JTreport/text/summary.txt | \
+			$(GREP) -v -E '(Not run|Error. Parse Exception|Error. JUnit not available)'`" ]; then \
+		echo "Unexpected test results" ; exit 1 ; \
+	fi
+	echo "test passed at `date`" > $@
+
+TESTS.com.sun.javatest.regtest += $(BUILDDIR)/no-junit.ok
+
+#----------------------------------------------------------------------
+
+$(BUILDDIR)/multirun.ok: \
+	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
+	    $(JTREG_IMAGEDIR)/lib/jh.jar \
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	    $(JTREG_IMAGEDIR)/solaris/bin/jtreg
+	$(RM) -rf $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(J2SEHOME) \
+		-samevm \
+		$(TESTDIR)/javatest/regtest/data/multirun/a/test/p/Test.java/  \
+		$(TESTDIR)/javatest/regtest/data/multirun/b1/b/test/q/Test.java/  \
+			> $(@:%.ok=%/jt.a_b1.log) 2>&1
+	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(J2SEHOME) \
+		-samevm \
+		$(TESTDIR)/javatest/regtest/data/multirun/a/test/p/Test.java/  \
+		$(TESTDIR)/javatest/regtest/data/multirun/b2/b/test/r/Test.java/  \
+			> $(@:%.ok=%/jt.a_b2.log) 2>&1
+	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(J2SEHOME) \
+		-samevm \
+		$(TESTDIR)/javatest/regtest/data/multirun/b1/b/test/q/Test.java/  \
+		$(TESTDIR)/javatest/regtest/data/multirun/b2/b/test/r/Test.java/  \
+			> $(@:%.ok=%/jt.b1_b2.log) 2>&1
+	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(J2SEHOME) \
+		-samevm \
+		$(TESTDIR)/javatest/regtest/data/multirun/a/test/p/Test.java/  \
+		$(TESTDIR)/javatest/regtest/data/multirun/b1/b/test/q/Test.java/  \
+		$(TESTDIR)/javatest/regtest/data/multirun/b2/b/test/r/Test.java/  \
+			> $(@:%.ok=%/jt.a_b1_b2.log) 2>&1
+	echo "test passed at `date`" > $@
+
+TESTS.com.sun.javatest.regtest += $(BUILDDIR)/multirun.ok
+
+#----------------------------------------------------------------------
+
+# jdk/test/Makefile uses the following platform keys in ProblemList.txt
+#	$(OS_NAME)-all
+#	$(PLATFORM_OS)
+#	$(OS_NAME)-$(OS_ARCH2)
+#	$(OS_NAME)-$(OS_VERSION)
+#	generic-$(OS_ARCH)
+#	generic-$(OS_ARCH2)
+#       generic-all
+# Create a version of ProblemList.txt to test by editing those values
+# into a template.
+
+$(BUILDDIR)/ProblemList.ok: \
+	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
+	    $(JTREG_IMAGEDIR)/lib/jh.jar \
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	    $(JTREG_IMAGEDIR)/solaris/bin/jtreg
+	$(RM) -rf $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	$(MKDIR) $(@:%.ok=%)/1
+	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/1/work -r:$(@:%.ok=%)/1/report \
+		-jdk:$(JDK16HOME) \
+		-samevm \
+		$(TESTDIR)/javatest/regtest/data/problemList/  \
+			> $(@:%.ok=%/1/jt.log) 2>&1 
+	$(GREP) -s 'Test results: passed: 6' $(@:%.ok=%/1/jt.log)  > /dev/null
+	$(MKDIR) $(@:%.ok=%)/2
+	@echo OS_ARCH $(OS_ARCH)
+	@echo OS_ARCH2 $(OS_ARCH2)
+	@echo OS_NAME $(OS_NAME)
+	@echo OS_VERSION $(OS_VERSION)
+	@echo PLATFORM_OS $(PLATFORM_OS)
+	cat $(TESTDIR)/javatest/regtest/data/problemList/ProblemList.template | sed \
+		-e 's/OSNAME-\([A-Za-z]*\)$$/$(OS_NAME)-\1/' \
+		-e 's/\([A-Za-z]*\)-ARCH2$$/\1-$(OS_ARCH2)/' \
+		-e 's/\([A-Za-z]*\)-ARCH$$/\1-$(OS_ARCH)/' \
+		-e 's/\([A-Za-z]*\)-REV$$/\1-$(OS_VERSION)/' \
+		> $(@:%.ok=%)/2/ProblemList.txt
+	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/2/work -r:$(@:%.ok=%)/2/report \
+		-jdk:$(JDK16HOME) \
+		-samevm \
+		-exclude:$(@:%.ok=%)/2/ProblemList.txt \
+		$(TESTDIR)/javatest/regtest/data/problemList/  \
+			> $(@:%.ok=%/2/jt.log) 2>&1 
+	$(GREP) -s 'Test results: passed: 1' $(@:%.ok=%/2/jt.log)  > /dev/null
+
+TESTS.com.sun.javatest.regtest += $(BUILDDIR)/ProblemList.ok
+
+#----------------------------------------------------------------------
+
+$(BUILDDIR)/StatsTest.ok: $(TESTDIR)/javatest/regtest/StatsTest.java \
+	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar
+	$(RM) -rf $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	$(MKDIR) $(@:%.ok=%)/classes
+	$(J2SEJAVAC) -d $(@:%.ok=%)/classes -cp $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+		$(TESTDIR)/javatest/regtest/StatsTest.java
+	$(J2SEJAVA) -cp $(@:%.ok=%)/classes:$(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	    com.sun.javatest.regtest.StatsTest
+	echo "test passed at `date`" > $@
+
+TESTS.com.sun.javatest.regtest += $(BUILDDIR)/StatsTest.ok
+
+
+$(BUILDDIR)/StatsTxt.1.ok: \
+	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	    $(JTREG_IMAGEDIR)/lib/jh.jar
+	$(RM) -rf $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	$(J2SEJAVA) \
+	    -Djtreg.stats.format="TEST-STATS: StatsTxt run=%r failed=%F excluded=%x" \
+	    -jar $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+		-jdk:$(J2SEHOME) \
+		-s \
+		-w $(@:%.ok=%/work) \
+		-r $(@:%.ok=%/report) \
+		$(TESTDIR)/javatest/regtest/data/basic/main   \
+			> $(@:%.ok=%/jt.log) 2>&1  || \
+	    true "non-zero exit code from JavaTest intentionally ignored"
+	$(GREP) -s '^TEST-STATS: StatsTxt run=44 failed=32 excluded=0$$' \
+		$(@:%.ok=%/jt.log)  > /dev/null
+	$(GREP) -s '^TEST-STATS: StatsTxt run=44 failed=32 excluded=0$$' \
+		$(@:%.ok=%/report/text/stats.txt)  > /dev/null
+	echo "test passed at `date`" > $@
+
+$(BUILDDIR)/StatsTxt.2.ok: \
+	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	    $(JTREG_IMAGEDIR)/lib/jh.jar
+	$(RM) -rf $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	$(J2SEJAVA) \
+	    -Djtreg.stats.format="TEST-STATS: StatsTxt passed=%p failed=%F ignored=%i" \
+	    -jar $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+		-jdk:$(J2SEHOME) \
+		-s \
+		-w $(@:%.ok=%/work) \
+		-r $(@:%.ok=%/report) \
+		-ignore:quiet \
+		$(TESTDIR)/javatest/regtest/data/basic/main   \
+		$(TESTDIR)/javatest/regtest/data/basic/ignore   \
+			> $(@:%.ok=%/jt.log) 2>&1  || \
+	    true "non-zero exit code from JavaTest intentionally ignored"
+	$(GREP) -s '^TEST-STATS: StatsTxt passed=12 failed=32 ignored=2$$' \
+		$(@:%.ok=%/jt.log)  > /dev/null
+	$(GREP) -s '^TEST-STATS: StatsTxt passed=12 failed=32 ignored=2$$' \
+		$(@:%.ok=%/report/text/stats.txt)  > /dev/null
+	echo "test passed at `date`" > $@
+		    			
+TESTS.com.sun.javatest.regtest += $(BUILDDIR)/StatsTxt.2.ok
 
 #----------------------------------------------------------------------
 

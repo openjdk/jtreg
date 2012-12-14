@@ -1,12 +1,12 @@
 /*
- * Copyright 1997-2009 Sun Microsystems, Inc.  All Rights Reserved.
+ * Copyright (c) 1997, 2011, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Sun designates this
+ * published by the Free Software Foundation.  Oracle designates this
  * particular file as subject to the "Classpath" exception as provided
- * by Sun in the LICENSE file that accompanied this code.
+ * by Oracle in the LICENSE file that accompanied this code.
  *
  * This code is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -18,9 +18,9 @@
  * 2 along with this work; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
  *
- * Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa Clara,
- * CA 95054 USA or visit www.sun.com if you need additional information or
- * have any questions.
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
  */
 
 package com.sun.javatest.regtest;
@@ -28,6 +28,8 @@ package com.sun.javatest.regtest;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -38,6 +40,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.sun.javatest.Script;
 import com.sun.javatest.Status;
@@ -71,6 +74,8 @@ public class RegressionScript extends Script
         if (!(env instanceof RegressionEnvironment))
             throw new AssertionError();
 
+        long started = System.currentTimeMillis();
+
         regEnv = (RegressionEnvironment) env;
         params = regEnv.params;
 
@@ -82,6 +87,14 @@ public class RegressionScript extends Script
         // defaults
 
         testResult = getTestResult();
+        String hostname;
+        try {
+            hostname = InetAddress.getLocalHost().getCanonicalHostName();
+        } catch (UnknownHostException e) {
+            hostname = "unknown";
+        }
+        testResult.putProperty("hostname", hostname);
+
         PrintWriter msgPW = testResult.getTestCommentWriter();
 
         try {
@@ -94,8 +107,12 @@ public class RegressionScript extends Script
                 if (a instanceof JUnitAction)
                     needJUnit = true;
             }
-            if (needJUnit)
-                addClsLib(params.getJUnitJar());
+            if (needJUnit) {
+                if (params.isJUnitAvailable())
+                    addClsLib(params.getJUnitJar());
+                else
+                    throw new TestRunException("JUnit not available: see the FAQ or online help for details");
+            }
 
             try {
                 initScratchDirectory();
@@ -147,6 +164,13 @@ public class RegressionScript extends Script
         } catch (TestRunException e) {
             status = Status.error(e.getMessage());
         } finally {
+            int elapsed = (int) (System.currentTimeMillis() - started);
+            int millis = (elapsed % 1000);
+            int secs = (elapsed / 1000) % 60;
+            int mins = (elapsed / (1000 * 60)) % 60;
+            int hours = elapsed / (1000 * 60 * 60);
+            testResult.putProperty("elapsed", String.format("%d %d:%02d:%02d.%03d",
+                    elapsed, hours, mins, secs, millis));
             if (params.isRetainEnabled()) {
                 boolean ok = retainScratchFiles(status);
                 if (!ok) {
@@ -646,7 +670,7 @@ public class RegressionScript extends Script
                 String[] testClsDir = regEnv.lookup("testClassDir");
                 if (testClsDir == null || testClsDir.length != 1)
                     throw new TestClassException(PATH_TESTCLASS);
-                classDir = new File(testClsDir[0], sourceDir);
+                classDir = new File(getThreadSafeDir(testClsDir[0]), sourceDir);
                 if (!classDir.exists())
                     classDir.mkdirs();
             } catch (TestEnvironment.Fault e) {
@@ -668,7 +692,7 @@ public class RegressionScript extends Script
         if (cacheAbsTestScratchDir == null) {
             cacheAbsTestScratchDir = params.isRetainEnabled() && getExecMode() == ExecMode.OTHERVM
                 ? absTestResultDir()
-                : workDir.getFile("scratch");
+                : workDir.getFile(getThreadSafeDir("scratch").getPath());
         }
         return cacheAbsTestScratchDir;
     } // absTestScratchDir()
@@ -1019,6 +1043,14 @@ public class RegressionScript extends Script
         return params.getTestJDK();
     }
 
+    JDK.Version getTestJDKVersion() {
+        try {
+            return JDK.Version.forName(getTestJDK().getVersion(params));
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
     boolean isTestJDK11() {
         return params.getTestJDK().isVersion(JDK.Version.V1_1, params);
     }
@@ -1031,6 +1063,14 @@ public class RegressionScript extends Script
 
     JDK getCompileJDK() {
         return params.getCompileJDK();
+    }
+
+    JDK.Version getCompileJDKVersion() {
+        try {
+            return JDK.Version.forName(getCompileJDK().getVersion(params));
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 
     boolean isCompileJDK11() {
@@ -1085,7 +1125,7 @@ public class RegressionScript extends Script
          * record the agents that the script has already obtained for use.
          */
         for (Agent agent: agents) {
-            if (agent.matches(jdk, vmOpts))
+            if (agent.matches(absTestScratchDir(), jdk, vmOpts))
                 return agent;
         }
 
@@ -1183,5 +1223,25 @@ public class RegressionScript extends Script
 
     private RegressionEnvironment regEnv;
     private RegressionParameters params;
-}
 
+    //----------thread safety-----------------------------------------------
+
+    private static final AtomicInteger uniqueId = new AtomicInteger(0);
+
+    private static final ThreadLocal < Integer > uniqueNum =
+        new ThreadLocal < Integer > () {
+            @Override protected Integer initialValue() {
+                return uniqueId.getAndIncrement();
+        }
+    };
+
+    File getThreadSafeDir(String name) {
+        return (regEnv.params.getConcurrency() == 1)
+                ? new File(name)
+                : new File(name, String.valueOf(getCurrentThreadId()));
+    }
+
+    private static int getCurrentThreadId() {
+        return uniqueNum.get();
+    }
+}

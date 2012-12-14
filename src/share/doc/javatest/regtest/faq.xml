@@ -1879,5 +1879,24 @@
                 be changed.</p>
             </answer>
         </entry>
+
+        <entry>
+            <question><code>Error. JUnit not available</code></question>
+            <answer>
+                <p>To run JUnit tests within jtreg, you must have a copy of junit.jar
+                available. To do this, you should do one of the following:</p>
+                <ul>
+                <li>Put junit.jar on the classpath used to run jtreg.</li>
+                <li>You can specify the location by setting the system property
+                        <code>junit.jar</code></li>
+                <li>Install a copy in the <em>jtreg</em><code>/lib</code> directory
+                        if it is not already present.</li>
+                </ul>
+                <p>
+                If you do not have a copy of junit.jar on your system, you can download
+                it from <a href="http://junit.org/">http://junit.org/</a>.
+                </p>
+            </answer>
+        </entry>
     </group>
 </faq>

@@ -1,12 +1,12 @@
 /*
- * Copyright 1998-2007 Sun Microsystems, Inc.  All Rights Reserved.
+ * Copyright (c) 1998, 2011, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Sun designates this
+ * published by the Free Software Foundation.  Oracle designates this
  * particular file as subject to the "Classpath" exception as provided
- * by Sun in the LICENSE file that accompanied this code.
+ * by Oracle in the LICENSE file that accompanied this code.
  *
  * This code is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -18,9 +18,9 @@
  * 2 along with this work; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
  *
- * Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa Clara,
- * CA 95054 USA or visit www.sun.com if you need additional information or
- * have any questions.
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
  */
 
 package com.sun.javatest.regtest;
@@ -40,7 +40,6 @@ import java.util.Properties;
 
 import com.sun.javatest.Status;
 import com.sun.javatest.TestResult;
-import com.sun.javatest.lib.JavaCompileCommand;
 import com.sun.javatest.lib.ProcessCommand;
 
 /**
@@ -331,7 +330,14 @@ public class CompileAction extends Action {
         PrintStringWriter stdOut = new PrintStringWriter();
         PrintStringWriter stdErr = new PrintStringWriter();
         try {
-            ProcessCommand cmd = new ProcessCommand();
+            ProcessCommand cmd = new ProcessCommand() {
+                @Override
+                protected Status getStatus(int exitCode, Status logStatus) {
+                    // logStatus is never used by javac, so ignore it
+                    JDK.Version v = script.getCompileJDKVersion();
+                    return getStatusForJavacExitCode(v, exitCode);
+                }
+            };
             cmd.setExecDir(script.absTestScratchDir());
 
             if (timeout > 0)
@@ -550,7 +556,13 @@ public class CompileAction extends Action {
                 alarm = new Alarm(timeout * 1000, Thread.currentThread(), testName, alarmOut);
             }
             try {
-                JavaCompileCommand jcc = new JavaCompileCommand();
+                RegressionCompileCommand jcc = new RegressionCompileCommand() {
+                    @Override
+                    protected Status getStatus(int exitCode) {
+                        JDK.Version v = JDK.Version.forThisJVM();
+                        return getStatusForJavacExitCode(v, exitCode);
+                    }
+                };
                 status = jcc.run(cmdArgs, err, out);
             } finally {
                 if (alarm != null)
@@ -609,6 +621,24 @@ public class CompileAction extends Action {
             throw new ParseException(COMPILE_CANT_FIND_REF + refFile);
         return value;
     } // parseRef()
+
+    static Status getStatusForJavacExitCode(JDK.Version v, int exitCode) {
+        if (v == null || v.compareTo(JDK.Version.V1_6) < 0)
+            return (exitCode == 0 ? passed : failed);
+
+        // The following exit codes are standard in JDK 6 or later
+        switch (exitCode) {
+            case 0:  return passed;
+            case 1:  return failed;
+            case 2:  return Status.error("command line error (exit code 2)");
+            case 3:  return Status.error("system error (exit code 3)");
+            case 4:  return Status.error("compiler crashed (exit code 4)");
+            default: return Status.error("unexpected exit code from javac: " + exitCode);
+        }
+    }
+
+    private static final Status passed = Status.passed("Compilation successful");
+    private static final Status failed = Status.failed("Compilation failed");
 
     private Status checkReverse(Status status, boolean reverseStatus) {
         if (!status.isError()) {

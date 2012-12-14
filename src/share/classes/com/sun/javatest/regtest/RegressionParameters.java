@@ -1,12 +1,12 @@
 /*
- * Copyright 2001-2009 Sun Microsystems, Inc.  All Rights Reserved.
+ * Copyright (c) 2001, 2011, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Sun designates this
+ * published by the Free Software Foundation.  Oracle designates this
  * particular file as subject to the "Classpath" exception as provided
- * by Sun in the LICENSE file that accompanied this code.
+ * by Oracle in the LICENSE file that accompanied this code.
  *
  * This code is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -18,9 +18,9 @@
  * 2 along with this work; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
  *
- * Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa Clara,
- * CA 95054 USA or visit www.sun.com if you need additional information or
- * have any questions.
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
  */
 
 package com.sun.javatest.regtest;
@@ -28,6 +28,7 @@ package com.sun.javatest.regtest;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -36,11 +37,14 @@ import java.util.regex.Pattern;
 
 import com.sun.interview.Interview;
 import com.sun.interview.Question;
+import com.sun.javatest.ExcludeList;
 import com.sun.javatest.InterviewParameters;
+import com.sun.javatest.TestDescription;
 import com.sun.javatest.TestEnvironment;
 import com.sun.javatest.Parameters;
 import com.sun.javatest.ProductInfo;
 import com.sun.javatest.Status;
+import com.sun.javatest.TestFilter;
 import com.sun.javatest.TestSuite;
 import com.sun.javatest.interview.BasicInterviewParameters;
 
@@ -57,7 +61,7 @@ public class RegressionParameters
 
     //---------------------------------------------------------------------
 
-    public void setTests(List<String> tests) {
+    public void setTests(Collection<String> tests) {
         setTests(tests == null ? null : tests.toArray(new String[tests.size()]));
     }
 
@@ -119,6 +123,193 @@ public class RegressionParameters
 
     //---------------------------------------------------------------------
 
+    @Override
+    public TestFilter getRelevantTestFilter() {
+        if (timeLimit <= 0)
+            return null;
+
+        return new TestFilter() {
+
+            @Override
+            public String getName() {
+                return "TestLimitFilter";
+            }
+
+            @Override
+            public String getDescription() {
+                return "Select tests that do not exceed a specified timeout value";
+            }
+
+            @Override
+            public String getReason() {
+                return "Test declares a timeout which exceeds the requested time limit";
+            }
+
+            @Override
+            public boolean accepts(TestDescription td) throws TestFilter.Fault {
+                String maxTimeoutValue = td.getParameter("maxTimeout");
+                if (maxTimeoutValue != null) {
+                    try {
+                        if (Integer.parseInt(maxTimeoutValue) > timeLimit)
+                            return false;
+                    } catch (NumberFormatException e) {
+                        // ignore
+                    }
+                }
+                return true;
+            }
+
+        };
+    }
+
+    /**
+     * @inheritDoc
+     *
+     * Use a caching filter partly for performance reasons, and partly to make
+     * it easier to calculate the number of rejected tests. Simply counting
+     * the number of true/false results is insufficient because the filter
+     * may be called more than once per test. An alternative approach is to use
+     * an ObservableTestFilter, and count the number of of true/false results in
+     * between Harness.Observer.startingTestRun and Harness.Observer.finishedTestRun.
+     * But that doesn't work correctly since the readAheadTestIterator in Harness
+     * is created before the notification to Harness.Observer.startingTestRun.
+     */
+    @Override
+    public CachingTestFilter getExcludeListFilter() {
+        // warning: os.arch depends on JVM; it ideally should come from the test jdk
+        OS os = OS.current();
+
+        // On JPRT, we see the following various types of values for these properties
+        //    os.arch              amd64
+        //    os.arch              i386
+        //    os.arch              sparc
+        //    os.arch              x86
+        //    os.name              Linux
+        //    os.name              SunOS
+        //    os.name              Windows 2003
+        //    os.name              Windows XP
+        //    os.version           2.6.27.21-78.2.41.fc9.i686
+        //    os.version           2.6.27.21-78.2.41.fc9.x86_64
+        //    os.version           5.1
+        //    os.version           5.10
+        //    os.version           5.2
+        // On a Mac, we see the following types of values
+        //    os.arch              x86_64
+        //    os.arch              universal
+        //    os.name              Darwin
+        //    os.name              Mac OS X
+        //    os.version           10.6.7
+        //    os.version           10.7.4
+
+        // ProblemList.txt uses the following encoding
+        //    generic-all   Problems on all platforms
+        //    generic-ARCH  Where ARCH is one of: sparc, sparcv9, x64, i586, etc.
+        //    OSNAME-all    Where OSNAME is one of: solaris, linux, windows
+        //    OSNAME-ARCH   Specific on to one OSNAME and ARCH, e.g. solaris-x64
+        //    OSNAME-REV    Specific on to one OSNAME and REV, e.g. solaris-5.8
+
+        final Set<String> excludedPlatforms = new HashSet<String>();
+        for (String p: Arrays.asList(os.name, os.name.replaceAll("\\s", ""), os.family, "generic")) {
+            for (String q: Arrays.asList(null, os.arch, os.simple_arch, os.version, os.simple_version, "all")) {
+                String ep = (q == null) ? p : p + "-" + q;
+                excludedPlatforms.add(ep.toLowerCase());
+            }
+        }
+
+        // System.err.println("excluded platforms: " + excludedPlatforms);
+
+
+        if (excludeListFilter == UNSET) {
+            final ExcludeList el = getExcludeList();
+            if (el == null)
+                excludeListFilter = null;
+            else {
+                excludeListFilter = new CachingTestFilter(new TestFilter() {
+                    @Override
+                    public String getName() {
+                        return "jtregExcludeListFilter";
+                    }
+
+                    @Override
+                    public String getDescription() {
+                        return "Select tests which are not excluded on any exclude list";
+                    }
+
+                    @Override
+                    public String getReason() {
+                        return "Test has been excluded by an exclude list";
+                    }
+
+                    @Override
+                    public boolean accepts(TestDescription td) throws TestFilter.Fault {
+                        ExcludeList.Entry e = el.getEntry(td.getRootRelativeURL());
+                        if (e == null)
+                            return true;
+
+                        String[] platforms = e.getPlatforms();
+                        if (platforms.length == 0 || (platforms.length == 1 && platforms[0].length() == 0)) {
+                            // allow for old ProblemList.txt format
+                            String[] bugIds = e.getBugIdStrings();
+                            if (bugIds.length > 0 && !bugIds[0].matches("[1-9][0-9,]*"))
+                                platforms = bugIds;
+                        }
+
+                        if (platforms.length == 0)
+                            return false;
+
+                        for (String p: platforms) {
+                            if (excludedPlatforms.contains(p.toLowerCase()))
+                                return false;
+                        }
+
+                        return true;
+                    }
+                });
+            }
+        }
+        return excludeListFilter;
+    }
+
+    private CachingTestFilter excludeListFilter = UNSET;
+
+    /**
+     * @inheritDoc
+     *
+     * Use a caching filter partly for performance reasons, and partly to make
+     * it easier to analze the rejected tests.
+     */
+    @Override
+    public CachingTestFilter getKeywordsFilter() {
+        if (keywordsFilter == UNSET) {
+            TestFilter f = super.getKeywordsFilter();
+            keywordsFilter = (f == null) ? null : new CachingTestFilter(f);
+        }
+        return keywordsFilter;
+    }
+
+    private CachingTestFilter keywordsFilter = UNSET;
+
+    private static CachingTestFilter UNSET = new CachingTestFilter(new TestFilter() {
+        @Override
+        public String getName() {
+            throw new IllegalStateException();
+        }
+        @Override
+        public String getDescription() {
+            throw new IllegalStateException();
+        }
+        @Override
+        public String getReason() {
+            throw new IllegalStateException();
+        }
+        @Override
+        public boolean accepts(TestDescription td) throws TestFilter.Fault {
+            throw new IllegalStateException();
+        }
+    });
+
+    //---------------------------------------------------------------------
+
     // The following (load and save) are an interim consequence of not using proper
     // interview questions to store configurations values.
     // The critical values to preserve are any that may be set by direct setXYZ methods
@@ -136,6 +327,8 @@ public class RegressionParameters
     private static final String IGNORE = ".ignore";
     private static final String RETAIN_ARGS = ".retain";
     private static final String JUNIT = ".junit";
+    private static final String TIMELIMIT = ".timeLimit";
+    private static final String REPORTDIR = ".reportDir";
 
     @Override
     public void load(Map data, boolean checkChecksum) throws Interview.Fault {
@@ -183,6 +376,14 @@ public class RegressionParameters
         v = (String) data.get(prefix + JUNIT);
         if (v != null)
             setJUnitJar(new File(v));
+
+        v = (String) data.get(prefix + TIMELIMIT);
+        if (v != null)
+            setTimeLimit(Integer.parseInt(v));
+
+        v = (String) data.get(prefix + REPORTDIR);
+        if (v != null)
+            setReportDir(new File(v));
     }
 
     @SuppressWarnings("unchecked")
@@ -219,6 +420,12 @@ public class RegressionParameters
 
         if (junitJar != null)
             data.put(prefix + JUNIT, junitJar.getPath());
+
+        if (timeLimit > 0)
+            data.put(prefix + TIMELIMIT, String.valueOf(timeLimit));
+
+        if (reportDir != null)
+            data.put(prefix + REPORTDIR, reportDir.getPath());
     }
 
     //---------------------------------------------------------------------
@@ -279,6 +486,18 @@ public class RegressionParameters
 
     //---------------------------------------------------------------------
 
+    void setTimeLimit(int timeLimit) {
+        this.timeLimit = timeLimit;
+    }
+
+    int getTimeLimit() {
+        return timeLimit;
+    }
+
+    int timeLimit;
+
+    //---------------------------------------------------------------------
+
     void setCompileJDK(JDK compileJDK) {
         compileJDK.getClass(); // null check
         this.compileJDK = compileJDK;
@@ -319,6 +538,14 @@ public class RegressionParameters
     }
 
     private File junitJar;
+
+    boolean isJUnitAvailable() {
+        if (junitJarExists == null)
+            junitJarExists = getJUnitJar().exists();
+        return junitJarExists;
+    }
+
+    private Boolean junitJarExists;
 
     //---------------------------------------------------------------------
 
@@ -478,6 +705,21 @@ public class RegressionParameters
     Pattern getRetainFilesPattern() {
         return retainFilesPattern;
     }
+
+    //---------------------------------------------------------------------
+
+    void setReportDir(File reportDir) {
+        reportDir.getClass(); // null check
+        this.reportDir = reportDir;
+    }
+
+    File getReportDir() {
+        return reportDir;
+    }
+
+    private File reportDir;
+
+    //---------------------------------------------------------------------
 
     private List<String> retainArgs;
     private Set<Integer> retainStatusSet = new HashSet<Integer>(4);

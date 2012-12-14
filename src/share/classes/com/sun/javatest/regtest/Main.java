@@ -1,12 +1,12 @@
 /*
- * Copyright 1997-2009 Sun Microsystems, Inc.  All Rights Reserved.
+ * Copyright (c) 1997, 2011, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Sun designates this
+ * published by the Free Software Foundation.  Oracle designates this
  * particular file as subject to the "Classpath" exception as provided
- * by Sun in the LICENSE file that accompanied this code.
+ * by Oracle in the LICENSE file that accompanied this code.
  *
  * This code is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -18,9 +18,9 @@
  * 2 along with this work; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
  *
- * Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa Clara,
- * CA 95054 USA or visit www.sun.com if you need additional information or
- * have any questions.
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
  */
 
 package com.sun.javatest.regtest;
@@ -28,11 +28,9 @@ package com.sun.javatest.regtest;
 import java.awt.EventQueue;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -52,9 +50,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Properties;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 import org.apache.tools.ant.BuildException;
@@ -63,12 +67,10 @@ import org.apache.tools.ant.Project;
 import org.apache.tools.ant.taskdefs.MatchingTask;
 import org.apache.tools.ant.types.Commandline;
 
-import com.sun.javatest.CompositeFilter;
 import com.sun.javatest.Keywords;
 import com.sun.javatest.Harness;
 import com.sun.javatest.InterviewParameters;
 import com.sun.javatest.JavaTestSecurityManager;
-import com.sun.javatest.Parameters;
 import com.sun.javatest.ProductInfo;
 import com.sun.javatest.Status;
 import com.sun.javatest.TestEnvironment;
@@ -80,7 +82,6 @@ import com.sun.javatest.WorkDirectory;
 import com.sun.javatest.exec.ExecToolManager;
 import com.sun.javatest.httpd.HttpdServer;
 import com.sun.javatest.httpd.PageGenerator;
-import com.sun.javatest.report.Report;
 import com.sun.javatest.tool.Desktop;
 import com.sun.javatest.tool.Startup;
 import com.sun.javatest.util.BackupPolicy;
@@ -110,7 +111,7 @@ public class Main {
     public static final String VERBOSE = "verbose";     // verbose controls
     public static final String DOC = "doc";             // help or doc info
 
-    Option[] options = {
+    List<Option> options = Arrays.asList(
         new Option(OPT, VERBOSE, "verbose", "v", "verbose") {
             @Override
             public String[] getChoices() {
@@ -239,6 +240,28 @@ public class Main {
         new Option(STD, MAIN, "", "timeout", "timeoutFactor") {
             public void process(String opt, String arg) {
                 timeoutFactorArg = arg;
+                childArgs.add(opt);
+            }
+        },
+
+        new Option(STD, MAIN, "", "tl", "timelimit") {
+            public void process(String opt, String arg) {
+                timeLimitArg = arg;
+                childArgs.add(opt);
+            }
+        },
+
+        new Option(STD, MAIN, "", "conc", "concurrency") {
+            public void process(String opt, String arg) {
+                concurrencyArg = arg;
+                childArgs.add(opt);
+            }
+        },
+
+        new Option(OPT, MAIN, "", "xml") {
+            public void process(String opt, String arg) {
+                xmlFlag = true;
+                xmlVerifyFlag = "verify".equals(arg);
                 childArgs.add(opt);
             }
         },
@@ -644,7 +667,7 @@ public class Main {
                 childArgs.add(arg);
             }
         }
-    };
+    );
 
     //---------- Ant Invocation ------------------------------------------------
 
@@ -654,6 +677,7 @@ public class Main {
         private File dir;
         private File reportDir;
         private File workDir;
+        private String concurrency;
         private String status;
         private String vmOption;
         private String vmOptions;
@@ -685,6 +709,10 @@ public class Main {
 
         public void setJDK(File jdk) {
             this.jdk = jdk;
+        }
+
+        public void setConcurrency(String concurrency) {
+            this.concurrency = concurrency;
         }
 
         // Should rethink this, and perhaps allow nested vmoption elements.
@@ -762,7 +790,7 @@ public class Main {
             Project p = getProject();
 
             // import javatest.* properties as system properties
-            java.util.Hashtable<?,?> properties = p.getProperties();
+            Map<?,?> properties = p.getProperties();
             for (Map.Entry<?,?> e: properties.entrySet()) {
                 String key = (String) e.getKey();
                 if (key.startsWith("javatest."))
@@ -771,6 +799,7 @@ public class Main {
 
             try {
                 AntOptionDecoder decoder = new AntOptionDecoder(m.options);
+                decoder.process("concurrency", concurrency);
                 decoder.process("dir", dir);
                 decoder.process("reportDir", reportDir);
                 decoder.process("workDir", workDir);
@@ -794,7 +823,7 @@ public class Main {
                     decoder.decodeArgs(allArgs);
                 }
 
-                if (m.testFileArgs.size() == 0 && dir != null) {
+                if (m.testFileArgs.isEmpty() && dir != null) {
                     DirectoryScanner s = getDirectoryScanner(dir);
                     addPaths(dir, s.getIncludedFiles());
                 }
@@ -889,11 +918,11 @@ public class Main {
             exit(EXIT_EXCEPTION);
         } catch (SecurityException e) {
             err.println(i18n.getString("main.securityException", e.getMessage()));
-            e.printStackTrace();
+            e.printStackTrace(System.err);
             exit(EXIT_EXCEPTION);
         } catch (Exception e) {
             err.println(i18n.getString("main.unexpectedException", e.toString()));
-            e.printStackTrace();
+            e.printStackTrace(System.err);
             exit(EXIT_EXCEPTION);
         }
     } // main()
@@ -936,6 +965,9 @@ public class Main {
 
         if (execMode == ExecMode.SAMEVM && compileJDK != null)
             throw new Fault(i18n, "main.cant.mix.samevm.compile.jdk.options");
+
+        if (execMode == ExecMode.SAMEVM && concurrencyArg != null)
+            throw new Fault(i18n, "main.cant.mix.samevm.concurrency.options");
 
         if (testJDK == null) {
             String s = null;
@@ -985,35 +1017,13 @@ public class Main {
             baseDir = baseDirArg.getAbsoluteFile();
         }
 
-        List<File> absTestFileArgs = new ArrayList<File>();
-
-        for (File t: testFileArgs) {
-            if (!t.isAbsolute())
-                t = new File(baseDir, t.getPath());
-            if (!t.exists())
-                throw new Fault(i18n, "main.cantFindFile", t);
-            absTestFileArgs.add(t);
-        }
-
-        testFileArgs = absTestFileArgs;
-
         String antFileList = System.getProperty(JAVATEST_ANT_FILE_LIST);
         if (antFileList != null)
             antFileArgs.addAll(readFileList(new File(antFileList)));
 
-        if (testSuiteArg == null) {
-            File t;
-            if (testFileArgs.size() > 0)
-                t = testFileArgs.iterator().next();
-            else if (antFileArgs.size() > 0)
-                t = antFileArgs.iterator().next();
-            else
-                throw new BadArgs(i18n, "main.noTestSuiteOrTests");
-
-            testSuiteArg = getTestSuite(t);
-            if (testSuiteArg == null)
-                throw new Fault(i18n, "main.cantDetermineTestSuite", t);
-        }
+        Map<File, Set<String>> testFileMap =
+                getTestFileMap(baseDir, join(testFileArgs, antFileArgs));
+        boolean multiRun = (testFileMap.size() > 1);
 
         if (workDirArg == null) {
             workDirArg = new File("JTwork");
@@ -1048,46 +1058,77 @@ public class Main {
         if (!isThisVMOK())
             return execChild();
 
-        RegressionParameters params = createParameters();
-
-        checkLockFiles(params.getWorkDirectory().getRoot(), "start");
-
         Harness.setClassDir(ProductInfo.getJavaTestClassDir());
 
         // Allow keywords to begin with a numeric
         Keywords.setAllowNumericKeywords(true);
 
-        // Before we install our own security manager (which will restrict access
-        // to the system properties), take a copy of the system properties.
-        TestEnvironment.addDefaultPropTable("(system properties)", System.getProperties());
-
-        // TODO: take SecurityManager into account for isThisVMOK
-        if (execMode == ExecMode.SAMEVM) {
-            RegressionSecurityManager.install();
-            SecurityManager sm = System.getSecurityManager();
-            if (sm instanceof RegressionSecurityManager) {
-                RegressionSecurityManager rsm = (RegressionSecurityManager) sm;
-                rsm.setAllowPropertiesAccess(true);
-                if (allowSetSecurityManagerFlag)
-                    rsm.setAllowSetSecurityManager(true);
-                // experimental
-                rsm.setAllowSetIO(true);
-            }
-        }
-
         if (httpdFlag)
             startHttpServer();
 
-        if (guiFlag) {
-            showTool(params);
-            return EXIT_OK;
-        } else {
-            try {
-                return batchHarness(params);
-            } finally {
-                checkLockFiles(params.getWorkDirectory().getRoot(), "done");
+        boolean validate = (antFileArgs.size() > 0);
+
+        if (multiRun && guiFlag)
+            throw new Fault(i18n, "main.onlyOneTestSuiteInGuiMode");
+
+        Map<File,String> subdirMap = getSubdirMap(testFileMap.keySet(), workDirArg);
+
+        testStats = new TestStats();
+
+        for (Map.Entry<File, Set<String>> e: testFileMap.entrySet()) {
+            File ts = e.getKey();
+            Set<String> tests = e.getValue();
+            String subdir = subdirMap.get(ts);
+
+            if (multiRun && (verbose != null && verbose.multiRun))
+                out.println("Running tests in " + ts);
+
+            RegressionParameters params = createParameters(ts, tests, subdir, validate);
+
+            checkLockFiles(params.getWorkDirectory().getRoot(), "start");
+
+            // Before we install our own security manager (which will restrict access
+            // to the system properties), take a copy of the system properties.
+            TestEnvironment.addDefaultPropTable("(system properties)", System.getProperties());
+
+            // TODO: take SecurityManager into account for isThisVMOK
+            if (execMode == ExecMode.SAMEVM) {
+                RegressionSecurityManager.install();
+                SecurityManager sm = System.getSecurityManager();
+                if (sm instanceof RegressionSecurityManager) {
+                    RegressionSecurityManager rsm = (RegressionSecurityManager) sm;
+                    rsm.setAllowPropertiesAccess(true);
+                    if (allowSetSecurityManagerFlag)
+                        rsm.setAllowSetSecurityManager(true);
+                    // experimental
+                    rsm.setAllowSetIO(true);
+                }
+            }
+
+            if (guiFlag) {
+                showTool(params);
+                return EXIT_OK;
+            } else {
+                try {
+                    boolean quiet = (multiRun && !(verbose != null && verbose.multiRun));
+                    testStats.addAll(batchHarness(params, quiet));
+                } finally {
+                    checkLockFiles(params.getWorkDirectory().getRoot(), "done");
+                }
             }
         }
+
+        if (multiRun) {
+            testStats.showResultStats(out);
+            RegressionReporter r = new RegressionReporter(workDirArg, reportDirArg, out);
+            r.report(subdirMap);
+            if (!reportOnlyFlag)
+                out.println("Results written to " + canon(workDirArg));
+        }
+
+        return (testStats.counts[Status.ERROR] > 0 ? EXIT_TEST_ERROR
+                : testStats.counts[Status.FAILED] > 0 ? EXIT_TEST_FAILED
+                : EXIT_OK);
     }
 
     /**
@@ -1193,7 +1234,7 @@ public class Main {
     }
 
     public int[] getTestStats() {
-        return testStats;
+        return testStats.counts;
     }
 
     private boolean isThisVMOK() {
@@ -1292,7 +1333,7 @@ public class Main {
 
         for (Map.Entry<?,?> e: System.getProperties().entrySet()) {
             String name = (String) e.getKey();
-            if (name.startsWith("javatest."))
+            if (name.startsWith("javatest.") || name.startsWith("jtreg."))
                 c.add("-D" + name + "=" + e.getValue());
         }
 
@@ -1338,7 +1379,7 @@ public class Main {
 
                 p = r.exec(cmd, env_cp, execDir);
             } catch (IOException e) {
-                err.println("cannot start child VM");
+                err.println("cannot start child VM: " + e);
                 return EXIT_FAULT;
             }
 
@@ -1458,7 +1499,6 @@ public class Main {
                 }
             } catch (IOException e) {
             }
-//          //System.out.println("Stream copied");
             synchronized (this) {
                 done = true;
                 notifyAll();
@@ -1490,25 +1530,148 @@ public class Main {
 
     }
 
-    private File getTestSuite(File test) {
-        File f = canon(test);
-        if (f.isFile())
-            f = f.getParentFile();
-        while (f != null) {
-            if (new File(f, "TEST.ROOT").exists())
-                return f;
-            f = f.getParentFile();
+    /**
+     * Analyse a list of test files, and convert to a map identifying the
+     * test suites containing those test files, and the corresponding
+     * relative paths for the test files.
+     * @param testFiles a list of test files from one or more test suites
+     * @return  a map identifying the test suites and the relative paths (if
+     *  any) for the tests identified in each test suite. An empty set for
+     *  a test suite implies all tests in the test suite.
+     */
+    private Map<File, Set<String>> getTestFileMap(File baseDir, List<File> testFiles) throws Fault {
+        Map<File,Set<String>> results = new LinkedHashMap<File,Set<String>>();
+        Map<File, File> cache = new HashMap<File,File>();
+        for (File tf: testFiles) {
+            File f = canon(tf.isAbsolute() ? tf : new File(baseDir, tf.getPath()));
+            if (!f.exists())
+                throw new Fault(i18n, "main.cantFindFile", tf);
+            File root = getTestSuiteForTest(cache, f);
+            if (root == null)
+                throw new Fault(i18n, "main.cantDetermineTestSuite", tf);
+            Set<String> filesForRoot = results.get(root);
+            if (filesForRoot == null) {
+                filesForRoot = new LinkedHashSet<String>();
+                if (tf != root)
+                    filesForRoot.add(getRelativePath(root, f));
+                results.put(root, filesForRoot);
+            } else {
+                if (tf == root) {
+                    filesForRoot.clear();
+                } else {
+                    if (!filesForRoot.isEmpty()) {
+                        filesForRoot.add(getRelativePath(root, f));
+
+                    }
+                }
+            }
         }
-        // TODO try and default from work directory
-        return null;
+        return results;
     }
 
-    private String getEnvVar(String name) {
-        for (String arg: envVarArgs) {
-            if (arg.startsWith(name + "="))
-                return (StringArray.splitEqual(arg))[1];
+    /**
+     * Get the test suite root for a file in a test suite
+     * @param cache a cache of earlier results to improve performance
+     * @param file the file to test
+     * @return the path for the enclosing directory containing TEST.ROOT,
+     *      or null if these is no such directory
+     */
+    private File getTestSuiteForTest(Map<File,File> cache, File file) {
+        if (file == null)
+            return null;
+        if (file.isFile())
+            return getTestSuiteForTest(cache, file.getParentFile());
+        File ts = cache.get(file);
+        if (ts == null) {
+            ts = new File(file, "TEST.ROOT").exists()
+                    ? file : getTestSuiteForTest(cache, file.getParentFile());
+            cache.put(file, ts);
         }
-        return null;
+        return ts;
+    }
+
+    /**
+     * Determine subdirectories to use within a top-level work directory.
+     * Existing subdirectories are honored if applicable.
+     */
+    private Map<File, String> getSubdirMap(Set<File> testSuites, File workDir) throws Fault {
+        if (testSuites.size() <= 1)
+            return Collections.emptyMap(); // no need for subdirs
+        if (WorkDirectory.isWorkDirectory(workDir))
+            throw new Fault(i18n, "main.workDirNotSuitableInMultiTestSuiteMode");
+        Set<String> subdirs = new HashSet<String>();
+        Map<File, String> results = new TreeMap<File, String>();
+
+        // first, scan directory looking for existing test suites
+        if (workDir.exists()) {
+            if (!workDir.isDirectory())
+                throw new Fault(i18n, "main.notADirectory", workDir);
+            for (File f: workDir.listFiles()) {
+                String subdir = f.getName();
+                subdirs.add(subdir); // record all names to avoid downstream clashes
+                if (WorkDirectory.isUsableWorkDirectory(f)) {
+                    File tsr = getTestSuiteForWorkDirectory(f);
+                    if (testSuites.contains(tsr))
+                        results.put(tsr, subdir);
+                }
+            }
+        }
+
+        // create new entries for test suites that do not have them
+        for (File ts: testSuites) {
+            if (!results.containsKey(ts)) {
+                String subdir = ts.getName();
+                if (ts.getParentFile() != null)
+                    subdir = ts.getParentFile().getName() + "_" + subdir;
+                if (subdirs.contains(subdir)) {
+                    int n = 0;
+                    String sdn;
+                    while (subdirs.contains(sdn = (subdir + "_" + n)))
+                        n++;
+                    subdir = sdn;
+                }
+                results.put(ts, subdir);
+                subdirs.add(subdir);
+            }
+        }
+
+        return results;
+    }
+
+    private <T> List<T> join(List<T> a, List<T> b) {
+        if (a == null || a.isEmpty())
+            return b;
+        else if (b == null || b.isEmpty())
+            return a;
+        else {
+            List<T> join = new ArrayList<T>();
+            join.addAll(a);
+            join.addAll(b);
+            return join;
+        }
+    }
+
+    private File getTestSuiteForWorkDirectory(File wd) {
+        // Cannot use standard WorkDirectory.open(ws).getTestSuite().getRoot()
+        // because jtreg does not follow standard protocol for tsInfo.
+        // (There is no easy way to disambiguate jtreg test suites.)
+        // So, have to read the testsuite file directly.
+        File tsInfo = new File(new File(wd, "jtData"), "testsuite");
+        try {
+            InputStream in = new FileInputStream(tsInfo);
+            try {
+                Properties p = new Properties();
+                p.load(in);
+                String tsr = p.getProperty("root");
+                if (tsr != null)
+                    return new File(tsr);
+            } finally {
+                in.close();
+            }
+        } catch (IOException e) {
+            // ignore
+        }
+        return new File("__UNKNOWN__");
     }
 
     private void makeDir(File dir) throws Fault {
@@ -1543,9 +1706,16 @@ public class Main {
      * Create a RegressionParameters object based on the values set up by decodeArgs.
      * @return a RegressionParameters object
      */
-    private RegressionParameters createParameters() throws BadArgs, Fault {
-        File ts = testSuiteArg;
-        File wd = workDirArg;
+    private RegressionParameters createParameters(File ts,
+            Set<String> tests,
+            String subdir,
+            boolean validate)
+            throws BadArgs, Fault
+    {
+        File wd = (subdir == null)
+                ? workDirArg : new File(workDirArg, subdir);
+        File rd = (reportDirArg == null || subdir == null)
+                ? reportDirArg : new File(reportDirArg, subdir);
 
         try {
             // create a canonTestFile suite and work dir.
@@ -1555,55 +1725,30 @@ public class Main {
             WorkDirectory workDir;
             if (WorkDirectory.isWorkDirectory(wd))
                 workDir = WorkDirectory.open(wd, testSuite);
-            else
+            else if (wd.exists())
                 workDir = WorkDirectory.convert(wd, testSuite);
+            else
+                workDir = WorkDirectory.create(wd, testSuite);
             rp.setWorkDirectory(workDir);
 
             rp.setRetainArgs(retainArgs);
 
-            // set up the tests mode, and if specified tests are used, pass in the canonTestFile list.
-            // ensure the tests parameters are root-relative
-            File root = testSuite.getRoot();
-            List<String> tests = new ArrayList<String>();
-
-            if (testFileArgs != null) {
-                // In the command line, the canonTestFile args are filenames, probably absolute,
-                // and possibly with non-canonical file separators (e.g. / on Windows).
-                // In the interview, they should be URIs -- relative to root, and using '/'
-                for (File testFile: testFileArgs) {
-                    File canonTestFile = canon(testFile);
-                    if (canonTestFile.equals(root))
-                        tests = null; // means all test suite
-                    else {
-                        String test = getRelativePath(root, canonTestFile);
-                        if (test == null) // cant make relative
-                            throw new Fault(i18n, "main.testNotInTestSuite", testFile);
-                        if (tests != null) // no need to add if all tests already included
-                            tests.add(test);
+            if (!tests.isEmpty()) {
+                if (validate) {
+                    List<String> validTests = new ArrayList<String>();
+                    TestResultTable trt = workDir.getTestResultTable();
+                    for (Iterator<String> iter = tests.iterator(); iter.hasNext(); ) {
+                        String test = iter.next();
+                        if (trt.validatePath(test))
+                            validTests.add(test);
                     }
+                    if (validTests.isEmpty())
+                        throw new Fault(i18n, "main.noTestSuiteOrTests");
+                    rp.setTests(validTests);
+                } else {
+                    rp.setTests(tests);
                 }
             }
-
-            // no need to scan ant tests if all test suite selected (i.e. tests == null)
-            if (tests != null && antFileArgs != null && antFileArgs.size() > 0) {
-                TestResultTable trt = workDir.getTestResultTable();
-                for (File antFile: antFileArgs) {
-                    File canonAntFile = canon(antFile);
-                    if (canonAntFile.equals(root))
-                        tests = null; // means all test suite
-                    else {
-                        String test = getRelativePath(root, canonAntFile);
-                        if (test == null) // cant make relative
-                            throw new Fault(i18n, "main.testNotInTestSuite", antFile);
-                        if (tests != null && trt.validatePath(test)) { // no need to add if all tests already included
-                            tests.add(test);
-                        }
-                    }
-                }
-            }
-
-            if (tests != null && tests.size() > 0)
-                rp.setTests(tests);
 
             if (keywordsExprArg != null)
                 rp.setKeywordsExpr(keywordsExprArg);
@@ -1621,7 +1766,12 @@ public class Main {
 
             if (concurrencyArg != null) {
                 try {
-                    rp.setConcurrency(Integer.parseInt(concurrencyArg));
+                    int c;
+                    if (concurrencyArg.equals("auto"))
+                        c = Runtime.getRuntime().availableProcessors();
+                    else
+                        c = Integer.parseInt(concurrencyArg);
+                    rp.setConcurrency(c);
                 } catch (NumberFormatException e) {
                     throw new BadArgs(i18n, "main.badConcurrency");
                 }
@@ -1634,6 +1784,9 @@ public class Main {
                     throw new BadArgs(i18n, "main.badTimeoutFactor");
                 }
             }
+
+            if (rd != null)
+                rp.setReportDir(rd);
 
             if (!rp.isValid())
                 throw new Fault(i18n, "main.badParams", rp.getErrorMessage());
@@ -1663,13 +1816,19 @@ public class Main {
             if (ignoreKind != null)
                 rp.setIgnoreKind(ignoreKind);
 
-//            String junit_jar = System.getProperty("junit.jar");
             if (junit_jar != null)
                 rp.setJUnitJar(junit_jar);
 
+            if (timeLimitArg != null) {
+                try {
+                    rp.setTimeLimit(Integer.parseInt(timeLimitArg));
+                } catch (NumberFormatException e) {
+                    throw new BadArgs(i18n, "main.badTimeLimit");
+                }
+            }
+
             return rp;
         } catch (TestSuite.Fault f) {
-            f.printStackTrace();
             // TODO: fix bad string -- need more helpful resource here
             throw new Fault(i18n, "main.cantOpenTestSuite", ts, f);
         } catch (WorkDirectory.Fault e) {
@@ -1679,7 +1838,7 @@ public class Main {
         }
     }
     // where
-    private File canon(File file) {
+    private static File canon(File file) {
         try {
             return file.getCanonicalFile();
         } catch (IOException e) {
@@ -1687,7 +1846,7 @@ public class Main {
         }
     }
 
-    private String getRelativePath(File base, File f) {
+    private static String getRelativePath(File base, File f) {
         StringBuilder sb = new StringBuilder();
         for ( ; f != null; f = f.getParentFile()) {
             if (f.equals(base))
@@ -1699,145 +1858,113 @@ public class Main {
         return null;
     }
 
-    /**
-     * Initialize the harness.  If we are in verbose mode, add our own observer.
-     */
-    private Harness createHarness() throws Fault {
-
-        // Set backup parameters; in time this might become more versatile.
-        BackupPolicy backupPolicy = createBackupPolicy();
-
-        Harness h = new Harness();
-        h.setBackupPolicy(backupPolicy);
-
-        if (observerClassName != null) {
-            try {
-                Class observerClass;
-                if (observerPathArg == null)
-                    observerClass = Class.forName(observerClassName);
-                else {
-                    URL[] urls = new URL[observerPathArg.size()];
-                    int u = 0;
-                    for (File f: observerPathArg) {
-                        try {
-                            urls[u++] = f.toURI().toURL();
-                        } catch (MalformedURLException ignore) {
-                        }
+    private static Harness.Observer getObserver(List<File> observerPath, String observerClassName)
+            throws Fault {
+        try {
+            Class<?> observerClass;
+            if (observerPath == null)
+                observerClass = Class.forName(observerClassName);
+            else {
+                URL[] urls = new URL[observerPath.size()];
+                int u = 0;
+                for (File f: observerPath) {
+                    try {
+                        urls[u++] = f.toURI().toURL();
+                    } catch (MalformedURLException ignore) {
                     }
-                    ClassLoader loader = new URLClassLoader(urls);
-                    observerClass = loader.loadClass(observerClassName);
                 }
-                Harness.Observer observer = (Harness.Observer)(observerClass.newInstance());
-                h.addObserver(observer);
-            } catch (ClassCastException e) {
-                throw new Fault(i18n, "main.obsvrType",
-                        new Object[] {Harness.Observer.class.getName(), observerClassName});
-            } catch (ClassNotFoundException e) {
-                throw new Fault(i18n, "main.obsvrNotFound", observerClassName);
-            } catch (IllegalAccessException e) {
-                throw new Fault(i18n, "main.obsvrFault", e);
-            } catch (InstantiationException e) {
-                throw new Fault(i18n, "main.obsvrFault", e);
+                ClassLoader loader = new URLClassLoader(urls);
+                observerClass = loader.loadClass(observerClassName);
             }
+            return observerClass.asSubclass(Harness.Observer.class).newInstance();
+        } catch (ClassCastException e) {
+            throw new Fault(i18n, "main.obsvrType",
+                    new Object[] {Harness.Observer.class.getName(), observerClassName});
+        } catch (ClassNotFoundException e) {
+            throw new Fault(i18n, "main.obsvrNotFound", observerClassName);
+        } catch (IllegalAccessException e) {
+            throw new Fault(i18n, "main.obsvrFault", e);
+        } catch (InstantiationException e) {
+            throw new Fault(i18n, "main.obsvrFault", e);
         }
-
-        // add our own observer for verbose
-        if (verbose != null) {
-            Harness.Observer observer = new RegressionObserver(verbose, out, err);
-            h.addObserver(observer);
-        }
-
-        return h;
-    } // createHarness()
+    }
 
     /**
      * Run the harness in batch mode, using the specified parameters.
      */
-    private int batchHarness(InterviewParameters params)
+    private TestStats batchHarness(RegressionParameters params, boolean quiet)
             throws Fault, Harness.Fault, InterruptedException {
+        boolean reportRequired =
+                !noReportFlag && !Boolean.getBoolean("javatest.noReportRequired");
+        File rd = params.getReportDir();
+
         try {
+            TestStats stats = new TestStats();
             boolean ok;
+            ElapsedTimeHandler elapsedTimeHandler = null;
 
             if (reportOnlyFlag) {
-                testStats = new int[Status.NUM_STATES];
                 for (Iterator iter = getResultsIterator(params); iter.hasNext(); ) {
                     TestResult tr = (TestResult) (iter.next());
-                    testStats[tr.getStatus().getType()]++;
+                    stats.add(tr);
                 }
-                ok = (testStats[Status.FAILED] == 0 && testStats[Status.ERROR] ==0);
+                ok = stats.isOK();
             } else {
-                Harness harness = createHarness();
-                harness.addObserver(new BatchObserver());
-                ok = harness.batch(params);
+                // Set backup parameters; in time this might become more versatile.
+                BackupPolicy backupPolicy = createBackupPolicy();
+
+                Harness h = new Harness();
+                h.setBackupPolicy(backupPolicy);
+
+                if (xmlFlag) {
+                    out.println("XML output " +
+                            (xmlVerifyFlag ? "with verification to " : " to ") +
+                            params.getWorkDirectory().getPath());
+                    h.addObserver(new XMLWriter.XMLHarnessObserver(xmlVerifyFlag, out, err));
+                }
+                if (observerClassName != null)
+                    h.addObserver(getObserver(observerPathArg, observerClassName));
+
+                if (verbose != null)
+                    new VerboseHandler(verbose, out, err).register(h);
+
+                stats.register(h);
+
+                h.addObserver(new BasicObserver() {
+                    @Override
+                    public void error(String msg) {
+                        err.println(i18n.getString("main.error", msg));
+                    }
+                });
+
+                if (reportRequired) {
+                    elapsedTimeHandler = new ElapsedTimeHandler();
+                    elapsedTimeHandler.register(h);
+                }
+
+                ok = h.batch(params);
+
                 Agent.Pool.instance().close();
                 Alarm.finished();
             }
 
-            showResultStats(testStats);
+            if (!quiet)
+                stats.showResultStats(out);
 
-            boolean reportRequired =
-                    !noReportFlag && !Boolean.getBoolean("javatest.noReportRequired");
-            List<String> reportKinds =
-                    Arrays.asList(System.getProperty("javatest.report.kinds", "html text").split("[ ,]+"));
-            String backups = System.getProperty("javatest.report.backups"); // default: none
             if (reportRequired) {
-                try {
-                    if (Thread.interrupted()) {
-                        // It is important to ensure the interrupted bit is cleared before writing
-                        // a report, because Report.writeReport checks if the interrupted bit is set,
-                        // and will stop writing the report. This typically manifests itself as
-                        // writing the HTML files but /not/ writing the text/summary.txt file.
-                        out.println("WARNING: interrupt status cleared prior to writing report");
-                    }
-
-                    Report r = new Report();
-                    Report.Settings s = new Report.Settings(params);
-                    if (reportKinds.contains("html")) {
-                        s.setEnableHtmlReport(true);
-                        s.setHtmlMainReport(true, true);
-                    }
-                    if (reportKinds.contains("text")) {
-                        s.setEnablePlainReport(true);
-                    }
-                    if (reportKinds.contains("xml")) {
-                        s.setEnableXmlReport(true);
-                    }
-                    s.setFilter(new CompositeFilter(params.getFilters()));
-                    if (backups == null)
-                        s.setEnableBackups(false);
-                    else {
-                        try {
-                            s.setBackupLevels(Integer.parseInt(backups));
-                            s.setEnableBackups(true);
-                        } catch (NumberFormatException e) {
-                            // ignore
-                        }
-                    }
-                    r.writeReport(s, reportDirArg);
-                    fixupReports(workDirArg, reportDirArg);
-                    File report = new File(reportDirArg, "report.html"); // std through version 3.*
-                    if (!report.exists())
-                        report = new File(new File(reportDirArg, "html"), "report.html"); // version 4.*
-                    if (report.exists())
-                        out.println("Report written to " + report);
-                } catch (IOException e) {
-                    out.println("Error while writing report: " + e);
-                } catch (SecurityException e) {
-                    out.println("Error while writing report: " + e);
-                }
+                RegressionReporter r = new RegressionReporter(workDirArg, reportDirArg, out);
+                r.report(params, elapsedTimeHandler, stats, quiet);
             }
 
-            if (!reportOnlyFlag)
+            if (!reportOnlyFlag && !quiet)
                 out.println("Results written to " + params.getWorkDirectory().getPath());
 
             // report a brief msg to System.err as well, in case System.out has
             // been redirected.
-            if (!ok)
+            if (!ok && !quiet)
                 err.println(i18n.getString("main.testsFailed"));
 
-            return (testStats[Status.ERROR] > 0 ? EXIT_TEST_ERROR :
-                testStats[Status.FAILED] > 0 ? EXIT_TEST_FAILED :
-                    EXIT_OK);
+            return stats;
         } finally {
             out.flush();
             err.flush();
@@ -1875,30 +2002,6 @@ public class Main {
             startup.disposeLater();
         }
     } // showTool()
-
-    private void showResultStats(int[] stats) {
-        int p = stats[Status.PASSED];
-        int f = stats[Status.FAILED];
-        int e = stats[Status.ERROR];
-        int nr = stats[Status.NOT_RUN];
-
-        String msg;
-        if (p + f + e + nr == 0)
-            msg = i18n.getString("main.noTests");
-        else {
-            msg = i18n.getString("main.tests",
-                    new Object[] {
-                new Integer(p),
-                new Integer((p > 0) && (f + e + nr > 0) ? 1 : 0),
-                new Integer(f),
-                new Integer((f > 0) && (e + nr > 0) ? 1 : 0),
-                new Integer(e),
-                new Integer((e > 0) && (nr > 0) ? 1 : 0),
-                new Integer(nr)
-            });
-        }
-        out.println(msg);
-    }
 
     private BackupPolicy createBackupPolicy() {
         return new BackupPolicy() {
@@ -2026,97 +2129,18 @@ public class Main {
                         return new File(uri.getPath());
                 }
             } catch (URISyntaxException ignore) {
-                ignore.printStackTrace();
+                ignore.printStackTrace(System.err);
             }
         }
 
         return null;
     }
 
-    /* If the work dir and report dir are equal or close to each other in the
-     * file system, rewrite HTML files in the report directory, replacing
-     * absolute paths for the work directory with relative paths.
-     */
-    private void fixupReports(File work, File report) {
-        File workParent = work.getParentFile();
-        String canonWorkPath;
-        try {
-            canonWorkPath = work.getCanonicalPath();
-        } catch (IOException e) {
-            canonWorkPath = work.getAbsolutePath();
-        }
-
-        File reportParent = report.getParentFile();
-        File reportHtmlDir = new File(report, "html");
-
-        if (equal(work, report)) {
-            fixupReportFiles(report,        canonWorkPath, ".");
-            fixupReportFiles(reportHtmlDir, canonWorkPath, "..");
-        } else if (equal(report, workParent)) {
-            fixupReportFiles(report,        canonWorkPath, work.getName());
-            fixupReportFiles(reportHtmlDir, canonWorkPath, "../" + work.getName());
-        } else if (equal(work, reportParent)) {
-            fixupReportFiles(report,        canonWorkPath, work.getName());
-            fixupReportFiles(reportHtmlDir, canonWorkPath, "../" + work.getName());
-        } else if (equal(workParent, reportParent)) {
-            fixupReportFiles(report,        canonWorkPath, "../" + work.getName());
-            fixupReportFiles(reportHtmlDir, canonWorkPath, "../../" + work.getName());
-        }
-    }
-
-    /* Rewrite html files in the given directory, replacing hrefs to the old path
-     * with references to the new path. */
-    private void fixupReportFiles(File dir, String oldPath, String newPath) {
-        String dirPath;
-        try {
-            dirPath = dir.getCanonicalPath();
-        } catch (IOException e) {
-            dirPath = dir.getAbsolutePath();
-        }
-
-        for (File f: dir.listFiles()) {
-            if (f.getName().endsWith(".html")) {
-                try {
-                    write(f, read(f)
-                            .replace("href=\"" + oldPath + "/", "href=\"" + newPath + "/")
-                            .replace("href=\"" + oldPath + "\"", "href=\"" + newPath + "\"")
-                            .replace("href=\"" + dirPath + "\"", "href=\".\""));
-                } catch (IOException e) {
-                    out.println("Error while updating report: " + e);
-                }
-            }
-        }
-    }
-
-    private String read(File f) throws IOException {
-        byte[] bytes = new byte[(int) f.length()];
-        DataInputStream fIn = new DataInputStream(new FileInputStream(f));
-        try {
-            fIn.readFully(bytes);
-            return new String(bytes);
-        } finally {
-            fIn.close();
-        }
-    }
-
-    private void write(File f, String s) throws IOException {
-        FileOutputStream fOut = new FileOutputStream(f);
-        try {
-            fOut.write(s.getBytes());
-        } finally {
-            fOut.close();
-        }
-    }
-
-    private static <T> boolean equal(T t1, T t2) {
-        return (t1 == null ? t2 == null : t1.equals(t2));
-    }
-
     /**
      * Call System.exit, taking care to get permission from the
      * JavaTestSecurityManager, if it is installed.
      */
-    private static final void exit(int exitCode) {
+    private static void exit(int exitCode) {
         // If our security manager is installed, it won't allow a call of
         // System.exit unless we ask it nicely, pretty please, thank you.
         SecurityManager sc = System.getSecurityManager();
@@ -2128,31 +2152,6 @@ public class Main {
     private static boolean isTrue(String s) {
         return (s != null) &&
                 (s.equalsIgnoreCase("true") || s.equalsIgnoreCase("yes"));
-    }
-
-    // This is almost completely dead code; testStats appears unused
-    // so the only use here is error handling, which perhaps can be
-    // folded into RegressionObserver
-    private class BatchObserver implements Harness.Observer {
-        public void startingTestRun(Parameters params) {
-            testStats = new int[Status.NUM_STATES];
-        }
-
-        public void startingTest(TestResult tr) { }
-
-        public void finishedTest(TestResult tr) {
-            testStats[tr.getStatus().getType()]++;
-        }
-
-        public void stoppingTestRun() { }
-
-        public void finishedTesting() { }
-
-        public void finishedTestRun(boolean allOK) { }
-
-        public void error(String msg) {
-            err.println(i18n.getString("main.error", msg));
-        }
     }
 
     private void checkLockFiles(File workDir, String msg) {
@@ -2173,12 +2172,11 @@ public class Main {
     private PrintWriter err;
 
     // this first group of args are the "standard" JavaTest args
-    private File testSuiteArg;
     private File workDirArg;
     private List<String> retainArgs;
     private List<File> excludeListArgs = new ArrayList<File>();
     private String keywordsExprArg;
-    private String concurrencyArg; // not currently exposed in any way
+    private String concurrencyArg;
     private String timeoutFactorArg;
     private String priorStatusValuesArg;
     private File reportDirArg;
@@ -2198,6 +2196,7 @@ public class Main {
     private boolean allowSetSecurityManagerFlag = true;
     private static Verbose  verbose;
     private boolean httpdFlag;
+    private String timeLimitArg;
     private String observerClassName;
     private List<File> observerPathArg;
     private List<String> testCompilerOpts = new ArrayList<String>();
@@ -2209,6 +2208,8 @@ public class Main {
     private List<File> classPathAppendArg = new ArrayList<File>();
     private boolean jitFlag = true;
     private Help help;
+    private boolean xmlFlag;
+    private boolean xmlVerifyFlag;
 
     File javatest_jar;
     File jtreg_jar;
@@ -2218,7 +2219,7 @@ public class Main {
     // the list of args to be passed down to a  child VM
     private List<String> childArgs = new ArrayList<String>();
 
-    private int[] testStats;
+    private TestStats testStats;
 
     private static final String AUTOMATIC = "!manual";
     private static final String MANUAL    = "manual";

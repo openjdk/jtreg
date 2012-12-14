@@ -1,12 +1,12 @@
 /*
- * Copyright 2010 Sun Microsystems, Inc.  All Rights Reserved.
+ * Copyright (c) 2010, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Sun designates this
+ * published by the Free Software Foundation.  Oracle designates this
  * particular file as subject to the "Classpath" exception as provided
- * by Sun in the LICENSE file that accompanied this code.
+ * by Oracle in the LICENSE file that accompanied this code.
  *
  * This code is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -18,9 +18,9 @@
  * 2 along with this work; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
  *
- * Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa Clara,
- * CA 95054 USA or visit www.sun.com if you need additional information or
- * have any questions.
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
  */
 
 package com.sun.javatest.regtest;
@@ -93,6 +93,7 @@ public class Agent {
 
         id = count++;
         this.jdk = jdk;
+        this.scatchDir = dir;
         this.vmOpts = vmOpts;
 
         List<String> cmd = new ArrayList<String>();
@@ -175,8 +176,8 @@ public class Agent {
         t.start();
     }
 
-    public boolean matches(JDK jdk, List<String> vmOpts) {
-        return this.jdk.equals(jdk) && this.vmOpts.equals(vmOpts);
+    public boolean matches(File scratchDir, JDK jdk, List<String> vmOpts) {
+        return scratchDir.getName().equals(this.scatchDir.getName()) && this.jdk.equals(jdk) && this.vmOpts.equals(vmOpts);
     }
 
     public Status doCompileAction(String testName,
@@ -399,6 +400,7 @@ public class Agent {
 
     final JDK jdk;
     final List<String> vmOpts;
+    final File scatchDir;
     final Process process;
     final DataInputStream in;
     final DataOutputStream out;
@@ -681,15 +683,16 @@ public class Agent {
         }
 
         synchronized Agent getAgent(File dir, JDK jdk, List<String> vmOpts, List<String> envVars) throws IOException {
-            Queue<Agent> agents = map.get(getKey(jdk, vmOpts));
+            Queue<Agent> agents = map.get(getKey(dir, jdk, vmOpts));
             Agent a = (agents == null) ? null : agents.poll();
-            if (a == null)
+            if (a == null) {
                 a = new Agent(dir, jdk, vmOpts, envVars, policyFile);
+            }
             return a;
         }
 
         synchronized void save(Agent agent) {
-            String key = getKey(agent.jdk, agent.vmOpts);
+            String key = getKey(agent.scatchDir, agent.jdk, agent.vmOpts);
             Queue<Agent> agents = map.get(key);
             if (agents == null)
                 map.put(key, agents = new LinkedList<Agent>());
@@ -706,8 +709,8 @@ public class Agent {
             policyFile = null;
         }
 
-        private static String getKey(JDK jdk, List<String> vmOpts) {
-            return (jdk.getAbsoluteFile() + " " + StringUtils.join(vmOpts, " "));
+        private static String getKey(File dir, JDK jdk, List<String> vmOpts) {
+            return (dir.getAbsolutePath() + " " + jdk.getAbsoluteFile() + " " + StringUtils.join(vmOpts, " "));
         }
 
         private Map<String,Queue<Agent>> map;
