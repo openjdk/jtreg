@@ -52,6 +52,10 @@ ifndef JDK16HOME
   JDK16HOME = /java/re/jdk/1.6.0/archive/fcs/binaries/linux-i586
 endif
 
+ifndef JDK17HOME
+  JDK17HOME = /java/re/jdk/1.7.0/archive/fcs/binaries/linux-i586
+endif
+
 # J2SE for most classes
 J2SEHOME = $(JDK15HOME)
 J2SEJAVA = $(J2SEHOME)/bin/java
@@ -90,11 +94,26 @@ ifndef JCOV_HOME
   JCOV_HOME = /java/re/jcov/2.0/promoted/latest/binaries/jcov_2.0/
 endif
 
+ifdef JCOV_HOME
+  JCOV = $(JDK16HOME)/bin/java -jar $(JCOV_HOME)/lib/jcov.jar
+endif
+
 #----- JUnit 4.5: see http://www.junit.org/
 # http://sourceforge.net/projects/junit/files/junit/4.5/junit-4.5.jar/download
 
 ifndef JUNIT_JAR
   JUNIT_JAR = /java/devtools/share/junit/junit-4.5/junit.jar
+endif
+
+#----- TestNG 6.7: see http://www.testng.org/
+# http://testng.org/doc/download.html
+
+ifndef TESTNG_HOME
+  TESTNG_HOME = /java/devtools/share/testng/testng-6.7
+endif
+
+ifndef TESTNG_JAR
+  TESTNG_JAR = $(TESTNG_HOME)/other-jars/testng-6.7-dist.jar
 endif
 
 #----- Ant: see http://ant.apache.org/
@@ -129,6 +148,7 @@ endif
 
 #----- Unix commands
 
+CAT 	= /bin/cat
 CHMOD 	= /bin/chmod
 CP 	= /bin/cp
 DIFF 	= /usr/bin/diff
@@ -143,6 +163,7 @@ SED 	= /bin/sed
 SH 	= /bin/sh
 SORT    = /usr/bin/sort
 TEST 	= /usr/bin/test
+TOUCH 	= /usr/bin/touch
 UNZIP 	= /usr/bin/unzip
 WC 	= /usr/bin/wc
 ZIP 	= /usr/bin/zip

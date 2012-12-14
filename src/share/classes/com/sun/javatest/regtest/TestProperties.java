@@ -31,7 +31,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.ref.SoftReference;
 import java.util.Arrays;
-import java.util.HashSet;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.Properties;
 import java.util.Set;
 import java.util.WeakHashMap;
@@ -78,10 +79,28 @@ public class TestProperties {
         return e.useOtherVM;
     }
 
+    boolean isTestNG(File file) throws TestSuite.Fault {
+        File dir = file.isDirectory() ? file : file.getParentFile();
+        Cache.Entry e = cache.getEntry(dir);
+        return e.testNGRoot != null;
+    }
+
+    File getTestNGRoot(File file) throws TestSuite.Fault {
+        File dir = file.isDirectory() ? file : file.getParentFile();
+        Cache.Entry e = cache.getEntry(dir);
+        return e.testNGRoot;
+    }
+
     boolean needsExclusiveAccess(File file) throws TestSuite.Fault {
         File dir = file.isDirectory() ? file : file.getParentFile();
         Cache.Entry e = cache.getEntry(dir);
         return e.needsExclusiveAccess;
+    }
+
+    Set<String> getLibDirs(File file) throws TestSuite.Fault {
+        File dir = file.isDirectory() ? file : file.getParentFile();
+        Cache.Entry e = cache.getEntry(dir);
+        return e.libDirs;
     }
 
     private File canon(File f) {
@@ -104,9 +123,12 @@ public class TestProperties {
             final Properties properties;
             final Set<String> validKeys;
             final boolean useOtherVM;
-            private final Set<String> otherVMDirs;
+            private final Set<File> otherVMDirs;
             final boolean needsExclusiveAccess;
-            private final Set<String> exclusiveAccessDirs;
+            private final Set<File> exclusiveAccessDirs;
+            final File testNGRoot;
+            private final Set<File> testNGDirs;
+            final Set<String> libDirs;
 
             Entry(Entry parent, File dir) throws TestSuite.Fault {
                 this.parent = parent;
@@ -127,10 +149,16 @@ public class TestProperties {
                     validKeys = initSet(parent == null ? null : parent.validKeys, "keys");
 
                     // add the list of othervm dirs
-                    otherVMDirs = initSet(parent == null ? null : parent.otherVMDirs, "othervm.dirs");
+                    otherVMDirs = initSet(parent == null ? null : parent.otherVMDirs, "othervm.dirs", dir);
 
                     // add the list of exclusive access dirs
-                    exclusiveAccessDirs = initSet(parent == null ? null : parent.exclusiveAccessDirs, "exclusiveAccess.dirs");
+                    exclusiveAccessDirs = initSet(parent == null ? null : parent.exclusiveAccessDirs, "exclusiveAccess.dirs", dir);
+
+                    // add the list of TestNG dirs
+                    testNGDirs = initSet(parent == null ? null : parent.testNGDirs, "TestNG.dirs", dir);
+
+                    // add the list of library dirs for TestNG tests
+                    libDirs = initSet(parent == null ? null : parent.libDirs, "lib.dirs");
                 } else {
                     if (parent == null)
                         throw new IllegalStateException("TEST.ROOT not found");
@@ -138,18 +166,45 @@ public class TestProperties {
                     validKeys = parent.validKeys;
                     otherVMDirs = parent.otherVMDirs;
                     exclusiveAccessDirs = parent.exclusiveAccessDirs;
+                    testNGDirs = parent.testNGDirs;
+                    libDirs = parent.libDirs;
                 }
 
                 useOtherVM = initUseOtherVM(parent, dir);
                 needsExclusiveAccess = initNeedsExclusiveAccess(parent, dir);
+                testNGRoot = initTestNGRoot(parent, dir);
             }
 
             private Set<String> initSet(Set<String> parent, String propertyName) {
                 String[] values = StringArray.splitWS(properties.getProperty(propertyName));
                 if (parent == null || values.length > 0) {
-                    Set<String> set = (parent == null) ? new HashSet<String>() : new HashSet<String>(parent);
+                    Set<String> set = (parent == null) ? new LinkedHashSet<String>() : new LinkedHashSet<String>(parent);
                     set.addAll(Arrays.asList(values));
-                    return set;
+                    return Collections.unmodifiableSet(set);
+                } else {
+                    return parent;
+                }
+            }
+
+            private Set<File> initSet(Set<File> parent, String propertyName, File baseDir) {
+                String[] values = StringArray.splitWS(properties.getProperty(propertyName));
+                if (parent == null || values.length > 0) {
+                    Set<File> set = (parent == null) ? new LinkedHashSet<File>() : new LinkedHashSet<File>(parent);
+                    //set.addAll(Arrays.asList(values));
+                    for (String v: values) {
+                        if (v.startsWith("/")) {
+                            File f = new File(rootDir, v.substring(1));
+                            if (f.exists())
+                                set.add(new File(f.toURI().normalize()));
+                        } else {
+                            File f;
+                            if ((f = new File(baseDir, v)).exists())
+                                set.add(new File(f.toURI().normalize()));
+                            else if ((f = new File(rootDir, v)).exists()) // for backwards compatibility
+                                set.add(new File(f.toURI().normalize()));
+                        }
+                    }
+                    return Collections.unmodifiableSet(set);
                 } else {
                     return parent;
                 }
@@ -162,8 +217,8 @@ public class TestProperties {
                 if (parent.useOtherVM)
                     return true;
 
-                for (String otherVMDir: otherVMDirs) {
-                    if (includes(new File(rootDir, otherVMDir), dir))
+                for (File otherVMDir: otherVMDirs) {
+                    if (includes(otherVMDir, dir))
                         return true;
                 }
 
@@ -177,12 +232,27 @@ public class TestProperties {
                 if (parent.needsExclusiveAccess)
                     return true;
 
-                for (String exclusiveAccessDir: exclusiveAccessDirs) {
-                    if (includes(new File(rootDir, exclusiveAccessDir), dir))
+                for (File exclusiveAccessDir: exclusiveAccessDirs) {
+                    if (includes(exclusiveAccessDir, dir))
                         return true;
                 }
 
                 return false;
+            }
+
+            private File initTestNGRoot(Entry parent, File dir) {
+                if (parent == null)
+                    return null;
+
+                if (parent.testNGRoot != null)
+                    return parent.testNGRoot;
+
+                for (File testNGDir: testNGDirs) {
+                    if (includes(testNGDir, dir))
+                        return testNGDir;
+                }
+
+                return null;
             }
 
             private boolean includes(File dir, File file) {
@@ -217,7 +287,7 @@ public class TestProperties {
             Entry e = (ref == null) ? null : ref.get();
             if (e == null) {
                 Entry parent = dir.equals(rootDir) ? null : getEntryInternal(dir.getParentFile());
-                e = new Entry(parent, dir);
+                map.put(dir, new SoftReference<Entry>(e = new Entry(parent, dir)));
             }
             return e;
         }

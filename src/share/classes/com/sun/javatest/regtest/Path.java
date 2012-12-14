@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010, 2012, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -45,6 +45,16 @@ public class Path {
      * Equivalent to {@code new Path().append(files)}.
      * @param files
      */
+    Path(List<File> files) {
+        append(files);
+    }
+
+
+    /**
+     * Create a path containing the concatenation of a series of files.
+     * Equivalent to {@code new Path().append(files)}.
+     * @param files
+     */
     Path(File... files) {
         append(files);
     }
@@ -65,6 +75,23 @@ public class Path {
      */
     Path(String... paths) {
         append(paths);
+    }
+
+    /**
+     * Append a series of files to the path.  Files that do not exist
+     * are ignored.
+     * @param files files to be added to the path
+     * @return the path itself
+     */
+    Path append(List<File> files) {
+        for (File f: files) {
+            if (f.exists()) {
+                if (value.length() > 0)
+                    value += PATHSEP;
+                value += f.getPath();
+            }
+        }
+        return this;
     }
 
     /**
@@ -120,14 +147,14 @@ public class Path {
      * Return the series of files that are currently on the path.
      * @return the files on the path
      */
-    File[] split() {
-        List<File> v = new ArrayList<File>();
+    List<File> split() {
+        List<File> list = new ArrayList<File>();
         for (String s: StringArray.splitSeparator(PATHSEP, value)) {
             if (s.length() > 0) {
-                v.add(new File(s));
+                list.add(new File(s));
             }
         }
-        return v.toArray(new File[v.size()]);
+        return list;
     }
 
     /**

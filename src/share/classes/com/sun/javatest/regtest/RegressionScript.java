@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2011, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2012, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -32,14 +32,13 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.TreeSet;
 
 import com.sun.javatest.Script;
 import com.sun.javatest.Status;
@@ -55,8 +54,7 @@ import com.sun.javatest.TestSuite;
   * @author Iris A Garcia
   * @see com.sun.javatest.Script
   */
-public class RegressionScript extends Script
-{
+public class RegressionScript extends Script {
     /**
      * The method that interprets the tags provided in the test description and
      * performs actions accordingly.
@@ -103,10 +101,10 @@ public class RegressionScript extends Script
         PrintWriter msgPW = testResult.getTestCommentWriter();
 
         try {
+            locations = new Locations(regEnv, td);
+
             // defaultExecMode may still be overridden in individual actions with /othervm
             defaultExecMode = testSuite.useOtherVM(td) ? ExecMode.OTHERVM : params.getExecMode();
-
-            setLibList(td.getParameter("library"));
 
             LinkedList<Action> actionList = parseActions(actions, true);
 
@@ -117,6 +115,15 @@ public class RegressionScript extends Script
             }
             if (needJUnit && !params.isJUnitAvailable()) {
                 throw new TestRunException("JUnit not available: see the FAQ or online help for details");
+            }
+
+            needTestNG = false;
+            for (Action a: actionList) {
+                if (a instanceof TestNGAction)
+                    needTestNG = true;
+            }
+            if (needTestNG && !params.isTestNGAvailable()) {
+                throw new TestRunException("TestNG not available: see the FAQ or online help for details");
             }
 
             scratchDirectory = ScratchDirectory.get(params, defaultExecMode, td);
@@ -179,29 +186,29 @@ public class RegressionScript extends Script
     /**
      * Get the set of source files used by the actions in a test description.
      **/
-    public File[] getSourceFiles(TestDescription td) {
+    public Set<File> getSourceFiles(RegressionParameters p, TestDescription td) {
         this.td = td;
         try {
-            setLibList(td.getParameter("library"));
+            if (locations == null) {
+                RegressionEnvironment e = (RegressionEnvironment) p.getEnv();
+                e.put("testClassDir", "/NO/CLASSES/");
+                locations = new Locations(e, td);
+            }
             String actions = td.getParameter("run");
             LinkedList<Action> actionList = parseActions(actions, false);
-            Set<File> files = new LinkedHashSet<File>();
+            Set<File> files = new TreeSet<File>();
             while (! actionList.isEmpty()) {
                 Action action = actionList.remove();
-                File[] a = action.getSourceFiles();
+                Set<File> a = action.getSourceFiles();
                 if (a != null)
-                    files.addAll(Arrays.asList(a));
+                    files.addAll(a);
             }
-            return files.toArray(new File[files.size()]);
+            return files;
         } catch (TestRunException e) {
-            return new File[0];
+            return Collections.<File>emptySet();
         } catch (ParseActionsException shouldNotHappen) {
             throw new Error(shouldNotHappen);
         }
-    }
-
-    public boolean hasEnv() {
-        return (regEnv != null);
     }
 
     static class ParseActionsException extends Exception {
@@ -340,6 +347,7 @@ public class RegressionScript extends Script
         addAction("main", MainAction.class);
         addAction("junit", JUnitAction.class);
         addAction("shell", ShellAction.class);
+        addAction("testng", TestNGAction.class);
     } // populateActionTable()
 
     private void addAction(String action, Class<?> actionClass) {
@@ -436,122 +444,21 @@ public class RegressionScript extends Script
 
     //----------------------- computing paths ---------------------------------
 
-    private String cacheRelTestSrcDir;
-    private String relTestSrcDir() {
-        if (cacheRelTestSrcDir == null) {
-            String d = td.getRootRelativeFile().getParent();
-            if (d == null)
-                cacheRelTestSrcDir = "";
-            else
-                cacheRelTestSrcDir = d;
-        }
-        return cacheRelTestSrcDir;
-    } // relTestSrcDir()
-
-    private File cacheAbsTestSrcDir;
     File absTestSrcDir() {
-        if (cacheAbsTestSrcDir == null)
-            cacheAbsTestSrcDir = td.getFile().getParentFile();
-
-        return cacheAbsTestSrcDir;
+        return locations.absTestSrcDir();
     } // absTestSrcDir()
 
-    private File cacheAbsTestClsDir;
-    File absTestClsDir() throws TestClassException {
-        if (cacheAbsTestClsDir == null) {
-            String sourceDir = relTestSrcDir();
-            File classDir;
-            try {
-                String[] testClsDir = regEnv.lookup("testClassDir");
-                if (testClsDir == null || testClsDir.length != 1)
-                    throw new TestClassException(PATH_TESTCLASS);
-                classDir = new File(getThreadSafeDir(testClsDir[0]), sourceDir);
-                if (!classDir.exists())
-                    classDir.mkdirs();
-            } catch (TestEnvironment.Fault e) {
-                throw new TestClassException(PATH_TESTCLASS);
-            }
-            cacheAbsTestClsDir = classDir;
-        }
-
-        try {
-            cacheAbsTestClsDir = cacheAbsTestClsDir.getCanonicalFile();
-        } catch (IOException e) {
-            throw new TestClassException(PROB_CANT_CANON + cacheAbsTestClsDir);
-        }
-        return cacheAbsTestClsDir;
+    File absTestClsDir() {
+        return locations.absTestClsDir();
     } // absTestClsDir()
 
     File absTestScratchDir() {
         return scratchDirectory.dir.getAbsoluteFile();
     } // absTestScratchDir()
 
-    private File cacheAbsTestClsTopDir;
-    File absTestClsTopDir() throws TestClassException {
-        String absTestClsDir = absTestClsDir().getPath();
-        String clsStr = "classes";
-
-        // locate trailing "classes"
-        int pos = absTestClsDir.lastIndexOf(FILESEP + clsStr);
-        String clsTopDir = absTestClsDir.substring(0, pos + clsStr.length() + 1);
-
-        cacheAbsTestClsTopDir = new File(clsTopDir);
-
-        return cacheAbsTestClsTopDir;
+    File absTestClsTopDir() {
+        return locations.absBaseClsDir();
     } // absTestClsTopDir()
-
-    /**
-     * Determine the destination directory for the compiled class file given the
-     * .java file.  If we are passed a file which should live in a library, make
-     * sure that we compile to the correct library directory.
-     */
-    File absTestClsDestDir(String fileName) throws TestClassException {
-        return absTestClsDestDir(new File(fileName));
-    }
-
-    File absTestClsDestDir(File file) throws TestClassException {
-        File retVal = null;
-        String name = null;
-        if (file.isAbsolute()) {
-            // from build
-            String fileName = file.getPath();
-            String srcDir = absTestSrcDir().getPath();
-            int len = srcDir.length();
-            if (fileName.startsWith(srcDir)) {
-                name = fileName.substring(len+1);
-            } else {
-                // highly unlikely to occur, but just in case
-                throw new TestClassException(TEST_SRC + fileName
-                                             + UNEXPECTED_LOC + srcDir);
-            }
-        } else {
-            // relative, from compile
-            // preserve directory name if passed
-            name = file.getPath();
-        }
-
-        // try looking in the test source directory
-        File testSrc = new File(absTestSrcDir(), name);
-        if (testSrc.exists())
-            // no need to modify the class directory
-            retVal = absTestClsDir();
-        else {
-            // the .java file lives in a library
-            for (int i = 0; i < cacheAbsSrcLibList.length; i++) {
-                File libSrc = new File(cacheAbsSrcLibList[i], name);
-                if (libSrc.exists()) {
-                    // in a library
-                    retVal = new File(absTestClsDir(), cacheRelSrcLibList[i]);
-                    break;
-                }
-            }
-        }
-
-        if (retVal == null)
-            throw new TestClassException(CANT_FIND_SRC + file);
-
-        return retVal;
-    } // absTestClsDestDir()
 
     private Path cacheTestClassPath;
     Path getTestClassPath() throws TestClassException {
@@ -559,16 +466,16 @@ public class RegressionScript extends Script
             cacheTestClassPath = new Path();
             JDK jdk = getTestJDK();
             if (jdk.isVersion(JDK.Version.V1_1, params)) {
-                cacheTestClassPath.append(absTestClsDir());
-                cacheTestClassPath.append(absTestSrcDir());
-                cacheTestClassPath.append(absClsLibList());
+                cacheTestClassPath.append(locations.absTestClsDir());
+                cacheTestClassPath.append(locations.absTestSrcDir());
+                cacheTestClassPath.append(locations.absClsLibList());
                 cacheTestClassPath.append(jdk.getJavaClassPath());
                 cacheTestClassPath.append(jdk.getJDKClassPath());
             } else { // isTestJDK12() or above
-                cacheTestClassPath.append(absTestClsDir());
-                cacheTestClassPath.append(absTestSrcDir()); // required??
-                cacheTestClassPath.append(absClsLibList());
-                cacheTestClassPath.append(absSrcJarLibList());
+                cacheTestClassPath.append(locations.absTestClsDir());
+                cacheTestClassPath.append(locations.absTestSrcDir()); // required??
+                cacheTestClassPath.append(locations.absClsLibList());
+                cacheTestClassPath.append(locations.absSrcJarLibList());
                 cacheTestClassPath.append(jdk.getJDKClassPath());
             }
 
@@ -594,21 +501,24 @@ public class RegressionScript extends Script
             cacheCompileClassPath = new Path();
             JDK jdk = getCompileJDK();
             if (jdk.isVersion(JDK.Version.V1_1, params)) {
-                cacheCompileClassPath.append(absTestClsDir());
-                cacheCompileClassPath.append(absTestSrcDir());
-                cacheCompileClassPath.append(absClsLibList());
+                cacheCompileClassPath.append(locations.absTestClsDir());
+                cacheCompileClassPath.append(locations.absTestSrcDir());
+                cacheCompileClassPath.append(locations.absClsLibList());
                 cacheCompileClassPath.append(jdk.getJavaClassPath());
                 cacheCompileClassPath.append(jdk.getJDKClassPath());
             } else { // isTestJDK12() or above
-                cacheCompileClassPath.append(absTestClsDir());
-                cacheCompileClassPath.append(absTestSrcDir()); // required??
-                cacheCompileClassPath.append(absClsLibList());
-                cacheCompileClassPath.append(absSrcJarLibList());
+                cacheCompileClassPath.append(locations.absTestClsDir());
+                cacheCompileClassPath.append(locations.absTestSrcDir()); // required??
+                cacheCompileClassPath.append(locations.absClsLibList());
+                cacheCompileClassPath.append(locations.absSrcJarLibList());
                 cacheCompileClassPath.append(jdk.getJDKClassPath());
             }
 
             if (needJUnit)
                 cacheCompileClassPath.append(params.getJUnitJar());
+
+            if (needTestNG)
+                cacheCompileClassPath.append(params.getTestNGJar());
 
             // handle cpa option to jtreg
             String[] envVars = getEnvVars();
@@ -637,177 +547,14 @@ public class RegressionScript extends Script
      *             contain the directory of the defining file of the test
      *             followed by the library list.
      */
-    Path getCompileSourcePath() throws TestRunException {
+    Path getCompileSourcePath() {
         if (cacheCompileSourcePath == null) {
             cacheCompileSourcePath = new Path();
-            JDK jdk = getCompileJDK();
-            cacheCompileSourcePath.append(absTestSrcDir());
-            cacheCompileSourcePath.append(absSrcLibList());
-            cacheCompileSourcePath.append(jdk.getJDKClassPath()); // required??
+            cacheCompileSourcePath.append(locations.absTestSrcDir());
+            cacheCompileSourcePath.append(locations.absSrcLibList());
         }
         return cacheCompileSourcePath;
     } // getCompileSourcePath()
-
-    private Map<File, Set<String>> cacheDirContents = new HashMap<File, Set<String>>();
-    private File locateFile(String fileName, File[] dirList)
-        throws TestRunException
-    {
-        for (int i = 0; i < dirList.length; i++) {
-            File dir = dirList[i];
-
-            if (fileName.indexOf(FILESEP) == -1) {
-                // file name provided
-
-                // set of the directory contents
-                Set<String> dirSet = cacheDirContents.get(dir);
-                if (dirSet == null) {
-                    String[] fileList = dir.list();
-                    dirSet = new HashSet<String>(1);
-                    if (fileList != null)
-                        dirSet.addAll(Arrays.asList(fileList));
-                    cacheDirContents.put(dir, dirSet);
-                }
-                if (dirSet.contains(fileName))
-                    // success
-                    return new File(dir, fileName);
-            } else {
-                // file name specifies directory
-                File f = new File(dir, fileName);
-                if (f.exists())
-                    return f;
-            }
-        }
-
-        // create the list of directory names that we looked in and fail
-        StringBuilder dirListStr = new StringBuilder();
-        for (int i = 0; i < dirList.length; i++)
-            dirListStr.append(dirList[i]).append(" ");
-        throw new TestRunException(CANT_FIND_SRC + fileName +
-                                   LIB_LIST + dirListStr);
-
-    } // locateFile()
-
-    /**
-     * Returns an absolute path to the given ".java" file.
-     *
-     * @param fileName The exact name of the file to search for (must be called
-     *             with ".java" as necessary).
-     */
-    private File[] cacheJavaSrcPath = null;
-    File locateJavaSrc(String fileName) throws TestRunException {
-        if (cacheJavaSrcPath == null) {
-            cacheJavaSrcPath = new File[cacheAbsSrcLibList.length + 1];
-            cacheJavaSrcPath[0] = absTestSrcDir();
-            System.arraycopy(cacheAbsSrcLibList, 0, cacheJavaSrcPath, 1,
-                             cacheAbsSrcLibList.length);
-        }
-        try {
-            return locateFile(fileName, cacheJavaSrcPath);
-        } catch (TestRunException ex) {
-            // Allow the file to define a class in a package,
-            // even though it is directly inside the test dir.
-            int sep = fileName.lastIndexOf(FILESEP);
-            if (sep >= 0) {
-                String baseName = fileName.substring(sep+1);
-                try {
-                    File[] path0 = { absTestSrcDir() };
-                    return locateFile(baseName, path0);
-                } catch (TestRunException ignoreEx) {
-                }
-            }
-            throw ex;
-        }
-    } // locateJavaSrc()
-
-    /**
-     * For a given .java file, find the absolute path to the .class file.
-     *
-     * @param fileNamethe .java file we are interested in.
-     */
-    File locateJavaCls(String fileName) throws TestRunException {
-        String sn = locateJavaSrc(fileName).getName();
-        File cp = new File(absTestClsDir(),
-            sn.substring(0, sn.length() - ".java".length()) + ".class");
-        return cp;
-    } // locateJavaCls()
-
-    File locateJavaClsDir(String fileName) throws TestRunException {
-        return (locateJavaCls(fileName)).getParentFile();
-    } // locateJavaClsDir()
-
-    private String[] cacheRelSrcLibList;
-    private File[] cacheAbsSrcLibList;
-    private File[] cacheAbsClsLibList;
-    private void setLibList(String libPath) throws TestClassException {
-        if ((cacheAbsSrcLibList == null) || (cacheAbsClsLibList == null)) {
-            cacheRelSrcLibList = StringArray.splitWS(libPath);
-
-            cacheAbsSrcLibList = new File[cacheRelSrcLibList.length];
-            for (int i = 0; i < cacheRelSrcLibList.length; i++) {
-                cacheAbsSrcLibList[i] = new File(absTestSrcDir(), cacheRelSrcLibList[i]);
-            }
-
-            if (hasEnv()) {
-                cacheAbsClsLibList = new File[cacheRelSrcLibList.length];
-                for (int i = 0; i < cacheRelSrcLibList.length; i++) {
-                    cacheAbsClsLibList[i] = new File(absTestClsDir(), cacheRelSrcLibList[i]);
-                }
-            }
-        }
-    } // setLibList()
-
-    private void addClsLib(File lib) {
-        assert cacheAbsClsLibListPath == null;
-        File[] newList = new File[cacheAbsClsLibList.length + 1];
-        System.arraycopy(cacheAbsClsLibList, 0, newList, 0, cacheAbsClsLibList.length);
-        newList[newList.length - 1] = lib;
-        cacheAbsClsLibList = newList;
-    } // addClsLib()
-
-    private Path cacheAbsClsLibListPath;
-    Path absClsLibList() throws TestClassException {
-        if (cacheAbsClsLibListPath == null) {
-            cacheAbsClsLibListPath = new Path();
-            for (int i = 0; i < cacheAbsClsLibList.length; i++) {
-                // It is not clear why the first of the following two statements
-                // was commented out in favor of the second. With the addition
-                // of addClsLib(), above, it is important to use cacheAbsClsLibList
-                // instead of recalculating the entries from  cacheRelSrcLibList.
-                // It is possible the change was made as a defensive measure when
-                // "if (hasEnv()) { ..}" was added to setLibList for the benefit
-                // of the GUI (i.e. getSourceFiles()).  But, absClsLibList()
-                // should only be called when hasEnv() is true, implying that
-                // cacheAbsClsLibList is already initialized correctly.
-//              String curr = cacheAbsClsLibList[i];
-//                File curr = new File(absTestClsDir(), cacheRelSrcLibList[i]);
-                File curr = cacheAbsClsLibList[i];
-                cacheAbsClsLibListPath.append(curr);
-            }
-        }
-        return cacheAbsClsLibListPath;
-    } // absClsLibList()
-
-    private Path cacheAbsSrcLibListPath;
-    Path absSrcLibList() {
-        if (cacheAbsSrcLibListPath == null) {
-            cacheAbsSrcLibListPath = new Path(cacheAbsSrcLibList);
-        }
-        return cacheAbsSrcLibListPath;
-    } // absSrcLibList()
-
-    private Path cacheAbsSrcJarLibListPath;
-    Path absSrcJarLibList() {
-        if (cacheAbsSrcJarLibListPath == null) {
-            cacheAbsSrcJarLibListPath = new Path();
-            for (File f: cacheAbsSrcLibList) {
-                if (f.getName().endsWith(".jar")) {
-                    if (f.exists())
-                        cacheAbsSrcJarLibListPath.append(f);
-                }
-            }
-        }
-        return cacheAbsSrcJarLibListPath;
-    } // absSrcJarLibList()
 
     ExecMode getExecMode() {
         return defaultExecMode;
@@ -823,6 +570,18 @@ public class RegressionScript extends Script
 
     File getJUnitJar() {
         return params.getJUnitJar();
+    }
+
+    boolean isTestNGRequired() {
+        return needTestNG;
+    }
+
+    File getTestNGJar() {
+        return params.getTestNGJar();
+    }
+
+    TestNGReporter getTestNGReporter() {
+        return TestNGReporter.instance(workDir);
     }
 
     Lock getLockIfRequired() throws TestRunException {
@@ -891,12 +650,15 @@ public class RegressionScript extends Script
             case AGENTVM:
             case SAMEVM:
                 Path path = new Path()
-                    .append(absTestClsDir(), absTestSrcDir())
-                    .append(absClsLibList());
+                    .append(locations.absTestClsDir())
+                    .append(locations.absTestSrcDir())
+                    .append(locations.absClsLibList());
                 p.put("test.class.path.prefix", path.toString());
         }
-        p.put("test.src", absTestSrcDir().getPath());
-        p.put("test.classes", absTestClsDir().getPath());
+        p.put("test.src", locations.absTestSrcDir().getPath());
+        p.put("test.src.path", toString(locations.absTestSrcPath()));
+        p.put("test.classes", locations.absTestClsDir().getPath());
+        p.put("test.class.path", toString(locations.absTestClsPath()));
         p.put("test.vm.opts", StringUtils.join(getTestVMOptions(), " "));
         p.put("test.tool.vm.opts", StringUtils.join(getTestToolVMOptions(), " "));
         p.put("test.compiler.opts", StringUtils.join(getTestCompilerOptions(), " "));
@@ -904,6 +666,15 @@ public class RegressionScript extends Script
         p.put("test.jdk", getTestJDK().getPath());
         p.put("compile.jdk", getCompileJDK().getPath());
         return p;
+    }
+    // where
+    private String toString(List<File> files) {
+        StringBuilder sb = new StringBuilder();
+        for (File f: files) {
+            if (sb.length() > 0) sb.append(File.pathSeparator);
+            sb.append(f.getPath());
+        }
+        return sb.toString();
     }
 
     //--------------------------------------------------------------------------
@@ -977,6 +748,12 @@ public class RegressionScript extends Script
 
     //----------internal classes-----------------------------------------------
 
+    void saveScratchFile(File file, File dest) {
+        scratchDirectory.retainFile(file, dest);
+    }
+
+    //----------internal classes-----------------------------------------------
+
     /*
      * Exception used to indicate that there is a problem with the destination
      * of class files generated by the actual tests.
@@ -1018,46 +795,20 @@ public class RegressionScript extends Script
         NOT_EXT_ACTION        = " does not extend Action",
         ILLEGAL_ACCESS_INIT   = "Illegal access to init method: ",
         BAD_ACTION            = "Bad action for script: ",
-        ADD_BAD_SUBTYPE       = "Class must be a subtype of ",
-        PATH_TESTCLASS        = "Unable to locate test class directory!?",
-        TEST_SRC              = "Test source: ",
-        UNEXPECTED_LOC        = "does not reside in: ",
-        CANT_FIND_SRC         = "Can't find source file: ",
-        LIB_LIST              = " in directory-list: ",
-        PROB_CANT_CANON       = "Unable to canonicalize file: ";
+        ADD_BAD_SUBTYPE       = "Class must be a subtype of ";
 
     //----------member variables-----------------------------------------------
 
     private Map<String, Class<?>> actionTable = new HashMap<String, Class<?>>();
     private TestResult testResult;
-    // the library-list resolved to the test-src directory
-    //private String[] libList;
 
     private RegressionEnvironment regEnv;
     private RegressionParameters params;
     private RegressionTestSuite testSuite;
     private ExecMode defaultExecMode;
     private boolean needJUnit;
+    private boolean needTestNG;
     private ScratchDirectory scratchDirectory;
+    Locations locations;
 
-    //----------thread safety-----------------------------------------------
-
-    private static final AtomicInteger uniqueId = new AtomicInteger(0);
-
-    private static final ThreadLocal<Integer> uniqueNum =
-        new ThreadLocal<Integer> () {
-            @Override protected Integer initialValue() {
-                return uniqueId.getAndIncrement();
-        }
-    };
-
-    File getThreadSafeDir(String name) {
-        return (params.getConcurrency() == 1)
-                ? new File(name)
-                : new File(name, String.valueOf(getCurrentThreadId()));
-    }
-
-    private static int getCurrentThreadId() {
-        return uniqueNum.get();
-    }
 }

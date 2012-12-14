@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2007, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2012, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -26,6 +26,8 @@
 package com.sun.javatest.regtest;
 
 import java.applet.Applet;
+import java.applet.AppletContext;
+import java.applet.AppletStub;
 import java.awt.BorderLayout;
 import java.awt.Button;
 import java.awt.Checkbox;
@@ -49,11 +51,11 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
+import java.net.URL;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
@@ -133,6 +135,9 @@ public class AppletWrapper
             int width  = Integer.parseInt((String) appletAtts.get("width"));
             int height = Integer.parseInt((String) appletAtts.get("height"));
             AppletFrame app = new AppletFrame(className, body, manual, width, height);
+            Applet applet = app.getApplet();
+            AppletStubImpl stub = new AppletStubImpl();
+            applet.setStub(stub);
 
             // center the frame
             app.pack();
@@ -147,9 +152,10 @@ public class AppletWrapper
             // shown.
             app.setVisible(true);
 
-            app.getApplet().init();
-            validate(app.getApplet());
-            app.getApplet().start();
+            applet.init();
+            validate(applet);
+            stub.isActive = true;
+            applet.start();
 
             app.setVisible(true);
             validate(app);
@@ -164,15 +170,16 @@ public class AppletWrapper
                     status.exit();
                 }
                 // just in case the system is slow, ensure paint is called
-                app.getApplet().paint(app.getApplet().getGraphics());
+                applet.paint(app.getApplet().getGraphics());
 
             } else {
                 // wait for user to click on "Pass", "Fail", or "Done"
                 waiter.waitForDone();
             }
 
-            app.getApplet().stop();
-            app.getApplet().destroy();
+            stub.isActive = false;
+            applet.stop();
+            applet.destroy();
 
             app.dispose();
 
@@ -205,6 +212,34 @@ public class AppletWrapper
         }
     } // class AppletRunnable
 
+    static class AppletStubImpl implements AppletStub {
+        boolean isActive;
+
+        public boolean isActive() {
+            return isActive;
+        }
+
+        public URL getDocumentBase() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        public URL getCodeBase() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        public String getParameter(String name) {
+            return (String) appletParams.get(name);
+        }
+
+        public AppletContext getAppletContext() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        public void appletResize(int width, int height) {
+            // no-op
+        }
+
+    }
 
     /**
      * The actual applet being tested is run in its own thread group.

@@ -51,6 +51,8 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.jar.Attributes;
+import java.util.jar.JarFile;
 
 import javax.help.DefaultHelpBroker;
 import javax.help.HelpSet;
@@ -68,10 +70,38 @@ import com.sun.javatest.util.WrapWriter;
  * Handles help options for main program
  */
 public class Help {
+    interface VersionHelper {
+        void showVersion(PrintWriter out);
+    }
 
     /** Creates a new instance of Help */
     public Help(List<Option> options) {
         this.options = options;
+    }
+
+    boolean isEnabled() {
+        return versionFlag
+                || releaseNotesFlag
+                || tagSpecFlag
+                || (commandLineHelpQuery != null)
+                || (onlineHelpQuery != null);
+    }
+
+    void addVersionHelper(VersionHelper h) {
+        versionHelpers.add(h);
+    }
+
+    void addJarVersionHelper(final String name, final File jar) {
+        addVersionHelper(new Help.VersionHelper() {
+            public void showVersion(PrintWriter out) {
+                try {
+                    JarFile j = new JarFile(jar);
+                    String v = (String) j.getManifest().getMainAttributes().get(Attributes.Name.IMPLEMENTATION_VERSION);
+                    out.println(name + ": version " + (v == null ? "unknown" : v)); // need i18n
+                } catch (IOException e) {
+                }
+            }
+        });
     }
 
     void setVersionFlag(boolean yes) {
@@ -213,6 +243,8 @@ public class Help {
 
         out.println(i18n.getString("help.version.txt", versionArgs));
         out.println(i18n.getString("help.copyright.txt"));
+        for (VersionHelper h: versionHelpers)
+            h.showVersion(out);
     }
 
     private File getHomeDir() {
@@ -445,8 +477,8 @@ public class Help {
         if (p != null)
             return p;
 
-        File[] cp = new Path(System.getProperty("java.class.path")).split();
-        if (cp.length == 1 && cp[0].getName().equals("jtreg.jar")) {
+        List<File> cp = new Path(System.getProperty("java.class.path")).split();
+        if (cp.size() == 1 && cp.get(0).getName().equals("jtreg.jar")) {
             return "java -jar jtreg.jar ";
         }
 
@@ -564,6 +596,7 @@ public class Help {
     }
 
     private List<Option> options;
+    private List<VersionHelper> versionHelpers = new ArrayList<VersionHelper>();
     private boolean releaseNotesFlag;
     private boolean tagSpecFlag;
     private boolean versionFlag;

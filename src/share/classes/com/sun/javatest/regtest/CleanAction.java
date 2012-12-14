@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2007, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2012, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -26,9 +26,12 @@
 package com.sun.javatest.regtest;
 
 import java.io.File;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 import com.sun.javatest.Status;
 import com.sun.javatest.TestResult;
+import com.sun.javatest.regtest.Locations.ClassLocn;
 
 /**
  * This class implements the "clean" action as described by the JDK tag
@@ -112,12 +115,14 @@ public class CleanAction extends Action
                     try {
                         if (dir.isDirectory()) {
                             File[] files = dir.listFiles();
-                            for (int j = 0; j < files.length; j++) {
-                                File f = files[j];
-                                // don't complain about not being able to clean
-                                // subpackages
-                                if (!f.delete() && !f.isDirectory())
-                                    throw new TestRunException(CLEAN_RM_FAILED + f);
+                            if (files != null) {
+                                for (int j = 0; j < files.length; j++) {
+                                    File f = files[j];
+                                    // don't complain about not being able to clean
+                                    // subpackages
+                                    if (!f.delete() && !f.isDirectory())
+                                        throw new TestRunException(CLEAN_RM_FAILED + f);
+                                }
                             }
                         }
                     } catch (SecurityException e) {
@@ -137,6 +142,23 @@ public class CleanAction extends Action
         endAction(status, section);
         return status;
     } // run()
+
+    @Override
+    public Set<File> getSourceFiles() {
+        Set<File> files = new LinkedHashSet<File>();
+        for (String arg: args) {
+            // the arguments to clean are packages or classnames
+            if (arg.endsWith("*"))
+                continue;
+            try {
+                ClassLocn cl = script.locations.locateClass(arg);
+                if (cl.absSrcFile.exists())
+                    files.add(cl.absSrcFile);
+            } catch (TestRunException ignore) {
+            }
+        }
+        return files;
+    }
 
     //----------member variables------------------------------------------------
 

@@ -78,11 +78,10 @@ public class JUnitAction extends MainAction
         }
 
         public static void main(ClassLoader loader, String... args) throws Exception {
-            try { // debug
-            if (args.length != 1)
+            if (args.length != 2)
                 throw new Error("wrong number of arguments");
-//            Class<?> mainClass = Class.forName(args[0], true, loader);
-            Class<?> mainClass = (loader == null) ? Class.forName(args[0]) : loader.loadClass(args[0]);
+            // String testName = args[0];  // not used
+            Class<?> mainClass = (loader == null) ? Class.forName(args[1]) : loader.loadClass(args[1]);
             org.junit.runner.Result result;
             try {
                 result = org.junit.runner.JUnitCore.runClasses(mainClass);
@@ -97,10 +96,6 @@ public class JUnitAction extends MainAction
                     System.err.println("JavaTest Message: JUnit Failure: "+failure);
                 }
                 throw new Exception("JUnit test failure");
-            }
-            } catch (Exception e) {
-                System.err.println("JUnitAction.main loader=" + loader + " e=" + e + " args=" + java.util.Arrays.asList(args) + " cp=" + System.getProperty("java.class.path"));
-                throw e;
             }
         }
     }

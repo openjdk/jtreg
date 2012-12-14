@@ -98,8 +98,13 @@ public class RegressionReporter {
             if (s.isPlainEnabled()) {
                 if (elapsedTimeHandler != null)
                     elapsedTimeHandler.report(r);
+
                 if (testStats != null)
                     testStats.report(r);
+
+                TestNGReporter tng = TestNGReporter.instance(params.getWorkDirectory());
+                if (!tng.isEmpty())
+                    tng.writeReport(reportDirArg);
             }
             fixupReports(rd, workDirArg, reportDirArg);
             if (!quiet)

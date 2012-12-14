@@ -45,7 +45,7 @@
     <property name="dist.dir" location="dist" />
     <property name="dist.jtreg.dir" location="${dist.dir}/jtreg" />
     <property name="dist.jtreg.zip" location="${dist.dir}/jtreg.zip" />
-    <property name="dist.jtreg-no-junit.zip" location="${dist.dir}/jtreg-no-junit.zip" />
+    <property name="dist.open-jtreg.zip" location="${dist.dir}/open-jtreg.zip" />
     <property name="make.checkstyle.dir" value="make/checkstyle"/>
 
     <patternset id="helpset">
@@ -75,6 +75,7 @@
         <available property="javatest.ok" file="${javatest.home}/COPYRIGHT-javatest.html"/>
         <available property="jtharness.ok" file="${javatest.home}/legal/copyright.txt"/>
         <available property="junit.ok" file="${junit.jar}"/>
+        <available property="testng.ok" file="${testng.jar}"/>
     </target>
 
     <!-- ********** jtreg ************************************************** -->
@@ -100,9 +101,10 @@
         <zip destfile="${dist.jtreg.zip}" filesOnly="true" basedir="${dist.dir}">
             <include name="jtreg/"/>
         </zip>
-        <zip destfile="${dist.jtreg-no-junit.zip}" filesOnly="true" basedir="${dist.dir}">
+        <zip destfile="${dist.open-jtreg.zip}" filesOnly="true" basedir="${dist.dir}">
             <include name="jtreg/"/>
             <exclude name="**/*junit*"/>
+            <exclude name="**/*testng*"/>
         </zip>
     </target>
 
@@ -178,7 +180,7 @@
             debug="true" debuglevel="source,lines"
             srcdir="${src.classes.dir}"
             destdir="${build.classes.dir}"
-            classpath="${build.classes.dir}:${javatest.jar}:${junit.jar}"
+            classpath="${build.classes.dir}:${javatest.jar}"
             includeantruntime="false">
             <patternset refid="jtreg.jdk11.files"/>
             <compilerarg line="-Xlint:deprecation"/>
@@ -187,7 +189,7 @@
             debug="true" debuglevel="source,lines"
             srcdir="${src.classes.dir}"
             destdir="${build.classes.dir}"
-            classpath="${build.classes.dir}:${javatest.jar}:${junit.jar}"
+            classpath="${build.classes.dir}:${javatest.jar}:${junit.jar}:${testng.jar}"
             includeantruntime="true">
             <compilerarg line="-Xlint:all"/>
             <patternset refid="jtreg.packages"/>

@@ -40,6 +40,8 @@ import com.sun.javatest.TestResult;
 abstract class ScratchDirectory {
     /** Used to resort serious issues while manipulating the scratch directory. */
     static class Fault extends Exception {
+        private static final long serialVersionUID = 0;
+
         Fault(String msg) {
             super(msg);
         }
@@ -107,6 +109,12 @@ abstract class ScratchDirectory {
     }
 
     abstract boolean retainFiles(Status status, PrintWriter log);
+
+    boolean retainFile(File file, File dest) {
+        File f = new File(dir, file.getPath());
+        File d = params.getWorkDirectory().getFile(dest.getPath());
+        return f.renameTo(d);
+    }
 
     /**
      * Delete the contents of a directory, reporting any issues to a log.

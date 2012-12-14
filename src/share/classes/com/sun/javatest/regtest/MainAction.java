@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2009, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2012, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -36,10 +36,11 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import com.sun.javatest.Status;
 import com.sun.javatest.TestResult;
@@ -112,13 +113,13 @@ public class MainAction extends Action
             } else if (optName.equals("othervm")) {
                 othervm = true;
             } else if (optName.equals("policy")) {
-                if (!script.hasEnv() || !script.isTestJDK11())
+                if (!script.isTestJDK11())
                     policyFN = parsePolicy(optValue);
                 else
                     throw new ParseException(PARSE_BAD_OPT_JDK + optName);
             } else if (optName.equals("secure")) {
-                if (!script.hasEnv() || !script.isTestJDK11())
-                    secureFN = parseSecure(optValue);
+                if (!script.isTestJDK11())
+                    secureCN = parseSecure(optValue);
                 else
                     throw new ParseException(PARSE_BAD_OPT_JDK + optName);
             } else {
@@ -164,7 +165,7 @@ public class MainAction extends Action
                 throw new ParseException(javaArgs + MAIN_UNEXPECT_VMOPT);
             if (policyFN != null)
                 throw new ParseException(PARSE_POLICY_OTHERVM);
-            if (secureFN != null)
+            if (secureCN != null)
                 throw new ParseException(PARSE_SECURE_OTHERVM);
         }
     } // init()
@@ -180,23 +181,21 @@ public class MainAction extends Action
     }
 
     @Override
-    public File[] getSourceFiles() {
-        List<File> l = new ArrayList<File>();
+    public Set<File> getSourceFiles() {
+        Set<File> files = new LinkedHashSet<File>();
         if (mainClassName != null) {
             String[][] buildOpts = {};
             String[]   buildArgs = {mainClassName.replace(File.separatorChar, '.')};
             try {
                 BuildAction ba = new BuildAction();
                 ba.init(buildOpts, buildArgs, SREASON_ASSUMED_BUILD, script);
-                l.addAll(Arrays.asList(ba.getSourceFiles()));
+                files.addAll(ba.getSourceFiles());
             } catch (ParseException ignore) {
             }
         }
         if (policyFN != null)
-            l.add(new File(policyFN));
-        if (secureFN != null)
-            l.add(new File(secureFN));
-        return l.toArray(new File[l.size()]);
+            files.add(new File(policyFN));
+        return files;
     }
 
     /**
@@ -204,14 +203,14 @@ public class MainAction extends Action
      * given action is defined by the tag specification.
      *
      * Invoke the main method of the specified class, passing any arguments
-     * after the class name.  A "main" action is considerd to be finished when
+     * after the class name.  A "main" action is considered to be finished when
      * the main method returns.
      *
      * A "main" action passes if the main method returns normally and does not
      * cause an exception to be thrown by the main or any subsidiary threads.
      * It fails otherwise.
      *
-     * If the <em>othervm<em> option is present, this action requires that the
+     * If the <em>othervm</em> option is present, this action requires that the
      * JVM support multiple processes.
      *
      * @return     The result of the action.
@@ -221,13 +220,7 @@ public class MainAction extends Action
     public Status run() throws TestRunException {
         Status status;
 
-        // TAG-SPEC:  "The named <class> will be compiled on demand, just as
-        // though an "@run build <class>" action had been inserted before
-        // this action."
-        String[][] buildOpts = {};
-        String[]   buildArgs = {mainClassName.replace(File.separatorChar, '.')};
-        BuildAction ba = new BuildAction();
-        if (!(status = ba.build(buildOpts, buildArgs, SREASON_ASSUMED_BUILD, script)).isPassed())
+        if (!(status = build()).isPassed())
             return status;
 
         section = startAction(getActionName(), getActionArgs(), reason);
@@ -260,9 +253,17 @@ public class MainAction extends Action
         return status;
     } // run()
 
-
-
     //----------internal methods------------------------------------------------
+
+    protected Status build() throws TestRunException {
+        // TAG-SPEC:  "The named <class> will be compiled on demand, just as
+        // though an "@run build <class>" action had been inserted before
+        // this action."
+        String[][] buildOpts = {};
+        String[]   buildArgs = {mainClassName.replace(File.separatorChar, '.')};
+        BuildAction ba = new BuildAction();
+        return ba.build(buildOpts, buildArgs, SREASON_ASSUMED_BUILD, script);
+    }
 
     protected String getActionName() {
         return "main";
@@ -286,6 +287,7 @@ public class MainAction extends Action
         } else {
             runClassName = driverClass;
             runClassArgs = new ArrayList<String>();
+            runClassArgs.add(script.getTestResult().getTestName());
             runClassArgs.add(mainClassName);
             runClassArgs.addAll(mainArgs);
         }
@@ -319,6 +321,8 @@ public class MainAction extends Action
         Path cp = new Path(script.getJavaTestClassPath(), script.getTestClassPath());
         if (script.isJUnitRequired())
             cp.append(script.getJUnitJar());
+        if (script.isTestNGRequired())
+            cp.append(script.getTestNGJar());
         if (useCLASSPATH || script.isTestJDK11()) {
             command.add("CLASSPATH=" + cp);
         }
@@ -341,8 +345,8 @@ public class MainAction extends Action
             command.add("-Djava.security.policy==" + newPolicyFN);
         }
 
-        if (secureFN != null)
-            command.add("-Djava.security.manager=" + secureFN);
+        if (secureCN != null)
+            command.add("-Djava.security.manager=" + secureCN);
         else if (policyFN != null)
             command.add("-Djava.security.manager=default");
 //      command.addElement("-Djava.security.debug=all");
@@ -414,6 +418,7 @@ public class MainAction extends Action
             runClasspath = script.getTestClassPath();
             runMainClass = driverClass;
             runMainArgs = new ArrayList<String>();
+            runMainArgs.add(script.getTestResult().getTestName());
             runMainArgs.add(mainClassName);
             runMainArgs.addAll(mainArgs);
         }
@@ -454,6 +459,7 @@ public class MainAction extends Action
             runClasspath = script.getTestClassPath();
             runMainClass = driverClass;
             runMainArgs = new ArrayList<String>();
+            runMainArgs.add(script.getTestResult().getTestName());
             runMainArgs.add(mainClassName);
             runMainArgs.addAll(mainArgs);
         }
@@ -472,6 +478,8 @@ public class MainAction extends Action
             Path classpath = new Path(script.getJavaTestClassPath(), jdk.getJDKClassPath());
             if (script.isJUnitRequired())
                 classpath.append(script.getJUnitJar());
+            if (script.isTestNGRequired())
+                classpath.append(script.getTestNGJar());
             agent = script.getAgent(jdk, classpath, script.getTestVMJavaOptions());
         } catch (IOException e) {
             return Status.error(AGENTVM_CANT_GET_VM + ": " + e);
@@ -821,7 +829,7 @@ public class MainAction extends Action
     private String  driverClass = null;
     private String  mainClassName  = null;
     private String  policyFN = null;
-    private String  secureFN = null;
+    private String  secureCN = null;
 
     private boolean reverseStatus = false;
     private boolean othervm = false;

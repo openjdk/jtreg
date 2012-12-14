@@ -83,11 +83,11 @@ import com.sun.javatest.WorkDirectory;
 import com.sun.javatest.exec.ExecToolManager;
 import com.sun.javatest.httpd.HttpdServer;
 import com.sun.javatest.httpd.PageGenerator;
+import com.sun.javatest.regtest.Help.VersionHelper;
 import com.sun.javatest.tool.Desktop;
 import com.sun.javatest.tool.Startup;
 import com.sun.javatest.util.BackupPolicy;
 import com.sun.javatest.util.I18NResourceBundle;
-
 import static com.sun.javatest.regtest.Option.ArgType.*;
 
 /**
@@ -178,16 +178,12 @@ public class Main {
 
         new Option(NONE, DOC, "", "t", "tagspec") {
             public void process(String opt, String arg) {
-                if (help == null)
-                    help = new Help(options);
                 help.setTagSpec(true);
             }
         },
 
         new Option(NONE, DOC, "", "n", "relnote") {
             public void process(String opt, String arg) {
-                if (help == null)
-                    help = new Help(options);
                 help.setReleaseNotes(true);
             }
         },
@@ -195,7 +191,7 @@ public class Main {
         new Option(OLD, MAIN, "", "w", "workDir") {
             public void process(String opt, String arg) {
                 workDirArg = new File(arg);
-                childArgs.add("-w:" + workDirArg.getAbsolutePath());
+                childArgs.add("-w:" + getNormalizedFile(workDirArg));
             }
         },
 
@@ -221,7 +217,7 @@ public class Main {
         new Option(OLD, MAIN, "", "r", "reportDir") {
             public void process(String opt, String arg) {
                 reportDirArg = new File(arg);
-                childArgs.add("-r:" + reportDirArg.getAbsolutePath());
+                childArgs.add("-r:" + getNormalizedFile(reportDirArg));
             }
         },
 
@@ -269,7 +265,7 @@ public class Main {
         new Option(STD, MAIN, "", "dir") {
             public void process(String opt, String arg) {
                 baseDirArg = new File(arg);
-                childArgs.add("-dir:" + baseDirArg.getAbsolutePath());
+                childArgs.add("-dir:" + getNormalizedFile(baseDirArg));
             }
         },
 
@@ -298,9 +294,9 @@ public class Main {
 
         new Option(STD, SELECT, "", "exclude", "Xexclude") {
             public void process(String opt, String arg) {
-                File f = new File(arg);
+                File f = getNormalizedFile(new File(arg));
                 excludeListArgs.add(f);
-                childArgs.add("-exclude:" + f.getAbsolutePath());
+                childArgs.add("-exclude:" + f);
             }
         },
 
@@ -389,7 +385,7 @@ public class Main {
 
         new Option(STD, MAIN, "", "lock") {
             public void process(String opt, String arg) throws BadArgs {
-                File f = new File(arg).getAbsoluteFile();
+                File f = getNormalizedFile(new File(arg));
                 try {
                     if (!(f.exists() ? f.isFile() && f.canRead() : f.createNewFile()))
                         throw new BadArgs(i18n, "main.badLockFile", arg);
@@ -470,13 +466,13 @@ public class Main {
 
         new Option(OLD, JDK, "", "jdk", "testjdk") {
             public void process(String opt, String arg) {
-                testJDK = new JDK(arg);
+                testJDK = com.sun.javatest.regtest.JDK.of(arg);
             }
         },
 
         new Option(OLD, JDK, "", "compilejdk") {
             public void process(String opt, String arg) {
-                compileJDK = new JDK(arg);
+                compileJDK = com.sun.javatest.regtest.JDK.of(arg);
             }
         },
 
@@ -652,24 +648,18 @@ public class Main {
 
         new Option(REST, DOC, "help", "h", "help", "usage") {
             public void process(String opt, String arg) {
-                if (help == null)
-                    help = new Help(options);
                 help.setCommandLineHelpQuery(arg);
             }
         },
 
         new Option(REST, DOC, "help", "onlineHelp") {
             public void process(String opt, String arg) {
-                if (help == null)
-                    help = new Help(options);
                 help.setOnlineHelpQuery(arg);
             }
         },
 
         new Option(NONE, DOC, "help", "version") {
             public void process(String opt, String arg) {
-                if (help == null)
-                    help = new Help(options);
                 help.setVersionFlag(true);
             }
         },
@@ -962,6 +952,15 @@ public class Main {
                 options.addAll(jcovManager.options);
             }
         }
+
+        help = new Help(options);
+        if (jcovManager != null && jcovManager.isJCovInstalled()) {
+            help.addVersionHelper(new VersionHelper() {
+                public void showVersion(PrintWriter out) {
+                    out.println(jcovManager.version());
+                }
+            });
+        }
     }
 
     /**
@@ -983,7 +982,9 @@ public class Main {
     }
 
     private int run() throws BadArgs, Fault, Harness.Fault, InterruptedException {
-        if (help != null) {
+        findSystemJarFiles();
+
+        if (help.isEnabled()) {
             guiFlag = help.show(out);
             return EXIT_OK;
         }
@@ -1052,7 +1053,7 @@ public class Main {
                     && f.getName().toLowerCase().equals("jre")
                     && f.getParentFile() != null)
                 f = f.getParentFile();
-            testJDK = new JDK(f);
+            testJDK = com.sun.javatest.regtest.JDK.of(f);
         }
 
         if (jitFlag == false) {
@@ -1079,12 +1080,12 @@ public class Main {
 
         if (workDirArg == null) {
             workDirArg = new File("JTwork");
-            childArgs.add(0, "-w:" + workDirArg.getAbsolutePath());
+            childArgs.add(0, "-w:" + getNormalizedFile(workDirArg));
         }
 
         if (reportDirArg == null && !noReportFlag) {
             reportDirArg = new File("JTreport");
-            childArgs.add(0, "-r:" + reportDirArg.getAbsolutePath());
+            childArgs.add(0, "-r:" + getNormalizedFile(reportDirArg));
         }
 
         if (!noReportFlag)
@@ -1092,8 +1093,6 @@ public class Main {
 
         makeDir(workDirArg);
         makeDir(new File(workDirArg, "scratch"));
-
-        findSystemJarFiles();
 
         if (allowSetSecurityManagerFlag) {
             switch (execMode) {
@@ -1110,15 +1109,19 @@ public class Main {
         }
 
         if (jcovManager.isEnabled()) {
-            jcovManager.setWorkDir(workDirArg.getAbsoluteFile());
-            jcovManager.setReportDir(reportDirArg.getAbsoluteFile());
+            jcovManager.setTestJDK(testJDK);
+            jcovManager.setWorkDir(getNormalizedFile(workDirArg));
+            jcovManager.setReportDir(getNormalizedFile(reportDirArg));
             boolean isChild = (System.getProperty("javatest.child") != null);
             if (!isChild) {
                 jcovManager.instrumentClasses();
                 final String XBOOTCLASSPATH_P = "-Xbootclasspath/p:";
+                final String XMS = "-Xms";
+                final String defaultInitialHeap = "20m";
                 String insert = jcovManager.instrClasses + File.pathSeparator
                                 + jcovManager.jcov_implant_jar;
-                boolean done = false;
+                boolean found_Xbootclasspath_p = false;
+                boolean found_Xms = false;
                 for (int i = 0; i < testVMOpts.size(); i++) {
                     String opt = testVMOpts.get(i);
                     if (opt.startsWith(XBOOTCLASSPATH_P)) {
@@ -1126,13 +1129,15 @@ public class Main {
                                 + insert + File.pathSeparator
                                 + opt.substring(XBOOTCLASSPATH_P.length());
                         testVMOpts.set(i, opt);
-                        done = true;
+                        found_Xbootclasspath_p = true;
                         break;
-                    }
+                    } else if (opt.startsWith(XMS))
+                        found_Xms = true;
                 }
-                if (!done)
+                if (!found_Xbootclasspath_p)
                     testVMOpts.add(XBOOTCLASSPATH_P + insert);
-
+                if (!found_Xms)
+                    testVMOpts.add(XMS + defaultInitialHeap);
                 jcovManager.startGrabber();
                 testVMOpts.add("-Djcov.port=" + jcovManager.grabberPort);
 
@@ -1398,7 +1403,7 @@ public class Main {
         if (System.getProperty("javatest.child") != null)
             throw new AssertionError();
 
-        File childJDKHome = testJDK.getAbsoluteFile();
+        File childJDKHome = getNormalizedFile(testJDK.getAbsoluteFile());
         File childJava = new File(new File(childJDKHome, "bin"), "java");
         File childTools  = new File(new File(childJDKHome, "lib"), "tools.jar");
         File scratchDir = canon(new File(workDirArg, "scratch"));
@@ -1413,6 +1418,8 @@ public class Main {
             classpath.add(childTools);
         if (junit_jar.exists())
             classpath.add(junit_jar);
+        if (testng_jar.exists())
+            classpath.add(testng_jar);
         classpath.addAll(classPathAppendArg);
         c.add(filesToAbsolutePath(classpath).toString());
 
@@ -1445,6 +1452,9 @@ public class Main {
 
         if (junit_jar != null)
             c.add("-Djunit.jar=" + junit_jar.getPath());
+
+        if (testng_jar != null)
+            c.add("-Dtestng.jar=" + testng_jar.getPath());
 
         c.add(Main.class.getName());
 
@@ -1540,9 +1550,9 @@ public class Main {
                 throw new Fault(i18n, "main.cantFind.jtreg.jar");
         }
 
-        String s = System.getProperty("junit.jar");
-        if (s != null)
-            junit_jar = new File(s);
+        String junit_jar_prop = System.getProperty("junit.jar");
+        if (junit_jar_prop != null)
+            junit_jar = new File(junit_jar_prop);
         else {
             try {
                 junit_jar = findJar("junit.jar", "lib/junit.jar", org.junit.runner.JUnitCore.class);
@@ -1553,6 +1563,22 @@ public class Main {
             // Leave a place-holder for the optional jar.
             junit_jar = new File(jtreg_jar.getParentFile(), "junit.jar");
         }
+        // no convenient version info for junit.jar
+
+        String testng_jar_prop = System.getProperty("testng.jar");
+        if (testng_jar_prop != null)
+            testng_jar = new File(testng_jar_prop);
+        else {
+            try {
+                testng_jar = findJar("testng.jar", "lib/testng.jar", org.testng.annotations.Test.class);
+            } catch (NoClassDefFoundError ex) {
+            }
+        }
+        if (testng_jar == null) {
+            // Leave a place-holder for the optional jar.
+            testng_jar = new File(jtreg_jar.getParentFile(), "testng.jar");
+        }
+        help.addJarVersionHelper("TestNG", testng_jar);
     }
 
     void initPolicyFile() throws Fault {
@@ -1564,7 +1590,7 @@ public class Main {
             BufferedWriter pout = new BufferedWriter(new FileWriter(pfile));
             try {
                 String LINESEP = System.getProperty("line.separator");
-                for (File f: new File[] { jtreg_jar, javatest_jar }) {
+                for (File f: Arrays.asList(jtreg_jar, javatest_jar)) {
                     pout.write("grant codebase \"" + f.toURI().toURL() + "\" {" + LINESEP);
                     pout.write("    permission java.security.AllPermission;" + LINESEP);
                     pout.write("};" + LINESEP);
@@ -1805,7 +1831,7 @@ public class Main {
     private static Path filesToAbsolutePath(List<File> files) {
         Path p = new Path();
         for (File f: files) {
-            p.append(f.getAbsolutePath());
+            p.append(getNormalizedFile(f));
         }
         return p;
     }
@@ -1933,6 +1959,9 @@ public class Main {
             if (junit_jar != null)
                 rp.setJUnitJar(junit_jar);
 
+            if (testng_jar != null)
+                rp.setTestNGJar(testng_jar);
+
             if (timeLimitArg != null) {
                 try {
                     rp.setTimeLimit(Integer.parseInt(timeLimitArg));
@@ -1956,7 +1985,7 @@ public class Main {
         try {
             return file.getCanonicalFile();
         } catch (IOException e) {
-            return file.getAbsoluteFile();
+            return getNormalizedFile(file);
         }
     }
 
@@ -2282,6 +2311,10 @@ public class Main {
 //      }
     }
 
+    private static File getNormalizedFile(File f) {
+        return new File(f.getAbsoluteFile().toURI().normalize());
+    }
+
     //----------member variables-----------------------------------------------
 
     private PrintWriter out;
@@ -2328,9 +2361,11 @@ public class Main {
     private boolean xmlVerifyFlag;
     private File exclusiveLockArg;
 
+    File jtreg_home;
     File javatest_jar;
     File jtreg_jar;
     File junit_jar;
+    File testng_jar;
     File policyFile;
 
     JCovManager jcovManager;

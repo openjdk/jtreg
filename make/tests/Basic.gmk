@@ -25,12 +25,36 @@
 
 #----------------------------------------------------------------------
 
-ENVVARS="DISPLAY=$${DISPLAY:-`uname -n`:0.0}"
-
-# with respect to $(SCRATCHDIR)
-REGTESTDIR = ../../..
-
 # explicit rules for specific tests
+
+BASIC.files := $(shell find $(TESTDIR)/javatest/regtest/data/basic -type f)
+
+$(BUILDDIR)/Basic.check.ok: \
+                $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+		$(JTREG_IMAGEDIR)/lib/javatest.jar \
+		$(JTREG_IMAGEDIR)/lib/jh.jar \
+		$(JTREG_IMAGEDIR)/lib/junit.jar \
+		$(JTREG_IMAGEDIR)/lib/testng.jar \
+		$(BUILDDIR)/i18n.com.sun.javatest.regtest.ok \
+	        $(BASIC.files)
+	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
+	$(MKDIR) -p $(@:%.ok=%/work/scratch) $(@:%.ok=%/report)
+	$(J2SEJAVA) -jar $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+		-w $(@:%.ok=%/work) \
+		-r $(@:%.ok=%/report) \
+		-c -v1 \
+		$(TESTDIR)/javatest/regtest/data/basic \
+		> $(@:%.ok=%/log) 2>&1|| \
+	    true "non-zero exit code from JavaTest intentionally ignored"
+	$(GREP) -s 'Test results: passed: 146; error: 74' $(@:%.ok=%/log)  > /dev/null
+	echo $@ passed at `date` > $@
+
+INITIAL_TESTS += \
+	$(BUILDDIR)/Basic.check.ok
+
+#----------------------------------------------------------------------
+
+ENVVARS="DISPLAY=$${DISPLAY:-`uname -n`:0.0}"
 
 $(BUILDDIR)/Basic.othervm.ok \
 $(BUILDDIR)/Basic.samevm.ok \
@@ -40,8 +64,10 @@ $(BUILDDIR)/Basic.agentvm.ok: \
 		$(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(JTREG_IMAGEDIR)/lib/jh.jar \
 		$(JTREG_IMAGEDIR)/lib/junit.jar \
+		$(JTREG_IMAGEDIR)/lib/testng.jar \
 		$(TESTDIR)/javatest/regtest/Basic.java \
 		$(BUILDDIR)/i18n.com.sun.javatest.regtest.ok \
+	        $(BASIC.files) \
 		display.sh
 	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
 	$(MKDIR) -p $(@:%.ok=%/work/scratch) $(@:%.ok=%/report)
@@ -49,9 +75,10 @@ $(BUILDDIR)/Basic.agentvm.ok: \
 		$(J2SEJAVAC) -encoding ISO8859-1 -d $(BUILDDIR)/testClasses $(TESTDIR)/javatest/regtest/Basic.java
 	DISPLAY=`sh display.sh` export DISPLAY ; \
 	trap "sh `pwd`/display.sh -kill" 0 ; \
+	export BASIC_TESTS=`cd $(TESTDIR)/javatest/regtest/data/basic; pwd` ; \
 	cd $(@:%.ok=%/work/scratch) ; \
 	    $(J2SEJAVA) \
-		-cp $(REGTESTDIR)/testClasses:$(ABS_JTREG_IMAGEJARDIR)/jtreg.jar \
+		-cp ../../../testClasses:$(ABS_JTREG_IMAGEJARDIR)/jtreg.jar \
 		-Ddebug.com.sun.javatest.TestResultTable=true \
 		-Ddebug.com.sun.javatest.TRT.TreeIterator=true \
 		-Ddebug.com.sun.javatest.TestRunner=true \
@@ -59,14 +86,14 @@ $(BUILDDIR)/Basic.agentvm.ok: \
 		-Djavatest.regtest.debugChild=true \
 		-Djavatest.regtest.debugOptions=true \
 		Basic \
-		    ../../../$(TESTDIR)/javatest/regtest/data/basic \
-		    `cd ../../../$(@:%.ok=%/report); pwd`  \
-		    ../../../$(@:%.ok=%/work) \
+		    $${BASIC_TESTS} \
+		    ../../report \
+		    ../../work \
 		    $(J2SEHOME) \
 		    $(ENVVARS) \
 		    $(@:$(BUILDDIR)/Basic.%.ok=-%) \
-		> $(@:$(BUILDDIR)/%.ok=$(REGTESTDIR)/%/log 2>&1) \
-	    || (cat $(@:$(BUILDDIR)/%.ok=$(REGTESTDIR)/%/log) ; exit 1)
+		> ../../log 2>&1 \
+	    || (cat ../../log ; exit 1)
 	echo $@ passed at `date` > $@
 
 INITIAL_TESTS += \

@@ -187,29 +187,28 @@
 
                 <dl><dt></dt><dd>
                     <pre>
-                        /* @test 1.1 97/10/12
-                           @bug 1234567
-                           @summary Make sure that 1 != 0
-                        */
+/* @test 1.1 97/10/12
+   @bug 1234567
+   @summary Make sure that 1 != 0
+*/
 
-                        public class OneZero {
+public class OneZero {
 
-                            public static void main(String[] args) throws Exception {
-                                if (1 == 0) {
-                                    throw new Exception("1 == 0");
-                                }
-                            }
+    public static void main(String[] args) throws Exception {
+        if (1 == 0) {
+            throw new Exception("1 == 0");
+        }
+    }
 
-                        }
+}
                     </pre>
                 </dd></dl>
 
                 <p>This test could be run on its own with the command</p>
 
                 <dl><dt></dt><dd>
-                <pre>
-                    &lt;build&gt;/bin/java OneZero
-                </pre></dd></dl>
+                <pre>&lt;build&gt;/bin/java OneZero</pre>
+                </dd></dl>
                 where &lt;build&gt; is the location of the JDK build that you're testing.
 
             </answer>
@@ -980,12 +979,13 @@
         <entry>
             <question>Which should I use? MKS or Cygwin?</question>
             <answer>
-                <code>jtreg</code> supports both, equally. However, the tests in the
+                <p><code>jtreg</code> supports both, equally. However, the tests in the
                 JDK regression test suite assume that MKS is available. So, when you
                 are writing tests for that test suite, you should make sure that your
                 test at least works with MKS. If you prefer to use Cygwin, and can make
-                your test run with both, so much the better. Note: as of JDK 8, the
-                tests assume the use of Cygwin by default.
+                your test run with both, so much the better.</p>
+                <p><strong>Note:</strong> as of JDK 8, the
+                tests assume the use of Cygwin by default.</p>
             </answer>
         </entry>
 
@@ -1031,6 +1031,186 @@
             </answer>
         </entry>
     </group>
+
+    <group title="TestNG tests">
+        <entry>
+            <question>What is the test root directory?
+            </question>
+            <answer>
+                <p>The "test root directory", or "test suite root directory" is the
+                root directory of the overall test suite.
+                In OpenJDK terms, this means either of the "jdk/test/" or
+                "langtools/test/" directories in an OpenJDK forest.</p>
+                <p>The "test root directory" for any test is determined by finding
+                the smallest enclosing directory containing a marker file called
+                TEST.ROOT.
+                The TEST.ROOT file can also be used to define some global properties
+                for the test suite.</p>
+            </answer>
+        </entry>
+
+        <entry>
+            <question>Why is the "test root directory" important?
+            </question>
+            <answer>
+                <p>Within the test suite, tests are uniquely identified by their path
+                relative to the test root directory.
+                This relative path is used to generate test-specific directories
+                and files within the work directory, and to identify test results
+                within the report directory.</p>
+                <p>However, note that tests can be specified on the command line
+                by any valid file system path, either absolute or relative to the
+                current directory.
+                </p>
+            </answer>
+        </entry>
+
+        <entry>
+            <question>Can I have more than one TEST.ROOT?
+            </question>
+            <answer>
+                <p>In general, no.  Each test is uniquely associated with
+                exactly one test root directory, which is the the smallest
+                enclosing directory containing a marker file called TEST.ROOT.
+                In general, a test run will consist of tests from a single
+                test suite, identified by a single test root directory.
+                </p>
+                <p>It <em>is</em> possible to run tests from multiple test suites
+                (such as jdk/test and langtools/test) but this is not common. </p>
+            </answer>
+        </entry>
+
+        <entry>
+            <question>What is a "package root"?
+            </question>
+            <answer>
+                <p>"package root" refers the root of the package hierarchy in
+                 which a Java source is placed. It is the directory you would
+                 put on the javac source path if you wanted javac to compile
+                 the file explicitly.</p>
+                <p>Most jtreg tests are written in the "unnamed package"
+                 (i.e. without a package statement) and so for most jtreg tests,
+                 the directory directly containing the test is the package root
+                 for the test.  This is different from other test suites using
+                 other test harnesses (such as TestNG) in which all the tests
+                 of a test suite are placed in a single package hierarchy,
+                 often mirroring the package hierarchy of API being tested.</p>
+            </answer>
+        </entry>
+
+        <entry>
+            <question>How does jtreg support TestNG tests?
+            </question>
+            <answer>
+                <p>jtreg supports TestNG tests in two ways.</p>
+                <ol>
+                    <li><p>Tests can be written with a full test description
+                     (the comment beginning /* @test....*/) and can use the following
+                     action tag to run the test with TestNG: </p>
+                            <pre>"@run testng classname args"</pre>
+                            <p>Such a test would otherwise be similar to a standard test
+                     using "@run main". You can use other tags such as @library and
+                     @build, just as you would for "@run main".
+                     These tests would normally be in the unnamed directory
+                     (i.e. no package statement.)
+                     These tests can be freely intermixed with other tests using
+                     "@run main", "@run shell", "@run applet" and so on. </p> </li>
+                    <li><p>If you have a group of TestNG tests written in their own
+                     package hierarchy, you can include that entire package
+                     hierarchy as a subdirectory under the main test root directory.
+                     If you do this, you must identify the root directory of that
+                     package hierarchy to jtreg, so that it knows to treat all the
+                     files in that package hierarchy specially.
+                     In such a group of tests, you do not need to provide test
+                     descriptions in each test.
+                     You may optionally provide a test description if you choose to
+                     do so, if you wish to specify information tags such as
+                     @bug, @summary and @keyword.
+                     You must not specify any action tags, such as @run, @compile,
+                     etc, since the actions are implicit for every test in the group
+                     of tests. </p></li>
+                </ol>
+            </answer>
+        </entry>
+
+        <entry>
+            <question>How do I identify a group of TestNG tests in their own directory?
+            </question>
+            <answer>
+                <p>Add a line specifying the directory to TEST.ROOT</p>
+                <pre>TestNG.dirs = dir1 dir2 dir3 ...</pre>
+                <p>Include the package root directory for each group of TestNG
+                tests, and specify the package root directory relative to the test
+                root directory.
+                </p>
+                <p>You can also override the value in TEST.ROOT by using the
+                TEST.properties file in any subdirectory of the test root directory
+                that contains the package root.
+                If you put the declaration in a TEST.properties file, you can
+                specify the path relative to the directory containing the
+                TEST.properties file.
+                In particular, instead of declaring the directory in TEST.ROOT,
+                you could place the declaration in a TEST.properties file in the
+                package root directory for the group of tests, in which case
+                the declaration would be simply:
+                </p>
+                <pre>TestNG.dirs = .</pre>
+            </answer>
+        </entry>
+
+        <entry>
+            <question> How does jtreg run TestNG tests?
+            </question>
+            <answer>
+                <p>Tests using "@run testng" are compiled in the standard way,
+                with TestNG libraries on the classpath.
+                The test is run using the class <code>org.testng.TestNG</code>.
+                For any TestNG test in a group of TestNG tests, any tests in the
+                group that need compiling are compiled together before any
+                test in the group is run.
+                Then, the selected test classes are run one at a time using
+                <code>org.testng.TestNG</code>.
+                Each test that is run will have its results stored in a
+                corresponding *.jtr file.
+                </p>
+            </answer>
+        </entry>
+
+        <entry>
+            <question>How do I specify any libraries I want to use in TestNG tests?
+            </question>
+            <answer>
+                <p>Tests using "@run testng" can use @library and @build in
+                the standard way.
+                For any test in a group of TestNG tests, you can specify the
+                library by adding a line specifying the library in the
+                TEST.properties file in the package root directory for the group of
+                tests.
+                </p>
+                <pre>lib.dirs = path-to-library ...</pre>
+                <p>As with the @library tag, if the path begins with "/",
+                it will be evaluated relative to the test root directory;
+                otherwise, it will be evaluated relative to the directory
+                containing the TEST.properties file.
+                </p>
+                <p>For any particular group of TestNG tests, you can only
+                specify libraries for the entire group: you cannot specify one
+                library for some of the tests and another library for other tests.
+                This is because the all the source files in the group are
+                compiled together.
+                </p>
+            </answer>
+        </entry>
+
+        <entry>
+            <question>What version of TestNG does jtreg support?</question>
+            <answer>
+                <p>Run the command <code>jtreg -version</code> to see the
+                version of jtreg and available components.</p>
+            </answer>
+        </entry>
+    </group>
+
     <group title="General Problems">
 
         <entry>

@@ -25,17 +25,17 @@
 
 package com.sun.javatest.regtest;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-
-import com.sun.javatest.Status;
-import com.sun.javatest.lib.ProcessCommand;
+import java.util.Set;
 
 /**
  * Info about a JDK
@@ -66,12 +66,20 @@ public class JDK {
         }
     }
 
-    /** Creates a new instance of JDK */
-    public JDK(String jdk) {
-        this(new File(jdk));
+    public static JDK of(String javaHome) {
+        return of(new File(javaHome));
     }
 
-    public JDK(File jdk) {
+    public static synchronized JDK of(File javaHome) {
+        JDK jdk = cache.get(javaHome);
+        if (jdk == null)
+            cache.put(javaHome, jdk = new JDK(javaHome));
+        return jdk;
+    }
+
+    private static final Map<File, JDK> cache = new HashMap<File, JDK>();
+
+    private JDK(File jdk) {
         this.jdk = jdk;
         absJDK = jdk.getAbsoluteFile();
     }
@@ -136,37 +144,32 @@ public class JDK {
     }
 
     // params just used for execMode and javatestClassPath
-    public String getVersion(RegressionParameters params) {
+    public synchronized String getVersion(RegressionParameters params) {
         if (version == null) {
             final String VERSION_PROPERTY = "java.specification.version";
-            version = "unknown";
+            version = "unknown"; // default
             if (params.getExecMode() == ExecMode.SAMEVM) {
                 version = System.getProperty(VERSION_PROPERTY);
             } else {
-                Status status = null;
+                ProcessBuilder pb = new ProcessBuilder();
                 // since we are trying to determine the Java version, we have to assume
                 // the worst, and use CLASSPATH.
-                String[] cmdArgs = new String[] {
-                    "CLASSPATH=" + params.getJavaTestClassPath(),
-                    getJavaProg().getPath(),
-                    "com.sun.javatest.regtest.GetSystemProperty",
-                    VERSION_PROPERTY
-                };
-
-                // PASS TO PROCESSCOMMAND
-                StringWriter outSW = new StringWriter();
-                StringWriter errSW = new StringWriter();
-
-                ProcessCommand cmd = new ProcessCommand();
-                //cmd.setExecDir(scratchDir());
-                status = cmd.run(cmdArgs, new PrintWriter(errSW), new PrintWriter(outSW));
-
-                // EVALUATE THE RESULTS
-                if (status.isPassed()) {
-                    // we sent everything to stdout
-                    String[] v = StringArray.splitEqual(outSW.toString().trim());
-                    if (v.length == 2 && v[0].equals(VERSION_PROPERTY))
-                        version = v[1];
+                pb.environment().put("CLASSPATH", params.getJavaTestClassPath().toString());
+                pb.command(getJavaProg().getPath(), GetSystemProperty.class.getName(), VERSION_PROPERTY);
+                pb.redirectErrorStream(true);
+                try {
+                    Process p = pb.start();
+                    String out = getOutput(p);
+                    int rc = p.waitFor();
+                    if (rc == 0) {
+                        String[] v = StringArray.splitEqual(out.trim());
+                        if (v.length == 2 && v[0].equals(VERSION_PROPERTY))
+                            version = v[1];
+                    }
+                } catch (InterruptedException e) {
+                    // ignore, leave version as default
+                } catch (IOException e) {
+                    // ignore, leave version as default
                 }
             }
 
@@ -177,43 +180,52 @@ public class JDK {
         return version;
     }
 
-    public String getFullVersion(List<String> vmOpts) {
+    public synchronized String getFullVersion(Collection<String> vmOpts) {
         if (fullVersions == null)
-            fullVersions = new HashMap<List<String>, String>();
+            fullVersions = new HashMap<Set<String>, String>();
 
-        String fullVersion = fullVersions.get(vmOpts);
+        Set<String> vmOptsSet = new LinkedHashSet<String>(vmOpts);
+        String fullVersion = fullVersions.get(vmOptsSet);
         if (fullVersion == null) {
+            fullVersion = jdk.getPath();  // default
             List<String> cmdArgs = new ArrayList<String>();
             cmdArgs.add(getJavaProg().getPath());
             cmdArgs.addAll(vmOpts);
             cmdArgs.add("-version");
 
-            // PASS TO PROCESSCOMMAND
-            StringWriter outSW = new StringWriter();
-            StringWriter errSW = new StringWriter();
-
-            ProcessCommand cmd = new ProcessCommand();
-            // no need to set execDir for "java -version"
-            Status status = cmd.run(cmdArgs.toArray(new String[cmdArgs.size()]),
-                            new PrintWriter(errSW), new PrintWriter(outSW));
-
-            // EVALUATE THE RESULTS
-            if (status.isPassed()) {
-                // some JDK's send the string to stderr, others to stdout
-                String out = errSW.toString().trim();
-                fullVersion = "(" + jdk + ")" + LINESEP;
-                if (out.length() == 0)
-                    fullVersion += outSW.toString().trim();
-                else
-                    fullVersion += out;
-            } else {
-                fullVersion = jdk.getPath();
+            ProcessBuilder pb = new ProcessBuilder(cmdArgs);
+            pb.redirectErrorStream(true);
+            try {
+                Process p = pb.start();
+                String out = getOutput(p);
+                int rc = p.waitFor();
+                if (rc == 0) {
+                    fullVersion = "(" + jdk + ")" + LINESEP + out;
+                }
+            } catch (InterruptedException e) {
+                // ignore, leave version as default
+            } catch (IOException e) {
+                // ignore, leave version as default
             }
 
-            fullVersions.put(vmOpts, fullVersion);
+            fullVersions.put(vmOptsSet, fullVersion);
         }
 
         return fullVersion;
+    }
+
+    private String getOutput(Process p) {
+        try {
+            StringBuilder sb = new StringBuilder();
+            BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            String line;
+            while ((line = r.readLine()) != null) {
+                sb.append(line).append("\n");
+            }
+            return sb.toString();
+        } catch (IOException e) {
+            return e.toString();
+        }
     }
 
     @Override
@@ -237,8 +249,10 @@ public class JDK {
     private final File jdk;
     private final File absJDK;
 
+    /** Value of java.specification.version for this JDK. Lazily evaluated as needed. */
     private String version;
-    private Map<List<String>, String> fullVersions;
+    /** Value of java VMOPTS -version for this JDK. Lazily evaluated as needed. */
+    private Map<Set<String>, String> fullVersions;
 
     private static final String LINESEP  = System.getProperty("line.separator");
 }

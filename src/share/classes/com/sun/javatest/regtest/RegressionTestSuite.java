@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000, 2011, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2000, 2012, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -29,11 +29,12 @@ import java.io.File;
 import java.lang.ref.SoftReference;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 
+import com.sun.interview.Interview;
 import com.sun.javatest.InterviewParameters;
 import com.sun.javatest.Script;
 import com.sun.javatest.TestDescription;
@@ -56,7 +57,7 @@ public class RegressionTestSuite extends TestSuite
         RegressionTestSuite ts = (ref == null) ? null : ref.get();
         if (ts == null) {
             ts = new RegressionTestSuite(testSuiteRoot);
-            cache.put(testSuiteRoot, new SoftReference(ts));
+            cache.put(testSuiteRoot, new SoftReference<RegressionTestSuite>(ts));
         }
         return ts;
     }
@@ -136,21 +137,25 @@ public class RegressionTestSuite extends TestSuite
 
     @Override
     public URL[] getFilesForTest(TestDescription td) {
-        List<URL> urls = new ArrayList<URL>();
+        Set<URL> urls = new LinkedHashSet<URL>();
 
-        // always include the file containing the test description
+        // always start with the file containing the test description
         try {
             urls.add(td.getFile().toURI().toURL());
         } catch (MalformedURLException e) {
             // ignore any bad URLs
         }
 
-        File[] files = new RegressionScript().getSourceFiles(td);
-        for (int i = 0; i < files.length; i++) {
-            try {
-                urls.add(files[i].toURI().toURL());
-            } catch (MalformedURLException e) {
+        try {
+            RegressionParameters params = new RegressionParameters("regtest", this);
+            Set<File> files = new RegressionScript().getSourceFiles(params, td);
+            for (File file: files) {
+                try {
+                    urls.add(file.toURI().toURL());
+                } catch (MalformedURLException e) {
+                }
             }
+        } catch (Interview.Fault ignore) {
         }
         return urls.toArray(new URL[urls.size()]);
     }

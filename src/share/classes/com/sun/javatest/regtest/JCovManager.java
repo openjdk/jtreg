@@ -26,14 +26,18 @@
 package com.sun.javatest.regtest;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.jar.JarFile;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -44,13 +48,13 @@ import static com.sun.javatest.regtest.Option.ArgType.*;
  * Manager to drive jcov code coverage tool.
  */
 public class JCovManager {
-    public JCovManager(File jtreg_home) {
+    public JCovManager(File libDir) {
         String s = System.getProperty("jcov.jar");
-        File f = (s != null) ? new File(s) : new File(jtreg_home, "jcov.jar");
+        File f = (s != null) ? new File(s) : new File(libDir, "jcov.jar");
         if (f.exists())
             jcov_jar = f;
         s = System.getProperty("jcov_implant.jar");
-        f = (s != null) ? new File(s) : new File(jtreg_home, "jcov_implant.jar");
+        f = (s != null) ? new File(s) : new File(libDir, "jcov_implant.jar");
         if (f.exists())
             jcov_implant_jar = f;
 
@@ -98,15 +102,21 @@ public class JCovManager {
             }
         },
 
+        new Option(STD, JCOV, null, "jcov/patch") {
+            public void process(String opt, String arg) {
+                patch = new File(arg);
+            }
+        },
+
         new Option(NONE, JCOV, "jcov-verbose", "jcov/verbose") {
             public void process(String opt, String arg) {
                 verbose = "-verbose";
             }
         },
 
-        new Option(NONE, JCOV, "jcov-verbose", "jcov/verbosest") {
+        new Option(NONE, JCOV, "jcov-verbose", "jcov/verbosemore") {
             public void process(String opt, String arg) {
-                verbose = "-verbosest";
+                verbose = "-verbosemore";
             }
         },
 
@@ -116,6 +126,24 @@ public class JCovManager {
             }
         }
     );
+
+    String version() {
+        if (version == null) {
+            List<String> opts = Arrays.asList("-version");
+            Task t = new Task(opts) {
+                @Override
+                void processLine(String line) {
+                    if (version == null)
+                        version = line;
+                }
+
+            };
+            t.run();
+            if (version == null)
+                version = "JCov version unknown";
+        }
+        return version;
+    }
 
     boolean isJCovInstalled() {
         return (jcov_jar != null) && (jcov_implant_jar != null);
@@ -134,6 +162,11 @@ public class JCovManager {
 
     void setReportDir(File reportDir) {
         report = new File(reportDir, "jcov");
+        patchReport = new File(reportDir, "text/patch.txt");
+    }
+
+    void setTestJDK(JDK testJDK) {
+        this.testJDK = testJDK;
     }
 
     void instrumentClasses() {
@@ -167,9 +200,45 @@ public class JCovManager {
         if (printEnv)
             opts.add("-print-env");
 
+        if (containsClass(classes, "java/lang/Shutdown")) {
+            opts.add("-include");
+            opts.add("java/lang/Shutdown");
+            opts.add("-saveatend");
+            opts.add("java/lang/Shutdown.runHooks");
+        }
+
         opts.add(classes.getPath());
 
-        new Task(opts).run();
+        // Uugh, best to run Instr on the test JDK because it may try to read
+        // platform classes from the bootclasspath
+        new Task(testJDK, opts).run();
+
+        if (classes.isFile()) {
+            File result = new File(instrClasses, classes.getName());
+            if (result.exists()) {
+                // work around weird Instr behavior for -output
+                File instrJar = new File(instrClasses.getParent(), "classes.jar");
+                instrJar.delete();
+                result.renameTo(instrJar);
+                instrClasses.delete();
+                instrClasses = instrJar;
+            }
+        }
+    }
+
+    private boolean containsClass(File file, String name) {
+        if (file.isDirectory())
+            return new File(file, name.replace('/', File.separatorChar) + ".class").exists();
+        try {
+            JarFile j = new JarFile(file);
+            try {
+                return (j.getEntry(name + ".class") != null);
+            } finally {
+                j.close();
+            }
+        } catch (IOException ex) {
+            return false;
+        }
     }
 
     void startGrabber() {
@@ -198,12 +267,13 @@ public class JCovManager {
             opts.add("-print-env");
 
         Task t = new Task(opts) {
-            Pattern p = Pattern.compile("Server started [^0-9]*([0-9]+)[^0-9]*([0-9]+)[^0-9]*");
+            Pattern skip = Pattern.compile("[A-Z]+\\s*:.*");
+            Pattern ports = Pattern.compile("Server started .*:([0-9]+)\\. .*? ([0-9]+)\\. .*");
             @Override
             void processLine(String line) {
                 super.processLine(line);
-                if (p != null  && !line.matches("[A-Z]+\\s+:.*")) {
-                    Matcher m = p.matcher(line);
+                if (!skip.matcher(line).matches()) {
+                    Matcher m = ports.matcher(line);
                     if (m.matches()) {
                         synchronized (JCovManager.this) {
                             grabberPort = Integer.parseInt(m.group(1));
@@ -229,6 +299,9 @@ public class JCovManager {
         } catch (InterruptedException e) {
             System.err.println("Interrupted while waiting for jcov grabber to initialize");
         }
+
+        if (showJCov)
+            System.err.println("jcov grabber port: " + grabberPort + ", command port: " + grabberCommandPort);
 
         if (grabberPort == 0 || grabberCommandPort == 0)
             System.err.println("Warning: jcov grabber not initialized correctly");
@@ -284,6 +357,43 @@ public class JCovManager {
         opts.add(results.getPath());
 
         new Task(opts).run();
+
+        if (patch != null)
+            writePatchReport();
+    }
+
+    void writePatchReport() {
+        List<String> opts = new ArrayList<String>();
+        opts.add("diffcoverage");
+
+        opts.add("-replaceDiff");
+        opts.add("[^ ]+/classes/:");
+
+        opts.add(results.getPath());
+        opts.add(patch.getPath());
+
+        patchReport.getParentFile().mkdirs();
+        final PrintWriter out;
+        try {
+            out = new PrintWriter(new BufferedWriter(new FileWriter(patchReport)));
+            new Task(opts) {
+                String lastLine;
+                @Override
+                public void run() {
+                    super.run();
+                    if (lastLine != null)
+                        super.processLine(lastLine);
+                }
+                @Override
+                void processLine(String line) {
+                    out.println(line);
+                    lastLine = line;
+                }
+            }.run();
+            out.close();
+        } catch (IOException e) {
+            System.err.println("Cannot open " + patchReport + ": " + e);
+        }
     }
 
     boolean delete(File file) {
@@ -305,16 +415,26 @@ public class JCovManager {
         BufferedReader in = new BufferedReader(new FileReader(f));
         String line;
         try {
-            while ((line = in.readLine()) != null)
+            while ((line = in.readLine()) != null) {
+                if (line.length() == 0 || line.startsWith("#"))
+                    continue;
                 lines.add(line);
+            }
             return lines;
         } finally {
             in.close();
         }
     }
 
+    private static final JDK thisJDK = JDK.of(System.getProperty("java.home"));
+
     class Task implements Runnable {
         Task(List<String> opts) {
+            this(thisJDK, opts);
+        }
+
+        Task(JDK jdk, List<String> opts) {
+            this.jdk = jdk;
             name = opts.get(0);
             this.opts = opts;
         }
@@ -324,7 +444,7 @@ public class JCovManager {
                 File javaHome = new File(System.getProperty("java.home"));
                 File java = new File(new File(javaHome, "bin"), "java");
                 List<String> args = new ArrayList<String>();
-                args.add(java.getPath());
+                args.add(jdk.getJavaProg().getPath());
                 args.add("-jar");
                 args.add(jcov_jar.getPath());
                 args.addAll(opts);
@@ -352,6 +472,7 @@ public class JCovManager {
             System.out.println("[jcov:" + name + "] " + line);
         }
 
+        JDK jdk;
         String name;
         List<String> opts;
     }
@@ -360,18 +481,22 @@ public class JCovManager {
     File jcov_implant_jar;
 
     private File classes;
+    private File patch;
     private File source;
     private String verbose;
     private boolean printEnv;
     private List<String> includeOpts = new ArrayList<String>();
     private List<String> excludeOpts = new ArrayList<String>();
 
+    JDK testJDK;
     File instrClasses;
     File template;
     File results;
     File report;
+    File patchReport;
     int grabberPort;
     int grabberCommandPort;
+    String version;
 
     private Thread grabber;
     static final boolean showJCov = Action.show("showJCov");

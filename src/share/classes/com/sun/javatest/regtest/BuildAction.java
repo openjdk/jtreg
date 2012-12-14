@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2007, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2012, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -26,17 +26,19 @@
 package com.sun.javatest.regtest;
 
 import java.io.File;
-
 import java.io.PrintWriter;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.sun.javatest.Status;
 import com.sun.javatest.TestResult;
+import com.sun.javatest.regtest.Locations.ClassLocn;
 
 /**
  * This class implements the "build" action as described by the JDK tag
@@ -105,18 +107,17 @@ public class BuildAction extends Action
     } // init()
 
     @Override
-    public File[] getSourceFiles() {
-        List<File> l = new ArrayList<File>();
-        for (int i = 0; i < args.length; i++) {
+    public Set<File> getSourceFiles() {
+        Set<File> files = new LinkedHashSet<File>();
+        for (String arg: args) {
             // the argument to build is a classname
-            String currFN = args[i].replace('.', File.separatorChar) + ".java";
             try {
-                File javaSrc = script.locateJavaSrc(currFN);
-                l.add(javaSrc);
+                ClassLocn cl = script.locations.locateClass(arg);
+                files.add(cl.absSrcFile);
             } catch (TestRunException ignore) {
             }
         }
-        return l.toArray(new File[l.size()]);
+        return files;
     }
 
     /**
@@ -148,25 +149,22 @@ public class BuildAction extends Action
         PrintWriter pw = section.getMessageWriter();
         long now = System.currentTimeMillis();
         Map<File, List<File>> filesToCompile = new LinkedHashMap<File, List<File>>();
-        for (int i = 0; i < args.length; i++) {
+        for (String arg: args) {
             // the argument to build is a classname
-            String currFN = args[i].replace('.', File.separatorChar) + ".java";
-            File sf = script.locateJavaSrc(currFN);
-            File cf = script.locateJavaCls(currFN);
-            if (sf.lastModified() > now) {
-                pw.println(String.format(BUILD_FUTURE_SOURCE, sf,
-                        DateFormat.getDateTimeInstance().format(new Date(sf.lastModified()))));
+            ClassLocn cl = script.locations.locateClass(arg);
+            if (cl.absSrcFile.lastModified() > now) {
+                pw.println(String.format(BUILD_FUTURE_SOURCE, cl.absSrcFile,
+                        DateFormat.getDateTimeInstance().format(new Date(cl.absSrcFile.lastModified()))));
                 pw.println(BUILD_FUTURE_SOURCE_2);
             }
-            if (!cf.exists() || !cf.canRead()
-                    || (cf.lastModified() < sf.lastModified())) {
-                File destDir = script.absTestClsDestDir(sf);
+            if (!cl.isUpToDate()) {
+                File destDir = cl.lib.absClsDir;
                 List<File> filesForDest = filesToCompile.get(destDir);
                 if (filesForDest == null) {
                     filesForDest = new ArrayList<File>();
                     filesToCompile.put(destDir, filesForDest);
                 }
-                filesForDest.add(sf);
+                filesForDest.add(cl.absSrcFile);
             }
         }
 
@@ -175,10 +173,11 @@ public class BuildAction extends Action
             status = Status.passed(BUILD_UP_TO_DATE);
         } else {
             status = null;
-            for (List<File> filesForDest: filesToCompile.values()) {
-                File[] files = filesForDest.toArray(new File[filesForDest.size()]);
+            for (Map.Entry<File,List<File>> e: filesToCompile.entrySet()) {
+                File destDir = e.getKey();
+                List<File> filesForDest = e.getValue();
                 CompileAction ca = new CompileAction();
-                Status s =  ca.compile(opts, asStrings(files), SREASON_FILE_TOO_OLD, script);
+                Status s =  ca.compile(destDir, opts, asStrings(filesForDest), SREASON_FILE_TOO_OLD, script);
                 if (!s.isPassed()) {
                     status = s;
                     break;
@@ -192,10 +191,11 @@ public class BuildAction extends Action
         return status;
     } // run()
 
-    private String[] asStrings(File[] files) {
-        String[] strings = new String[files.length];
-        for (int i = 0; i < files.length; i++)
-            strings[i] = files[i].getPath();
+    private String[] asStrings(List<File> files) {
+        String[] strings = new String[files.size()];
+        int i = 0;
+        for (File f: files)
+            strings[i++] = f.getPath();
         return strings;
     }
 

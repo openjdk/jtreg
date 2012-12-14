@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2011, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2012, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -34,9 +34,11 @@ import java.io.PrintWriter;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import com.sun.javatest.Status;
 import com.sun.javatest.TestResult;
@@ -54,6 +56,7 @@ public class CompileAction extends Action {
      * A method used by sibling classes to run both the init() and run()
      * method of CompileAction.
      *
+     * @param destDir Where to place the compiled classes
      * @param opts The options for the action.
      * @param args The arguments for the actions.
      * @param reason Indication of why this action was invoked.
@@ -62,8 +65,9 @@ public class CompileAction extends Action {
      * @see #init
      * @see #run
      */
-    public Status compile(String[][] opts, String[] args, String reason,
+    public Status compile(File destDir, String[][] opts, String[] args, String reason,
             RegressionScript script) throws TestRunException {
+        this.destDir = destDir;
         init(opts, args, reason, script);
         return run();
     } // compile()
@@ -123,43 +127,36 @@ public class CompileAction extends Action {
         // add absolute path name to all the .java files create appropriate
         // class directories
         try {
+            Locations locations = script.locations;
+            if (destDir == null)
+                destDir = locations.absTestClsDir();
+            if (!script.isCheck())
+                mkdirs(destDir);
+
+            boolean foundJavaFile = false;
+
             for (int i = 0; i < args.length; i++) {
                 String currArg = args[i];
 
                 if (currArg.endsWith(".java")) {
-                    // make sure the correct file separator has been used
-                    currArg = currArg.replace('/', File.separatorChar);
-
-                    File sourceFile = new File(currArg);
-                    if (!sourceFile.isAbsolute())
+                    foundJavaFile = true;
+                    File sourceFile = new File(currArg.replace('/', File.separatorChar));
+                    if (!sourceFile.isAbsolute()) {
                         // User must have used @compile, so file must be
                         // in the same directory as the defining file.
-                        args[i] = new File(script.absTestSrcDir(), currArg).getPath();
-//                  if (!sourceFile.exists())
-//                      throw new ParseException(CANT_FIND_SRC);
-
-                    // set the destination directory only if we've actually
-                    // found something to compile
-                    if (script.hasEnv()) {
-                        destDir = script.absTestClsDestDir(currArg);
-                        if (!destDir.exists())
-                            destDir.mkdirs();
+                        File absSourceFile = locations.absTestSrcFile(sourceFile);
+                        if (!absSourceFile.exists())
+                            throw new RegressionScript.TestClassException(CANT_FIND_SRC + currArg);
+                        args[i] = absSourceFile.getPath();
                     }
-
                 }
 
                 if (currArg.equals("-classpath") || currArg.equals("-cp")) {
                     classpathp = true;
                     // assume the next element provides the classpath, add
                     // test.classes and test.src and lib-list to it
-                    if (script.hasEnv()) {
-                        Path p = new Path(args[i+1])
-                                .append(script.absTestClsDir())
-                                .append(script.absTestSrcDir())
-                                .append(script.absClsLibList());
-                        args[i+1] = p.toString();
-                    }
-                    args[i+1] = singleQuoteString(args[i+1]);
+                    Path p = new Path(args[i+1]).append(script.getCompileClassPath());
+                    args[i+1] = p.toString();
                 }
 
                 if (currArg.equals("-d")) {
@@ -171,23 +168,13 @@ public class CompileAction extends Action {
                     sourcepathp = true;
                     // assume the next element provides the sourcepath, add test.src
                     // and lib-list to it
-                    Path p = new Path(args[i+1])
-                            .append(script.absTestSrcDir())
-                            .append(script.absSrcLibList());
+                    Path p = new Path(args[i+1]).append(script.getCompileSourcePath());
                     args[i+1] = p.toString();
-                    args[i+1] = singleQuoteString(args[i+1]);
                 }
             }
 
-            // If we didn't set the destination directory, then we must not have
-            // found something ending with ".java" to compile.
-            if (script.hasEnv() && destDir == null) {
-                if (process) {
-                    destDir = script.absTestClsDir();
-                    if (!destDir.exists())
-                        destDir.mkdirs();
-                } else
-                    throw new ParseException(COMPILE_NO_DOT_JAVA);
+            if (!foundJavaFile && !process) {
+                throw new ParseException(COMPILE_NO_DOT_JAVA);
             }
         } catch (RegressionScript.TestClassException e) {
             throw new ParseException(e.getMessage());
@@ -197,18 +184,18 @@ public class CompileAction extends Action {
     } // init()
 
     @Override
-    public File[] getSourceFiles() {
-        List<File> l = new ArrayList<File>();
+    public Set<File> getSourceFiles() {
+        Set<File> files = new LinkedHashSet<File>();
 
         for (int i = 0; i < args.length; i++) {
             String currArg = args[i];
 
             if (currArg.endsWith(".java")) {
-                l.add(new File(currArg));
+                files.add(new File(currArg));
             }
         }
 
-        return l.toArray(new File[l.size()]);
+        return files;
     }
 
     /**

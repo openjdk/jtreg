@@ -6,3 +6,6 @@
 # The list of acceptable keys for this testsuite.
 keys=2d dnd i18n
 
+# TestNG subdirectories
+TestNG.dirs=testng/group
+

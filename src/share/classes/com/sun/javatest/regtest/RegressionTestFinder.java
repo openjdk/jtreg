@@ -25,7 +25,9 @@
 
 package com.sun.javatest.regtest;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -35,9 +37,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.sun.javatest.TestSuite;
+import com.sun.javatest.finder.CommentStream;
 import com.sun.javatest.finder.HTMLCommentStream;
+import com.sun.javatest.finder.JavaCommentStream;
 import com.sun.javatest.finder.ShScriptCommentStream;
 import com.sun.javatest.finder.TagTestFinder;
+import com.sun.javatest.util.I18NResourceBundle;
 
 /**
   * This is a specific implementation of the TagTestFinder which is to be used
@@ -75,11 +80,89 @@ public class RegressionTestFinder extends TagTestFinder
         super.setRoot(canon(testSuiteRoot));
     }
 
-    @Override protected void scanFile(File file) {
+    @Override
+    protected void scanFile(File file) {
         // filter out SCCS leftovers
         if (file.getName().startsWith(","))
             return;
-        super.scanFile(file);
+
+        try {
+            File tngRoot = properties.getTestNGRoot(file);
+            if (tngRoot != null) {
+                scanTestNGFile(tngRoot, file);
+            } else {
+                super.scanFile(file);
+            }
+        } catch (TestSuite.Fault e) {
+            error(i18n, "finder.cant.read.test.properties", new Object[] { e });
+        }
+    }
+
+    protected void scanTestNGFile(File tngRoot, File file) throws TestSuite.Fault {
+        if (isTestNGTest(file)) {
+            BufferedReader in = null;
+            try {
+                in = new BufferedReader(new FileReader(file));
+                Map<String,String> tagValues = readTestNGComments(file, in);
+                if (tagValues == null) {
+                    tagValues = new HashMap<String,String>();
+                    // could read more of file looking for annotations like @Test, @Factory
+                    // to guess whether this is really a test file or not
+                }
+                String p = tngRoot.toURI().relativize(file.toURI()).getPath();
+                String className = p.substring(0, p.length() - 5).replace("/", ".");
+                tagValues.put("packageRoot", getRootDir().toURI().relativize(tngRoot.toURI()).getPath());
+                tagValues.put("testngClass", className);
+                tagValues.put("library", StringUtils.join(properties.getLibDirs(file), " "));
+                foundTestDescription(tagValues, file, /*line*/0);
+            } catch (IOException e) {
+                error(i18n, "finder.ioError", file);
+            } finally {
+                try {
+                    if (in != null) in.close();
+                } catch (IOException e) {
+                }
+            }
+        }
+    }
+
+    private Map<String,String> readTestNGComments(File file, BufferedReader in) throws IOException {
+        CommentStream cs = new JavaCommentStream();
+        cs.init(in);
+        cs.setFastScan(true);
+
+        Map<String, String> tagValues = null;
+        String comment;
+        int index = 1;
+        while ((comment = cs.readComment()) != null) {
+            @SuppressWarnings("unchecked")
+            Map<String, String> tv = parseComment(comment, file);
+            if (tv.isEmpty())
+                continue;
+
+            if (tagValues == null) {
+                tagValues = tv;
+            } else {
+                tv.put("error", PARSE_MULTIPLE_COMMENTS_NOT_ALLOWED);
+                tv.put("id", String.valueOf(index++));
+                foundTestDescription(tv, file, /*line*/0);
+            }
+
+            // The "test" marker can now be removed so that we don't waste
+            // space unnecessarily.  We need to do the remove *after* the
+            // isEmpty() check because of the potential to interfere with
+            // defaults based on file extension. (i.e. The TD /* @test */
+            // still needs to evaluate to a valid test description.)
+            tagValues.remove("test");
+        }
+        return tagValues;
+
+    }
+
+    protected boolean isTestNGTest(File file) {
+        // for now, ignore comments and annotations, and
+        // assume *.java is a test
+        return file.getName().endsWith(".java");
     }
 
     private File canon(File f) {
@@ -96,24 +179,32 @@ public class RegressionTestFinder extends TagTestFinder
     }
 
     private Map<String, String> normalize0(Map<String, String> tagValues) {
-        File currFile = getCurrentFile();
-        HashMap<String, String> newTagValues = new HashMap<String, String>();
-        String fileName = currFile.getName();
+        Map<String, String> newTagValues = new HashMap<String, String>();
+        String fileName = getCurrentFile().getName();
         String baseName = fileName.substring(0, fileName.lastIndexOf("."));
+        boolean testNG = tagValues.containsKey("testngClass");
 
         // default values
         newTagValues.put("title", " ");
         newTagValues.put("source", fileName);
 
-        if (fileName.endsWith(".sh"))
+        if (testNG) {
+            if (tagValues.get("run") != null) {
+                tagValues.put("error", PARSE_BAD_RUN);
+            }
+            String className = tagValues.get("testngClass");
+            newTagValues.put("run", Action.REASON_ASSUMED_ACTION + " testng "
+                             + className + LINESEP);
+        } else if (fileName.endsWith(".sh")) {
             newTagValues.put("run", Action.REASON_ASSUMED_ACTION + " shell "
                              + fileName + LINESEP);
-        else if (fileName.endsWith(".java")) // we have a ".java" file
+        } else if (fileName.endsWith(".java")) { // we have a ".java" file
             newTagValues.put("run", Action.REASON_ASSUMED_ACTION + " main "
                              + baseName + LINESEP);
-        else // we have a ".html" file
+        } else { // we have a ".html" file
             newTagValues.put("run", Action.REASON_ASSUMED_ACTION + " applet "
                              + fileName + LINESEP);
+        }
 
         // translate between JDK tags and JavaTest tags; for required
         // JavaTest fields, make sure that we make a reasonable assumption
@@ -185,6 +276,9 @@ public class RegressionTestFinder extends TagTestFinder
 
         if (match(value, IGNORE_ACTION))
             addKeywords += " ignore";
+
+        if (testNG)
+            addKeywords += " testng";
 
         if (!addKeywords.equals("")) {
             if (origKeywords == null)
@@ -298,8 +392,11 @@ public class RegressionTestFinder extends TagTestFinder
     }
 
     /**
-     * Verify that all bugs are properly formatted.  Each provided bugid must
-     * be entirely composed of exactly seven digits.
+     * Verify that all bugs are properly formatted.
+     * Each provided bugid must match one of the following patterns:
+     * Sun bug number: 7 digits
+     * OpenJDK JIRA number: 7 digits or PROJECTNAME- 7 digits
+     * Oracle internal bug number: 8 digits beginning 14
      *
      * @param tagValues The map of all of the current tag values.
      * @param value     The value of the entry currently being processed.
@@ -320,13 +417,9 @@ public class RegressionTestFinder extends TagTestFinder
                 // bugid checking can be switched on and off with an
                 // environment var. that the testsuite finds
                 if (checkBugID) {
-                    // bugid must be exactly 7 digits long
-                    if (currBug.length() != 7)
-                        throw new ParseException(PARSE_BUG_BAD_LEN + currBug);
-
-                    // bugid must consist entirely of digits
-                    if (!isDigitString(currBug))
-                        throw new ParseException(PARSE_BUG_NON_DIGIT + currBug);
+                    Matcher m = bugIdPattern.matcher(currBug);
+                    if (!m.matches())
+                        throw new ParseException(PARSE_BUG_INVALID + currBug);
                 }
 
                 if (newValue.length() > 0)
@@ -338,6 +431,7 @@ public class RegressionTestFinder extends TagTestFinder
         }
         return newValue.toString();
     }
+    private static final Pattern bugIdPattern = Pattern.compile("(([A-Z]+-)?[0-9]{7})|(14[0-9]{6})");
 
     /**
      * Verify that the provided set of keys are allowed for the current
@@ -478,12 +572,14 @@ public class RegressionTestFinder extends TagTestFinder
     protected static final String
         PARSE_TAG_BAD         = "Invalid tag: ",
         PARSE_BUG_EMPTY       = "No value provided for `@bug'",
-        PARSE_BUG_BAD_LEN     = "Unexpected length for bugid: ",
-        PARSE_BUG_NON_DIGIT   = "Non-digit found in bugid: ",
+        PARSE_BUG_INVALID     = "Invalid or unrecognized bugid: ",
         PARSE_KEY_EMPTY       = "No value provided for `@key'",
         PARSE_KEY_BAD         = "Invalid key: ",
         PARSE_LIB_EMPTY       = "No value provided for `@library'",
-        PARSE_LIB_AFTER_RUN   = "`@library' must appear before first `@run'";
+        PARSE_LIB_AFTER_RUN   = "`@library' must appear before first `@run'",
+        PARSE_BAD_RUN         = "Explicit action tag not allowed",
+        PARSE_MULTIPLE_COMMENTS_NOT_ALLOWED
+                              = "Multiple test descriptions not allowed";
 
     private static final Pattern
         OTHERVM_OPTION = Pattern.compile(".*/othervm[/ \t].*",    Pattern.DOTALL),
@@ -498,4 +594,6 @@ public class RegressionTestFinder extends TagTestFinder
     private ValidTagNames validTagNames;
     private TestProperties properties;
     private boolean checkBugID;
+
+    private static I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(RegressionTestFinder.class);
 }

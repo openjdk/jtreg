@@ -148,6 +148,7 @@ public class Basic
         int numApplet = 0, numBuild  = 0, numClean  = 0, numCompile = 0,
             numIgnore = 0, numMain   = 0, numShell  = 0, numMisc    = 0;
         int numJUnit  = 0;
+        int numTestNG = 0;
 
         // applet
         numPassed += 2; numFailed += 4; numError  += 11;
@@ -178,6 +179,11 @@ public class Basic
         numPassed += 6; numFailed += 6; numError  += 8 + 8 /*Pass/Fail, badarg*/;
         numJUnit  += 28;
 
+        // TestNG
+        numPassed += 3; numFailed += 2; numError += 2;
+        numTestNG += 5;
+        numMain   += 2;
+
         // main
         numPassed += 12; numFailed += 19; numError  += 12;
         numMain   += 43;
@@ -202,6 +208,7 @@ public class Basic
         actionTable.put("ignore",  Integer.valueOf(numIgnore));
         actionTable.put("main",    Integer.valueOf(numMain));
         actionTable.put("junit",   Integer.valueOf(numJUnit));
+        actionTable.put("testng",  Integer.valueOf(numTestNG));
         actionTable.put("shell",   Integer.valueOf(numShell));
         actionTable.put("misc",    Integer.valueOf(numMisc));
 
@@ -286,12 +293,12 @@ public class Basic
                 // a td may have more than one of the target action
                 while ((pos = actions.indexOf(action, pos)) != -1) {
                     found++;
+                    if (found > expected) {
+                        System.err.println(REP_ACTION + action);
+                        System.err.println(REP_FOUND_TEST + td.getRootRelativeFile());
+                        System.err.println(ERR_REP_UEXP_TEST);
+                    }
                     pos += actions.length();
-                }
-                if (found > expected) {
-                    System.err.println(REP_ACTION + action);
-                    System.err.println(REP_FOUND_TEST + td.getRootRelativeFile());
-                    System.err.println(ERR_REP_UEXP_TEST);
                 }
             }
 
@@ -418,7 +425,7 @@ public class Basic
         REP_ACTION           = "action: ";
 
     private static final String[] actionList = {
-        "applet", "build", "clean", "compile", "ignore", "junit", "main", "shell", "misc"
+        "applet", "build", "clean", "compile", "ignore", "junit", "testng", "main", "shell", "misc"
     };
 
     private static final String[] statusList = {

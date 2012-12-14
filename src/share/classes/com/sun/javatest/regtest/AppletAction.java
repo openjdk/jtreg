@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2007, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2012, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -33,10 +33,11 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Dictionary;
-import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import com.sun.javatest.Status;
 import com.sun.javatest.TestResult;
@@ -125,8 +126,8 @@ public class AppletAction extends Action
     } // init()
 
     @Override
-    public File[] getSourceFiles() {
-        return new File[] { new File(script.absTestSrcDir(), htmlFN) };
+    public Set<File> getSourceFiles() {
+        return Collections.singleton(new File(script.absTestSrcDir(), htmlFN));
     }
 
     /**
@@ -151,7 +152,7 @@ public class AppletAction extends Action
         // TAG-SPEC:  "The named <class> will be compiled on demand, just as
         // though an "@run build <class>" action had been inserted before
         // this action."
-        clsName = htmlFileContents.getAppletAtts().get("code");
+        clsName = htmlFileContents.getAppletAttrs().get("code");
         if (clsName.endsWith(".class"))
             clsName = clsName.substring(0, clsName.lastIndexOf(".class"));
         String[][] buildOpts = {};
@@ -194,8 +195,8 @@ public class AppletAction extends Action
             fw.write(script.getTestClassPath() + "\0");
             fw.write(manual + "\0");
             fw.write(htmlFileContents.getBody() + "\0");
-            fw.write(dictionaryToString(htmlFileContents.getAppletParams()) + "\0");
-            fw.write(dictionaryToString(htmlFileContents.getAppletAtts()) + "\0");
+            fw.write(toString(htmlFileContents.getAppletParams()) + "\0");
+            fw.write(toString(htmlFileContents.getAppletAttrs()) + "\0");
             fw.close();
         } catch (IOException e) {
             return Status.error(APPLET_CANT_WRITE_ARGS);
@@ -225,12 +226,9 @@ public class AppletAction extends Action
         vmOpts.addAll(script.getTestJavaOptions());
         command.addAll(vmOpts);
 
-        command.add("-Dtest.src=" + script.absTestSrcDir());
-        command.add("-Dtest.classes=" + script.absTestClsDir());
-        command.add("-Dtest.vm.options=" + script.getTestVMOptions());
-        command.add("-Dtest.tool.vm.options=" + script.getTestToolVMOptions());
-        command.add("-Dtest.compiler.options=" + script.getTestCompilerOptions());
-        command.add("-Dtest.java.options=" + script.getTestJavaOptions());
+        for (Map.Entry<String, String> e: script.getTestProperties().entrySet()) {
+            command.add("-D" + e.getKey() + "=" + e.getValue());
+        }
 
         String headless = System.getProperty("java.awt.headless");
         if (headless != null)
@@ -353,17 +351,16 @@ public class AppletAction extends Action
         return value;
     } // parseAppletManual()
 
-    private static String dictionaryToString(Dictionary<String, ?> d) {
+    private static String toString(Map<String, String> d) {
         StringBuilder retVal = new StringBuilder();
-        for (Enumeration<String> e = d.keys(); e.hasMoreElements(); ) {
-            String key = e.nextElement();
-            retVal.append(key);
+        for (Map.Entry<String,String> e : d.entrySet()) {
+            retVal.append(e.getKey());
             retVal.append("\034");
-            retVal.append(d.get(key));
+            retVal.append(e.getValue());
             retVal.append("\034");
         }
         return retVal.toString();
-    } // dictionaryToString()
+    } // toString()
 
     //-----internal classes-----------------------------------------------------
 
@@ -418,7 +415,7 @@ public class AppletAction extends Action
             }
 
             // APPLET ATTRIBUTES
-            // Find the first <applet> tag and put contents into a Dictionary.
+            // Find the first <applet> tag and put contents into a map.
             int[] appletPos = getTagPositions(body, lowerBody, "applet", 0);
             if (appletPos == null)
                 throw new ParseException(APPLET_MISS_APPLET + htmlFN);
@@ -427,39 +424,41 @@ public class AppletAction extends Action
             if (endAppletPos == null)
                 throw new ParseException(APPLET_MISS_ENDAPPLET + htmlFN);
 
-            appletAtts = attsToDictionary(body.substring(appletPos[1],
+            appletAttrs = parseAttrs(body.substring(appletPos[1],
                                                          appletPos[2]));
 
             // verify that all of the required attributes are present
             String[] requiredAtts = {"code", "width", "height"};
 
             for (int i = 0; i <requiredAtts.length; i++) {
-                if (appletAtts.get(requiredAtts[i]) == null)
+                if (appletAttrs.get(requiredAtts[i]) == null)
                     throw new ParseException(htmlFN + APPLET_MISS_REQ_ATTRIB
                                              + requiredAtts[i]);
             }
 
             // We currently do not support "archive".
-            if (appletAtts.get("archive") != null)
+            if (appletAttrs.get("archive") != null)
                 throw new ParseException(APPLET_ARCHIVE_USUPP + htmlFN);
 
             // APPLET PARAMS
             // Put all parameters found between <applet> and </applet> into the
-            // appletParams dictionary.
+            // appletParams map.
             String appletBody = body.substring(appletPos[3], endAppletPos[0]);
             String lowerAppletBody = appletBody.toLowerCase();
 
+            int startPos = 0;
             int[] paramPos;
             while ((paramPos = getTagPositions(appletBody, lowerAppletBody,
-                                               "param", 0)) != null) {
-                Dictionary<String, String> d =
-                    attsToDictionary(appletBody.substring(paramPos[1],
+                                               "param", startPos)) != null) {
+                Map<String, String> d =
+                    parseAttrs(appletBody.substring(paramPos[1],
                                                           paramPos[2]));
                 String name  = d.get("name");
                 String value = d.get("value");
                 if ((name == null) || (value == null))
                     throw new ParseException(APPLET_MISS_REQ_PARAM);
                 appletParams.put(name, value);
+                startPos = paramPos[3];
             }
 
         } // HTMLFileContents()
@@ -470,13 +469,13 @@ public class AppletAction extends Action
             return body;
         } // getBody()
 
-        Dictionary<String, String> getAppletParams() {
+        Map<String, String> getAppletParams() {
             return appletParams;
         } // getAppletParams()
 
-        Dictionary<String, String> getAppletAtts() {
-            return appletAtts;
-        } // getAppletAtts()
+        Map<String, String> getAppletAttrs() {
+            return appletAttrs;
+        } // getAppletAttrs()
 
         //----------internal methods--------------------------------------------
 
@@ -489,22 +488,21 @@ public class AppletAction extends Action
          * 0     1    2     3
          * </pre>
          *
-         * @param atts     A string containing attributes.
+         * @param attrs     A string containing attributes.
          * @return Array of four interesting positions for the first attribute
          *         in the string.
          */
-        private int[] getAttPositions(String atts) {
-            // XXX code would benefit from addition of index parameter
+        private int[] getAttrPositions(String attrs, int startPos) {
             try {
                 // find the start of the name, skipping any header whitespace
-                int nameStart = 0;
-                while (Character.isWhitespace(atts.charAt(nameStart)))
+                int nameStart = startPos;
+                while (Character.isWhitespace(attrs.charAt(nameStart)))
                     nameStart++;
 
                 // the name ends at the first whitespace or '='
                 int nameEnd = nameStart;
                 while (true) {
-                    char c = atts.charAt(nameEnd);
+                    char c = attrs.charAt(nameEnd);
                     if (Character.isWhitespace(c) || (c == '='))
                         break;
                     nameEnd++;
@@ -512,24 +510,24 @@ public class AppletAction extends Action
 
                 // hop over any whitespaces to find the '='
                 int valStart = nameEnd;
-                while (Character.isWhitespace(atts.charAt(valStart)))
+                while (Character.isWhitespace(attrs.charAt(valStart)))
                     valStart++;
 
                 // verify presence of '='
-                if (atts.charAt(valStart) != '=')
+                if (attrs.charAt(valStart) != '=')
                     return null;
                 valStart++;
                 // hop over any whitespaces after the '=' to find valStart
-                while (Character.isWhitespace(atts.charAt(valStart)))
+                while (Character.isWhitespace(attrs.charAt(valStart)))
                     valStart++;
 
                 // find valEnd by locating the first non-quoted whitespace
                 // character or the end of the string
-                int theEnd = atts.length();
+                int theEnd = attrs.length();
                 int valEnd = valStart;
                 boolean inString = false;
                 while (valEnd < theEnd) {
-                    char c = atts.charAt(valEnd);
+                    char c = attrs.charAt(valEnd);
                     if (!inString && Character.isWhitespace(c))
                         break;
                     if (c == '"')
@@ -549,7 +547,7 @@ public class AppletAction extends Action
             } catch (StringIndexOutOfBoundsException e) {
                 return null; // input string was of invalid format
             }
-        } // getAttPositions()
+        } // getAttrPositions()
 
         /**
          * Return "important" positions used in parsing non-nested HTML tags.
@@ -575,43 +573,44 @@ public class AppletAction extends Action
 
             // !!!! doesn't properly handle '>' inside a quoted string
             int tagEnd = lower.indexOf(">", tagStart);
-            if(tagEnd == -1)
+            if (tagEnd == -1)
                 return null;
 
-            int[] result = {tagStart, tagStart + tagName.length() + 1,
-                             tagEnd, tagEnd+1};
+            int[] result = { tagStart, tagStart + tagName.length() + 1,
+                             tagEnd, tagEnd + 1 };
             return result;
         } // getTagPositions()
 
         /**
-         * Convert the attributes of an HTML tag into a dictionary.
+         * Parse the attributes of an HTML tag.
          *
-         * @param atts     A string containing HTML attributes.
-         * @return Dictionary of HTML attributes (name/value pairs).
+         * @param attrs     A string containing HTML attributes.
+         * @return Map of HTML attributes (name/value pairs).
          */
-        private Dictionary<String, String> attsToDictionary (String atts) {
-            Dictionary<String, String> result = new Hashtable<String, String>(3);
+        private Map<String, String> parseAttrs(String attrs) {
+            Map<String, String> result = new HashMap<String, String>(3);
 
+            int startPos = 0;
             int[] positions;
-            while ((positions = getAttPositions(atts)) != null) {
-                String value = atts.substring(positions[2], positions[3]);
+            while ((positions = getAttrPositions(attrs, startPos)) != null) {
+                String value = attrs.substring(positions[2], positions[3]);
                 if ((value.indexOf("\"") == 0)
                     && (value.lastIndexOf("\"") == value.length() - 1))
                     value = value.substring(1, value.length() - 1);
-                result.put(atts.substring(positions[0],
+                result.put(attrs.substring(positions[0],
                                           positions[1]).toLowerCase(),
                            value);
 
-                atts = atts.substring(positions[3]);
+                startPos = positions[3];
             }
             return result;
-        } // attsToDictionary()
+        } // parseAttrs()
 
         //----------member variables--------------------------------------------
 
         String body;
-        Dictionary<String, String> appletParams = new Hashtable<String, String>(1);
-        Dictionary<String, String> appletAtts;
+        Map<String, String> appletParams = new HashMap<String, String>(1);
+        Map<String, String> appletAttrs;
     } // class HTMLFileContents
 
     //----------member variables------------------------------------------------

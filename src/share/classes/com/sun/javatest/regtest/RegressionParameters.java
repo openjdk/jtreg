@@ -250,11 +250,11 @@ public class RegressionParameters
                         if (platforms.length == 0 || (platforms.length == 1 && platforms[0].length() == 0)) {
                             // allow for old ProblemList.txt format
                             String[] bugIds = e.getBugIdStrings();
-                            if (bugIds.length > 0 && !bugIds[0].matches("[1-9][0-9,]*"))
+                            if (bugIds.length > 0 && !bugIds[0].matches("0|([1-9][0-9,]*)"))
                                 platforms = bugIds;
                         }
 
-                        if (platforms.length == 0)
+                        if (platforms.length == 0 || (platforms.length == 1 && platforms[0].length() == 0))
                             return false;
 
                         for (String p: platforms) {
@@ -328,6 +328,7 @@ public class RegressionParameters
     private static final String IGNORE = ".ignore";
     private static final String RETAIN_ARGS = ".retain";
     private static final String JUNIT = ".junit";
+    private static final String TESTNG = ".testng";
     private static final String TIMELIMIT = ".timeLimit";
     private static final String REPORTDIR = ".reportDir";
     private static final String EXCLUSIVE_LOCK = ".exclLock";
@@ -357,11 +358,11 @@ public class RegressionParameters
 
         v = (String) data.get(prefix + COMPILE_JDK);
         if (v != null)
-            setCompileJDK(new JDK(v));
+            setCompileJDK(JDK.of(v));
 
         v = (String) data.get(prefix + TEST_JDK);
         if (v != null)
-            setTestJDK(new JDK(v));
+            setTestJDK(JDK.of(v));
 
         v = (String) data.get(prefix + TEST_VM_OPTIONS);
         if (v != null)
@@ -382,6 +383,10 @@ public class RegressionParameters
         v = (String) data.get(prefix + JUNIT);
         if (v != null)
             setJUnitJar(new File(v));
+
+        v = (String) data.get(prefix + TESTNG);
+        if (v != null)
+            setTestNGJar(new File(v));
 
         v = (String) data.get(prefix + TIMELIMIT);
         if (v != null)
@@ -432,6 +437,9 @@ public class RegressionParameters
 
         if (junitJar != null)
             data.put(prefix + JUNIT, junitJar.getPath());
+
+        if (testngJar != null)
+            data.put(prefix + TESTNG, testngJar.getPath());
 
         if (timeLimit > 0)
             data.put(prefix + TIMELIMIT, String.valueOf(timeLimit));
@@ -561,6 +569,31 @@ public class RegressionParameters
     }
 
     private Boolean junitJarExists;
+
+    //---------------------------------------------------------------------
+
+    void setTestNGJar(File testngJar) {
+        testngJar.getClass(); // null check
+        this.testngJar = testngJar;
+    }
+
+    File getTestNGJar() {
+        if (testngJar == null) {
+            File jtClsDir = ProductInfo.getJavaTestClassDir();
+            testngJar = new File(jtClsDir.getParentFile(), "testng.jar");
+        }
+        return testngJar;
+    }
+
+    private File testngJar;
+
+    boolean isTestNGAvailable() {
+        if (testngJarExists == null)
+            testngJarExists = getTestNGJar().exists();
+        return testngJarExists;
+    }
+
+    private Boolean testngJarExists;
 
     //---------------------------------------------------------------------
 

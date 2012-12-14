@@ -47,7 +47,7 @@ JAVAFILES.com.sun.javatest.regtest-j2se := \
 $(BUILDDIR)/classes.com.sun.javatest.regtest.ok: \
 		$(JAVAFILES.com.sun.javatest.regtest-j2se) \
 		$(BUILDDIR)/classes.com.sun.javatest.regtest-jdk11.ok
-	CLASSPATH=$(CLASSDIR):$(ANTHOME)/lib/ant.jar:$(JAVATEST_JAR):$(JUNIT_JAR):$(JAVAHELP_JAR) \
+	CLASSPATH=$(CLASSDIR):$(ANTHOME)/lib/ant.jar:$(JAVATEST_JAR):$(JUNIT_JAR):$(TESTNG_JAR):$(JAVAHELP_JAR) \
 	    $(J2SEJAVAC) -target $(J2SEJAVAC_TARGET) -encoding ISO8859-1 -d $(CLASSDIR) \
 		$(JAVAFILES.com.sun.javatest.regtest-j2se)
 	echo "classes built at `date`" > $@
@@ -322,6 +322,32 @@ TARGETS.ZIP.jtreg += $(JTREG_IMAGEJARDIR)/junit.jar
 
 #----------------------------------------------------------------------
 #
+# import TestNG
+
+ifdef TESTNG_HOME 
+
+$(JTREG_IMAGEDIR)/legal/testng/LICENSE.txt: $(TESTNG_HOME)/LICENSE.txt
+	$(MKDIR) -p $(@D)
+	$(CAT) $(TESTNG_HOME)/LICENSE.txt >> $@ 
+
+TARGETS.ZIP.jtreg += $(JTREG_IMAGEDIR)/legal/testng/LICENSE.txt
+
+$(JTREG_IMAGEDIR)/lib/testng.jar: $(TESTNG_JAR)
+	$(RM) $@
+	$(MKDIR) -p $(@D)
+	$(CP) $(TESTNG_JAR) $@
+	jquery=`$(JAR) tf $@ | $(GREP) 'jquery.*.js'` ; \
+	if [ -n "$$jquery" ]; then \
+	    $(RM) $(BUILDDIR)/$$jquery ; $(TOUCH) $(BUILDDIR)/$$jquery ; \
+	    $(JAR) uf $@ -C $(BUILDDIR) $$jquery ; \
+	fi
+
+TARGETS.ZIP.jtreg += $(JTREG_IMAGEJARDIR)/testng.jar
+
+endif
+
+#----------------------------------------------------------------------
+#
 # import JCov
 
 #ifdef JCOV_HOME
@@ -360,6 +386,18 @@ TARGETS.ZIP.jtreg += \
 	$(JTREG_IMAGEDIR)/linux/bin/jtreg \
 	$(JTREG_IMAGEDIR)/solaris/bin/jtreg \
 	$(JTREG_IMAGEDIR)/win32/bin/jtreg 
+
+#----------------------------------------------------------------------
+#
+# release info
+
+$(JTREG_IMAGEDIR)/release:
+	echo "JTREG_VERSION=$(BUILD_VERSION) $(BUILD_NUMBER)" > $@
+	echo "BUILD_DATE=`/bin/date +'%B %d, %Y'`" >> $@
+	if [ -r $(TOPDIR)/.hg ]; then echo "SOURCE=jtreg:`hg tip | head -1 | cut -d: -f 3`" >> $@ ; fi
+
+TARGETS.ZIP.jtreg += \
+	$(JTREG_IMAGEDIR)/release
 
 #----------------------------------------------------------------------
 #

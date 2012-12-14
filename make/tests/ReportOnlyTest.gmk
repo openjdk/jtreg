@@ -38,7 +38,7 @@ $(BUILDDIR)/ReportOnlyTest.ok: $(BUILDDIR)/Basic.othervm.ok \
 		$(TESTDIR)/javatest/regtest/data/basic \
 			> $(@:%.ok=%.jt.log) 2>&1 || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
-	$(GREP) -s 'Test results: passed: 86; failed: 38; error: 75' $(@:%.ok=%.jt.log)  > /dev/null
+	$(GREP) -s 'Test results: passed: 89; failed: 40; error: 77' $(@:%.ok=%.jt.log)  > /dev/null
 	echo $@ passed at `date` > $@
 
 TESTS.jtreg += $(BUILDDIR)/ReportOnlyTest.ok

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2009, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2012, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -42,6 +42,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import com.sun.javatest.Status;
 import com.sun.javatest.TestResult;
@@ -95,8 +96,12 @@ public abstract class Action
     /**
      * Get any source files directly referenced by this action.
      **/
-    public File[] getSourceFiles() {
+    public Set<File> getSourceFiles() {
         return null;
+    }
+
+    static synchronized void mkdirs(File dir) {
+        dir.mkdirs();
     }
 
    //------------------- parsing -----------------------------------------------
@@ -631,7 +636,7 @@ public abstract class Action
         AGENTVM_EXCEPTION        = "Agent error: %s; check console log for any additional details",
 
         UNEXPECT_SYS_EXIT     = "Unexpected exit from test",
-        CANT_FIND_SRC         = "Can't file source file: ",
+        CANT_FIND_SRC         = "Can't find source file: ",
 
         // applet
         APPLET_ONE_ARG_REQ    = "`applet' requires exactly one file argument",

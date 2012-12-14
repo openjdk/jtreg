@@ -24,18 +24,18 @@
  */
 package com.sun.javatest.regtest;
 
-import java.util.List;
+import java.util.Collection;
 
 /**
  * String utilities.
  * (Not restricted to -target 1.1)
  */
 public class StringUtils extends StringArray {
-    public static String join(List<String> list) {
+    public static String join(Collection<String> list) {
         return join(list, " ");
     }
 
-    public static String join(List<String> list, String sep) {
+    public static String join(Collection<String> list, String sep) {
         StringBuilder sb = new StringBuilder();
         for (String s: list) {
             if (sb.length() > 0)

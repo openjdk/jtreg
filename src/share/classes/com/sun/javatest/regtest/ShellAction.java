@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2011, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2012, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -28,7 +28,9 @@ package com.sun.javatest.regtest;
 import java.io.File;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import com.sun.javatest.Status;
 import com.sun.javatest.TestResult;
@@ -103,7 +105,8 @@ public class ShellAction extends Action
 //          //shellArgs += " " + args[i];
 //          shellArgs.add(args[i]);
 //      }
-        // support simple unescaped ' characters
+        // support simple unescaped ' characters,
+        // as in: @run shell test.sh abc 'def ghi jkl' mno
         shellArgs = new ArrayList<String>();
         StringBuilder curr = null;
         for (int i = 1; i < args.length; i++) {
@@ -130,8 +133,8 @@ public class ShellAction extends Action
         }
 
     @Override
-    public File[] getSourceFiles() {
-        return new File[] { new File(script.absTestSrcDir(), shellFN) };
+    public Set<File> getSourceFiles() {
+        return Collections.singleton(new File(script.absTestSrcDir(), shellFN));
     }
 
     /**
@@ -167,6 +170,7 @@ public class ShellAction extends Action
         if (script.isCheck()) {
             status = Status.passed(CHECK_PASS);
         } else {
+            mkdirs(script.absTestClsDir());
 
             // CONSTRUCT THE COMMAND LINE
 
@@ -187,8 +191,11 @@ public class ShellAction extends Action
             List<String> tmpArgs = new ArrayList<String>();
             for (int i = 0; i < envVars.length; i++)
                 tmpArgs.add(fixupSep(envVars[i]));
-            tmpArgs.add("TESTSRC=" + fixupSep(script.absTestSrcDir()));
-            tmpArgs.add("TESTCLASSES=" + fixupSep(script.absTestClsDir()));
+            Locations locations = script.locations;
+            tmpArgs.add("TESTSRC=" + fixupSep(locations.absTestSrcDir()));
+            tmpArgs.add("TESTSRCPATH=" + fixupSep(locations.absTestSrcPath()));
+            tmpArgs.add("TESTCLASSES=" + fixupSep(locations.absTestClsDir()));
+            tmpArgs.add("TESTCLASSPATH=" + fixupSep(locations.absTestClsPath()));
             tmpArgs.add("COMPILEJAVA=" + fixupSep(script.getCompileJDK().getAbsolutePath()));
             tmpArgs.add("TESTJAVA=" + fixupSep(script.getTestJDK().getAbsolutePath()));
             List<String> vmOpts = script.getTestVMOptions();
@@ -257,6 +264,14 @@ public class ShellAction extends Action
         return status;
     } // run()
         // where
+        private String fixupSep(List<File> files) {
+            StringBuilder sb = new StringBuilder();
+            for (File f: files) {
+                if (sb.length() > 0) sb.append(File.pathSeparator);
+                sb.append(fixupSep(f));
+            }
+            return sb.toString();
+        }
         private String fixupSep(File f) {
             return fixupSep(f.getPath());
         }
