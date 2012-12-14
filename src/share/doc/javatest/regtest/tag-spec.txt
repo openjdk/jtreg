@@ -1,0 +1,551 @@
+	      The JDK Test Framework: Tag Language Specification
+              Comments and questions to: jtreg-comments@sun.com
+			         1.26 09/10/10
+
+
+This is a specification document, not a tutorial.  For more basic information
+please consult the jtreg faq at http://openjdk.dev.java.net/jtreg.
+
+
+LEADING COMMENTS AND DEFINING FILES
+
+A particular test may involve several files of various types, but the test is
+specified in just one of them.  Let this be called the _defining_ file of the
+test.
+
+The defining file of a test may be one of several types of files.  Test tags
+must be enclosed in a comment at the head of the file, optionally preceeded by
+comments which do not contain test tags.  The comment in the defining file
+which includes the test tags is called the _leading_ comment.  The following
+types of defining files are recognized:
+
+    A Java source file, with file extension ".java".  Only the "/*" to "*/"
+    comment syntax is recognized.  On each comment line leading asterisks, if
+    any, are ignored.
+
+    A Bourne shell file, with file extension ".sh".  The leading comment is the
+    first contiguous set of lines each of whose first character is '#'.  The
+    comment is terminated by the first line whose first character is not '#'.
+    Note that shell tests should not contain "# !/bin/sh" on the first line;
+    they are intended to be run only via explicit invocation of a shell.
+
+    An HTML file, with file extension ".html".  The leading comment is enclosed
+    within the usual "<!--" to "-->" HTML tag.
+
+The contents of a leading comment are parsed into a sequence of tokens.  A
+token is a maximal contiguous sequence of non-whitespace characters.
+Whitespace characters, which include newline and carriage-return characters,
+are significant only insofar as they separate tokens.
+
+The first token in the leading comment in the defining file of a test must be
+"@test".  The harness discovers defining files by looking for such tokens.  A
+file without comments is not a defining file.  A file whose leading comment
+does not start with "@test" is not a defining file.
+
+
+TAG SYNTAX
+
+Within a leading comment, a tag consists of a tag token followed by some number
+of arguments.  A tag token is any token whose first character is '@'.  There is
+at present no syntax for quoting a leading '@' character.  Case is significant
+when comparing tag tokens; all tag tokens defined here are in lower case.  It
+is an error for the leading comment of a defining file to contain any tag token
+not defined here.
+
+As a special case, the token "@(#)" is not treated as a tag token.  This token
+may appear in the arguments to an @test tag as part of the SCCS identification
+string.
+
+The arguments of a tag are simply the tokens that follow it.  The argument
+tokens of a tag extend from the first token after the tag token to the end of
+the comment, the end of the file, or the next tag token, whichever comes first.
+Argument tokens are separated by whitespace; if commas are used, they will be
+considered to be part of the tokens to which they are adjacent.
+
+
+INFORMATIONAL TAGS
+
+Informational tags document the test.  They do not affect the operation of the
+harness, but may be used by the harness in generating reports.
+
+    @test <token>*	        -- Defining-file identifier; <token>* is
+                                   typically SCCS identification info
+
+    @bug <bugid>+               -- Bugtraq bug numbers
+
+    @summary <token>+           -- Textual summary
+
+    @author <token>+            -- Original author
+
+Any particular informational tag may occur at most once in a given test.
+
+
+DECLARATIVE TAGS
+
+Declarative tags govern the execution of the tags that follow them.
+
+    @library <path|jar>+
+
+Add one or more pathnames or jar filenames to the library-directory list.  Each
+argument must be relative using forward slashes and ".." to denote parent
+directories.  The names are prepended to the list from right to left.
+
+When the harness runs a test it adds the library list to the class path used by
+the virtual machine.  The class path will consist of the test-class directory,
+the current test-source directory, the library list with each element resolved
+against the test-class directory, and the system class directories or zip/jar
+files of the build being tested.  The class path will be computed in the same
+fashion when the harness compiles a class.
+
+Classes in library directories are not automatically compiled.  A test that
+relies upon library classes should contain appropriate @build directives to
+ensure that the classes will be compiled.
+
+The @library tag may be used more than once.  It may only be used before the
+first @run tag.
+
+The @library tag and the library list have nothing to do with the search path
+(i.e., the PATH environment variable) defined in shell actions.
+
+    @key <keyword>+
+
+Label this test with the given keyword(s).  Some harnesses allow tests to be
+selected via boolean expressions on keywords.  The list of acceptable keywords
+may be specified in the TEST.ROOT file (see below).  The @key tag may be used
+at most once in a given test.
+
+
+ACTION TAGS
+
+Action tags tell the harness how to perform the test.  They are executed in the
+order in which they are given.  Each action either passes or fails.  If an
+action fails, no following actions, if any, are performed.  A test passes if,
+and only if, all of its actions pass.
+
+Action tags begin with the tag token "@run", and have the following syntax:
+
+    @run <type><option>* <arg>*
+
+The <type> describes the basic type of the action; the <option>s further
+describe how the action is to be performed.  The <arg>s are passed to the test
+in a manner appropriate to the <type>.
+
+The first token after the "@run" token contains both the action type and
+options, if any.  To parse the type and the options, this token is broken down
+into subtokens.  A subtoken is either the character '=', the character '/', or
+a maximal contiguous sequence of characters not containing either of these
+characters.
+
+The type of an action tag is named by the first subtoken of the tag's first
+token.  The remaining subtokens of the first token form the options.  Options
+have the syntax
+
+    /<name>        or        /<name>=<value>
+
+where <name> and <value> are a single subtokens.  The <value> may be enclosed
+in double quotes to prevent the usual interpretation of '=', '/', and
+whitespace.
+
+
+ACTION OPTIONS
+
+Not all action types support all options.
+
+    /fail
+
+Negate the result of the action.  If the action fails it is treated as though
+it passed, and vice versa.
+
+    /timeout=<seconds>
+
+Specify the timeout value.  The default timeout is two minutes.  If an action
+does not finish before the timeout expires, it fails.  The timeout period
+applies to the entire action, not to particular steps of the action.  The
+/timeout option may not be given in conjunction with the /manual option.
+
+    /ref=<file>
+
+Capture the standard output and error of the action and compare it to the
+content of <file>, which is in the same directory as the test.  The action
+succeeds only if the output matches the content of the file.  Even if /fail is
+specified, the output must match in order for the action to pass.
+
+    /othervm
+
+Some test harnesses run tests in the same VM as the harness itself.  This
+option forces the action to be run in a fresh VM subprocess.  Use this option
+if you need to specify VM options, or if the action might crash the VM.
+
+    /manual[=(yesno|done)]
+
+Indicates that this is a manual action requiring user interaction.  If the
+harness has been instructed to run only automatic actions, then this action
+will be skipped and will be considered to have passed.  The /manual option may
+not be given in conjunction with the /timeout option.
+
+If no option value is given, then the harness assumes that the test itself will
+handle whatever user interaction is necessary.  If "yesno" is given, then the
+harness will ask the user whether the action is to pass or fail.  If "done" is
+given, then the harness will wait until the user indicates that the test has
+completed.  When the harness queries the user it does so in a manner
+appropriate to the action type; e.g., for applet actions it will either display
+"pass" or "fail" buttons or a single "done" button.  In the failure case, some
+harnesses may provide a way for the user to submit text describing the failure.
+
+    /policy=<file>
+
+Define the Java system property "java.security.policy" to have the value
+"=${TESTSRC}/<file>", where TESTSRC is the name of the directory containing the
+defining file of the test.  This definition has the effect of making the given
+file the sole source of security policies to be used by the security manager.
+In particular, the system security policy and the user's security policy will
+be ignored.  If the /secure option is not used then the default security
+manager will be installed.
+
+Property expansion will be performed in the policy file as usual; in
+particular, the "test.src" and "test.classes" properties will name the source
+and class directories of the test being run (see DIRECTORY CONTEXT below).
+
+This option may only be used in conjunction with the /othervm option.
+
+    /secure=<class>
+
+Specify a subclass of java.lang.SecurityManager to be installed as the security
+manager.  An appropriate @build tag should be provided to ensure that the class
+is compiled.  If the /secure option is used without the /policy option then the
+system's built-in policy, equivalent to the original sandbox policy, will be
+assumed.
+
+This option may only be used in conjunction with the /othervm option.
+
+
+CLASS NAMES AS ACTION ARGUMENTS
+
+Some actions take one or more class names as arguments.  Each such argument is
+the name of a class, not the name of a class file, so the ".class" suffix
+should not be given.
+
+A class name may be a simple class name (e.g., "Foo"), or a simple class name
+preceded by a package name (e.g., "bar.Foo", "baz.bar.Foo").  If a class in a
+non-Java package is specified, then the source file for that class must be in
+the corresponding directory relative to the directory containing the defining
+file of the test.
+
+
+CLASS-NAME WILDCARDS
+
+Some actions take either class names or class-name wildcards as arguments.  A
+class-name wildcard is either "*", meaning all classes in the default package,
+or "<package-name>.*", meaning all classes in the named package.
+
+
+ACTION TYPES
+
+    build <classname-or-wildcard>+
+
+Build classes on demand.  Each argument may be a class name, as described
+above, or a class-name wildcard.  To locate a source file for a named class,
+the harness takes the first matching file found by looking in the test-source
+directory and then in each directory of the library-directory list.  To locate
+the source files denoted by a wildcard, the harness evaluates the wildcard
+relative to test-source directory and relative to each directory of the
+library-directory list, taking all matches.  Each discovered class will be
+compiled if its corresponding class file doesn't exist or is older than its
+source file.  Intended primarily for use before main and applet actions that
+require more than one class to be compiled.  Passes only if the compiler
+finishes without error, or if none of the specified classes need to be
+compiled.
+
+    clean <classname-or-wildcard>+
+
+Remove the class files for the named classes, if they exist.  Each argument may
+be a class name or a class-name wildcard.  Intended primarily for compiler
+tests.  Always passes.
+
+    compile[/fail][/ref=<file>][/timeout=<seconds>] <arg>+
+
+Invoke the compiler on the given <arg>s, which may include any compiler option
+other than the "-d" option.  Equivalent to "javac <arg>+", therefore to specify
+source files the ".java" suffix must be included.  Source file names should be
+relative pathnames using forward slashes and ".." to denote parent directories;
+they are interpreted relative to the directory containing the defining file of
+the test.  Standard output and standard error are concatenated (not
+interleaved) so that /ref may be used.  Intended primarily for compiler tests;
+non-compiler tests should generally use build actions.  The timeout period, if
+specified, applies to the entire compile action, not to the compilation of each
+individual source file.  Passes only if the compiler finishes without error.
+
+The use of the -classpath and -sourcepath options as arguments to the compile
+action is discouraged; the @library tag is often more appropriate.
+
+    main[/fail][/manual][/othervm][/policy=<file>][/secure=<class>]
+        [/timeout=<seconds>] <vm-opt>* <class> <arg>*
+
+Invoke the main method of the specified class, passing any arguments after the
+class name.  Roughly equivalent to "java <vm-opt>* <class> <arg>*".  All
+initial argument tokens beginning with a dash are considered to be VM options;
+the first argument not beginning with a dash is the <class> to be invoked, and
+any remaining arguments are passed to the main method of that class.  Passes
+only if the main method returns normally and does not cause an exception to be
+thrown, from the main thread or from any other thread.  A "main" action is
+considered to be finished when the main method returns; if a test involves
+multiple threads, some synchronization may be necessary to ensure that the
+other threads finish their work before the thread running the main method
+returns.
+
+The named <class> will be compiled on demand, just as though an "@run build
+<class>" action had been inserted before this action.  If this action requires
+classes other than <class> to be up to date, insert an appropriate build action
+before this action.  If any <vm-opt>s are given then /othervm should be
+specified.  If the /manual option is specified then the harness will skip this
+action when instructed to run only automatic tests; no arguments to the /manual
+option are supported.
+
+The use of the -classpath option as an argument to a main/othervm action is
+discouraged; the @library tag is often more appropriate.  The setting of the
+system properties "java.security.manager" and "java.security.policy" in
+main/othervm actions is also discouraged; the /policy and /secure options
+should be used instead.
+
+    junit[/fail][/manual][/othervm][/policy=<file>][/secure=<class>]
+        [/timeout=<seconds>] <vm-opt>* <class>
+
+Invoke the specified class as a JUnit 4.5 test.  Roughly equivalent to "@run
+main org.junit.runner.JUnitCore <class>".  All initial argument tokens
+beginning with a dash are considered to be VM options; the first argument not
+beginning with a dash is the <class> to be invoked.  No additional arguments
+are allowed.  Passes only if the main method of JUnitCore returns normally and
+does not cause an exception to be thrown, from the main thread or from any
+other thread.  As with a "main" action, a "junit" action is considered to be
+finished when the main method of JUnitCore returns.
+
+The named <class> will be compiled on demand, just as though an "@run build
+<class>" action had been inserted before this action.  If this action requires
+classes other than <class> to be up to date, insert an appropriate build action
+before this action.  If any <vm-opt>s are given then /othervm should be
+specified.
+
+The use of the @library tag, and of the /othervm, /manual, /policy, and /secure
+options, are the same for a "junit" action as for a "main" action; see above.
+
+In order to use a "junit" action, the JUnit 4.5 jar file may need to be placed
+manually alongside the jtreg and javatest jar files in the jtreg installation.
+If junit.jar file is not found, and if no class named org.junit.runner.JUnitCore
+can be found, any "junit" actions will fail, regardless of whether the /fail
+option was selected.
+
+This action executes all the tests in a single JUnit test file.  All the tests
+in that one file will be grouped as a single jtreg test for reporting purposes.
+
+    applet[/fail][/manual[=(yesno|done)]][/othervm][/policy=<file>]
+        [/secure=<class>][/timeout=<sec>] <html-file>
+
+Run the applet described by the first <APPLET> HTML tag in the given
+<html-file>, ignoring any other <APPLET> tags.  The applet action is roughly
+equivalent to "appletviewer <html-file>"; the major difference is that the
+applet is not run in the restricted security environment implemented by the
+appletviewer.  Intended primarily for tests of graphics functionality; tests of
+the appletviewer itself can be written using shell actions.  Passes if the
+applet does not throw any exceptions from any thread and, if the /manual option
+is specified with a value of "yesno", the user indicates that the test passes.
+
+The class named in the <APPLET> tag will be compiled on demand, just as though
+an "@run build <class>" action had been inserted before this action.  If this
+action requires classes other the class named in the <APPLET> tag to be up to
+date, insert an appropriate build action before this action.
+
+If /manual is not specified, then the applet will be run by invoking its init,
+start, and setVisible(true) methods (in that order), delaying for a few
+seconds, and then invoking its stop and destroy methods (in that order).
+
+The /manual option may be specified to indicate that the test requires human
+interaction.  In this case the HTML file itself will be displayed; it should
+contain any instructions for the user.  When displaying the HTML file, a
+harness may or may not interpret HTML tags other than the <APPLET> tag; thus
+the instructions should be written in a way that does not depend upon HTML
+rendering.
+
+If /manual is specified alone, i.e., without any value argument, then the
+applet will be run just as in the non-manual case.  The harness will skip this
+action, and treat it as though it had passed, when instructed to run only
+automatic tests.
+
+If /manual=yesno is specified, then the harness will ask the user whether the
+test passes or fails, typically by displaying "pass" and "fail" buttons.  The
+applet will be run by invoking its init, start, and setVisible(true) methods
+(in that order), waiting for the user to click on "pass" or "fail", and then
+invoking the applet's stop and destroy methods (in that order).
+
+If /manual=done is specified, then the harness will wait for the user to
+indicate that the test is complete, typically by displaying a "done" button.
+The applet will be run by invoking its init, start, and setVisible(true)
+methods (in that order), waiting for the user to click on "done", and then
+invoking the applet's stop and destroy methods (in that order).
+
+The setting of the system properties "java.security.manager" and
+"java.security.policy" in applet/othervm actions is also discouraged; the
+/policy and /secure options should be used instead.
+
+
+    shell[/fail][/manual][/timeout=<seconds>] <script> <arg>*
+
+Invoke the Bourne shell to run <script> on the given <arg>s.  The <script>
+argument should the name of a file relative to the test source directory (see
+below), using "/" to separate directories and ".." to refer to parent
+directories.  Passes only if the script exits with an exit status of 0.  The
+environment variables TESTSRC, TESTCLASSES, and TESTJAVA will be defined (see
+below).  On Unix systems, the PATH will be set to /bin:/usr/bin and the
+DISPLAY, HOME, LANG, LC_ALL, LC_TYPE, TZ, LPDEST, PRINTER, and XMODIFIERS
+variables will be propagated if they are set.  On Windows systems, PATH will be
+set to the MKS toolkit or Cygwin binary directory and WINDIR, SYSTEMROOT, and
+SYSTEMDRIVE will be propagated if they are set.  The environment variable
+TESTVMOPTS will contain the set of VM options passed from the test harness
+invocation.  If the /manual option is specified then the harness will skip this
+action when instructed to run only automatic tests; no arguments to the /manual
+option are supported.
+
+    ignore <word>*
+
+Ignore this and all following @run tags.  A test harness may treat this test as
+a failure or as some other type of error.  The <word> tokens, if any, should
+describe why the test is being ignored.  These tokens may be displayed by the
+harness in some appropriate fashion.
+
+
+DIRECTORY CONTEXT
+
+Each test is run in a context that defines the following directories.
+
+    Working directory: The directory in which the harness is running.
+
+    Source directory: The directory containing the defining file of the test,
+    as well as any associated files (e.g., input data files).  Generally not
+    the same as the working directory.
+
+    Class directory: The directory into which class files compiled from source
+    files in the source directory are compiled.  May be the source directory,
+    or may be some other directory.
+
+    Java home directory: The directory containing the JDK build or release
+    being tested.
+
+A test may create temporary files in the working directory as needed.  Test
+harnesses will typically delete such files before or after each test is run.
+In order to work properly when run standalone, however, tests should not rely
+upon this behavior.  This can be done having each test's initialization code
+delete any files that the test may have created in a previous invocation.
+
+For each source directory in the test hierarchy there is a corresponding class
+directory, which may or may not the same as the source directory.  Classes in
+different source directories are, therefore, in different name spaces and need
+their names will not collide.  Simple test harnesses may place class files in
+source directories, while more sophisticated harnesses will generally place
+class files in a parallel directory hiearchy.
+
+The names of the source, class, and Java home directories of a test are made
+available to shell-action scripts via the environment variables TESTSRC,
+TESTCLASSES, and TESTJAVA, respectively.  The directory names do not have
+trailing separators.
+
+The names of the source and class directories of a test are made available to
+main and applet actions via the system properties "test.src" and
+"test.classes", respectively.  The directory names do not have trailing
+separators.  Main and applet actions can read data files defined in the test's
+source directory using this idiom:
+
+    File f = new File(System.getProperty("test.src", "."), "foo");
+    InputStream in = new FileInputStream(f);
+
+By defaulting the directory to ".", this technique allows the test to be run
+standalone in its source directory.
+
+
+SOURCE-DIRECTORY STRUCTURE and TEST.ROOT
+
+This specification places no constraints upon the structure of a tree of source
+directories.  Some test harnesses may be able to provide more robust behavior or
+more succinct reports when they can identify the root of such a tree.  The root
+of a test-source tree must therefore be identified by placing a file named
+TEST.ROOT in the root directory.  Exactly one such file must exist in every
+test-source tree.
+
+The TEST.ROOT file contains test-suite configuration information.  It is in the
+standard Java property-file format as described in the specification of the
+java.util.Properties class.  The only property currently supported is "keys,"
+which should be bound to a space-separated list of the keywords that are
+allowable in the containing test suite.  A harness that supports keyword-based
+test selection should reject any test containing keywords that are not present
+in this list.  If this property is not present then no keywords should be
+accepted.
+
+
+DEFAULTS
+
+If no @run tags are present in a defining file, a default is assumed depending
+upon the file's filename extension.  For a ".java" file, "@run main <name>" is
+assumed, where <name> is the name of the file without the ".java" suffix.  For
+a ".sh" file, "@run shell <file>" is assumed.  For an ".html" file, "@run
+applet <file>" is assumed.
+
+
+SHORTHANDS
+
+    @build <classname>+       ==  @run build <classname>+
+    @clean <classname>+       ==  @run clean <classname>+
+    @compile<option>* <arg>+  ==  @run compile<option>* <arg>+
+    @ignore <word>*           ==  @run ignore <word>*
+
+
+EXAMPLES
+
+Run Foo in a separate VM, with the heap limited to 2MB and the verifier turned on:
+
+    /* @test
+     * @run main/othervm -mx2m -verify Foo arg1 arg2
+     */
+
+Run Foo in the same VM, with a two-second timeout:
+
+    /* @test
+     * @run main/timeout=2 Foo
+     */
+
+Compile Foo with debugging, expecting failure, and check the error message
+against a reference file:
+
+    /* @test
+       @compile/fail/ref=Foo.ref -debug Foo.java
+     */
+
+Remove Bar's class file, if it exists, then compile Foo, then compile Bar, and
+finally run Bar, which is expected to fail:
+
+    /* @test
+       @clean Bar
+       @compile Foo.java
+       @compile Bar.java
+       @run main/fail Bar
+     */
+
+Run the applet described in the file Foo.html, waiting for the user to indicate
+success or failure.
+
+    /* @test
+     * @run applet/manual=yesno Foo.html
+     */
+
+Run the class Snidely with the security manager Pinkerton, using the
+paranoid.sp policy file:
+
+    /* @test
+       @build Pinkerton
+       @run main/othervm/secure=Pinkerton/policy=paranoid.sp Snidely
+     */
+
+Run the class SnowWhite using classes in the library directory dwarfs:
+
+    /* @test
+       @library ../dwarfs
+       @build Bashful Doc Dopey Grumpy Happy Sleepy Sneezy
+       @run main SnowWhite
+     */

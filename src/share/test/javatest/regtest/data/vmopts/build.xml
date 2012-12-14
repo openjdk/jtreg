@@ -1,0 +1,70 @@
+<project name="vmopts-test" default="go" basedir="../../../../../../..">
+
+    <property name="build.jtreg" value="build/jtreg"/>
+    <property name="vmopts.tests" value="src/share/test/javatest/regtest/data/vmopts"/>
+
+    <property name="jtreg.jar" value="dist/lib/jtreg.jar"/>
+    <property name="testjdk" value="/tl/jdk/1.6.0"/>
+
+    <target name="go" depends="defs,args.othervm,args.samevm,fileset.othervm,fileset.samevm"/>
+
+    <target name="defs">
+        <taskdef name="jtreg"
+            classname="com.sun.javatest.regtest.Main$$Ant"
+            classpath="${jtreg.jar}"
+        />
+    </target>
+
+    <target name="args.othervm">
+        <jtreg
+            jdk="${testjdk}"
+            workDir="${build.jtreg}/ant-args.othervm/work"
+            reportDir="${build.jtreg}/ant-args.othervm/report"
+            verbose="fail" >
+            <arg value="-Dfoo=bar" />
+            <arg value="-Xbootclasspath/p:baz.jar" />
+            <arg file="${vmopts.tests}" />
+        </jtreg>
+    </target>
+
+    <target name="args.samevm">
+        <jtreg
+            samevm="true"
+            jdk="${testjdk}"
+            workDir="${build.jtreg}/ant-args.samevm/work"
+            reportDir="${build.jtreg}/ant-args.samevm/report"
+            verbose="fail" >
+            <arg value="-Dfoo=bar" />
+            <arg value="-Xbootclasspath/p:baz.jar" />
+            <arg file="${vmopts.tests}" />
+        </jtreg>
+    </target>
+
+    <target name="fileset.othervm">
+        <jtreg
+            jdk="${testjdk}"
+            workDir="${build.jtreg}/ant-fileset.othervm/work"
+            reportDir="${build.jtreg}/ant-fileset.othervm/report"
+            dir="${vmopts.tests}"
+            verbose="fail" >
+            <arg value="-Dfoo=bar" />
+            <arg value="-Xbootclasspath/p:baz.jar" />
+            <include name="**"/>
+        </jtreg>
+    </target>
+
+    <target name="fileset.samevm">
+        <jtreg
+            samevm="true"
+            jdk="${testjdk}"
+            workDir="${build.jtreg}/ant-fileset.samevm/work"
+            reportDir="${build.jtreg}/ant-fileset.samevm/report"
+            dir="${vmopts.tests}"
+            verbose="fail" >
+            <arg value="-Dfoo=bar" />
+            <arg value="-Xbootclasspath/p:baz.jar" />
+            <include name="**"/>
+        </jtreg>
+    </target>
+
+</project>

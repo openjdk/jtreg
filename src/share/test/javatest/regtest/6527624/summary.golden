@@ -1,0 +1,12 @@
+A/AA/GoodAA1.java  Passed. Execution successful
+A/AA/GoodAA2.java  Passed. Execution successful
+A/BadA.java        Error. Parse Exception: Invalid key: B-only
+A/GoodA.java       Passed. Execution successful
+Bad.java           Error. Parse Exception: Invalid key: A-only
+B/BadB1.java       Error. Parse Exception: Invalid key: A-only
+B/BadB2.java       Error. Parse Exception: Invalid key: B-only
+B/BB/BadBB1.java   Error. Parse Exception: Invalid key: A-only
+B/BB/BadBB2.java   Error. Parse Exception: Invalid key: B-only
+B/BB/GoodBB.java   Passed. Execution successful
+B/GoodB.java       Passed. Execution successful
+Good.java          Passed. Execution successful

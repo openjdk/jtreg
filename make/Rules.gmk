@@ -1,0 +1,176 @@
+#
+# Copyright 1996-2007 Sun Microsystems, Inc.  All Rights Reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Sun designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Sun in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa Clara,
+# CA 95054 USA or visit www.sun.com if you need additional information or
+# have any questions.
+#
+
+
+#---------------------------------------------------------------------
+#
+# Copy resources (*.gif, *.html, *.properties, *.hs) into classes directory from source tree
+
+$(CLASSDIR)/%.gif: $(JAVADIR)/%.gif checkImageFormat.sh
+	$(SH) checkImageFormat.sh GIF $(@:$(CLASSDIR)/%=$(JAVADIR)/%)
+	$(RM) -f $@
+	if [ ! -d $(@D) ] ; then $(MKDIR) -p $(@D) ; fi
+	$(CP) $(@:$(CLASSDIR)/%=$(JAVADIR)/%) $@
+
+$(CLASSDIR)/%.jpeg: $(JAVADIR)/%.jpeg checkImageFormat.sh
+	$(SH) checkImageFormat.sh JPEG $(@:$(CLASSDIR)/%=$(JAVADIR)/%) 
+	$(RM) -f $@
+	if [ ! -d $(@D) ] ; then $(MKDIR) -p $(@D) ; fi
+	$(CP) $(@:$(CLASSDIR)/%=$(JAVADIR)/%) $@
+
+$(CLASSDIR)/%.html: $(JAVADIR)/%.html
+	$(RM) -f $@
+	if [ ! -d $(@D) ] ; then $(MKDIR) -p $(@D) ; fi
+	$(CP) $(@:$(CLASSDIR)/%=$(JAVADIR)/%) $@
+
+$(CLASSDIR)/%.properties: $(JAVADIR)/%.properties
+	$(RM) -f $@
+	if [ ! -d $(@D) ] ; then $(MKDIR) -p $(@D) ; fi
+	$(CP) $(@:$(CLASSDIR)/%=$(JAVADIR)/%) $@
+
+$(CLASSDIR)/%.hs: $(JAVADIR)/%.hs
+	$(RM) -f $@
+	if [ ! -d $(@D) ] ; then $(MKDIR) -p $(@D) ; fi
+	$(CP) $(@:$(CLASSDIR)/%=$(JAVADIR)/%) $@
+
+$(CLASSDIR)/%.xsd: $(JAVADIR)/%.xsd
+	$(RM) -f $@
+	if [ ! -d $(@D) ] ; then $(MKDIR) -p $(@D) ; fi
+	$(CP) $(@:$(CLASSDIR)/%=$(JAVADIR)/%) $@
+
+#---------------------------------------------------------------------
+#
+# doc files:
+#	HTML files are htmlcheck-ed and then copied from the source area
+#	area to the build area; other files are simply copied.
+
+$(JTREG_IMAGEDOCDIR)/%.html: $(SRCDOCDIR)/%.html
+	$(HTMLCHECK) $(@:$(JTREG_IMAGEDOCDIR)/%=$(SRCDOCDIR)/%)
+	$(MKDIR) -p $(@D)
+	$(RM) $@
+	$(CP) $(@:$(JTREG_IMAGEDOCDIR)/%=$(SRCDOCDIR)/%) $@
+	chmod -w $@
+
+$(JTREG_IMAGEDOCDIR)/%: $(SRCDOCDIR)/%
+	$(MKDIR) -p $(@D)
+	$(RM) $@
+	$(CP) $(@:$(JTREG_IMAGEDOCDIR)/%=$(SRCDOCDIR)/%) $@
+	chmod -w $@
+
+#---------------------------------------------------------------------
+
+$(CLASSDIR) $(BUILDDIR) $(BUILDDIR)/testClasses $(BUILDDIR)/testWork $(BUILDDIR)/testReport:
+	$(MKDIR) -p $@
+
+#----------------------------------------------------------------------
+#
+# Build a JAR file containing the contents of any classes/* files
+# listed in the FILES.JAR.%
+
+# default copyright; override as necessary
+JAR_COPYRIGHT = -C $(TOPDIR) COPYRIGHT
+
+$(IMAGES_DIR)/%.jar: pkgsToFiles.sh
+	$(RM) $@ $(@:$(IMAGES_DIR)/%.jar=$(BUILDDIR)/jarData/%) 
+	$(MKDIR) -p $(@D)
+	$(MKDIR) -p $(@:$(IMAGES_DIR)/%.jar=$(BUILDDIR)/jarData/%)
+	( if [ ! -z "$(JAR_MAINCLASS)" ]; then echo "Main-class: $(JAR_MAINCLASS)" ; fi ; \
+	  if [ ! -z "$(JAR_CLASSPATH)" ]; then echo "Class-Path: $(JAR_CLASSPATH)" ; fi ; \
+	  echo "$(@F:%.jar=%)-Name: $(@F:%.jar=%)" ; \
+	  echo "$(@F:%.jar=%)-Version: $(BUILD_VERSION)" ; \
+	  echo "$(@F:%.jar=%)-Milestone: $(BUILD_MILESTONE)" ; \
+	  echo "$(@F:%.jar=%)-Build: $(BUILD_NUMBER)" ; \
+	  echo "$(@F:%.jar=%)-BuildJavaVersion: `$(J2SEJAVA) -fullversion 2>&1 | awk '{print $$NF}'  | \
+		sed -e 's|^"\(.*\)"$$|Java(TM) 2 SDK, Version \1|'`" ; \
+	  echo "$(@F:%.jar=%)-BuildDate: `/bin/date +'%B %d, %Y'`" ; \
+	) \
+		> $(@:$(IMAGES_DIR)/%.jar=$(BUILDDIR)/jarData/%/manifest.txt)
+	$(JAR) -cmf $(@:$(IMAGES_DIR)/%.jar=$(BUILDDIR)/jarData/%/manifest.txt) $@ \
+	    $(JAR_COPYRIGHT) \
+	    `sh pkgsToFiles.sh $(CLASSDIR) $($(@F:%.jar=PKGS.JAR.%))` \
+	    $(patsubst $(CLASSDIR)/%,-C $(CLASSDIR) %,$(sort $(FILES.JAR.$(@F:%.jar=%)))) \
+	    $(JAR_EXTRAS)
+	$(CHMOD) -w $@
+
+# don't know how to include these in the preceding implicit rules
+$(JTREG_IMAGEJARDIR)/jtdiff.jar: $(TARGETS.JAR.jtdiff)
+$(JTREG_IMAGEJARDIR)/jtreg.jar: $(TARGETS.JAR.jtreg)
+
+#----------------------------------------------------------------------
+#
+# Build zips with verbose names
+
+%-$(VERBOSE_ZIP_SUFFIX).zip: %.zip 
+	cp $(@:%-$(VERBOSE_ZIP_SUFFIX).zip=%.zip) $@
+
+
+#---------------------------------------------------------------------
+#
+# check for leftover TestResultCache lock files.
+# leftover files may indicate a bug in the cache or its robustness
+
+$(BUILDDIR)/lockCheck.ok: 
+	@ ( \
+	lckfiles=`$(FIND) $(TOPDIR)/build -name ResultCache.jtw.lck -print` ; \
+	if [ ! -z "$$lckfiles" ] ; then \
+	    echo "JavaTest cache lock files remain, please investigate and fix:" ; \
+	    $(FIND) $(TOPDIR)/build -name \*.jtw.lck -ls ; \
+	    exit 1 ; \
+	else \
+	    echo "No leftover JavaTest cache lock files found." ; \
+	fi \
+	)
+	echo $@ passed at `date` > $@
+
+#----------------------------------------------------------------------
+#
+# cancel implicit rules
+
+%: %.o
+%: %.obj
+%: %.dll
+%: %.c
+%: %.cc
+%: %.cpp
+%: %.C
+%: %.p
+%: %.f
+%: %.s
+%: %.F
+%: %.r
+%: %.S
+%: %.mod
+%: %.sh
+
+#---------------------------------------------------------------------
+#
+# clean:
+
+clean:
+	$(RM) $(BUILDDIR)
+
+.NO_PARALLEL: clean
+
+

@@ -1,0 +1,97 @@
+The Regression Test Harness for the OpenJDK platform: jtreg
+
+
+Introduction
+
+jtreg is designed to run test programs written according to the JDK Test 
+Framework: Tag Language Specification, on a wide-variety of Java™ platforms, 
+and specifically those platforms supported by JDK.
+
+This README contains basic information about this version of jtreg. 
+Please see the doc/ directory or the online help for more information.
+
+NOTE: To display the jtreg online help without launching the jtreg GUI, use the 
+-onlineHelp option. For example, if your current directory is the directory
+where you have installed jtreg, you can use the following command to display 
+online help:
+
+    > java -jar lib/jtreg.jar -onlineHelp
+
+In the example command, > represents the command prompt. For Unix systems the 
+command prompt may be either a shell prompt, such as %, or a user defined value. 
+For win32 systems, the command prompt may be C: or another appropriate drive 
+identifier.
+
+
+Release Notes.
+
+This is jtreg, version 4.0. jtreg is to designed as a set of extensions to
+Sun's JavaTest harness, which is also available under an open source license
+under the name JT Harness.  jtreg 4.0 is suitable for use with JavaTest or 
+JT Harness, version 4.1.3 or later. (Note: Older versions of JT Harness have
+a different license. Please make sure you are familiar with the terms of the
+license for the version you are using.).
+
+The primary change for this release of jtreg is that it now uses 
+JavaTest or JTHarness version 4.1.3 or later.  
+
+As a side-effect of using this new version of JavaTest or JT Harness, the layout
+of the files in the report directory has changed. An extra level of subdirectory
+under the main report directory has been added, to group the files of the 
+different types of reports and to improve the way that reports are backed up.
+
+
+System Requirements
+
+The following sections provide the recommended system requirements for running 
+jtreg.
+
+- Java platform
+    A platform equivalent to JDK 1.5.0 or later is required.
+
+- Memory
+    It is recommended that you run jtreg on a computer having at least 256M of 
+    physical memory.
+ 
+
+Running tests
+
+You can either execute the jtreg.jar file directly, or you can use of the
+the wrapper scripts provided in one of the platform-specific bin directories.
+
+To run the JDK regression tests, it is common to set your current directory
+to the root of your repository, such as langtools/ or jdk/ and execute a command
+of the form:
+    
+    > jtreg -jdk:<build-image> <tests>
+ 
+where <build-image> represents the path for where you have built JDK, and <tests>
+specifies one or more tests or folders of tests in the repository's test/ directory.
+
+If you have just built part of a JDK, you can use the -Xbootclasspath/p: option
+for JDK to prepend your classes to the bootclasspath, ahead of a complete version
+of JDK:
+
+    > jtreg -jdk:<jdk> -Xbootclasspath/p:<jar-or-classdir> <tests> 
+
+where <jdk> points to a complete JDK, and <jar-or-classdir> points to where
+you have prepared your classes to be tested.
+
+Your repository may also provide a NetBeans project that provides Ant targets
+to run some or all of the tests in your repository. See the documentation for
+your repository for more details.
+
+
+Files and Directories
+
+Name 	        Description
+README	        This file
+COPYRIGHT 	Copyright information
+LICENSE         License file
+doc/            Documentation files
+legal/          Copyright and license files for JavaTest or JT Harness
+lib/     	Directory containing the JAR files needed to run jtreg
+linux/bin/ 	Miscellaneous utility script for use on Linux
+solaris/bin/ 	Miscellaneous utility script for use on Solaris
+win32/bin/ 	Miscellaneous utility script for use with MKS or Cygwin on 
+                Microsoft Windows platforms

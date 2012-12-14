@@ -1,0 +1,126 @@
+body {background-color: #FFFFFF;
+      font-size: 12pt;
+      font-family: SansSerif;
+      margin-left: 3}       
+
+h1  {font-size: 18pt;
+     font-weight: bold;
+     color: #8080C0;
+     margin-top: 0;
+     margin-bottom: 0}
+
+h1.cover {border-top="300em";
+	  margin-botttom="120";
+	  font-family: Palatino}
+
+h2 {font-size: 14pt;
+    font-weight: bold;
+    color: #8080C0;
+    margin-top: 15;
+    margin-bottom: -5}
+
+h3 {font-size: 12pt;
+    font-weight: bold;
+    color: #8080C0;
+    margin-top: 10;
+    margin-bottom: -5}
+
+p   {font-size: 12pt;
+     margin-top: 10;
+     margin-bottom: 0}
+
+p.code {font-family: Monospaced;
+	margin-left: 22}
+
+h1.glossaryTitle   {margin-top: 0;
+		 font-size: 12pt;
+     		font-weight: bold;
+     	       	color: #8080C0;}
+
+p.glossary	 {margin-top: 5}
+
+p.indent1  {margin-left: 3}
+
+p.indent2  {margin-left: 12}
+
+p.indent3  {margin-left: 32}
+
+p.note {margin-top: -19;
+	margin-left: 22}
+
+p.table {margin-bottom: 0}
+
+blockquote.menu {margin-left: 18;
+		margin-top: 10}
+
+center {margin-top: 10}
+
+dl {margin-left: 10;
+    margin-top: 10;
+    margin-bottom: 10}
+
+dd.hang {margin-left:15;
+	 margin-bottom:10}
+
+dd.hang_last {margin-left:15;
+	 margin-bottom:0}
+
+dd.next {margin-left: 31}
+
+dd p {margin-left: 20;
+    margin-top: 0;
+    margin-bottom: 0}
+
+ol {margin-top: 10;
+    margin-bottom: 0;
+    margin-left: 30}
+
+ol.noindent {margin-top: 10;
+    margin-left: 16;
+    margin-bottom: 0}
+
+ol li.noindent {margin-top:10}
+
+ul {margin-top: 10;
+    margin-bottom: 0;
+    margin-left: 30;
+    -bullet-gap: 70;
+    list-style-image: ../images/blueListBull.gif}
+
+ul li {margin-bottom: 7}
+
+ul li.tight {margin-bottom: 2}
+
+pre.code_table {font-size: 11;
+	   margin-left: 10}
+
+table {
+	border-color: Gray;
+	border-style: outset;
+	margin-top: 10;
+       	margin-bottom: 5;
+       	margin-left: 5;
+	margin-right: 5}
+
+table.bullet {
+	border-color: Gray;
+	border-style: outset;
+	margin-top: 0;
+       	margin-bottom: 5;
+       	margin-left: 5;
+	margin-right: 5}
+
+table.nested {margin-top: -5}
+
+table.gray {background: #F5F5F5}
+
+td.more_space {margin-top: 15}
+
+dl.see_also {margin-left: 0;
+    margin-top: 10;
+    margin-bottom: 10}
+
+pre.deplist   {
+        font-size: 12pt;
+        margin-top: 10;
+        margin-bottom: 0}

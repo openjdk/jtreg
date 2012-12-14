@@ -1,0 +1,192 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<!--
+ Copyright 2006-2008 Sun Microsystems, Inc.  All Rights Reserved.
+ DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+
+ This code is free software; you can redistribute it and/or modify it
+ under the terms of the GNU General Public License version 2 only, as
+ published by the Free Software Foundation.
+
+ This code is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ version 2 for more details (a copy is included in the LICENSE file that
+ accompanied this code).
+
+ You should have received a copy of the GNU General Public License version
+ 2 along with this work; if not, write to the Free Software Foundation,
+ Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+
+ Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa Clara,
+ CA 95054 USA or visit www.sun.com if you need additional information or
+ have any questions.
+-->
+<html>
+    <head>
+        <LINK REL="stylesheet" TYPE="text/css" HREF="help.css" TITLE="Style">
+        <style>pre { margin-left:0.5in; margin-top:12px }</style>
+        <title>Using jtreg with Ant</title>
+    </head>
+    <body>
+        <h1>Using jtreg with Ant</h1>
+        <h2>Description</h2>
+        <p>You can invoke <i>jtreg</i> from Ant, as well as from the command line. 
+        The class name is <code>com.sun.javatest.regtest.Main$Ant</code>. 
+        You will need to add the following to your build file to register 
+        the class with Ant.</p>
+        <pre>
+        &lt;taskdef name="jtreg" classname="com.sun.javatest.regtest.Main$$Ant" 
+            classpath="${jtreg.home}/lib/jtreg.jar" /&gt;
+        </pre>
+        <p>
+            You can use any options that you would use on the command line by using 
+            a nested <code>&lt;arg&gt;</code> element. Alternatively, many options
+            can also be specified directly.
+        </p>
+        
+        <p>This task forms an implicit FileSet and supports <!--all attributes of 
+            &lt;fileset&gt; (dir becomes basedir) as well as--> the nested 
+            &lt;include&gt;, &lt;exclude&gt; and &lt;patternset&gt; elements.
+        </p>
+        <h2>Parameters</h2>
+        <table border="1" cellpadding="2" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>Parameters</th><th>Description</th><th>Required</th>
+                </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>dir</td>
+                <td>The base directory for the implicit FileSet. This may be
+                the test-suite directory (as identified by the presence of
+                TEST.ROOT), or any subdirectory within the test suite.
+                It is also used as a base directory for any test files
+                and directories that many be specified with nested &lt;arg&gt;
+                elements.</td>
+                <td>Yes, if nested fileset elements are used.</td>
+            </tr>
+            
+            <tr>
+                <td>jdk</td>
+                <td>The path for the JDK to use for the tests.</td>
+                <td>No</td>
+            </tr>
+            
+            <tr>
+                <td>otherVM</td>
+                <td>Run each test in its own separate VM.</td>
+                <td rowspan="2">Not both.</td>
+            </tr>
+            
+            <tr>
+                <td>sameVM</td>
+                <td>Run all tests in the same VM, where possible.</td>
+            </tr>
+            
+            <tr>
+                <td>status</td>
+                <td>Specify the prior status of tests to be selected to run.</td>
+                <td>No</td>
+            </tr>
+            
+            <tr>
+                <td>vmOptions</td>
+                <td>A space-separated list of VM options to be used for the VM 
+                to run the tests. 
+                </td>
+                <td>No</td>
+            </tr>
+            
+            <tr>
+                <td>javacOptions</td>
+                <td>A space-separated list of compiler options to be used 
+                to compile the tests. 
+                </td>
+                <td>No</td>
+            </tr>
+            
+            <tr>
+                <td>verbose</td>
+                <td>Controls the amout of tracing output generated for each test.
+                One of "all", "fail", "error", "pass", "summary", "default", "time"</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>workDir</td>
+                <td>Specify where to put test result files.</td>
+                <td>No</td>
+            </tr>
+            
+            <tr>
+                <td>reportDir</td>
+                <td>Specify where to put final test report.</td>
+                <td>No</td>
+            </tr>
+            
+            <tr>
+                <td>failOnError</td>
+                <td>Stop the buildprocess if the command exits with a returncode other than 0. 
+                Default is "false" if any of "resultProperty", "failureProperty" or "errorProperty"
+                are specified, and "true" if none of them are specified.
+                <td>No</td>
+            </tr>
+            
+            <tr>
+                <td>resultProperty</td>
+                <td>The name of a property in which the return code of the command should be stored. Only of interest if failonerror=false.</td>
+                <td>No</td>
+            </tr>
+            
+            <tr>
+                <td>failureProperty</td>
+                <td>The name of a property to set in the event of a failure (errors are considered failures as well).</td>
+                <td>No</td>
+            </tr>
+            
+            <tr>
+                <td>errorProperty</td>
+                <td>The name of a property to set in the event of an error.</td>
+                <td>No</td>
+            </tr>
+            
+        </table>
+        <h2>Nested elements</h2>
+        <p><i>jtreg</i> does not specify any new types of nested elements. 
+        However, you can use <code>&lt;arg&gt;</code> elements to provide
+        any options that cannot be given as parameters, and you can use
+        &lt;include&gt;, &lt;exclude&gt; and &lt;patternset&gt; elements
+        in conjunction with the <i>dir</i> parameter to specify the tests
+        to be run.
+        <p><b>Note:</b> If you specify a directory in the implicit fileset,
+        <i>jtreg</i> will run all the tests in that directory, and in all
+        its subdirectories. Therefore, as a general rule, you should not
+        use the '**' pattern to specify a set of directories. You can use
+        the '**' pattern to specify a set of files, such as '**/*.java'.
+        </p>
+        <h2>Examples</h2>
+        <pre>
+&lt;jtreg dir="test/tools/javac"/&gt;</pre>
+        <p>Run all the tests in the <i>test/tools/javac</i> directory,
+        using the same JDK being used to run Ant, the default
+        work and report directories, and running each test in a separate
+        VM.</p>
+        <pre>
+&lt;jtreg dir="test/tools/javac" workDir="myWorkDir"/&gt;</pre>
+        <p>As before, but specifying a work directory for the results.</p>
+        <pre>
+&lt;jtreg dir="test/tools/javac" workDir="myWorkDir"&gt;
+    &lt;include name="api/*.java" /&gt;
+&lt;/jtreg&gt;</pre>
+        <p>
+        Run just the <i>api/*.java</i> tests.
+        </p>
+        <pre>
+&lt;jtreg&gt;
+    &lt;arg line="-w myWorkDir -jdk /java/jdk/1.5.0 test/tools/javac"&gt;
+&lt;/jtreg&gt;</pre>
+        <p>Run the <i>test/tools/javac</i> tests using <i>/java/jdk/1.5.0</i>
+        writing the results to <i>myWorkDir</i>.</p>
+    </body>
+</html>

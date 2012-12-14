@@ -1,0 +1,132 @@
+#
+# Copyright 2007 Sun Microsystems, Inc.  All Rights Reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Sun designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Sun in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa Clara,
+# CA 95054 USA or visit www.sun.com if you need additional information or
+# have any questions.
+#
+
+JAVAFILES.com.sun.javatest.diff = \
+        Diff.java \
+	DiffReader.java \
+        Fault.java \
+	HTMLReporter.java \
+	Help.java \
+        HTMLWriter.java \
+	Main.java \
+	MultiMap.java \
+	ReportReader.java \
+	Reporter.java \
+	SimpleReporter.java \
+        StandardDiff.java \
+	StatusComparator.java \
+        SuperDiff.java \
+	WorkDirectoryReader.java 
+
+
+RESOURCES.com.sun.javatest.diff = \
+	i18n.properties
+
+#----------------------------------------------------------------------
+#
+# compile com.sun.javatest.diff
+
+$(BUILDDIR)/classes.com.sun.javatest.diff.ok: \
+		$(JAVAFILES.com.sun.javatest.diff:%=$(JAVADIR)/com/sun/javatest/diff/%) \
+		$(BUILDDIR)/classes.com.sun.javatest.regtest.ok 
+	CLASSPATH=$(CLASSDIR):$(JAVATEST_JAR):$(JAVAHELP_JAR):$(ANTHOME)/lib/ant.jar \
+		$(J2SEJAVAC) -target $(J2SEJAVAC_TARGET) -encoding ISO8859-1 -d $(CLASSDIR) $(JAVAFILES.com.sun.javatest.diff:%=$(JAVADIR)/com/sun/javatest/diff/%)
+	echo "classes built at `date`" > $@
+
+TARGETS.com.sun.javatest.diff += $(BUILDDIR)/classes.com.sun.javatest.diff.ok
+
+#----------------------------------------------------------------------
+#
+# resources required for com.sun.javatest.diff
+
+TARGETS.com.sun.javatest.diff += $(RESOURCES.com.sun.javatest.diff:%=$(CLASSDIR)/com/sun/javatest/diff/%)
+
+#----------------------------------------------------------------------
+#
+# convenience targets
+
+jtdiff: \
+	check-files-checked-in \
+	$$(TESTS.com.sun.javatest.diff) \
+	$(BUILDDIR)/copyright.com.sun.javatest.ok \
+	$(BUILDDIR)/javatest.imports.ok \
+	$(BUILDDIR)/i18n.javatest \
+	$(BUILDDIR)/i18n.com.sun.javatest.diff.ok \
+	$(JTREG_IMAGEDIR)/lib/javatest.jar \
+	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	jtreg.zip \
+	jtreg-faqs
+
+#----------------------------------------------------------------------
+
+$(BUILDDIR)/i18n.com.sun.javatest.diff.ok: \
+		$(JAVAFILES.com.sun.javatest.diff:%=$(JAVADIR)/com/sun/javatest/diff/%) \
+		$(JAVADIR)/com/sun/javatest/diff/i18n.properties \
+		$(BUILDDIR)/classes.com.sun.javatest.diff.ok \
+		checkI18NProps.sh
+	CLASSPATH=$(CLASSDIR):$(JAVADIR):$(JAVATEST_JAR) \
+		$(J2SEJAVA) -Djavatest.i18n.log=com.sun.javatest.diff \
+			com.sun.javatest.diff.Main -help all \
+			> $(@:%.ok=%.log) 2>&1
+	$(SH) checkI18NProps.sh $(JAVADIR)/com/sun/javatest/diff $(@:%.ok=%.log)
+	echo $@ passed at `date` > $@
+
+TESTS.com.sun.javatest.diff += $(BUILDDIR)/i18n.com.sun.javatest.diff.ok
+
+#----------------------------------------------------------------------
+
+$(BUILDDIR)/T6783039.ok: \
+	$(JTREG_IMAGEDIR)/lib/javatest.jar \
+	$(JTREG_IMAGEDIR)/lib/jtreg.jar 
+	$(RM) $(BUILDDIR)/6783039/
+	for p in p1 p2 ; do for y in 2007 2008 ; do for d in 1 2 3 ; do \
+	    mkdir -p $(BUILDDIR)/6783039/$$p/$$y/$$d/JTreport/text/ ; touch $(BUILDDIR)/6783039/$$p/$$y/$$d/JTreport/text/summary.txt ; \
+	done ; done ; done
+	$(J2SEJAVA) -cp $(JTREG_IMAGEDIR)/lib/jtreg.jar com.sun.javatest.diff.Main \
+		$(BUILDDIR)/6783039/*/*/*/JTreport/text/summary.txt > $(BUILDDIR)/6783039/stdout
+	$(J2SEJAVA) -cp $(JTREG_IMAGEDIR)/lib/jtreg.jar com.sun.javatest.diff.Main \
+		-o $(BUILDDIR)/6783039/out.txt $(BUILDDIR)/6783039/*/*/*/JTreport/text/summary.txt
+	diff $(BUILDDIR)/6783039/stdout $(BUILDDIR)/6783039/out.txt
+	mkdir $(BUILDDIR)/6783039/super
+	$(J2SEJAVA) -cp $(JTREG_IMAGEDIR)/lib/jtreg.jar com.sun.javatest.diff.Main \
+		-o $(BUILDDIR)/6783039/super -super $(BUILDDIR)/6783039/
+	if [ `find $(BUILDDIR)/6783039/super -name \*.html | wc -l` != 9 ]; then \
+		echo "super output not as expected" ; exit 1 ; \
+	fi
+	echo $@ passed at `date` > $@
+
+TESTS.com.sun.javatest.diff += $(BUILDDIR)/T6783039.ok
+
+#----------------------------------------------------------------------
+
+$(TESTS.com.sun.javatest.diff): $(TARGETS.com.sun.javatest.diff)
+
+#----------------------------------------------------------------------
+#
+# add stuff into standard macros
+
+TARGETS.JAR.jtreg += $(TARGETS.com.sun.javatest.diff)
+TESTS.jtreg += $(TESTS.com.sun.javatest.diff)
+PKGS.JAR.jtreg += com.sun.javatest.diff

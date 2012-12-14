@@ -1,0 +1,164 @@
+Building The Regression Test Harness for the OpenJDK platform: jtreg
+
+There are two ways to build jtreg. The first way uses GNU Make to build jtreg 
+and run all the tests. The second way uses Ant, and is primarily intended for 
+developers using an IDE such as NetBeans. Not all of the tests are available 
+using the Ant build.
+
+Building jtreg with GNU Make
+
+The Makefile is in make/Makefile, and creates deliverables in the build/ 
+directory, similar to OpenJDK. By default, the build file builds jtreg and runs 
+the tests. You can build jtreg from a Unix-like command shell with the following 
+commands:
+    
+    % cd jtreg-root-directory
+    % make -C make
+
+Dependencies
+
+jtreg has a number of build dependencies. These can be set with values on the 
+make command line or with values in make/Defs.gmk.
+
+JDK 1.5 (or better)
+    Set JDK15HOME to the JDK or equivalent used to build jtreg. It must be 
+    equivalent to JDK 1.5 or later.
+
+JavaHelp
+    See https://javahelp.dev.java.net/. Set JAVAHELP_HOME to an installed copy 
+    of JavaHelp. It should be version 2.0_01 or better.
+
+JT Harness
+    See https://jtharness.dev.java.net/. Set JTHARNESS_HOME to the installed 
+    copy of the version of JT Harness to be used. It should be version 4.1.3 or 
+    better. (Note, the license changed for version 4.1.3.) See the notes below
+    on building JT Harness from source for use in jtreg.
+
+    Note: there is a bug in JT Harness 4.1.3 which causes some of the jtreg self
+    tests to fail. These are run automatically if you build jtreg with the 
+    default "all" target. The bug affects the ability to run tests in the root 
+    directory of a test suite. (This does not apply to OpenJDK test suites.) To 
+    work around this issue, you can either download and build JT Harness 4.1.3a 
+    from source, or you can use version 4.1.3 and just build jtreg, with the 
+    "build" target, and avoid running the jtreg self tests invoked by the "test" 
+    target in the Makefile.
+
+Xalan
+    See http://xml.apache.org/xalan-j/. This is used while building jtreg to 
+    process XML files.
+
+The following dependencies are optional.
+
+HTMLCheck
+    This uses nsgmlns, available from http://www.jclark.com/sp/, and DTDs, 
+    available from http://w3c.org/ to validate HTML documentation files. 
+    Set HTMLCHECK to an HTML validation program. It should take a single file 
+    as argument, and exit with a zero return code for a valid file, and non-zero 
+    for an invalid one. This is optional, and if available, it will be used 
+    while building jtreg. It may be left unset to ignore the checks.
+
+LinkLint
+    See http://www.linklint.org/. This is used to validate the links in HTML 
+    documentation files. Set LINKLINT to your installed copy of LinkLint. 
+    This is optional, and if available, it will be used while building jtreg. 
+    It may be left unset to ignore the checks.
+
+The following dependencies are only required when running the tests for jtreg. 
+(Note: this only applies to the tests for jtreg itself; these dependencies are 
+not required when using jtreg to run the JDK regression tests.
+
+JDK 1.6
+    This is used when running some of the tests. Set JDK16HOME to run these 
+tests. It must be equivalent to JDK 1.6 or later. It need not be set if you are 
+just building jtreg.
+
+Ant
+    See http://ant.apache.org/. Set ANTHOME to an installed copy of Ant. This is 
+    used when running some of the tests. It should be version 1.6.5. or better. 
+    It need not be set if you are just building jtreg.
+
+Running Tests
+
+The tests can be invoked with individual make targets, or collectively via the 
+"test" target.
+
+Some of the tests need to pop up windows while they execute. No interaction with 
+these windows is normally required. Since this can be a problem on a headless 
+server machine, and an annoyance on a personal workstation, the tests will 
+attempt to use VNC to create a dummy X-server for use by the tests while they 
+are running. Various implementations of VNC are available, such as from 
+http://www.realvnc.com/. Using VNC is optional; it is not required in order to 
+run the tests.
+
+By default, VNC will be used if vncserver is found on your execution path, or if
+VNC_HOME points to an installed copy of VNC. To explicitly disable the use of 
+VNC, set the VNC environment variable to one of false, off, no, or 0. Unless 
+explicitly disabled, the tests will check the following:
+
+    * You must have a password set in $HOME/.vnc/passwd. This is the standard 
+      location used by the vncserver command.
+    * If you set the environment variable VNC_HOME, it will be prepended to your 
+      execution path to find vncserver.
+    * vncserver must be on your execution path, after VNC_HOME has been added, 
+      if set.
+
+If the tests find any issue with using VNC, it will not be used. If VNC is used 
+to create a dummy X server, the server will be terminated when the test is 
+complete.
+
+The logic for using VNC is encapsulated within the script make/display.sh.
+
+
+Building jtreg with Ant
+
+The build file is in make/build.xml; it creates intermediate files in the build/ 
+directory and deliverables in the dist/ directory. By default, the build file 
+just builds jtreg, but does not run any tests. You can build jtreg from a 
+Unix-like command shell with the following commands:
+
+    % cd jtreg-root-directory
+    % ant -f make/build.xml
+
+You can also use this build file when creating a NetBeans free form project with 
+an existing build file.
+
+Dependencies
+
+Some of the tasks that are used are listed as "Optional Tasks" in the Ant 
+manual. You may need to make sure that these tasks are available for use by Ant. 
+For example, on Ubuntu Linux these tasks are in the ant-optional package.
+
+Running Tests
+
+Some of the tests can be invoked with individual targets beginning "test-", or 
+collectivly via the "test-jtreg" target. 
+
+
+Building JT Harness for jtreg
+
+JT Harness has build-time dependencies on a number of components, some of which
+may cause issues. There are workarounds available which allow you to build
+JT Harness while not affecting its use for jtreg.
+
+JUnit 4
+    If your system does not yet support JUnit 4, you can build JT Harness 
+    without needing to install JUnit 4 by executing the "jar" and "dist-doc" 
+    targets instead of the default "build" target. This will avoid building the
+    jar file which references JUnit 4. The jar file (jt-junit.jar) is not
+    required when running jtreg.
+
+The Java Communications API (also known as javax.comm)
+    This API is not widely available under an OSI-approved license. There is a
+    replacement known as "librxtx-java" which provides the same functionality
+    in the "gnu.io" package. To use this package, you will have to edit the
+    JT Harness source code so that references to "javax.comm." are replaced
+    by references to "gnu.io.". These references are all in the 
+    "com.sun.javatest.agent" package. These changes are just required to 
+    compile JT Harness. The resulting classes are not required when running
+    jtreg itself.
+
+Note: if you are building jtreg with GNU Make, and want to run all the self 
+tests for jtreg, you should make sure you use a patched version of JT Harness, 
+available on the JT Harness 4.1.3a development branch (or later). The patch 
+fixes a bug which is exhibited when the jtreg self tests are run. It does not 
+affect the use of jtreg to run the OpenJDK regression tests.

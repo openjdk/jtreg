@@ -1,0 +1,189 @@
+#
+# Copyright 1996-2007 Sun Microsystems, Inc.  All Rights Reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Sun designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Sun in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa Clara,
+# CA 95054 USA or visit www.sun.com if you need additional information or
+# have any questions.
+#
+
+# include host-specific defs, if any
+-include Defs-$(shell hostname).gmk
+
+# TOPDIR = .. # now set in Makefile
+ABSTOPDIR = $(shell cd $(TOPDIR); pwd)
+
+BUILDDIR = $(TOPDIR)/build
+
+# clobber settings from user's environment
+JAVA_HOME=
+CLASSPATH=
+JAVA_COMPILER=
+LD_LIBRARY_PATH=
+
+#----------------------------------------------------------------------
+#
+# Parameters to control what to build with
+# explicit JDK versions, for use as needed
+
+#----- Java: see http://java.sun.com
+
+ifndef JDK15HOME
+  JDK15HOME = /java/re/jdk/1.5.0/archive/fcs/binaries/linux-i586
+endif
+
+ifndef JDK16HOME
+  JDK16HOME = /java/re/jdk/1.6.0/archive/fcs/binaries/linux-i586
+endif
+
+# J2SE for most classes
+J2SEHOME = $(JDK15HOME)
+J2SEJAVA = $(J2SEHOME)/bin/java
+J2SEJAVAC = $(J2SEHOME)/bin/javac
+JAR = $(J2SEHOME)/bin/jar
+
+J2SEJAVAC_TARGET = 5
+
+#----- JavaHelp: see https://javahelp.dev.java.net/
+ifndef JAVAHELP_HOME
+  JAVAHELP_HOME = /java/re/jh/2.0_01/promoted/fcs/latest/binaries/jh2.0/javahelp
+endif
+
+JAVAHELP_JAR = $(JAVAHELP_HOME)/lib/jh.jar
+JHINDEXER =  CLASSPATH=$(JAVAHELP_HOME)/lib/jhall.jar $(J2SEJAVA) com.sun.java.help.search.Indexer
+
+#----- JavaTest: see https://jtharness.dev.java.net/
+
+ifndef JTHARNESS_HOME
+  JTHARNESS_HOME = /java/re/jtharness/4.1.4/archive/MR1/binaries
+endif 
+
+ifndef JAVATEST_HOME
+  ifdef JTHARNESS_HOME
+    JAVATEST_HOME = $(JTHARNESS_HOME)
+  else
+    JAVATEST_HOME = /java/re/javatest/4.1.3/archive/fcs/binaries/javatest
+  endif
+endif
+
+JAVATEST_JAR = $(JAVATEST_HOME)/lib/javatest.jar
+
+#----- JUnit 4.5: see http://www.junit.org/
+# http://sourceforge.net/projects/junit/files/junit/4.5/junit-4.5.jar/download
+
+ifndef JUNIT_JAR
+  JUNIT_JAR = /java/devtools/share/junit/junit-4.5/junit.jar
+endif
+
+#----- Ant: see http://ant.apache.org/
+
+ifndef ANTHOME
+  ANTHOME = /java/devtools/share/ant/1.7.0
+endif
+
+ANT = $(ANTHOME)/bin/ant
+
+#----- HTML check: 
+# Optional: if set, checks HTML doc files for correctness.
+# Uses nsgmlns http://www.jclark.com/sp/ and w3c DTDs
+# Leave HTMLCHECK unset if not required
+
+ifndef HTMLCHECK
+#  HTMLCHECK = /java/jct-tools/pkgs/htmlcheck_1.2.1/bin/htmlcheck
+endif
+
+#----- Linklint: see http://www.linklint.org/
+# Optional: if set, checks HTML doc files for broken links
+
+LINKLINT = $(PERL) /java/jct-tools/pkgs/linklint_2.1/linklint
+
+#----- Xalan: see http://xml.apache.org/xalan-j/
+
+ifndef XALANHOME
+  XALANHOME = /java/jct-tools/pkgs/xalan-j_2_7_0
+endif
+
+#----- Unix commands
+
+CHMOD 	= /bin/chmod
+CP 	= /bin/cp
+DIFF 	= /usr/bin/diff
+ECHO	= /bin/echo
+FIND	= /usr/bin/find
+GREP 	= /bin/grep
+MKDIR 	= /bin/mkdir
+PERL	= /usr/bin/perl
+RM 	= /bin/rm -rf
+SED 	= /bin/sed
+SH 	= /bin/sh
+TEST 	= /usr/bin/test
+UNZIP 	= /usr/bin/unzip
+ZIP 	= /usr/bin/zip
+
+
+#----------------------------------------------------------------------
+#
+# Identification of parts of the system
+SRCDIR = $(TOPDIR)/src
+JAVADIR = $(SRCDIR)/share/classes
+SRCDOCDIR = $(SRCDIR)/share/doc
+SRCJTDOCDIR = $(SRCDIR)/share/doc/javatest
+SRCJTREGDOCDIR = $(SRCDIR)/share/doc/javatest/regtest
+SRCSHAREBINDIR = $(SRCDIR)/share/bin
+TESTDIR = $(SRCDIR)/share/test
+
+CLASSDIR = $(BUILDDIR)/classes
+ABSCLASSDIR = $(cd $(CLASSDIR); pwd)
+
+IMAGES_DIR = $(BUILDDIR)/images
+JTREG_IMAGEDIR = $(IMAGES_DIR)/jtreg
+JTREG_IMAGEDOCDIR = $(JTREG_IMAGEDIR)/doc
+JTREG_IMAGEJARDIR = $(JTREG_IMAGEDIR)/lib
+ABS_JTREG_IMAGEJARDIR = $(shell cd $(JTREG_IMAGEJARDIR); pwd)
+
+# source bundle locations
+IMAGESRC_SRCDIR = $(IMAGESRC_TOPDIR)/src/share/classes
+
+#----------------------------------------------------------------------
+#
+# Version tags
+#
+# BUILD_* variables are normally set (overridden) by RE builds
+BUILD_VERSION = 4.0
+BUILD_MILESTONE = dev
+BUILD_NUMBER = b00
+
+# don't eval dates here directly, because that leads to unstable builds
+#BUILD_YEAR:sh = /bin/date +"%Y"
+BUILD_YEAR_CMD = /bin/date '+%Y'
+#BUILD_DOCDATE:sh = /bin/date +"%B %d, %Y"
+BUILD_DOCDATE_CMD = /bin/date  +'%B %d, %Y'
+#BUILD_ZIPDATE:sh = /bin/date '+%d %h %Y' 
+BUILD_ZIPDATE_CMD = /bin/date  '+%d %h %Y' 
+BUILD_NONFCS_MILESTONE_sh = echo $(BUILD_MILESTONE) | sed -e 's/[fF][cC][sS]//'
+BUILD_NONFCS_MILESTONE = $(BUILD_NONFCS_MILESTONE_sh:sh)
+
+# munge the BUILD values suitable for use in the bundle name
+ZIPSFX_VERSION_sh = echo '$(BUILD_VERSION)' | sed -e 's|\([^0-9][^0-9]*\)|_|g'
+ZIPSFX_MILESTONE_sh = echo '$(BUILD_MILESTONE)'
+ZIPSFX_BUILD_sh = echo '$(BUILD_NUMBER)'
+ZIPSFX_DATE_sh = echo "`$(BUILD_ZIPDATE_CMD)`" | /usr/bin/tr -s '[A-Z] ' '[a-z]_'
+
+VERBOSE_ZIP_SUFFIX = $(shell $(ZIPSFX_VERSION_sh))-$(shell $(ZIPSFX_MILESTONE_sh))-bin-$(shell $(ZIPSFX_BUILD_sh))-$(shell $(ZIPSFX_DATE_sh))
+

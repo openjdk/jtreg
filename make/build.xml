@@ -1,0 +1,396 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ Copyright 2007-2008 Sun Microsystems, Inc.  All Rights Reserved.
+ DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+
+ This code is free software; you can redistribute it and/or modify it
+ under the terms of the GNU General Public License version 2 only, as
+ published by the Free Software Foundation.  Sun designates this
+ particular file as subject to the "Classpath" exception as provided
+ by Sun in the LICENSE file that accompanied this code.
+
+ This code is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ version 2 for more details (a copy is included in the LICENSE file that
+ accompanied this code).
+
+ You should have received a copy of the GNU General Public License version
+ 2 along with this work; if not, write to the Free Software Foundation,
+ Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+
+ Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa Clara,
+ CA 95054 USA or visit www.sun.com if you need additional information or
+ have any questions.
+-->
+
+<project name="jtreg" default="build" basedir="..">
+
+    <!-- ********** system-specific values ********************************* -->
+
+    <property file="build.properties"/>  <!-- for user overrides -->
+    <property file="make/build.properties"/>
+
+    <!-- ********** general useful values ********************************** -->
+
+    <property environment="env"/>
+
+    <property name="src.bin.dir" location="src/share/bin"/>
+    <property name="src.classes.dir" location="src/share/classes"/>
+    <property name="src.doc.dir" location="src/share/doc"/>
+    <property name="src.test.dir" location="src/share/test"/>
+    <property name="build.dir" location="build"/>
+    <property name="build.classes.dir" location="${build.dir}/classes" />
+    <property name="dist.dir" location="dist" />
+    <property name="dist.jtreg.dir" location="${dist.dir}/jtreg" />
+    <property name="dist.jtreg.zip" location="${dist.dir}/jtreg.zip" />
+    <property name="dist.jtreg-no-junit.zip" location="${dist.dir}/jtreg-no-junit.zip" />
+
+    <patternset id="helpset">
+        <include name="*.hs"/>
+        <include name="default/**"/>
+        <include name="images/**"/>
+    </patternset>
+
+
+    <!-- ********** top level and shared targets *************************** -->
+
+    <target name="build" depends="dist-jtreg"
+        description="default build target: build jtreg for distribution"/>
+
+    <target name="clean" description="remove all generated files">
+        <delete dir="${build.dir}"/>
+        <delete dir="${dist.dir}"/>
+    </target>
+
+    <!-- ********** init *************************************************** -->
+
+    <target name="-init">
+        <tstamp>
+            <format property="build.date" pattern="MM/dd/yyyy"/>
+            <format property="build.date.time" pattern="MM/dd/yyyy hh:mm aa"/>
+        </tstamp>
+        <available property="javatest.ok" file="${javatest.home}/COPYRIGHT-javatest.html"/>
+        <available property="jtharness.ok" file="${javatest.home}/legal/copyright.txt"/>
+        <available property="junit.ok" file="${junit.jar}"/>
+    </target>
+
+    <!-- ********** jtreg ************************************************** -->
+
+    <property name="src.jtreg.help" location="${src.doc.dir}/javatest/regtest/help"/>
+    <property name="build.jtreg.help" location="${build.classes.dir}/com/sun/javatest/regtest/help"/>
+
+    <patternset id="jtreg.packages">
+        <include name="com/sun/javatest/regtest/**"/>
+        <include name="com/sun/javatest/diff/**"/>
+    </patternset>
+
+    <patternset id="jtreg.jdk11.files">
+        <include name="com/sun/javatest/regtest/AppletWrapper.java"/>
+        <include name="com/sun/javatest/regtest/GetSystemProperty.java"/>
+        <include name="com/sun/javatest/regtest/MainWrapper.java"/>
+        <include name="com/sun/javatest/regtest/StringArray.java"/>
+    </patternset>
+
+    <target name="dist-jtreg"
+        depends="import-javatest,import-junit,import-jtharness,jar-jtreg,-dist-jtreg.bin,-dist-jtreg.doc,-dist-jtreg.legal"
+        description="build jtreg for distribution">
+        <zip destfile="${dist.jtreg.zip}" filesOnly="true" basedir="${dist.dir}">
+            <include name="jtreg/"/>
+        </zip>
+        <zip destfile="${dist.jtreg-no-junit.zip}" filesOnly="true" basedir="${dist.dir}">
+            <include name="jtreg/"/>
+            <exclude name="**/*junit*"/>
+        </zip>
+    </target>
+
+    <target name="-dist-jtreg.bin" depends="jar-jtreg,-dist-jtreg.doc">
+        <copy file="${src.bin.dir}/jtreg.sh" tofile="${dist.jtreg.dir}/linux/bin/jtreg"/>
+        <copy file="${src.bin.dir}/jtreg.sh" tofile="${dist.jtreg.dir}/solaris/bin/jtreg"/>
+        <copy file="${src.bin.dir}/jtreg.sh" tofile="${dist.jtreg.dir}/win32/bin/jtreg"/>
+        <copy file="${src.bin.dir}/jtdiff.sh" tofile="${dist.jtreg.dir}/linux/bin/jtdiff"/>
+        <copy file="${src.bin.dir}/jtdiff.sh" tofile="${dist.jtreg.dir}/solaris/bin/jtdiff"/>
+        <copy file="${src.bin.dir}/jtdiff.sh" tofile="${dist.jtreg.dir}/win32/bin/jtdiff"/>
+        <chmod dir="${dist.jtreg.dir}" perm="+x">
+            <include name="*/bin/jtreg"/>
+            <include name="*/bin/jtdiff"/>
+        </chmod>
+    </target>
+
+    <target name="-dist-jtreg.doc" depends="-compile-jtreg.help,-compile-jtreg.usage">
+        <mkdir dir="${dist.jtreg.dir}/doc/jtreg"/>
+        <copy todir="${dist.jtreg.dir}" file="${src.doc.dir}/javatest/regtest/README"/>
+        <copy todir="${dist.jtreg.dir}/doc/jtreg">
+            <fileset file="${src.doc.dir}/javatest/regtest/tag-spec.txt"/>
+            <fileset file="${build.dir}/jtreg/usage.txt"/>
+        </copy>
+        <xslt
+            style="${src.doc.dir}/javatest/regtest/faqtohtml.xsl"
+            in="${src.doc.dir}/javatest/regtest/faq.xml"
+            out="${dist.jtreg.dir}/doc/jtreg/faq.html">
+            <param name="context" expression="openjdk"/>
+        </xslt>
+    </target>
+
+    <target name="-dist-jtreg.legal">
+        <copy todir="${dist.jtreg.dir}" file="COPYRIGHT"/>
+        <copy todir="${dist.jtreg.dir}" file="LICENSE"/>
+    </target>
+
+    <target name="jar-jtreg" depends="-init,-check-jtreg.jar" unless="jtreg.jar.ok">
+        <mkdir dir="${dist.jtreg.dir}/lib"/>
+        <jar destfile="${dist.jtreg.dir}/lib/jtreg.jar"
+            basedir="${build.classes.dir}" >
+            <manifest>
+                <attribute name="Built-By" value="${user.name}"/>
+                <attribute name="Main-Class" value="com.sun.javatest.regtest.Main"/>
+                <attribute name="Class-Path" value="javatest.jar jh.jar junit.jar"/>
+                <attribute name="jtreg-Name" value="jtreg"/>
+                <attribute name="jtreg-Version" value="${build.version}"/>
+                <attribute name="jtreg-Milestone" value="${build.milestone}"/>
+                <attribute name="jtreg-Build" value="${build.number}"/>
+                <attribute name="jtreg-BuildJavaVersion" value="${java.version}"/>
+                <attribute name="jtreg-BuildDate" value="${build.date.time}"/>
+            </manifest>
+            <include name="COPYRIGHT"/>
+            <include name="buildInfo.txt"/>
+            <patternset refid="jtreg.packages"/>
+        </jar>
+    </target>
+
+    <target name="-check-jtreg.jar" depends="compile-jtreg">
+        <dependset>
+            <srcfileset dir="${build.classes.dir}">
+                <patternset refid="jtreg.packages"/>
+            </srcfileset>
+            <targetfilelist dir="${dist.jtreg.dir}/lib" files="jtreg.jar"/>
+        </dependset>
+        <available property="jtreg.jar.ok" file="${dist.jtreg.dir}/lib/jtreg.jar"/>
+    </target>
+
+    <target name="compile-jtreg" depends="-compile-jtreg.classes,-compile-jtreg.resources,-compile-jtreg.help"/>
+
+    <target name="-compile-jtreg.classes">
+        <mkdir dir="${build.classes.dir}"/>
+        <javac encoding="iso-8859-1" source="1.2" target="1.1"
+            debug="true" debuglevel="source,lines"
+            srcdir="${src.classes.dir}"
+            destdir="${build.classes.dir}"
+            classpath="${build.classes.dir}:${javatest.jar}:${junit.jar}">
+            <patternset refid="jtreg.jdk11.files"/>
+            <compilerarg line="-Xlint:deprecation"/>
+        </javac>
+        <javac encoding="iso-8859-1" source="1.5" target="1.5"
+            debug="true" debuglevel="source,lines"
+            srcdir="${src.classes.dir}"
+            destdir="${build.classes.dir}"
+            classpath="${build.classes.dir}:${javatest.jar}:${junit.jar}">
+            <compilerarg line="-Xlint:all"/>
+            <patternset refid="jtreg.packages"/>
+        </javac>
+    </target>
+
+    <target name="-compile-jtreg.help"
+        depends="-check-jtreg.help,-ant-jct.utils" unless="jtreg.help.ok"
+        description="prepare JavaHelp files">
+        <!-- copy the basic files -->
+        <copy todir="${build.classes.dir}/com/sun/javatest/regtest/help">
+            <fileset dir="${src.doc.dir}/javatest/regtest/help">
+                <patternset refid="helpset"/>
+                <exclude name="images/topic.gif"/>
+            </fileset>
+        </copy>
+        <!-- generate the spec page from the master spec file -->
+        <texttohtml
+            textfile="${src.doc.dir}/javatest/regtest/tag-spec.txt"
+            htmlfile="${build.classes.dir}/com/sun/javatest/regtest/help/default/tag-spec.html"
+            title="The JDK Test Framework: Tag Language Specification"
+            style="body: { background-color: white; font-size: 12pt; font-family: SansSerif; margin-left: 3px }">
+        </texttohtml>
+        <!-- generate the usage page from the command line help -->
+        <texttohtml
+            textfile="${build.dir}/jtreg/usage.txt"
+            htmlfile="${build.classes.dir}/com/sun/javatest/regtest/help/default/usage.html"
+            title="jtreg: Command Line Usage"
+            style="body: { background-color: white; font-size: 12pt; font-family: SansSerif; margin-left: 3px }">
+        </texttohtml>
+        <!-- generate the faq pages from the master faq file -->
+        <xslt
+            style="${src.doc.dir}/javatest/regtest/faqtohelp-html.xsl"
+            in="${src.doc.dir}/javatest/regtest/faq.xml"
+            out="${build.classes.dir}/com/sun/javatest/regtest/help/default/faq.html">
+            <param name="context" expression="help"/>
+            <param name="basedir" expression="${build.classes.dir}/com/sun/javatest/regtest/help/default"/>
+        </xslt>
+        <xslt
+            style="${src.doc.dir}/javatest/regtest/faqtotoc.xsl"
+            in="${src.doc.dir}/javatest/regtest/faq.xml"
+            out="${build.classes.dir}/com/sun/javatest/regtest/help/default/toc.xml">
+            <param name="context" expression="help"/>
+        </xslt>
+        <xslt
+            style="${src.doc.dir}/javatest/regtest/faqtomap.xsl"
+            in="${src.doc.dir}/javatest/regtest/faq.xml"
+            out="${build.classes.dir}/com/sun/javatest/regtest/help/default/map.xml">
+            <param name="context" expression="help"/>
+        </xslt>
+        <!-- build the search index -->
+        <delete dir="${build.classes.dir}/com/sun/javatest/regtest/help/default/JavaHelpSearch"/>
+        <jhindexer dir="${build.classes.dir}/com/sun/javatest/regtest/help">
+            <arg value="-c"/>
+            <arg file="${src.javatest.help}/jhindexer-config.txt "/>
+            <arg line="-db default/JavaHelpSearch"/>
+            <arg line="default"/>
+        </jhindexer>
+    </target>
+
+    <target name="-check-jtreg.help" depends="-compile-jtreg.usage">
+        <dependset>
+            <srcfileset dir="${src.jtreg.help}" />
+            <targetfileset dir="${build.jtreg.help}" />
+        </dependset>
+        <available property="jtreg.help.ok" file="${build.jtreg.help}/default/map.xml"/>
+    </target>
+
+    <target name="-compile-jtreg.usage" depends="-compile-jtreg.classes,-ant-jct.utils">
+        <!-- generate the usage page from the command line help -->
+        <!-- have to set fork=true because otherwise output redirection gets screwed up -->
+        <mkdir dir="${build.dir}/jtreg"/>
+        <java fork="true" failonerror="true"
+            classname="com.sun.javatest.regtest.Main" classpath="${build.classes.dir}:${javatest.jar}:${junit.jar}:${jh.jar}"
+            output="${build.dir}/jtreg/usage.txt">
+            <jvmarg value="-Dprogram=jtreg"/>
+            <arg value="-help"/>
+            <arg value="all"/>
+        </java>
+    </target>
+
+    <target name="-compile-jtreg.resources">
+        <copy todir="${build.classes.dir}" file="COPYRIGHT"/>
+        <copy todir="${build.classes.dir}">
+            <fileset dir="${src.classes.dir}">
+                <patternset refid="jtreg.packages"/>
+                <include name="**/*.properties"/>
+                <exclude name="**/*.java"/>
+            </fileset>
+        </copy>
+    </target>
+
+    <!-- ********** imports ************************************************ -->
+
+    <target name="import-javatest" depends="-init,import-javahelp" if="javatest.ok">
+        <copy todir="${dist.jtreg.dir}/doc/javatest" file="${javatest.home}/doc/javatest/javatestGUI.pdf"/>
+        <copy tofile="${dist.jtreg.dir}/legal/javatest/copyright.html" file="${javatest.home}/COPYRIGHT-javatest.html"/>
+        <copy file="${javatest.jar}" tofile="${dist.jtreg.dir}/lib/javatest.jar"/>
+    </target>
+
+    <target name="import-junit" depends="-init" if="junit.ok">
+        <copy file="${junit.jar}" tofile="${dist.jtreg.dir}/lib/junit.jar"/>
+    </target>
+
+    <target name="import-jtharness" depends="-init,import-javahelp" if="jtharness.ok">
+        <copy todir="${dist.jtreg.dir}/legal/jtharness" file="${javatest.home}/legal/copyright.txt"/>
+        <copy todir="${dist.jtreg.dir}/legal/jtharness" file="${javatest.home}/legal/license.txt"/>
+        <copy file="${javatest.jar}" tofile="${dist.jtreg.dir}/lib/javatest.jar"/>
+    </target>
+
+    <target name="import-javahelp" unless="javatest.includes.javahelp.ok">
+        <copy file="${jh.jar}" tofile="${dist.jtreg.dir}/lib/jh.jar"/>
+    </target>
+
+    <!-- ********** jct-utils ********************************************** -->
+
+    <target name="-ant-jct.utils" depends="-compile-jct.utils">
+        <taskdef name="texttohtml" classname="com.sun.jct.utils.texttohtml.Main$$Ant" classpath="${build.classes.dir}" />
+        <presetdef name="jhindexer">
+            <java fork="true" failonerror="true"
+                dir="unset"
+                classpath="${jhall.jar}"
+                classname="com.sun.java.help.search.Indexer">
+            </java>
+        </presetdef>
+        <taskdef name="i18ncheck" classname="com.sun.jct.utils.i18ncheck.Main$$Ant" classpath="${build.classes.dir}" />
+<!--
+        <taskdef name="glossarygen" classname="com.sun.jct.utils.glossarygen.Main$$Ant" classpath="${build.classes.dir}" />
+        <taskdef name="indexgen" classname="com.sun.jct.utils.indexgen.Main$$Ant" classpath="${build.classes.dir}" />
+        <taskdef name="mapmerge" classname="com.sun.jct.utils.mapmerge.Main$$Ant" classpath="${build.classes.dir}" />
+        <taskdef name="importcheck" classname="com.sun.jct.utils.importcheck.Main$$Ant" classpath="${build.classes.dir}" />
+-->
+    </target>
+
+    <target name="-compile-jct.utils">
+        <mkdir dir="${build.classes.dir}"/>
+        <javac encoding="iso-8859-1" debug="true" source="1.4"
+            srcdir="${src.classes.dir}"
+            destdir="${build.classes.dir}">
+            <compilerarg value="-Xlint"/>
+            <include name="com/sun/jct/utils/glossarygen/**"/>
+            <include name="com/sun/jct/utils/indexgen/**"/>
+            <include name="com/sun/jct/utils/mapmerge/**"/>
+        </javac>
+        <javac encoding="iso-8859-1" debug="true" source="1.5"
+            srcdir="${src.classes.dir}"
+            destdir="${build.classes.dir}">
+            <compilerarg value="-Xlint"/>
+            <include name="com/sun/jct/utils/i18ncheck/**"/>
+            <include name="com/sun/jct/utils/texttohtml/**"/>
+        </javac>
+
+    </target>
+
+    <target name="test-jtreg" depends="-test-jtreg.i18n,-test-jtreg.basic"
+        description="execute the main jtreg tests"/>
+
+    <target name="-test-jtreg.i18n" depends="compile-jtreg,-ant-jct.utils">
+        <!-- have to set fork=true because otherwise output redirection gets screwed up -->
+        <java fork="true" classname="com.sun.javatest.regtest.Main" classpath="${build.classes.dir}:${javatest.jar}:${junit.jar}:${jh.jar}"
+            output="${build.dir}/jtreg.i18n" >
+            <sysproperty key="javatest.i18n.log" value="com.sun.javatest.regtest"/>
+            <arg value="-help"/>
+        </java>
+        <i18ncheck patternFile="make/i18n.pat">
+            <fileset dir="${src.classes.dir}/com/sun/javatest/regtest">
+                <include name="**/*.properties"/>
+                <include name="**/*.java"/>
+            </fileset>
+            <fileset file="${build.dir}/jtreg.i18n"/>
+        </i18ncheck>
+    </target>
+
+    <target name="-test-jtreg.basic" depends="jar-jtreg">
+        <mkdir dir="${build.dir}/jtreg/testclasses"/>
+        <delete dir="${build.dir}/jtreg/basic"/>
+        <mkdir dir="${build.dir}/jtreg/basic/report"/>
+        <mkdir dir="${build.dir}/jtreg/basic/work/scratch"/>
+        <javac classpath="${dist.jtreg.dir}/lib/jtreg.jar"
+            srcdir="${src.test.dir}/javatest/regtest"
+            destdir="${build.dir}/jtreg/testclasses"
+            includes="Basic.java">
+            <compilerarg value="-Xlint"/>
+        </javac>
+        <java classpath="${dist.jtreg.dir}/lib/jtreg.jar:${build.dir}/jtreg/testclasses" classname="Basic"
+            fork="true" dir="${build.dir}/jtreg/basic/work/scratch" >
+            <arg file="${src.test.dir}/javatest/regtest/data/basic"></arg>
+            <arg file="${build.dir}/jtreg/basic/report"/>
+            <arg file="${build.dir}/jtreg/basic/work"/>
+            <arg file="${java.home}/.."/>
+            <arg value="TESTJAVAHOME=${java.home},DISPLAY=${env.DISPLAY},HOME=${user.home}"/>
+        </java>
+        <java fork="true" jar="${dist.jtreg.dir}/lib/jtreg.jar"
+            output="${build.dir}/jtreg/basic/report.out">
+            <arg value="-reportOnly"/>
+            <arg value="-automatic"/>
+            <arg value="-verbose"/>
+            <arg value="-reportDir"/>
+            <arg file="${build.dir}/jtreg/basic/report2"/>
+            <arg value="-workDir"/>
+            <arg file="${build.dir}/jtreg/basic/work"/>
+            <arg file="${src.test.dir}/javatest/regtest/data/basic"></arg>
+        </java>
+        <exec executable="grep" input="${build.dir}/jtreg/basic/report.out">
+            <arg value="-s"/>
+            <arg value="Test results: passed: 80; failed: 32; error: 59"/>
+        </exec>
+    </target>
+
+</project>
