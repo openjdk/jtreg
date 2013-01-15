@@ -295,6 +295,7 @@ public class MainAction extends Action
         // WRITE ARGUMENT FILE
         File mainArgFile =
             new File(script.absTestClsDir(), mainClassName + RegressionScript.WRAPPEREXTN);
+        mainArgFile.getParentFile().mkdirs();
         FileWriter fw;
         try {
             fw = new FileWriter(mainArgFile);
