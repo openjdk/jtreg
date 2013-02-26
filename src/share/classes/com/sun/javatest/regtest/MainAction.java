@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -112,6 +112,9 @@ public class MainAction extends Action
                 timeout  = parseTimeout(optValue);
             } else if (optName.equals("othervm")) {
                 othervm = true;
+            } else if (optName.equals("bootclasspath")) {
+                useBootClassPath = true;
+                othervm = true;
             } else if (optName.equals("policy")) {
                 if (!script.isTestJDK11())
                     policyFN = parsePolicy(optValue);
@@ -140,6 +143,9 @@ public class MainAction extends Action
         if (driverClass != null) {
             this.driverClass = driverClass;
         }
+
+        if (script.useBootClassPath())
+            useBootClassPath = othervm = true;
 
         // separate the arguments into the options to java, the
         // classname and the parameters to the named class
@@ -324,11 +330,16 @@ public class MainAction extends Action
             cp.append(script.getJUnitJar());
         if (script.isTestNGRequired())
             cp.append(script.getTestNGJar());
-        if (useCLASSPATH || script.isTestJDK11()) {
+
+        if ((useCLASSPATH || script.isTestJDK11()) && !useBootClassPath) {
             command.add("CLASSPATH=" + cp);
         }
+
         command.add(script.getJavaProg());
-        if (!useCLASSPATH && !script.isTestJDK11()) {
+
+        if (useBootClassPath) {
+            command.add("-Xbootclasspath/a:" + cp.toString());
+        } else if (!useCLASSPATH && !script.isTestJDK11()) {
             command.add("-classpath");
             command.add(cp.toString());
         }
@@ -833,6 +844,7 @@ public class MainAction extends Action
     private String  secureCN = null;
 
     private boolean reverseStatus = false;
+    private boolean useBootClassPath = false;
     private boolean othervm = false;
     private int     timeout = -1;
     private String  manual  = "unset";

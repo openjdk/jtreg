@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000, 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2000, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -169,6 +169,10 @@ public class RegressionTestSuite extends TestSuite
 
     ExecMode getDefaultExecMode() {
         return properties.getDefaultExecMode();
+    }
+
+    boolean useBootClassPath(TestDescription td) throws TestSuite.Fault {
+        return properties.useBootClassPath(td.getFile());
     }
 
     boolean useOtherVM(TestDescription td) throws TestSuite.Fault {

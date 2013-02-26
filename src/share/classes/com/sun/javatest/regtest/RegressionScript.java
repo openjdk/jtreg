@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -105,6 +105,7 @@ public class RegressionScript extends Script {
 
             // defaultExecMode may still be overridden in individual actions with /othervm
             defaultExecMode = testSuite.useOtherVM(td) ? ExecMode.OTHERVM : params.getExecMode();
+            useBootClassPath = testSuite.useBootClassPath(td);
 
             LinkedList<Action> actionList = parseActions(actions, true);
 
@@ -556,6 +557,10 @@ public class RegressionScript extends Script {
         return cacheCompileSourcePath;
     } // getCompileSourcePath()
 
+    boolean useBootClassPath() {
+        return useBootClassPath;
+    }
+
     ExecMode getExecMode() {
         return defaultExecMode;
     }
@@ -805,6 +810,7 @@ public class RegressionScript extends Script {
     private RegressionEnvironment regEnv;
     private RegressionParameters params;
     private RegressionTestSuite testSuite;
+    private boolean useBootClassPath;
     private ExecMode defaultExecMode;
     private boolean needJUnit;
     private boolean needTestNG;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2011, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -73,6 +73,12 @@ public class TestProperties {
         return defaultExecMode;
     }
 
+    boolean useBootClassPath(File file) throws TestSuite.Fault {
+        File dir = file.isDirectory() ? file : file.getParentFile();
+        Cache.Entry e = cache.getEntry(dir);
+        return e.useBootClassPath;
+    }
+
     boolean useOtherVM(File file) throws TestSuite.Fault {
         File dir = file.isDirectory() ? file : file.getParentFile();
         Cache.Entry e = cache.getEntry(dir);
@@ -122,6 +128,8 @@ public class TestProperties {
             final File dir;
             final Properties properties;
             final Set<String> validKeys;
+            final boolean useBootClassPath;
+            private final Set<File> bootClassPathDirs;
             final boolean useOtherVM;
             private final Set<File> otherVMDirs;
             final boolean needsExclusiveAccess;
@@ -148,6 +156,9 @@ public class TestProperties {
                     // add the list of valid keys
                     validKeys = initSet(parent == null ? null : parent.validKeys, "keys");
 
+                    // add the list of bootclasspath dirs
+                    bootClassPathDirs = initSet(parent == null ? null : parent.bootClassPathDirs, "bootclasspath.dirs", dir);
+
                     // add the list of othervm dirs
                     otherVMDirs = initSet(parent == null ? null : parent.otherVMDirs, "othervm.dirs", dir);
 
@@ -164,12 +175,14 @@ public class TestProperties {
                         throw new IllegalStateException("TEST.ROOT not found");
                     properties = parent.properties;
                     validKeys = parent.validKeys;
+                    bootClassPathDirs = parent.bootClassPathDirs;
                     otherVMDirs = parent.otherVMDirs;
                     exclusiveAccessDirs = parent.exclusiveAccessDirs;
                     testNGDirs = parent.testNGDirs;
                     libDirs = parent.libDirs;
                 }
 
+                useBootClassPath= initUseBootClassPath(parent, dir);
                 useOtherVM = initUseOtherVM(parent, dir);
                 needsExclusiveAccess = initNeedsExclusiveAccess(parent, dir);
                 testNGRoot = initTestNGRoot(parent, dir);
@@ -208,6 +221,21 @@ public class TestProperties {
                 } else {
                     return parent;
                 }
+            }
+
+            private boolean initUseBootClassPath(Entry parent, File dir) {
+                if (parent == null)
+                    return false;
+
+                if (parent.useBootClassPath)
+                    return true;
+
+                for (File bootClassPathDir: bootClassPathDirs) {
+                    if (includes(bootClassPathDir, dir))
+                        return true;
+                }
+
+                return false;
             }
 
             private boolean initUseOtherVM(Entry parent, File dir) {

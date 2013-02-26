@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2007, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -262,7 +262,7 @@ public class RegressionTestFinder extends TagTestFinder
         String origKeywords = newTagValues.get("keywords");
         String addKeywords  = "";
 
-        if (match(value, OTHERVM_OPTION))
+        if (match(value, OTHERVM_OPTION) || match(value, BOOTCLASSPATH_OPTION))
             addKeywords += " othervm";
 
         if (match(value, MANUAL_OPTION))
@@ -582,6 +582,8 @@ public class RegressionTestFinder extends TagTestFinder
                               = "Multiple test descriptions not allowed";
 
     private static final Pattern
+        BOOTCLASSPATH_OPTION
+                       = Pattern.compile(".*/bootclasspath[/ \t].*", Pattern.DOTALL),
         OTHERVM_OPTION = Pattern.compile(".*/othervm[/ \t].*",    Pattern.DOTALL),
         MANUAL_OPTION  = Pattern.compile(".*/manual[/= \t].*",    Pattern.DOTALL),
         SHELL_ACTION   = Pattern.compile(".*[ \t]shell[/ \t].*",  Pattern.DOTALL),
