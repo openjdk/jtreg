@@ -256,9 +256,9 @@ public class RegressionTestFinder extends TagTestFinder
             newTagValues.put(name, value);
         }
 
-        // force more key words based on actions
         String value = newTagValues.get("run");
 
+        // force more key words based on actions
         String origKeywords = newTagValues.get("keywords");
         String addKeywords  = "";
 
@@ -285,6 +285,14 @@ public class RegressionTestFinder extends TagTestFinder
                 newTagValues.put("keywords", addKeywords.trim());
             else
                 newTagValues.put("keywords", origKeywords + addKeywords);
+        }
+
+        if (rejectTrailingBuild) {
+            int sep = value.lastIndexOf(LINESEP, value.length() - 2); // ignore final LINESEP
+            String lastLine = value.substring(sep + 1);
+            if (lastLine.startsWith(Action.REASON_USER_SPECIFIED + " build")) {
+                newTagValues.put("error", PARSE_RUN_ENDS_WITH_BUILD);
+            }
         }
 
         int maxTimeout = -1;
@@ -578,12 +586,13 @@ public class RegressionTestFinder extends TagTestFinder
         PARSE_LIB_EMPTY       = "No value provided for `@library'",
         PARSE_LIB_AFTER_RUN   = "`@library' must appear before first `@run'",
         PARSE_BAD_RUN         = "Explicit action tag not allowed",
+        PARSE_RUN_ENDS_WITH_BUILD = "No action after @build",
         PARSE_MULTIPLE_COMMENTS_NOT_ALLOWED
                               = "Multiple test descriptions not allowed";
 
     private static final Pattern
-        BOOTCLASSPATH_OPTION
-                       = Pattern.compile(".*/bootclasspath[/ \t].*", Pattern.DOTALL),
+        BOOTCLASSPATH_OPTION =
+                         Pattern.compile(".*/bootclasspath[/ \t].*", Pattern.DOTALL),
         OTHERVM_OPTION = Pattern.compile(".*/othervm[/ \t].*",    Pattern.DOTALL),
         MANUAL_OPTION  = Pattern.compile(".*/manual[/= \t].*",    Pattern.DOTALL),
         SHELL_ACTION   = Pattern.compile(".*[ \t]shell[/ \t].*",  Pattern.DOTALL),
@@ -598,4 +607,6 @@ public class RegressionTestFinder extends TagTestFinder
     private boolean checkBugID;
 
     private static I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(RegressionTestFinder.class);
+    private static boolean rejectTrailingBuild =
+            !Boolean.getBoolean("javatest.regtest.allowTrailingBuild");
 }
