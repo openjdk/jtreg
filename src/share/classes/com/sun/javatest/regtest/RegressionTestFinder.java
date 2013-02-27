@@ -506,20 +506,6 @@ public class RegressionTestFinder extends TagTestFinder
         return newValue.trim();
     }
 
-    /**
-     * Given a string, determine whether it consists entirely of digits.
-     *
-     * @param s         The string to examine
-     * @return          <code>true</code> the string consists entirely of
-     *                  digits, <code>false</code> otherwise.
-     */
-    private boolean isDigitString(String s) {
-        for (int i = 0; i < s.length(); i++)
-            if (!Character.isDigit(s.charAt(i)))
-                return false;
-        return true;
-    }
-
     //----------internal classes------------------------------------------------
 
     /*
@@ -591,13 +577,20 @@ public class RegressionTestFinder extends TagTestFinder
                               = "Multiple test descriptions not allowed";
 
     private static final Pattern
-        BOOTCLASSPATH_OPTION =
-                         Pattern.compile(".*/bootclasspath[/ \t].*", Pattern.DOTALL),
-        OTHERVM_OPTION = Pattern.compile(".*/othervm[/ \t].*",    Pattern.DOTALL),
-        MANUAL_OPTION  = Pattern.compile(".*/manual[/= \t].*",    Pattern.DOTALL),
-        SHELL_ACTION   = Pattern.compile(".*[ \t]shell[/ \t].*",  Pattern.DOTALL),
-        JUNIT_ACTION   = Pattern.compile(".*[ \t]junit[/ \t].*",  Pattern.DOTALL),
-        IGNORE_ACTION  = Pattern.compile(".*[ \t]ignore[/ \t].*", Pattern.DOTALL);
+        BOOTCLASSPATH_OPTION = getOptionPattern("bootclasspath"),
+        OTHERVM_OPTION =       getOptionPattern("othervm"),
+        MANUAL_OPTION  =       getOptionPattern("manual"),
+        SHELL_ACTION   =       getActionPattern("shell"),
+        JUNIT_ACTION   =       getActionPattern("junit"),
+        IGNORE_ACTION  =       getActionPattern("ignore");
+
+    private static Pattern getActionPattern(String name) {
+        return Pattern.compile("(?s).*\\Q" + Action.REASON_USER_SPECIFIED + " " + name + "\\E\\b.*");
+    }
+
+    private static Pattern getOptionPattern(String name) {
+        return Pattern.compile("(?s).*/" + name + "[/= \t].*");
+    }
 
     //----------member variables------------------------------------------------
 
