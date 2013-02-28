@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -46,6 +46,8 @@ import java.util.Set;
 
 import com.sun.javatest.Status;
 import com.sun.javatest.TestResult;
+
+import static com.sun.javatest.regtest.RStatus.*;
 
 /**
  * Action is an abstract base class providing the ability to control the
@@ -250,7 +252,7 @@ public abstract class Action
                 //return Status.error(MAIN_SECMGR_BAD);
             }
         }
-        return Status.passed("OK");
+        return passed("OK");
     } // redirectOutput()
 
     //----------logging methods-------------------------------------------------
@@ -496,7 +498,7 @@ public abstract class Action
                 stdErr.println("*** " + e.getMessage());
                 stdErr.println("***");
                 stdErr.println();
-                cleanupStatus = Status.error(SAMEVM_CANT_RESET_SECMGR + ": " + e);
+                cleanupStatus = error(SAMEVM_CANT_RESET_SECMGR + ": " + e);
             }
 
             // Reset system properties, if necessary
@@ -520,7 +522,7 @@ public abstract class Action
                 }
             } catch (SecurityException e) {
                 if (cleanupStatus == null)
-                    cleanupStatus = Status.error(SAMEVM_CANT_RESET_PROPS + ": " + e);
+                    cleanupStatus = error(SAMEVM_CANT_RESET_PROPS + ": " + e);
             }
 
             // Reset output streams

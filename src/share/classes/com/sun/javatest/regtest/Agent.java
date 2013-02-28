@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -53,6 +53,8 @@ import java.util.Queue;
 import com.sun.javatest.Status;
 import com.sun.javatest.TestResult;
 import com.sun.javatest.util.Timer;
+
+import static com.sun.javatest.regtest.RStatus.*;
 
 public class Agent {
     public static class Fault extends Exception {
@@ -386,7 +388,7 @@ public class Agent {
                         if (pw != trs.getMessageWriter())
                             pw.close();
                     }
-                    Status status = new Status(type, reason);
+                    Status status = createStatus(type, reason);
                     // any other cleanup??
                     return status;
                 }

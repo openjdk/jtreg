@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2007, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -27,6 +27,8 @@ package com.sun.javatest.regtest;
 
 import com.sun.javatest.Status;
 import com.sun.javatest.TestResult;
+
+import static com.sun.javatest.regtest.RStatus.*;
 
 /**
  * This class implements the "ignore" action as described by the JDK tag
@@ -80,21 +82,21 @@ public class IgnoreAction extends Action
 
         Status status;
         if (script.isCheck())
-            status = Status.passed(CHECK_PASS);
+            status = passed(CHECK_PASS);
         else switch (script.getIgnoreKind()) {
             case QUIET:
                 throw new IllegalStateException();
             case ERROR:
                 if (args.length == 0)
-                    status = Status.error(IGNORE_TEST_IGNORED);
+                    status = error(IGNORE_TEST_IGNORED);
                 else
-                    status = Status.error(IGNORE_TEST_IGNORED_C + StringArray.join(args));
+                    status = error(IGNORE_TEST_IGNORED_C + StringArray.join(args));
                 break;
             case RUN:
                 if (args.length == 0)
-                    status = Status.passed(IGNORE_TEST_SUPPRESSED);
+                    status = passed(IGNORE_TEST_SUPPRESSED);
                 else
-                    status = Status.passed(IGNORE_TEST_SUPPRESSED_C + StringArray.join(args));
+                    status = passed(IGNORE_TEST_SUPPRESSED_C + StringArray.join(args));
                 break;
             default:
                 throw new IllegalArgumentException();

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -32,6 +32,8 @@ import java.util.Set;
 import com.sun.javatest.Status;
 import com.sun.javatest.TestResult;
 import com.sun.javatest.regtest.Locations.ClassLocn;
+
+import static com.sun.javatest.regtest.RStatus.*;
 
 /**
  * This class implements the "clean" action as described by the JDK tag
@@ -92,12 +94,12 @@ public class CleanAction extends Action
      */
     public Status run() throws TestRunException {
         // This doesn't complain if the specified file doesn't exist
-        Status status = Status.passed(CLEAN_SUCC);
+        Status status = passed(CLEAN_SUCC);
 
         section = startAction("clean", args, reason);
 
         if (script.isCheck()) {
-            status = Status.passed(CHECK_PASS);
+            status = passed(CHECK_PASS);
         } else {
             for (int i = 0; i < args.length; i++) {
 
@@ -134,7 +136,7 @@ public class CleanAction extends Action
                     File victim = new File(script.absTestClsDir(),
                                            args[i].replace('.', File.separatorChar) + ".class");
                     if (victim.exists() && !victim.delete())
-                        return Status.error(CLEAN_RM_FAILED + victim);
+                        return error(CLEAN_RM_FAILED + victim);
                 }
             }
         }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -39,6 +39,8 @@ import java.util.Set;
 import com.sun.javatest.Status;
 import com.sun.javatest.TestResult;
 import com.sun.javatest.regtest.Locations.ClassLocn;
+
+import static com.sun.javatest.regtest.RStatus.*;
 
 /**
  * This class implements the "build" action as described by the JDK tag
@@ -170,7 +172,7 @@ public class BuildAction extends Action
 
         // step 2: perform the compilations, if any
         if (filesToCompile.isEmpty()) {
-            status = Status.passed(BUILD_UP_TO_DATE);
+            status = passed(BUILD_UP_TO_DATE);
         } else {
             status = null;
             for (Map.Entry<File,List<File>> e: filesToCompile.entrySet()) {
@@ -184,7 +186,7 @@ public class BuildAction extends Action
                 }
             }
             if (status == null)
-                status = Status.passed(BUILD_SUCC);
+                status = passed(BUILD_SUCC);
         }
 
         endAction(status, section);

@@ -46,6 +46,8 @@ import com.sun.javatest.Status;
 import com.sun.javatest.TestResult;
 import com.sun.javatest.lib.ProcessCommand;
 
+import static com.sun.javatest.regtest.RStatus.*;
+
 /**
  * This class implements the "main" action as described by the JDK tag
  * specification.
@@ -232,7 +234,7 @@ public class MainAction extends Action
         section = startAction(getActionName(), getActionArgs(), reason);
 
         if (script.isCheck()) {
-            status = Status.passed(CHECK_PASS);
+            status = passed(CHECK_PASS);
         } else {
             Lock lock = script.getLockIfRequired();
             if (lock != null) lock.lock();
@@ -309,10 +311,10 @@ public class MainAction extends Action
             fw.write(StringUtils.join(runClassArgs) + "\0" );
             fw.close();
         } catch (IOException e) {
-            return Status.error(MAIN_CANT_WRITE_ARGS);
+            return error(MAIN_CANT_WRITE_ARGS);
         } catch (SecurityException e) {
             // shouldn't happen since JavaTestSecurityManager allows file ops
-            return Status.error(MAIN_SECMGR_FILEOPS);
+            return error(MAIN_SECMGR_FILEOPS);
         }
 
         // CONSTRUCT THE COMMAND LINE
@@ -395,16 +397,14 @@ public class MainAction extends Action
             // require the use of a non-zero exit code for a passed test so
             // that we have a chance of detecting whether the test itself has
             // illegally called System.exit(0).
-            cmd.setStatusForExit(Status.exitCodes[Status.PASSED],
-                                 Status.passed(EXEC_PASS));
-            cmd.setStatusForExit(Status.exitCodes[Status.FAILED],
-                                 Status.failed(EXEC_FAIL));
-            cmd.setDefaultStatus(Status.failed(UNEXPECT_SYS_EXIT));
+            cmd.setStatusForExit(Status.exitCodes[Status.PASSED], passed(EXEC_PASS));
+            cmd.setStatusForExit(Status.exitCodes[Status.FAILED], failed(EXEC_FAIL));
+            cmd.setDefaultStatus(failed(UNEXPECT_SYS_EXIT));
 
             if (timeout > 0)
                 script.setAlarm(timeout*1000);
 
-            status = cmd.run(cmdArgs, sysErr, sysOut);
+            status = normalize(cmd.run(cmdArgs, sysErr, sysOut));
 
         } finally {
             script.setAlarm(0);
@@ -494,7 +494,7 @@ public class MainAction extends Action
                 classpath.append(script.getTestNGJar());
             agent = script.getAgent(jdk, classpath, script.getTestVMJavaOptions());
         } catch (IOException e) {
-            return Status.error(AGENTVM_CANT_GET_VM + ": " + e);
+            return error(AGENTVM_CANT_GET_VM + ": " + e);
         }
 
         Status status;
@@ -509,9 +509,9 @@ public class MainAction extends Action
                     section);
         } catch (Agent.Fault e) {
             if (e.getCause() instanceof IOException)
-                status = Status.error(String.format(AGENTVM_IO_EXCEPTION, e.getCause()));
+                status = error(String.format(AGENTVM_IO_EXCEPTION, e.getCause()));
             else
-                status = Status.error(String.format(AGENTVM_EXCEPTION, e.getCause()));
+                status = error(String.format(AGENTVM_EXCEPTION, e.getCause()));
         }
         if (status.isError()) {
             script.closeAgent(agent);
@@ -549,7 +549,7 @@ public class MainAction extends Action
         PrintByteArrayOutputStream out = new PrintByteArrayOutputStream();
         PrintByteArrayOutputStream err = new PrintByteArrayOutputStream();
 
-        Status status = Status.passed(EXEC_PASS);
+        Status status = passed(EXEC_PASS);
         try {
             Class<?> c;
             ClassLoader loader;
@@ -606,7 +606,7 @@ public class MainAction extends Action
             } catch (InterruptedException e) {
                 if (t.isInterrupted() && (tg.uncaughtThrowable == null)) {
                     error = e;
-                    status = Status.error(MAIN_THREAD_INTR + e.getMessage());
+                    status = error(MAIN_THREAD_INTR + e.getMessage());
                 }
             } finally {
                 tg.cleanup();
@@ -614,7 +614,7 @@ public class MainAction extends Action
                     alarm.cancel();
                     if (alarm.getState() != Alarm.State.WAITING && (error == null)) {
                         error = new Error("timeout");
-                        status = Status.error(MAIN_THREAD_TIMEOUT);
+                        status = error(MAIN_THREAD_TIMEOUT);
                     }
                 }
             }
@@ -624,13 +624,13 @@ public class MainAction extends Action
                     error = tg.uncaughtThrowable;
                 else
                     error = svmt.t;
-                status = Status.failed(MAIN_THREW_EXCEPT + error.toString());
+                status = failed(MAIN_THREW_EXCEPT + error.toString());
             }
 
             if (status.getReason().contains("java.lang.SecurityException: System.exit() forbidden")) {
-                status = Status.failed(UNEXPECT_SYS_EXIT);
+                status = failed(UNEXPECT_SYS_EXIT);
             } else if (!tg.cleanupOK) {
-                status = Status.error(EXEC_ERROR_CLEANUP);
+                status = error(EXEC_ERROR_CLEANUP);
             }
         } catch (ClassNotFoundException e) {
             e.printStackTrace(err);
@@ -638,14 +638,14 @@ public class MainAction extends Action
             err.println("JavaTest Message: main() method must be in a public class named");
             err.println("JavaTest Message: " + classname + " in file " + classname + ".java");
             err.println();
-            status = Status.error(MAIN_CANT_LOAD_TEST + e);
+            status = error(MAIN_CANT_LOAD_TEST + e);
         } catch (NoSuchMethodException e) {
             e.printStackTrace(err);
             err.println();
             err.println("JavaTest Message: main() method must be in a public class named");
             err.println("JavaTest Message: " + classname + " in file " + classname + ".java");
             err.println();
-            status = Status.error(MAIN_CANT_FIND_MAIN);
+            status = error(MAIN_CANT_FIND_MAIN);
         } finally {
             status = saved.restore(testName, status);
         }
@@ -696,7 +696,7 @@ public class MainAction extends Action
             if ((st == Status.FAILED) && ! (status.getReason() == null) &&
                     !status.getReason().equals(EXEC_PASS))
                 sr += ": " + status.getReason();
-            status = new Status(st, sr);
+            status = createStatus(st, sr);
         }
 
         return status;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2007, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -60,7 +60,7 @@ public class MainWrapper
             String stringifiedArgs   = fileArgs[i++];
             mainArgs = StringArray.splitWS(stringifiedArgs);
         } catch (IOException e) {
-            Status.failed(MAIN_CANT_READ_ARGS).exit();
+            RStatus.failed(MAIN_CANT_READ_ARGS).exit();
         }
 
         // RUN JAVA IN ANOTHER THREADGROUP
@@ -70,14 +70,14 @@ public class MainWrapper
         try {
             t.join();
         } catch (InterruptedException e) {
-            Status.failed(MAIN_THREAD_INTR + Thread.currentThread().getName()).exit();
+            RStatus.failed(MAIN_THREAD_INTR + Thread.currentThread().getName()).exit();
         }
 //      tg.cleanup();
 
         if (tg.uncaughtThrowable != null)
-            Status.failed(MAIN_THREW_EXCEPT + tg.uncaughtThrowable.toString()).exit();
+            RStatus.failed(MAIN_THREW_EXCEPT + tg.uncaughtThrowable.toString()).exit();
         else
-            Status.passed("").exit();
+            RStatus.passed("").exit();
 
     } // main()
 
@@ -99,28 +99,28 @@ public class MainWrapper
                 System.err.println("JavaTest Message: Test threw exception: " + e.getTargetException());
                 System.err.println("JavaTest Message: shutting down test");
                 System.err.println();
-                Status.failed(MAIN_THREW_EXCEPT + e.getTargetException()).exit();
+                RStatus.failed(MAIN_THREW_EXCEPT + e.getTargetException()).exit();
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
                 System.err.println();
                 System.err.println("JavaTest Message: main() method must be in a public class named");
                 System.err.println("JavaTest Message: " + mainClassName + " in file " + mainClassName + ".java");
                 System.err.println();
-                Status.error(MAIN_CANT_LOAD_TEST + e).exit();
+                RStatus.error(MAIN_CANT_LOAD_TEST + e).exit();
             } catch (NoSuchMethodException e) {
                 e.printStackTrace();
                 System.err.println();
                 System.err.println("JavaTest Message: main() method must be in a public class named");
                 System.err.println("JavaTest Message: " + mainClassName + " in file " + mainClassName + ".java");
                 System.err.println();
-                Status.error(MAIN_CANT_FIND_MAIN).exit();
+                RStatus.error(MAIN_CANT_FIND_MAIN).exit();
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
                 System.err.println();
                 System.err.println("JavaTest Message: Verify that the class defining the test is");
                 System.err.println("JavaTest Message: declared public (test invoked via reflection)");
                 System.err.println();
-                Status.error(e.toString()).exit();
+                RStatus.error(e.toString()).exit();
             }
         } // run
     }
@@ -140,7 +140,7 @@ public class MainWrapper
                 uncaughtThread    = t;
             }
 //          cleanup();
-            Status.failed(MAIN_THREW_EXCEPT + e.toString()).exit();
+            RStatus.failed(MAIN_THREW_EXCEPT + e.toString()).exit();
         } // uncaughtException()
 
 //      public void cleanup() {

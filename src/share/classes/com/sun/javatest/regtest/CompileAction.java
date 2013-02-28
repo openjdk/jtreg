@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -43,6 +43,8 @@ import java.util.Set;
 import com.sun.javatest.Status;
 import com.sun.javatest.TestResult;
 import com.sun.javatest.lib.ProcessCommand;
+
+import static com.sun.javatest.regtest.RStatus.*;
 
 /**
  * This class implements the "compile" action as described by the JDK tag
@@ -237,7 +239,7 @@ public class CompileAction extends Action {
         }
 
         if (script.isCheck()) {
-            status = Status.passed(CHECK_PASS);
+            status = passed(CHECK_PASS);
         } else {
             switch (script.getExecMode()) {
                 case AGENTVM:
@@ -330,7 +332,7 @@ public class CompileAction extends Action {
             if (timeout > 0)
                 script.setAlarm(timeout*1000);
 
-            status = cmd.run(cmdArgs, stdErr, stdOut);
+            status = normalize(cmd.run(cmdArgs, stdErr, stdOut));
         } finally {
             script.setAlarm(0);
         }
@@ -458,7 +460,7 @@ public class CompileAction extends Action {
             Path classpath = new Path(script.getJavaTestClassPath(), jdk.getJDKClassPath());
             agent = script.getAgent(jdk, classpath, script.getTestVMJavaOptions());
         } catch (IOException e) {
-            return Status.error(AGENTVM_CANT_GET_VM + ": " + e);
+            return error(AGENTVM_CANT_GET_VM + ": " + e);
         }
 
         Status status;
@@ -471,9 +473,9 @@ public class CompileAction extends Action {
                     section);
         } catch (Agent.Fault e) {
             if (e.getCause() instanceof IOException)
-                status = Status.error(String.format(AGENTVM_IO_EXCEPTION, e.getCause()));
+                status = error(String.format(AGENTVM_IO_EXCEPTION, e.getCause()));
             else
-                status = Status.error(String.format(AGENTVM_EXCEPTION, e.getCause()));
+                status = error(String.format(AGENTVM_EXCEPTION, e.getCause()));
         }
         if (status.isError()) {
             script.closeAgent(agent);
@@ -534,7 +536,7 @@ public class CompileAction extends Action {
         PrintStringWriter out = new PrintStringWriter();
         PrintStringWriter err = new PrintStringWriter();
 
-        Status status = Status.error("");
+        Status status = error("");
         try {
             Status stat = redirectOutput(sysOut, sysErr);
             if (!stat.isPassed())
@@ -553,7 +555,7 @@ public class CompileAction extends Action {
                         return getStatusForJavacExitCode(v, exitCode);
                     }
                 };
-                status = jcc.run(cmdArgs, err, out);
+                status = normalize(jcc.run(cmdArgs, err, out));
             } finally {
                 if (alarm != null)
                     alarm.cancel();
@@ -620,15 +622,15 @@ public class CompileAction extends Action {
         switch (exitCode) {
             case 0:  return passed;
             case 1:  return failed;
-            case 2:  return Status.error("command line error (exit code 2)");
-            case 3:  return Status.error("system error (exit code 3)");
-            case 4:  return Status.error("compiler crashed (exit code 4)");
-            default: return Status.error("unexpected exit code from javac: " + exitCode);
+            case 2:  return error("command line error (exit code 2)");
+            case 3:  return error("system error (exit code 3)");
+            case 4:  return error("compiler crashed (exit code 4)");
+            default: return error("unexpected exit code from javac: " + exitCode);
         }
     }
 
-    private static final Status passed = Status.passed("Compilation successful");
-    private static final Status failed = Status.failed("Compilation failed");
+    private static final Status passed = passed("Compilation successful");
+    private static final Status failed = failed("Compilation failed");
 
     private Status checkReverse(Status status, boolean reverseStatus) {
         if (!status.isError()) {
@@ -649,7 +651,7 @@ public class CompileAction extends Action {
             if ((st == Status.FAILED) && ! (status.getReason() == null) &&
                     !status.getReason().equals(EXEC_PASS))
                 sr += ": " + status.getReason();
-            status = new Status(st, sr);
+            status = createStatus(st, sr);
         }
         return status;
     }
@@ -669,7 +671,7 @@ public class CompileAction extends Action {
             BufferedReader r2 = new BufferedReader(new FileReader(refFile));
             int lineNum;
             if ((lineNum = compareGoldenFile(r1, r2)) != 0) {
-                return Status.failed(COMPILE_GOLD_FAIL + ref +
+                return failed(COMPILE_GOLD_FAIL + ref +
                         COMPILE_GOLD_LINE + lineNum);
             }
             return status;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -35,6 +35,8 @@ import java.util.Set;
 import com.sun.javatest.Status;
 import com.sun.javatest.TestResult;
 import com.sun.javatest.lib.ProcessCommand;
+
+import static com.sun.javatest.regtest.RStatus.*;
 
 /**
  * This class implements the "shell" action as described by the JDK tag
@@ -168,7 +170,7 @@ public class ShellAction extends Action
         // and we got this far, we can just set a successful status. Everything
         // after this point is preparation to run the actual test.
         if (script.isCheck()) {
-            status = Status.passed(CHECK_PASS);
+            status = passed(CHECK_PASS);
         } else {
             mkdirs(script.absTestClsDir());
 
@@ -227,7 +229,7 @@ public class ShellAction extends Action
                 if (timeout > 0)
                     script.setAlarm(timeout*1000);
 
-                status = cmd.run(cmdArgs, sysErr, sysOut);
+                status = normalize(cmd.run(cmdArgs, sysErr, sysOut));
             } finally {
                 if (lock != null) lock.unlock();
                 script.setAlarm(0);
@@ -256,7 +258,7 @@ public class ShellAction extends Action
                 if ((st == Status.FAILED) && !status.getReason().equals("")
                     && !status.getReason().equals(EXEC_PASS))
                     sr += ": " + status.getReason();
-                status = new Status(st, sr);
+                status = createStatus(st, sr);
             }
         }
 

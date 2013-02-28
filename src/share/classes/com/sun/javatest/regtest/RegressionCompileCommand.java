@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2011, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -37,6 +37,7 @@ import com.sun.javatest.Status;
 import com.sun.javatest.util.PathClassLoader;
 import com.sun.javatest.util.WriterStream;
 
+import static com.sun.javatest.regtest.RStatus.*;
 
 // This is primarily a cut-n-paste copy of com.sun.javatest.lib.JavaCompileCommand,
 // that provides a way to map compiler exit codes to a status.
@@ -85,7 +86,7 @@ public class RegressionCompileCommand extends Command
         Status s;
         try {
             RegressionCompileCommand c = new RegressionCompileCommand();
-            s = c.run(args, out, err);
+            s = normalize(c.run(args, out, err));
         }
         finally {
             out.flush();
@@ -125,7 +126,7 @@ public class RegressionCompileCommand extends Command
     public Status run(String[] args, PrintWriter log, PrintWriter ref) {
 
         if (args.length == 0)
-            return Status.error("No args supplied");
+            return error("No args supplied");
 
         String compilerClassName = null;
         String compilerName = null;
@@ -151,7 +152,7 @@ public class RegressionCompileCommand extends Command
             for (int i = 0; i < options.length; i++) {
                 if (options[i].equals("-compiler")) {
                     if (i + 1 == options.length)
-                        return Status.error("No compiler specified after -compiler option");
+                        return error("No compiler specified after -compiler option");
 
                     String s = options[++i];
                     int colon = s.indexOf(":");
@@ -166,13 +167,13 @@ public class RegressionCompileCommand extends Command
                 }
                 else if (options[i].equals("-cp") || options[i].equals("-classpath")) {
                     if (i + 1 == options.length)
-                        return Status.error("No path specified after -cp or -classpath option");
+                        return error("No path specified after -cp or -classpath option");
                     classpath = options[++i];
                 }
                 else if (options[i].equals("-verbose"))
                     verbose = true;
                 else
-                    return Status.error("Unrecognized option: " + options[i]);
+                    return error("Unrecognized option: " + options[i]);
             }
         }
 
@@ -190,7 +191,7 @@ public class RegressionCompileCommand extends Command
             if (compilerClassName != null) {
                 compilerClass = getClass(loader, compilerClassName);
                 if (compilerClass == null)
-                    return Status.error("Cannot find compiler: " + compilerClassName);
+                    return error("Cannot find compiler: " + compilerClassName);
             }
             else {
                 compilerName = "javac";
@@ -198,7 +199,7 @@ public class RegressionCompileCommand extends Command
                 if (compilerClass == null)
                     compilerClass = getClass(loader, "sun.tools.javac.Main");  // JDK1.1-2
                 if (compilerClass == null)
-                    return Status.error("Cannot find compiler");
+                    return error("Cannot find compiler");
             }
 
             loader = null;
@@ -214,7 +215,7 @@ public class RegressionCompileCommand extends Command
                 if (compileMethod != null)
                     compileMethodArgs = new Object[] { args };
                 else
-                    return Status.error("Cannot find compile method for " + compilerClass.getName());
+                    return error("Cannot find compile method for " + compilerClass.getName());
             }
 
             Object compiler;
@@ -231,14 +232,14 @@ public class RegressionCompileCommand extends Command
                     if (constr != null)
                         constrArgs = new Object[0];
                     else
-                        return Status.error("Cannot find suitable constructor for " + compilerClass.getName());
+                        return error("Cannot find suitable constructor for " + compilerClass.getName());
                 }
                 try {
                     compiler = constr.newInstance(constrArgs);
                 }
                 catch (Throwable t) {
                     t.printStackTrace(log);
-                    return Status.error("Cannot instantiate compiler");
+                    return error("Cannot instantiate compiler");
                 }
             }
 
@@ -248,7 +249,7 @@ public class RegressionCompileCommand extends Command
             }
             catch (Throwable t) {
                 t.printStackTrace(log);
-                return Status.error("Error invoking compiler");
+                return error("Error invoking compiler");
             }
 
             // result might be a boolean (old javac) or an int (new javac)
@@ -259,7 +260,7 @@ public class RegressionCompileCommand extends Command
                 return getStatus((Integer) result);
             }
             else
-                return Status.error("Unexpected return value from compiler: " + result);
+                return error("Unexpected return value from compiler: " + result);
         }
         finally {
             log.flush();
@@ -322,6 +323,6 @@ public class RegressionCompileCommand extends Command
     private boolean verbose = defaultVerbose;
     private PrintWriter log;
 
-    private static final Status passed = Status.passed("Compilation successful");
-    private static final Status failed = Status.failed("Compilation failed");
+    private static final Status passed = passed("Compilation successful");
+    private static final Status failed = failed("Compilation failed");
 }

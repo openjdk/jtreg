@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -42,6 +42,8 @@ import java.util.Set;
 import com.sun.javatest.Status;
 import com.sun.javatest.TestResult;
 import com.sun.javatest.lib.ProcessCommand;
+
+import static com.sun.javatest.regtest.RStatus.*;
 
 /**
  * This class implements the "applet" action as described by the JDK tag
@@ -168,7 +170,7 @@ public class AppletAction extends Action
             // desciption and we got this far, we can just return success.
             // Everything after this point is preparation to run the actual test
             // and the test itself.
-            status = Status.passed(CHECK_PASS);
+            status = passed(CHECK_PASS);
         } else {
 //          if (othervm)
                 status = runOtherJVM();
@@ -199,10 +201,10 @@ public class AppletAction extends Action
             fw.write(toString(htmlFileContents.getAppletAttrs()) + "\0");
             fw.close();
         } catch (IOException e) {
-            return Status.error(APPLET_CANT_WRITE_ARGS);
+            return error(APPLET_CANT_WRITE_ARGS);
         } catch (SecurityException e) {
             // shouldn't happen since JavaTestSecurityManager allows file ops
-            return Status.error(APPLET_SECMGR_FILEOPS);
+            return error(APPLET_SECMGR_FILEOPS);
         }
 
         // CONSTRUCT THE COMMAND LINE
@@ -284,17 +286,17 @@ public class AppletAction extends Action
             // that we have a chance of detecting whether the test itself has
             // illegally called System.exit(0).
             cmd.setStatusForExit(Status.exitCodes[Status.PASSED],
-                                 Status.passed(EXEC_PASS));
+                                 passed(EXEC_PASS));
             cmd.setStatusForExit(Status.exitCodes[Status.FAILED],
-                                 Status.failed(EXEC_FAIL));
-            cmd.setDefaultStatus(Status.failed(UNEXPECT_SYS_EXIT));
+                                 failed(EXEC_FAIL));
+            cmd.setDefaultStatus(failed(UNEXPECT_SYS_EXIT));
 
             // allow only one applet to run at a time, we don't want the tester
             // to be inundated with applet tests
             synchronized(appletLock) {
                 if (timeout > 0)
                     script.setAlarm(timeout*1000);
-                status = cmd.run(cmdArgs, sysErr, sysOut);
+                status = normalize(cmd.run(cmdArgs, sysErr, sysOut));
             }
         } finally {
             script.setAlarm(0);
@@ -336,7 +338,7 @@ public class AppletAction extends Action
             if ((st == Status.FAILED) && !status.getReason().equals("")
                 && !status.getReason().equals(EXEC_PASS))
                 sr += ": " + status.getReason();
-            status = new Status(st, sr);
+            status = createStatus(st, sr);
         }
 
         return status;

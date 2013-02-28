@@ -47,6 +47,8 @@ import com.sun.javatest.TestEnvironment;
 import com.sun.javatest.TestResult;
 import com.sun.javatest.TestSuite;
 
+import static com.sun.javatest.regtest.RStatus.*;
+
 /**
   * This class interprets the TestDescription as specified by the JDK tag
   * specification.
@@ -77,7 +79,7 @@ public class RegressionScript extends Script {
         params = regEnv.params;
         testSuite = (RegressionTestSuite) params.getTestSuite();
 
-        Status status = Status.passed("OK");
+        Status status = passed("OK");
         String actions = td.getParameter("run");
 
 //      System.out.println("--- ACTIONS: " + actions);
@@ -133,7 +135,7 @@ public class RegressionScript extends Script {
             // if we got an error while parsing the TestDescription, return
             // error immediately
             if (td.getParameter("error") != null)
-                status = Status.error(td.getParameter("error"));
+                status = error(td.getParameter("error"));
             else {
                 if (getTestJDK().equals(getCompileJDK())) {
                     // output for default case unchanged
@@ -150,18 +152,18 @@ public class RegressionScript extends Script {
                 }
             }
         } catch (InterruptedException e) {
-            status = Status.error("Interrupted! " + e.getLocalizedMessage());
+            status = error("Interrupted! " + e.getLocalizedMessage());
         } catch (ScratchDirectory.Fault e) {
             String msg = e.getLocalizedMessage();
             if (e.getCause() != null)
                 msg += " (" + e.getCause().getLocalizedMessage() + ")";
-            status = Status.error(msg);
+            status = error(msg);
         } catch (TestSuite.Fault e) {
-            status = Status.error(e.getMessage());
+            status = error(e.getMessage());
         } catch (ParseActionsException e) {
-            status = Status.error(e.getMessage());
+            status = error(e.getMessage());
         } catch (TestRunException e) {
-            status = Status.error(e.getMessage());
+            status = error(e.getMessage());
         } finally {
             int elapsed = (int) (System.currentTimeMillis() - started);
             int millis = (elapsed % 1000);
@@ -174,7 +176,7 @@ public class RegressionScript extends Script {
                 boolean ok = scratchDirectory.retainFiles(status, msgPW);
                 if (!ok) {
                     msgPW.println("Test result (overridden): " + status);
-                    status = Status.error("failed to clean up files after test");
+                    status = error("failed to clean up files after test");
                     closeAgents();
                 }
             }
