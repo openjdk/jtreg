@@ -68,7 +68,7 @@ public class RegressionTestFinder extends TagTestFinder
         this.rootValidKeys = properties.validKeys;
         this.checkBugID = properties.checkBugID;
 
-        validTagNames = new ValidTagNames(rootValidKeys != null);
+        validTagNames = getValidTagNames(rootValidKeys != null);
 
         exclude(excludeNames);
         addExtension(".sh", ShScriptCommentStream.class);
@@ -343,40 +343,48 @@ public class RegressionTestFinder extends TagTestFinder
             return;
 
         // translate the shorthands into run actions
-        if (name.startsWith("compile")
-            || name.startsWith("clean")
-            || name.startsWith("build")
-            || name.startsWith("ignore")) {
+        if (name.startsWith(COMPILE)
+            || name.startsWith(CLEAN)
+            || name.startsWith(BUILD)
+            || name.startsWith(IGNORE)) {
             value = name + " " + value;
-            name = "run";
+            name = RUN;
         }
 
         try {
-            if (!validTagNames.isValid(name)) {
-                throw new ParseException(PARSE_TAG_BAD + name);
-            } else if (name.equals("run")) {
-                value = parseRun(tagValues, value);
-            } else if (name.equals("bug")) {
-                value = parseBug(tagValues, value);
-            } else if (name.equals("key")) {
-                value = parseKey(tagValues, value);
-            } else if (name.equals("library")) {
-                value = parseLibrary(tagValues, value);
-            }
-        } catch (ParseException e) {
-            name  = "error";
-            value = e.getMessage();
+            if (!validTagNames.contains(name)) {
+                parseError(tagValues, PARSE_TAG_BAD + name);
+            } else if (name.equals(RUN)) {
+                processRun(tagValues, value);
+            } else if (name.equals(BUG)) {
+                processBug(tagValues, value);
+            } else if (name.equals(KEY)) {
+                processKey(tagValues, value);
+            } else if (name.equals(LIBRARY)) {
+                processLibrary(tagValues, value);
+            } else
+                tagValues.put(name, value);
         } catch (TestSuite.Fault e) {
-            name  = "error";
-            value = e.getMessage();
+            reportError(tagValues, e.getMessage());
         }
-
-        super.processEntry(tagValues, name, value);
     }
 
     //-----internal routines----------------------------------------------------
 
     //---------- parsing -------------------------------------------------------
+
+    private void parseError(Map<String, String> tagValues, String value) {
+        // TODO: The use of "Exception" in the following message is
+        // temporarily retained for backward compatibility.
+        // "Error" would be a better word.
+        reportError(tagValues, "Parse Exception: " + value);
+    }
+
+    private void reportError(Map<String, String> tagValues, String value) {
+        // for now, just record first error
+        if (tagValues.get(ERROR) == null)
+            tagValues.put(ERROR, value);
+    }
 
     /**
      * Create the "run" action entry by adding a reason code to the
@@ -384,19 +392,18 @@ public class RegressionTestFinder extends TagTestFinder
      *
      * @param tagValues The map of all of the current tag values.
      * @param value     The value of the entry currently being processed.
-     * @exception ParseException If the value for the tag does not conform to
-     *            the spec for the tag.
-     * @return    A string which contains the new value for the "run" tag.
      */
-    private String parseRun(Map<String, String> tagValues, String value)
-        throws ParseException
+    private void processRun(Map<String, String> tagValues, String value)
     {
-        String oldValue = tagValues.get("run");
-        if (oldValue == null)
-            return Action.REASON_USER_SPECIFIED + " " + value + LINESEP;
-        else
-            return oldValue + Action.REASON_USER_SPECIFIED + " " + value +
-                LINESEP;
+        String oldValue = tagValues.get(RUN);
+        StringBuilder sb = new StringBuilder();
+        if (oldValue != null)
+            sb.append(oldValue);
+        sb.append(Action.REASON_USER_SPECIFIED)
+                .append(" ")
+                .append(value)
+                .append(LINESEP);
+        tagValues.put(RUN, sb.toString());
     }
 
     /**
@@ -408,36 +415,30 @@ public class RegressionTestFinder extends TagTestFinder
      *
      * @param tagValues The map of all of the current tag values.
      * @param value     The value of the entry currently being processed.
-     * @exception ParseException If the value for the tag does not conform to
-     *            the spec for the tag.
-     * @return    A string which contains the new value for the "bug" tag.
      */
-    private String parseBug(Map<String, String> tagValues, String value)
-        throws ParseException
-    {
-        StringBuilder newValue = new StringBuilder();
-
-        if (value.trim().length() != 0) {
-            String[] bugids = StringArray.splitWS(value);
-            for (int i = 0; i < bugids.length; i++) {
-                String currBug = bugids[i];
-
-                // bugid checking can be switched on and off with an
-                // environment var. that the testsuite finds
-                if (checkBugID) {
-                    Matcher m = bugIdPattern.matcher(currBug);
-                    if (!m.matches())
-                        throw new ParseException(PARSE_BUG_INVALID + currBug);
-                }
-
-                if (newValue.length() > 0)
-                    newValue.append(" ");
-                newValue.append("bug").append(currBug);
-            }
-        } else {
-            throw new ParseException(PARSE_BUG_EMPTY);
+    private void processBug(Map<String, String> tagValues, String value) {
+        if (value.trim().length() == 0) {
+            parseError(tagValues, PARSE_BUG_EMPTY);
+            return;
         }
-        return newValue.toString();
+
+        StringBuilder newValue = new StringBuilder();
+        if (tagValues.get(BUG) != null)
+            newValue.append(tagValues.get(BUG));
+        for (String bugid : StringArray.splitWS(value)) {
+            // bugid checking can be switched on and off with an
+            // environment var. that the testsuite finds
+            if (checkBugID && !bugIdPattern.matcher(bugid).matches()) {
+                parseError(tagValues, PARSE_BUG_INVALID + bugid);
+                continue;
+            }
+            if (newValue.length() > 0)
+                newValue.append(" ");
+            newValue.append("bug").append(bugid);
+        }
+
+        if (newValue.length() > 0)
+            tagValues.put(BUG, newValue.toString());
     }
     private static final Pattern bugIdPattern = Pattern.compile("(([A-Z]+-)?[0-9]{7})|(14[0-9]{6})");
 
@@ -448,28 +449,30 @@ public class RegressionTestFinder extends TagTestFinder
      *
      * @param tagValues The map of all of the current tag values.
      * @param value     The value of the entry currently being processed.
-     * @exception ParseException If the value for the tag does not conform to
-     *            the spec for the tag.
      * @return    A string which contains the new value for the "key" tag.
      */
-    private String parseKey(Map<String, String> tagValues, String value)
-        throws ParseException, TestSuite.Fault
-  {
-        Set<String> validKeys = properties.getValidKeys(getCurrentFile());
+    private void processKey(Map<String, String> tagValues, String value)
+            throws TestSuite.Fault {
+        if (value.trim().length() == 0) {
+            parseError(tagValues, PARSE_KEY_EMPTY);
+            return;
+        }
 
         // make sure that the provided keys are all valid
-        if (value.trim().length() != 0) {
-            String[] keys = StringArray.splitWS(value);
-            for (int i = 0; i < keys.length; i++) {
-                if (!validKeys.contains(keys[i])) {
-                    // invalid key
-                    throw new ParseException(PARSE_KEY_BAD + keys[i]);
-                }
+        Set<String> validKeys = properties.getValidKeys(getCurrentFile());
+        StringBuilder newValue = new StringBuilder();
+        for (String key: StringArray.splitWS(value)) {
+            if (!validKeys.contains(key)) {
+                parseError(tagValues, PARSE_KEY_BAD + key);
+                continue;
             }
-            return StringArray.join(keys, " ");
-        } else {
-            throw new ParseException(PARSE_KEY_EMPTY);
+            if (newValue.length() > 0)
+                newValue.append(" ");
+            newValue.append(key);
         }
+
+        if (newValue.length() > 0)
+            tagValues.put(KEY, newValue.toString());
     }
 
     /**
@@ -478,81 +481,67 @@ public class RegressionTestFinder extends TagTestFinder
      *
      * @param tagValues The map of all of the current tag values.
      * @param value     The value of the entry currently being processed.
-     * @exception ParseException If the value for the tag does not conform to
-     *            the spec for the tag.
      * @return    A string which contains the new value for the "library" tag.
      */
-    private String parseLibrary(Map<String, String> tagValues, String value)
-        throws ParseException
-    {
-        String newValue = "";
-        if (tagValues.get("run") == null) {
+    private void processLibrary(Map<String, String> tagValues, String value) {
+        String newValue;
+        if (tagValues.get(RUN) == null) {
             // we haven't seen a "run" action yet
             if (value.trim().length() != 0) {
                 // multiple library tags allowed, prepend the new stuff
-                String oldValue = tagValues.get("library");
+                String oldValue = tagValues.get(LIBRARY);
                 if (oldValue != null)
-                    newValue = value + " " + oldValue;
+                    newValue = value.trim() + " " + oldValue;
                 else
-                    newValue = value;
+                    newValue = value.trim();
+                tagValues.put(LIBRARY, newValue);
             } else {
                 // found an empty library tag
-                throw new ParseException(PARSE_LIB_EMPTY);
+                parseError(tagValues, PARSE_LIB_EMPTY);
             }
         } else {
             // found library tag after the first @run tag
-            throw new ParseException(PARSE_LIB_AFTER_RUN);
+            parseError(tagValues, PARSE_LIB_AFTER_RUN);
         }
-        return newValue.trim();
     }
 
-    //----------internal classes------------------------------------------------
+    private Set<String> getValidTagNames(boolean allowKey) {
+        Set<String> tags = new HashSet<String>();
+        // JDK specific tags
+        tags.add(TEST);
+        tags.add(BUG);
+        tags.add(SUMMARY);
+        tags.add(AUTHOR);
+        tags.add(LIBRARY);
+        tags.add(CLEAN);
+        tags.add(COMPILE);
+        tags.add(IGNORE);
+        tags.add(RUN);
+        tags.add(BUILD);
 
-    /*
-     * HashMap of acceptable / valid tag names.
-     */
-    private static class ValidTagNames {
-        public ValidTagNames(boolean allowKey) {
-            validTags = new HashSet<String>(29);
-            populate(allowKey);
+        // @key allowed only if TEST.ROOT contains a non-empty entry for
+        // "key".  This is handled by the testsuite object.
+        if (allowKey) {
+            tags.add(KEY);
         }
 
-        public boolean isValid(String tag) {
-            return validTags.contains(tag);
-        }
-
-        private void add(String validTag) {
-            validTags.add(validTag);
-        }
-
-        /*
-         * Put the acceptable / valid reserved private tags into a HashMap.
-         */
-        private void populate(boolean allowKey) {
-            // JDK specific tags
-            add("test");
-            add("bug");
-            add("summary");
-            add("author");
-            add("library");
-            add("clean");
-            add("compile");
-            add("ignore");
-            add("run");
-            add("build");
-
-            // @key allowed only if TEST.ROOT contains a non-empty entry for
-            // "key".  This is handled by the testsuite object.
-            if (allowKey) {
-                add("key");
-            }
-        }
-
-        private Set<String> validTags;
+        return tags;
     }
-
 
     //----------misc statics----------------------------------------------------
+
+    public static final String TEST    = "test";
+    public static final String AUTHOR  = "author";
+    public static final String BUG     = "bug";
+    public static final String BUILD   = "build";
+    public static final String CLEAN   = "clean";
+    public static final String COMPILE = "compile";
+    public static final String ERROR   = "error";
+    public static final String IGNORE  = "ignore";
+    public static final String KEY     = "key";
+    public static final String LIBRARY = "library";
+    public static final String RUN     = "run";
+    public static final String SUMMARY = "summary";
 
     private static final String LINESEP = System.getProperty("line.separator");
 
@@ -595,7 +584,7 @@ public class RegressionTestFinder extends TagTestFinder
     //----------member variables------------------------------------------------
 
     private Set<String> rootValidKeys;
-    private ValidTagNames validTagNames;
+    private Set<String> validTagNames;
     private TestProperties properties;
     private boolean checkBugID;
 
