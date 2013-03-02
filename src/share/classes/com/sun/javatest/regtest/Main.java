@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -872,16 +872,18 @@ public class Main {
 
     /** Execution OK. */
     public static final int EXIT_OK = 0;
-    /** One of more tests failed. */
-    public static final int EXIT_TEST_FAILED = 1;
+    /** No tests found. */
+    public static final int EXIT_NO_TESTS = 1;
+    /** One or more tests failed. */
+    public static final int EXIT_TEST_FAILED = 2;
     /** One or more tests had an error. */
-    public static final int EXIT_TEST_ERROR = 2;
+    public static final int EXIT_TEST_ERROR = 3;
     /** Bad user args. */
-    public static final int EXIT_BAD_ARGS = 3;
+    public static final int EXIT_BAD_ARGS = 4;
     /** Other fault occurred. */
-    public static final int EXIT_FAULT = 4;
+    public static final int EXIT_FAULT = 5;
     /** Unexpected exception occurred. */
-    public static final int EXIT_EXCEPTION = 5;
+    public static final int EXIT_EXCEPTION = 6;
 
     /**
      * Standard entry point. Only returns if GUI mode is initiated; otherwise, it calls System.exit
@@ -1221,6 +1223,7 @@ public class Main {
 
             return (testStats.counts[Status.ERROR] > 0 ? EXIT_TEST_ERROR
                     : testStats.counts[Status.FAILED] > 0 ? EXIT_TEST_FAILED
+                    : testStats.counts[Status.PASSED] == 0 ? EXIT_NO_TESTS
                     : EXIT_OK);
 
         } finally {
