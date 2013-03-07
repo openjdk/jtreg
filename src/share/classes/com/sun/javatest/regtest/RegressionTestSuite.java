@@ -117,7 +117,7 @@ public class RegressionTestSuite extends TestSuite
     }
 
     @Override
-    public InterviewParameters createInterview() throws TestSuite.Fault {
+    public RegressionParameters createInterview() throws TestSuite.Fault {
         try {
             return new RegressionParameters("regtest", this);
         }

@@ -29,7 +29,6 @@ import java.awt.EventQueue;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -51,14 +50,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
 
@@ -1004,21 +998,17 @@ public class Main {
         if (antFileList != null)
             antFileArgs.addAll(readFileList(new File(antFileList)));
 
-        Map<File, Set<String>> testFileMap =
-                getTestFileMap(baseDir, join(testFileArgs, antFileArgs));
-        boolean multiRun = (testFileMap.size() > 1);
+        TestManager testManager = new TestManager(out, baseDir);
+        testManager.addTests(testFileArgs, false);
+        testManager.addTests(antFileArgs, true);
+        boolean multiRun = testManager.isMultiRun();
 
         if (execMode == null) {
             Set<ExecMode> modes = EnumSet.noneOf(ExecMode.class);
-            for (File f: testFileMap.keySet()) {
-                try {
-                    RegressionTestSuite ts = RegressionTestSuite.open(f);
-                    ExecMode m = ts.getDefaultExecMode();
-                    if (m != null)
-                        modes.add(m);
-                } catch (TestSuite.Fault e) {
-                    throw new Fault(i18n, "main.cantOpenTestSuite", f, e);
-                }
+            for (RegressionTestSuite ts: testManager.getTestSuites()) {
+                ExecMode m = ts.getDefaultExecMode();
+                if (m != null)
+                    modes.add(m);
             }
             switch (modes.size()) {
                 case 0:
@@ -1090,11 +1080,14 @@ public class Main {
             childArgs.add(0, "-r:" + getNormalizedFile(reportDirArg));
         }
 
-        if (!noReportFlag)
-            makeDir(reportDirArg);
+        makeDir(workDirArg, false);
+        makeDir(new File(workDirArg, "scratch"), true);
+        testManager.setWorkDirectory(workDirArg);
 
-        makeDir(workDirArg);
-        makeDir(new File(workDirArg, "scratch"));
+        if (!noReportFlag) {
+            makeDir(reportDirArg, false);
+            testManager.setReportDirectory(reportDirArg);
+        }
 
         if (allowSetSecurityManagerFlag) {
             switch (execMode) {
@@ -1161,24 +1154,17 @@ public class Main {
             if (httpdFlag)
                 startHttpServer();
 
-            boolean validate = (antFileArgs.size() > 0);
-
             if (multiRun && guiFlag)
                 throw new Fault(i18n, "main.onlyOneTestSuiteInGuiMode");
 
-            Map<File, String> subdirMap = getSubdirMap(testFileMap.keySet(), workDirArg);
-
             testStats = new TestStats();
 
-            for (Map.Entry<File, Set<String>> e: testFileMap.entrySet()) {
-                File ts = e.getKey();
-                Set<String> tests = e.getValue();
-                String subdir = subdirMap.get(ts);
+            for (RegressionTestSuite ts: testManager.getTestSuites()) {
 
                 if (multiRun && (verbose != null && verbose.multiRun))
-                    out.println("Running tests in " + ts);
+                    out.println("Running tests in " + ts.getRootDir());
 
-                RegressionParameters params = createParameters(ts, tests, subdir, validate);
+                RegressionParameters params = createParameters(testManager, ts);
 
                 checkLockFiles(params.getWorkDirectory().getRoot(), "start");
 
@@ -1216,7 +1202,7 @@ public class Main {
             if (multiRun) {
                 testStats.showResultStats(out);
                 RegressionReporter r = new RegressionReporter(workDirArg, reportDirArg, out);
-                r.report(subdirMap);
+                r.report(testManager);
                 if (!reportOnlyFlag)
                     out.println("Results written to " + canon(workDirArg));
             }
@@ -1251,8 +1237,7 @@ public class Main {
      * files are not supported. The '@' character itself can be quoted with
      * the sequence '@@'.
      */
-    private static String[] expandAtFiles(String[] args)
-    throws Fault {
+    private static String[] expandAtFiles(String[] args) throws Fault {
         List<String> newArgs = new ArrayList<String>();
         for (int i = 0; i < args.length; i++) {
             String arg = args[i];
@@ -1270,8 +1255,7 @@ public class Main {
         return newArgs.toArray(new String[newArgs.size()]);
     }
 
-    private static void loadCmdFile(String name, List<String> args)
-    throws Fault {
+    private static void loadCmdFile(String name, List<String> args) throws Fault {
         Reader r;
         try {
             r = new BufferedReader(new FileReader(name));
@@ -1302,8 +1286,7 @@ public class Main {
         }
     }
 
-    private static List<File> readFileList(File file)
-    throws Fault {
+    private static List<File> readFileList(File file) throws Fault {
         BufferedReader r;
         try {
             r = new BufferedReader(new FileReader(file));
@@ -1667,155 +1650,12 @@ public class Main {
 
     }
 
-    /**
-     * Analyse a list of test files, and convert to a map identifying the
-     * test suites containing those test files, and the corresponding
-     * relative paths for the test files.
-     * @param testFiles a list of test files from one or more test suites
-     * @return  a map identifying the test suites and the relative paths (if
-     *  any) for the tests identified in each test suite. An empty set for
-     *  a test suite implies all tests in the test suite.
-     */
-    private Map<File, Set<String>> getTestFileMap(File baseDir, List<File> testFiles) throws Fault {
-        Map<File, Set<String>> results = new LinkedHashMap<File, Set<String>>();
-        Map<File, File> cache = new HashMap<File, File>();
-        for (File tf: testFiles) {
-            File f = canon(tf.isAbsolute() ? tf : new File(baseDir, tf.getPath()));
-            if (!f.exists())
-                throw new Fault(i18n, "main.cantFindFile", tf);
-            File root = getTestSuiteForTest(cache, f);
-            if (root == null)
-                throw new Fault(i18n, "main.cantDetermineTestSuite", tf);
-            Set<String> filesForRoot = results.get(root);
-            if (filesForRoot == null) {
-                filesForRoot = new LinkedHashSet<String>();
-                if (tf != root)
-                    filesForRoot.add(getRelativePath(root, f));
-                results.put(root, filesForRoot);
-            } else {
-                if (tf == root) {
-                    filesForRoot.clear();
-                } else {
-                    if (!filesForRoot.isEmpty()) {
-                        filesForRoot.add(getRelativePath(root, f));
-
-                    }
-                }
-            }
-        }
-        return results;
-    }
-
-    /**
-     * Get the test suite root for a file in a test suite
-     * @param cache a cache of earlier results to improve performance
-     * @param file the file to test
-     * @return the path for the enclosing directory containing TEST.ROOT,
-     *      or null if these is no such directory
-     */
-    private File getTestSuiteForTest(Map<File, File> cache, File file) {
-        if (file == null)
-            return null;
-        if (file.isFile())
-            return getTestSuiteForTest(cache, file.getParentFile());
-        File ts = cache.get(file);
-        if (ts == null) {
-            ts = new File(file, "TEST.ROOT").exists()
-                    ? file : getTestSuiteForTest(cache, file.getParentFile());
-            cache.put(file, ts);
-        }
-        return ts;
-    }
-
-    /**
-     * Determine subdirectories to use within a top-level work directory.
-     * Existing subdirectories are honored if applicable.
-     */
-    private Map<File, String> getSubdirMap(Set<File> testSuites, File workDir) throws Fault {
-        if (testSuites.size() <= 1)
-            return Collections.emptyMap(); // no need for subdirs
-        if (WorkDirectory.isWorkDirectory(workDir))
-            throw new Fault(i18n, "main.workDirNotSuitableInMultiTestSuiteMode");
-        Set<String> subdirs = new HashSet<String>();
-        Map<File, String> results = new TreeMap<File, String>();
-
-        // first, scan directory looking for existing test suites
-        if (workDir.exists()) {
-            if (!workDir.isDirectory())
-                throw new Fault(i18n, "main.notADirectory", workDir);
-            for (File f: workDir.listFiles()) {
-                String subdir = f.getName();
-                subdirs.add(subdir); // record all names to avoid downstream clashes
-                if (WorkDirectory.isUsableWorkDirectory(f)) {
-                    File tsr = getTestSuiteForWorkDirectory(f);
-                    if (testSuites.contains(tsr))
-                        results.put(tsr, subdir);
-                }
-            }
-        }
-
-        // create new entries for test suites that do not have them
-        for (File ts: testSuites) {
-            if (!results.containsKey(ts)) {
-                String subdir = ts.getName();
-                if (ts.getParentFile() != null)
-                    subdir = ts.getParentFile().getName() + "_" + subdir;
-                if (subdirs.contains(subdir)) {
-                    int n = 0;
-                    String sdn;
-                    while (subdirs.contains(sdn = (subdir + "_" + n)))
-                        n++;
-                    subdir = sdn;
-                }
-                results.put(ts, subdir);
-                subdirs.add(subdir);
-            }
-        }
-
-        return results;
-    }
-
-    private <T> List<T> join(List<T> a, List<T> b) {
-        if (a == null || a.isEmpty())
-            return b;
-        else if (b == null || b.isEmpty())
-            return a;
-        else {
-            List<T> join = new ArrayList<T>();
-            join.addAll(a);
-            join.addAll(b);
-            return join;
-        }
-    }
-
-    private File getTestSuiteForWorkDirectory(File wd) {
-        // Cannot use standard WorkDirectory.open(ws).getTestSuite().getRoot()
-        // because jtreg does not follow standard protocol for tsInfo.
-        // (There is no easy way to disambiguate jtreg test suites.)
-        // So, have to read the testsuite file directly.
-        File tsInfo = new File(new File(wd, "jtData"), "testsuite");
-        try {
-            InputStream in = new FileInputStream(tsInfo);
-            try {
-                Properties p = new Properties();
-                p.load(in);
-                String tsr = p.getProperty("root");
-                if (tsr != null)
-                    return new File(tsr);
-            } finally {
-                in.close();
-            }
-        } catch (IOException e) {
-            // ignore
-        }
-        return new File("__UNKNOWN__");
-    }
-
-    private void makeDir(File dir) throws Fault {
+    private void makeDir(File dir, boolean quiet) throws Fault {
         // FIXME: I18N
         if (dir.isDirectory())
             return;
-        out.println("Directory \"" + dir + "\" not found: creating");
+        if (!quiet)
+            out.println("Directory \"" + dir + "\" not found: creating");
         dir.mkdirs();
         if (!dir.isDirectory()) {
             throw new Fault(i18n, "main.cantCreateDir", dir);
@@ -1843,29 +1683,14 @@ public class Main {
      * Create a RegressionParameters object based on the values set up by decodeArgs.
      * @return a RegressionParameters object
      */
-    private RegressionParameters createParameters(File ts,
-            Set<String> tests,
-            String subdir,
-            boolean validate)
+    private RegressionParameters createParameters(
+            TestManager testManager, RegressionTestSuite testSuite)
             throws BadArgs, Fault
     {
-        File wd = (subdir == null)
-                ? workDirArg : new File(workDirArg, subdir);
-        File rd = (reportDirArg == null || subdir == null)
-                ? reportDirArg : new File(reportDirArg, subdir);
-
         try {
-            // create a canonTestFile suite and work dir.
-            RegressionTestSuite testSuite = RegressionTestSuite.open(ts);
-            RegressionParameters rp = (RegressionParameters) (testSuite.createInterview());
+            RegressionParameters rp = testSuite.createInterview();
 
-            WorkDirectory workDir;
-            if (WorkDirectory.isWorkDirectory(wd))
-                workDir = WorkDirectory.open(wd, testSuite);
-            else if (wd.exists())
-                workDir = WorkDirectory.convert(wd, testSuite);
-            else
-                workDir = WorkDirectory.create(wd, testSuite);
+            WorkDirectory workDir = testManager.getWorkDirectory(testSuite);
             rp.setWorkDirectory(workDir);
 
             // JT Harness 4.3+ requires a config file to be set
@@ -1873,26 +1698,13 @@ public class Main {
 
             rp.setRetainArgs(retainArgs);
 
-            if (!tests.isEmpty()) {
-                if (validate) {
-                    List<String> validTests = new ArrayList<String>();
-                    TestResultTable trt = workDir.getTestResultTable();
-                    for (Iterator<String> iter = tests.iterator(); iter.hasNext(); ) {
-                        String test = iter.next();
-                        if (trt.validatePath(test))
-                            validTests.add(test);
-                    }
-                    if (validTests.isEmpty())
-                        throw new Fault(i18n, "main.noTestSuiteOrTests");
-                    rp.setTests(validTests);
-                } else {
-                    rp.setTests(tests);
-                }
-            }
+            rp.setTests(testManager.getTests(testSuite));
 
             if (keywordsExprArg != null)
                 rp.setKeywordsExpr(keywordsExprArg);
+
             rp.setExcludeLists(excludeListArgs.toArray(new File[excludeListArgs.size()]));
+
             if (priorStatusValuesArg == null || priorStatusValuesArg.length() == 0)
                 rp.setPriorStatusValues((boolean[]) null);
             else {
@@ -1925,6 +1737,7 @@ public class Main {
                 }
             }
 
+            File rd = testManager.getReportDirectory(testSuite);
             if (rd != null)
                 rp.setReportDir(rd);
 
@@ -1976,32 +1789,16 @@ public class Main {
             return rp;
         } catch (TestSuite.Fault f) {
             // TODO: fix bad string -- need more helpful resource here
-            throw new Fault(i18n, "main.cantOpenTestSuite", ts, f);
-        } catch (WorkDirectory.Fault e) {
-            throw new Fault(i18n, "main.cantRead", wd.getName(), e);
-        } catch (IOException e) {
-            throw new Fault(i18n, "main.cantRead", wd.getName(), e);
+            throw new Fault(i18n, "main.cantOpenTestSuite", testSuite.getRootDir(), f);
         }
     }
-    // where
+
     private static File canon(File file) {
         try {
             return file.getCanonicalFile();
         } catch (IOException e) {
             return getNormalizedFile(file);
         }
-    }
-
-    private static String getRelativePath(File base, File f) {
-        StringBuilder sb = new StringBuilder();
-        for ( ; f != null; f = f.getParentFile()) {
-            if (f.equals(base))
-                return sb.toString();
-            if (sb.length() > 0)
-                sb.insert(0, '/');
-            sb.insert(0, f.getName());
-        }
-        return null;
     }
 
     private static Harness.Observer getObserver(List<File> observerPath, String observerClassName)
@@ -2187,7 +1984,7 @@ public class Main {
         if (dt != null)
             date = df.format(dt);
         else
-            date = i18n.getString("main.nobDate");
+            date = i18n.getString("main.noDate");
 
         PageGenerator.setSWBuildDate(date);
         PageGenerator.setSWVersion(ProductInfo.getVersion());

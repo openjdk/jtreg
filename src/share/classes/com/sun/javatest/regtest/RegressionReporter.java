@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -36,12 +36,11 @@ import java.io.PrintWriter;
 import java.text.DateFormat;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import com.sun.javatest.CompositeFilter;
+import com.sun.javatest.regtest.Main.Fault;
 import com.sun.javatest.report.Report;
 import com.sun.javatest.util.HTMLWriter;
 
@@ -116,18 +115,18 @@ public class RegressionReporter {
         }
     }
 
-    void report(Map<File, String> subdirMap) {
-        File parent = getCommonParent(subdirMap.keySet());
+    void report(TestManager testManager) throws Fault {
+        File parent = getCommonParent(testManager.getTestSuites());
         // ignore the case where the common parent is just the root directory
         if (parent != null && parent.getParentFile() == null)
             parent = null;
 
         try {
             if (reportKinds.contains("html"))
-                writeHTMLReport(subdirMap, parent);
+                writeHTMLReport(testManager, parent);
 
             if (reportKinds.contains("text")) {
-                writeCombinedSummary(subdirMap);
+                writeCombinedSummary(testManager);
                 // for extra marks, write a combined elapsedTime file
             }
 
@@ -152,7 +151,7 @@ public class RegressionReporter {
      * The page is a simple table containing rows
      *      testsuite (link to work subdir) (link to report subdir)
      */
-    void writeHTMLReport(Map<File, String> subdirMap, File parent) throws IOException {
+    void writeHTMLReport(TestManager testManager, File parent) throws IOException, Fault {
         String title = (parent == null)
                 ? "MultiRun Report"
                 : "MultiRun Report: " + parent;
@@ -184,28 +183,28 @@ public class RegressionReporter {
                 html.endTag(HTMLWriter.TH);
             }
             html.startTag(HTMLWriter.TR);
-            for (Map.Entry<File, String> e: subdirMap.entrySet()) {
-                File testSuite = e.getKey();
-                String subdir = e.getValue();
+            for (RegressionTestSuite testSuite: testManager.getTestSuites()) {
                 html.startTag(HTMLWriter.TR);
                 html.startTag(HTMLWriter.TD);
                 html.startTag(HTMLWriter.A);
-                html.writeAttr(HTMLWriter.HREF, testSuite.getAbsolutePath());
-                html.write(relativize(parent, testSuite).getPath());
+                File ts = testSuite.getRootDir();
+                html.writeAttr(HTMLWriter.HREF, ts.getAbsolutePath());
+                html.write(relativize(parent, ts).getPath());
                 html.endTag(HTMLWriter.A);
                 html.endTag(HTMLWriter.TD);
                 html.startTag(HTMLWriter.TD);
                 html.startTag(HTMLWriter.A);
-                File wd = new File(workDirArg, subdir);
-                html.writeAttr(HTMLWriter.HREF, wd.getAbsolutePath());
-                html.write(subdir);
+                File wd = testManager.getWorkDirectory(testSuite).getRoot();
+                html.writeAttr(HTMLWriter.HREF, wd.getPath());
+                html.write(wd.getName());
                 html.endTag(HTMLWriter.A);
                 html.endTag(HTMLWriter.TD);
                 html.startTag(HTMLWriter.TD);
                 html.startTag(HTMLWriter.A);
-                File r = new File(new File(reportDirArg, subdir), "index.html");
+                File rd = testManager.getReportDirectory(testSuite);
+                File r = new File(rd, "index.html");
                 html.writeAttr(HTMLWriter.HREF, r.getAbsolutePath());
-                html.write(subdir);
+                html.write(rd.getName());
                 html.endTag(HTMLWriter.A);
                 html.endTag(HTMLWriter.TD);
                 html.endTag(HTMLWriter.TR);
@@ -276,14 +275,14 @@ public class RegressionReporter {
         }
     }
 
-    private void writeCombinedSummary(Map<File, String> subdirMap) throws IOException {
+    private void writeCombinedSummary(TestManager testManager) throws IOException, Main.Fault {
         File textDir = new File(reportDirArg, "text");
         textDir.mkdirs();
         File report = new File(textDir, "summary.txt");
         BufferedWriter summaryOut = new BufferedWriter(new FileWriter(report));
         try {
-            for (String subdir: subdirMap.values()) {
-                File f = new File(new File(new File(reportDirArg, subdir), "text"), "summary.txt");
+            for (RegressionTestSuite ts: testManager.getTestSuites()) {
+                File f = new File(new File(testManager.getReportDirectory(ts), "text"), "summary.txt");
                 if (f.exists()) {
                     String s = read(f);
                     if (!s.endsWith("\n"))
@@ -368,17 +367,11 @@ public class RegressionReporter {
         }
     }
 
-    public static void main(String... args) {
-        Set<File> files = new LinkedHashSet<File>();
-        for (String arg: args)
-            files.add(new File(arg));
-        System.err.println("result: " + getCommonParent(files));
-    }
-
-    private static File getCommonParent(Set<File> files) {
+    private static File getCommonParent(Set<RegressionTestSuite> testSuites) {
         String FS = File.separator;
         String path = null;
-        for (File file: files) {
+        for (RegressionTestSuite testSuite: testSuites) {
+            File file = testSuite.getRootDir();
             File dir = file.isDirectory() ? file : file.getParentFile();
             File absDir = (dir == null) ? new File(System.getProperty("user.dir")) : dir.getAbsoluteFile();
             String p = absDir.getPath();
