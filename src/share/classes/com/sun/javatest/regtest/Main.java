@@ -338,6 +338,13 @@ public class Main {
             }
         },
 
+        new Option(NONE, MAIN, null, "l", "listtests") {
+            public void process(String opt, String arg) {
+                listTestsFlag = true;
+                noReportFlag = true;
+            }
+        },
+
         // deprecated
         new Option(NONE, MAIN, "ignore", "noignore") {
             public void process(String opt, String arg) {
@@ -1200,7 +1207,16 @@ public class Main {
                 if (guiFlag) {
                     showTool(params);
                     return EXIT_OK;
-                } else {
+                } else if (listTestsFlag) {
+                    int count = 0;
+                    for (Iterator<TestResult> iter = getResultsIterator(params); iter.hasNext(); ) {
+                        TestResult tr = iter.next();
+                        out.println(tr.getTestName());
+                        count++;
+                    }
+                    out.println(i18n.getString("main.tests.found", count));
+                    return EXIT_OK;
+            } else {
                     try {
                         boolean quiet = (multiRun && !(verbose != null && verbose.multiRun));
                         testStats.addAll(batchHarness(params, quiet));
@@ -1342,7 +1358,7 @@ public class Main {
     }
 
     private boolean isThisVMOK() {
-        if (reportOnlyFlag || checkFlag || execMode != ExecMode.SAMEVM)
+        if (reportOnlyFlag || checkFlag || listTestsFlag || execMode != ExecMode.SAMEVM)
             return true;
 
         // sameVM tests can use this VM if
@@ -2164,6 +2180,7 @@ public class Main {
     private List<String> testJavaOpts = new ArrayList<String>();
     private List<String> testVMOpts = new ArrayList<String>();
     private boolean checkFlag;
+    private boolean listTestsFlag;
     private List<String> envVarArgs = new ArrayList<String>();
     private IgnoreKind ignoreKind;
     private List<File> classPathAppendArg = new ArrayList<File>();
