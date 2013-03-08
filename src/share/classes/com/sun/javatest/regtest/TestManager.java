@@ -50,6 +50,12 @@ import com.sun.javatest.util.I18NResourceBundle;
  * Manage tests to be run by jtreg.
  */
 public class TestManager {
+    class NoTests extends Main.Fault {
+        NoTests() {
+            super(i18n, "tm.noTests");
+        }
+    }
+
     private final PrintWriter out;
     private final File baseDir;
     private File reportDir;
@@ -61,6 +67,7 @@ public class TestManager {
         final File rootDir;
         boolean all = false;
         Map<String, Boolean> files = new LinkedHashMap<String, Boolean>();
+        Set<String> groups = new LinkedHashSet<String>();
 
         RegressionTestSuite testSuite;
         String subdir;
@@ -94,6 +101,19 @@ public class TestManager {
             } else if (!e.all) {
                 e.files.put(getRelativePath(rootDir, f), ignoreEmptyFiles);
             }
+        }
+    }
+
+    void addGroups(Collection<String> groups) throws Fault {
+        for (String g: groups) {
+            int sep = g.lastIndexOf(":");
+            if (sep == -1)
+                throw new Fault(i18n, "tm.badGroupSpec", g);
+            File rootDir = canon((sep == 0) ? baseDir : new File(g.substring(0, sep)));
+            if (!new File(rootDir, "TEST.ROOT").exists())
+                throw new Fault(i18n, "tm.badGroupTestSuite", g);
+            Entry e = getEntry(rootDir);
+            e.groups.add(g.substring(sep + 1));
         }
     }
 
@@ -203,8 +223,13 @@ public class TestManager {
             else if (!ignoreEmptyFiles)
                 throw new Fault(i18n, "tm.notATest", test);
         }
+        for (File f: expandGroups(e)) {
+            String test = getRelativePath(e.rootDir, f);
+            if (trt.validatePath(test))
+                tests.add(test);
+        }
         if (tests.isEmpty())
-            throw new Fault(i18n, "tm.noTests");
+            throw new NoTests();
         return tests;
     }
 
@@ -302,6 +327,19 @@ public class TestManager {
             // ignore
         }
         return new File("__UNKNOWN__");
+    }
+
+    private Set<File> expandGroups(Entry e) throws Main.Fault {
+        try {
+            Set<File> results = new LinkedHashSet<File>();
+            GroupManager gm = e.testSuite.getGroupManager(out);
+            for (String group: e.groups) {
+                results.addAll(gm.getFiles(group));
+            }
+            return results;
+        } catch (IOException ex) {
+            throw new Main.Fault(i18n, "tm.cantReadGroups", e.testSuite.getRootDir(), ex);
+        }
     }
 
     File canon(File file) {

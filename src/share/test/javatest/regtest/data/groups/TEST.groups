@@ -1,0 +1,14 @@
+g1 = d1/d11 d1/d13
+g2 = d1 -d1/d12
+g3 = d2
+g4 = :g1 :g3
+g5 = d3 -d3/d32/Bad.java
+g6 = d4
+
+# self-cycle
+g10 = :g10
+
+# cycle
+g11 = :g1 :g12
+g12 = :g11
+

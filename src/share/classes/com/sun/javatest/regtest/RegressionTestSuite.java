@@ -26,6 +26,8 @@
 package com.sun.javatest.regtest;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.lang.ref.SoftReference;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -158,6 +160,14 @@ public class RegressionTestSuite extends TestSuite
         } catch (Interview.Fault ignore) {
         }
         return urls.toArray(new URL[urls.size()]);
+    }
+
+    GroupManager getGroupManager(PrintWriter out) throws IOException {
+        GroupManager g = new GroupManager(out, getRootDir(), properties.getGroupFiles());
+        RegressionTestFinder tf = (RegressionTestFinder) getTestFinder();
+        g.setAllowedExtensions(tf.getAllowedExtensions());
+        g.setIgnoredDirectories(tf.getIgnoredDirectories());
+        return g;
     }
 
     // defined in JT Harness 4.2, needs to be overridden

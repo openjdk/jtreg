@@ -377,7 +377,8 @@ public class Help {
             commandHelpTree.addNode(groupNode);
         }
 
-        HelpTree.Node n = new HelpTree.Node(i18n, "help.at", new String[] { });
+        HelpTree.Node n = new HelpTree.Node(i18n, "help.tests",
+                new String[] { "at", "groups" });
         commandHelpTree.addNode(n);
 
         String progName = getProgramName();

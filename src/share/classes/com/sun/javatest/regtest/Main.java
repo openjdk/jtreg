@@ -55,6 +55,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.regex.Pattern;
 
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
@@ -660,10 +661,16 @@ public class Main {
 
         new Option(FILE, MAIN, null) {
             public void process(String opt, String arg) {
-                File f= new File(arg);
-                testFileArgs.add(f);
+                if (groupPtn.matcher(arg).matches())
+                    testGroupArgs.add(arg);
+                else
+                    testFileArgs.add(new File(arg));
                 childArgs.add(arg);
             }
+
+            Pattern groupPtn = System.getProperty("os.name").matches("(?i)windows.*")
+                    ? Pattern.compile("(|[^A-Za-z]|.{2,}):[A-Za-z0-9_,]+")
+                    : Pattern.compile(".*:[A-Za-z0-9_,]+");
         }
     );
 
@@ -906,6 +913,9 @@ public class Main {
         } catch (Harness.Fault e) {
             err.println(i18n.getString("main.error", e.getMessage()));
             exit(EXIT_FAULT);
+        } catch (TestManager.NoTests e) {
+            err.println(i18n.getString("main.error", e.getMessage()));
+            exit(EXIT_NO_TESTS);
         } catch (Fault e) {
             err.println(i18n.getString("main.error", e.getMessage()));
             exit(EXIT_FAULT);
@@ -1001,6 +1011,7 @@ public class Main {
         TestManager testManager = new TestManager(out, baseDir);
         testManager.addTests(testFileArgs, false);
         testManager.addTests(antFileArgs, true);
+        testManager.addGroups(testGroupArgs);
         boolean multiRun = testManager.isMultiRun();
 
         if (execMode == null) {
@@ -2129,6 +2140,7 @@ public class Main {
     private String timeoutFactorArg;
     private String priorStatusValuesArg;
     private File reportDirArg;
+    private List<String> testGroupArgs = new ArrayList<String>();
     private List<File> testFileArgs = new ArrayList<File>();
     // TODO: consider making this a "pathset" to detect redundant specification
     // of directories and paths within them.

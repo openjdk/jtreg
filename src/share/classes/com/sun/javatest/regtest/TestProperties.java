@@ -33,6 +33,7 @@ import java.lang.ref.SoftReference;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 import java.util.WeakHashMap;
@@ -58,6 +59,11 @@ public class TestProperties {
 
         String mode = e.properties.getProperty("defaultExecMode");
         defaultExecMode = ExecMode.fromString(mode);
+
+        String gf = e.properties.getProperty("groups");
+        groupFiles = (gf == null)
+                ? Collections.<String>emptyList()
+                : Arrays.asList(gf.split("\\s+"));
     }
 
     Set<String> getValidKeys(File file) throws TestSuite.Fault {
@@ -71,6 +77,10 @@ public class TestProperties {
 
     ExecMode getDefaultExecMode() {
         return defaultExecMode;
+    }
+
+    List<String> getGroupFiles() {
+        return groupFiles;
     }
 
     boolean useBootClassPath(File file) throws TestSuite.Fault {
@@ -121,6 +131,7 @@ public class TestProperties {
     /*private*/ final boolean checkBugID;
     /*private*/ final Set<String> validKeys;
     final ExecMode defaultExecMode;
+    final List<String> groupFiles;
 
     static class Cache {
         class Entry {

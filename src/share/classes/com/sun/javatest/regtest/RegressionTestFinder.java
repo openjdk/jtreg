@@ -29,6 +29,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -73,6 +74,29 @@ public class RegressionTestFinder extends TagTestFinder
         exclude(excludeNames);
         addExtension(".sh", ShScriptCommentStream.class);
         addExtension(".html", HTMLCommentStream.class);
+    }
+
+    Set<String> getAllowedExtensions() {
+        return ((HashMap) getField("extensionTable")).keySet();
+    }
+
+    Set<String> getIgnoredDirectories() {
+        return ((HashMap) getField("excludeList")).keySet();
+    }
+
+    Object getField(String name) {
+        try {
+            Field f = TagTestFinder.class.getDeclaredField(name);
+            try {
+                f.setAccessible(true);
+                return f.get(this);
+            } finally {
+                f.setAccessible(false);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     @Override
@@ -545,7 +569,7 @@ public class RegressionTestFinder extends TagTestFinder
 
     private static final String LINESEP = System.getProperty("line.separator");
 
-    private static final String[] excludeNames = {
+    static final String[] excludeNames = {
         "SCCS", "Codemgr_wsdata", ".hg", "RCS", ".svn",
         "DeletedFiles", "DELETED-FILES", "deleted_files",
         "TemporarilyRemoved"
