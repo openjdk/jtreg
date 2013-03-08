@@ -119,7 +119,7 @@ public class Help {
     void setCommandLineHelpQuery(String query) {
         if (commandLineHelpQuery == null)
             commandLineHelpQuery = new ArrayList<String>();
-        if (query != null)
+        if (query != null && query.trim().length() > 0)
             commandLineHelpQuery.addAll(Arrays.asList(query.trim().split("\\s+")));
     }
 

@@ -972,7 +972,7 @@ public class Main {
             new OptionDecoder(options).decodeArgs(expandAtFiles(args));
         else {
             help = new Help(options);
-            help.setCommandLineHelpQuery("");
+            help.setCommandLineHelpQuery(null);
         }
         return run();
     }
