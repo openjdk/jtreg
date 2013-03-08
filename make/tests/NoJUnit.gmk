@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2012, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -28,7 +28,7 @@
 $(BUILDDIR)/no-junit.ok: $(IMAGES_DIR)/open-jtreg.zip
 	$(RM) -rf $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	$(UNZIP) -d $(@:%.ok=%) $(IMAGES_DIR)/open-jtreg.zip
-	$(@:%.ok=%)/jtreg/linux/bin/jtreg \
+	JT_JAVA=$(JDK16HOME) $(@:%.ok=%)/jtreg/linux/bin/jtreg \
 		-w $(@:%.ok=%)/JTwork  \
 		-r $(@:%.ok=%)/JTreport \
 		$(TESTDIR)/javatest/regtest/data/basic/junit \
