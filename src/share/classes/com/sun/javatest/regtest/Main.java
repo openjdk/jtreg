@@ -1099,8 +1099,28 @@ public class Main {
         }
 
         makeDir(workDirArg, false);
-        makeDir(new File(workDirArg, "scratch"), true);
         testManager.setWorkDirectory(workDirArg);
+
+        if (listTestsFlag) {
+            int total = 0;
+            for (RegressionTestSuite ts: testManager.getTestSuites()) {
+                int count = 0;
+                out.println(i18n.getString("main.tests.suite", ts.getRootDir()));
+                RegressionParameters params = createParameters(testManager, ts);
+                for (Iterator<TestResult> iter = getResultsIterator(params); iter.hasNext(); ) {
+                    TestResult tr = iter.next();
+                    out.println(tr.getTestName());
+                    count++;
+                }
+                out.println(i18n.getString("main.tests.found", count));
+                total += count;
+            }
+            if (testManager.isMultiRun())
+                out.println(i18n.getString("main.tests.total", total));
+            return EXIT_OK;
+        }
+
+        makeDir(new File(workDirArg, "scratch"), true);
 
         if (!noReportFlag) {
             makeDir(reportDirArg, false);
@@ -1207,16 +1227,7 @@ public class Main {
                 if (guiFlag) {
                     showTool(params);
                     return EXIT_OK;
-                } else if (listTestsFlag) {
-                    int count = 0;
-                    for (Iterator<TestResult> iter = getResultsIterator(params); iter.hasNext(); ) {
-                        TestResult tr = iter.next();
-                        out.println(tr.getTestName());
-                        count++;
-                    }
-                    out.println(i18n.getString("main.tests.found", count));
-                    return EXIT_OK;
-            } else {
+                } else {
                     try {
                         boolean quiet = (multiRun && !(verbose != null && verbose.multiRun));
                         testStats.addAll(batchHarness(params, quiet));
