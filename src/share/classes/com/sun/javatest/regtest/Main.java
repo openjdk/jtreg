@@ -25,6 +25,8 @@
 
 package com.sun.javatest.regtest;
 
+import java.util.Comparator;
+import java.util.TreeSet;
 import java.awt.EventQueue;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -341,7 +343,12 @@ public class Main {
         new Option(NONE, MAIN, null, "l", "listtests") {
             public void process(String opt, String arg) {
                 listTestsFlag = true;
-                noReportFlag = true;
+            }
+        },
+
+        new Option(NONE, MAIN, null, "showGroups") {
+            public void process(String opt, String arg) {
+                showGroupsFlag = true;
             }
         },
 
@@ -1101,22 +1108,13 @@ public class Main {
         makeDir(workDirArg, false);
         testManager.setWorkDirectory(workDirArg);
 
+        if (showGroupsFlag) {
+            showGroups(testManager);
+            return EXIT_OK;
+        }
+
         if (listTestsFlag) {
-            int total = 0;
-            for (RegressionTestSuite ts: testManager.getTestSuites()) {
-                int count = 0;
-                out.println(i18n.getString("main.tests.suite", ts.getRootDir()));
-                RegressionParameters params = createParameters(testManager, ts);
-                for (Iterator<TestResult> iter = getResultsIterator(params); iter.hasNext(); ) {
-                    TestResult tr = iter.next();
-                    out.println(tr.getTestName());
-                    count++;
-                }
-                out.println(i18n.getString("main.tests.found", count));
-                total += count;
-            }
-            if (testManager.isMultiRun())
-                out.println(i18n.getString("main.tests.total", total));
+            listTests(testManager);
             return EXIT_OK;
         }
 
@@ -1263,6 +1261,72 @@ public class Main {
             }
 
         }
+    }
+
+    /**
+     * Show the expansion (to files and directories) of the groups given
+     * for the test suites on the command line.  If a test suite is given
+     * without qualifying with a group, all groups in that test suite are
+     * shown.
+     * No filters (like keywords, status, etc) are taken into account.
+     */
+    void showGroups(TestManager testManager) throws Fault {
+        for (RegressionTestSuite ts : testManager.getTestSuites()) {
+            out.println(i18n.getString("main.tests.suite", ts.getRootDir()));
+            try {
+                Set<String> selected = testManager.getGroups(ts);
+                GroupManager gm = ts.getGroupManager(out);
+                Set<String> gset = new TreeSet<String>(new NaturalComparator(false));
+                if (selected.isEmpty())
+                    gset.addAll(gm.getGroups());
+                else {
+                    for (String g : gm.getGroups()) {
+                        if (selected.contains(g))
+                            gset.add(g);
+                    }
+                }
+                if (gset.isEmpty()) {
+                    out.println(i18n.getString("main.groups.nogroups"));
+                } else {
+                    for (String g: gset) {
+                        out.print(g);
+                        out.print(":");
+                        Set<String> fset = new TreeSet<String>(new NaturalComparator(false));
+                        for (File f : gm.getFiles(g))
+                            fset.add(ts.getRootDir().toURI().relativize(f.toURI()).getPath());
+                        for (String f: fset) {
+                            out.print(" ");
+                            out.print(f);
+                        }
+                        out.println();
+                    }
+                }
+            } catch (IOException e) {
+                throw new Fault(i18n, "main.cantReadGroups", ts.getRootDir(), e);
+            }
+        }
+    }
+    /**
+     * Show the set of tests defined by the parameters on the command line.
+     * Filters (like keywords and status) are taken into account.
+     */
+
+    void listTests(TestManager testManager) throws BadArgs, Fault {
+        int total = 0;
+        for (RegressionTestSuite ts: testManager.getTestSuites()) {
+            int count = 0;
+            out.println(i18n.getString("main.tests.suite", ts.getRootDir()));
+            RegressionParameters params = createParameters(testManager, ts);
+            for (Iterator<TestResult> iter = getResultsIterator(params); iter.hasNext(); ) {
+                TestResult tr = iter.next();
+                out.println(tr.getTestName());
+                count++;
+            }
+            out.println(i18n.getString("main.tests.found", count));
+            total += count;
+        }
+        if (testManager.isMultiRun())
+            out.println(i18n.getString("main.tests.total", total));
     }
 
     /**
@@ -2192,6 +2256,7 @@ public class Main {
     private List<String> testVMOpts = new ArrayList<String>();
     private boolean checkFlag;
     private boolean listTestsFlag;
+    private boolean showGroupsFlag;
     private List<String> envVarArgs = new ArrayList<String>();
     private IgnoreKind ignoreKind;
     private List<File> classPathAppendArg = new ArrayList<File>();

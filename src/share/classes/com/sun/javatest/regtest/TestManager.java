@@ -186,7 +186,7 @@ public class TestManager {
     File getReportDirectory(RegressionTestSuite ts) throws Fault {
         Entry e = map.get(ts.getRootDir());
         if (e == null)
-            throw new IllegalStateException();
+            throw new IllegalArgumentException();
         if (reportDir != null && e.reportDir == null) {
             if (e.subdir == null && isMultiRun())
                 initSubdirs();
@@ -201,7 +201,7 @@ public class TestManager {
 
         Entry e = map.get(ts.getRootDir());
         if (e == null)
-            throw new IllegalStateException();
+            throw new IllegalArgumentException();
         if (e.subdir == null)
             initSubdirs();
         return e.subdir;
@@ -210,7 +210,7 @@ public class TestManager {
     Set<String> getTests(RegressionTestSuite ts) throws Fault {
         Entry e = map.get(ts.getRootDir());
         if (e == null)
-            throw new IllegalStateException();
+            throw new IllegalArgumentException();
         if (e.all)
             return Collections.<String>emptySet();
         TestResultTable trt = getWorkDirectory(ts).getTestResultTable();
@@ -231,6 +231,13 @@ public class TestManager {
         if (tests.isEmpty())
             throw new NoTests();
         return tests;
+    }
+
+    Set<String> getGroups(RegressionTestSuite ts) throws Fault {
+        Entry e = map.get(ts.getRootDir());
+        if (e == null)
+            throw new IllegalArgumentException();
+        return e.groups;
     }
 
     private Entry getEntry(File rootDir) {

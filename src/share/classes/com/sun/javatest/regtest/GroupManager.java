@@ -135,6 +135,10 @@ public class GroupManager {
         return g;
     }
 
+    Set<String> getGroups() {
+        return groups.keySet();
+    }
+
     private void validate() {
         for (Group g: groups.values()) {
             for (Entry e: g.entries) {
