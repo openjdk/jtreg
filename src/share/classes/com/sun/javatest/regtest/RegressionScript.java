@@ -670,8 +670,8 @@ public class RegressionScript extends Script {
         p.put("test.tool.vm.opts", StringUtils.join(getTestToolVMOptions(), " "));
         p.put("test.compiler.opts", StringUtils.join(getTestCompilerOptions(), " "));
         p.put("test.java.opts", StringUtils.join(getTestJavaOptions(), " "));
-        p.put("test.jdk", getTestJDK().getPath());
-        p.put("compile.jdk", getCompileJDK().getPath());
+        p.put("test.jdk", getTestJDK().getAbsolutePath());
+        p.put("compile.jdk", getCompileJDK().getAbsolutePath());
         return p;
     }
     // where
