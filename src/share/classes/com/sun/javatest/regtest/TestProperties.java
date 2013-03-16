@@ -165,22 +165,22 @@ public class TestProperties {
                     }
 
                     // add the list of valid keys
-                    validKeys = initSet(parent == null ? null : parent.validKeys, "keys");
+                    validKeys = initSimpleSet(parent == null ? null : parent.validKeys, "keys");
 
                     // add the list of bootclasspath dirs
-                    bootClassPathDirs = initSet(parent == null ? null : parent.bootClassPathDirs, "bootclasspath.dirs", dir);
+                    bootClassPathDirs = initFileSet(parent == null ? null : parent.bootClassPathDirs, "bootclasspath.dirs", dir);
 
                     // add the list of othervm dirs
-                    otherVMDirs = initSet(parent == null ? null : parent.otherVMDirs, "othervm.dirs", dir);
+                    otherVMDirs = initFileSet(parent == null ? null : parent.otherVMDirs, "othervm.dirs", dir);
 
                     // add the list of exclusive access dirs
-                    exclusiveAccessDirs = initSet(parent == null ? null : parent.exclusiveAccessDirs, "exclusiveAccess.dirs", dir);
+                    exclusiveAccessDirs = initFileSet(parent == null ? null : parent.exclusiveAccessDirs, "exclusiveAccess.dirs", dir);
 
                     // add the list of TestNG dirs
-                    testNGDirs = initSet(parent == null ? null : parent.testNGDirs, "TestNG.dirs", dir);
+                    testNGDirs = initFileSet(parent == null ? null : parent.testNGDirs, "TestNG.dirs", dir);
 
                     // add the list of library dirs for TestNG tests
-                    libDirs = initSet(parent == null ? null : parent.libDirs, "lib.dirs");
+                    libDirs = initLibDirSet(parent == null ? null : parent.libDirs, "lib.dirs", dir);
                 } else {
                     if (parent == null)
                         throw new IllegalStateException("TEST.ROOT not found");
@@ -199,35 +199,43 @@ public class TestProperties {
                 testNGRoot = initTestNGRoot(parent, dir);
             }
 
-            private Set<String> initSet(Set<String> parent, String propertyName) {
+            private Set<File> initFileSet(Set<File> parent, String propertyName, File baseDir) {
                 String[] values = StringArray.splitWS(properties.getProperty(propertyName));
                 if (parent == null || values.length > 0) {
-                    Set<String> set = (parent == null) ? new LinkedHashSet<String>() : new LinkedHashSet<String>(parent);
-                    set.addAll(Arrays.asList(values));
+                    Set<File> set = (parent == null) ? new LinkedHashSet<File>() : new LinkedHashSet<File>(parent);
+                    //set.addAll(Arrays.asList(values));
+                    for (String v: values) {
+                        File f = toFile(baseDir, v);
+                        if (f != null)
+                            set.add(f);
+                    }
                     return Collections.unmodifiableSet(set);
                 } else {
                     return parent;
                 }
             }
 
-            private Set<File> initSet(Set<File> parent, String propertyName, File baseDir) {
+            private Set<String> initLibDirSet(Set<String> parent, String propertyName, File baseDir) {
                 String[] values = StringArray.splitWS(properties.getProperty(propertyName));
                 if (parent == null || values.length > 0) {
-                    Set<File> set = (parent == null) ? new LinkedHashSet<File>() : new LinkedHashSet<File>(parent);
-                    //set.addAll(Arrays.asList(values));
+                    Set<String> set = (parent == null) ? new LinkedHashSet<String>() : new LinkedHashSet<String>(parent);
                     for (String v: values) {
-                        if (v.startsWith("/")) {
-                            File f = new File(rootDir, v.substring(1));
-                            if (f.exists())
-                                set.add(new File(f.toURI().normalize()));
-                        } else {
-                            File f;
-                            if ((f = new File(baseDir, v)).exists())
-                                set.add(new File(f.toURI().normalize()));
-                            else if ((f = new File(rootDir, v)).exists()) // for backwards compatibility
-                                set.add(new File(f.toURI().normalize()));
+                        File f = toFile(baseDir, v);
+                        if (f != null) {
+                            set.add("/" + rootDir.toURI().relativize(f.toURI()));
                         }
                     }
+                    return Collections.unmodifiableSet(set);
+                } else {
+                    return parent;
+                }
+            }
+
+            private Set<String> initSimpleSet(Set<String> parent, String propertyName) {
+                String[] values = StringArray.splitWS(properties.getProperty(propertyName));
+                if (parent == null || values.length > 0) {
+                    Set<String> set = (parent == null) ? new LinkedHashSet<String>() : new LinkedHashSet<String>(parent);
+                    set.addAll(Arrays.asList(values));
                     return Collections.unmodifiableSet(set);
                 } else {
                     return parent;
@@ -300,6 +308,21 @@ public class TestProperties {
                         return true;
                 }
                 return false;
+            }
+
+            private File toFile(File baseDir, String v) {
+                if (v.startsWith("/")) {
+                    File f = new File(rootDir, v.substring(1));
+                    if (f.exists())
+                        return new File(f.toURI().normalize());
+                } else {
+                    File f;
+                    if ((f = new File(baseDir, v)).exists())
+                        return new File(f.toURI().normalize());
+                    else if ((f = new File(rootDir, v)).exists()) // for backwards compatibility
+                        return new File(f.toURI().normalize());
+                }
+                return null;
             }
         }
 
