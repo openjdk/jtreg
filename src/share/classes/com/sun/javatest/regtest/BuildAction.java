@@ -179,7 +179,15 @@ public class BuildAction extends Action
                 File destDir = e.getKey();
                 List<File> filesForDest = e.getValue();
                 CompileAction ca = new CompileAction();
-                Status s =  ca.compile(destDir, opts, asStrings(filesForDest), SREASON_FILE_TOO_OLD, script);
+                // RFE:  For now we just compile dir at a time in isolation
+                // A better solution would be to put other dirs on source path
+                // and use -implicit:none
+                List<String> compileArgs = new ArrayList<String>();
+                if (IGNORE_SYMBOL_FILE)
+                    compileArgs.add("-XDignore.symbol.file=true");
+                compileArgs.addAll(asStrings(filesForDest));
+                String[] compArgs = compileArgs.toArray(new String[compileArgs.size()]);
+                Status s =  ca.compile(destDir, opts, compArgs, SREASON_FILE_TOO_OLD, script);
                 if (!s.isPassed()) {
                     status = s;
                     break;
@@ -193,15 +201,17 @@ public class BuildAction extends Action
         return status;
     } // run()
 
-    private String[] asStrings(List<File> files) {
-        String[] strings = new String[files.size()];
+    private List<String> asStrings(List<File> files) {
+        List<String> strings = new ArrayList<String>();
         int i = 0;
         for (File f: files)
-            strings[i++] = f.getPath();
+            strings.add(f.getPath());
         return strings;
     }
 
     //----------member variables------------------------------------------------
+
+    private static final boolean IGNORE_SYMBOL_FILE = true;
 
     private String[]   args;
     private String[][] opts;
