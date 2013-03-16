@@ -91,8 +91,14 @@ public class BuildAction extends Action
         this.script = script;
         this.reason = reason;
 
-        if (opts.length != 0)
+        for (int i = 0; i < opts.length; i++) {
+            String[] opt = opts[i];
+            if (opt[0].equals("implicit") && opt[1].equals("none")) {
+                implicitOpt = "-implicit:none";
+                continue;
+            }
             throw new ParseException(BUILD_UNEXPECT_OPT);
+        }
 
         if (args.length == 0)
             throw new ParseException(BUILD_NO_CLASSNAME);
@@ -179,15 +185,18 @@ public class BuildAction extends Action
                 File destDir = e.getKey();
                 List<File> filesForDest = e.getValue();
                 CompileAction ca = new CompileAction();
+                String[][] compOpts = { };
                 // RFE:  For now we just compile dir at a time in isolation
                 // A better solution would be to put other dirs on source path
                 // and use -implicit:none
                 List<String> compileArgs = new ArrayList<String>();
                 if (IGNORE_SYMBOL_FILE)
                     compileArgs.add("-XDignore.symbol.file=true");
+                if (implicitOpt != null)
+                    compileArgs.add(implicitOpt);
                 compileArgs.addAll(asStrings(filesForDest));
                 String[] compArgs = compileArgs.toArray(new String[compileArgs.size()]);
-                Status s =  ca.compile(destDir, opts, compArgs, SREASON_FILE_TOO_OLD, script);
+                Status s =  ca.compile(destDir, compOpts, compArgs, SREASON_FILE_TOO_OLD, script);
                 if (!s.isPassed()) {
                     status = s;
                     break;
@@ -211,10 +220,12 @@ public class BuildAction extends Action
 
     //----------member variables------------------------------------------------
 
-    private static final boolean IGNORE_SYMBOL_FILE = true;
 
     private String[]   args;
     private String[][] opts;
 
     private TestResult.Section section;
+
+    private String implicitOpt;
+    private static final boolean IGNORE_SYMBOL_FILE = true;
 }

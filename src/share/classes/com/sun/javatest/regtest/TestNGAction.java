@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -91,17 +91,21 @@ public class TestNGAction extends MainAction {
         if (userSpecified) {
             return super.build();
         } else {
-            List<String> classes = listClasses(script.absTestSrcDir());
-            String[][] buildOpts = {};
+            List<String> classes = listClasses(script.getCompileSourcePath().split());
+            JDK.Version v = script.getCompileJDKVersion();
+            String[][] buildOpts = v.compareTo(JDK.Version.V1_6) >= 0
+                    ? new String[][] {{ "implicit", "none" }}
+                    : new String[][] { };
             String[]   buildArgs = classes.toArray(new String[classes.size()]);
             BuildAction ba = new BuildAction();
             return ba.build(buildOpts, buildArgs, SREASON_ASSUMED_BUILD, script);
         }
     }
 
-    List<String> listClasses(File root) {
+    List<String> listClasses(List<File> roots) {
         List<String> classes = new ArrayList<String>();
-        listClasses(root, null, classes);
+        for (File root: roots)
+            listClasses(root, null, classes);
         return classes;
     }
 
