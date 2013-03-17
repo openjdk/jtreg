@@ -27,6 +27,7 @@
 
 $(BUILDDIR)/BootClassPathTest.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	$(JTREG_IMAGEDIR)/lib/testng.jar \
 	$(JTREG_IMAGEDIR)/solaris/bin/jtreg
 	$(MKDIR) -p $(@:%.ok=%)
 	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \

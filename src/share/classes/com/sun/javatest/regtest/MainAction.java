@@ -327,23 +327,33 @@ public class MainAction extends Action
         // some tests are inappropriately relying on the CLASSPATH environment
         // variable being set, so force the use here.
         final boolean useCLASSPATH = true;
-        Path cp = new Path(script.getJavaTestClassPath(), script.getTestClassPath());
-        if (script.isJUnitRequired())
-            cp.append(script.getJUnitJar());
-        if (script.isTestNGRequired())
-            cp.append(script.getTestNGJar());
 
-        if ((useCLASSPATH || script.isTestJDK11()) && !useBootClassPath) {
+        Path cp = new Path();
+        Path bcp = new Path();
+        (useBootClassPath ? bcp : cp).append(script.getJavaTestClassPath());
+
+        cp.append(script.getTestClassPath(useBootClassPath));
+        bcp.append(script.getTestBootClassPath(useBootClassPath));
+
+        Path p = bcp.isEmpty() ? cp : bcp;
+        if (script.isJUnitRequired())
+            p.append(script.getJUnitJar());
+        if (script.isTestNGRequired())
+            p.append(script.getTestNGJar());
+
+        if ((useCLASSPATH || script.isTestJDK11()) && !cp.isEmpty()) {
             command.add("CLASSPATH=" + cp);
         }
 
         command.add(script.getJavaProg());
 
-        if (useBootClassPath) {
-            command.add("-Xbootclasspath/a:" + cp.toString());
-        } else if (!useCLASSPATH && !script.isTestJDK11()) {
+        if ((!useCLASSPATH && !script.isTestJDK11()) && !cp.isEmpty()) {
             command.add("-classpath");
             command.add(cp.toString());
+        }
+
+        if (!bcp.isEmpty()) {
+            command.add("-Xbootclasspath/a:" + bcp.toString());
         }
 
         command.addAll(script.getTestVMJavaOptions());

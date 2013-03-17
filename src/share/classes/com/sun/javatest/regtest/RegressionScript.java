@@ -107,7 +107,7 @@ public class RegressionScript extends Script {
 
             // defaultExecMode may still be overridden in individual actions with /othervm
             defaultExecMode = testSuite.useOtherVM(td) ? ExecMode.OTHERVM : params.getExecMode();
-            useBootClassPath = testSuite.useBootClassPath(td);
+            useBootClassPath = testSuite.useBootClassPath(td.getRootRelativePath());
 
             LinkedList<Action> actionList = parseActions(actions, true);
 
@@ -463,40 +463,70 @@ public class RegressionScript extends Script {
         return locations.absBaseClsDir();
     } // absTestClsTopDir()
 
-    private Path cacheTestClassPath;
     Path getTestClassPath() throws TestClassException {
-        if (cacheTestClassPath == null) {
-            cacheTestClassPath = new Path();
-            JDK jdk = getTestJDK();
-            if (jdk.isVersion(JDK.Version.V1_1, params)) {
-                cacheTestClassPath.append(locations.absTestClsDir());
-                cacheTestClassPath.append(locations.absTestSrcDir());
-                cacheTestClassPath.append(locations.absClsLibList());
-                cacheTestClassPath.append(jdk.getJavaClassPath());
-                cacheTestClassPath.append(jdk.getJDKClassPath());
-            } else { // isTestJDK12() or above
-                cacheTestClassPath.append(locations.absTestClsDir());
-                cacheTestClassPath.append(locations.absTestSrcDir()); // required??
-                cacheTestClassPath.append(locations.absClsLibList());
-                cacheTestClassPath.append(locations.absSrcJarLibList());
-                cacheTestClassPath.append(jdk.getJDKClassPath());
-            }
+        return getTestClassPath(false);
+    }
 
-            // handle cpa option to jtreg
-            String[] envVars = getEnvVars();
-            for (int i = 0; i < envVars.length; i++) {
-                if (envVars[i].startsWith("CPAPPEND")) {
-                    String cpa = (StringArray.splitEqual(envVars[i]))[1];
-                    // the cpa we were passed always uses '/' as FILESEP, make
-                    // sure to use the proper one for the platform
-                    cpa = cpa.replace('/', File.separatorChar);
-                    cacheTestClassPath.append(cpa);
-                }
-            }
-
-        }
-        return cacheTestClassPath;
+    Path getTestClassPath(boolean testOnBootClassPath) throws TestClassException {
+        return getTestClassPaths(testOnBootClassPath)[0];
     } // getTestClassPath()
+
+    Path getTestBootClassPath(boolean testOnBootClassPath) throws TestClassException {
+        return getTestClassPaths(testOnBootClassPath)[1];
+    } // getTestBootClassPath()
+
+    private Path[] getTestClassPaths(boolean testOnBootClassPath) throws TestClassException {
+        Path cp = new Path();
+        Path bcp = new Path();
+        JDK jdk = getTestJDK();
+        if (jdk.isVersion(JDK.Version.V1_1, params)) {
+            cp.append(locations.absTestClsDir());
+            cp.append(locations.absTestSrcDir());
+            cp.append(locations.absClsLibList());
+            cp.append(jdk.getJavaClassPath());
+            cp.append(jdk.getJDKClassPath());
+            cp.append(getCPAPPEND());
+        } else if (testOnBootClassPath) {
+            bcp.append(locations.absTestClsDir());
+            bcp.append(locations.absClsLibList());
+            bcp.append(locations.absSrcJarLibList());
+            bcp.append(jdk.getJDKClassPath());
+            bcp.append(getCPAPPEND());
+        } else { // isTestJDK12() or above
+            cp.append(locations.absTestClsDir());
+            cp.append(locations.absTestSrcDir()); // required??
+            for (File lib: locations.absClsLibList())
+                (useBootClassPath(lib) ? bcp : cp).append(lib);
+            cp.append(locations.absSrcJarLibList());
+            cp.append(jdk.getJDKClassPath());
+            cp.append(getCPAPPEND());
+        }
+
+        return new Path[] { cp, bcp };
+    }
+
+    private Path getCPAPPEND() {
+        // handle cpa option to jtreg
+        String[] envVars = getEnvVars();
+        for (int i = 0; i < envVars.length; i++) {
+            if (envVars[i].startsWith("CPAPPEND")) {
+                String cpa = (StringArray.splitEqual(envVars[i]))[1];
+                // the cpa we were passed always uses '/' as FILESEP, make
+                // sure to use the proper one for the platform
+                return new Path(cpa.replace('/', File.separatorChar));
+            }
+        }
+        return new Path();
+    }
+
+    private boolean useBootClassPath(File classdir) throws TestClassException {
+        try {
+            String rel = locations.absBaseClsDir().toURI().relativize(classdir.toURI()).getPath();
+            return testSuite.useBootClassPath(rel);
+        } catch (TestSuite.Fault f) {
+            throw new TestClassException(f.toString());
+        }
+    }
 
     private Path cacheCompileClassPath;
     Path getCompileClassPath() throws TestClassException {
@@ -794,7 +824,6 @@ public class RegressionScript extends Script {
 
     static final String WRAPPEREXTN = ".jta";
 
-    private static final String FILESEP  = System.getProperty("file.separator");
     private static final String LINESEP  = System.getProperty("line.separator");
 
     private static final String

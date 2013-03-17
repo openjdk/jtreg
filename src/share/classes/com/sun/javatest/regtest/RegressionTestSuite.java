@@ -181,8 +181,8 @@ public class RegressionTestSuite extends TestSuite
         return properties.getDefaultExecMode();
     }
 
-    boolean useBootClassPath(TestDescription td) throws TestSuite.Fault {
-        return properties.useBootClassPath(td.getFile());
+    boolean useBootClassPath(String rootRelativePath) throws TestSuite.Fault {
+        return properties.useBootClassPath(new File(getRootDir(), rootRelativePath));
     }
 
     boolean useOtherVM(TestDescription td) throws TestSuite.Fault {
