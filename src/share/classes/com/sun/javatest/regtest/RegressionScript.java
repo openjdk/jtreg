@@ -156,7 +156,7 @@ public class RegressionScript extends Script {
         } catch (ScratchDirectory.Fault e) {
             String msg = e.getLocalizedMessage();
             if (e.getCause() != null)
-                msg += " (" + e.getCause().getLocalizedMessage() + ")";
+                msg += " (" + e.getCause() + ")";
             status = error(msg);
         } catch (TestSuite.Fault e) {
             status = error(e.getMessage());
@@ -173,7 +173,17 @@ public class RegressionScript extends Script {
             testResult.putProperty("elapsed", String.format("%d %d:%02d:%02d.%03d",
                     elapsed, hours, mins, secs, millis));
             if (params.isRetainEnabled()) {
-                boolean ok = scratchDirectory.retainFiles(status, msgPW);
+                boolean ok = false;;
+                try {
+                    ok = scratchDirectory.retainFiles(status, msgPW);
+                } catch (InterruptedException e) {
+                    status = Status.error("Interrupted! " + e.getLocalizedMessage());
+                } catch (ScratchDirectory.Fault e) {
+                    String msg = e.getLocalizedMessage();
+                    if (e.getCause() != null)
+                        msg += " (" + e.getCause() + ")";
+                    status = Status.error(msg);
+                }
                 if (!ok) {
                     msgPW.println("Test result (overridden): " + status);
                     status = error("failed to clean up files after test");

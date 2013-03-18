@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2011, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -86,12 +86,15 @@ abstract class ScratchDirectory {
             // So, if files cannot be deleted, we pause and try again.
             // In all cases, if we cannot delete all the files, we close
             // any agents that might be using this scratch directory.
-            for (int count = 0; count < INIT_MAX_TRIES; count++) {
+            long startTime = System.currentTimeMillis();
+            do {
                 if (deleteFiles(dir, log))
                     return;
-                Agent.Pool.instance().close(dir);
-                Thread.sleep(INIT_RETRY_DELAY);
-            }
+                Thread.sleep(RETRY_DELETE_DELAY_MILLIS);
+            } while ((System.currentTimeMillis() -startTime)
+                    <= MAX_RETRY_DELETE_MILLIS);
+
+            Agent.Pool.instance().close(dir);
             throw new Fault(CANT_CLEAN + dir);
         } else {
             if (dir.mkdirs())
@@ -100,15 +103,16 @@ abstract class ScratchDirectory {
         }
     }
 
-    private static final int INIT_RETRY_DELAY;
-    private static final int INIT_MAX_TRIES;
+    private static final int RETRY_DELETE_DELAY_MILLIS;
+    private static final int MAX_RETRY_DELETE_MILLIS;
+
     static {
         boolean isWindows = System.getProperty("os.name").startsWith("Windows");
-        INIT_RETRY_DELAY = isWindows ? 500 : 0; // millis
-        INIT_MAX_TRIES   = isWindows ?   4 : 1;
+        RETRY_DELETE_DELAY_MILLIS = isWindows ? 500 : 0;
+        MAX_RETRY_DELETE_MILLIS = isWindows ? 30 * 1000 : 0;
     }
 
-    abstract boolean retainFiles(Status status, PrintWriter log);
+    abstract boolean retainFiles(Status status, PrintWriter log) throws InterruptedException, Fault;
 
     boolean retainFile(File file, File dest) {
         File f = new File(dir, file.getPath());
@@ -117,29 +121,48 @@ abstract class ScratchDirectory {
     }
 
     /**
-     * Delete the contents of a directory, reporting any issues to a log.
+     * Delete the contents of a directory, but not the directory itself,
+     * reporting any issues to a log.
      * @param dir The directory whose contents are to be deleted.
      * @param log A stream to which to write errors.
      * @return true if and only if all the contents are successfully deleted.
      * @throws com.sun.javatest.regtest.ScratchDirectory.Fault if any unexpected
      *      issues occur while deleting the contents of the directory.
+     * @throws InterruptedException
      */
-    protected boolean deleteFiles(File dir, PrintWriter log) throws Fault {
+    protected boolean deleteFiles(File dir, PrintWriter log)
+            throws Fault, InterruptedException {
+        return deleteFiles(dir,
+                null /* Pattern */,
+                false /* match */,
+                false /* deleteDir */,
+                log);
+    }
+
+
+    /**
+     * Delete all files in a directory that optionally match or don't
+     * match a pattern.
+     * @throws InterruptedException
+     * @throws Fault
+     * @returns true if the selected contents of the directory are successfully deleted.
+     */
+    protected boolean deleteFiles(File dir, Pattern p, boolean match, PrintWriter log)
+            throws InterruptedException, Fault {
         try {
-            File[] children = dir.listFiles();
-            if (children == null)
+            if (!dir.exists()) {
+                log.println("WARNING: dir " + dir + " already deleted.");
                 return true;
-            boolean ok = true;
-            for (File child: children) {
-                if (isDirectory(child)) {
-                    ok &= deleteFiles(child, log);
-                }
-                if (!child.delete()) {
-                    log.println(CANT_DELETE + child);
-                    ok = false;
-                }
             }
-            return ok;
+            long startTime = System.currentTimeMillis();
+            do {
+                if (deleteFiles(dir, p, match, false, log)) {
+                    return true;
+                }
+                Thread.sleep(RETRY_DELETE_DELAY_MILLIS);
+            } while ((System.currentTimeMillis() - startTime)
+                    <= MAX_RETRY_DELETE_MILLIS);
+            throw new Fault(ScratchDirectory.CANT_CLEAN);
         } catch (SecurityException e) {
             throw new Fault(SECMGR_EXC + dir, e);
         }
@@ -147,26 +170,19 @@ abstract class ScratchDirectory {
 
     /**
      * Delete all files in a directory that optionally match or don't
-     * match a pattern.
-     * @returns true if the selected contents of the directory are successfully deleted.
-     */
-    protected boolean deleteFiles(File dir, Pattern p, boolean match, PrintWriter log) {
-        return deleteFiles(dir, p, match, false, log);
-    }
-
-    /**
-     * Delete all files in a directory that optionally match or don't
      * match a pattern.  If deleteDir is set and all files in the directory
      * are deleted, the directory is deleted as well.
+     * @throws Fault
      * @returns true if the selected files and directories are deleted successfully.
      */
-    protected boolean deleteFiles(File dir, Pattern p, boolean match, boolean deleteDir, PrintWriter log) {
+    protected boolean deleteFiles(File dir, Pattern p, boolean match, boolean deleteDir, PrintWriter log)
+            throws InterruptedException, Fault {
         if (!dir.exists())
             return true;
 
         boolean ok = true;
         for (File file: dir.listFiles()) {
-            if (file.isDirectory()) {
+            if (isDirectory(file)) {
                 ok &= deleteFiles(file, p, match, true, log);
             } else {
                 boolean delete = (p == null) || (p.matcher(file.getName()).matches() == match);
@@ -190,11 +206,14 @@ abstract class ScratchDirectory {
 
     /**
      * Copy all files in a directory that optionally match or don't match a pattern.
+     * @throws InterruptedException
      **/
-    protected boolean saveFiles(File fromDir, File toDir, Pattern p, boolean match, PrintWriter log) {
+    protected boolean saveFiles(File fromDir, File toDir, Pattern p, boolean match, PrintWriter log)
+            throws InterruptedException {
         boolean result = true;
         boolean toDirExists = toDir.exists();
         if (toDirExists) {
+            // clean out the target directory before doing the copy to it
             try {
                 deleteFiles(toDir, log);
             } catch (Fault e) {
@@ -247,9 +266,8 @@ abstract class ScratchDirectory {
     private static final String
         CANT_CLEAN            = "Can't clean ",
         CANT_CREATE           = "Can't create ",
-        CANT_DELETE           = "Can't delete ",
         SECMGR_EXC            = "Problem deleting file: ",
-        CANON_FILE_EXC        = "Problem deleting file: ";
+        CANON_FILE_EXC        = "Problem determining canonical file: ";
 
     /**
      * Use a test-specific directory as the scratch directory for the test.
@@ -263,7 +281,8 @@ abstract class ScratchDirectory {
         }
 
         @Override
-        boolean retainFiles(Status status, PrintWriter log) {
+        boolean retainFiles(Status status, PrintWriter log)
+                throws InterruptedException, Fault {
             // if scratchDir is the same as resultDir, we just need to delete
             // the files we don't want to keep; the ones we want to keep are
             // already in the right place.
@@ -341,7 +360,8 @@ abstract class ScratchDirectory {
         }
 
         @Override
-        boolean retainFiles(Status status, PrintWriter log) {
+        boolean retainFiles(Status status, PrintWriter log)
+                throws InterruptedException, Fault {
             // The scratchDir is not the same as resultDir, so we need to
             // save the files we want and delete the rest.
             boolean ok;
