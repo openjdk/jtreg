@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #
-# Copyright (c) 1998, 2008, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1998, 2013, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -58,7 +58,12 @@
 # E.g.  jtreg -onlineHelp ant
 
 # Determine jtreg/JavaTest installation directory
-if [ -z "$JT_HOME" ]; then
+if [ -n "$JT_HOME" ]; then
+    if [ ! -r $JT_HOME/lib/jtreg.jar ];then
+        echo "Invalid JT_HOME=$JT_HOME. Cannot find or read $JT_HOME/lib/jtreg.jar"
+       exit 1;
+    fi
+else
     # Deduce where script is installed
     # - should work on most derivatives of Bourne shell, like ash, bash, ksh,
     #   sh, zsh, etc, including on Windows, MKS (ksh) and Cygwin (ash or bash)
