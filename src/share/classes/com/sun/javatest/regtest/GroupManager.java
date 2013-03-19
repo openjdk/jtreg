@@ -142,7 +142,9 @@ public class GroupManager {
     private void validate() {
         for (Group g: groups.values()) {
             for (Entry e: g.entries) {
-                for (Set<File> files: Arrays.asList(e.includeFiles, e.excludeFiles)) {
+                @SuppressWarnings("unchecked")
+                List<Set<File>> allFiles = Arrays.asList(e.includeFiles, e.excludeFiles);
+                for (Set<File> files: allFiles) {
                     for (File f: files) {
                         if (!f.exists()) {
                             URI u = root.toURI().relativize(f.toURI());

@@ -76,10 +76,12 @@ public class RegressionTestFinder extends TagTestFinder
         addExtension(".html", HTMLCommentStream.class);
     }
 
+    @SuppressWarnings("unchecked")
     Set<String> getAllowedExtensions() {
         return ((HashMap) getField("extensionTable")).keySet();
     }
 
+    @SuppressWarnings("unchecked")
     Set<String> getIgnoredDirectories() {
         return ((HashMap) getField("excludeList")).keySet();
     }

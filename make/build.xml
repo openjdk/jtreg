@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
- Copyright (c) 2007, 2008, Oracle and/or its affiliates. All rights reserved.
+ Copyright (c) 2007, 2013, Oracle and/or its affiliates. All rights reserved.
  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 
  This code is free software; you can redistribute it and/or modify it
@@ -76,6 +76,12 @@
         <available property="jtharness.ok" file="${javatest.home}/legal/copyright.txt"/>
         <available property="junit.ok" file="${junit.jar}"/>
         <available property="testng.ok" file="${testng.jar}"/>
+        <condition property="jcov.ok">
+            <and>
+                <available file="${jcov.home}/lib/jcov.jar"/>
+                <available file="${jcov.home}/lib/jcov_implant.jar"/>
+            </and>
+        </condition>
     </target>
 
     <!-- ********** jtreg ************************************************** -->
@@ -96,7 +102,7 @@
     </patternset>
 
     <target name="dist-jtreg"
-        depends="import-javatest,import-junit,import-jtharness,jar-jtreg,-dist-jtreg.bin,-dist-jtreg.doc,-dist-jtreg.legal"
+        depends="import-javatest,import-junit,import-testng,import-jcov,import-jtharness,jar-jtreg,-dist-jtreg.bin,-dist-jtreg.doc,-dist-jtreg.legal"
         description="build jtreg for distribution">
         <zip destfile="${dist.jtreg.zip}" filesOnly="true" basedir="${dist.dir}">
             <include name="jtreg/"/>
@@ -104,7 +110,7 @@
         <zip destfile="${dist.open-jtreg.zip}" filesOnly="true" basedir="${dist.dir}">
             <include name="jtreg/"/>
             <exclude name="**/*junit*"/>
-            <exclude name="**/*testng*"/>
+            <exclude name="**/*jcov*"/>
         </zip>
     </target>
 
@@ -294,6 +300,15 @@
         <copy file="${junit.jar}" tofile="${dist.jtreg.dir}/lib/junit.jar"/>
     </target>
 
+    <target name="import-testng" depends="-init" if="testng.ok">
+        <copy file="${testng.jar}" tofile="${dist.jtreg.dir}/lib/testng.jar"/>
+    </target>
+
+    <target name="import-jcov" depends="-init" if="jcov.ok">
+        <copy file="${jcov.home}/lib/jcov.jar" tofile="${dist.jtreg.dir}/lib/jcov.jar"/>
+        <copy file="${jcov.home}/lib/jcov_implant.jar" tofile="${dist.jtreg.dir}/lib/jcov_implant.jar"/>
+    </target>
+
     <target name="import-jtharness" depends="-init,import-javahelp" if="jtharness.ok">
         <copy todir="${dist.jtreg.dir}/legal/jtharness" file="${javatest.home}/legal/copyright.txt"/>
         <copy todir="${dist.jtreg.dir}/legal/jtharness" file="${javatest.home}/legal/license.txt"/>
@@ -349,9 +364,9 @@
     <target name="test-jtreg" depends="-test-jtreg.i18n,-test-jtreg.basic"
         description="execute the main jtreg tests"/>
 
-    <target name="-test-jtreg.i18n" depends="compile-jtreg,-ant-jct.utils">
+    <target name="-test-jtreg.i18n" depends="dist-jtreg,-ant-jct.utils">
         <!-- have to set fork=true because otherwise output redirection gets screwed up -->
-        <java fork="true" classname="com.sun.javatest.regtest.Main" classpath="${build.classes.dir}:${javatest.jar}:${junit.jar}:${jh.jar}"
+        <java fork="true" jar="${dist.jtreg.dir}/lib/jtreg.jar"
             output="${build.dir}/jtreg.i18n" >
             <sysproperty key="javatest.i18n.log" value="com.sun.javatest.regtest"/>
             <arg value="-help"/>
@@ -365,7 +380,7 @@
         </i18ncheck>
     </target>
 
-    <target name="-test-jtreg.basic" depends="jar-jtreg">
+    <target name="-test-jtreg.basic" depends="dist-jtreg">
         <mkdir dir="${build.dir}/jtreg/testclasses"/>
         <delete dir="${build.dir}/jtreg/basic"/>
         <mkdir dir="${build.dir}/jtreg/basic/report"/>
@@ -378,11 +393,13 @@
         </javac>
         <java classpath="${dist.jtreg.dir}/lib/jtreg.jar:${build.dir}/jtreg/testclasses" classname="Basic"
             fork="true" dir="${build.dir}/jtreg/basic/work/scratch" >
+            <sysproperty key="javatest.regtest.allowTrailingBuild" value="true"/>
             <arg file="${src.test.dir}/javatest/regtest/data/basic"></arg>
             <arg file="${build.dir}/jtreg/basic/report"/>
             <arg file="${build.dir}/jtreg/basic/work"/>
             <arg file="${java.home}/.."/>
             <arg value="TESTJAVAHOME=${java.home},DISPLAY=${env.DISPLAY},HOME=${user.home}"/>
+            <arg value="-othervm"/>
         </java>
         <java fork="true" jar="${dist.jtreg.dir}/lib/jtreg.jar"
             output="${build.dir}/jtreg/basic/report.out">

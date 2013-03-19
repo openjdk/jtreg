@@ -51,6 +51,7 @@ import com.sun.javatest.util.I18NResourceBundle;
  */
 public class TestManager {
     class NoTests extends Main.Fault {
+        private static final long serialVersionUID = 0L;
         NoTests() {
             super(i18n, "tm.noTests");
         }
