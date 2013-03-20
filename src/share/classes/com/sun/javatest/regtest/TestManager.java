@@ -40,7 +40,9 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+import com.sun.javatest.TestResult;
 import com.sun.javatest.TestResultTable;
+import com.sun.javatest.TestResultTable.TreeIterator;
 import com.sun.javatest.TestSuite;
 import com.sun.javatest.WorkDirectory;
 import com.sun.javatest.regtest.Main.Fault;
@@ -214,24 +216,54 @@ public class TestManager {
             throw new IllegalArgumentException();
         if (e.all)
             return Collections.<String>emptySet();
-        TestResultTable trt = getWorkDirectory(ts).getTestResultTable();
+        WorkDirectory wd = getWorkDirectory(ts);
         Set<String> tests = new LinkedHashSet<String>();
         for (Map.Entry<String,Boolean> me: e.files.entrySet()) {
             String test = me.getKey();
             boolean ignoreEmptyFiles = me.getValue();
-            if (trt.validatePath(test))
+            if (validatePath(wd, test))
                 tests.add(test);
             else if (!ignoreEmptyFiles)
                 throw new Fault(i18n, "tm.notATest", test);
         }
         for (File f: expandGroups(e)) {
             String test = getRelativePath(e.rootDir, f);
-            if (trt.validatePath(test))
+            if (validatePath(wd, test))
                 tests.add(test);
         }
         if (tests.isEmpty())
             throw new NoTests();
         return tests;
+    }
+
+    // This method is to work around a bug in TestResultTable.validatePath
+    // such that the extension of the file name is not validated.
+    // In other words, an invalid path dir/file.ex1 will be reported as
+    // valid if dir/file.ex2 exists and is valid.
+    // The problem only exists for paths to files (not directories.)
+    // The solution is to check the root-relative path in the test description
+    // to make sure it is the same as the original path.
+    // See JBS CODETOOLS-7900138, CODETOOLS-7900139
+    private boolean validatePath(WorkDirectory wd, String path) {
+        try {
+            TestResultTable trt = wd.getTestResultTable();
+            if (trt.validatePath(path)) {
+                File rootDir = wd.getTestSuite().getRootDir();
+                File f = new File(rootDir, path);
+                if (f.isDirectory())
+                    return true;
+                TreeIterator iter = trt.getIterator(new String[] { path }, null);
+                while (iter.hasNext()) {
+                    TestResult tr = (TestResult) iter.next();
+                    String trp = tr.getDescription().getRootRelativePath();
+                    if (path.equals(trp))
+                        return true;
+                }
+            }
+            return false;
+        } catch (TestResult.Fault f) {
+            return false;
+        }
     }
 
     Set<String> getGroups(RegressionTestSuite ts) throws Fault {
