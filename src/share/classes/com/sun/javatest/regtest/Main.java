@@ -25,8 +25,6 @@
 
 package com.sun.javatest.regtest;
 
-import java.util.Comparator;
-import java.util.TreeSet;
 import java.awt.EventQueue;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -57,6 +55,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.regex.Pattern;
 
 import org.apache.tools.ant.BuildException;
@@ -73,6 +72,7 @@ import com.sun.javatest.ProductInfo;
 import com.sun.javatest.Status;
 import com.sun.javatest.TestEnvironment;
 import com.sun.javatest.TestFilter;
+import com.sun.javatest.TestFinder;
 import com.sun.javatest.TestResult;
 import com.sun.javatest.TestResultTable;
 import com.sun.javatest.TestSuite;
@@ -85,6 +85,7 @@ import com.sun.javatest.tool.Desktop;
 import com.sun.javatest.tool.Startup;
 import com.sun.javatest.util.BackupPolicy;
 import com.sun.javatest.util.I18NResourceBundle;
+
 import static com.sun.javatest.regtest.Option.ArgType.*;
 
 /**
@@ -1246,6 +1247,7 @@ public class Main {
             return (testStats.counts[Status.ERROR] > 0 ? EXIT_TEST_ERROR
                     : testStats.counts[Status.FAILED] > 0 ? EXIT_TEST_FAILED
                     : testStats.counts[Status.PASSED] == 0 ? EXIT_NO_TESTS
+                    : errors != 0 ? EXIT_FAULT
                     : EXIT_OK);
 
         } finally {
@@ -1978,7 +1980,13 @@ public class Main {
                 h.addObserver(new BasicObserver() {
                     @Override
                     public void error(String msg) {
-                        err.println(i18n.getString("main.error", msg));
+                        Main.this.error(msg);
+                    }
+                });
+                params.getWorkDirectory().getTestResultTable().getTestFinder().setErrorHandler(
+                        new TestFinder.ErrorHandler() {
+                    public void error(String msg) {
+                        Main.this.error(msg);
                     }
                 });
 
@@ -2182,6 +2190,12 @@ public class Main {
 
         return null;
     }
+
+    private void error(String msg) {
+        err.println(i18n.getString("main.error", msg));
+        errors++;
+    }
+    int errors;
 
     /**
      * Call System.exit, taking care to get permission from the

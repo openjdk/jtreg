@@ -173,7 +173,7 @@ public class RegressionScript extends Script {
             testResult.putProperty("elapsed", String.format("%d %d:%02d:%02d.%03d",
                     elapsed, hours, mins, secs, millis));
             if (params.isRetainEnabled()) {
-                boolean ok = false;;
+                boolean ok = false;
                 try {
                     ok = scratchDirectory.retainFiles(status, msgPW);
                 } catch (InterruptedException e) {

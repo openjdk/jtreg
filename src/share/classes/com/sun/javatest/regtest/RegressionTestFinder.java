@@ -37,6 +37,8 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.sun.javatest.TestDescription;
+import com.sun.javatest.TestResult;
 import com.sun.javatest.TestSuite;
 import com.sun.javatest.finder.CommentStream;
 import com.sun.javatest.finder.HTMLCommentStream;
@@ -394,6 +396,22 @@ public class RegressionTestFinder extends TagTestFinder
             reportError(tagValues, e.getMessage());
         }
     }
+
+    @Override
+    protected void foundTestDescription(TestDescription td) {
+        String wrp = TestResult.getWorkRelativePath(td);
+        TestDescription other = paths.get(wrp);
+        if (other != null && !td.getRootRelativeURL().equals(other.getRootRelativeURL())) {
+            error(i18n, "finder.jtrClash",
+                    new Object[] { td.getFile(), other.getFile() });
+            return;
+        }
+
+        super.foundTestDescription(td);
+        paths.put(wrp, td);
+
+    }
+    Map<String, TestDescription> paths = new HashMap<String, TestDescription>();
 
     //-----internal routines----------------------------------------------------
 
