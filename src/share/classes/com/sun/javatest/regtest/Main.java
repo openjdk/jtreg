@@ -290,7 +290,7 @@ public class Main {
             }
         },
 
-        new Option(STD, SELECT, "", "exclude", "Xexclude") {
+        new Option(STD, SELECT, null, "exclude", "Xexclude") {
             public void process(String opt, String arg) {
                 File f = getNormalizedFile(new File(arg));
                 excludeListArgs.add(f);
@@ -1943,7 +1943,6 @@ public class Main {
             throws Fault, Harness.Fault, InterruptedException {
         boolean reportRequired =
                 !noReportFlag && !Boolean.getBoolean("javatest.noReportRequired");
-        File rd = params.getReportDir();
 
         try {
             TestStats stats = new TestStats();
