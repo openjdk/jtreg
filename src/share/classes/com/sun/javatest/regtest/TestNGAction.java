@@ -180,6 +180,11 @@ public class TestNGAction extends MainAction {
         }
 
         public void onTestSkipped(ITestResult itr) {
+            if (itr.getThrowable() != null) {
+                // Report a skipped test, due to an exception, as a failure
+                onTestFailure(itr);
+                return;
+            }
             skippedCount++;
             report(InfoKind.TEST, itr);
         }
@@ -212,11 +217,36 @@ public class TestNGAction extends MainAction {
 
         void report(InfoKind k, ITestResult itr) {
             System.out.println(k.toString().toLowerCase()
-                    + " " + itr.getMethod().getConstructorOrMethod()
+                    + " " + itr.getMethod().getMethod().getDeclaringClass().getName()
+                    + "." + itr.getMethod().getMethodName()
+                    + formatParams(itr)
                     + ": " + statusToString(itr.getStatus()));
             Throwable t = itr.getThrowable();
-            if (t != null) {
+            if (t != null  && itr.getStatus() != SUCCESS) {
                 t.printStackTrace(System.out);
+            }
+        }
+
+        private String formatParams(ITestResult itr) {
+            StringBuilder sb = new StringBuilder(80);
+            sb.append('(');
+            String sep = "";
+            for(Object arg : itr.getParameters()) {
+                sb.append(sep);
+                formatParam(sb, arg);
+                sep = ", ";
+            }
+            sb.append(")");
+            return sb.toString();
+        }
+
+        private void formatParam(StringBuilder sb, Object param) {
+            if (param instanceof String) {
+                sb.append('"');
+                sb.append((String) param);
+                sb.append('"');
+            } else {
+                sb.append(param);
             }
         }
 
