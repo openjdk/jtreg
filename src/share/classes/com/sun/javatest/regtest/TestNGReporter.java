@@ -67,7 +67,7 @@ public class TestNGReporter {
     static final String configPrefix = "Configuration Failures:";
     static final Pattern configPattern = Pattern.compile("[^0-9]+([0-9]+)[^0-9]+([0-9]+)[^0-9]*");
 
-    public void add(TestResult tr, TestResult.Section s) {
+    public synchronized void add(TestResult tr, TestResult.Section s) {
         try {
             TestDescription td = tr.getDescription();
             String group = td.getParameter("packageRoot");
