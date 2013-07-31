@@ -91,7 +91,7 @@ public class RegressionScript extends Script {
         try {
             hostname = InetAddress.getLocalHost().getCanonicalHostName();
         } catch (UnknownHostException e) {
-            hostname = "unknown";
+            hostname = "127.0.0.1";
         }
         testResult.putProperty("hostname", hostname);
         String[] props = { "user.name" };
