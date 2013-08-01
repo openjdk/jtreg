@@ -45,15 +45,21 @@ LD_LIBRARY_PATH=
 #----- Java: see http://java.sun.com
 
 ifndef JDK15HOME
-  JDK15HOME = /java/re/jdk/1.5.0/archive/fcs/binaries/linux-i586
+  ifdef SLASHJAVA
+    JDK15HOME = $(SLASHJAVA)/re/jdk/1.5.0/archive/fcs/binaries/linux-i586
+  endif
 endif
 
 ifndef JDK16HOME
-  JDK16HOME = /java/re/jdk/1.6.0/archive/fcs/binaries/linux-i586
+  ifdef SLASHJAVA
+    JDK16HOME = $(SLASHJAVA)/re/jdk/1.6.0/archive/fcs/binaries/linux-i586
+  endif
 endif
 
 ifndef JDK17HOME
-  JDK17HOME = /java/re/jdk/1.7.0/archive/fcs/binaries/linux-i586
+  ifdef SLASHJAVA
+    JDK17HOME = $(SLASHJAVA)/re/jdk/1.7.0/archive/fcs/binaries/linux-i586
+  endif
 endif
 
 # J2SE for most classes
@@ -66,7 +72,9 @@ J2SEJAVAC_TARGET = 5
 
 #----- JavaHelp: see https://javahelp.dev.java.net/
 ifndef JAVAHELP_HOME
-  JAVAHELP_HOME = /java/re/jh/2.0_01/promoted/fcs/latest/binaries/jh2.0/javahelp
+  ifdef SLASHJAVA
+    JAVAHELP_HOME = $(SLASHJAVA)/re/jh/2.0_01/promoted/fcs/latest/binaries/jh2.0/javahelp
+  endif
 endif
 
 JAVAHELP_JAR = $(JAVAHELP_HOME)/lib/jh.jar
@@ -75,23 +83,31 @@ JHINDEXER =  CLASSPATH=$(JAVAHELP_HOME)/lib/jhall.jar $(J2SEJAVA) com.sun.java.h
 #----- JavaTest: see https://jtharness.dev.java.net/
 
 ifndef JTHARNESS_HOME
-  JTHARNESS_HOME = /java/re/jtharness/4.4/archive/MR1/binaries
+  ifdef SLASHJAVA
+    JTHARNESS_HOME = $(SLASHJAVA)/re/jtharness/4.4/archive/MR1/binaries
+  endif
 endif 
 
 ifndef JAVATEST_HOME
   ifdef JTHARNESS_HOME
     JAVATEST_HOME = $(JTHARNESS_HOME)
   else
-    JAVATEST_HOME = /java/re/javatest/4.4/archive/fcs/binaries/javatest
+    ifdef SLASHJAVA
+      JAVATEST_HOME = $(SLASHJAVA)/re/javatest/4.4/archive/fcs/binaries/javatest
+    endif
   endif
 endif
 
-JAVATEST_JAR = $(JAVATEST_HOME)/lib/javatest.jar
+ifdef JAVATEST_HOME
+  JAVATEST_JAR = $(JAVATEST_HOME)/lib/javatest.jar
+endif
 
 #----- JCov 2.0
 
 ifndef JCOV_HOME
-  JCOV_HOME = /java/re/jcov/2.0/promoted/latest/binaries/jcov_2.0/
+  ifdef SLASHJAVA
+    JCOV_HOME = $(SLASHJAVA)/re/jcov/2.0/promoted/latest/binaries/jcov_2.0/
+  endif
 endif
 
 ifdef JCOV_HOME
@@ -102,27 +118,37 @@ endif
 # http://sourceforge.net/projects/junit/files/junit/4.5/junit-4.5.jar/download
 
 ifndef JUNIT_JAR
-  JUNIT_JAR = /java/devtools/share/junit/junit-4.5/junit.jar
+  ifdef SLASHJAVA
+    JUNIT_JAR = $(SLASHJAVA)/devtools/share/junit/junit-4.5/junit.jar
+  endif
 endif
 
 #----- TestNG 6.7: see http://www.testng.org/
 # http://testng.org/doc/download.html
 
 ifndef TESTNG_HOME
-  TESTNG_HOME = /java/devtools/share/testng/testng-6.7
+  ifdef SLASHJAVA
+    TESTNG_HOME = $(SLASHJAVA)/devtools/share/testng/testng-6.7
+  endif
 endif
 
 ifndef TESTNG_JAR
-  TESTNG_JAR = $(TESTNG_HOME)/other-jars/testng-6.7-dist.jar
+  ifdef TESTNG_HOME
+    TESTNG_JAR = $(TESTNG_HOME)/other-jars/testng-6.7-dist.jar
+  endif
 endif
 
 #----- Ant: see http://ant.apache.org/
 
 ifndef ANTHOME
-  ANTHOME = /java/devtools/share/ant/1.7.0
+  ifdef SLASHJAVA
+    ANTHOME = $(SLASHJAVA)/devtools/share/ant/1.7.0
+  endif
 endif
 
-ANT = $(ANTHOME)/bin/ant
+ifdef ANTHOME
+  ANT = $(ANTHOME)/bin/ant
+endif
 
 #----- HTML check: 
 # Optional: if set, checks HTML doc files for correctness.
@@ -130,7 +156,9 @@ ANT = $(ANTHOME)/bin/ant
 # Leave HTMLCHECK unset if not required
 
 ifndef HTMLCHECK
-#  HTMLCHECK = /java/jct-tools/pkgs/htmlcheck_1.2.1/bin/htmlcheck
+  ifdef SLASHJAVA
+#  HTMLCHECK = $(SLASHJAVA)/jct-tools/pkgs/htmlcheck_1.2.1/bin/htmlcheck
+  endif
 endif
 
 #----- Linklint: see http://www.linklint.org/
@@ -143,7 +171,9 @@ endif
 #----- Xalan: see http://xml.apache.org/xalan-j/
 
 ifndef XALANHOME
-  XALANHOME = /java/jct-tools/pkgs/xalan-j_2_7_0
+  ifdef SLASHJAVA
+    XALANHOME = $(SLASHJAVA)/jct-tools/pkgs/xalan-j_2_7_0
+  endif
 endif
 
 #----- Unix commands
