@@ -77,16 +77,18 @@ public class TestNGReporter {
             if (info == null)
                 infoMap.put(group, info = new Info());
             String out = s.getOutput(OutputKind.STDOUT.name);
-            Matcher tm = getMatcher(out, testsPrefix, testsPattern);
-            if (tm != null && tm.matches()) {
-                info.count += Integer.parseInt(tm.group(1));
-                info.failureCount += Integer.parseInt(tm.group(2));
-                info.skippedCount += Integer.parseInt(tm.group(3));
-            }
-            Matcher cm = getMatcher(out, configPrefix, configPattern);
-            if (cm != null && cm.matches()) {
-                info.configFailureCount += Integer.parseInt(cm.group(1));
-                info.configSkippedCount += Integer.parseInt(cm.group(2));
+            if (out != null) {
+                Matcher tm = getMatcher(out, testsPrefix, testsPattern);
+                if (tm != null && tm.matches()) {
+                    info.count += Integer.parseInt(tm.group(1));
+                    info.failureCount += Integer.parseInt(tm.group(2));
+                    info.skippedCount += Integer.parseInt(tm.group(3));
+                }
+                Matcher cm = getMatcher(out, configPrefix, configPattern);
+                if (cm != null && cm.matches()) {
+                    info.configFailureCount += Integer.parseInt(cm.group(1));
+                    info.configSkippedCount += Integer.parseInt(cm.group(2));
+                }
             }
         } catch (TestResult.Fault e) {
             // should not occur with tr still in memory
