@@ -209,13 +209,17 @@ public class GroupManager {
         Set<File> getFiles() {
             if (files == null) {
                 files = new LinkedHashSet<File>();
-                Set<Group> subgroups = new LinkedHashSet<Group>();
+                Set<File> inclFiles = new HashSet<File>();
+                Set<File> exclFiles = new HashSet<File>();
                 for (Entry e: entries) {
-                    addFiles(files, e.includeFiles, e.excludeFiles);
-                    subgroups.addAll(e.includeGroups);
+                    inclFiles.addAll(e.includeFiles);
+                    for (Group g: e.includeGroups)
+                        inclFiles.addAll(g.getFiles());
+                    exclFiles.addAll(e.excludeFiles);
+                    for (Group g: e.excludeGroups)
+                        exclFiles.addAll(g.getFiles());
                 }
-                for (Group g: subgroups)
-                    files.addAll(g.getFiles());
+                addFiles(files, inclFiles, exclFiles);
             }
             return files;
         }
@@ -286,20 +290,22 @@ public class GroupManager {
         Set<File> includeFiles = new LinkedHashSet<File>();
         Set<File> excludeFiles = new LinkedHashSet<File>();
         Set<Group> includeGroups = new LinkedHashSet<Group>();
+        Set<Group> excludeGroups = new LinkedHashSet<Group>();
 
         Entry(File origin, File root, String def) {
             this.origin = origin;
 
             for (String item: def.split("\\s+")) {
+                boolean exclude = item.startsWith(EXCLUDE_PREFIX);
+                if (exclude)
+                    item = item.substring(1);
+
                 if (item.startsWith(GROUP_PREFIX)) {
                     String name = item.substring(1);
-                    includeGroups.add(getGroup(name));
-                } else if (item.startsWith(EXCLUDE_PREFIX)) {
-                    String name = item.substring(1);
-                    excludeFiles.add(new File(root, name));
+                    (exclude ? excludeGroups : includeGroups).add(getGroup(name));
                 } else {
                     String name = item;
-                    includeFiles.add(new File(root, name));
+                    (exclude ? excludeFiles : includeFiles).add(new File(root, name));
                 }
             }
         }
