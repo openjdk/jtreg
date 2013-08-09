@@ -295,6 +295,10 @@ public class GroupManager {
         Entry(File origin, File root, String def) {
             this.origin = origin;
 
+            def = def.trim();
+            if (def.length() == 0)
+                return;
+
             for (String item: def.split("\\s+")) {
                 boolean exclude = item.startsWith(EXCLUDE_PREFIX);
                 if (exclude)
@@ -308,6 +312,15 @@ public class GroupManager {
                     (exclude ? excludeFiles : includeFiles).add(new File(root, name));
                 }
             }
+        }
+
+        @Override
+        public String toString() {
+            return "Entry[inclFiles" + includeFiles
+                    + ",exclFiles:" + excludeFiles
+                    + ",inclGroups:" + includeGroups
+                    + ",exclGroups:" + excludeGroups
+                    + "]";
         }
     }
 }
