@@ -43,7 +43,6 @@ import java.util.Properties;
 import java.util.Set;
 
 import com.sun.javatest.Status;
-import com.sun.javatest.TestResult;
 import com.sun.javatest.lib.ProcessCommand;
 
 import static com.sun.javatest.regtest.RStatus.*;
@@ -57,6 +56,17 @@ import static com.sun.javatest.regtest.RStatus.*;
  */
 public class MainAction extends Action
 {
+    public static final String NAME = "main";
+
+    /**
+     * {@inheritdoc}
+     * @return "main"
+     */
+    @Override
+    public String getName() {
+        return NAME;
+    }
+
     /** Marker interface for test driver classes, which need to be passed a
      *  class loader to load the classes for the test.
      *  @see JUnitAction.JUnitRunner
@@ -79,6 +89,7 @@ public class MainAction extends Action
      * @exception  ParseException If the options or arguments are not expected
      *             for the action or are improperly formated.
      */
+    @Override
     public void init(String[][] opts, String[] args, String reason,
                      RegressionScript script)
         throws ParseException
@@ -96,8 +107,7 @@ public class MainAction extends Action
                      String driverClass)
         throws ParseException
     {
-        this.script = script;
-        this.reason = reason;
+        super.init(opts, args, reason, script);
 
         if (args.length == 0)
             throw new ParseException(MAIN_NO_CLASSNAME);
@@ -231,7 +241,7 @@ public class MainAction extends Action
         if (!(status = build()).isPassed())
             return status;
 
-        section = startAction(getActionName(), getActionArgs(), reason);
+        startAction();
 
         if (script.isCheck()) {
             status = passed(CHECK_PASS);
@@ -257,7 +267,7 @@ public class MainAction extends Action
             }
         }
 
-        endAction(status, section);
+        endAction(status);
         return status;
     } // run()
 
@@ -271,10 +281,6 @@ public class MainAction extends Action
         String[]   buildArgs = {mainClassName.replace(File.separatorChar, '.')};
         BuildAction ba = new BuildAction();
         return ba.build(buildOpts, buildArgs, SREASON_ASSUMED_BUILD, script);
-    }
-
-    protected String getActionName() {
-        return "main";
     }
 
     protected String[] getActionArgs() {
@@ -392,9 +398,9 @@ public class MainAction extends Action
         PrintWriter sysErr = section.createOutput("System.err");
         try {
             if (showMode)
-                showMode(getActionName(), ExecMode.OTHERVM, section);
+                showMode(getName(), ExecMode.OTHERVM, section);
             if (showCmd)
-                showCmd(getActionName(), cmdArgs, section);
+                showCmd(getName(), cmdArgs, section);
 //          for (int i = 0; i < cmdArgs.length; i++)
 //              System.out.print(" " + cmdArgs[i]);
 //          System.out.println();
@@ -446,7 +452,7 @@ public class MainAction extends Action
         }
 
         if (showMode)
-            showMode(getActionName(), ExecMode.SAMEVM, section);
+            showMode(getName(), ExecMode.SAMEVM, section);
 
         // TAG-SPEC:  "The source and class directories of a test are made
         // available to main and applet actions via the system properties
@@ -487,7 +493,7 @@ public class MainAction extends Action
         }
 
         if (showMode)
-            showMode(getActionName(), ExecMode.AGENTVM, section);
+            showMode(getName(), ExecMode.AGENTVM, section);
 
         // TAG-SPEC:  "The source and class directories of a test are made
         // available to main and applet actions via the system properties
@@ -858,6 +864,4 @@ public class MainAction extends Action
     private boolean othervm = false;
     private int     timeout = -1;
     private String  manual  = "unset";
-
-    private TestResult.Section section;
 }

@@ -33,7 +33,6 @@ import java.util.List;
 import java.util.Set;
 
 import com.sun.javatest.Status;
-import com.sun.javatest.TestResult;
 import com.sun.javatest.lib.ProcessCommand;
 
 import static com.sun.javatest.regtest.RStatus.*;
@@ -47,6 +46,17 @@ import static com.sun.javatest.regtest.RStatus.*;
  */
 public class ShellAction extends Action
 {
+    public static final String NAME = "shell";
+
+    /**
+     * {@inheritdoc}
+     * @return "shell"
+     */
+    @Override
+    public String getName() {
+        return NAME;
+    }
+
     /**
      * This method does initial processing of the options and arguments for the
      * action.  Processing is determined by the requirements of run().
@@ -63,12 +73,12 @@ public class ShellAction extends Action
      * @exception  ParseException If the options or arguments are not expected
      *             for the action or are improperly formated.
      */
+    @Override
     public void init(String [][] opts, String [] args, String reason,
                      RegressionScript script)
         throws ParseException
     {
-        this.script = script;
-        this.reason = reason;
+        super.init(opts, args, reason, script);
 
         if (args.length == 0)
             throw new ParseException(SHELL_NO_SCRIPT_NAME);
@@ -160,7 +170,7 @@ public class ShellAction extends Action
     public Status run() throws TestRunException {
         Status status;
 
-        section = startAction("shell", shellFN + " " + shellArgs, reason);
+        startAction();
 
         File shellFile = new File(script.absTestSrcDir(), shellFN);
         if (!shellFile.exists())
@@ -262,7 +272,7 @@ public class ShellAction extends Action
             }
         }
 
-        endAction(status, section);
+        endAction(status);
         return status;
     } // run()
         // where
@@ -303,6 +313,4 @@ public class ShellAction extends Action
     private boolean reverseStatus = false;
     private int     timeout = -1;
     private String  manual  = "unset";
-
-    private TestResult.Section section;
 }

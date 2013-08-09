@@ -30,7 +30,6 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import com.sun.javatest.Status;
-import com.sun.javatest.TestResult;
 import com.sun.javatest.regtest.Locations.ClassLocn;
 
 import static com.sun.javatest.regtest.RStatus.*;
@@ -44,6 +43,17 @@ import static com.sun.javatest.regtest.RStatus.*;
  */
 public class CleanAction extends Action
 {
+    public static final String NAME = "clean";
+
+    /**
+     * {@inheritdoc}
+     * @return "clean"
+     */
+    @Override
+    public String getName() {
+        return NAME;
+    }
+
     /**
      * This method does initial processing of the options and arguments for the
      * action.  Processing is determined by the requirements of run().
@@ -57,12 +67,12 @@ public class CleanAction extends Action
      * @exception  ParseException If the options or arguments are not expected
      *             for the action or are improperly formated.
      */
+    @Override
     public void init(String[][] opts, String[] args, String reason,
                      RegressionScript script)
         throws ParseException
     {
-        this.script = script;
-        this.reason = reason;
+        super.init(opts, args, reason, script);
 
         if (opts.length != 0)
             throw new ParseException(CLEAN_UNEXPECT_OPT);
@@ -76,8 +86,6 @@ public class CleanAction extends Action
                 || (currArg.indexOf('/') != -1))
                 throw new ParseException(CLEAN_BAD_CLASSNAME + currArg);
         }
-
-        this.args = args;
     } // init()
 
     /**
@@ -96,7 +104,7 @@ public class CleanAction extends Action
         // This doesn't complain if the specified file doesn't exist
         Status status = passed(CLEAN_SUCC);
 
-        section = startAction("clean", args, reason);
+        startAction();
 
         if (script.isCheck()) {
             status = passed(CHECK_PASS);
@@ -141,7 +149,7 @@ public class CleanAction extends Action
             }
         }
 
-        endAction(status, section);
+        endAction(status);
         return status;
     } // run()
 
@@ -163,8 +171,4 @@ public class CleanAction extends Action
     }
 
     //----------member variables------------------------------------------------
-
-    private String[] args;
-
-    private TestResult.Section section;
 }

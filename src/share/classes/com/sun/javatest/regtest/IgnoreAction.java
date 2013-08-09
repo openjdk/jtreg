@@ -26,7 +26,6 @@
 package com.sun.javatest.regtest;
 
 import com.sun.javatest.Status;
-import com.sun.javatest.TestResult;
 
 import static com.sun.javatest.regtest.RStatus.*;
 
@@ -39,6 +38,17 @@ import static com.sun.javatest.regtest.RStatus.*;
  */
 public class IgnoreAction extends Action
 {
+    public static final String NAME = "ignore";
+
+    /**
+     * {@inheritdoc}
+     * @return "ignore"
+     */
+    @Override
+    public String getName() {
+        return NAME;
+    }
+
     /**
      * This method does initial processing of the options and arguments for the
      * action.  Processing is determined by the requirements of run().
@@ -52,17 +62,15 @@ public class IgnoreAction extends Action
      * @exception  ParseException If the options or arguments are not expected
      *             for the action or are improperly formated.
      */
-    public void init(String [][] opts, String [] args, String reason,
+    @Override
+    public void init(String[][] opts, String[] args, String reason,
                      RegressionScript script)
         throws ParseException
     {
-        this.script = script;
-        this.reason = reason;
+        super.init(opts, args, reason, script);
 
         if (opts.length != 0)
             throw new ParseException(IGNORE_UNEXPECT_OPTS);
-
-        this.args = args;
     } // init()
 
     /**
@@ -78,7 +86,7 @@ public class IgnoreAction extends Action
      *             the test.
      */
     public Status run() throws TestRunException {
-        section = startAction("ignore", args, reason);
+        startAction();
 
         Status status;
         if (script.isCheck())
@@ -101,13 +109,10 @@ public class IgnoreAction extends Action
             default:
                 throw new IllegalArgumentException();
         }
-        endAction(status, section);
+
+        endAction(status);
         return status;
     } // run()
 
     //----------member variables------------------------------------------------
-
-    private String [] args;
-
-    private TestResult.Section section;
 }

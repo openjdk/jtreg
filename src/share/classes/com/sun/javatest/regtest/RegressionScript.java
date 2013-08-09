@@ -352,21 +352,19 @@ public class RegressionScript extends Script {
     //----------internal methods------------------------------------------------
 
     private void populateActionTable() {
-        addAction("applet", AppletAction.class);
-        addAction("build", BuildAction.class);
-        addAction("clean", CleanAction.class);
-        addAction("compile", CompileAction.class);
-        addAction("ignore", IgnoreAction.class);
-        addAction("main", MainAction.class);
-        addAction("junit", JUnitAction.class);
-        addAction("shell", ShellAction.class);
-        addAction("testng", TestNGAction.class);
+        addAction(AppletAction.NAME,  AppletAction.class);
+        addAction(BuildAction.NAME,   BuildAction.class);
+        addAction(CleanAction.NAME,   CleanAction.class);
+        addAction(CompileAction.NAME, CompileAction.class);
+        addAction(IgnoreAction.NAME,  IgnoreAction.class);
+        addAction(JUnitAction.NAME,   JUnitAction.class);
+        addAction(MainAction.NAME,    MainAction.class);
+        addAction(ShellAction.NAME,   ShellAction.class);
+        addAction(TestNGAction.NAME,  TestNGAction.class);
     } // populateActionTable()
 
-    private void addAction(String action, Class<?> actionClass) {
-        if (!Action.class.isAssignableFrom(actionClass))
-            throw new IllegalArgumentException(ADD_BAD_SUBTYPE + Action.class.getName());
-        actionTable.put(action, actionClass);
+    private void addAction(String actionName, Class<? extends Action> actionClass) {
+        actionTable.put(actionName, actionClass);
     } // addAction()
 
     /**

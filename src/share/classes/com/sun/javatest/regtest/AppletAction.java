@@ -40,7 +40,6 @@ import java.util.Map;
 import java.util.Set;
 
 import com.sun.javatest.Status;
-import com.sun.javatest.TestResult;
 import com.sun.javatest.lib.ProcessCommand;
 
 import static com.sun.javatest.regtest.RStatus.*;
@@ -54,6 +53,17 @@ import static com.sun.javatest.regtest.RStatus.*;
  */
 public class AppletAction extends Action
 {
+    public static final String NAME = "applet";
+
+    /**
+     * {@inheritdoc}
+     * @return "applet"
+     */
+    @Override
+    public String getName() {
+        return NAME;
+    }
+
     /**
      * This method does initial processing of the options and arguments for the
      * action.  Processing is determined by the requirements of run().
@@ -70,12 +80,12 @@ public class AppletAction extends Action
      * @exception  ParseException If the options or arguments are not expected
      *             for the action or are improperly formated.
      */
+    @Override
     public void init(String[][] opts, String[] args, String reason,
                      RegressionScript script)
         throws ParseException
     {
-        this.script = script;
-        this.reason = reason;
+        super.init(opts, args, reason, script);
 
         if (args.length != 1)
             throw new ParseException(APPLET_ONE_ARG_REQ);
@@ -163,7 +173,7 @@ public class AppletAction extends Action
         if (!(status = ba.build(buildOpts, buildArgs, SREASON_ASSUMED_BUILD, script)).isPassed())
             return status;
 
-        section = startAction("applet", htmlFN, reason);
+        startAction();
 
         if (script.isCheck()) {
             // If we're only running check on the contents of the test
@@ -178,7 +188,7 @@ public class AppletAction extends Action
 //              status = runSameJVM();
         }
 
-        endAction(status, section);
+        endAction(status);
         return status;
     } // run()
 
@@ -627,6 +637,5 @@ public class AppletAction extends Action
     private String htmlFN;
     private String clsName;
     private HTMLFileContents htmlFileContents;
-    private TestResult.Section section;
     private static final Object appletLock = new Object();
 }

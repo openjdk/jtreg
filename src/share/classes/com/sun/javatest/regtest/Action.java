@@ -70,6 +70,12 @@ public abstract class Action
     } // Action()
 
     /**
+     * Get the user-visible name of this action.
+     * @return the user-visible name of this action.
+     */
+    public abstract String getName();
+
+    /**
      * This method does initial processing of the options and arguments for the
      * action.  Processing is determined by the requirements of run() which is
      * determined by the tag specification.
@@ -81,9 +87,14 @@ public abstract class Action
      * @exception  ParseException If the options or arguments are not expected
      *             for the action or are improperly formated.
      */
-    public abstract void init(String[][] opts, String[] args, String reason,
-                              RegressionScript script)
-        throws ParseException;
+    public void init(String[][] opts, String[] args, String reason,
+            RegressionScript script)
+            throws ParseException {
+        this.opts = opts;
+        this.args = args;
+        this.reason = reason;
+        this.script = script;
+    }
 
     /**
      * The method that does the work of the action.  The necessary work for the
@@ -258,46 +269,22 @@ public abstract class Action
     //----------logging methods-------------------------------------------------
 
     /**
-     * Return a recording area for the action.  The initial contents of the
+     * Set up a recording area for the action.  The initial contents of the
      * default message area are set and will be of the form:
      * <pre>
      * command: action [command_args]
      * reason: [reason_string]
      * </pre>
-     *
-     * @param action The name of the action currently being processed.
-     * @param args An array containing the action's arguments.
-     * @param reason A reason string.
-     * @return     The record area for the action.
      */
-    protected TestResult.Section startAction(String action, String[] args, String reason) {
-        startTime = (new Date()).getTime();
-        return  startAction(action, StringArray.join(args, " "), reason);
-    } // startAction()
+    protected void startAction() {
+        String name = getName();
+        section = script.getTestResult().createSection(name);
 
-    /**
-     * Return a recording area for the action.  The initial contents of the
-     * default message area are set and will be of the form:
-     * <pre>
-     * command: action [command_args]
-     * reason: [reason_string]
-     * </pre>
-     *
-     * @param action The name of the action currently being processed.
-     * @param args The string containing the action's arguments.
-     * @param reason A reason string.
-     * @return     The record area for the action.
-     */
-    protected TestResult.Section startAction(String action, String args, String reason) {
-        TestResult.Section section = script.getTestResult().createSection(action);
         PrintWriter pw = section.getMessageWriter();
-
-        String basic = LOG_COMMAND + action + " " + args;
-        pw.println(basic);
+        pw.println(LOG_COMMAND + name + " " + args);
         pw.println(LOG_REASON + reason);
 
         startTime = (new Date()).getTime();
-        return section;
     } // startAction()
 
     /**
@@ -307,7 +294,7 @@ public abstract class Action
      * @param status The final status of the action.
      * @param section The record area for the action.
      */
-    protected void endAction(Status status, TestResult.Section section) {
+    protected void endAction(Status status) {
         long elapsedTime = (new Date()).getTime() - startTime;
         PrintWriter pw = section.getMessageWriter();
         pw.println(LOG_ELAPSED_TIME + ((double) elapsedTime/1000.0));
@@ -745,8 +732,12 @@ public abstract class Action
 
     private long   startTime;
 
-    protected String reason;
+    protected /*final*/ String[][] opts;
+    protected /*final*/ String[] args;
+    protected /*final*/ String reason;
     protected /*final*/ RegressionScript script;
+
+    protected /*final*/ TestResult.Section section;
 
     protected static final boolean showCmd = show("showCmd");
     protected static final boolean showMode = show("showMode");

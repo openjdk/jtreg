@@ -41,7 +41,6 @@ import java.util.Properties;
 import java.util.Set;
 
 import com.sun.javatest.Status;
-import com.sun.javatest.TestResult;
 import com.sun.javatest.lib.ProcessCommand;
 
 import static com.sun.javatest.regtest.RStatus.*;
@@ -54,6 +53,17 @@ import static com.sun.javatest.regtest.RStatus.*;
  * @see Action
  */
 public class CompileAction extends Action {
+    public static final String NAME = "compile";
+
+    /**
+     * {@inheritdoc}
+     * @return "compile"
+     */
+    @Override
+    public String getName() {
+        return NAME;
+    }
+
     /**
      * A method used by sibling classes to run both the init() and run()
      * method of CompileAction.
@@ -97,11 +107,11 @@ public class CompileAction extends Action {
      * @exception  ParseException If the options or arguments are not expected
      *             for the action or are improperly formated.
      */
+    @Override
     public void init(String[][] opts, String[] args, String reason,
                 RegressionScript script)
             throws ParseException {
-        this.script = script;
-        this.reason = reason;
+        super.init(opts, args, reason, script);
 
         if (args.length == 0)
             throw new ParseException(COMPILE_NO_CLASSNAME);
@@ -181,8 +191,6 @@ public class CompileAction extends Action {
         } catch (RegressionScript.TestClassException e) {
             throw new ParseException(e.getMessage());
         }
-
-        this.args = args;
     } // init()
 
     @Override
@@ -223,9 +231,7 @@ public class CompileAction extends Action {
      *             the test.
      */
     public Status run() throws TestRunException {
-        Status status;
-
-        section = startAction("compile", args, reason);
+        startAction();
 
         // Make sure that all of the .java files we want to compile exist.
         // We could let the compiler handle this, but if we put the extra check
@@ -237,6 +243,8 @@ public class CompileAction extends Action {
                     throw new TestRunException(CANT_FIND_SRC + currArg);
             }
         }
+
+        Status status;
 
         if (script.isCheck()) {
             status = passed(CHECK_PASS);
@@ -256,7 +264,7 @@ public class CompileAction extends Action {
             }
         }
 
-        endAction(status, section);
+        endAction(status);
         return status;
     } // run()
 
@@ -713,7 +721,6 @@ public class CompileAction extends Action {
 
     //----------member variables------------------------------------------------
 
-    private String[] args;
     private File destDir;
 
     private boolean reverseStatus = false;
@@ -722,6 +729,4 @@ public class CompileAction extends Action {
     private boolean classpathp  = false;
     private boolean sourcepathp = false;
     private boolean process = false;
-
-    private TestResult.Section section;
 }

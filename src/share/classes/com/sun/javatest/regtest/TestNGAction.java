@@ -36,7 +36,6 @@ import org.testng.reporters.XMLReporter;
 import static org.testng.ITestResult.*;
 
 import com.sun.javatest.Status;
-import com.sun.javatest.TestResult;
 import org.testng.IConfigurationListener;
 import org.testng.ITestNGListener;
 
@@ -46,6 +45,16 @@ import org.testng.ITestNGListener;
  * @see Action
  */
 public class TestNGAction extends MainAction {
+    public static final String NAME = "testng";
+
+    /**
+     * {@inheritdoc}
+     * @return "testng"
+     */
+    @Override
+    public String getName() {
+        return NAME;
+    }
 
     /**
      * This method does initial processing of the options and arguments for the
@@ -79,11 +88,6 @@ public class TestNGAction extends MainAction {
     } // init()
 
     boolean userSpecified = false;
-
-    @Override
-    protected String getActionName() {
-        return "testng";
-    }
 
     // cache results?
     @Override
@@ -124,11 +128,11 @@ public class TestNGAction extends MainAction {
     private static final File TESTNG_RESULTS_XML = new File("testng-results.xml");
 
     @Override
-    public void endAction(Status s, TestResult.Section trs) {
-        super.endAction(s, trs);
+    public void endAction(Status s) {
+        super.endAction(s);
         if (script.isCheck())
             return;
-        script.getTestNGReporter().add(script.getTestResult(), trs);
+        script.getTestNGReporter().add(script.getTestResult(), section);
         String jtrPath = script.getTestResult().getWorkRelativePath();
         String tngPath = jtrPath.replaceAll("\\.jtr$", ".testng-results.xml");
         script.saveScratchFile(TESTNG_RESULTS_XML, new File(tngPath));

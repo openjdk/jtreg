@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2008, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -36,6 +36,17 @@ import java.util.List;
  */
 public class JUnitAction extends MainAction
 {
+    public static final String NAME = "junit";
+
+    /**
+     * {@inheritdoc}
+     * @return "junit"
+     */
+    @Override
+    public String getName() {
+        return NAME;
+    }
+
     /**
      * This method does initial processing of the options and arguments for the
      * action.  Processing is determined by the requirements of run().
@@ -66,11 +77,6 @@ public class JUnitAction extends MainAction
             throw new ParseException(JUNIT_BAD_MAIN_ARG);
 
     } // init()
-
-    @Override
-    protected String getActionName() {
-        return "junit";
-    }
 
     public static class JUnitRunner implements TestRunner {
         public static void main(String... args) throws Exception {

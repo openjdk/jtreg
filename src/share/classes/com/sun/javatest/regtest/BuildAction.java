@@ -37,7 +37,6 @@ import java.util.Map;
 import java.util.Set;
 
 import com.sun.javatest.Status;
-import com.sun.javatest.TestResult;
 import com.sun.javatest.regtest.Locations.ClassLocn;
 
 import static com.sun.javatest.regtest.RStatus.*;
@@ -51,6 +50,17 @@ import static com.sun.javatest.regtest.RStatus.*;
  */
 public class BuildAction extends Action
 {
+    public static final String NAME = "build";
+
+    /**
+     * {@inheritdoc}
+     * @return "build"
+     */
+    @Override
+    public String getName() {
+        return NAME;
+    }
+
     /**
      * A method used by sibling classes to run both the init() and run()
      * method of BuildAction.
@@ -84,12 +94,12 @@ public class BuildAction extends Action
      * @exception  ParseException If the options or arguments are not expected
      *             for the action or are improperly formated.
      */
+    @Override
     public void init(String[][] opts, String[] args, String reason,
                      RegressionScript script)
         throws ParseException
     {
-        this.script = script;
-        this.reason = reason;
+        super.init(opts, args, reason, script);
 
         for (int i = 0; i < opts.length; i++) {
             String[] opt = opts[i];
@@ -109,9 +119,6 @@ public class BuildAction extends Action
                 || (currArg.indexOf('/') != -1))
                 throw new ParseException(BUILD_BAD_CLASSNAME + currArg);
         }
-
-        this.args = args;
-        this.opts = opts;
     } // init()
 
     @Override
@@ -148,9 +155,9 @@ public class BuildAction extends Action
      *             the test.
      */
     public Status run() throws TestRunException {
-        Status status = null;
+        Status status;
 
-        section = startAction("build", args, reason);
+        startAction();
 
         // step 1: see which files need compiling, and group them according
         // to the value of the -d flag that will be required
@@ -206,7 +213,7 @@ public class BuildAction extends Action
                 status = passed(BUILD_SUCC);
         }
 
-        endAction(status, section);
+        endAction(status);
         return status;
     } // run()
 
@@ -219,12 +226,6 @@ public class BuildAction extends Action
     }
 
     //----------member variables------------------------------------------------
-
-
-    private String[]   args;
-    private String[][] opts;
-
-    private TestResult.Section section;
 
     private String implicitOpt;
     private static final boolean IGNORE_SYMBOL_FILE = true;
