@@ -281,7 +281,7 @@ public abstract class Action
         section = script.getTestResult().createSection(name);
 
         PrintWriter pw = section.getMessageWriter();
-        pw.println(LOG_COMMAND + name + " " + args);
+        pw.println(LOG_COMMAND + name + " " + StringArray.join(args, " "));
         pw.println(LOG_REASON + reason);
 
         startTime = (new Date()).getTime();
