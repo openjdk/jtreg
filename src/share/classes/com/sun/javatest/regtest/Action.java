@@ -36,9 +36,11 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
@@ -284,6 +286,8 @@ public abstract class Action
         pw.println(LOG_COMMAND + name + " " + StringArray.join(args, " "));
         pw.println(LOG_REASON + reason);
 
+        recorder = new ActionRecorder(this);
+
         startTime = (new Date()).getTime();
     } // startAction()
 
@@ -298,6 +302,7 @@ public abstract class Action
         long elapsedTime = (new Date()).getTime() - startTime;
         PrintWriter pw = section.getMessageWriter();
         pw.println(LOG_ELAPSED_TIME + ((double) elapsedTime/1000.0));
+        recorder.close();
         section.setStatus(status);
     } // endAction()
 
@@ -318,10 +323,14 @@ public abstract class Action
      * @see com.sun.javatest.lib.ProcessCommand#run
      */
     protected void showCmd(String action, String[] cmdArgs, TestResult.Section section) {
+        showCmd(action, Arrays.asList(cmdArgs), section);
+    }
+
+    protected void showCmd(String action, List<String> cmdArgs, TestResult.Section section) {
         PrintWriter pw = section.getMessageWriter();
         pw.println(LOG_JT_COMMAND + action);
-        for (int i = 0; i < cmdArgs.length; i++)
-            pw.print("'" + cmdArgs[i] + "' ");
+        for (String s: cmdArgs)
+            pw.print("'" + s + "' ");
         pw.println();
     } // showCmd()
 
@@ -730,14 +739,14 @@ public abstract class Action
 
     //----------member variables------------------------------------------------
 
-    private long   startTime;
-
     protected /*final*/ String[][] opts;
     protected /*final*/ String[] args;
     protected /*final*/ String reason;
     protected /*final*/ RegressionScript script;
 
     protected /*final*/ TestResult.Section section;
+    protected /*final*/ ActionRecorder recorder;
+    private long   startTime;
 
     protected static final boolean showCmd = show("showCmd");
     protected static final boolean showMode = show("showMode");

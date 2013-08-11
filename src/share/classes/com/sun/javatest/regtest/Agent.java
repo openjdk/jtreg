@@ -510,7 +510,7 @@ public class Agent {
                 Status status = CompileAction.runCompile(
                         testName,
                         testProps,
-                        cmdArgs.toArray(new String[cmdArgs.size()]),
+                        cmdArgs,
                         timeout,
                         this);
 

@@ -34,6 +34,7 @@ import java.io.PrintWriter;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -277,51 +278,60 @@ public class CompileAction extends Action {
         final boolean useClassPathOpt = !jdk11;
         final boolean useSourcePathOpt = !jdk11;
 
+        // Set test.src and test.classes for the benefit of annotation processors
+        Map<String, String> javacProps = script.getTestProperties();
+
         // CONSTRUCT THE COMMAND LINE
-        List<String> javacOpts = new ArrayList<String>();
+        List<String> envArgs = new ArrayList<String>();
+        envArgs.addAll(Arrays.asList(script.getEnvVars()));
 
         // Why JavaTest?
         Path cp = new Path(script.getJavaTestClassPath(), script.getCompileClassPath());
         if (useCLASSPATHEnv) {
-            javacOpts.add("CLASSPATH=" + cp);
+            envArgs.add("CLASSPATH=" + cp);
         }
 
-        javacOpts.add(script.getJavacProg());
+        String javacCmd = script.getJavacProg();
 
-        javacOpts.addAll(script.getTestToolVMOptions());
+        List<String> javacVMOpts = new ArrayList<String>();
+        javacVMOpts.addAll(script.getTestVMOptions());
 
-        javacOpts.addAll(script.getTestCompilerOptions());
+        List<String> javacArgs = new ArrayList<String>();
+        javacArgs.addAll(script.getTestCompilerOptions());
 
         if (destDir != null) {
-            javacOpts.add("-d");
-            javacOpts.add(destDir.toString());
+            javacArgs.add("-d");
+            javacArgs.add(destDir.toString());
         }
 
         // JavaTest added, to match CLASSPATH, but not sure why JavaTest required at all
         if (!classpathp && useClassPathOpt) {
-            javacOpts.add("-classpath");
-            javacOpts.add(cp.toString());
+            javacArgs.add("-classpath");
+            javacArgs.add(cp.toString());
         }
 
         if (!sourcepathp && useSourcePathOpt) {
-            javacOpts.add("-sourcepath");
-            javacOpts.add(script.getCompileSourcePath().toString());
+            javacArgs.add("-sourcepath");
+            javacArgs.add(script.getCompileSourcePath().toString());
         }
 
-        // Set test.src and test.classes for the benefit of annotation processors
-        for (Map.Entry<String, String> e: script.getTestProperties().entrySet()) {
-            javacOpts.add("-J-D" + e.getKey() + "=" + e.getValue());
-        }
+        javacArgs.addAll(Arrays.asList(args));
 
-        String[] envVars = script.getEnvVars();
-        String[] jcOpts = javacOpts.toArray(new String[javacOpts.size()]);
-        String[] cmdArgs = StringArray.join(envVars, jcOpts);
-        cmdArgs = StringArray.join(cmdArgs, args);
+        List<String> command = new ArrayList<String>();
+        command.addAll(envArgs);
+        command.add(javacCmd);
+        for (String opt: javacVMOpts)
+            command.add("-J" + opt);
+        for (Map.Entry<String,String> e: javacProps.entrySet())
+            command.add("-J-D" + e.getKey() + "=" + e.getValue());
+        command.addAll(javacArgs);
 
         if (showMode)
             showMode("compile", ExecMode.OTHERVM, section);
         if (showCmd)
-            showCmd("compile", cmdArgs, section);
+            showCmd("compile", command, section);
+
+        recorder.javac(envArgs, javacCmd, javacVMOpts, javacProps, javacArgs);
 
         // PASS TO PROCESSCOMMAND
         PrintStringWriter stdOut = new PrintStringWriter();
@@ -340,6 +350,7 @@ public class CompileAction extends Action {
             if (timeout > 0)
                 script.setAlarm(timeout*1000);
 
+            String[] cmdArgs = command.toArray(new String[command.size()]);
             status = normalize(cmd.run(cmdArgs, stdErr, stdOut));
         } finally {
             script.setAlarm(0);
@@ -372,40 +383,44 @@ public class CompileAction extends Action {
         // TAG-SPEC:  "The source and class directories of a test are made
         // available to main and applet actions via the system properties
         // "test.src" and "test.classes", respectively"
-        Map<String, String> p = script.getTestProperties();
+        Map<String, String> javacProps = script.getTestProperties();
 
         // CONSTRUCT THE COMMAND LINE
-        List<String> javacOpts = new ArrayList<String>();
+        List<String> javacArgs = new ArrayList<String>();
 
-        javacOpts.addAll(script.getTestCompilerOptions());
+        javacArgs.addAll(script.getTestCompilerOptions());
 
         if (destDir != null) {
-            javacOpts.add("-d");
-            javacOpts.add(destDir.toString());
+            javacArgs.add("-d");
+            javacArgs.add(destDir.toString());
         }
 
         if (!classpathp) {
-            javacOpts.add("-classpath");
-            javacOpts.add(script.getCompileClassPath().toString());
+            javacArgs.add("-classpath");
+            javacArgs.add(script.getCompileClassPath().toString());
         }
 
         if (!sourcepathp) { // must be JDK1.4 or greater, to even run JavaTest 3
-            javacOpts.add("-sourcepath");
-            javacOpts.add(script.getCompileSourcePath().toString());
+            javacArgs.add("-sourcepath");
+            javacArgs.add(script.getCompileSourcePath().toString());
         }
 
-        String[] jcOpts = javacOpts.toArray(new String[javacOpts.size()]);
-        String[] cmdArgs = StringArray.join(jcOpts, args);
+        javacArgs.addAll(Arrays.asList(args));
 
         if (showMode)
             showMode("compile", ExecMode.SAMEVM, section);
         if (showCmd)
-            showCmd("compile", cmdArgs, section);
+            showCmd("compile", javacArgs, section);
+
+        List<String> envArgs = Arrays.asList(script.getEnvVars());
+        String javacProg = script.getJavacProg();
+        List<String> javacVMOpts = script.getTestVMJavaOptions();
+        recorder.javac(envArgs, javacProg, javacVMOpts, javacProps, javacArgs);
 
         Status status = runCompile(
                 script.getTestResult().getTestName(),
-                p,
-                cmdArgs,
+                javacProps,
+                javacArgs,
                 timeout,
                 getOutputHandler(section));
 
@@ -432,35 +447,39 @@ public class CompileAction extends Action {
         // TAG-SPEC:  "The source and class directories of a test are made
         // available to main and applet actions via the system properties
         // "test.src" and "test.classes", respectively"
-        Map<String, String> p = script.getTestProperties();
+        Map<String, String> javacProps = script.getTestProperties();
 
         // CONSTRUCT THE COMMAND LINE
-        List<String> javacOpts = new ArrayList<String>();
+        List<String> javacArgs = new ArrayList<String>();
 
-        javacOpts.addAll(script.getTestCompilerOptions());
+        javacArgs.addAll(script.getTestCompilerOptions());
 
         if (destDir != null) {
-            javacOpts.add("-d");
-            javacOpts.add(destDir.toString());
+            javacArgs.add("-d");
+            javacArgs.add(destDir.toString());
         }
 
         if (!classpathp) {
-            javacOpts.add("-classpath");
-            javacOpts.add(script.getCompileClassPath().toString());
+            javacArgs.add("-classpath");
+            javacArgs.add(script.getCompileClassPath().toString());
         }
 
         if (!sourcepathp) { // must be JDK1.4 or greater, to even run JavaTest 3
-            javacOpts.add("-sourcepath");
-            javacOpts.add(script.getCompileSourcePath().toString());
+            javacArgs.add("-sourcepath");
+            javacArgs.add(script.getCompileSourcePath().toString());
         }
 
-        String[] jcOpts = javacOpts.toArray(new String[javacOpts.size()]);
-        String[] cmdArgs = StringArray.join(jcOpts, args);
+        javacArgs.addAll(Arrays.asList(args));
 
         if (showMode)
             showMode("compile", ExecMode.AGENTVM, section);
         if (showCmd)
-            showCmd("compile", cmdArgs, section);
+            showCmd("compile", javacArgs, section);
+
+        List<String> envArgs = Arrays.asList(script.getEnvVars());
+        String javacProg = script.getJavacProg();
+        List<String> javacVMOpts = script.getTestVMJavaOptions();
+        recorder.javac(envArgs, javacProg, javacVMOpts, javacProps, javacArgs);
 
         Agent agent;
         try {
@@ -475,8 +494,8 @@ public class CompileAction extends Action {
         try {
             status = agent.doCompileAction(
                     script.getTestResult().getTestName(),
-                    p,
-                    Arrays.asList(cmdArgs),
+                    javacProps,
+                    javacArgs,
                     timeout,
                     section);
         } catch (Agent.Fault e) {
@@ -514,7 +533,7 @@ public class CompileAction extends Action {
 
     static Status runCompile(String testName,
             Map<String, String> props,
-            String[] cmdArgs,
+            List<String> cmdArgs,
             int timeout,
             OutputHandler outputHandler) {
         SaveState saved = new SaveState();
@@ -540,7 +559,7 @@ public class CompileAction extends Action {
         PrintByteArrayOutputStream sysOut = new PrintByteArrayOutputStream();
         PrintByteArrayOutputStream sysErr = new PrintByteArrayOutputStream();
 
-        // for direct use with JavaCompileCommand
+        // for direct use with RegressionCompileCommand
         PrintStringWriter out = new PrintStringWriter();
         PrintStringWriter err = new PrintStringWriter();
 
@@ -563,7 +582,8 @@ public class CompileAction extends Action {
                         return getStatusForJavacExitCode(v, exitCode);
                     }
                 };
-                status = normalize(jcc.run(cmdArgs, err, out));
+                String[] c = cmdArgs.toArray(new String[cmdArgs.size()]);
+                status = normalize(jcc.run(c, err, out));
             } finally {
                 if (alarm != null)
                     alarm.cancel();

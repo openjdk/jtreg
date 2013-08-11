@@ -231,6 +231,13 @@ public class Main {
             }
         },
 
+        new Option(STD, MAIN, "ro-nr", "show") {
+            public void process(String opt, String arg) {
+                noReportFlag = true;
+                showStream = arg;
+            }
+        },
+
         new Option(STD, MAIN, "", "timeout", "timeoutFactor") {
             public void process(String opt, String arg) {
                 timeoutFactorArg = arg;
@@ -1435,7 +1442,8 @@ public class Main {
     }
 
     private boolean isThisVMOK() {
-        if (reportOnlyFlag || checkFlag || listTestsFlag || execMode != ExecMode.SAMEVM)
+        if (reportOnlyFlag || checkFlag || listTestsFlag
+                || showStream != null || execMode != ExecMode.SAMEVM)
             return true;
 
         // sameVM tests can use this VM if
@@ -1955,6 +1963,41 @@ public class Main {
                     stats.add(tr);
                 }
                 ok = stats.isOK();
+            } else if (showStream != null) {
+                TestResult tr = null;
+                for (Iterator<TestResult> iter = getResultsIterator(params); iter.hasNext(); ) {
+                    if (tr != null) {
+                        out.println("More than one test specified");
+                        tr = null;
+                        break;
+                    }
+                    tr = iter.next();
+                }
+                if (tr == null) {
+                    ok = false;
+                } else if (tr.getStatus().isNotRun()) {
+                    out.println("Test has not been run");
+                    ok = false;
+                } else {
+                    try {
+                        // work around bug CODETOOLS-7900214 -- force the sectrions to be reloaded
+                        tr.getProperty("sections");
+                        for (int i = 0; i < tr.getSectionCount(); i++) {
+                            TestResult.Section s = tr.getSection(i);
+                            String text = s.getOutput(showStream);
+                            // need to handle internal newlines properly
+                            if (text != null) {
+                                out.println("### Section " + s.getTitle());
+                                out.println(text);
+                            }
+                        }
+                        ok = true;
+                    } catch (TestResult.Fault f) {
+                        out.println("Cannot reload test results: " + f.getMessage());
+                        ok = false;
+                    }
+                }
+                quiet = true;
             } else {
                 // Set backup parameters; in time this might become more versatile.
                 BackupPolicy backupPolicy = createBackupPolicy();
@@ -2258,6 +2301,7 @@ public class Main {
     private boolean guiFlag;
     private boolean reportOnlyFlag;
     private boolean noReportFlag;
+    private String showStream;
     private boolean allowSetSecurityManagerFlag = true;
     private static Verbose  verbose;
     private boolean httpdFlag;

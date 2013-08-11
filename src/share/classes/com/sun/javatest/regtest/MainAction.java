@@ -36,6 +36,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -162,25 +164,25 @@ public class MainAction extends Action
         // separate the arguments into the options to java, the
         // classname and the parameters to the named class
         for (int i = 0; i < args.length; i++) {
-            if (mainClassName == null) {
+            if (testClassName == null) {
                 if (args[i].startsWith("-")) {
-                    javaArgs.add(args[i]);
+                    testJavaArgs.add(args[i]);
                     if ((args[i].equals("-cp") || args[i].equals("-classpath"))
                         && (i+1 < args.length))
-                        javaArgs.add(args[++i]);
+                        testJavaArgs.add(args[++i]);
                 } else {
-                    mainClassName = args[i];
+                    testClassName = args[i];
                 }
             } else {
-                mainArgs.add(args[i]);
+                testClassArgs.add(args[i]);
             }
         }
 
-        if (mainClassName == null)
+        if (testClassName == null)
             throw new ParseException(MAIN_NO_CLASSNAME);
         if (!othervm) {
-            if (javaArgs.size() > 0)
-                throw new ParseException(javaArgs + MAIN_UNEXPECT_VMOPT);
+            if (testJavaArgs.size() > 0)
+                throw new ParseException(testJavaArgs + MAIN_UNEXPECT_VMOPT);
             if (policyFN != null)
                 throw new ParseException(PARSE_POLICY_OTHERVM);
             if (secureCN != null)
@@ -189,21 +191,21 @@ public class MainAction extends Action
     } // init()
 
     public List<String> getJavaArgs() {
-        return javaArgs;
+        return testJavaArgs;
     }
-    public List<String> getMainArgs() {
-        return mainArgs;
+    public List<String> getClassArgs() {
+        return testClassArgs;
     }
-    public String getMainClassName() {
-        return mainClassName;
+    public String getClassName() {
+        return testClassName;
     }
 
     @Override
     public Set<File> getSourceFiles() {
         Set<File> files = new LinkedHashSet<File>();
-        if (mainClassName != null) {
+        if (testClassName != null) {
             String[][] buildOpts = {};
-            String[]   buildArgs = {mainClassName.replace(File.separatorChar, '.')};
+            String[]   buildArgs = {testClassName.replace(File.separatorChar, '.')};
             try {
                 BuildAction ba = new BuildAction();
                 ba.init(buildOpts, buildArgs, SREASON_ASSUMED_BUILD, script);
@@ -278,17 +280,9 @@ public class MainAction extends Action
         // though an "@run build <class>" action had been inserted before
         // this action."
         String[][] buildOpts = {};
-        String[]   buildArgs = {mainClassName.replace(File.separatorChar, '.')};
+        String[]   buildArgs = {testClassName.replace(File.separatorChar, '.')};
         BuildAction ba = new BuildAction();
         return ba.build(buildOpts, buildArgs, SREASON_ASSUMED_BUILD, script);
-    }
-
-    protected String[] getActionArgs() {
-        List<String> args = new ArrayList<String>();
-        args.addAll(javaArgs);
-        args.add(mainClassName);
-        args.addAll(mainArgs);
-        return args.toArray(new String[args.size()]);
     }
 
     private Status runOtherJVM() throws TestRunException {
@@ -296,19 +290,19 @@ public class MainAction extends Action
         String runClassName;
         List<String> runClassArgs;
         if (driverClass == null) {
-            runClassName = mainClassName;
-            runClassArgs = mainArgs;
+            runClassName = testClassName;
+            runClassArgs = testClassArgs;
         } else {
             runClassName = driverClass;
             runClassArgs = new ArrayList<String>();
             runClassArgs.add(script.getTestResult().getTestName());
-            runClassArgs.add(mainClassName);
-            runClassArgs.addAll(mainArgs);
+            runClassArgs.add(testClassName);
+            runClassArgs.addAll(testClassArgs);
         }
 
         // WRITE ARGUMENT FILE
         File mainArgFile =
-            new File(script.absTestClsDir(), mainClassName + RegressionScript.WRAPPEREXTN);
+            new File(script.absTestClsDir(), testClassName + RegressionScript.WRAPPEREXTN);
         mainArgFile.getParentFile().mkdirs();
         FileWriter fw;
         try {
@@ -328,7 +322,8 @@ public class MainAction extends Action
         // TAG-SPEC:  "The source and class directories of a test are made
         // available to main and applet actions via the system properties
         // "test.src" and "test.classes", respectively"
-        List<String> command = new ArrayList<String>(6);
+        List<String> envArgs = new ArrayList<String>();
+        envArgs.addAll(Arrays.asList(script.getEnvVars()));
 
         // some tests are inappropriately relying on the CLASSPATH environment
         // variable being set, so force the use here.
@@ -348,49 +343,58 @@ public class MainAction extends Action
             p.append(script.getTestNGJar());
 
         if ((useCLASSPATH || script.isTestJDK11()) && !cp.isEmpty()) {
-            command.add("CLASSPATH=" + cp);
+            envArgs.add("CLASSPATH=" + cp);
         }
 
-        command.add(script.getJavaProg());
+        String javaCmd = script.getJavaProg();
+        List<String> javaOpts = new ArrayList<String>();
 
         if ((!useCLASSPATH && !script.isTestJDK11()) && !cp.isEmpty()) {
-            command.add("-classpath");
-            command.add(cp.toString());
+            javaOpts.add("-classpath");
+            javaOpts.add(cp.toString());
         }
 
         if (!bcp.isEmpty()) {
-            command.add("-Xbootclasspath/a:" + bcp.toString());
+            javaOpts.add("-Xbootclasspath/a:" + bcp.toString());
         }
 
-        command.addAll(script.getTestVMJavaOptions());
+        javaOpts.addAll(script.getTestVMJavaOptions());
 
-        for (Map.Entry<String, String> e: script.getTestProperties().entrySet()) {
-            command.add("-D" + e.getKey() + "=" + e.getValue());
-        }
+        Map<String, String> javaProps = new LinkedHashMap<String, String>();
+        javaProps.putAll(script.getTestProperties());
 
         String newPolicyFN;
         if (policyFN != null) {
             // add permission to read JTwork/classes by adding a grant entry
             newPolicyFN = addGrantEntry(policyFN);
-            command.add("-Djava.security.policy==" + newPolicyFN);
+            javaProps.put("java.security.policy", "=" + newPolicyFN);
         }
 
-        if (secureCN != null)
-            command.add("-Djava.security.manager=" + secureCN);
-        else if (policyFN != null)
-            command.add("-Djava.security.manager=default");
-//      command.addElement("-Djava.security.debug=all");
+        if (secureCN != null) {
+            javaProps.put("java.security.manager", secureCN.toString());
+        }
+        else if (policyFN != null) {
+            javaProps.put("java.security.manager", "default");
+        }
+//      javaProps.put("java.security.debug", "all");
 
-        command.addAll(javaArgs);
+        javaOpts.addAll(testJavaArgs);
 
-        command.add("com.sun.javatest.regtest.MainWrapper");
-        command.add(mainArgFile.getPath());
+        String className = "com.sun.javatest.regtest.MainWrapper";
+        List<String> classArgs = new ArrayList<String>();
+        classArgs.add(mainArgFile.getPath());
 
-        command.addAll(runClassArgs);
+        classArgs.addAll(runClassArgs);
 
-        String[] envVars = script.getEnvVars();
-        String[] tmpCmd = command.toArray(new String[command.size()]);
-        String[] cmdArgs = StringArray.join(envVars, tmpCmd);
+        List<String> command = new ArrayList<String>();
+        command.addAll(envArgs);
+        command.add(javaCmd);
+        for (Map.Entry<String,String> e: javaProps.entrySet())
+            command.add("-D" + e.getKey() + "=" + e.getValue());
+        command.addAll(javaOpts);
+        command.add(className);
+        command.addAll(classArgs);
+        String[] cmdArgs = command.toArray(new String[command.size()]);
 
         // PASS TO PROCESSCOMMAND
         Status status;
@@ -401,9 +405,7 @@ public class MainAction extends Action
                 showMode(getName(), ExecMode.OTHERVM, section);
             if (showCmd)
                 showCmd(getName(), cmdArgs, section);
-//          for (int i = 0; i < cmdArgs.length; i++)
-//              System.out.print(" " + cmdArgs[i]);
-//          System.out.println();
+            recorder.java(envArgs, javaCmd, javaProps, javaOpts, className, classArgs);
 
             // RUN THE MAIN WRAPPER CLASS
             ProcessCommand cmd = new ProcessCommand();
@@ -440,15 +442,15 @@ public class MainAction extends Action
         List<String> runMainArgs;
         if (driverClass == null) {
             runClasspath = script.getTestClassPath();
-            runMainClass = mainClassName;
-            runMainArgs = mainArgs;
+            runMainClass = testClassName;
+            runMainArgs = testClassArgs;
         } else {
             runClasspath = script.getTestClassPath();
             runMainClass = driverClass;
             runMainArgs = new ArrayList<String>();
             runMainArgs.add(script.getTestResult().getTestName());
-            runMainArgs.add(mainClassName);
-            runMainArgs.addAll(mainArgs);
+            runMainArgs.add(testClassName);
+            runMainArgs.addAll(testClassArgs);
         }
 
         if (showMode)
@@ -457,12 +459,17 @@ public class MainAction extends Action
         // TAG-SPEC:  "The source and class directories of a test are made
         // available to main and applet actions via the system properties
         // "test.src" and "test.classes", respectively"
-        Map<String, String> p = script.getTestProperties();
+        Map<String, String> javaProps = script.getTestProperties();
+
+        List<String> envVars = Arrays.asList(script.getEnvVars());
+        String javaProg = script.getJavaProg();
+        List<String> javaArgs = Arrays.asList("-classpath", runClasspath.toString());
+        recorder.java(envVars, javaProg, javaProps, javaArgs, runMainClass, runMainArgs);
 
         // delegate actual work to shared method
         Status status = runClass(
                 script.getTestResult().getTestName(),
-                p,
+                javaProps,
                 runClasspath,
                 runMainClass,
                 runMainArgs.toArray(new String[runMainArgs.size()]),
@@ -481,15 +488,15 @@ public class MainAction extends Action
         List<String> runMainArgs;
         if (driverClass == null) {
             runClasspath = script.getTestClassPath();
-            runMainClass = mainClassName;
-            runMainArgs = mainArgs;
+            runMainClass = testClassName;
+            runMainArgs = testClassArgs;
         } else {
             runClasspath = script.getTestClassPath();
             runMainClass = driverClass;
             runMainArgs = new ArrayList<String>();
             runMainArgs.add(script.getTestResult().getTestName());
-            runMainArgs.add(mainClassName);
-            runMainArgs.addAll(mainArgs);
+            runMainArgs.add(testClassName);
+            runMainArgs.addAll(testClassArgs);
         }
 
         if (showMode)
@@ -498,7 +505,12 @@ public class MainAction extends Action
         // TAG-SPEC:  "The source and class directories of a test are made
         // available to main and applet actions via the system properties
         // "test.src" and "test.classes", respectively"
-        Map<String, String> p = script.getTestProperties();
+        Map<String, String> javaProps = script.getTestProperties();
+
+        List<String> envVars = Arrays.asList(script.getEnvVars());
+        String javaProg = script.getJavaProg();
+        List<String> javaArgs = Arrays.asList("-classpath", runClasspath.toString());
+        recorder.java(envVars, javaProg, javaProps, javaArgs, runMainClass, runMainArgs);
 
         Agent agent;
         try {
@@ -517,7 +529,7 @@ public class MainAction extends Action
         try {
             status = agent.doMainAction(
                     script.getTestResult().getTestName(),
-                    p,
+                    javaProps,
                     runClasspath,
                     runMainClass,
                     runMainArgs,
@@ -852,10 +864,10 @@ public class MainAction extends Action
 
     //----------member variables------------------------------------------------
 
-    private List<String>  javaArgs = new ArrayList<String>();
-    private List<String>  mainArgs = new ArrayList<String>();
+    private List<String>  testJavaArgs = new ArrayList<String>();
+    private List<String>  testClassArgs = new ArrayList<String>();
     private String  driverClass = null;
-    private String  mainClassName  = null;
+    private String  testClassName  = null;
     private String  policyFN = null;
     private String  secureCN = null;
 

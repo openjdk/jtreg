@@ -1,0 +1,20 @@
+### Section shell
+DISPLAY=:0.0 \
+GNOME_DESKTOP_SESSION_ID=this-is-deprecated \
+HOME=%HOME%
+LANG=en_US.UTF-8 \
+MY_ENV_VAR=x \
+PATH=/bin:/usr/bin \
+TESTSRC=%WS%/src/share/test/javatest/regtest/data/rerun/std \
+TESTSRCPATH=%WS%/src/share/test/javatest/regtest/data/rerun/std \
+TESTCLASSES=%WS%/build/RerunTest.agentvm/work/classes/std \
+TESTCLASSPATH=%WS%/build/RerunTest.agentvm/work/classes/std \
+COMPILEJAVA=%JDKHOME% \
+TESTJAVA=%JDKHOME% \
+TESTVMOPTS=-Dmy.vm.option=x \
+TESTTOOLVMOPTS=-J-Dmy.vm.option=x \
+TESTJAVACOPTS=-XDmy.javac.option=x \
+TESTJAVAOPTS=-Dmy.java.option=x \
+    sh \
+        %WS%/src/share/test/javatest/regtest/data/rerun/std/ShellTest.sh
+

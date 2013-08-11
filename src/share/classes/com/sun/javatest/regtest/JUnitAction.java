@@ -73,7 +73,7 @@ public class JUnitAction extends MainAction
 
         init(opts, args, reason, script, JUnitRunner.class.getName());
 
-        if (getMainArgs().size() != 0)
+        if (getClassArgs().size() != 0)
             throw new ParseException(JUNIT_BAD_MAIN_ARG);
 
     } // init()

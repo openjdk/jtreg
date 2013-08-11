@@ -710,7 +710,7 @@ public class RegressionScript extends Script {
         p.put("test.java.opts", StringUtils.join(getTestJavaOptions(), " "));
         p.put("test.jdk", getTestJDK().getAbsolutePath());
         p.put("compile.jdk", getCompileJDK().getAbsolutePath());
-        return p;
+        return Collections.unmodifiableMap(p);
     }
     // where
     private String toString(List<File> files) {

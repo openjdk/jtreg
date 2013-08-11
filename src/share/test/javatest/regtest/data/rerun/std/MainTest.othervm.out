@@ -1,0 +1,43 @@
+### Section compile
+DISPLAY=:0.0 \
+GNOME_DESKTOP_SESSION_ID=this-is-deprecated \
+HOME=%HOME%
+LANG=en_US.UTF-8 \
+MY_ENV_VAR=x \
+PATH=/bin:/usr/bin \
+    %JDKHOME%/bin/javac \
+        -J-Dmy.vm.option=x \
+        -J-Dtest.vm.opts=-Dmy.vm.option=x \
+        -J-Dcompile.jdk=%JDKHOME% \
+        -J-Dtest.src.path=%WS%/src/share/test/javatest/regtest/data/rerun/std \
+        -J-Dtest.src=%WS%/src/share/test/javatest/regtest/data/rerun/std \
+        -J-Dtest.tool.vm.opts=-J-Dmy.vm.option=x \
+        -J-Dtest.class.path=%WS%/build/RerunTest.othervm/work/classes/std \
+        -J-Dtest.classes=%WS%/build/RerunTest.othervm/work/classes/std \
+        -J-Dtest.jdk=%JDKHOME% \
+        -J-Dtest.java.opts=-Dmy.java.option=x \
+        -J-Dtest.compiler.opts=-XDmy.javac.option=x \
+        -XDmy.javac.option=x -d %WS%/build/RerunTest.othervm/work/classes/std -classpath %WS%/build/images/jtreg/lib/javatest.jar:%WS%/build/images/jtreg/lib/jtreg.jar:%WS%/build/RerunTest.othervm/work/classes/std:%WS%/src/share/test/javatest/regtest/data/rerun/std:%JDKHOME%/lib/tools.jar -sourcepath %WS%/src/share/test/javatest/regtest/data/rerun/std -XDignore.symbol.file=true %WS%/src/share/test/javatest/regtest/data/rerun/std/MainTest.java
+
+### Section main
+DISPLAY=:0.0 \
+GNOME_DESKTOP_SESSION_ID=this-is-deprecated \
+HOME=%HOME%
+LANG=en_US.UTF-8 \
+MY_ENV_VAR=x \
+PATH=/bin:/usr/bin \
+CLASSPATH=%WS%/build/images/jtreg/lib/javatest.jar:%WS%/build/images/jtreg/lib/jtreg.jar:%WS%/build/RerunTest.othervm/work/classes/std:%WS%/src/share/test/javatest/regtest/data/rerun/std:%JDKHOME%/lib/tools.jar \
+    %JDKHOME%/bin/java \
+        -Dtest.vm.opts=-Dmy.vm.option=x \
+        -Dcompile.jdk=%JDKHOME% \
+        -Dtest.src.path=%WS%/src/share/test/javatest/regtest/data/rerun/std \
+        -Dtest.src=%WS%/src/share/test/javatest/regtest/data/rerun/std \
+        -Dtest.tool.vm.opts=-J-Dmy.vm.option=x \
+        -Dtest.class.path=%WS%/build/RerunTest.othervm/work/classes/std \
+        -Dtest.classes=%WS%/build/RerunTest.othervm/work/classes/std \
+        -Dtest.jdk=%JDKHOME% \
+        -Dtest.java.opts=-Dmy.java.option=x \
+        -Dtest.compiler.opts=-XDmy.javac.option=x \
+        -Dmy.vm.option=x -Dmy.java.option=x \
+        com.sun.javatest.regtest.MainWrapper %WS%/build/RerunTest.othervm/work/classes/std/MainTest.jta
+

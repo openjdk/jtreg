@@ -1,5 +1,6 @@
-#
-# Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
+#!/bin/sh
+
+# Copyright (c) 2013, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -21,30 +22,7 @@
 # Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
 # or visit www.oracle.com if you need additional information or have any
 # questions.
-#
 
-#----------------------------------------------------------------------
+# @test
 
-$(BUILDDIR)/T7113596.ok: \
-	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
-	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	    $(JTREG_IMAGEDIR)/lib/jh.jar
-	$(RM) -rf $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
-	$(LN) -s $(J2SEHOME) $(@:%.ok=%)/jdk
-	cd $(@:%.ok=%) && $(J2SEJAVA) -jar ../$(JTREG_IMAGEDIR)/lib/jtreg.jar \
-		-jdk:jdk \
-		../$(TESTDIR)/javatest/regtest/data/T7113596
-	for i in COMPILEJAVA TESTJAVA ; do \
-	    value=`$(GREP) $$i= $(@:%.ok=%)/JTwork/Test.jtr | $(SED) -e 's/[^=]*=//' | head -n 1` ; \
-	    case $$value in \
-		jdk ) echo "$$i set to relative value" ; exit 1 ;; \
-		`cd $(@:%.ok=%)/jdk ; pwd` ) echo "$$i set to expected absolute path" ;; \
-		* ) echo "bad value for $$i: $$value" ; \
-		    echo "         expected: `cd $(@:%.ok=%)/jdk ; pwd`" ; \
-		    exit 1 ;; \
-	    esac \
-	done
-	echo "test passed at `date`" > $@
-
-TESTS.jtreg += $(BUILDDIR)/T7113596.ok
-
+echo "args: " $@

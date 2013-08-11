@@ -287,6 +287,8 @@ public class AppletAction extends Action
             if (showCmd)
                 showCmd("applet", cmdArgs, section);
 
+            recorder.exec(cmdArgs);
+
             // RUN THE APPLET WRAPPER CLASS
             ProcessCommand cmd = new ProcessCommand();
             cmd.setExecDir(script.absTestScratchDir());

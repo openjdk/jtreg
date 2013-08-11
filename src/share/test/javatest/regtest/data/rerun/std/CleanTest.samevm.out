@@ -1,0 +1,8 @@
+### Section clean
+rm -f %WS%/build/RerunTest.samevm/work/classes/std/CleanTest.class
+
+### Section clean
+for f in %WS%/build/RerunTest.samevm/work/classes/std/p/*; do
+  if [ -f $f ]; then rm $f ; fi
+done
+

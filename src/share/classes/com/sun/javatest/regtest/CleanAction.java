@@ -122,6 +122,10 @@ public class CleanAction extends Action
                     if (!path.equals(""))
                         dir = new File(dir, path);
 
+                    recorder.exec("for f in " + dir + "/*; do\n"
+                            + "  if [ -f $f ]; then rm $f ; fi\n"
+                            + "done");
+
                     try {
                         if (dir.isDirectory()) {
                             File[] files = dir.listFiles();
@@ -143,6 +147,7 @@ public class CleanAction extends Action
                     // clean class file
                     File victim = new File(script.absTestClsDir(),
                                            args[i].replace('.', File.separatorChar) + ".class");
+                    recorder.exec("rm -f " + victim);
                     if (victim.exists() && !victim.delete())
                         return error(CLEAN_RM_FAILED + victim);
                 }

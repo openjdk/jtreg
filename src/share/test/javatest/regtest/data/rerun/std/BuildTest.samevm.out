@@ -1,0 +1,24 @@
+### Section clean
+rm -f %WS%/build/RerunTest.samevm/work/classes/std/BuildTest.class
+
+### Section compile
+DISPLAY=:0.0 \
+GNOME_DESKTOP_SESSION_ID=this-is-deprecated \
+HOME=%HOME%
+LANG=en_US.UTF-8 \
+PATH=/bin:/usr/bin \
+    %JDKHOME%/bin/javac \
+        -J-Dmy.vm.option=x \
+        -J-Dtest.vm.opts=-Dmy.vm.option=x \
+        -J-Dcompile.jdk=%JDKHOME% \
+        -J-Dtest.src.path=%WS%/src/share/test/javatest/regtest/data/rerun/std \
+        -J-Dtest.src=%WS%/src/share/test/javatest/regtest/data/rerun/std \
+        -J-Dtest.tool.vm.opts=-J-Dmy.vm.option=x \
+        -J-Dtest.class.path=%WS%/build/RerunTest.samevm/work/classes/std \
+        -J-Dtest.classes=%WS%/build/RerunTest.samevm/work/classes/std \
+        -J-Dtest.class.path.prefix=%WS%/build/RerunTest.samevm/work/classes/std:%WS%/src/share/test/javatest/regtest/data/rerun/std \
+        -J-Dtest.jdk=%JDKHOME% \
+        -J-Dtest.java.opts= \
+        -J-Dtest.compiler.opts= \
+        -d %WS%/build/RerunTest.samevm/work/classes/std -classpath %WS%/build/RerunTest.samevm/work/classes/std:%WS%/src/share/test/javatest/regtest/data/rerun/std:%JDKHOME%/lib/tools.jar -sourcepath %WS%/src/share/test/javatest/regtest/data/rerun/std -XDignore.symbol.file=true %WS%/src/share/test/javatest/regtest/data/rerun/std/BuildTest.java
+

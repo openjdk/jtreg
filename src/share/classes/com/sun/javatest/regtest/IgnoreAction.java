@@ -95,12 +95,14 @@ public class IgnoreAction extends Action
             case QUIET:
                 throw new IllegalStateException();
             case ERROR:
+                recorder.exec("# @ignore: " + StringArray.join(args) + "\nexit 1");
                 if (args.length == 0)
                     status = error(IGNORE_TEST_IGNORED);
                 else
                     status = error(IGNORE_TEST_IGNORED_C + StringArray.join(args));
                 break;
             case RUN:
+                recorder.exec("# @ignore: " + StringArray.join(args) + " (suppressed)");
                 if (args.length == 0)
                     status = passed(IGNORE_TEST_SUPPRESSED);
                 else

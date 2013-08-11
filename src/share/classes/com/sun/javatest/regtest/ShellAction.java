@@ -231,6 +231,7 @@ public class ShellAction extends Action
             try {
                 if (showCmd)
                     showCmd("shell", cmdArgs, section);
+                recorder.exec(cmdArgs);
 
                 // RUN THE SHELL SCRIPT
                 ProcessCommand cmd = new ProcessCommand();
