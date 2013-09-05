@@ -304,7 +304,6 @@ public class RegressionScript extends Script {
         return 0;
     }
 
-    private static float cacheJavaTestTimeoutFactor = -1;
     /**
      * Get the timeout to be used for an action.  The timeout will be scaled by
      * the timeoutFactor as necessary.  The default timeout for any action as
@@ -319,22 +318,27 @@ public class RegressionScript extends Script {
      * @return     The timeout in seconds.
      */
     protected int getActionTimeout(int time) {
+        if (time == 0)
+            time = 120;
+        return (int) (time * getTimeoutFactor());
+    }
+
+    protected float getTimeoutFactor() {
         if (cacheJavaTestTimeoutFactor == -1) {
+            cacheJavaTestTimeoutFactor = 1; // default
             try {
                 // use [1] to get the floating point timeout factor
                 String f = (regEnv == null ? null : regEnv.lookup("javatestTimeoutFactor")[1]);
                 if (f != null)
                     cacheJavaTestTimeoutFactor = Float.parseFloat(f);
-                else
-                    cacheJavaTestTimeoutFactor = 1;
             } catch (TestEnvironment.Fault e) {
             } catch (NumberFormatException e) {
             }
         }
-        if (time == 0)
-            time = 120;
-        return (int) (time * cacheJavaTestTimeoutFactor);
+        return cacheJavaTestTimeoutFactor;
     }
+
+    private static float cacheJavaTestTimeoutFactor = -1;
 
     /**
      * Set an alarm that will interrupt the calling thread after a specified
@@ -710,6 +714,7 @@ public class RegressionScript extends Script {
         p.put("test.java.opts", StringUtils.join(getTestJavaOptions(), " "));
         p.put("test.jdk", getTestJDK().getAbsolutePath());
         p.put("compile.jdk", getCompileJDK().getAbsolutePath());
+        p.put("test.timeout.factor", String.valueOf(getTimeoutFactor()));
         return Collections.unmodifiableMap(p);
     }
     // where

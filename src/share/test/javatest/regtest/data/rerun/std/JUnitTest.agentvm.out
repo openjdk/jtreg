@@ -1,6 +1,5 @@
 ### Section compile
-DISPLAY=:0.0 \
-GNOME_DESKTOP_SESSION_ID=this-is-deprecated \
+DISPLAY=%DISPLAY%
 HOME=%HOME%
 LANG=en_US.UTF-8 \
 MY_ENV_VAR=x \
@@ -14,6 +13,7 @@ PATH=/bin:/usr/bin \
         -J-Dtest.src=%WS%/src/share/test/javatest/regtest/data/rerun/std \
         -J-Dtest.tool.vm.opts=-J-Dmy.vm.option=x \
         -J-Dtest.class.path=%WS%/build/RerunTest.agentvm/work/classes/std \
+        -J-Dtest.timeout.factor=1.0 \
         -J-Dtest.classes=%WS%/build/RerunTest.agentvm/work/classes/std \
         -J-Dtest.class.path.prefix=%WS%/build/RerunTest.agentvm/work/classes/std:%WS%/src/share/test/javatest/regtest/data/rerun/std \
         -J-Dtest.jdk=%JDKHOME% \
@@ -22,8 +22,7 @@ PATH=/bin:/usr/bin \
         -XDmy.javac.option=x -d %WS%/build/RerunTest.agentvm/work/classes/std -classpath %WS%/build/RerunTest.agentvm/work/classes/std:%WS%/src/share/test/javatest/regtest/data/rerun/std:%JDKHOME%/lib/tools.jar:%WS%/build/images/jtreg/lib/junit.jar -sourcepath %WS%/src/share/test/javatest/regtest/data/rerun/std -XDignore.symbol.file=true %WS%/src/share/test/javatest/regtest/data/rerun/std/JUnitTest.java
 
 ### Section junit
-DISPLAY=:0.0 \
-GNOME_DESKTOP_SESSION_ID=this-is-deprecated \
+DISPLAY=%DISPLAY%
 HOME=%HOME%
 LANG=en_US.UTF-8 \
 MY_ENV_VAR=x \
@@ -35,6 +34,7 @@ PATH=/bin:/usr/bin \
         -Dtest.src=%WS%/src/share/test/javatest/regtest/data/rerun/std \
         -Dtest.tool.vm.opts=-J-Dmy.vm.option=x \
         -Dtest.class.path=%WS%/build/RerunTest.agentvm/work/classes/std \
+        -Dtest.timeout.factor=1.0 \
         -Dtest.classes=%WS%/build/RerunTest.agentvm/work/classes/std \
         -Dtest.class.path.prefix=%WS%/build/RerunTest.agentvm/work/classes/std:%WS%/src/share/test/javatest/regtest/data/rerun/std \
         -Dtest.jdk=%JDKHOME% \

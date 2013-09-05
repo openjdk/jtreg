@@ -218,6 +218,7 @@ public class ShellAction extends Action
             tmpArgs.add("TESTJAVACOPTS=" + fixupSep(StringUtils.join(compilerOpts, " ")));
             List<String> javaOpts = script.getTestJavaOptions();
             tmpArgs.add("TESTJAVAOPTS=" + fixupSep(StringUtils.join(javaOpts, " ")));
+            tmpArgs.add("TESTTIMEOUTFACTOR=" + script.getTimeoutFactor());
             tmpArgs.add("sh");
             tmpArgs.add(shellFile.getPath());
             tmpArgs.addAll(shellArgs);

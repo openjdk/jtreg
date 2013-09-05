@@ -2,8 +2,7 @@
 rm -f %WS%/build/RerunTest.othervm/work/classes/std/BuildTest.class
 
 ### Section compile
-DISPLAY=:0.0 \
-GNOME_DESKTOP_SESSION_ID=this-is-deprecated \
+DISPLAY=%DISPLAY%
 HOME=%HOME%
 LANG=en_US.UTF-8 \
 MY_ENV_VAR=x \
@@ -16,6 +15,7 @@ PATH=/bin:/usr/bin \
         -J-Dtest.src=%WS%/src/share/test/javatest/regtest/data/rerun/std \
         -J-Dtest.tool.vm.opts=-J-Dmy.vm.option=x \
         -J-Dtest.class.path=%WS%/build/RerunTest.othervm/work/classes/std \
+        -J-Dtest.timeout.factor=1.0 \
         -J-Dtest.classes=%WS%/build/RerunTest.othervm/work/classes/std \
         -J-Dtest.jdk=%JDKHOME% \
         -J-Dtest.java.opts=-Dmy.java.option=x \

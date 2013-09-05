@@ -56,6 +56,7 @@ $(BUILDDIR)/RerunTest.othervm.ok: \
 		-dir:$(TESTDIR)/javatest/regtest/data/rerun \
 		-show:rerun $$i | \
 		sed -e 's|^HOME=.*|HOME=%HOME%|' \
+		    -e 's|^DISPLAY=.*|DISPLAY=%DISPLAY%|' \
 		    -e 's|$(JDK16HOME)|%JDKHOME%|g' \
 		    -e "s|`cd $(JDK16HOME); pwd -P`|%JDKHOME%|g" \
 		    -e 's|$(ABSTOPDIR)|%WS%|g' \
