@@ -746,7 +746,7 @@ public abstract class Action
 
     protected /*final*/ TestResult.Section section;
     protected /*final*/ ActionRecorder recorder;
-    private long   startTime;
+    private long startTime;
 
     protected static final boolean showCmd = show("showCmd");
     protected static final boolean showMode = show("showMode");

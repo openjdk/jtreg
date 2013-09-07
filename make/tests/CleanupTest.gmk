@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2011, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2011, 2013, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -53,7 +53,7 @@ $(BUILDDIR)/CleanupTests.othervm.ok: \
 #####
 # In samevm mode, jtreg cannot run the tests successfully. 
 # The first test will succeed; all subsequent ones will fail
-# because the scratch direectory cannot be cleared.
+# because the scratch directory cannot be cleared.
 
 $(BUILDDIR)/CleanupTests.samevm.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
@@ -67,7 +67,7 @@ $(BUILDDIR)/CleanupTests.samevm.ok: \
 		$(TESTDIR)/javatest/regtest/data/cleanup \
 			> $(@:%.ok=%/jt.log) 2>&1 || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
-	$(GREP) -s 'Test results: passed: 1; failed: ' $(@:%.ok=%/jt.log)  > /dev/null
+	$(GREP) -s 'Test results: passed: 1; error: ' $(@:%.ok=%/jt.log)  > /dev/null
 	$(CHMOD) -R +w $(@:%.ok=%)
 	echo "test passed at `date`" > $@
 
@@ -101,7 +101,7 @@ $(BUILDDIR)/CleanupTests.othervm.conc.ok: \
 
 #####
 # In agent mode with -retain, the tests all return error
-# because the selected files annot be retained
+# because the selected files cannot be retained
 
 $(BUILDDIR)/CleanupTests.agentvm.retain.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \

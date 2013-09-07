@@ -1,0 +1,110 @@
+#
+# Copyright (c) 2011, 2013, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+# These tests run a set of 5 tests two of which create an open file
+# that will cause problems for jtreg cleaning up after a test.
+#
+# However, they are primarily designed for a Windows environment
+# where open files can be a problem during file cleanup before/after
+# a test. On a non-Windows environment (i.e. Linux, Solaris) all
+# the tests in the openfiles test suite pass.
+# But, for now, these makefiles are not set up to run on Windows. 
+# When the makefiles are upgraded to run on Windows, the rules in this
+# makefile will have to be updated (perhaps by using target-specific
+# variable definitions) to behave correctly on Windows as well as
+# non-Windows platforms.
+
+#####
+# In agentvm and othervm mode, jtreg should successfully run each test
+# by moving to a new scratch directory when it can't clear the previous one.
+
+$(BUILDDIR)/OpenFileTests.agentvm.ok \
+$(BUILDDIR)/OpenFileTests.othervm.ok: \
+	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	$(JTREG_IMAGEDIR)/solaris/bin/jtreg
+	if [ -d $(@:%.ok=%) ]; then $(CHMOD) -R +w $(@:%.ok=%) && $(RM) -rf $(@:%.ok=%) ; fi
+	$(MKDIR) $(@:%.ok=%)
+	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(JDK17HOME) \
+		$(@:$(BUILDDIR)/OpenFileTests.%.ok=-%) \
+		$(TESTDIR)/javatest/regtest/data/openfiles \
+			> $(@:%.ok=%/jt.log) 2>&1 || \
+	    true "non-zero exit code from JavaTest intentionally ignored"
+	$(GREP) -s 'Test results: passed: 5' $(@:%.ok=%/jt.log)  > /dev/null
+	$(CHMOD) -R +w $(@:%.ok=%)
+	echo "test passed at `date`" > $@
+
+#####
+# In samevm mode, jtreg cannot run the tests successfully. 
+# The first test will succeed; all subsequent ones will fail
+# because the scratch directory cannot be cleared.
+
+$(BUILDDIR)/OpenFileTests.samevm.ok: \
+	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	$(JTREG_IMAGEDIR)/solaris/bin/jtreg
+	if [ -d $(@:%.ok=%) ]; then $(CHMOD) -R +w $(@:%.ok=%) && $(RM) -rf $(@:%.ok=%) ; fi
+	$(MKDIR) $(@:%.ok=%)
+	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(JDK17HOME) \
+		$(@:$(BUILDDIR)/OpenFileTests.%.ok=-%) \
+		$(TESTDIR)/javatest/regtest/data/openfiles \
+			> $(@:%.ok=%/jt.log) 2>&1 || \
+	    true "non-zero exit code from JavaTest intentionally ignored"
+	$(GREP) -s 'Test results: passed: 5' $(@:%.ok=%/jt.log)  > /dev/null
+	$(CHMOD) -R +w $(@:%.ok=%)
+	echo "test passed at `date`" > $@
+
+#####
+# In agent mode with -retain, the tests all return error
+# because the selected files cannot be retained
+
+$(BUILDDIR)/OpenFileTests.agentvm.retain.ok \
+$(BUILDDIR)/OpenFileTests.othervm.retain.ok \
+$(BUILDDIR)/OpenFileTests.samevm.retain.ok: \
+	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	$(JTREG_IMAGEDIR)/solaris/bin/jtreg
+	if [ -d $(@:%.ok=%) ]; then $(CHMOD) -R +w $(@:%.ok=%) && $(RM) -rf $(@:%.ok=%) ; fi
+	$(MKDIR) $(@:%.ok=%)
+	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(JDK17HOME) \
+		$(@:$(BUILDDIR)/OpenFileTests.%.retain.ok=-%) \
+		-retain:none \
+		$(TESTDIR)/javatest/regtest/data/openfiles \
+			> $(@:%.ok=%/jt.log) 2>&1 || \
+	    true "non-zero exit code from JavaTest intentionally ignored"
+	$(GREP) -s 'Test results: passed: 5' $(@:%.ok=%/jt.log)  > /dev/null
+	$(CHMOD) -R +w $(@:%.ok=%)
+	echo "test passed at `date`" > $@
+
+TESTS.jtreg += \
+	$(BUILDDIR)/OpenFileTests.agentvm.ok \
+	$(BUILDDIR)/OpenFileTests.agentvm.retain.ok \
+	$(BUILDDIR)/OpenFileTests.othervm.ok \
+	$(BUILDDIR)/OpenFileTests.othervm.retain.ok \
+	$(BUILDDIR)/OpenFileTests.samevm.ok \
+	$(BUILDDIR)/OpenFileTests.othervm.retain.ok

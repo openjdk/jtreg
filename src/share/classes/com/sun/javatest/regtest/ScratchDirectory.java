@@ -27,6 +27,9 @@ package com.sun.javatest.regtest;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
@@ -38,7 +41,7 @@ import com.sun.javatest.TestResult;
  * Utilities for handling the scratch directory in which tests are executed.
  */
 abstract class ScratchDirectory {
-    /** Used to resort serious issues while manipulating the scratch directory. */
+    /** Used to report serious issues while manipulating the scratch directory. */
     static class Fault extends Exception {
         private static final long serialVersionUID = 0;
 
@@ -52,15 +55,20 @@ abstract class ScratchDirectory {
 
     /** Get a scratch directory appropriate for the given parameters. */
     static ScratchDirectory get(RegressionParameters params, ExecMode mode, TestDescription td) {
-        if (params.isRetainEnabled() && mode == ExecMode.OTHERVM)
+        if (mode == ExecMode.SAMEVM)
+            return new SimpleScratchDirectory(params, td);
+        else if (mode == ExecMode.OTHERVM && params.isRetainEnabled())
             return new TestResultScratchDir(params, td);
         else
             return new ThreadSafeScratchDir(params, td);
     }
 
-    protected final RegressionParameters params;
-    protected final TestDescription td;
+    private static final boolean verboseScratchDir = Action.show("verboseScratchDir");
 
+    /** The execution parameters for the current test. */
+    protected final RegressionParameters params;
+    /** The current test. */
+    protected final TestDescription td;
     /** The current location of the scratch directory. */
     File dir;
 
@@ -69,6 +77,8 @@ abstract class ScratchDirectory {
         this.td = td;
         this.dir = dir;
     }
+
+    // <editor-fold defaultstate="collapsed" desc="create and initialize">
 
     /**
      * Initialize a scratch directory.
@@ -82,37 +92,35 @@ abstract class ScratchDirectory {
      */
     void init(PrintWriter log) throws Fault, InterruptedException {
         if (dir.exists()) {
-            // On Windows, files cannot be deleted if they are still open.
-            // So, if files cannot be deleted, we pause and try again.
-            // In all cases, if we cannot delete all the files, we close
-            // any agents that might be using this scratch directory.
-            long startTime = System.currentTimeMillis();
-            do {
-                if (deleteFiles(dir, log))
-                    return;
-                Thread.sleep(RETRY_DELETE_DELAY_MILLIS);
-            } while ((System.currentTimeMillis() -startTime)
-                    <= MAX_RETRY_DELETE_MILLIS);
-
-            Agent.Pool.instance().close(dir);
-            throw new Fault(CANT_CLEAN + dir);
+            try {
+                deleteFiles(dir, null, false, log);
+            } catch (Fault e) {
+                addBadDir(dir);
+                Agent.Pool.instance().close(dir);
+                throw e;
+            }
         } else {
-            if (dir.mkdirs())
-                return;
-            throw new Fault(CANT_CREATE + dir);
+            if (!dir.mkdirs()) {
+                throw new Fault(CANT_CREATE + dir);
+            }
         }
     }
 
-    private static final int RETRY_DELETE_DELAY_MILLIS;
-    private static final int MAX_RETRY_DELETE_MILLIS;
+    private static final Set<File> badDirs = new HashSet<File>();
 
-    static {
-        boolean isWindows = System.getProperty("os.name").startsWith("Windows");
-        RETRY_DELETE_DELAY_MILLIS = isWindows ? 500 : 0;
-        MAX_RETRY_DELETE_MILLIS = isWindows ? 30 * 1000 : 0;
+    private static synchronized boolean isBadDir(File dir) {
+        return badDirs.contains(dir);
     }
 
-    abstract boolean retainFiles(Status status, PrintWriter log) throws InterruptedException, Fault;
+    private static synchronized void addBadDir(File dir) {
+        badDirs.add(dir);
+    }
+
+    // </editor-fold>
+
+    // <editor-fold defaultstate="collapsed" desc="retain files">
+
+    abstract void retainFiles(Status status, PrintWriter log) throws Fault, InterruptedException;
 
     boolean retainFile(File file, File dest) {
         File f = new File(dir, file.getPath());
@@ -120,52 +128,67 @@ abstract class ScratchDirectory {
         return f.renameTo(d);
     }
 
-    /**
-     * Delete the contents of a directory, but not the directory itself,
-     * reporting any issues to a log.
-     * @param dir The directory whose contents are to be deleted.
-     * @param log A stream to which to write errors.
-     * @return true if and only if all the contents are successfully deleted.
-     * @throws com.sun.javatest.regtest.ScratchDirectory.Fault if any unexpected
-     *      issues occur while deleting the contents of the directory.
-     * @throws InterruptedException
-     */
-    protected boolean deleteFiles(File dir, PrintWriter log)
-            throws Fault, InterruptedException {
-        return deleteFiles(dir,
-                null /* Pattern */,
-                false /* match */,
-                false /* deleteDir */,
-                log);
-    }
+    // </editor-fold>
 
+    // <editor-fold defaultstate="collapsed" desc="delete files">
 
     /**
      * Delete all files in a directory that optionally match or don't
      * match a pattern.
+     * @throws Fault if any unexpected issues occur while deleting the contents
+     *      of the directory.
      * @throws InterruptedException
-     * @throws Fault
-     * @returns true if the selected contents of the directory are successfully deleted.
      */
-    protected boolean deleteFiles(File dir, Pattern p, boolean match, PrintWriter log)
-            throws InterruptedException, Fault {
+    protected void deleteFiles(File dir, Pattern p, boolean match, PrintWriter log)
+            throws Fault, InterruptedException {
+        if (isBadDir(dir))
+            throw new Fault(CANT_CLEAN + dir);
         try {
             if (!dir.exists()) {
-                log.println("WARNING: dir " + dir + " already deleted.");
-                return true;
+                if (verboseScratchDir)
+                    log.println("WARNING: dir " + dir + " already deleted.");
+                return;
             }
-            long startTime = System.currentTimeMillis();
-            do {
-                if (deleteFiles(dir, p, match, false, log)) {
-                    return true;
-                }
-                Thread.sleep(RETRY_DELETE_DELAY_MILLIS);
-            } while ((System.currentTimeMillis() - startTime)
-                    <= MAX_RETRY_DELETE_MILLIS);
-            throw new Fault(ScratchDirectory.CANT_CLEAN);
+            deleteFilesWithRetry(dir, p, match, log);
         } catch (SecurityException e) {
             throw new Fault(SECMGR_EXC + dir, e);
         }
+    }
+
+    /**
+     * Delete all files in a directory that optionally match or don't
+     * match a pattern.
+     * On Windows, files cannot be deleted if they are still open.
+     * So, if files cannot be deleted, we pause and try again.
+     * @throws Fault
+     * @throws InterruptedException
+     */
+    private void deleteFilesWithRetry(File dir, Pattern p, boolean match, PrintWriter log)
+            throws Fault, InterruptedException {
+        long startTime = System.currentTimeMillis();
+        Set<File> cantDelete = new LinkedHashSet<File>();
+
+        do {
+            if (deleteFiles(dir, p, match, false, cantDelete, log)) {
+                return;
+            }
+            Thread.sleep(RETRY_DELETE_MILLIS);
+        } while ((System.currentTimeMillis() - startTime)
+                <= MAX_RETRY_DELETE_MILLIS);
+
+        // report the list of files that could not be deleted
+        for (File f: cantDelete)
+            log.println("Can't delete " + f);
+        throw new Fault(CANT_CLEAN + dir);
+    }
+
+    private static final int RETRY_DELETE_MILLIS;
+    private static final int MAX_RETRY_DELETE_MILLIS;
+
+    static {
+        boolean isWindows = System.getProperty("os.name").startsWith("Windows");
+        RETRY_DELETE_MILLIS = isWindows ? 500 : 0;
+        MAX_RETRY_DELETE_MILLIS = isWindows ? 15 * 1000 : 0;
     }
 
     /**
@@ -175,34 +198,47 @@ abstract class ScratchDirectory {
      * @throws Fault
      * @returns true if the selected files and directories are deleted successfully.
      */
-    protected boolean deleteFiles(File dir, Pattern p, boolean match, boolean deleteDir, PrintWriter log)
-            throws InterruptedException, Fault {
+    private boolean deleteFiles(File dir, Pattern p, boolean match, boolean deleteDir,
+            Set<File> badFiles, PrintWriter log)
+            throws Fault, InterruptedException {
         if (!dir.exists())
             return true;
 
         boolean ok = true;
         for (File file: dir.listFiles()) {
             if (isDirectory(file)) {
-                ok &= deleteFiles(file, p, match, true, log);
+                ok &= deleteFiles(file, p, match, true, badFiles, log);
             } else {
-                boolean delete = (p == null) || (p.matcher(file.getName()).matches() == match);
-                if (delete) {
-                    if (!file.delete()) {
-                        log.println("warning: failed to delete " + file);
-                        ok = false;
-                    }
+                boolean deleteFile = (p == null) || (p.matcher(file.getName()).matches() == match);
+                if (deleteFile && !delete(file, badFiles, log)) {
+                    ok = false;
                 }
             }
         }
         if (ok && isEmpty(dir) && deleteDir) {
-            ok = dir.delete();
+            ok = delete(dir, badFiles, log);
         }
         return ok;
     }
 
-    private static boolean isEmpty(File dir) {
-        return dir.isDirectory() && (dir.listFiles().length == 0);
+    boolean delete(File f, Set<File> cantDelete, PrintWriter log) {
+        if (f.delete()) {
+            cantDelete.remove(f);
+            return true;
+        } else {
+            if (verboseScratchDir) {
+                log.println("warning: failed to delete "
+                        + (f.isDirectory() ? "directory " : "")
+                        + f);
+            }
+            cantDelete.add(f);
+            return false;
+        }
     }
+
+    // </editor-fold>
+
+    // <editor-fold defaultstate="collapsed" desc="save files">
 
     /**
      * Copy all files in a directory that optionally match or don't match a pattern.
@@ -215,9 +251,9 @@ abstract class ScratchDirectory {
         if (toDirExists) {
             // clean out the target directory before doing the copy to it
             try {
-                deleteFiles(toDir, log);
+                deleteFiles(toDir, null, false, log);
             } catch (Fault e) {
-                log.println("warning: failed to empty " + toDir);
+                log.println("warning: could not empty " + toDir + ": " + e.getMessage());
             }
         }
 
@@ -246,6 +282,9 @@ abstract class ScratchDirectory {
         }
         return result;
     }
+    // </editor-fold>
+
+    // <editor-fold defaultstate="collapsed" desc="utility methods">
 
     private static boolean isDirectory(File dir) throws Fault {
         try {
@@ -255,6 +294,10 @@ abstract class ScratchDirectory {
         }
     }
 
+    private static boolean isEmpty(File dir) {
+        return dir.isDirectory() && (dir.listFiles().length == 0);
+    }
+
     protected static File getResultDir(RegressionParameters params, TestDescription td) {
         String wrp = TestResult.getWorkRelativePath(td);
         // assert wrp.endsWith(".jtr")
@@ -262,48 +305,57 @@ abstract class ScratchDirectory {
             wrp = wrp.substring(0, wrp.length() - 4);
         return params.getWorkDirectory().getFile(wrp);
     }
+    // </editor-fold>
 
     private static final String
         CANT_CLEAN            = "Can't clean ",
         CANT_CREATE           = "Can't create ",
+        CANT_SAVE             = "Can't save files in ",
         SECMGR_EXC            = "Problem deleting file: ",
         CANON_FILE_EXC        = "Problem determining canonical file: ";
 
     /**
-     * Use a test-specific directory as the scratch directory for the test.
-     * This is used in OtherVM mode when we want to retain some or all of the
-     * files from the test's execution, since it avoids the need to move
-     * files from a shared scratch directory to the test result directory.
+     * Simple, basic scratch directory, in workdir/scratch, for samevm mode
      */
-    static class TestResultScratchDir extends ScratchDirectory {
-        TestResultScratchDir(RegressionParameters params, TestDescription td) {
-            super(params, td, getResultDir(params, td));
+    static class SimpleScratchDirectory extends ScratchDirectory {
+
+        SimpleScratchDirectory(RegressionParameters params, TestDescription td) {
+            this(params, td, params.getWorkDirectory().getFile("scratch"));
+        }
+
+        protected SimpleScratchDirectory(RegressionParameters params, TestDescription td, File dir) {
+            super(params, td, dir);
         }
 
         @Override
-        boolean retainFiles(Status status, PrintWriter log)
+        void retainFiles(Status status, PrintWriter log)
                 throws InterruptedException, Fault {
-            // if scratchDir is the same as resultDir, we just need to delete
-            // the files we don't want to keep; the ones we want to keep are
-            // already in the right place.
+            // The scratchDir is not the same as resultDir, so we need to
+            // save the files we want and delete the rest.
+            boolean ok;
+            File resultDir = getResultDir(params, td);
             if (params.getRetainStatus().contains(status.getType())) {
-                // all files to be retained; no need to delete any files
-                return true;
+                // save all files; no need to delete any files
+                ok = saveFiles(dir, resultDir, null, false, log);
             } else {
                 Pattern rp = params.getRetainFilesPattern();
                 if (rp != null) {
-                    // delete files which do not match pattern
-                    // extend pattern so as not to delete *.jtr files
-                    Pattern rp_jtr = Pattern.compile(".*\\.jtr|" + rp.pattern());
-                    return deleteFiles(dir, rp_jtr, false, log);
+                    // save files which need to be retained
+                    ok = saveFiles(dir, resultDir, rp, true, log);
                 } else {
                     // test result doesn't match status set, no patterns specified:
-                    // delete all except *.jtr files
-                    Pattern jtr = Pattern.compile(".*\\.jtr");
-                    return deleteFiles(dir, jtr, false, log);
+                    // no files need saving
+                    ok = true;
                 }
             }
+
+            if (!ok)
+                throw new Fault(CANT_SAVE + dir);
+
+            // delete any files remaining in the scratch dir
+            deleteFiles(dir, null, false, log);
         }
+
     }
 
     /**
@@ -312,7 +364,7 @@ abstract class ScratchDirectory {
      * executed by that thread. If a directory in the series cannot be cleaned
      * up after previous tests, the next directory in the series is used.
      */
-    static class ThreadSafeScratchDir extends ScratchDirectory {
+    static class ThreadSafeScratchDir extends SimpleScratchDirectory {
         private static class ThreadInfo {
             private static AtomicInteger counter = new AtomicInteger();
             final int threadNum;
@@ -333,6 +385,8 @@ abstract class ScratchDirectory {
             }
 
             File getNextDir(RegressionParameters params) {
+                if (params.getExecMode() == ExecMode.SAMEVM)
+                    throw new AssertionError();
                 serial++;
                 return getDir(params);
             }
@@ -360,39 +414,56 @@ abstract class ScratchDirectory {
         }
 
         @Override
-        boolean retainFiles(Status status, PrintWriter log)
+        void retainFiles(Status status, PrintWriter log)
                 throws InterruptedException, Fault {
-            // The scratchDir is not the same as resultDir, so we need to
-            // save the files we want and delete the rest.
-            boolean ok;
-            File resultDir = getResultDir(params, td);
-            if (params.getRetainStatus().contains(status.getType())) {
-                // save all files; no need to delete any files
-                ok = saveFiles(dir, resultDir, null, false, log);
-            } else {
-                Pattern rp = params.getRetainFilesPattern();
-                if (rp != null) {
-                    // save files which need to be retained
-                    ok = saveFiles(dir, resultDir, rp, true, log);
-                } else {
-                    // test result doesn't match status set, no patterns specified:
-                    // no files need saving
-                    ok = true;
-                }
-            }
-
-            // delete any files remaining in the scratch dir
-            if (ok)
-                ok = deleteFiles(dir, null, false, log);
-
-            if (!ok)
+            try {
+                super.retainFiles(status, log);
+            } catch (Fault f) {
                 useNextDir();
-
-            return ok;
+                throw f;
+            }
         }
 
         private void useNextDir() {
             dir = threadInfo.get().getNextDir(params);
         }
     }
+
+
+    /**
+     * Use a test-specific directory as the scratch directory for the test.
+     * This is used in OtherVM mode when we want to retain some or all of the
+     * files from the test's execution, since it avoids the need to move
+     * files from a shared scratch directory to the test result directory.
+     */
+    static class TestResultScratchDir extends ScratchDirectory {
+        TestResultScratchDir(RegressionParameters params, TestDescription td) {
+            super(params, td, getResultDir(params, td));
+        }
+
+        @Override
+        void retainFiles(Status status, PrintWriter log)
+                throws Fault, InterruptedException {
+            // if scratchDir is the same as resultDir, we just need to delete
+            // the files we don't want to keep; the ones we want to keep are
+            // already in the right place.
+            if (params.getRetainStatus().contains(status.getType())) {
+                // all files to be retained; no need to delete any files
+            } else {
+                Pattern rp = params.getRetainFilesPattern();
+                if (rp != null) {
+                    // delete files which do not match pattern
+                    // extend pattern so as not to delete *.jtr files
+                    Pattern rp_jtr = Pattern.compile(".*\\.jtr|" + rp.pattern());
+                    deleteFiles(dir, rp_jtr, false, log);
+                } else {
+                    // test result doesn't match status set, no patterns specified:
+                    // delete all except *.jtr files
+                    Pattern jtr = Pattern.compile(".*\\.jtr");
+                    deleteFiles(dir, jtr, false, log);
+                }
+            }
+        }
+    }
+
 }
