@@ -123,18 +123,18 @@ ifndef JUNIT_JAR
   endif
 endif
 
-#----- TestNG 6.7: see http://www.testng.org/
+#----- TestNG 6.8.5: see http://www.testng.org/
 # http://testng.org/doc/download.html
 
 ifndef TESTNG_HOME
   ifdef SLASHJAVA
-    TESTNG_HOME = $(SLASHJAVA)/devtools/share/testng/testng-6.7
+    TESTNG_HOME = $(SLASHJAVA)/devtools/share/testng/testng-6.8.5
   endif
 endif
 
 ifndef TESTNG_JAR
   ifdef TESTNG_HOME
-    TESTNG_JAR = $(TESTNG_HOME)/other-jars/testng-6.7-dist.jar
+    TESTNG_JAR = $(TESTNG_HOME)/testng-6.8.5.jar
   endif
 endif
 
