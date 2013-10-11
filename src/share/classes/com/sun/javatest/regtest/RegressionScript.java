@@ -175,7 +175,11 @@ public class RegressionScript extends Script {
             if (params.isRetainEnabled()) {
                 String errmsg = null;
                 try {
-                    scratchDirectory.retainFiles(status, msgPW);
+                    if (scratchDirectory != null) {
+                        scratchDirectory.retainFiles(status, msgPW);
+                    } else {
+                        errmsg = "No scratch directory";
+                    }
                 } catch (InterruptedException e) {
                     errmsg = "Interrupted! " + e.getLocalizedMessage();
                 } catch (ScratchDirectory.Fault e) {
