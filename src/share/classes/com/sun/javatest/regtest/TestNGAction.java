@@ -25,6 +25,8 @@
 package com.sun.javatest.regtest;
 
 import java.io.File;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -220,15 +222,28 @@ public class TestNGAction extends MainAction {
         }
 
         void report(InfoKind k, ITestResult itr) {
-            System.out.println(k.toString().toLowerCase()
+            Throwable t = itr.getThrowable();
+            String suffix;
+            if (t != null  && itr.getStatus() != SUCCESS) {
+                // combine in stack trace so we can issue single println
+                // threading may otherwise result in interleaved output
+                StringWriter trace = new StringWriter();
+                PrintWriter pw = new PrintWriter(trace);
+
+                t.printStackTrace(pw);
+                pw.close();
+
+                suffix = "\n" + trace;
+            } else {
+                suffix = "\n";
+            }
+
+            System.out.print(k.toString().toLowerCase()
                     + " " + itr.getMethod().getMethod().getDeclaringClass().getName()
                     + "." + itr.getMethod().getMethodName()
                     + formatParams(itr)
-                    + ": " + statusToString(itr.getStatus()));
-            Throwable t = itr.getThrowable();
-            if (t != null  && itr.getStatus() != SUCCESS) {
-                t.printStackTrace(System.out);
-            }
+                        + ": " + statusToString(itr.getStatus())
+                        + suffix);
         }
 
         private String formatParams(ITestResult itr) {
@@ -250,7 +265,14 @@ public class TestNGAction extends MainAction {
                 sb.append((String) param);
                 sb.append('"');
             } else {
-                sb.append(param);
+                String value = String.valueOf(param);
+                if (value.length() > 30) {
+                   sb.append(param.getClass().getName());
+                   sb.append('@');
+                   sb.append(Integer.toHexString(System.identityHashCode(param)));
+                } else {
+                   sb.append(value);
+                }
             }
         }
 
