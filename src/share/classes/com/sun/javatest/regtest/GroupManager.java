@@ -46,6 +46,7 @@ import com.sun.javatest.regtest.GraphUtils.TarjanNode;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 
 /**
  * Manage test groups, for use on the jtreg command line.
@@ -225,38 +226,54 @@ public class GroupManager {
         }
 
         private void addFiles(Collection<File> files, Collection<File> includes, Collection<File> excludes) {
-            if (excludes.isEmpty()) {
-                files.addAll(includes);
-            } else {
-                for (File file: includes) {
-                    addFiles(files, file, excludes);
+            for (File incl: includes) {
+                if (contains(files, incl) || contains(excludes, incl))
+                    continue;
+
+                if (incl.isFile())
+                    addFile(files, incl);
+                else if (incl.isDirectory()) {
+                    Set<File> excludesForIncl = filter(incl, excludes);
+                    if (excludesForIncl.isEmpty())
+                        addFile(files, incl);
+                    else
+                        addFiles(files, list(incl), excludesForIncl);
                 }
             }
         }
 
-        private void addFiles(Collection<File> files, File file, Collection<File> excludes) {
-            if (excludes.contains(file))
-                return;
-
-            if (file.isFile())
-                files.add(file);
-            else if (file.isDirectory()) {
-                Set<File> excludesForFile = filter(file, excludes);
-                if (excludesForFile.isEmpty())
-                    files.add(file);
-                else
-                    addFiles(files, list(file), excludesForFile);
+        private void addFile(Collection<File> files, File file) {
+            for (Iterator<File> iter = files.iterator(); iter.hasNext(); ) {
+                File f = iter.next();
+                if (contains(file, f))
+                    iter.remove();
             }
+            files.add(file);
         }
 
-        private Set<File> filter(File file, Collection<File> excludes) {
+        private boolean contains(Collection<File> files, File file) {
+            for (File f: files) {
+                if (f.equals(file) || contains(f, file))
+                    return true;
+            }
+            return false;
+        }
+
+        private boolean contains(File dir, File file) {
+            String dirPath = dir.getPath();
+            if (!dirPath.endsWith(File.separator))
+                dirPath += File.separator;
+            return file.getPath().startsWith(dirPath);
+        }
+
+        private Set<File> filter(File dir, Collection<File> files) {
             Set<File> results = null;
-            String fp = file.getPath();
-            for (File e: excludes) {
-                String ep = e.getPath();
-                if (ep.startsWith(fp + File.separator)) {
+            String dirPath = dir.getPath();
+            for (File f: files) {
+                String fp = f.getPath();
+                if (fp.startsWith(dirPath + File.separator)) {
                     if (results == null) results = new LinkedHashSet<File>();
-                    results.add(e);
+                    results.add(f);
                 }
             }
             return results == null ? Collections.<File>emptySet() : results;

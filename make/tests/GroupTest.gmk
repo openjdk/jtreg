@@ -29,10 +29,6 @@ GroupTest.GROUPS := $(shell $(GREP) -h '=' \
 	$(TESTDIR)/javatest/regtest/data/groups/TEST.group* | \
 	$(AWK) '{print $$1}' | $(SORT) -unk 1.2 )
 
-
-foo: 
-	echo $(GroupTest.GROUPS)
-
 $(BUILDDIR)/GroupTest.ok: $(GroupTest.GROUPS:%=$(BUILDDIR)/GroupTest.%.ok)
 	echo $@ passed at `date` > $@
 
@@ -53,3 +49,21 @@ $(GroupTest.GROUPS:%=$(BUILDDIR)/GroupTest.%.ok): \
 	echo $@ passed at `date` > $@
 
 TESTS.jtreg += $(BUILDDIR)/GroupTest.ok
+
+$(BUILDDIR)/ShowGroupTest.ok: \
+	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	$(JTREG_IMAGEDIR)/solaris/bin/jtreg
+	$(MKDIR) -p $(@:%.ok=%) 
+	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(J2SEHOME) \
+                -showGroups \
+		$(TESTDIR)/javatest/regtest/data/groups \
+                > $(@:%.ok=%)/jt.log 2>&1
+	$(GREP) '^g3[0-9]' $(@:%.ok=%)/jt.log > $(@:%.ok=%)/g3.found
+	$(GREP) '^# g3[0-9]*' $(TESTDIR)/javatest/regtest/data/groups/TEST.groups3 \
+	        | $(SED) -e 's/# //' > $(@:%.ok=%)/g3.expect
+	$(DIFF) $(@:%.ok=%)/g3.expect $(@:%.ok=%)/g3.found
+	echo $@ passed at `date` > $@
+
+TESTS.jtreg += $(BUILDDIR)/ShowGroupTest.ok
