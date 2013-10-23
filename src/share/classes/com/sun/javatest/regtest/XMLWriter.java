@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -411,25 +411,48 @@ class XPrintStream {
         ps.print(d);
     }
 
-    // precompile the standard regex patterns for performance
-    private static final Pattern XML_GT = Pattern.compile(">");
-    private static final Pattern XML_LT = Pattern.compile("<");
-    private static final Pattern XML_AMP = Pattern.compile("&");
-    private static final Pattern XML_QUOTE = Pattern.compile("\"");
-    private static final Pattern XML_APOS = Pattern.compile("\'");
-
     // sanitize the string for xml presentation
     public void sanitize(String in) {
-        if (in == null) {
-            ps.print("");
-        } else {
-            // Note: take care of ampersands first
-            in = XML_AMP.matcher(in).replaceAll("&amp;");
-            in = XML_GT.matcher(in).replaceAll("&gt;");
-            in = XML_LT.matcher(in).replaceAll("&lt;");
-            in = XML_QUOTE.matcher(in).replaceAll("&quot;");
-            in = XML_APOS.matcher(in).replaceAll("&apos;");
-            ps.print(in);
+        if (in == null)
+            return;
+
+        for (int i = 0; i < in.length(); i++) {
+            char ch = in.charAt(i);
+            switch (ch) {
+                case '&':  ps.print("&amp;");  break;
+                case '<':  ps.print("&lt;");   break;
+                case '>':  ps.print("&gt;");   break;
+                case '"':  ps.print("&quot;"); break;
+                case '\'': ps.print("&apos;"); break;
+
+                // case 'f': // not a valid XML character
+                case '\n':
+                case '\r':
+                case '\t':
+                    ps.print(ch);
+                    break;
+
+                case '\\':
+                    if (i + 1 < in.length() && in.charAt(i + 1) == 'u') {
+                        // encode "backslash u" as "backslash u u" to distinguish
+                        // it from use of unicode escapes for control characters.
+                        ps.print("\\uu");
+                        i++;
+                    } else {
+                        ps.print(ch);
+                    }
+                    break;
+
+                default:
+                    if (ch < 32 || !Character.isDefined(ch)) {
+                        // Ideally, we'd print control characters as numeric
+                        // character entities, but a validating SAX parser
+                        // rejects that, so we encode them as Unicode instead.
+                        ps.print(String.format("\\u%04x", (int) ch));
+                    } else {
+                        ps.print(ch);
+                    }
+            }
         }
     }
 
