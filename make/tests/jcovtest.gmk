@@ -23,6 +23,8 @@
 # questions.
 #
 
+ifdef JCOV_HOME
+
 $(BUILDDIR)/jcovtest.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar
 	$(RM) $(BUILDDIR)/jcov
@@ -46,3 +48,6 @@ $(BUILDDIR)/jcovtest.ok: \
 
 # convenience target
 test.jcov: $(BUILDDIR)/jcovtest.ok
+
+endif
+

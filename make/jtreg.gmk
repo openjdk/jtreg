@@ -350,7 +350,7 @@ endif
 #
 # import JCov
 
-#ifdef JCOV_HOME
+ifdef JCOV_HOME
 
 $(JTREG_IMAGEDIR)/lib/jcov.jar: $(JCOV_HOME)/lib/jcov.jar
 	$(RM) -f $@
@@ -366,7 +366,7 @@ TARGETS.ZIP.jtreg += \
     $(JTREG_IMAGEDIR)/lib/jcov.jar \
     $(JTREG_IMAGEDIR)/lib/jcov_implant.jar
 
-#endif JCOV_HOME
+endif #JCOV_HOME
 
 #----------------------------------------------------------------------
 #

@@ -57,8 +57,11 @@ $(BUILDDIR)/jcov.agentvm.ok: \
 	if [ ! -r $(@:%.ok=%/report)/jcov/com/acme/Library.html ]; then exit 1; fi
 	echo $@ passed at `date` > $@
 
+ifdef JCOV_HOME
+
 TESTS.jtreg += \
 	$(BUILDDIR)/jcov.othervm.ok \
 	$(BUILDDIR)/jcov.agentvm.ok \
 	$(BUILDDIR)/jcov.samevm.ok
 
+endif #JCOV_HOME
