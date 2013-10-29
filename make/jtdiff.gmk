@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1999, 2007, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1999, 2013, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -28,13 +28,13 @@
 # compile com.sun.javatest.diff
 
 JAVAFILES.com.sun.javatest.diff := \
-	$(shell find $(JAVADIR)/com/sun/javatest/diff -name \*.java )
+	$(shell $(FIND) $(JAVADIR)/com/sun/javatest/diff -name \*.java )
 
 $(BUILDDIR)/classes.com.sun.javatest.diff.ok: \
 		$(JAVAFILES.com.sun.javatest.diff) \
 		$(BUILDDIR)/classes.com.sun.javatest.regtest.ok 
-	CLASSPATH=$(CLASSDIR):$(JAVATEST_JAR):$(JAVAHELP_JAR):$(ANTHOME)/lib/ant.jar \
-	    $(J2SEJAVAC) -target $(J2SEJAVAC_TARGET) -encoding ISO8859-1 -d $(CLASSDIR) \
+		CLASSPATH="$(CLASSDIR)$(PS)$(JAVATEST_JAR)$(PS)$(JAVAHELP_JAR)$(PS)$(ANTHOME)/lib/ant.jar" \
+		$(J2SEJAVAC) -target $(J2SEJAVAC_TARGET) -encoding ISO8859-1 -d $(CLASSDIR) \
 	    $(JAVAFILES.com.sun.javatest.diff)
 	echo "classes built at `date`" > $@
 

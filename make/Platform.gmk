@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1995, 2011, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1995, 2013, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -26,9 +26,8 @@
 # This file is an extract from jdk/test/Makefile to model the logic
 # for determining the platform keys used for ProblemList.txt
 
-CUT	= cut
+CUT     = cut
 UNAME   = uname
-
 
 # Get OS name from uname
 UNAME_S := $(shell $(UNAME) -s)
@@ -38,6 +37,9 @@ GETMIXEDPATH=$(ECHO)
 
 # Location of developer shared files
 SLASH_JAVA = /java
+
+# path separator
+PS = :
 
 # Platform specific settings
 ifeq ($(UNAME_S), SunOS)
@@ -74,6 +76,7 @@ ifeq ($(OS_NAME),)
     GETMIXEDPATH  = cygpath -m -s
     OS_VERSION   := $(shell $(UNAME) -s | $(CUT) -d'-' -f2)
   endif
+  PS = ;
 endif
 
 # Only want major and minor numbers from os version

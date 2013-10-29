@@ -1,6 +1,6 @@
 #! /bin/sh
 #
-# Copyright (c) 2001, 2007, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2001, 2013, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -30,6 +30,6 @@ cd $classdir
 if [ "$#" -gt 0 ]; then
     for i in $* ; do
         dir=`echo $i | sed -e 's|\.|/|g'`
-        ls -F $dir | grep -v '/$' | sed -e "s|\(.*\)|-C $classdir $dir/\1|"
+        ls -F $dir | grep -v '/$' | sed -e 's|\*$||' -e "s|\(.*\)|-C $classdir $dir/\1|"
     done
 fi

@@ -36,19 +36,19 @@ $(BUILDDIR)/classes.com.sun.javatest.regtest-jdk11.ok: \
 		$(JAVAFILES.com.sun.javatest.regtest-jdk11) \
 		$(JAVATEST_JAR) \
 		$(CLASSDIR)
-	CLASSPATH=$(JAVADIR):$(CLASSDIR):$(JAVATEST_JAR):$(JUNIT_JAR) \
-	    $(J2SEJAVAC) -source 1.2 -target 1.1 -d $(CLASSDIR) \
+		CLASSPATH="$(JAVADIR)$(PS)$(CLASSDIR)$(PS)$(JAVATEST_JAR)$(PS)$(JUNIT_JAR)" \
+		$(J2SEJAVAC)  -source 1.2 -target 1.1 -d $(CLASSDIR) \
 		$(JAVAFILES.com.sun.javatest.regtest-jdk11)
 	echo "classes built at `date`" > $@
 
 JAVAFILES.com.sun.javatest.regtest-j2se := \
-	$(filter-out $(JAVAFILES.com.sun.javatest.regtest-jdk11), $(shell find $(JAVADIR)/com/sun/javatest/regtest -name \*.java ))
+	$(filter-out $(JAVAFILES.com.sun.javatest.regtest-jdk11), $(shell $(FIND) $(JAVADIR)/com/sun/javatest/regtest -name \*.java ))
 
 $(BUILDDIR)/classes.com.sun.javatest.regtest.ok: \
 		$(JAVAFILES.com.sun.javatest.regtest-j2se) \
 		$(BUILDDIR)/classes.com.sun.javatest.regtest-jdk11.ok
-	CLASSPATH=$(CLASSDIR):$(ANTHOME)/lib/ant.jar:$(JAVATEST_JAR):$(JUNIT_JAR):$(TESTNG_JAR):$(JAVAHELP_JAR) \
-	    $(J2SEJAVAC) -target $(J2SEJAVAC_TARGET) -encoding ISO8859-1 -d $(CLASSDIR) \
+		CLASSPATH="$(CLASSDIR)$(PS)$(ANTHOME)/lib/ant.jar$(PS)$(JAVATEST_JAR)$(PS)$(JUNIT_JAR)$(PS)$(TESTNG_JAR)$(PS)$(JAVAHELP_JAR)" \
+		$(J2SEJAVAC)  -target $(J2SEJAVAC_TARGET) -encoding ISO8859-1 -d $(CLASSDIR) \
 		$(JAVAFILES.com.sun.javatest.regtest-j2se)
 	echo "classes built at `date`" > $@
 
