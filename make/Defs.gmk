@@ -68,6 +68,7 @@ J2SEJAVA = $(J2SEHOME)/bin/java
 J2SEJAVAC = $(J2SEHOME)/bin/javac
 JAR = $(J2SEHOME)/bin/jar
 
+J2SEJAVAC_SOURCE = 5
 J2SEJAVAC_TARGET = 5
 
 #----- JavaHelp: see https://javahelp.dev.java.net/

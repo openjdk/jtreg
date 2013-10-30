@@ -48,7 +48,7 @@ $(BUILDDIR)/classes.com.sun.javatest.regtest.ok: \
 		$(JAVAFILES.com.sun.javatest.regtest-j2se) \
 		$(BUILDDIR)/classes.com.sun.javatest.regtest-jdk11.ok
 		CLASSPATH="$(CLASSDIR)$(PS)$(ANTHOME)/lib/ant.jar$(PS)$(JAVATEST_JAR)$(PS)$(JUNIT_JAR)$(PS)$(TESTNG_JAR)$(PS)$(JAVAHELP_JAR)" \
-		$(J2SEJAVAC)  -target $(J2SEJAVAC_TARGET) -encoding ISO8859-1 -d $(CLASSDIR) \
+		$(J2SEJAVAC) -source $(J2SEJAVAC_SOURCE) -target $(J2SEJAVAC_TARGET) -encoding ISO8859-1 -d $(CLASSDIR) \
 		$(JAVAFILES.com.sun.javatest.regtest-j2se)
 	echo "classes built at `date`" > $@
 
@@ -166,11 +166,11 @@ $(REGTEST_CLASSDIR)/help/default/usage.html: $(BUILDDIR)/jtreg-usage.txt
 $(BUILDDIR)/jtreg-usage.txt: \
 		$(BUILDDIR)/classes.com.sun.javatest.regtest.ok \
 		$(BUILDDIR)/classes/com/sun/javatest/regtest/i18n.properties
-	$(J2SEJAVA) -cp $(CLASSDIR):$(JAVATEST_JAR):$(JAVAHELP_JAR) \
+	$(J2SEJAVA) -cp "$(CLASSDIR)$(PS)$(JAVATEST_JAR)$(PS)$(JAVAHELP_JAR)" \
 	    -Dprogram=jtreg com.sun.javatest.regtest.Main -help all > $@
 
-XALAN_PATH = $(XALANHOME)/xalan.jar:$(XALANHOME)/serializer.jar:$(XALANHOME)/xml-apis.jar:$(XALANHOME)/xercesImpl.jar
-XALAN = CLASSPATH=$(XALAN_PATH) $(J2SEJAVA) org.apache.xalan.xslt.Process
+XALAN_PATH = $(XALANHOME)/xalan.jar$(PS)$(XALANHOME)/serializer.jar$(PS)$(XALANHOME)/xml-apis.jar$(PS)$(XALANHOME)/xercesImpl.jar
+XALAN = CLASSPATH="$(XALAN_PATH)" $(J2SEJAVA) org.apache.xalan.xslt.Process
 
 $(BUILDDIR)/regtest_help_dynfiles.ok: \
 		$(REGTEST_SRCDIR)/faq.xml \
