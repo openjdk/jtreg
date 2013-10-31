@@ -54,14 +54,20 @@ clean:
 sanity:
 	@echo "JDK15HOME      = $(JDK15HOME)"
 	@echo "JDK16HOME      = $(JDK16HOME)"
+	@echo "JDK17HOME      = $(JDK17HOME)"
 	@echo "JAVAHELP_HOME  = $(JAVAHELP_HOME)"
 	@echo "JAVATEST_HOME  = $(JAVATEST_HOME)"
 ifneq ($(JTHARNESS_HOME), $(JAVATEST_HOME))
 	@echo "JTHARNESS_HOME = $(JTHARNESS_HOME)"
 endif
+ifdef JCOV_HOME
+	@echo "JCOV_HOME      = $(JCOV_HOME)"
+endif
 	@echo "ANTHOME        = $(ANTHOME)"
 	@echo "XALANHOME      = $(XALANHOME)"
 	@echo "JUNIT_JAR      = $(JUNIT_JAR)"
+	@echo "TESTNG_HOME    = $(TESTNG_HOME)"
+	@echo "TESTNG_JAR     = $(TESTNG_JAR)"
 	@echo "LINKLINT       = $(LINKLINT)"
 
 #----------------------------------------------------------------------
