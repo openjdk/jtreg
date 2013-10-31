@@ -34,7 +34,7 @@ JAVAFILES.com.sun.javatest.regtest-jdk11 = \
 # TODO: set -bootclasspath to JDK 1.1 classes?
 $(BUILDDIR)/classes.com.sun.javatest.regtest-jdk11.ok: \
 		$(JAVAFILES.com.sun.javatest.regtest-jdk11) \
-		$(JAVATEST_JAR) \
+		$(call PosixPath,$(JAVATEST_JAR)) \
 		$(CLASSDIR)
 		CLASSPATH="$(JAVADIR)$(PS)$(CLASSDIR)$(PS)$(JAVATEST_JAR)$(PS)$(JUNIT_JAR)" \
 		$(J2SEJAVAC)  -source 1.2 -target 1.1 -d $(CLASSDIR) \
@@ -280,18 +280,18 @@ $(JTREG_IMAGEDIR)/legal/jtharness/license.txt: \
 	$(CP) $< $@
 
 $(JTREG_IMAGEDIR)/legal/javatest/copyright.html: \
-		$(JAVATEST_HOME)/COPYRIGHT-javatest.html
+		$(call PosixPath,$(JAVATEST_HOME)/COPYRIGHT-javatest.html)
 	$(RM) -f $@
 	$(MKDIR) -p $(@D)
 	$(CP) $< $@
 
 $(JTREG_IMAGEDIR)/doc/javatest/javatestGUI.pdf: \
-		$(JTREG_IMAGEDIR)/%: $(JAVATEST_HOME)/%
+		$(JTREG_IMAGEDIR)/%: $(call PosixPath,$(JAVATEST_HOME))/%
 	$(RM) -f $@
 	$(MKDIR) -p $(@D)
 	$(CP) $< $@
 
-$(JTREG_IMAGEDIR)/lib/javatest.jar: $(JAVATEST_JAR)
+$(JTREG_IMAGEDIR)/lib/javatest.jar: $(call PosixPath,$(JAVATEST_JAR))
 	$(RM) -f $@
 	$(MKDIR) -p $(@D)
 	$(CP) $(JAVATEST_JAR) $@
@@ -302,7 +302,7 @@ TARGETS.ZIP.jtreg += $(JTREG_IMAGEJARDIR)/javatest.jar
 #
 # import JavaHelp
 
-$(IMAGES_DIR)/%/jh.jar: $(JAVAHELP_JAR)
+$(IMAGES_DIR)/%/jh.jar: $(call PosixPath,$(JAVAHELP_JAR))
 	$(RM) -f $@
 	$(MKDIR) -p $(@D)
 	$(CP) $(JAVAHELP_JAR) $@
@@ -313,7 +313,7 @@ TARGETS.ZIP.jtreg += $(JTREG_IMAGEJARDIR)/jh.jar
 #
 # import JUnit
 
-$(JTREG_IMAGEDIR)/lib/junit.jar: $(JUNIT_JAR)
+$(JTREG_IMAGEDIR)/lib/junit.jar: $(call PosixPath,$(JUNIT_JAR))
 	$(RM) -f $@
 	$(MKDIR) -p $(@D)
 	$(CP) $(JUNIT_JAR) $@
@@ -326,13 +326,13 @@ TARGETS.ZIP.jtreg += $(JTREG_IMAGEJARDIR)/junit.jar
 
 ifdef TESTNG_HOME 
 
-$(JTREG_IMAGEDIR)/legal/testng/LICENSE.txt: $(TESTNG_HOME)/LICENSE.txt
+$(JTREG_IMAGEDIR)/legal/testng/LICENSE.txt: $(call PosixPath,$(TESTNG_HOME)/LICENSE.txt)
 	$(MKDIR) -p $(@D)
 	$(CAT) $(TESTNG_HOME)/LICENSE.txt >> $@ 
 
 TARGETS.ZIP.jtreg += $(JTREG_IMAGEDIR)/legal/testng/LICENSE.txt
 
-$(JTREG_IMAGEDIR)/lib/testng.jar: $(TESTNG_JAR)
+$(JTREG_IMAGEDIR)/lib/testng.jar: $(call PosixPath,$(TESTNG_JAR))
 	$(RM) $@
 	$(MKDIR) -p $(@D)
 	$(CP) $(TESTNG_JAR) $@
@@ -352,13 +352,13 @@ endif
 
 ifdef JCOV_HOME
 
-$(JTREG_IMAGEDIR)/lib/jcov.jar: $(JCOV_HOME)/lib/jcov.jar
-	$(RM) -f $@
+$(JTREG_IMAGEDIR)/lib/jcov.jar: $(call PosixPath,$(JCOV_HOME)/lib/jcov.jar)
+	$(RM) $@
 	$(MKDIR) -p $(@D)
 	$(CP) $< $@
 
-$(JTREG_IMAGEDIR)/lib/jcov_implant.jar: $(JCOV_HOME)/lib/jcov_implant.jar
-	$(RM) -f $@
+$(JTREG_IMAGEDIR)/lib/jcov_implant.jar: $(call PosixPath,$(JCOV_HOME)/lib/jcov_implant.jar)
+	$(RM) $@
 	$(MKDIR) -p $(@D)
 	$(CP) $< $@
 

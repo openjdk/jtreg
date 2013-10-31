@@ -28,7 +28,7 @@
 $(BUILDDIR)/StatsTest.ok: $(TESTDIR)/javatest/regtest/StatsTest.java \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar
-	$(RM) -rf $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	$(MKDIR) $(@:%.ok=%)/classes
 	$(J2SEJAVAC) -d $(@:%.ok=%)/classes -cp $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(TESTDIR)/javatest/regtest/StatsTest.java
@@ -44,7 +44,7 @@ $(BUILDDIR)/StatsTxt.1.ok: \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/lib/jh.jar
-	$(RM) -rf $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	$(J2SEJAVA) \
 	    -Djtreg.stats.format="TEST-STATS: StatsTxt run=%r failed=%F excluded=%x" \
 	    -jar $(JTREG_IMAGEDIR)/lib/jtreg.jar \
@@ -65,7 +65,7 @@ $(BUILDDIR)/StatsTxt.2.ok: \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/lib/jh.jar
-	$(RM) -rf $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	$(J2SEJAVA) \
 	    -Djtreg.stats.format="TEST-STATS: StatsTxt passed=%p failed=%F ignored=%i" \
 	    -jar $(JTREG_IMAGEDIR)/lib/jtreg.jar \

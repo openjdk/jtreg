@@ -30,7 +30,7 @@
 $(BUILDDIR)/JDK11Test.1.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/solaris/bin/jtreg
-	$(RM) -rf $(@:%.ok=%)
+	$(RM) $(@:%.ok=%)
 	JTREG_SHOWAGENT=true JTREG_SHOWCMD=true \
 	JT_JAVA=$(JDK16HOME) \
 		$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
@@ -43,7 +43,7 @@ $(BUILDDIR)/JDK11Test.1.ok: \
 $(BUILDDIR)/JDK11Test.2.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/solaris/bin/jtreg
-	$(RM) -rf $(@:%.ok=%)
+	$(RM) $(@:%.ok=%)
 	JTREG_SHOWAGENT=true JTREG_SHOWCMD=true \
 	JT_JAVA=$(JDK16HOME) \
 		$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \

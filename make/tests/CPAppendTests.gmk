@@ -36,7 +36,7 @@ $(BUILDDIR)/CPAppend/neg.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/solaris/bin/jtreg \
 	    $(BUILDDIR)/CPAppend/classes/p/Lib.class
-	    $(RM) -rf $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	    $(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(J2SEHOME) \

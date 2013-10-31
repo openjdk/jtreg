@@ -65,7 +65,7 @@ $(BUILDDIR)/OpenFileTests.othervm.ok: \
 $(BUILDDIR)/OpenFileTests.samevm.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/solaris/bin/jtreg
-	if [ -d $(@:%.ok=%) ]; then $(CHMOD) -R +w $(@:%.ok=%) && $(RM) -rf $(@:%.ok=%) ; fi
+	if [ -d $(@:%.ok=%) ]; then $(CHMOD) -R +w $(@:%.ok=%) && $(RM) $(@:%.ok=%) ; fi
 	$(MKDIR) $(@:%.ok=%)
 	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
@@ -87,7 +87,7 @@ $(BUILDDIR)/OpenFileTests.othervm.retain.ok \
 $(BUILDDIR)/OpenFileTests.samevm.retain.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/solaris/bin/jtreg
-	if [ -d $(@:%.ok=%) ]; then $(CHMOD) -R +w $(@:%.ok=%) && $(RM) -rf $(@:%.ok=%) ; fi
+	if [ -d $(@:%.ok=%) ]; then $(CHMOD) -R +w $(@:%.ok=%) && $(RM) $(@:%.ok=%) ; fi
 	$(MKDIR) $(@:%.ok=%)
 	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \

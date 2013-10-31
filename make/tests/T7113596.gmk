@@ -29,7 +29,7 @@ $(BUILDDIR)/T7113596.ok: \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/lib/jh.jar
-	$(RM) -rf $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	$(LN) -s $(J2SEHOME) $(@:%.ok=%)/jdk
 	cd $(@:%.ok=%) && $(J2SEJAVA) -jar ../$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		-jdk:jdk \

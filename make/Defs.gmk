@@ -37,6 +37,42 @@ CLASSPATH=
 JAVA_COMPILER=
 LD_LIBRARY_PATH=
 
+
+
+#----------------------------------------------------------------------
+#
+# Support for Cygwin
+
+SYSTEM_UNAME := $(shell uname)
+
+# Where is unwanted output to be delivered?
+# On Windows, MKS uses the special file "NUL", cygwin uses the customary unix file.
+ifeq ($(SYSTEM_UNAME), Windows_NT)
+DEV_NULL = NUL
+else
+DEV_NULL = /dev/null 
+endif
+
+ifneq (,$(findstring CYGWIN,$(SYSTEM_UNAME)))
+USING_CYGWIN = true
+endif
+
+ifdef USING_CYGWIN
+define FullPath
+$(shell cygpath -a -m $1 2> $(DEV_NULL))
+endef
+define PosixPath
+$(shell cygpath -a -u $1 2> $(DEV_NULL))
+endef
+else
+define FullPath
+$(abspath $1)
+endef
+define PosixPath
+$1
+endef
+endif
+
 #----------------------------------------------------------------------
 #
 # Parameters to control what to build with
@@ -49,18 +85,21 @@ ifndef JDK15HOME
     JDK15HOME = $(SLASHJAVA)/re/jdk/1.5.0/archive/fcs/binaries/linux-i586
   endif
 endif
+JDK15HOME := $(call FullPath,$(JDK15HOME))
 
 ifndef JDK16HOME
   ifdef SLASHJAVA
     JDK16HOME = $(SLASHJAVA)/re/jdk/1.6.0/archive/fcs/binaries/linux-i586
   endif
 endif
+JDK16HOME := $(call FullPath,$(JDK16HOME))
 
 ifndef JDK17HOME
   ifdef SLASHJAVA
     JDK17HOME = $(SLASHJAVA)/re/jdk/1.7.0/archive/fcs/binaries/linux-i586
   endif
 endif
+JDK17HOME := $(call FullPath,$(JDK17HOME))
 
 # J2SE for most classes
 J2SEHOME = $(JDK15HOME)
@@ -77,6 +116,7 @@ ifndef JAVAHELP_HOME
     JAVAHELP_HOME = $(SLASHJAVA)/re/jh/2.0_01/promoted/fcs/latest/binaries/jh2.0/javahelp
   endif
 endif
+JAVAHELP_HOME := $(call FullPath,$(JAVAHELP_HOME))
 
 JAVAHELP_JAR = $(JAVAHELP_HOME)/lib/jh.jar
 JHINDEXER =  CLASSPATH=$(JAVAHELP_HOME)/lib/jhall.jar $(J2SEJAVA) com.sun.java.help.search.Indexer
@@ -88,6 +128,7 @@ ifndef JTHARNESS_HOME
     JTHARNESS_HOME = $(SLASHJAVA)/re/jtharness/4.4/archive/MR1/binaries
   endif
 endif 
+JTHARNESS_HOME := $(call FullPath,$(JTHARNESS_HOME))
 
 ifndef JAVATEST_HOME
   ifdef JTHARNESS_HOME
@@ -98,6 +139,7 @@ ifndef JAVATEST_HOME
     endif
   endif
 endif
+JAVATEST_HOME := $(call FullPath,$(JAVATEST_HOME))
 
 ifdef JAVATEST_HOME
   JAVATEST_JAR = $(JAVATEST_HOME)/lib/javatest.jar
@@ -110,6 +152,7 @@ ifndef JCOV_HOME
     JCOV_HOME = $(SLASHJAVA)/re/jcov/2.0/promoted/latest/binaries/jcov_2.0/
   endif
 endif
+JCOV_HOME := $(call FullPath,$(JCOV_HOME))
 
 ifdef JCOV_HOME
   JCOV = $(JDK16HOME)/bin/java -jar $(JCOV_HOME)/lib/jcov.jar
@@ -123,6 +166,7 @@ ifndef JUNIT_JAR
     JUNIT_JAR = $(SLASHJAVA)/devtools/share/junit/junit-4.5/junit.jar
   endif
 endif
+JUNIT_JAR := $(call FullPath,$(JUNIT_JAR))
 
 #----- TestNG 6.8.5: see http://www.testng.org/
 # http://testng.org/doc/download.html
@@ -132,12 +176,14 @@ ifndef TESTNG_HOME
     TESTNG_HOME = $(SLASHJAVA)/devtools/share/testng/testng-6.8.5
   endif
 endif
+TESTNG_HOME := $(call FullPath,$(TESTNG_HOME))
 
 ifndef TESTNG_JAR
   ifdef TESTNG_HOME
     TESTNG_JAR = $(TESTNG_HOME)/testng-6.8.5.jar
   endif
 endif
+TESTNG_JAR := $(call FullPath,$(TESTNG_JAR))
 
 #----- Ant: see http://ant.apache.org/
 
@@ -146,6 +192,7 @@ ifndef ANTHOME
     ANTHOME = $(SLASHJAVA)/devtools/share/ant/1.7.0
   endif
 endif
+ANTHOME := $(call FullPath,$(ANTHOME))
 
 ifdef ANTHOME
   ANT = $(ANTHOME)/bin/ant
@@ -176,6 +223,7 @@ ifndef XALANHOME
     XALANHOME = $(SLASHJAVA)/jct-tools/pkgs/xalan-j_2_7_0
   endif
 endif
+XALANHOME := $(call FullPath,$(XALANHOME))
 
 #----- Unix commands
 

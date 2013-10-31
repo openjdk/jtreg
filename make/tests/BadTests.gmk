@@ -33,7 +33,7 @@
 $(BUILDDIR)/BadTests.othervm.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/solaris/bin/jtreg
-	$(RM) -rf $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(J2SEHOME) \
@@ -58,7 +58,7 @@ $(BUILDDIR)/BadTests.othervm.ok: \
 $(BUILDDIR)/BadTests.agentvm.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/solaris/bin/jtreg
-	$(RM) -rf $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	JTREG_SHOWAGENT=true \
 	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
@@ -80,7 +80,7 @@ $(BUILDDIR)/BadTests.agentvm.ok: \
 $(BUILDDIR)/BadTests.samevm.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/solaris/bin/jtreg
-	$(RM) -rf $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	JTREG_USE_AGENTVM_FOR_SAMEVM=false \
 	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \

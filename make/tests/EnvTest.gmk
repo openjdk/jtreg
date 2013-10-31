@@ -30,7 +30,7 @@ $(BUILDDIR)/EnvTest.simple.ok: $(ENV.files) \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/lib/jh.jar \
 	    $(JTREG_IMAGEDIR)/solaris/bin/jtreg
-	$(RM) -rf $(@:%.ok=%)
+	$(RM) $(@:%.ok=%)
 	$(MKDIR) $(@:%.ok=%)
 	( echo "testRoot=`cd $(TESTDIR)/javatest/regtest/data/env ; pwd`" ; \
 	  echo "classRoot=`cd $(@:%.ok=%); pwd`/work/classes" ; \
@@ -55,7 +55,7 @@ $(BUILDDIR)/EnvTest.full.ok: $(ENV.files) \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/lib/jh.jar \
 	    $(JTREG_IMAGEDIR)/solaris/bin/jtreg
-	$(RM) -rf $(@:%.ok=%)
+	$(RM) $(@:%.ok=%)
 	$(MKDIR) $(@:%.ok=%)
 	( echo "testRoot=`cd $(TESTDIR)/javatest/regtest/data/env ; pwd`" ; \
 	  echo "classRoot=`cd $(@:%.ok=%); pwd`/work/classes" ; \

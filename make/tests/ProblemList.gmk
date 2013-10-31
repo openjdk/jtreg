@@ -41,7 +41,7 @@ $(BUILDDIR)/ProblemList.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jh.jar \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/solaris/bin/jtreg
-	$(RM) -rf $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	$(MKDIR) $(@:%.ok=%)/1
 	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/1/work -r:$(@:%.ok=%)/1/report \

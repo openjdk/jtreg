@@ -31,7 +31,7 @@ $(BUILDDIR)/CompileTest.1.othervm.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/solaris/bin/jtreg \
 	    $(BUILDDIR)/not-a-jdk/bin/java
-	$(RM) -rf $(@:%.ok=%)
+	$(RM) $(@:%.ok=%)
 	JTREG_SHOWAGENT=true JTREG_SHOWCMD=true \
 	JT_JAVA=$(JDK16HOME) \
 		$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
@@ -50,7 +50,7 @@ $(BUILDDIR)/CompileTest.2.othervm.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/solaris/bin/jtreg \
 	    $(BUILDDIR)/not-a-jdk/bin/java
-	$(RM) -rf $(@:%.ok=%)
+	$(RM) $(@:%.ok=%)
 	JTREG_SHOWAGENT=true JTREG_SHOWCMD=true \
 	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
@@ -75,7 +75,7 @@ $(BUILDDIR)/CompileTest.3.othervm.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/solaris/bin/jtreg \
 	    $(BUILDDIR)/just-java/bin/java
-	$(RM) -rf $(@:%.ok=%)
+	$(RM) $(@:%.ok=%)
 	JTREG_SHOWAGENT=true JTREG_SHOWCMD=true \
 	JT_JAVA=$(JDK16HOME) \
 		$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
@@ -92,7 +92,7 @@ $(BUILDDIR)/CompileTest.4.agentvm.ok \
 $(BUILDDIR)/CompileTest.4.othervm.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/solaris/bin/jtreg
-	$(RM) -rf $(@:%.ok=%)
+	$(RM) $(@:%.ok=%)
 	JTREG_SHOWAGENT=true JTREG_SHOWCMD=true \
 	JT_JAVA=$(JDK16HOME) \
 		$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
@@ -107,7 +107,7 @@ $(BUILDDIR)/CompileTest.4.othervm.ok: \
 $(BUILDDIR)/CompileTest.5.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/solaris/bin/jtreg
-	$(RM) -rf $(@:%.ok=%)
+	$(RM) $(@:%.ok=%)
 	JT_JAVA=$(JDK16HOME) \
 		$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
