@@ -316,8 +316,8 @@ public class RegressionTestFinder extends TagTestFinder
         }
 
         if (rejectTrailingBuild) {
-            int sep = value.lastIndexOf(LINESEP, value.length() - 2); // ignore final LINESEP
-            String lastLine = value.substring(sep + 1);
+            int sep = value.lastIndexOf(LINESEP, value.length() - 1 - LINESEP.length()); // ignore final LINESEP
+            String lastLine = value.substring(sep == -1 ? 0 : sep + LINESEP.length());
             if (lastLine.startsWith(Action.REASON_USER_SPECIFIED + " build")) {
                 newTagValues.put("error", PARSE_RUN_ENDS_WITH_BUILD);
             }

@@ -30,7 +30,7 @@ $(BUILDDIR)/i18n.com.sun.javatest.diff.ok: \
 		$(JAVADIR)/com/sun/javatest/diff/i18n.properties \
 		$(BUILDDIR)/classes.com.sun.javatest.diff.ok \
 		checkI18NProps.sh
-	CLASSPATH=$(CLASSDIR):$(JAVADIR):$(JAVATEST_JAR) \
+	CLASSPATH="$(CLASSDIR)$(PS)$(JAVADIR)$(PS)$(JAVATEST_JAR)" \
 		$(J2SEJAVA) -Djavatest.i18n.log=com.sun.javatest.diff \
 			com.sun.javatest.diff.Main -help all \
 			> $(@:%.ok=%.log) 2>&1

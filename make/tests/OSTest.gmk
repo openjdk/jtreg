@@ -29,9 +29,9 @@ $(BUILDDIR)/OSTest.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/solaris/bin/jtreg
 	$(MKDIR) -p $(@:%.ok=%)/classes
-	$(J2SEJAVAC) -cp $(JTREG_IMAGEDIR)/lib/jtreg.jar -target $(J2SEJAVAC_TARGET) \
+	$(J2SEJAVAC) -cp $(JTREG_IMAGEDIR)/lib/jtreg.jar -source $(J2SEJAVAC_SOURCE) -target $(J2SEJAVAC_TARGET) \
 		-encoding ISO8859-1 -d $(@:%.ok=%)/classes $(TESTDIR)/javatest/regtest/OSTest.java
-	$(J2SEJAVA) -cp $(@:%.ok=%)/classes:$(JTREG_IMAGEDIR)/lib/jtreg.jar OSTest
+	$(J2SEJAVA) -cp "$(@:%.ok=%)/classes$(PS)$(JTREG_IMAGEDIR)/lib/jtreg.jar" OSTest
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += $(BUILDDIR)/OSTest.ok

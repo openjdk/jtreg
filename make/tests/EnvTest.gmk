@@ -80,8 +80,8 @@ $(BUILDDIR)/EnvTest.full.ok: $(ENV.files) \
 	echo "test passed at `date`" > $@
 
 
-
+ifneq ($(OS_NAME), windows)
 TESTS.jtreg += \
 	$(BUILDDIR)/EnvTest.simple.ok \
 	$(BUILDDIR)/EnvTest.full.ok
-
+endif

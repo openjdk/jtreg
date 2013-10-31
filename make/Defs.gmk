@@ -166,7 +166,7 @@ endif
 # Optional: if set, checks HTML doc files for broken links
 
 ifndef LINKLINT
-    LINKLINT = $(shell which linklint)
+    LINKLINT = $(shell which linklint 2>/dev/null)
 endif
 
 #----- Xalan: see http://xml.apache.org/xalan-j/

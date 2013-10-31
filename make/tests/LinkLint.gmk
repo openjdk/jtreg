@@ -26,14 +26,14 @@
 #----------------------------------------------------------------------
 
 $(BUILDDIR)/linklint.ok: $(JTREG_ZIP)
-ifdef LINKLINT
+ifneq ($(LINKLINT), )
 	$(LINKLINT) -htmlonly -quiet \
 		-ignore /doc/jcov/report \
 		-doc $(BUILDDIR)/linklint \
 		-root $(JTREG_IMAGEDIR) /doc/jtreg/faq.html
-	@echo checked at `date` > $@
+	echo checked at `date` > $@
 else
-	@echo files not checked at `date`: LINKLINT not set > $@
+	echo files not checked at `date`: LINKLINT not set > $@
 endif
 
 linklint: $(BUILDDIR)/linklint.ok

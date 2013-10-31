@@ -41,4 +41,6 @@ $(BUILDDIR)/T6527624.ok:\
 	diff $(@:%.ok=%)/report/$(SUMMARY_TXT).sorted $(TESTDIR)/javatest/regtest/6527624/summary.golden
 	echo "test passed at `date`" > $@
 
+ifneq ($(OS_NAME), windows)
 TESTS.jtreg += $(BUILDDIR)/T6527624.ok
+endif

@@ -149,6 +149,7 @@ $(BUILDDIR)/CleanupTests.othervm.retain.ok: \
 	echo "test passed at `date`" > $@
 
 
+ifneq ($(OS_NAME), windows)
 TESTS.jtreg += \
 	$(BUILDDIR)/CleanupTests.agentvm.ok \
 	$(BUILDDIR)/CleanupTests.agentvm.conc.ok \
@@ -157,3 +158,4 @@ TESTS.jtreg += \
 	$(BUILDDIR)/CleanupTests.othervm.conc.ok \
 	$(BUILDDIR)/CleanupTests.othervm.retain.ok \
 	$(BUILDDIR)/CleanupTests.samevm.ok
+endif

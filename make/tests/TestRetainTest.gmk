@@ -33,7 +33,7 @@ $(BUILDDIR)/TestRetainTest.ok:  $(TESTDIR)/javatest/regtest/RetainTest.java \
 	$(J2SEJAVAC) -d $(@:%.ok=%)/classes \
 		-cp $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(TESTDIR)/javatest/regtest/RetainTest.java
-	$(J2SEJAVA) -cp $(@:%.ok=%)/classes:$(JTREG_IMAGEDIR)/lib/jtreg.jar RetainTest \
+	$(J2SEJAVA) -cp "$(@:%.ok=%)/classes$(PS)$(JTREG_IMAGEDIR)/lib/jtreg.jar" RetainTest \
 		$(TESTDIR)/javatest/regtest/data/retain \
 		$(@:%.ok=%)/work \
 		$(@:%.ok=%)/report \

@@ -130,6 +130,7 @@ $(BUILDDIR)/just-java/bin/java:
 	echo '$(JDK16HOME)/bin/java $$*' > $@
 	chmod +x $@
 
+ifneq ($(OS_NAME), windows)
 TESTS.jtreg += \
 	$(BUILDDIR)/CompileTest.1.agentvm.ok \
 	$(BUILDDIR)/CompileTest.1.othervm.ok \
@@ -140,4 +141,4 @@ TESTS.jtreg += \
 	$(BUILDDIR)/CompileTest.4.agentvm.ok \
 	$(BUILDDIR)/CompileTest.4.othervm.ok \
 	$(BUILDDIR)/CompileTest.5.ok
-
+endif

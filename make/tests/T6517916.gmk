@@ -61,5 +61,7 @@ $(BUILDDIR)/T6517916.ok: \
 		$(@:%.ok=%)/work/svm/scratch/T6517916.out2
 	echo "test passed at `date`" > $@
 
+ifneq ($(OS_NAME), windows)
 TESTS.jtreg += $(BUILDDIR)/T6517916.ok
+endif
 

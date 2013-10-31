@@ -44,7 +44,7 @@ $(BUILDDIR)/OpenFileTests.agentvm.ok \
 $(BUILDDIR)/OpenFileTests.othervm.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/solaris/bin/jtreg
-	if [ -d $(@:%.ok=%) ]; then $(CHMOD) -R +w $(@:%.ok=%) && $(RM) -rf $(@:%.ok=%) ; fi
+	if [ -d $(@:%.ok=%) ]; then $(CHMOD) -R +w $(@:%.ok=%) && $(RM) $(@:%.ok=%) ; fi
 	$(MKDIR) $(@:%.ok=%)
 	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
@@ -101,6 +101,7 @@ $(BUILDDIR)/OpenFileTests.samevm.retain.ok: \
 	$(CHMOD) -R +w $(@:%.ok=%)
 	echo "test passed at `date`" > $@
 
+ifneq ($(OS_NAME), windows) # TEMP
 TESTS.jtreg += \
 	$(BUILDDIR)/OpenFileTests.agentvm.ok \
 	$(BUILDDIR)/OpenFileTests.agentvm.retain.ok \
@@ -108,3 +109,4 @@ TESTS.jtreg += \
 	$(BUILDDIR)/OpenFileTests.othervm.retain.ok \
 	$(BUILDDIR)/OpenFileTests.samevm.ok \
 	$(BUILDDIR)/OpenFileTests.othervm.retain.ok
+endif

@@ -67,7 +67,9 @@ $(BUILDDIR)/RerunTest.othervm.ok: \
 	echo "test passed at `date`" > $@
 
 
+ifneq ($(OS_NAME), windows)
 TESTS.jtreg += \
 	$(BUILDDIR)/RerunTest.agentvm.ok \
 	$(BUILDDIR)/RerunTest.samevm.ok \
 	$(BUILDDIR)/RerunTest.othervm.ok
+endif

@@ -47,5 +47,7 @@ $(BUILDDIR)/TestWhiteSpaceFiles.ok: \
 		$(TESTDIR)/javatest/regtest/data/basic/main/Pass.java
 	echo "test passed at `date`" > $@
 
+ifneq ($(OS_NAME), windows)
 TESTS.jtreg += $(BUILDDIR)/TestWhiteSpaceFiles.ok
+endif
 

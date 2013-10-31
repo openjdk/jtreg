@@ -37,7 +37,7 @@ $(BUILDDIR)/i18n.com.sun.javatest.regtest.ok: \
 		$(JAVADIR)/com/sun/javatest/regtest/i18n.properties \
 		$(BUILDDIR)/classes.com.sun.javatest.regtest.ok \
 		checkI18NProps.sh
-	CLASSPATH=$(CLASSDIR):$(JAVADIR):$(JAVATEST_JAR):$(JAVAHELP_JAR) \
+	CLASSPATH="$(CLASSDIR)$(PS)$(JAVADIR)$(PS)$(JAVATEST_JAR)$(PS)$(JAVAHELP_JAR)" \
 	    $(J2SEJAVA) -Djavatest.i18n.log=com.sun.javatest.regtest \
 		$(JCOV_JARS) \
 		com.sun.javatest.regtest.Main -help all \

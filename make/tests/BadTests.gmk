@@ -94,8 +94,9 @@ $(BUILDDIR)/BadTests.samevm.ok: \
 	  if [ $${files} -ne 7 ]; then echo "Unexpected number of files: $${files}" ; exit 1 ; fi )
 	echo "test passed at `date`" > $@
 
+ifneq ($(OS_NAME), windows)
 TESTS.jtreg += \
 	$(BUILDDIR)/BadTests.othervm.ok \
 	$(BUILDDIR)/BadTests.agentvm.ok \
 	$(BUILDDIR)/BadTests.samevm.ok
-
+endif
