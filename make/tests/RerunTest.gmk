@@ -37,6 +37,7 @@ $(BUILDDIR)/RerunTest.othervm.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/solaris/bin/jtreg
 	$(RM) -rf $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	unset GNOME_DESKTOP_SESSION_ID ; \
 	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
 		-J-Djavatest.regtest.allowTrailingBuild=true \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
