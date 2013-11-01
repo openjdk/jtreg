@@ -83,10 +83,12 @@ else
     if [ -z "$JT_HOME" ]; then
         echo "Cannot determine JT_HOME; please set it explicitly"; exit 1
     fi
-    case "`uname -s`" in
-        CYGWIN* ) JT_HOME=`cygpath -m "$JT_HOME"` ;;
-    esac
 fi
+
+# Normalize JT_HOME if using Cygwin
+case "`uname -s`" in
+    CYGWIN* ) JT_HOME=`cygpath -a -m "$JT_HOME"` ;;
+esac
 
 
 # Separate out -J* options for the JVM
@@ -108,7 +110,7 @@ for i in "$@" ; do
 done
 unset DUALCASE
 
-# Determine java for jtreg, from JT_JAVA, JAVA_HOME, jdk, java
+# Determine java for jtreg, from JT_JAVA, JAVA_HOME, -jdk, java
 if [ -n "$JT_JAVA" ]; then
     if [ -d "$JT_JAVA" ]; then
         JT_JAVA="$JT_JAVA/bin/java"
