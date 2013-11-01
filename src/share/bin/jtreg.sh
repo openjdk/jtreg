@@ -87,7 +87,7 @@ fi
 
 # Normalize JT_HOME if using Cygwin
 case "`uname -s`" in
-    CYGWIN* ) JT_HOME=`cygpath -a -m "$JT_HOME"` ;;
+    CYGWIN* ) cygwin=1 ; JT_HOME=`cygpath -a -m "$JT_HOME"` ;;
 esac
 
 
@@ -100,6 +100,7 @@ nl='
 '
 for i in "$@" ; do
     IFS=
+    if [ -n "$cygwin" ]; then i=`echo $i | sed -e 's|/cygdrive/\([A-Za-z]\)/|\1:/|'` ; fi
     case $i in
     -jdk:* )    jdk="`echo $i | sed -e 's/^-jdk://'`"
                 jtregOpts=$jtregOpts$nl$i ;;
