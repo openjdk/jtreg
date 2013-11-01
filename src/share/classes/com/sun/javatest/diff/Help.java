@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2007, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -140,12 +140,13 @@ public class Help {
         String unknown = i18n.getString("help.version.unknown");
 
         // build properties, from manifest
-        String product = manifest.getProperty("jtdiff-Name", unknown);
-        String version = manifest.getProperty("jtdiff-Version", unknown);
-        String milestone = manifest.getProperty("jtdiff-Milestone", unknown);
-        String build = manifest.getProperty("jtdiff-Build", unknown);
-        String buildJavaVersion = manifest.getProperty("jtdiff-BuildJavaVersion", unknown);
-        String buildDate = manifest.getProperty("jtdiff-BuildDate", unknown);
+        String prefix = "jtreg"; // base name of containing .jar file
+        String product = "jtdiff"; // manifest.getProperty(productPrefix + "-Name", unknown);
+        String version = manifest.getProperty(prefix + "-Version", unknown);
+        String milestone = manifest.getProperty(prefix + "-Milestone", unknown);
+        String build = manifest.getProperty(prefix + "-Build", unknown);
+        String buildJavaVersion = manifest.getProperty(prefix + "-BuildJavaVersion", unknown);
+        String buildDate = manifest.getProperty(prefix + "-BuildDate", unknown);
 
         String thisJavaHome = System.getProperty("java.home");
         String thisJavaVersion = System.getProperty("java.version");
@@ -232,7 +233,7 @@ public class Help {
                     String path = url.getPath();
                     int sep = path.lastIndexOf("!");
                     URL u = new URL(path.substring(0, sep));
-                    if (u.equals(classPathEntry )) {
+                    if (u.equals(classPathEntry)) {
                         Properties p = new Properties();
                         InputStream in = url.openStream();
                         p.load(in);

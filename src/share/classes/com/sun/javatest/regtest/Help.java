@@ -91,12 +91,22 @@ public class Help {
         versionHelpers.add(h);
     }
 
-    void addJarVersionHelper(final String name, final File jar) {
+    void addJarVersionHelper(final String name, final File jar, final String pomProperties) {
         addVersionHelper(new Help.VersionHelper() {
             public void showVersion(PrintWriter out) {
                 try {
                     JarFile j = new JarFile(jar);
                     String v = (String) j.getManifest().getMainAttributes().get(Attributes.Name.IMPLEMENTATION_VERSION);
+                    if (v == null && pomProperties != null) {
+                        Properties p = new Properties();
+                        InputStream in = j.getInputStream(j.getEntry(pomProperties));
+                        try {
+                            p.load(in);
+                            v = p.getProperty("version");
+                        } finally {
+                            in.close();
+                        }
+                    }
                     out.println(name + ": version " + (v == null ? "unknown" : v)); // need i18n
                 } catch (IOException e) {
                 }
@@ -198,12 +208,13 @@ public class Help {
         String unknown = i18n.getString("help.version.unknown");
 
         // build properties, from manifest
-        String product = v.getProperty("jtreg-Name", unknown);
-        String version = v.getProperty("jtreg-Version", unknown);
-        String milestone = v.getProperty("jtreg-Milestone", unknown);
-        String build = v.getProperty("jtreg-Build", unknown);
-        String buildJavaVersion = v.getProperty("jtreg-BuildJavaVersion", unknown);
-        String buildDate = v.getProperty("jtreg-BuildDate", unknown);
+        String prefix = "jtreg"; // base name of containing .jar file
+        String product = v.getProperty(prefix + "-Name", unknown);
+        String version = v.getProperty(prefix + "-Version", unknown);
+        String milestone = v.getProperty(prefix + "-Milestone", unknown);
+        String build = v.getProperty(prefix + "-Build", unknown);
+        String buildJavaVersion = v.getProperty(prefix + "-BuildJavaVersion", unknown);
+        String buildDate = v.getProperty(prefix + "-BuildDate", unknown);
 
         String thisJavaHome = System.getProperty("java.home");
         String thisJavaVersion = System.getProperty("java.version");

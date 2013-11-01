@@ -1676,7 +1676,7 @@ public class Main {
             // Leave a place-holder for the optional jar.
             testng_jar = new File(jtreg_jar.getParentFile(), "testng.jar");
         }
-        help.addJarVersionHelper("TestNG", testng_jar);
+        help.addJarVersionHelper("TestNG", testng_jar, "META-INF/maven/org.testng/testng/pom.properties");
     }
 
     void initPolicyFile() throws Fault {
