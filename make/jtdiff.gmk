@@ -59,6 +59,16 @@ TARGETS.JAR.jtreg += $(TARGETS.com.sun.javatest.diff)
 #----------------------------------------------------------------------
 #
 # executable scripts
+
+$(JTREG_IMAGEDIR)/bin/jtdiff: $(SRCSHAREBINDIR)/jtdiff.sh 
+	$(MKDIR) -p $(@D)
+	$(RM) $@
+	$(CP) $<  $@
+	$(CHMOD) +x,-w $@
+
+TARGETS.ZIP.jtreg += \
+	$(JTREG_IMAGEDIR)/bin/jtdiff
+
 # maybe one of these days we'll get rid of the somewhat unnecessary OS name
 
 $(JTREG_IMAGEDIR)/linux/bin/jtdiff \
@@ -67,7 +77,11 @@ $(JTREG_IMAGEDIR)/win32/bin/jtdiff: \
 		$(SRCSHAREBINDIR)/jtdiff.sh 
 	$(MKDIR) -p $(@D)
 	$(RM) $@
-	$(CP) $(SRCSHAREBINDIR)/jtdiff.sh  $@
+	$(SED) $< -e '/# Usage/i\
+# !!!! This script is retained for backwards compatibility. \
+# !!!! At some point, it will be deleted. \
+# !!!! Please use $$JT_HOME/bin/jtdiff instead \
+# ' > $@
 	$(CHMOD) +x,-w $@
 
 TARGETS.ZIP.jtreg += \

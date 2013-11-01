@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2011, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -29,13 +29,13 @@
 $(BUILDDIR)/T6590671.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(TESTDIR)/javatest/regtest/6590671/T6590671.java \
-		$(JTREG_IMAGEDIR)/solaris/bin/jtreg
+		$(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%)
 	$(MKDIR) -p $(@:%.ok=%)/test
 	$(CP) $(TESTDIR)/javatest/regtest/6590671/T6590671.java \
 		$(TESTDIR)/javatest/regtest/6590671/TEST.ROOT $(@:%.ok=%)/test
 	$(CP) $(@:%.ok=%)/test/T6590671.java $(@:%.ok=%)/test/,T6590671.java
-	JTHOME=$(JTREG_IMAGEDIR) $(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
+	JTHOME=$(JTREG_IMAGEDIR) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-v -jdk:$(J2SEHOME) \
 		$(@:%.ok=%)/test

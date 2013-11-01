@@ -29,7 +29,7 @@ $(BUILDDIR)/EnvTest.simple.ok: $(ENV.files) \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/lib/jh.jar \
-	    $(JTREG_IMAGEDIR)/solaris/bin/jtreg
+	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%)
 	$(MKDIR) $(@:%.ok=%)
 	( echo "testRoot=`cd $(TESTDIR)/javatest/regtest/data/env ; pwd`" ; \
@@ -40,7 +40,7 @@ $(BUILDDIR)/EnvTest.simple.ok: $(ENV.files) \
 	  echo "test.java.opts="; \
 	  echo "test.jdk=$(JDK16HOME)"; \
 	  echo "compile.jdk=$(JDK16HOME)" ) > $(@:%.ok=%/ref.properties)
-	JT_JAVA=$(JDK16HOME) $(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
+	JT_JAVA=$(JDK16HOME) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDK16HOME) \
 		-e:refprops=`cd $(@:%.ok=%); pwd`/ref.properties \
@@ -54,7 +54,7 @@ $(BUILDDIR)/EnvTest.full.ok: $(ENV.files) \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/lib/jh.jar \
-	    $(JTREG_IMAGEDIR)/solaris/bin/jtreg
+	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%)
 	$(MKDIR) $(@:%.ok=%)
 	( echo "testRoot=`cd $(TESTDIR)/javatest/regtest/data/env ; pwd`" ; \
@@ -65,7 +65,7 @@ $(BUILDDIR)/EnvTest.full.ok: $(ENV.files) \
 	  echo "test.java.opts=-DJAVA_OPT=java_opt"; \
 	  echo "test.jdk=$(JDK17HOME)"; \
 	  echo "compile.jdk=$(JDK16HOME)" ) > $(@:%.ok=%/ref.properties)
-	JT_JAVA=$(JDK16HOME) $(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
+	JT_JAVA=$(JDK16HOME) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-compilejdk:$(JDK16HOME) \
 		-testjdk:$(JDK17HOME) \

@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2011, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2011, 2013, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -28,10 +28,10 @@ $(BUILDDIR)/ExclusiveAccessTest.ref:
 
 $(BUILDDIR)/ExclusiveAccessTest.single.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	$(JTREG_IMAGEDIR)/solaris/bin/jtreg \
+	$(JTREG_IMAGEDIR)/bin/jtreg \
 	$(BUILDDIR)/ExclusiveAccessTest.ref
 	$(RM) $(@:%.ok=%) && $(MKDIR) $(@:%.ok=%)
-	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(J2SEHOME) \
 		-conc:4 \
@@ -44,11 +44,11 @@ $(BUILDDIR)/ExclusiveAccessTest.single.ok: \
 
 $(BUILDDIR)/ExclusiveAccessTest.multi.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	$(JTREG_IMAGEDIR)/solaris/bin/jtreg \
+	$(JTREG_IMAGEDIR)/bin/jtreg \
 	$(BUILDDIR)/ExclusiveAccessTest.ref
 	$(RM) $(@:%.ok=%) && $(MKDIR) $(@:%.ok=%)
 	for i in 1 2 3 4 ; do \
-	    $(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
+	    $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work.$$i -r:$(@:%.ok=%)/report.$$i \
 		-jdk:$(J2SEHOME) \
 		-lock:$(@:%.ok=%)/Test.lck \

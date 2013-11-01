@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2011, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -40,10 +40,10 @@ $(BUILDDIR)/ProblemList.ok: \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
 	    $(JTREG_IMAGEDIR)/lib/jh.jar \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	    $(JTREG_IMAGEDIR)/solaris/bin/jtreg
+	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	$(MKDIR) $(@:%.ok=%)/1
-	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/1/work -r:$(@:%.ok=%)/1/report \
 		-jdk:$(JDK16HOME) \
 		-samevm \
@@ -62,7 +62,7 @@ $(BUILDDIR)/ProblemList.ok: \
 		-e 's/\([A-Za-z]*\)-ARCH$$/\1-$(OS_ARCH)/' \
 		-e 's/\([A-Za-z]*\)-REV$$/\1-$(OS_VERSION)/' \
 		> $(@:%.ok=%)/2/ProblemList.txt
-	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/2/work -r:$(@:%.ok=%)/2/report \
 		-jdk:$(JDK16HOME) \
 		-samevm \

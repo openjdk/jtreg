@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2011, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -32,9 +32,9 @@
 #
 $(BUILDDIR)/BadTests.othervm.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	$(JTREG_IMAGEDIR)/solaris/bin/jtreg
+	$(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
-	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(J2SEHOME) \
 		-othervm \
@@ -57,10 +57,10 @@ $(BUILDDIR)/BadTests.othervm.ok: \
 #
 $(BUILDDIR)/BadTests.agentvm.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	$(JTREG_IMAGEDIR)/solaris/bin/jtreg
+	$(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	JTREG_SHOWAGENT=true \
-	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(J2SEHOME) \
 		-agentvm \
@@ -79,10 +79,10 @@ $(BUILDDIR)/BadTests.agentvm.ok: \
 #
 $(BUILDDIR)/BadTests.samevm.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	$(JTREG_IMAGEDIR)/solaris/bin/jtreg
+	$(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	JTREG_USE_AGENTVM_FOR_SAMEVM=false \
-	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(J2SEHOME) \
 		-samevm \

@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2011, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -27,7 +27,7 @@
 
 $(BUILDDIR)/TimeoutTest.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	    $(JTREG_IMAGEDIR)/solaris/bin/jtreg
+	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(MAKE) -C $(TESTDIR)/javatest/regtest/data/timeouts/test \
 		TEST_OUTPUT_DIR=`pwd`/$(BUILDDIR)/$(@:%.ok=%) \
 		JT_JAVA=$(J2SEHOME) \
@@ -48,9 +48,9 @@ $(BUILDDIR)/TimeoutTest.agentvm.ok \
 $(BUILDDIR)/TimeoutTest.samevm.ok \
 $(BUILDDIR)/TimeoutTest.othervm.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	    $(JTREG_IMAGEDIR)/solaris/bin/jtreg
+	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
-	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDK16HOME) \
 		-va \

@@ -33,10 +33,10 @@
 $(BUILDDIR)/CleanupTests.agentvm.ok \
 $(BUILDDIR)/CleanupTests.othervm.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	$(JTREG_IMAGEDIR)/solaris/bin/jtreg
+	$(JTREG_IMAGEDIR)/bin/jtreg
 	if [ -d $(@:%.ok=%) ]; then $(CHMOD) -R +w $(@:%.ok=%) && $(RM) $(@:%.ok=%) ; fi
 	$(MKDIR) $(@:%.ok=%)
-	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(J2SEHOME) \
 		$(@:$(BUILDDIR)/CleanupTests.%.ok=-%) \
@@ -57,10 +57,10 @@ $(BUILDDIR)/CleanupTests.othervm.ok: \
 
 $(BUILDDIR)/CleanupTests.samevm.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	$(JTREG_IMAGEDIR)/solaris/bin/jtreg
+	$(JTREG_IMAGEDIR)/bin/jtreg
 	if [ -d $(@:%.ok=%) ]; then $(CHMOD) -R +w $(@:%.ok=%) && $(RM) $(@:%.ok=%) ; fi
 	$(MKDIR) $(@:%.ok=%)
-	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(J2SEHOME) \
 		$(@:$(BUILDDIR)/CleanupTests.%.ok=-%) \
@@ -81,10 +81,10 @@ $(BUILDDIR)/CleanupTests.samevm.ok: \
 $(BUILDDIR)/CleanupTests.agentvm.conc.ok \
 $(BUILDDIR)/CleanupTests.othervm.conc.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	$(JTREG_IMAGEDIR)/solaris/bin/jtreg
+	$(JTREG_IMAGEDIR)/bin/jtreg
 	if [ -d $(@:%.ok=%) ]; then $(CHMOD) -R +w $(@:%.ok=%) && $(RM) $(@:%.ok=%) ; fi
 	$(MKDIR) $(@:%.ok=%)
-	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(J2SEHOME) \
 		$(@:$(BUILDDIR)/CleanupTests.%.conc.ok=-%) \
@@ -105,10 +105,10 @@ $(BUILDDIR)/CleanupTests.othervm.conc.ok: \
 
 $(BUILDDIR)/CleanupTests.agentvm.retain.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	$(JTREG_IMAGEDIR)/solaris/bin/jtreg
+	$(JTREG_IMAGEDIR)/bin/jtreg
 	if [ -d $(@:%.ok=%) ]; then $(CHMOD) -R +w $(@:%.ok=%) && $(RM) $(@:%.ok=%) ; fi
 	$(MKDIR) $(@:%.ok=%)
-	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(J2SEHOME) \
 		$(@:$(BUILDDIR)/CleanupTests.%.retain.ok=-%) \
@@ -130,10 +130,10 @@ $(BUILDDIR)/CleanupTests.agentvm.retain.ok: \
 
 $(BUILDDIR)/CleanupTests.othervm.retain.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	$(JTREG_IMAGEDIR)/solaris/bin/jtreg
+	$(JTREG_IMAGEDIR)/bin/jtreg
 	if [ -d $(@:%.ok=%) ]; then $(CHMOD) -R +w $(@:%.ok=%) && $(RM) $(@:%.ok=%) ; fi
 	$(MKDIR) $(@:%.ok=%)
-	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(J2SEHOME) \
 		$(@:$(BUILDDIR)/CleanupTests.%.retain.ok=-%) \

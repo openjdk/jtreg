@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2011, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -29,9 +29,9 @@
 $(BUILDDIR)/ReportOnlyTest.ok: $(BUILDDIR)/Basic.othervm.ok \
 		   $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		   $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-		   $(JTREG_IMAGEDIR)/solaris/bin/jtreg
+		   $(JTREG_IMAGEDIR)/bin/jtreg
 	JAVA_HOME=$(J2SEHOME) CLASSPATH=$(ABSCLASSDIR) \
-	    $(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
+	    $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-reportOnly  -automatic -v \
 		-workDir:$(BUILDDIR)/Basic.othervm/work \
 		-reportDir:$(BUILDDIR)/$(@:%.ok=%) \

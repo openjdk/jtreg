@@ -25,13 +25,13 @@
 # questions.
 #
 
-# !!!!! This script provides an alternate entry point into JavaTest.  It directs
-# !!!!! JavaTest to use a highly customized script and test finder.  It is an
-# !!!!! example of how to extend JavaTest to run using specific environments
-# !!!!! and properties for test suites using procedural test descriptions.
-# !!!!!
-# !!!!! "jtreg" does not run JCK-style tests.  Please refer to the "javatest"
-# !!!!! script to run the JCK or testsuites following the JCK style.
+# This script provides an alternate entry point into JavaTest.  It directs
+# JavaTest to use a highly customized script and test finder.  It is an
+# example of how to extend JavaTest to run using specific environments
+# and properties for test suites using procedural test descriptions.
+#
+# "jtreg" does not run JCK-style tests.  Please refer to the "javatest"
+# script to run the JCK or testsuites following the JCK style.
 
 # Usage:
 #    jtreg ...args....

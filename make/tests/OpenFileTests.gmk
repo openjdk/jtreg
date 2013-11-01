@@ -43,10 +43,10 @@
 $(BUILDDIR)/OpenFileTests.agentvm.ok \
 $(BUILDDIR)/OpenFileTests.othervm.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	$(JTREG_IMAGEDIR)/solaris/bin/jtreg
+	$(JTREG_IMAGEDIR)/bin/jtreg
 	if [ -d $(@:%.ok=%) ]; then $(CHMOD) -R +w $(@:%.ok=%) && $(RM) $(@:%.ok=%) ; fi
 	$(MKDIR) $(@:%.ok=%)
-	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDK17HOME) \
 		$(@:$(BUILDDIR)/OpenFileTests.%.ok=-%) \
@@ -64,10 +64,10 @@ $(BUILDDIR)/OpenFileTests.othervm.ok: \
 
 $(BUILDDIR)/OpenFileTests.samevm.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	$(JTREG_IMAGEDIR)/solaris/bin/jtreg
+	$(JTREG_IMAGEDIR)/bin/jtreg
 	if [ -d $(@:%.ok=%) ]; then $(CHMOD) -R +w $(@:%.ok=%) && $(RM) $(@:%.ok=%) ; fi
 	$(MKDIR) $(@:%.ok=%)
-	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDK17HOME) \
 		$(@:$(BUILDDIR)/OpenFileTests.%.ok=-%) \
@@ -86,10 +86,10 @@ $(BUILDDIR)/OpenFileTests.agentvm.retain.ok \
 $(BUILDDIR)/OpenFileTests.othervm.retain.ok \
 $(BUILDDIR)/OpenFileTests.samevm.retain.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	$(JTREG_IMAGEDIR)/solaris/bin/jtreg
+	$(JTREG_IMAGEDIR)/bin/jtreg
 	if [ -d $(@:%.ok=%) ]; then $(CHMOD) -R +w $(@:%.ok=%) && $(RM) $(@:%.ok=%) ; fi
 	$(MKDIR) $(@:%.ok=%)
-	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDK17HOME) \
 		$(@:$(BUILDDIR)/OpenFileTests.%.retain.ok=-%) \

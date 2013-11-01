@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2011, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -29,21 +29,21 @@
 $(BUILDDIR)/T6533136.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(TESTDIR)/javatest/regtest/data/basic/main/Pass.java \
-		$(JTREG_IMAGEDIR)/solaris/bin/jtreg
+		$(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%)
 	$(MKDIR) $(@:%.ok=%)
 	( b=`pwd`; cd $(TESTDIR)/javatest/regtest/data/basic/ ; \
-	  JTHOME=$$b/$(JTREG_IMAGEDIR) $$b/$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
+	  JTHOME=$$b/$(JTREG_IMAGEDIR) $$b/$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-svm -w:$$b/$(@:%.ok=%)/work -r:$$b/$(@:%.ok=%)/report \
 		-v:fail -jdk:$(J2SEHOME) main/Pass.java; \
-	  JTHOME=$$b/$(JTREG_IMAGEDIR) $$b/$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
+	  JTHOME=$$b/$(JTREG_IMAGEDIR) $$b/$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-ovm -w:$$b/$(@:%.ok=%)/work -r:$$b/$(@:%.ok=%)/report \
 		-v:fail -jdk:$(J2SEHOME) main/Pass.java )
-	JTHOME=$(JTREG_IMAGEDIR) $(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
+	JTHOME=$(JTREG_IMAGEDIR) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-svm -w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-v:fail -jdk:$(J2SEHOME) \
 		-dir:$(TESTDIR)/javatest/regtest/data/basic/ main/Pass.java
-	JTHOME=$(JTREG_IMAGEDIR) $(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
+	JTHOME=$(JTREG_IMAGEDIR) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-ovm -w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-v:fail -jdk:$(J2SEHOME) \
 		-dir:$(TESTDIR)/javatest/regtest/data/basic/ main/Pass.java

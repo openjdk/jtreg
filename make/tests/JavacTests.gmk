@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2011, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -31,10 +31,10 @@ $(BUILDDIR)/javac/othervm.ok \
 $(BUILDDIR)/javac/agentvm.ok \
 $(BUILDDIR)/javac/samevm.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	    $(JTREG_IMAGEDIR)/solaris/bin/jtreg
+	    $(JTREG_IMAGEDIR)/bin/jtreg
 	JTREG_SHOWAGENT=true JTREG_SHOWCMD=true \
 	JTREG_USE_AGENTVM_FOR_SAMEVM=false \
-	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDK16HOME) \
 		$(@:$(BUILDDIR)/javac/%.ok=-%) \

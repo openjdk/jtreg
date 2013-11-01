@@ -29,10 +29,10 @@
 $(BUILDDIR)/T6590657.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(TESTDIR)/javatest/regtest/6590657/T6590657.java \
-		$(JTREG_IMAGEDIR)/solaris/bin/jtreg
+		$(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%)
 	$(MKDIR) $(@:%.ok=%)
-	JTHOME=$(JTREG_IMAGEDIR) $(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
+	JTHOME=$(JTREG_IMAGEDIR) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-J-Djavatest.regtest.allowTrailingBuild=true \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-va -jdk:$(J2SEHOME) \

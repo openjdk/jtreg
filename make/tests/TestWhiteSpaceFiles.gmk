@@ -29,17 +29,17 @@ $(BUILDDIR)/TestWhiteSpaceFiles.ok: \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/lib/jh.jar \
-	    $(JTREG_IMAGEDIR)/solaris/bin/jtreg
+	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(BUILDDIR)/tmp/$(@F:%.ok=%)
 	$(MKDIR) -p $(BUILDDIR)/tmp/$(@F:%.ok=%)
 	ln -s $(J2SEHOME) $(BUILDDIR)/tmp/$(@F:%.ok=%)/"j2se home"
 	ln -s $(shell cd $(JTREG_IMAGEDIR); pwd) $(BUILDDIR)/tmp/$(@F:%.ok=%)/"jtreg home"
-	$(BUILDDIR)/tmp/$(@F:%.ok=%)/"jtreg home"/solaris/bin/jtreg $(JTREG_OPTS) \
+	$(BUILDDIR)/tmp/$(@F:%.ok=%)/"jtreg home"/bin/jtreg $(JTREG_OPTS) \
 		-w $(@:%.ok=%/ovm/work) \
 		-r $(@:%.ok=%/ovm/report) \
 		-jdk:$(BUILDDIR)/tmp/$(@F:%.ok=%)/"j2se home" \
 		$(TESTDIR)/javatest/regtest/data/basic/main/Pass.java
-	$(BUILDDIR)/tmp/$(@F:%.ok=%)/"jtreg home"/solaris/bin/jtreg $(JTREG_OPTS) \
+	$(BUILDDIR)/tmp/$(@F:%.ok=%)/"jtreg home"/bin/jtreg $(JTREG_OPTS) \
 		-s \
 		-w $(@:%.ok=%/svm/work) \
 		-r $(@:%.ok=%/svm/report) \

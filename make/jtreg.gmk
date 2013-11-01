@@ -371,6 +371,16 @@ endif #JCOV_HOME
 #----------------------------------------------------------------------
 #
 # executable scripts
+
+$(JTREG_IMAGEDIR)/bin/jtreg: $(SRCSHAREBINDIR)/jtreg.sh 
+	$(MKDIR) -p $(@D)
+	$(RM) $@
+	$(CP) $<  $@
+	$(CHMOD) +x,-w $@
+
+TARGETS.ZIP.jtreg += \
+	$(JTREG_IMAGEDIR)/bin/jtreg
+
 # maybe one of these days we'll get rid of the somewhat unnecessary OS name
 
 $(JTREG_IMAGEDIR)/linux/bin/jtreg \
@@ -379,7 +389,11 @@ $(JTREG_IMAGEDIR)/win32/bin/jtreg: \
 		$(SRCSHAREBINDIR)/jtreg.sh 
 	$(MKDIR) -p $(@D)
 	$(RM) $@
-	$(CP) $<  $@
+	$(SED) $< -e '/# This script /i\
+# !!!! This script is retained for backwards compatibility. \
+# !!!! At some point, it will be deleted. \
+# !!!! Please use $$JT_HOME/bin/jtreg instead \
+# ' > $@
 	$(CHMOD) +x,-w $@
 
 TARGETS.ZIP.jtreg += \

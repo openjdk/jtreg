@@ -35,10 +35,10 @@ $(BUILDDIR)/RerunTest.agentvm.ok \
 $(BUILDDIR)/RerunTest.samevm.ok \
 $(BUILDDIR)/RerunTest.othervm.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	    $(JTREG_IMAGEDIR)/solaris/bin/jtreg
+	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	unset GNOME_DESKTOP_SESSION_ID ; \
-	$(JTREG_IMAGEDIR)/solaris/bin/jtreg $(JTREG_OPTS) \
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-J-Djavatest.regtest.allowTrailingBuild=true \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDK16HOME) \
@@ -52,7 +52,7 @@ $(BUILDDIR)/RerunTest.othervm.ok: \
 	for i in `cd $(TESTDIR)/javatest/regtest/data/rerun ; ls */*.sh */*.java` ; do \
 	    echo Checking $(@:$(BUILDDIR)/RerunTest.%.ok=%) $$i ; \
 	    mkdir -p `dirname $(@:%.ok=%)/out/$$i` ; \
-	    $(JTREG_IMAGEDIR)/solaris/bin/jtreg \
+	    $(JTREG_IMAGEDIR)/bin/jtreg \
 		-w:$(@:%.ok=%)/work \
 		-dir:$(TESTDIR)/javatest/regtest/data/rerun \
 		-show:rerun $$i | \
