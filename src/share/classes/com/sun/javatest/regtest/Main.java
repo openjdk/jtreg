@@ -1980,7 +1980,7 @@ public class Main {
                     ok = false;
                 } else {
                     try {
-                        // work around bug CODETOOLS-7900214 -- force the sectrions to be reloaded
+                        // work around bug CODETOOLS-7900214 -- force the sections to be reloaded
                         tr.getProperty("sections");
                         for (int i = 0; i < tr.getSectionCount(); i++) {
                             TestResult.Section s = tr.getSection(i);
