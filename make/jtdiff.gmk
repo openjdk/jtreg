@@ -77,11 +77,13 @@ $(JTREG_IMAGEDIR)/win32/bin/jtdiff: \
 		$(SRCSHAREBINDIR)/jtdiff.sh 
 	$(MKDIR) -p $(@D)
 	$(RM) $@
-	$(SED) -e '/# Usage/i\
-# !!!! This script is retained for backwards compatibility. \
-# !!!! At some point, it will be deleted. \
-# !!!! Please use $$JT_HOME/bin/jtdiff instead \
-# ' $< > $@
+	( echo '/# Usage/i\\' ; \
+	  echo '# !!!! This script is retained for backwards compatibility. \\' ; \
+	  echo '# !!!! At some point, it will be deleted. \\' ; \
+	  echo '# !!!! Please use $$JT_HOME/bin/jtdiff instead \\' ; \
+	  echo '#' ; \
+	) > $(BUILDDIR)/jtdiff.warning.sed
+	$(SED) -f $(BUILDDIR)/jtdiff.warning.sed $< > $@
 	$(CHMOD) +x,-w $@
 
 TARGETS.ZIP.jtreg += \
