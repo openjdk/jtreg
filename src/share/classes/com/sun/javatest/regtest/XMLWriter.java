@@ -22,6 +22,7 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
+
 package com.sun.javatest.regtest;
 
 import java.io.BufferedReader;
@@ -34,30 +35,33 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
-import java.util.regex.Pattern;
 
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
 import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 
-import com.sun.javatest.Harness.Fault;
 import com.sun.javatest.Status;
 import com.sun.javatest.TestDescription;
 import com.sun.javatest.TestResult;
-import com.sun.javatest.TestResult.ReloadFault;
-import com.sun.javatest.TestResult.ResultFileNotFoundFault;
 import com.sun.javatest.TestResult.Section;
 
 /**
+ * Write out results in JUnit-compatible XML format, for processing by tools
+ * that can process such files, such as CI systems like Hudson and Jenkins.
  *
  * @author ksrini
  */
@@ -79,12 +83,13 @@ public class XMLWriter {
     private final DateFormat isoDateFmt;
 
     XMLWriter(TestResult tr, boolean mustVerify, PrintWriter out, PrintWriter err)
-            throws ResultFileNotFoundFault, ReloadFault, Fault, ParseException, TestResult.Fault, java.text.ParseException {
+            throws ParseException, UnsupportedEncodingException, TestResult.Fault {
+        String encoding = Charset.defaultCharset().name();
         defDateFmt = new SimpleDateFormat("EEE MMM dd hh:mm:ss z yyyy");
         isoDateFmt = new SimpleDateFormat("yyyy-MM-DD'T'HH:mm:ssZ");
         harnessOut = out;
         harnessErr = err;
-        xps = new XPrintStream(harnessOut, harnessErr);
+        xps = new XPrintStream(harnessOut, harnessErr, encoding);
         this.tr = tr;
         verify = mustVerify;
         status = tr.getStatus();
@@ -92,16 +97,20 @@ public class XMLWriter {
         xmlFile = new File(tr.getFile().getAbsolutePath() + ".xml");
         start = defDateFmt.parse(tr.getProperty("start"));
         duration = getElapsedTime();
-        process();
+        process(encoding);
     }
 
-    private double getElapsedTime() throws Fault, TestResult.Fault {
+    private double getElapsedTime() throws TestResult.Fault {
         String f[] = tr.getProperty("elapsed").split("\\s");
         double elapsed = Double.parseDouble(f[0]);
         return elapsed/1000;
     }
 
-    private void createTestSuite() throws Fault, ParseException, TestResult.Fault {
+    private void createHeader(String encoding) {
+        xps.println("<?xml version=\"1.0\" encoding=\"" + encoding + "\" ?>");
+    }
+
+    private void startTestSuite() throws TestResult.Fault {
         xps.print("<testsuite");
         xps.print(" errors=\"");
         xps.print(status.isError() ? "1" : "0");
@@ -110,7 +119,6 @@ public class XMLWriter {
         xps.print(status.isFailed() ? "1" : "0");
         xps.print("\"");
         xps.print(" tests=\"1\"");
-
         xps.print(" hostname=\"");
         xps.print(tr.getProperty("hostname"));
         xps.print("\"");
@@ -126,7 +134,11 @@ public class XMLWriter {
         xps.println(">");
     }
 
-    private void insertProperties() throws Fault, TestResult.Fault {
+    private void endTestSuite() {
+        xps.println("</testsuite>");
+    }
+
+    private void insertProperties() throws TestResult.Fault {
         xps.indent();
         xps.println("<properties>");
         TestDescription td = tr.getDescription();
@@ -159,7 +171,7 @@ public class XMLWriter {
         xps.println("</properties>");
     }
 
-    private String getOutput(String name) throws ReloadFault {
+    private String getOutput(String name) throws TestResult.Fault {
         String[] titles = tr.getSectionTitles();
         for (int i = 0; i < titles.length; i++) {
             if (titles[i].equals("main")) {
@@ -172,7 +184,7 @@ public class XMLWriter {
         return "";
     }
 
-    private void insertSystemOut() throws ReloadFault {
+    private void insertSystemOut() throws TestResult.Fault {
         xps.indent();
         xps.print("<system-out>");
         xps.sanitize(getOutput("System.out"));
@@ -180,7 +192,7 @@ public class XMLWriter {
         xps.println("</system-out>");
     }
 
-    private void insertSystemErr() throws ReloadFault {
+    private void insertSystemErr() throws TestResult.Fault {
         xps.indent();
         xps.print("<system-err>");
         xps.sanitize(getOutput("System.err"));
@@ -201,7 +213,7 @@ public class XMLWriter {
         xps.println("</failure>");
     }
 
-    private void insertTestCase() throws Fault, TestResult.Fault {
+    private void insertTestCase() throws TestResult.Fault {
         xps.indent();
         xps.print("<testcase ");
         xps.print("classname=\"");
@@ -219,13 +231,14 @@ public class XMLWriter {
         xps.println("</testcase>");
     }
 
-    private void process() throws Fault, ParseException, TestResult.Fault {
-        createTestSuite();
+    private void process(String encoding) throws ParseException, TestResult.Fault {
+        createHeader(encoding);
+        startTestSuite();
         insertProperties();
         insertTestCase();
         insertSystemOut();
         insertSystemErr();
-        xps.println("</testsuite>");
+        endTestSuite();
     }
 
     @Override
@@ -242,25 +255,23 @@ public class XMLWriter {
         try {
             xps.writeTo(fos);
         } finally {
-            if (fos != null) {
-                fos.close();
-            }
+            fos.close();
         }
         if (verify)
             xps.verifyXML(xmlFile);
     }
 
-    private static void usage(String message) {
+    private static void usage(PrintStream out, String message) {
         if (message != null) {
-            System.out.println(message);
+            out.println(message);
         }
-        System.out.println("Usage:");
-        System.out.println("  java -cp jtreg.jar com.sun.javatest.regtest.XMLWriter -@list");
-        System.out.println("      where list is a file containing the .jtr files to be processed");
-        System.out.println("  java -cp jtreg.jar com.sun.javatest.regtest.XMLWriter dir");
-        System.out.println("      where dir is a JTwork dir containing the .jtr files to be processed");
-        System.out.println("  java -cp jtreg.jar com.sun.javatest.regtest.XMLWriter 1.jtr 2.jtr.. n.jtr");
-        System.out.println("      where args are a list of .jtr files to be processed");
+        out.println("Usage:");
+        out.println("  java -cp jtreg.jar com.sun.javatest.regtest.XMLWriter -@list");
+        out.println("      where list is a file containing the .jtr files to be processed");
+        out.println("  java -cp jtreg.jar com.sun.javatest.regtest.XMLWriter dir");
+        out.println("      where dir is a JTwork dir containing the .jtr files to be processed");
+        out.println("  java -cp jtreg.jar com.sun.javatest.regtest.XMLWriter 1.jtr 2.jtr.. n.jtr");
+        out.println("      where args are a list of .jtr files to be processed");
         System.exit(1);
     }
 
@@ -301,7 +312,7 @@ public class XMLWriter {
 
     private static void translateList(List<File> xmlFileList) throws Exception {
         if (xmlFileList == null || xmlFileList.isEmpty()) {
-            usage("Warning: nothing to process");
+            usage(System.out, "Warning: nothing to process");
         }
         for (File jtrFile : xmlFileList) {
             if (jtrFile.exists() && jtrFile.isFile() && jtrFile.getName().endsWith(".jtr")) {
@@ -323,10 +334,10 @@ public class XMLWriter {
     }
 
     // utility to populate a previous run with xml files
-    public static void main(String[] args) throws Fault {
+    public static void main(String[] args) {
         try {
             if (args == null || args.length < 1 ) {
-                usage("Error: insufficent arguments");
+                usage(System.err, "Error: insufficent arguments");
             }
             if (args[0].startsWith("-@") || args[0].startsWith("@")) {
                 translateList(fileToList(args[0]));
@@ -339,7 +350,7 @@ public class XMLWriter {
                 }
             }
         } catch (Exception ex) {
-            ex.printStackTrace();
+            ex.printStackTrace(System.err);
             System.exit(1);
         }
     }
@@ -367,7 +378,11 @@ public class XMLWriter {
             try {
                 super.finishedTest(tr);
                 new XMLWriter(tr, mustVerify, harnessOut, harnessErr).toXML();
-            } catch (Exception ex) {
+            } catch (IOException ex) {
+                ex.printStackTrace(harnessOut);
+            } catch (ParseException ex) {
+                ex.printStackTrace(harnessOut);
+            } catch (TestResult.Fault ex) {
                 ex.printStackTrace(harnessOut);
             }
         }
@@ -382,11 +397,12 @@ class XPrintStream {
 
     private static final String INDENT = "    ";
 
-    XPrintStream(PrintWriter out, PrintWriter err) {
+    XPrintStream(PrintWriter out, PrintWriter err, String encoding)
+            throws UnsupportedEncodingException {
         this.out = out;
         this.err = err;
         this.bstream = new ByteArrayOutputStream();
-        this.ps = new PrintStream(bstream);
+        this.ps = new PrintStream(bstream, false, encoding);
     }
 
     void indent() {
@@ -479,7 +495,13 @@ class XPrintStream {
             XMLReader xmlreader = parser.getXMLReader();
             xmlreader.parse(new InputSource(new ByteArrayInputStream(bstream.toByteArray())));
             //out.println("File: " + xmlFile + ": verified");
-        } catch (Exception ex) {
+        } catch (IOException ex) {
+            err.println("File: " + xmlFile + ":" + ex);
+            err.println(toString());
+        } catch (ParserConfigurationException ex) {
+            err.println("File: " + xmlFile + ":" + ex);
+            err.println(toString());
+        } catch (SAXException ex) {
             err.println("File: " + xmlFile + ":" + ex);
             err.println(toString());
         }

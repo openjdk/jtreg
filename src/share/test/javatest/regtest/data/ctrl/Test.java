@@ -9,7 +9,7 @@ public class Test {
             System.out.print((char) i);
             if (i % 8 == 7) System.out.println();
         }
-
+        System.out.println("\u00E2");
         System.out.println("\\u0000\\u0001\\u0002");
     }
 }
