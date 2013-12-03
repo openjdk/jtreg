@@ -36,6 +36,8 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
+import java.security.Provider;
+import java.security.Security;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Enumeration;
@@ -110,6 +112,7 @@ public abstract class Action
 
     /**
      * Get any source files directly referenced by this action.
+     * @return the source files used by this action.
      **/
     public Set<File> getSourceFiles() {
         return null;
@@ -165,6 +168,7 @@ public abstract class Action
      * @param fileName The absolute name of the original policy file.
      * @return     A string indicating the absolute name of the modified policy
      *             file.
+     * @throws TestRunException if a problem occurred adding this grant entry.
      */
     protected String addGrantEntry(String fileName) throws TestRunException {
         File newPolicy = new File(script.absTestScratchDir(),
@@ -296,7 +300,6 @@ public abstract class Action
      * for the action become immutable.
      *
      * @param status The final status of the action.
-     * @param section The record area for the action.
      */
     protected void endAction(Status status) {
         long elapsedTime = (new Date()).getTime() - startTime;
@@ -320,6 +323,7 @@ public abstract class Action
      *
      * @param action The name of the action currently being processed.
      * @param cmdArgs An array of the command to pass to ProcessCommand.
+     * @param section The section of the result file for this action.
      * @see com.sun.javatest.lib.ProcessCommand#run
      */
     protected void showCmd(String action, String[] cmdArgs, TestResult.Section section) {
@@ -466,6 +470,8 @@ public abstract class Action
                 rsm.setAllowPropertiesAccess(true);
                 rsm.resetPropertiesModified();
             }
+
+            securityProviders = Security.getProviders();
         }
 
         Status restore(String testName, Status status) {
@@ -496,6 +502,26 @@ public abstract class Action
                 stdErr.println();
                 cleanupStatus = error(SAMEVM_CANT_RESET_SECMGR + ": " + e);
             }
+
+            try {
+                final Provider[] sp = Security.getProviders();
+                if (!equal(securityProviders, sp)) {
+                    AccessController.doPrivileged(new PrivilegedAction<Object>() {
+                        public Object run() {
+                            for (Provider p : sp) {
+                                Security.removeProvider(p.getName());
+                            }
+                            for (Provider p : securityProviders) {
+                                Security.addProvider(p);
+                            }
+                            return null;
+                        }
+                    });
+                }
+            } catch (SecurityException e) {
+                cleanupStatus = error(SAMEVM_CANT_RESET_SECPROVS + ": " + e);
+            }
+
 
             // Reset system properties, if necessary
             // The default security manager tracks whether system properties may have
@@ -538,7 +564,20 @@ public abstract class Action
         final PrintStream stdOut;
         final PrintStream stdErr;
         final Locale locale;
+        final Provider[] securityProviders;
         static Map<?, ?> sysProps;
+    }
+
+    private static <T> boolean equal(T[] a, T[] b) {
+        if (a == null || b == null)
+            return a == b;
+        if (a.length != b.length)
+            return false;
+        for (int i = 0; i < a.length; i++) {
+            if (a[i] != b[i])
+                return false;
+        }
+        return true;
     }
 
     //----------in memory streams-----------------------------------------------
@@ -625,8 +664,9 @@ public abstract class Action
         CHECK_PASS            = "Test description appears acceptable",
 
         // used in:  compile, main
-        SAMEVM_CANT_RESET_SECMGR= "Cannot reset security manager",
-        SAMEVM_CANT_RESET_PROPS = "Cannot reset system properties",
+        SAMEVM_CANT_RESET_SECMGR   = "Cannot reset security manager",
+        SAMEVM_CANT_RESET_SECPROVS = "Cannot reset security providers",
+        SAMEVM_CANT_RESET_PROPS    = "Cannot reset system properties",
 
         // used in:  compile, main
         AGENTVM_CANT_GET_VM      = "Cannot get VM for test",
