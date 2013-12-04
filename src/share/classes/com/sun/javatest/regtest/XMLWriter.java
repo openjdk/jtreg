@@ -101,7 +101,14 @@ public class XMLWriter {
     }
 
     private double getElapsedTime() throws TestResult.Fault {
-        String f[] = tr.getProperty("elapsed").split("\\s");
+        String elapsedTime = tr.getProperty("elapsed");
+        if (elapsedTime == null) {
+            elapsedTime = tr.getProperty("totalTime");
+        }
+        if (elapsedTime == null) {
+            return 0.0;
+        }
+        String f[] = elapsedTime.split("\\s");
         double elapsed = Double.parseDouble(f[0]);
         return elapsed/1000;
     }
