@@ -223,43 +223,38 @@ public class RegressionReporter {
      * absolute paths for the work directory with relative paths.
      */
     private void fixupReports(File dir, File work, File report) {
-//        System.err.println("fixupreports: " + dir + " " + work + " " + report);
+        // ensure all files normalized
+        dir = getCanonicalFile(dir);
+        work = getCanonicalFile(work);
+        report = getCanonicalFile(report);
+
+        String canonWorkPath = getCanonicalURIPath(work);
         File workParent = work.getParentFile();
-        String canonWorkPath;
-        try {
-            canonWorkPath = work.getCanonicalPath();
-        } catch (IOException e) {
-            canonWorkPath = work.getAbsolutePath();
-        }
-
         File reportParent = report.getParentFile();
-
         File htmlDir = new File(dir, "html");
 
         if (equal(work, report)) {
-            fixupReportFiles(dir,        canonWorkPath, ".");
+            fixupReportFiles(dir,     canonWorkPath, ".");
             fixupReportFiles(htmlDir, canonWorkPath, "..");
         } else if (equal(report, workParent)) {
-            fixupReportFiles(dir,        canonWorkPath, work.getName());
+            fixupReportFiles(dir,     canonWorkPath, work.getName());
             fixupReportFiles(htmlDir, canonWorkPath, "../" + work.getName());
         } else if (equal(work, reportParent)) {
-            fixupReportFiles(dir,        canonWorkPath, work.getName());
-            fixupReportFiles(htmlDir, canonWorkPath, "../" + work.getName());
+            fixupReportFiles(dir,     canonWorkPath, "..");
+            fixupReportFiles(htmlDir, canonWorkPath, "../..");
         } else if (equal(workParent, reportParent)) {
-            fixupReportFiles(dir,        canonWorkPath, "../" + work.getName());
+            fixupReportFiles(dir,     canonWorkPath, "../" + work.getName());
             fixupReportFiles(htmlDir, canonWorkPath, "../../" + work.getName());
         }
     }
 
     /* Rewrite html files in the given directory, replacing hrefs to the old path
-     * with references to the new path. */
+     * with references to the new path.
+     * Since all files have been canonicalized, we should not neded to worry
+     * about inconsistent case on case-equivalent file systems like Mac and Windows.
+     */
     private void fixupReportFiles(File dir, String oldPath, String newPath) {
-        String dirPath;
-        try {
-            dirPath = dir.getCanonicalPath();
-        } catch (IOException e) {
-            dirPath = dir.getAbsolutePath();
-        }
+        String dirPath = getCanonicalURIPath(dir);
 
         for (File f: dir.listFiles()) {
             if (f.getName().endsWith(".html")) {
@@ -272,6 +267,24 @@ public class RegressionReporter {
                     out.println("Error while updating report: " + e);
                 }
             }
+        }
+    }
+
+    // This method mimics the code in JTHarness class com.sun.javatest.util.HtmlWriter,
+    // method writeLink, which writes out absolute files as URI paths.
+    String getCanonicalURIPath(File f) {
+        File cf = getCanonicalFile(f);
+        String path = cf.getPath().replace(File.separatorChar, '/');
+        if (cf.isAbsolute() && !path.startsWith("/"))
+            path = "/" + path;
+        return path;
+    }
+
+    File getCanonicalFile(File f) {
+        try {
+            return f.getCanonicalFile();
+        } catch (IOException e) {
+            return f.getAbsoluteFile();
         }
     }
 
