@@ -463,7 +463,13 @@ public class MainAction extends Action
 
         List<String> envVars = Arrays.asList(script.getEnvVars());
         String javaProg = script.getJavaProg();
-        List<String> javaArgs = Arrays.asList("-classpath", runClasspath.toString());
+        Path rcp = new Path(script.getJavaTestClassPath(), script.getTestJDK().getJDKClassPath());
+        if (script.isJUnitRequired())
+            rcp.append(script.getJUnitJar());
+        if (script.isTestNGRequired())
+            rcp.append(script.getTestNGJar());
+        rcp.append(runClasspath);
+        List<String> javaArgs = Arrays.asList("-classpath", rcp.toString());
         recorder.java(envVars, javaProg, javaProps, javaArgs, runMainClass, runMainArgs);
 
         // delegate actual work to shared method
@@ -507,19 +513,21 @@ public class MainAction extends Action
         // "test.src" and "test.classes", respectively"
         Map<String, String> javaProps = script.getTestProperties();
 
+        JDK jdk = script.getTestJDK();
+        Path classpath = new Path(script.getJavaTestClassPath(), jdk.getJDKClassPath());
+        if (script.isJUnitRequired())
+            classpath.append(script.getJUnitJar());
+        if (script.isTestNGRequired())
+            classpath.append(script.getTestNGJar());
+
         List<String> envVars = Arrays.asList(script.getEnvVars());
         String javaProg = script.getJavaProg();
-        List<String> javaArgs = Arrays.asList("-classpath", runClasspath.toString());
+        Path rcp = new Path(classpath, runClasspath);
+        List<String> javaArgs = Arrays.asList("-classpath", rcp.toString());
         recorder.java(envVars, javaProg, javaProps, javaArgs, runMainClass, runMainArgs);
 
         Agent agent;
         try {
-            JDK jdk = script.getTestJDK();
-            Path classpath = new Path(script.getJavaTestClassPath(), jdk.getJDKClassPath());
-            if (script.isJUnitRequired())
-                classpath.append(script.getJUnitJar());
-            if (script.isTestNGRequired())
-                classpath.append(script.getTestNGJar());
             agent = script.getAgent(jdk, classpath, script.getTestVMJavaOptions());
         } catch (IOException e) {
             return error(AGENTVM_CANT_GET_VM + ": " + e);

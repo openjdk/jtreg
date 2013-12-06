@@ -37,6 +37,6 @@ PATH=/bin:/usr/bin \
         -Dtest.jdk=%JDKHOME% \
         -Dtest.java.opts= \
         -Dtest.compiler.opts= \
-        -classpath %WS%/build/RerunTest.samevm/work/classes/std:%WS%/src/share/test/javatest/regtest/data/rerun/std:%JDKHOME%/lib/tools.jar \
+        -classpath %WS%/build/images/jtreg/lib/javatest.jar:%WS%/build/images/jtreg/lib/jtreg.jar:%JDKHOME%/lib/tools.jar:%WS%/build/RerunTest.samevm/work/classes/std:%WS%/src/share/test/javatest/regtest/data/rerun/std:%JDKHOME%/lib/tools.jar \
         MainTest
 
