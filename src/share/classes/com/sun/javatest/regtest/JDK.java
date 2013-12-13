@@ -49,7 +49,10 @@ public class JDK {
         V1_5("1.5"),
         V1_6("1.6"),
         V1_7("1.7"),
-        V1_8("1.8");
+        V1_8("1.8"),
+        V1_9("1.9"),
+        // proactive ...
+        V1_10("1.10");
         Version(String name) {
             this.name = name;
         }
