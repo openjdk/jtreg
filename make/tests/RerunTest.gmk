@@ -53,6 +53,7 @@ $(BUILDDIR)/RerunTest.othervm.ok: \
 	    echo Checking $(@:$(BUILDDIR)/RerunTest.%.ok=%) $$i ; \
 	    mkdir -p `dirname $(@:%.ok=%)/out/$$i` ; \
 	    $(JTREG_IMAGEDIR)/bin/jtreg \
+		-jdk:$(J2SEHOME) \
 		-w:$(@:%.ok=%)/work \
 		-dir:$(TESTDIR)/javatest/regtest/data/rerun \
 		-show:rerun $$i | \
