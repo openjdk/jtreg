@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2014, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -32,11 +32,12 @@ import java.io.IOException;
 import java.lang.ref.SoftReference;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.WeakHashMap;
 
 import com.sun.javatest.TestSuite;
 import com.sun.javatest.util.I18NResourceBundle;
@@ -327,15 +328,15 @@ public class TestProperties {
         }
 
 
-        /** Cache map, using weak and soft references. */
-        WeakHashMap<File, SoftReference<Entry>> map;
+        /** Cache map, using soft references. */
+        Map<File, SoftReference<Entry>> map;
         /** Strong reference to most recent entry, and all its ancestors */
         Entry lastUsedEntry;
         File rootDir;
 
         Cache(File rootDir) {
             this.rootDir = rootDir;
-            map = new WeakHashMap<File, SoftReference<Entry>>();
+            map = new HashMap<File, SoftReference<Entry>>();
         }
 
         Entry getEntry(File dir) throws TestSuite.Fault {
