@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2014, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -80,10 +80,9 @@ public class CleanAction extends Action
         if (args.length == 0)
             throw new ParseException(CLEAN_NO_CLASSNAME);
 
-        for (int i = 0; i < args.length; i++) {
-            String currArg = args[i];
+        for (String currArg : args) {
             if ((currArg.indexOf(File.separatorChar) != -1)
-                || (currArg.indexOf('/') != -1))
+                    || (currArg.indexOf('/') != -1))
                 throw new ParseException(CLEAN_BAD_CLASSNAME + currArg);
         }
     } // init()
@@ -110,6 +109,8 @@ public class CleanAction extends Action
             status = passed(CHECK_PASS);
         } else {
             for (int i = 0; i < args.length; i++) {
+                // NOTE -- should probably clean library-compiled classes
+                // as well.
 
                 if (args[i].equals("*"))
                     // clean default package
@@ -130,8 +131,7 @@ public class CleanAction extends Action
                         if (dir.isDirectory()) {
                             File[] files = dir.listFiles();
                             if (files != null) {
-                                for (int j = 0; j < files.length; j++) {
-                                    File f = files[j];
+                                for (File f : files) {
                                     // don't complain about not being able to clean
                                     // subpackages
                                     if (!f.delete() && !f.isDirectory())
@@ -162,13 +162,12 @@ public class CleanAction extends Action
     public Set<File> getSourceFiles() {
         Set<File> files = new LinkedHashSet<File>();
         for (String arg: args) {
-            // the arguments to clean are packages or classnames
-            if (arg.endsWith("*"))
-                continue;
+            // the arguments to clean are classnames or package names with wildcards
             try {
-                ClassLocn cl = script.locations.locateClass(arg);
-                if (cl.absSrcFile.exists())
-                    files.add(cl.absSrcFile);
+                for (ClassLocn cl: script.locations.locateClasses(arg)) {
+                    if (cl.absSrcFile.exists())
+                        files.add(cl.absSrcFile);
+                }
             } catch (TestRunException ignore) {
             }
         }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2014, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -30,6 +30,7 @@ import com.sun.javatest.TestEnvironment;
 import com.sun.javatest.regtest.RegressionScript.TestClassException;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -173,7 +174,16 @@ public class Locations {
         return list;
     }
 
-    ClassLocn locateClass(String className) throws TestRunException {
+    List<ClassLocn> locateClasses(String name) throws TestRunException {
+        if (name.equals("*"))
+            return locateClassesInPackage(null);
+        else if (name.endsWith(".*"))
+            return locateClassesInPackage(name.substring(0, name.length() - 2));
+        else
+            return Collections.singletonList(locateClass(name));
+    }
+
+    private ClassLocn locateClass(String className) throws TestRunException {
         String relSrc = className.replace('.', File.separatorChar) + ".java";
         String relCls = className.replace('.', File.separatorChar) + ".class";
         File sf, cf;
@@ -211,6 +221,51 @@ public class Locations {
             dirListStr.append(l.absSrcDir).append(" ");
         throw new TestRunException(CANT_FIND_SRC + relSrc +
                                    LIB_LIST + dirListStr);
+    }
+
+    private List<ClassLocn> locateClassesInPackage(String packageName) throws TestRunException {
+        List<ClassLocn> results = new ArrayList<ClassLocn>();
+
+        // Check testSrcDir
+        LibLocn tl = new LibLocn(null, absTestSrcDir, absTestClsDir);
+        locateClassesInPackage(packageName, tl, results);
+
+        // Check lib list
+        for (LibLocn l: libList) {
+            locateClassesInPackage(packageName, l, results);
+        }
+
+        return results;
+    }
+
+    private void locateClassesInPackage(
+            String packageName, LibLocn l, List<ClassLocn> results)
+            throws TestRunException {
+
+        File pkgSrcDir, pkgClsDir;
+        if (packageName == null) {
+            pkgSrcDir = l.absSrcDir;
+            pkgClsDir = l.absClsDir;
+        } else {
+            String p = packageName.replace('.', File.separatorChar);
+            pkgSrcDir = new File(l.absSrcDir, p);
+            pkgClsDir = new File(l.absClsDir, p);
+        }
+
+        if (!pkgSrcDir.isDirectory())
+            return;
+
+        for (File sf: pkgSrcDir.listFiles()) {
+            if (!sf.isFile())
+                continue;
+            String fn = sf.getName();
+            if (!fn.endsWith(".java"))
+                continue;
+            String cn = fn.substring(fn.length() - 5);
+            String className = (packageName == null) ? cn : packageName + "." + cn;
+            File cf = new File(pkgClsDir, cn + ".class");
+            results.add(new ClassLocn(className, l, sf, cf));
+        }
     }
 
     File absTestSrcFile(File srcFile) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2014, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -125,10 +125,11 @@ public class BuildAction extends Action
     public Set<File> getSourceFiles() {
         Set<File> files = new LinkedHashSet<File>();
         for (String arg: args) {
-            // the argument to build is a classname
+            // the arguments to build are classnames or package names with wildcards
             try {
-                ClassLocn cl = script.locations.locateClass(arg);
-                files.add(cl.absSrcFile);
+                for (ClassLocn cl: script.locations.locateClasses(arg)) {
+                    files.add(cl.absSrcFile);
+                }
             } catch (TestRunException ignore) {
             }
         }
@@ -165,21 +166,22 @@ public class BuildAction extends Action
         long now = System.currentTimeMillis();
         Map<File, List<File>> filesToCompile = new LinkedHashMap<File, List<File>>();
         for (String arg: args) {
-            // the argument to build is a classname
-            ClassLocn cl = script.locations.locateClass(arg);
-            if (cl.absSrcFile.lastModified() > now) {
-                pw.println(String.format(BUILD_FUTURE_SOURCE, cl.absSrcFile,
-                        DateFormat.getDateTimeInstance().format(new Date(cl.absSrcFile.lastModified()))));
-                pw.println(BUILD_FUTURE_SOURCE_2);
-            }
-            if (!cl.isUpToDate()) {
-                File destDir = cl.lib.absClsDir;
-                List<File> filesForDest = filesToCompile.get(destDir);
-                if (filesForDest == null) {
-                    filesForDest = new ArrayList<File>();
-                    filesToCompile.put(destDir, filesForDest);
+            // the argument to build is a classname or package name with wildcards
+            for (ClassLocn cl: script.locations.locateClasses(arg)) {
+                if (cl.absSrcFile.lastModified() > now) {
+                    pw.println(String.format(BUILD_FUTURE_SOURCE, cl.absSrcFile,
+                            DateFormat.getDateTimeInstance().format(new Date(cl.absSrcFile.lastModified()))));
+                    pw.println(BUILD_FUTURE_SOURCE_2);
                 }
-                filesForDest.add(cl.absSrcFile);
+                if (!cl.isUpToDate()) {
+                    File destDir = cl.lib.absClsDir;
+                    List<File> filesForDest = filesToCompile.get(destDir);
+                    if (filesForDest == null) {
+                        filesForDest = new ArrayList<File>();
+                        filesToCompile.put(destDir, filesForDest);
+                    }
+                    filesForDest.add(cl.absSrcFile);
+                }
             }
         }
 
