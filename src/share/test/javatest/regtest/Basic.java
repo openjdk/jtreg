@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2007, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2014, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -149,6 +149,7 @@ public class Basic
             numIgnore = 0, numMain   = 0, numShell  = 0, numMisc    = 0;
         int numJUnit  = 0;
         int numTestNG = 0;
+        int numDriver = 0;
 
         // applet
         numPassed += 2; numFailed += 4; numError  += 11;
@@ -188,6 +189,10 @@ public class Basic
         numPassed += 12; numFailed += 19; numError  += 12;
         numMain   += 43;
 
+        // driver
+        numPassed += 3; numFailed += 4; numError  += 10;
+        numDriver += 17;
+
         // shell
         numPassed += 7; numFailed += 5; numError  += 3;
         numShell  += 15;
@@ -205,6 +210,7 @@ public class Basic
         actionTable.put("build",   Integer.valueOf(numBuild));
         actionTable.put("clean",   Integer.valueOf(numClean));
         actionTable.put("compile", Integer.valueOf(numCompile));
+        actionTable.put("driver",  Integer.valueOf(numDriver));
         actionTable.put("ignore",  Integer.valueOf(numIgnore));
         actionTable.put("main",    Integer.valueOf(numMain));
         actionTable.put("junit",   Integer.valueOf(numJUnit));
@@ -425,7 +431,7 @@ public class Basic
         REP_ACTION           = "action: ";
 
     private static final String[] actionList = {
-        "applet", "build", "clean", "compile", "ignore", "junit", "testng", "main", "shell", "misc"
+        "applet", "build", "clean", "compile", "driver", "ignore", "junit", "testng", "main", "shell", "misc"
     };
 
     private static final String[] statusList = {

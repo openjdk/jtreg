@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2014, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -301,6 +301,9 @@ public class RegressionTestFinder extends TagTestFinder
 
         if (match(value, JUNIT_ACTION))
             addKeywords += " junit";
+
+        if (match(value, DRIVER_ACTION))
+            addKeywords += " driver";
 
         if (match(value, IGNORE_ACTION))
             addKeywords += " ignore";
@@ -615,6 +618,7 @@ public class RegressionTestFinder extends TagTestFinder
         MANUAL_OPTION  =       getOptionPattern("manual"),
         SHELL_ACTION   =       getActionPattern("shell"),
         JUNIT_ACTION   =       getActionPattern("junit"),
+        DRIVER_ACTION  =       getActionPattern("driver"),
         IGNORE_ACTION  =       getActionPattern("ignore");
 
     private static Pattern getActionPattern(String name) {

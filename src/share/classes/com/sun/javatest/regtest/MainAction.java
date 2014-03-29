@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2014, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -200,6 +200,10 @@ public class MainAction extends Action
         return testClassName;
     }
 
+    List<String> filterJavaOpts(List<String> args) {
+        return args;
+    }
+
     @Override
     public Set<File> getSourceFiles() {
         Set<File> files = new LinkedHashSet<File>();
@@ -391,7 +395,7 @@ public class MainAction extends Action
         command.add(javaCmd);
         for (Map.Entry<String,String> e: javaProps.entrySet())
             command.add("-D" + e.getKey() + "=" + e.getValue());
-        command.addAll(javaOpts);
+        command.addAll(filterJavaOpts(javaOpts));
         command.add(className);
         command.addAll(classArgs);
         String[] cmdArgs = command.toArray(new String[command.size()]);
@@ -436,7 +440,7 @@ public class MainAction extends Action
         return status;
     } // runOtherJVM()
 
-    private Status runSameJVM() throws TestRunException {
+    protected Status runSameJVM() throws TestRunException {
         Path runClasspath;
         String runMainClass;
         List<String> runMainArgs;
@@ -528,7 +532,8 @@ public class MainAction extends Action
 
         Agent agent;
         try {
-            agent = script.getAgent(jdk, classpath, script.getTestVMJavaOptions());
+            agent = script.getAgent(jdk, classpath,
+                    filterJavaOpts(script.getTestVMJavaOptions()));
         } catch (IOException e) {
             return error(AGENTVM_CANT_GET_VM + ": " + e);
         }
@@ -879,9 +884,9 @@ public class MainAction extends Action
     private String  policyFN = null;
     private String  secureCN = null;
 
-    private boolean reverseStatus = false;
-    private boolean useBootClassPath = false;
-    private boolean othervm = false;
+    protected boolean reverseStatus = false;
+    protected boolean useBootClassPath = false;
+    protected boolean othervm = false;
     private int     timeout = -1;
     private String  manual  = "unset";
 }

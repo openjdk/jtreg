@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2014, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -742,6 +742,11 @@ public abstract class Action
         JUNIT_NO_DRIVER        = "No JUnit 4 driver (install junit.jar next to jtreg.jar)",
         JUNIT_NO_CLASSNAME     = "No class provided for `junit'",
         JUNIT_BAD_MAIN_ARG     = "Bad argument provided for class in `junit'",
+
+        // driver
+        DRIVER_NO_CLASSNAME    = "No class provided for `driver'",
+        DRIVER_UNEXPECT_VMOPT  = "VM options not allowed",
+        DRIVER_BAD_OPT         = "Bad option for driver: ",
 
         // main
         MAIN_NO_CLASSNAME     = "No class provided for `main'",
