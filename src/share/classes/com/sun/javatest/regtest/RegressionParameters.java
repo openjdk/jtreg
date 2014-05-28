@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001, 2011, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2001, 2014, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -332,6 +332,7 @@ public class RegressionParameters
     private static final String TIMELIMIT = ".timeLimit";
     private static final String REPORTDIR = ".reportDir";
     private static final String EXCLUSIVE_LOCK = ".exclLock";
+    private static final String NATIVEDIR = ".nativeDir";
 
     @Override @SuppressWarnings("rawtypes")
     public void load(Map data, boolean checkChecksum) throws Interview.Fault {
@@ -399,6 +400,10 @@ public class RegressionParameters
         v = (String) data.get(prefix + EXCLUSIVE_LOCK);
         if (v != null)
             setExclusiveLock(new File(v));
+
+        v = (String) data.get(prefix + NATIVEDIR);
+        if (v != null)
+            setNativeDir(new File(v));
     }
 
     @Override @SuppressWarnings({"unchecked", "rawtypes"})
@@ -449,6 +454,9 @@ public class RegressionParameters
 
         if (exclusiveLock != null)
             data.put(prefix + EXCLUSIVE_LOCK, exclusiveLock.getPath());
+
+        if (nativeDir != null)
+            data.put(prefix + NATIVEDIR, nativeDir.getPath());
     }
 
     //---------------------------------------------------------------------
@@ -641,13 +649,16 @@ public class RegressionParameters
      * Return the set of VM options and Java options, for use by the java command.
      */
     List<String> getTestVMJavaOptions() {
-        if (testVMOpts == null || testVMOpts.isEmpty())
+        if ((testVMOpts == null || testVMOpts.isEmpty()) && nativeDir == null)
             return getTestJavaOptions();
-        if (testJavaOpts == null || testJavaOpts.isEmpty())
+        if ((testJavaOpts == null || testJavaOpts.isEmpty()) && nativeDir == null)
             return getTestVMOptions();
         List<String> opts = new ArrayList<String>();
         opts.addAll(getTestVMOptions());
         opts.addAll(getTestJavaOptions());
+        if (nativeDir != null)
+            opts.add("-Djava.library.path=" + nativeDir.getAbsolutePath());
+
         return opts;
     }
 
@@ -779,6 +790,18 @@ public class RegressionParameters
     }
 
     private File exclusiveLock;
+
+    //---------------------------------------------------------------------
+
+    void setNativeDir(File nativeDir) {
+        this.nativeDir = nativeDir;
+    }
+
+    File getNativeDir() {
+        return nativeDir;
+    }
+
+    private File nativeDir;
 
     //---------------------------------------------------------------------
 

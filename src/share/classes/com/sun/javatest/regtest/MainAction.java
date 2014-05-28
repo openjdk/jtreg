@@ -126,6 +126,8 @@ public class MainAction extends Action
                 timeout  = parseTimeout(optValue);
             } else if (optName.equals("othervm")) {
                 othervm = true;
+            } else if (optName.equals("native")) {
+                nativeCode = true;
             } else if (optName.equals("bootclasspath")) {
                 useBootClassPath = true;
                 othervm = true;
@@ -246,6 +248,9 @@ public class MainAction extends Action
 
         if (!(status = build()).isPassed())
             return status;
+
+        if (nativeCode && script.getNativeDir() == null)
+            return error(MAIN_NO_NATIVES);
 
         startAction();
 
@@ -887,6 +892,7 @@ public class MainAction extends Action
     protected boolean reverseStatus = false;
     protected boolean useBootClassPath = false;
     protected boolean othervm = false;
+    protected boolean nativeCode = false;
     private int     timeout = -1;
     private String  manual  = "unset";
 }

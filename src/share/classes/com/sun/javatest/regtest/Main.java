@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2014, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -414,6 +414,20 @@ public class Main {
             }
         },
 
+        new Option(STD, MAIN, "", "nativepath") {
+            public void process(String opt, String arg) throws BadArgs {
+                if (arg.contains(File.pathSeparator))
+                    throw new BadArgs(i18n, "main.nativePathMultiplePath", arg);
+                File f = new File(arg);
+                if (!f.exists())
+                    throw new BadArgs(i18n, "main.nativePathNotExist", arg);
+                if (!f.isDirectory())
+                    throw new BadArgs(i18n, "main.nativePathNotDir", arg);
+                nativeDirArg = f;
+                childArgs.add("-nativepath:" + getNormalizedFile(nativeDirArg));
+            }
+        },
+
         new Option(NONE, SELECT, "a-m", "a", "automatic", "automagic") {
             public void process(String opt, String arg) {
                 keywordsExprArg = combineKeywords(keywordsExprArg, AUTOMATIC);
@@ -704,6 +718,7 @@ public class Main {
         private File dir;
         private File reportDir;
         private File workDir;
+        private File nativeDir;
         private String concurrency;
         private String status;
         private String vmOption;
@@ -732,6 +747,10 @@ public class Main {
 
         public void setWorkDir(File workDir) {
             this.workDir = workDir;
+        }
+
+        public void setNativeDir(File nativeDir) {
+            this.nativeDir = nativeDir;
         }
 
         public void setJDK(File jdk) {
@@ -830,6 +849,7 @@ public class Main {
                 decoder.process("dir", dir);
                 decoder.process("reportDir", reportDir);
                 decoder.process("workDir", workDir);
+                decoder.process("nativeDir", nativeDir);
                 decoder.process("jdk", jdk);
                 decoder.process("verbose", verbose);
                 decoder.process("agentVM", agentVM);
@@ -1522,6 +1542,8 @@ public class Main {
         c.add(filesToAbsolutePath(classpath).toString());
 
         c.addAll(testVMOpts);
+        if (nativeDirArg != null)
+            c.add("-Djava.library.path=" + nativeDirArg.getAbsolutePath());
 
         if (allowSetSecurityManagerFlag)
             c.add("-Djava.security.policy=" + policyFile.toURI());
@@ -1897,6 +1919,9 @@ public class Main {
                     throw new BadArgs(i18n, "main.badTimeLimit");
                 }
             }
+
+            if (nativeDirArg != null)
+                rp.setNativeDir(nativeDirArg);
 
             return rp;
         } catch (TestSuite.Fault f) {
@@ -2317,6 +2342,7 @@ public class Main {
     private List<String> envVarArgs = new ArrayList<String>();
     private IgnoreKind ignoreKind;
     private List<File> classPathAppendArg = new ArrayList<File>();
+    private File nativeDirArg;
     private boolean jitFlag = true;
     private Help help;
     private boolean xmlFlag;

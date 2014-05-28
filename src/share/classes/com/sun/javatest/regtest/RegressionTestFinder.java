@@ -296,6 +296,9 @@ public class RegressionTestFinder extends TagTestFinder
         if (match(value, MANUAL_OPTION))
             addKeywords += " manual";
 
+        if (match(value, NATIVE_OPTION))
+            addKeywords += " native";
+
         if (match(value, SHELL_ACTION))
             addKeywords += " shell";
 
@@ -616,6 +619,7 @@ public class RegressionTestFinder extends TagTestFinder
         BOOTCLASSPATH_OPTION = getOptionPattern("bootclasspath"),
         OTHERVM_OPTION =       getOptionPattern("othervm"),
         MANUAL_OPTION  =       getOptionPattern("manual"),
+        NATIVE_OPTION  =       getOptionPattern("native"),
         SHELL_ACTION   =       getActionPattern("shell"),
         JUNIT_ACTION   =       getActionPattern("junit"),
         DRIVER_ACTION  =       getActionPattern("driver"),

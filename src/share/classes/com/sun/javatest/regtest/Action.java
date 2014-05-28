@@ -764,6 +764,7 @@ public abstract class Action
         MAIN_POLICY_SM_PROB   = "Unable to create new policy file: ",
         MAIN_CANT_RESET_SECMGR= "Cannot reset security manager",
         MAIN_CANT_RESET_PROPS = "Cannot reset system properties",
+        MAIN_NO_NATIVES       = "Use -nativepath to specify the location of native code",
 
         //    runOtherJVM
         MAIN_CANT_WRITE_ARGS  = "Can't write `main' argument file",

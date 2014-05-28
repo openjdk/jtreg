@@ -462,6 +462,13 @@ public class RegressionScript extends Script {
         return params.getIgnoreKind();
     }
 
+    /**
+     * Path to native components.
+     */
+    File getNativeDir() {
+        return params.getNativeDir();
+    }
+
     //----------------------- computing paths ---------------------------------
 
     File absTestSrcDir() {
@@ -720,6 +727,9 @@ public class RegressionScript extends Script {
         p.put("test.jdk", getTestJDK().getAbsolutePath());
         p.put("compile.jdk", getCompileJDK().getAbsolutePath());
         p.put("test.timeout.factor", String.valueOf(getTimeoutFactor()));
+        File nativeDir = getNativeDir();
+        if (nativeDir != null)
+            p.put("test.nativepath", nativeDir.getAbsolutePath());
         return Collections.unmodifiableMap(p);
     }
     // where
