@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2014, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -39,6 +39,8 @@ public class OS {
     public final String family;
     public final String simple_arch;
     public final String simple_version;
+
+    public final int processors;
 
     private static OS current;
 
@@ -121,6 +123,8 @@ public class OS {
             case 1:  simple_version = v.get(0) + ".0";              break;
             default: simple_version = v.get(0) + "." + v.get(1);    break;
         }
+
+        processors = Runtime.getRuntime().availableProcessors();
     }
 
 }

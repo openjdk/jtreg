@@ -29,6 +29,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +38,7 @@ import java.util.regex.Pattern;
 
 import com.sun.interview.Interview;
 import com.sun.interview.Question;
+import com.sun.javatest.CompositeFilter;
 import com.sun.javatest.ExcludeList;
 import com.sun.javatest.InterviewParameters;
 import com.sun.javatest.Parameters;
@@ -47,6 +49,7 @@ import com.sun.javatest.TestEnvironment;
 import com.sun.javatest.TestFilter;
 import com.sun.javatest.TestSuite;
 import com.sun.javatest.interview.BasicInterviewParameters;
+import com.sun.javatest.util.I18NResourceBundle;
 
 public class RegressionParameters
     extends BasicInterviewParameters
@@ -123,8 +126,71 @@ public class RegressionParameters
 
     //---------------------------------------------------------------------
 
+    /* Although a filter can throw TestFilter.Fault, currently all such
+     * exceptions are silently ignored!
+     * The following map provides a way of recording whether a problem
+     * was encountered by a filter.
+     */
+    Map<TestDescription, String> filterFaults = new HashMap<TestDescription, String>();
+
     @Override
     public TestFilter getRelevantTestFilter() {
+        if (relevantTestFilter == UNSET) {
+            TestFilter rf = getRequiresFilter();
+            TestFilter tlf = getTimeLimitFilter();
+            TestFilter f = (tlf == null)
+                    ? rf
+                    : new CompositeFilter(new TestFilter[] { rf, tlf });
+            relevantTestFilter = new CachingTestFilter(f);
+        }
+        return relevantTestFilter;
+
+    }
+
+    CachingTestFilter relevantTestFilter = UNSET;
+
+    TestFilter getRequiresFilter() {
+        return new TestFilter() {
+            @Override
+            public String getName() {
+                return "RequiresFilter";
+            }
+
+            @Override
+            public String getDescription() {
+                return "Select tests that satisfy a given set of platform requirements";
+            }
+
+            @Override
+            public String getReason() {
+                return "The platform does not meet the specified requirements";
+            }
+
+            @Override
+            public boolean accepts(TestDescription td) throws TestFilter.Fault {
+                try {
+                    String requires = td.getParameter("requires");
+                    if (requires == null)
+                        return true;
+                    return Expr.parse(requires).evalBoolean(context);
+                } catch (Expr.Fault ex) {
+                    filterFaults.put(td, "Error evaluating expression: " + ex.getMessage());
+                    // While it may seem more obvious to return false in this case,
+                    // that would make it easier to overlook the fault since the
+                    // test will have been quietly filtered out.
+                    // By returning true, we give downstream code the opportunity
+                    // to check whether a filter fault occurred, and to report
+                    // the error back to the user.
+                    return true;
+                }
+            }
+
+            private final Expr.Context context =
+                    new RegressionContext(RegressionParameters.this);
+        };
+    }
+
+    TestFilter getTimeLimitFilter() {
         if (timeLimit <= 0)
             return null;
 
@@ -163,7 +229,7 @@ public class RegressionParameters
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      *
      * Use a caching filter partly for performance reasons, and partly to make
      * it easier to calculate the number of rejected tests. Simply counting
@@ -173,6 +239,8 @@ public class RegressionParameters
      * between Harness.Observer.startingTestRun and Harness.Observer.finishedTestRun.
      * But that doesn't work correctly since the readAheadTestIterator in Harness
      * is created before the notification to Harness.Observer.startingTestRun.
+     *
+     * @return a filter based on the current exclude list(s)
      */
     @Override
     public CachingTestFilter getExcludeListFilter() {
@@ -273,10 +341,12 @@ public class RegressionParameters
     private CachingTestFilter excludeListFilter = UNSET;
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      *
      * Use a caching filter partly for performance reasons, and partly to make
-     * it easier to analze the rejected tests.
+     * it easier to analyze the rejected tests.
+     *
+     * @return a filter based on the keywords given on the command line.
      */
     @Override
     public CachingTestFilter getKeywordsFilter() {
@@ -289,7 +359,7 @@ public class RegressionParameters
 
     private CachingTestFilter keywordsFilter = UNSET;
 
-    private static CachingTestFilter UNSET = new CachingTestFilter(new TestFilter() {
+    private static final CachingTestFilter UNSET = new CachingTestFilter(new TestFilter() {
         @Override
         public String getName() {
             throw new IllegalStateException();
@@ -806,7 +876,10 @@ public class RegressionParameters
     //---------------------------------------------------------------------
 
     private List<String> retainArgs;
-    private Set<Integer> retainStatusSet = new HashSet<Integer>(4);
+    private final Set<Integer> retainStatusSet = new HashSet<Integer>(4);
     private Pattern retainFilesPattern;
+
+    private static final I18NResourceBundle i18n =
+            I18NResourceBundle.getBundleForClass(RegressionParameters.class);
 
 }

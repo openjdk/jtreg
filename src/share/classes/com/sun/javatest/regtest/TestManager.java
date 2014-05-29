@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2014, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -27,6 +27,7 @@ package com.sun.javatest.regtest;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
@@ -53,7 +54,6 @@ import com.sun.javatest.util.I18NResourceBundle;
  */
 public class TestManager {
     class NoTests extends Main.Fault {
-        private static final long serialVersionUID = 0L;
         NoTests() {
             super(i18n, "tm.noTests");
         }
@@ -170,7 +170,7 @@ public class TestManager {
                     e.workDir = WorkDirectory.create(wd, ts);
             } catch (WorkDirectory.Fault ex) {
                 throw new Fault(i18n, "tm.cantRead", wd.getName(), ex);
-            } catch (IOException ex) {
+            } catch (FileNotFoundException ex) {
                 throw new Fault(i18n, "tm.cantRead", wd.getName(), ex);
             }
         }
@@ -407,5 +407,5 @@ public class TestManager {
         return null;
     }
 
-    private static I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(TestManager.class);
+    private static final I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(TestManager.class);
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000, 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2000, 2014, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -65,6 +65,7 @@ public class RegressionTestSuite extends TestSuite
     }
 
     /**
+     * @param testSuiteRoot the root directory of the test suite
      * @throws Fault Thrown if there are problems reading TEST.ROOT.
      */
     public RegressionTestSuite(File testSuiteRoot) throws Fault {
@@ -133,7 +134,7 @@ public class RegressionTestSuite extends TestSuite
         return additionalDocNames;
     }
 
-    private static String[] additionalDocNames = {
+    private static final String[] additionalDocNames = {
         "com/sun/javatest/regtest/help/jtreg.hs"
     };
 
@@ -194,5 +195,5 @@ public class RegressionTestSuite extends TestSuite
     }
 
     private final TestProperties properties;
-    private static I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(RegressionTestSuite.class);
+    private static final I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(RegressionTestSuite.class);
 }

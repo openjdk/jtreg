@@ -65,6 +65,7 @@ public class RegressionTestFinder extends TagTestFinder
       * Constructs the list of file names to exclude for pruning in the search
       * for files to examine for test descriptions.  This constructor also sets
       * the allowable comment formats.
+      * @param properties the test suite properties manager
       */
     public RegressionTestFinder(TestProperties properties) {
         this.properties = properties;
@@ -97,8 +98,17 @@ public class RegressionTestFinder extends TagTestFinder
             } finally {
                 f.setAccessible(false);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace(System.err);
+            return null;
+        } catch (SecurityException e) {
+            e.printStackTrace(System.err);
+            return null;
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace(System.err);
+            return null;
+        } catch (IllegalAccessException e) {
+            e.printStackTrace(System.err);
             return null;
         }
     }
@@ -247,7 +257,7 @@ public class RegressionTestFinder extends TagTestFinder
                 while (true) {
                     pos = value.indexOf(".", pos);
                     if (pos == -1 || pos + 1 == value.length())
-                        break loop;
+                        break;
                     switch (value.charAt(pos + 1)) {
                     case ' ':
                     case '\n':
@@ -367,9 +377,9 @@ public class RegressionTestFinder extends TagTestFinder
      * @param value     The value of the entry that has been read
      */
     @Override @SuppressWarnings({"unchecked", "rawtypes"})
-    protected void processEntry(Map tv, String name, String value)
+    protected void processEntry(Map entries, String name, String value)
     {
-        Map<String, String> tagValues = (Map<String, String>) tv;
+        Map<String, String> tagValues = (Map<String, String>) entries;
 
         // check for valid tag name, don't produce error message for the
         // the SCCS sequence '%' 'W' '%'
@@ -392,6 +402,8 @@ public class RegressionTestFinder extends TagTestFinder
                 processRun(tagValues, value);
             } else if (name.equals(BUG)) {
                 processBug(tagValues, value);
+            } else if (name.equals(REQUIRES)) {
+                processRequires(tagValues, value);
             } else if (name.equals(KEY)) {
                 processKey(tagValues, value);
             } else if (name.equals(LIBRARY)) {
@@ -493,6 +505,33 @@ public class RegressionTestFinder extends TagTestFinder
     private static final Pattern bugIdPattern = Pattern.compile("(([A-Z]+-)?[0-9]{7})|(14[0-9]{6})");
 
     /**
+     * Validate @requires, and combine multiple instances.
+     *
+     * @param tagValues The map of all of the current tag values.
+     * @param value     The value of the entry currently being processed.
+     */
+    private void processRequires(Map<String, String> tagValues, String value) {
+        if (value.trim().length() == 0) {
+            parseError(tagValues, PARSE_REQUIRES_EMPTY);
+            return;
+        }
+
+        try {
+            Expr.parse(value);
+        } catch (Expr.Fault f) {
+            parseError(tagValues, PARSE_REQUIRES_SYNTAX + f.getMessage());
+            return;
+        }
+
+        String oldValue = tagValues.get(REQUIRES);
+        if (oldValue == null) {
+            tagValues.put(REQUIRES, value);
+        } else {
+            tagValues.put(REQUIRES, "(" + oldValue + ") & (" + value + ")");
+        }
+    }
+
+    /**
      * Verify that the provided set of keys are allowed for the current
      * test-suite.  The set of keys is stored in the system property
      * <code>env.regtest.key</code>.
@@ -568,6 +607,7 @@ public class RegressionTestFinder extends TagTestFinder
         tags.add(IGNORE);
         tags.add(RUN);
         tags.add(BUILD);
+        tags.add(REQUIRES);
 
         // @key allowed only if TEST.ROOT contains a non-empty entry for
         // "key".  This is handled by the testsuite object.
@@ -592,6 +632,7 @@ public class RegressionTestFinder extends TagTestFinder
     public static final String LIBRARY = "library";
     public static final String RUN     = "run";
     public static final String SUMMARY = "summary";
+    public static final String REQUIRES = "requires";
 
     private static final String LINESEP = System.getProperty("line.separator");
 
@@ -611,6 +652,8 @@ public class RegressionTestFinder extends TagTestFinder
         PARSE_LIB_EMPTY       = "No value provided for `@library'",
         PARSE_LIB_AFTER_RUN   = "`@library' must appear before first `@run'",
         PARSE_BAD_RUN         = "Explicit action tag not allowed",
+        PARSE_REQUIRES_EMPTY  = "No expression for @requires",
+        PARSE_REQUIRES_SYNTAX = "Syntax error in @requires expression: ",
         PARSE_RUN_ENDS_WITH_BUILD = "No action after @build",
         PARSE_MULTIPLE_COMMENTS_NOT_ALLOWED
                               = "Multiple test descriptions not allowed";
@@ -635,12 +678,12 @@ public class RegressionTestFinder extends TagTestFinder
 
     //----------member variables------------------------------------------------
 
-    private Set<String> rootValidKeys;
-    private Set<String> validTagNames;
-    private TestProperties properties;
-    private boolean checkBugID;
+    private final Set<String> rootValidKeys;
+    private final Set<String> validTagNames;
+    private final TestProperties properties;
+    private final boolean checkBugID;
 
-    private static I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(RegressionTestFinder.class);
-    private static boolean rejectTrailingBuild =
+    private static final I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(RegressionTestFinder.class);
+    private static final boolean rejectTrailingBuild =
             !Boolean.getBoolean("javatest.regtest.allowTrailingBuild");
 }

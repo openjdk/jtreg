@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2014, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -36,7 +36,7 @@ import com.sun.javatest.TestFilter;
  */
 public class CachingTestFilter extends TestFilter {
     private TestFilter delegate;
-    private Map<TestDescription, Boolean> cache = new HashMap<TestDescription, Boolean>();
+    private final Map<TestDescription, Boolean> cache = new HashMap<TestDescription, Boolean>();
 
     CachingTestFilter(TestFilter delegate) {
         if (delegate == null)

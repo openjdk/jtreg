@@ -79,6 +79,10 @@ public class RegressionScript extends Script {
         params = regEnv.params;
         testSuite = (RegressionTestSuite) params.getTestSuite();
 
+        String filterFault = params.filterFaults.get(td);
+        if (filterFault != null)
+            return Status.error(filterFault);
+
         Status status = passed("OK");
         String actions = td.getParameter("run");
 
@@ -202,7 +206,12 @@ public class RegressionScript extends Script {
 
     /**
      * Get the set of source files used by the actions in a test description.
+     * @param p  The parameters providing the necessary context
+     * @param td The test description for which to find the test files
+     * @return the set of source files known to the test
      **/
+    // Arguably, this would be better as a static method that internally created
+    // a private temporary RegressionScript.
     public Set<File> getSourceFiles(RegressionParameters p, TestDescription td) {
         this.td = td;
         try {
@@ -248,27 +257,23 @@ public class RegressionScript extends Script {
         String[] runCmds = StringArray.splitTerminator(LINESEP, actions);
         populateActionTable();
 
-        for (int j = 0; j < runCmds.length; j++) {
+        for (String runCmd : runCmds) {
             // e.g. reason compile/fail/ref=Foo.ref -debug Foo.java
             // where "reason" indicates why the action should run
-            String[] tokens = StringArray.splitWS(runCmds[j]);
+            String[] tokens = StringArray.splitWS(runCmd);
             // [reason, compile/fail/ref=Foo.ref, -debug, Foo.java]
-
             String[] verbopts = StringArray.splitSeparator("/", tokens[1]);
             // [compile, fail, ref=Foo.ref]
             String verb = verbopts[0];
-
             String[][] opts = new String[verbopts.length -1][];
             for (int i = 1; i < verbopts.length; i++) {
                 opts[i-1] = StringArray.splitEqual(verbopts[i]);
                 // [[fail,], [ref, Foo.ref]]
             }
-
             String[] args = new String[tokens.length-2];
             for (int i = 2; i < tokens.length; i++)
                 args[i-2] = tokens[i];
             // [-debug, Foo.java] (everything after the big options token)
-
             Class<?> c = null;
             try {
                 c = (Class<?>) (actionTable.get(verb));
@@ -532,9 +537,9 @@ public class RegressionScript extends Script {
     private Path getCPAPPEND() {
         // handle cpa option to jtreg
         String[] envVars = getEnvVars();
-        for (int i = 0; i < envVars.length; i++) {
-            if (envVars[i].startsWith("CPAPPEND")) {
-                String cpa = (StringArray.splitEqual(envVars[i]))[1];
+        for (String envVar : envVars) {
+            if (envVar.startsWith("CPAPPEND")) {
+                String cpa = (StringArray.splitEqual(envVar))[1];
                 // the cpa we were passed always uses '/' as FILESEP, make
                 // sure to use the proper one for the platform
                 return new Path(cpa.replace('/', File.separatorChar));
@@ -579,9 +584,9 @@ public class RegressionScript extends Script {
 
             // handle cpa option to jtreg
             String[] envVars = getEnvVars();
-            for (int i = 0; i < envVars.length; i++) {
-                if (envVars[i].startsWith("CPAPPEND")) {
-                    String cpa = (StringArray.splitEqual(envVars[i]))[1];
+            for (String envVar : envVars) {
+                if (envVar.startsWith("CPAPPEND")) {
+                    String cpa = (StringArray.splitEqual(envVar))[1];
                     // the cpa we were passed always uses '/' as FILESEP, make
                     // sure to use the proper one for the platform
                     cpa = cpa.replace('/', File.separatorChar);
@@ -869,7 +874,7 @@ public class RegressionScript extends Script {
 
     //----------member variables-----------------------------------------------
 
-    private Map<String, Class<?>> actionTable = new HashMap<String, Class<?>>();
+    private final Map<String, Class<?>> actionTable = new HashMap<String, Class<?>>();
     private TestResult testResult;
 
     private RegressionEnvironment regEnv;
