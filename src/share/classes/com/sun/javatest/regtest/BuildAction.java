@@ -70,6 +70,7 @@ public class BuildAction extends Action
      * @param args The arguments for the actions.
      * @param script The script.
      * @return     The result of the action.
+     * @throws TestRunException if an error occurs during the work
      * @see #init
      * @see #run
      */
@@ -101,8 +102,7 @@ public class BuildAction extends Action
     {
         super.init(opts, args, reason, script);
 
-        for (int i = 0; i < opts.length; i++) {
-            String[] opt = opts[i];
+        for (String[] opt : opts) {
             if (opt[0].equals("implicit") && opt[1].equals("none")) {
                 implicitOpt = "-implicit:none";
                 continue;
@@ -113,10 +113,9 @@ public class BuildAction extends Action
         if (args.length == 0)
             throw new ParseException(BUILD_NO_CLASSNAME);
 
-        for (int i = 0; i < args.length; i++) {
-            String currArg = args[i];
+        for (String currArg : args) {
             if ((currArg.indexOf(File.separatorChar) != -1)
-                || (currArg.indexOf('/') != -1))
+                    || (currArg.indexOf('/') != -1))
                 throw new ParseException(BUILD_BAD_CLASSNAME + currArg);
         }
     } // init()
@@ -151,9 +150,9 @@ public class BuildAction extends Action
      * path of the defining file to the passed filename.  Build must pass an
      * absolute filename to handle files found in the library-list.
      *
-     * @return     The result of the action.
-     * @exception  TestRunException If an unexpected error occurs while running
-     *             the test.
+     * @return  The result of the action.
+     * @throws  TestRunException If an unexpected error occurs while running
+     *          the test.
      */
     public Status run() throws TestRunException {
         Status status;

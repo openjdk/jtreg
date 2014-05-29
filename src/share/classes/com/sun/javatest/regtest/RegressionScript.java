@@ -656,6 +656,12 @@ public class RegressionScript extends Script {
         return Lock.get(params);
     }
 
+    int getNextSerial() {
+        return nextSerial++;
+    }
+
+    private int nextSerial = 0;
+
     //--------------------------------------------------------------------------
 
     JDK getTestJDK() {

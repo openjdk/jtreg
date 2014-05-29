@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2014, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -26,9 +26,11 @@
 package com.sun.javatest.regtest;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringReader;
@@ -74,6 +76,7 @@ public class CompileAction extends Action {
      * @param reason Indication of why this action was invoked.
      * @param script The script.
      * @return     The result of the action.
+     * @throws TestRunException if an error occurs while executing this action
      * @see #init
      * @see #run
      */
@@ -116,9 +119,9 @@ public class CompileAction extends Action {
         if (args.length == 0)
             throw new ParseException(COMPILE_NO_CLASSNAME);
 
-        for (int i = 0; i < opts.length; i++) {
-            String optName  = opts[i][0];
-            String optValue = opts[i][1];
+        for (String[] opt : opts) {
+            String optName = opt[0];
+            String optValue = opt[1];
 
             if (optName.equals("fail")) {
                 reverseStatus = parseFail(optValue);
@@ -197,9 +200,7 @@ public class CompileAction extends Action {
     public Set<File> getSourceFiles() {
         Set<File> files = new LinkedHashSet<File>();
 
-        for (int i = 0; i < args.length; i++) {
-            String currArg = args[i];
-
+        for (String currArg : args) {
             if (currArg.endsWith(".java")) {
                 files.add(new File(currArg));
             }
@@ -213,7 +214,7 @@ public class CompileAction extends Action {
      * given action is defined by the tag specification.
      *
      * Invoke the compiler on the given arguments which may possibly include
-     * compiler options.  Equivalent to "javac <arg>+".
+     * compiler options.  Equivalent to "javac arg+".
      *
      * Each named class will be compiled if its corresponding class file doesn't
      * exist or is older than its source file.  The class name is fully
@@ -222,22 +223,19 @@ public class CompileAction extends Action {
      *
      * Build is allowed to search anywhere in the library-list.  Compile is
      * allowed to search only in the directory containing the defining file of
-     * the test.  Thus, compile will always absolutify by adding the directory
-     * path of the defining file to the passed filename.  Build must pass an
-     * absolute filename to handle files found in the library-list.
+     * the test.  Thus, compile will always make files absolute by adding the
+     * directory path of the defining file to the passed filename.
+     * Build must pass an absolute filename to handle files found in the
+     * library-list.
      *
-     * @return     The result of the action.
-     * @exception  TestRunException If an unexpected error occurs while running
-     *             the test.
+     * @return  The result of the action.
+     * @throws  TestRunException If an unexpected error occurs while executing
+     *          the action.
      */
     public Status run() throws TestRunException {
         startAction();
 
-        // Make sure that all of the .java files we want to compile exist.
-        // We could let the compiler handle this, but if we put the extra check
-        // here, we get more information in "check" mode.
-        for (int i = 0; i < args.length; i++) {
-            String currArg = args[i];
+        for (String currArg : args) {
             if (currArg.endsWith(".java")) {
                 if (!(new File(currArg)).exists())
                     throw new TestRunException(CANT_FIND_SRC + currArg);
@@ -277,6 +275,32 @@ public class CompileAction extends Action {
         final boolean useClassPathOpt = !jdk11;
         final boolean useSourcePathOpt = !jdk11;
 
+        // WRITE ARGUMENT FILE
+        File compileArgFile;
+        if (args.length < 10)
+            compileArgFile = null;
+        else {
+            script.absTestClsDir().mkdirs();
+            String baseName = new File(script.getTestResult().getWorkRelativePath())
+                    .getName().replace(".jtr", ".compile.");
+            //compileArgFile = File.createTempFile(baseName, RegressionScript.WRAPPEREXTN, script.absTestClsDir());
+            compileArgFile = new File(script.absTestClsDir(), baseName + script.getNextSerial() + RegressionScript.WRAPPEREXTN);
+            BufferedWriter w;
+            try {
+                w = new BufferedWriter(new FileWriter(compileArgFile));
+                for (String arg: args) {
+                    w.write(arg);
+                    w.newLine();
+                }
+                w.close();
+            } catch (IOException e) {
+                return error(COMPILE_CANT_WRITE_ARGS);
+            } catch (SecurityException e) {
+                // shouldn't happen since JavaTestSecurityManager allows file ops
+                return error(COMPILE_SECMGR_FILEOPS);
+            }
+        }
+
         // Set test.src and test.classes for the benefit of annotation processors
         Map<String, String> javacProps = script.getTestProperties();
 
@@ -314,7 +338,11 @@ public class CompileAction extends Action {
             javacArgs.add(script.getCompileSourcePath().toString());
         }
 
-        javacArgs.addAll(Arrays.asList(args));
+        if (compileArgFile != null) {
+            javacArgs.add("@" + compileArgFile);
+        } else {
+            javacArgs.addAll(Arrays.asList(args));
+        }
 
         List<String> command = new ArrayList<String>();
         command.addAll(envArgs);

@@ -724,6 +724,10 @@ public abstract class Action
         COMPILE_GOLD_LINE     = ", line ",
         COMPILE_GOLD_READ_PROB= "Problem reading reference file: ",
 
+        COMPILE_CANT_CREATE_ARG_FILE = "Can't create `compile' argument file",
+        COMPILE_CANT_WRITE_ARGS  = "Can't write `compile' argument file",
+        COMPILE_SECMGR_FILEOPS   = "Unable to create `compile' argument file",
+
         COMPILE_PASS_UNEXPECT = "Compilation passed unexpectedly",
         COMPILE_PASS          = "Compilation successful",
         COMPILE_FAIL_EXPECT   = "Compilation failed as expected",

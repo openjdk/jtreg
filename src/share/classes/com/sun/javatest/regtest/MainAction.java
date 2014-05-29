@@ -114,9 +114,9 @@ public class MainAction extends Action
         if (args.length == 0)
             throw new ParseException(MAIN_NO_CLASSNAME);
 
-        for (int i = 0; i < opts.length; i++) {
-            String optName  = opts[i][0];
-            String optValue = opts[i][1];
+        for (String[] opt : opts) {
+            String optName = opt[0];
+            String optValue = opt[1];
 
             if (optName.equals("fail")) {
                 reverseStatus = parseFail(optValue);
@@ -380,7 +380,7 @@ public class MainAction extends Action
         }
 
         if (secureCN != null) {
-            javaProps.put("java.security.manager", secureCN.toString());
+            javaProps.put("java.security.manager", secureCN);
         }
         else if (policyFN != null) {
             javaProps.put("java.security.manager", "default");
@@ -787,9 +787,9 @@ public class MainAction extends Action
         //----------member variables--------------------------------------------
 
         public  Object result;
-        private Method method;
-        private Object[] args;
-        private PrintStream err;
+        private final Method method;
+        private final Object[] args;
+        private final PrintStream err;
 
         Throwable t = null;
     }
@@ -882,8 +882,8 @@ public class MainAction extends Action
 
     //----------member variables------------------------------------------------
 
-    private List<String>  testJavaArgs = new ArrayList<String>();
-    private List<String>  testClassArgs = new ArrayList<String>();
+    private final List<String>  testJavaArgs = new ArrayList<String>();
+    private final List<String>  testClassArgs = new ArrayList<String>();
     private String  driverClass = null;
     private String  testClassName  = null;
     private String  policyFN = null;
