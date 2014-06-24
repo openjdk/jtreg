@@ -436,19 +436,19 @@ public class RegressionParameters
             setTestJDK(JDK.of(v));
 
         v = (String) data.get(prefix + TEST_VM_OPTIONS);
-        if (v != null)
+        if (v != null && v.length() > 0)
             setTestVMOptions(Arrays.asList(StringArray.splitSeparator("\n", v)));
 
         v = (String) data.get(prefix + TEST_COMPILER_OPTIONS);
-        if (v != null)
+        if (v != null && v.length() > 0)
             setTestCompilerOptions(Arrays.asList(StringArray.splitSeparator("\n", v)));
 
         v = (String) data.get(prefix + TEST_JAVA_OPTIONS);
-        if (v != null)
+        if (v != null && v.length() > 0)
             setTestJavaOptions(Arrays.asList(StringArray.splitSeparator("\n", v)));
 
         v = (String) data.get(prefix + RETAIN_ARGS);
-        if (v != null)
+        if (v != null && v.length() > 0)
             setRetainArgs(Arrays.asList(StringArray.splitSeparator("\n", v)));
 
         v = (String) data.get(prefix + JUNIT);
@@ -498,16 +498,16 @@ public class RegressionParameters
         if (compileJDK != null)
             data.put(prefix + COMPILE_JDK, compileJDK.getPath());
 
-        if (retainArgs != null)
+        if (retainArgs != null && retainArgs.size() > 0)
             data.put(prefix + RETAIN_ARGS, StringUtils.join(retainArgs, "\n"));
 
-        if (testVMOpts != null)
+        if (testVMOpts != null && testVMOpts.size() > 0)
             data.put(prefix + TEST_VM_OPTIONS, StringUtils.join(testVMOpts, "\n"));
 
-        if (testCompilerOpts != null)
+        if (testCompilerOpts != null && testCompilerOpts.size() > 0)
             data.put(prefix + TEST_COMPILER_OPTIONS, StringUtils.join(testCompilerOpts, "\n"));
 
-        if (testJavaOpts != null)
+        if (testJavaOpts != null && testJavaOpts.size() > 0)
             data.put(prefix + TEST_JAVA_OPTIONS, StringUtils.join(testJavaOpts, "\n"));
 
         if (junitJar != null)
