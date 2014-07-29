@@ -189,6 +189,10 @@ public class BuildAction extends Action
             status = passed(BUILD_UP_TO_DATE);
         } else {
             status = null;
+            // ensure that all directories are created for any library classes
+            for (File dir: script.locations.absClsLibList()) {
+                dir.mkdirs();
+            }
             for (Map.Entry<File,List<File>> e: filesToCompile.entrySet()) {
                 File destDir = e.getKey();
                 List<File> filesForDest = e.getValue();
