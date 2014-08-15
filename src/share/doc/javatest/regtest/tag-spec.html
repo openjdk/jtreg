@@ -34,7 +34,9 @@
     pre.example { margin-left: 0.5in }
     dl.tags dt { font-family: monospace; font-size:smaller }
     dl.terms dt { font-style: italic }
-    table { border: 1px black solid }
+    table { border: 1px black solid; border-collapse: collapse }
+    td { border-right: 1px black solid }
+    th { border-right: 1px black solid; border-bottom: 1px black solid }
     td { padding: 2px 2em 2px 5px }
     tr.even { background-color: lightgrey }
     tr.odd { background-color: white }
@@ -48,7 +50,7 @@
 <p>Comments and questions to: 
 <a href="mailto:jtreg-use@openjdk.java.net">jtreg-use@openjdk.java.net</a>.
 <br>
-1.27 (draft), 7 July, 2014
+1.28 (draft), 7 July, 2014
 </div>
 
 <p>This is a specification document, not a tutorial.  For more basic information
@@ -70,6 +72,7 @@ please consult the jtreg FAQ at
 <a href="#DEFAULTS">Defaults</a> &middot;
 <a href="#SHORTHANDS">Shorthands</a> &middot;
 <a href="#EXAMPLES">Examples</a>
+<a href="#requires_names">Supported names for @requires</a>
 
 <h2><a name="LEADING_COMMENTS">LEADING COMMENTS AND DEFINING FILES</a></h2>
 
@@ -194,6 +197,39 @@ first <code>@run</code> tag.
 selected via boolean expressions on keywords.  The list of acceptable keywords
 may be specified in the <a href="#TEST_ROOT">TEST.ROOT</a> file (see below).  
 The <code>@key</code> tag may be used at most once in a given test.
+
+<dt>@requires <var>&lt;expression&gt;</var>
+<dd>Express a dependence on characteristics of the system being tested. 
+Some harnesses allow tests to be selected according to the characteristics
+of the system being tested. The expression may be composed of the 
+following elements:
+
+<ul>
+    <li>Named characteristics. See <a href="#requires_names">Appendix 1</a> 
+        for a complete list of the supported names.
+    <li>Numeric values. Values must be decimal integers, optionally followed a
+        suffix '<code>K</code>', '<code>M</code>' or '<code>G</code>', which as a
+        a multiplier of 1024, 1024*1024 and 1024*1024*1024 respectively. 
+        The resulting value must fit in a <code>long</code> variable.
+    <li>String values, enclosed in double quotes '"'.
+    <li>Boolean values '<code>true</code>' and '<code>false</code>'.
+    <li>Operators: 
+        &nbsp;<code>(&nbsp;)</code>&nbsp;
+        &nbsp;<code>*</code>&nbsp;
+        &nbsp;<code>/</code>&nbsp;
+        &nbsp;<code>%</code>&nbsp;
+        &nbsp;<code>+</code>&nbsp;
+        &nbsp;<code>-</code>&nbsp;
+        &nbsp;<code>==</code>&nbsp;
+        &nbsp;<code>&lt;</code>&nbsp;
+        &nbsp;<code>&lt;=</code>&nbsp;
+        &nbsp;<code>&gt;</code>&nbsp;
+        &nbsp;<code>&gt;=</code>&nbsp;
+        &nbsp;<code>&amp;</code>&nbsp;
+        &nbsp;<code>|</code>&nbsp;
+        &nbsp;<code>!</code>
+</ul> 
+The <code>@requires</code> tag may be used at most once in a given test.
 </dl>
 
 <h2><a name="ACTION_TAGS">ACTION TAGS</a></h2>
@@ -671,3 +707,95 @@ paranoid.sp policy file:
    @run main SnowWhite
  */
 </pre>
+
+<h2><a name="requires_names">APPENDIX 1: SUPPORTED NAMES FOR @requires</a></h2>
+
+<table summary="Supported names for <code>@requires</code>">
+<thead>
+<tr class="even">
+    <th>@requires name
+    <TH>Description
+    <th>value if set
+    <th>default value<br><span style="font-size:smaller">if not null</span>
+</thead>
+
+<tbody>
+<tr class="odd"><td><code>jdk.version</code>
+    <td>The JDK version, as given by <code>java.specification.version</code> 
+        system property of the test JDK.
+    <td>
+    <td>
+        
+<tr class="even"><td><code>os.name</code>
+    <td>The operating system name, as given by the corresponding system property.
+    <td>
+    <td>
+        
+<tr class="odd"><td><code>os.family</code>
+    <td>The operation system family, derived from the operating sytsem name.
+    <td>One of <code>linux</code> <code>mac</code> <code>solaris</code> <code>windows</code>
+    <td>first word of <code>os.name</code>	
+        
+<tr class="even"><td><code>os.arch</code>
+    <td>The operating system architecture, as given by the corresponding system property.
+    <td>
+    <td>
+        
+<tr class="odd"><td><code>os.simpleArch</code>
+    <td>A simplified representation of the operating system architecture.
+    <td>One of <code>x64</code> <code>i586</code> <code>ppc</code>
+    <td>same as <code>os.arch</code>
+  
+<tr class="even"><td><code>os.version</code>
+    <td>The operating system version, as given by the corresponding system property.
+    <td>
+    <td>
+
+<tr class="odd"><td><code>os.simpleVersion</code>
+    <td>A simplified representation of the operating system version.
+    <td><code><i>N</i>.0</code> or <code><i>N</i>.<i>M</i></code>,
+        where <code><i>N</i></code> and <code><i>M</i></code> 
+        are first two numbers in <code>os.version</code>
+    <td><code>99.99</code>
+
+<tr class="even"><td><code>vm.flavor</code>
+    <td>The kind of VM, derived from the options <code>-client</code> <code>-server</code>
+    <td>One of <code>client</code> <code>server</code>
+    <td>
+        
+<tr><td><code>vm.bits</code>
+    <td>The kind of VM, derived from the options <code>-d32</code> <code>-d64</code>
+    <td>One of <code>d32</code> <code>d64</code>
+    <td>
+        
+<tr class="even"><td><code>vm.gc</code>
+    <td>The garbage collection strategy, derived from the option <code>-XX:+Use<i>name</i>GC</code>
+    <td><code><i>name</i></code>
+    <td>
+        
+<tr class="odd"><td><code>vm.compMode</code>
+    <td>The VM compilation mode, derived from the options <code>-Xcomp</code> <code>-Xint</code> <code>-Xmixed</code>
+    <td>One of <code>Xcomp</code> <code>Xint</code> <code>Xmixed</code>
+    <td>
+        
+<tr class="even"><td><code>vm.opt.<i>switch</i></code>
+    <td>A boolean VM option, derived from option <code>-XX:+<i>switch</i></code> or <code>-XX:-<i>switch</i></code>
+    <td><code>true</code> <code>false</code>
+    <td>
+        
+<tr class="odd"><td><code>vm.opt.<i>name</i></code>
+    <td>A VM option, derived from option <code>-XX:<i>name</i>=<i>value</i></code>
+    <td><code><i>value</i></code>
+    <td>
+	
+<tr class="even" style="color:gray"><td><code>profile</code>
+    <td>The name of the highest profile supported by the test JDK.
+    <td>One of <code>compact1</code> <code>compact2</code> <code>compact3</code>
+    <td>
+        
+<tr class="odd" style="color:gray"><td><code>module:<i>name</i></code>
+    <td>Whether or not a module is available in the test JDK.
+    <td>One of <code>true</code> <code>false</code>
+    <td>
+</tbody>
+</table>
