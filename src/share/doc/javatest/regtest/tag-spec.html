@@ -28,6 +28,7 @@
 <LINK REL="stylesheet" TYPE="text/css" HREF="help.css" TITLE="Style">
 <title>The JDK Test Framework: Tag Language Specification</title>
 <style type="text/css">
+    h2.appendix { margin-top:.5in }
     dfn { font-style: oblique }
     var { font-style: oblique }
     pre { font-family: monospace }
@@ -50,7 +51,7 @@
 <p>Comments and questions to: 
 <a href="mailto:jtreg-use@openjdk.java.net">jtreg-use@openjdk.java.net</a>.
 <br>
-1.31 (draft), 7 July, 2014
+1.32 (draft), 7 July, 2014
 </div>
 
 <p>This is a specification document, not a tutorial.  For more basic information
@@ -73,7 +74,8 @@ please consult the jtreg FAQ at
 <a href="#DEFAULTS">Defaults</a> &middot;
 <a href="#SHORTHANDS">Shorthands</a> &middot;
 <a href="#EXAMPLES">Examples</a> &middot;
-<a href="#requires_names">Supported names for @requires</a>
+<a href="#requires_names">Supported names for @requires</a> &middot;
+<a href="#testvars">Test-specific system properties and environment variables</a>
 
 <h2><a name="LEADING_COMMENTS">LEADING COMMENTS AND DEFINING FILES</a></h2>
 
@@ -533,15 +535,34 @@ invoking the applet's <code>stop</code> and <code>destroy</code> methods (in tha
 <p>Invoke the Bourne shell to run <var>&lt;script&gt;</var> on the given <var>&lt;arg&gt;</var>s.  The <var>&lt;script&gt;</var>
 argument should the name of a file relative to the test source directory (see
 below), using "/" to separate directories and ".." to refer to parent
-directories.  Passes only if the script exits with an exit status of 0.  The
-environment variables <code>TESTSRC</code>, <code>TESTCLASSES</code>, and <code>TESTJAVA</code> will be defined (see
-below).  On Unix systems, the <code>PATH</code> will be set to <code>/bin:/usr/bin</code> and the
-<code>DISPLAY</code>, <code>HOME</code>, <code>LANG</code>, <code>LC_ALL</code>, <code>LC_TYPE</code>, <code>TZ</code>, <code>LPDEST</code>, <code>PRINTER</code>, and <code>XMODIFIERS</code>
-variables will be propagated if they are set.  On Windows systems, <code>PATH</code> will be
-set to the MKS toolkit or Cygwin binary directory and <code>WINDIR</code>, <code>SYSTEMROOT</code>, and
-<code>SYSTEMDRIVE</code> will be propagated if they are set.  The environment variable
-<code>TESTVMOPTS</code> will contain the set of VM options passed from the test harness
-invocation.  If the <code>/manual</code> option is specified then the harness will skip this
+directories.  Passes only if the script exits with an exit status of 0.  
+
+<p>On Unix systems, the <code>PATH</code> will be set to <code>/bin:/usr/bin</code> 
+and the following variables will be propagated if they are set:
+    <code>DISPLAY</code>,
+    <code>GNOME_DESKTOP_SESSION_ID</code>,
+    <code>HOME</code>,
+    <code>LANG</code>,
+    <code>LC_ALL</code>,
+    <code>LC_TYPE</code>,
+    <code>LPDEST</code>,
+    <code>PRINTER</code>,
+    <code>TZ</code> and
+    <code>XMODIFIERS</code>.
+
+<p>On Windows systems, the following variables will be propagated if they are set: 
+    <code>PATH</code>,
+    <code>SystemDrive</code>,
+    <code>SystemRoot</code>,
+    <code>TEMP</code>,
+    <code>TMP</code> and
+    <code>windir</code>.
+    
+<p>In addition, a number of test-specific environment variables will be
+set, giving details about the test itself. See <a href="#testvars">Appendix 2</a>
+for the complete list of these variables.
+
+<p>If the <code>/manual</code> option is specified then the harness will skip this
 action when instructed to run only automatic tests; no arguments to the <code>/manual</code>
 option are supported.
 
@@ -712,7 +733,7 @@ upon the file's filename extension.
     <tr class="even"><td>@ignore <var>&lt;word&gt;*</var>           <td>  @run ignore <var>&lt;word&gt;*</var>
 </table>
 
-<h2><a name="EXAMPLES">EXAMPLES</a></h2>
+<h2 class="appendix"><a name="EXAMPLES">EXAMPLES</a></h2>
 
 <p>Run <code>Foo</code> in a separate VM, with the heap limited to 2MB and the verifier turned on:
 
@@ -780,7 +801,7 @@ paranoid.sp policy file:
  */
 </pre>
 
-<h2><a name="requires_names">APPENDIX 1: SUPPORTED NAMES FOR @requires</a></h2>
+<h2 class="appendix"><a name="requires_names">APPENDIX 1: SUPPORTED NAMES FOR @requires</a></h2>
 
 <table summary="Supported names for <code>@requires</code>">
 <thead>
@@ -869,5 +890,86 @@ paranoid.sp policy file:
     <td>Whether or not a module is available in the test JDK.
     <td>One of <code>true</code> <code>false</code>
     <td>
+</tbody>
+</table>
+
+
+<h2 class="appendix"><a name="testvars">APPENDIX 2: TEST-SPECIFIC SYSTEM PROPERTIES and ENVIRONMENT VARIABLES</a></h2>
+
+<p>The system properties in the following table will be set
+while executing any class specified in an action tag;
+the environment variables will be set while executing a shell
+action tag.
+
+<table summary="Test-specific system properties and environment variables">
+<thead>
+<tr class="even"><th>System property<th>Environment variable<th>Notes</thead>
+<tbody>
+<tr class="odd">
+<td><code>test.src</code>
+<td><code>TESTSRC</code>
+<td>The directory containing the defining file of the test
+
+<tr class="even">
+<td><code>test.src.path</code>
+<td><code>TESTSRCPATH</code>
+<td>The series of directories, including library directories, 
+    for the source of the test.
+
+<tr class="odd">
+<td><code>test.classes</code>
+<td><code>TESTCLASSES</code>
+<td>The directory containing the compiled classes for source files in the 
+    directory containing the defining file of the test.
+
+<tr class="even">
+<td><code>test.class.path</code>
+<td><code>TESTCLASSPATH</code>
+<td>The series of directories for all the classes for the test.
+
+<tr class="odd">
+<td><code>test.vm.opts</code>
+<td><code>TESTVMOPTS</code>
+<td>Additional VM options for all JVMs used in the test.
+
+<tr class="even">
+<td><code>test.tool.vm.opts</code>
+<td><code>TESTTOOLVMOPTS</code>
+<td>Additional VM options for all JVMs used in the test, each preceded by 
+    '<code>-J</code>', suitable for use in tool commands like "javac".
+
+<tr class="odd">
+<td><code>test.compiler.opts</code>
+<td><code>TESTJAVACOPTS</code>
+<td>Additional Java compiler options.
+
+<tr class="even">
+<td><code>test.java.opts</code>
+<td><code>TESTJAVAOPTS</code>
+<td>Additional VM options for all invocations of the main Java launcher
+    used in the test.
+    (<i>i.e.</i>excluding JDK tools like "javac".)
+
+<tr class="odd">
+<td><code>test.jdk</code>
+<td><code>TESTJAVA</code>
+<td>The location of the JDK being used to run the tests.
+
+<tr class="even">
+<td><code>compile.jdk</code>
+<td><code>COMPILEJAVA</code>
+<td>The location of the JDK being used to compile the tests.
+    By default, this is the same as <code>test.jdk</code> and <code>TESTJAVA</code>.
+
+<tr class="odd">
+<td><code>test.timeout.factor</code>
+<td><code>TESTTIMEOUTFACTOR</code>
+<td>The timeout factor to be applied to the default timeout for the test.
+
+<tr class="even">
+<td><code>test.nativepath</code>
+<td>n/a
+<td>The location of native executables used in the tests.
+
 </tbody>
 </table>
