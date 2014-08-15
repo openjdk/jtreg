@@ -50,7 +50,7 @@
 <p>Comments and questions to: 
 <a href="mailto:jtreg-use@openjdk.java.net">jtreg-use@openjdk.java.net</a>.
 <br>
-1.29 (draft), 7 July, 2014
+1.30 (draft), 7 July, 2014
 </div>
 
 <p>This is a specification document, not a tutorial.  For more basic information
@@ -68,7 +68,7 @@ please consult the jtreg FAQ at
 <a href="#WILDCARDS">class name wildcards</a>,
 <a href="#ACTION_TYPES">action types</a>) &middot;
 <a href="#DIRECTORY_CONTEXT">Directory context</a> &middot;
-<a href="#SOURCE_STRUCTURE">Source-directory structure and TEST.ROOT</a> &middot;
+<a href="#SOURCE_STRUCTURE">Source-directory structure and test suite configuration files</a> &middot;
 <a href="#DEFAULTS">Defaults</a> &middot;
 <a href="#SHORTHANDS">Shorthands</a> &middot;
 <a href="#EXAMPLES">Examples</a> &middot;
@@ -608,7 +608,7 @@ InputStream in = new FileInputStream(f);
 standalone in its source directory.
 
 
-<h2><a name="SOURCE_STRUCTURE">SOURCE-DIRECTORY STRUCTURE and TEST.ROOT</a></h2>
+<h2><a name="SOURCE_STRUCTURE">SOURCE-DIRECTORY STRUCTURE AND TEST-SUITE CONFIGURATION FILES</a></h2>
 
 <p>This specification places no constraints upon the structure of a tree of source
 directories.  Some test harnesses may be able to provide more robust behavior or
@@ -617,14 +617,50 @@ of a test-source tree must therefore be identified by placing a file named
 TEST.ROOT in the root directory.  Exactly one such file must exist in every
 test-source tree.
 
-<p>The <a name="TEST_ROOT">TEST.ROOT</a> file contains test-suite configuration information.  It is in the
-standard Java property-file format as described in the specification of the
-<code>java.util.Properties</code> class.  The only property currently supported is "<code>keys</code>",
-which should be bound to a space-separated list of the keywords that are
-allowable in the containing test suite.  A harness that supports keyword-based
-test selection should reject any test containing keywords that are not present
-in this list.  If this property is not present then no keywords should be
-accepted.
+<p>The <a name="TEST_ROOT">TEST.ROOT</a> file contains test-suite configuration 
+information.  It is in the standard Java property-file format as described in the 
+specification of the <code>java.util.Properties</code> class.   
+Properties defined in this file apply to the entire test suite.  
+Additional properties files named TEST.properties may appear in subdirectories
+of the test suite, and may be used to provide additional configuration values
+that apply to files in that directory and its subdirectories.
+
+<p>The following properties may only appear in TEST.ROOT:
+
+<dl>
+<dt><code>checkBugId true|false</code>
+<dd>Whether or not to check the format of strings in @bug tags.
+Checking is disabled if this property is set to <code>false</code>.
+
+<dt><code>defaultExecMode agentvm|othervm|samevm</code>
+<dd>The default execution mode for tests in the test suite.
+A harness that supports multiple test execution modes may use
+this value to determine the default execution mode for tests in
+this test-suite.
+</dl>
+
+<p>The following properties may appear in either TEST.ROOT or any TEST.properties file:
+    
+<dl>
+<dt><code>keys <var>&lt;keywords&gt;</var></code> 
+<dd>The set of valid keywords that can be used in @key tags.
+A harness that supports keyword-based test selection should reject any test 
+containing keywords that are not present in this list.  
+If this property is not present then no keywords should be accepted.
+    
+<dt><code>othervm.dirs <var>&lt;directories&gt;</var></code>
+<dd>Directories containing tests which should all be run in othervm mode.
+A harness that supports multiple test execution modes should ensure
+that all tests in the specified directories are run in <code>othervm</code>
+mode.
+    
+<dt><code>exclusiveAccess.dirs <var>&lt;directories&gt;</var></code>
+<dd>Directories containing tests which should not be run concurrently at
+the same time as other tests.
+A harness that supports concurrent test execution should ensure
+that all tests in the specified directories are run when no other
+tests in the same directory is being run.
+</dl>
 
 
 <h2><a name="DEFAULTS">DEFAULTS</a></h2>
