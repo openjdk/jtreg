@@ -51,7 +51,7 @@
 <p>Comments and questions to: 
 <a href="mailto:jtreg-use@openjdk.java.net">jtreg-use@openjdk.java.net</a>.
 <br>
-1.32 (draft), 7 July, 2014
+1.33 (draft), 8 July, 2014
 </div>
 
 <p>This is a specification document, not a tutorial.  For more basic information
@@ -68,6 +68,7 @@ please consult the jtreg FAQ at
 <a href="#CLASS_NAMES">class names as action arguments</a>,
 <a href="#WILDCARDS">class name wildcards</a>,
 <a href="#ACTION_TYPES">action types</a>) &middot;
+<a href="#TESTNG">TestNG</a> &middot;
 <a href="#DIRECTORY_CONTEXT">Directory context</a> &middot;
 <a href="#TEST_GROUPS">Test groups</a> &middot;
 <a href="#SOURCE_STRUCTURE">Source-directory structure and test suite configuration files</a> &middot;
@@ -112,9 +113,11 @@ token is a maximal contiguous sequence of non-whitespace characters.
 Whitespace characters, which include newline and carriage-return characters,
 are significant only insofar as they separate tokens.
 
-<p>The first token in the leading comment in the defining file of a test must be
-"<code>@test</code>".  The harness discovers defining files by looking for such tokens.  
-A file without comments is not a defining file.  A file whose leading comment
+<p>Some files within the source directory structure may be configured to 
+implicitly be defining files. For all other files, the first token in the 
+leading comment in the defining file of a test must be "<code>@test</code>".  
+The harness discovers defining files by looking for such tokens: a file 
+without comments is not a defining file; a file whose leading comment
 does not start with "<code>@test</code>" is not a defining file.
 
 
@@ -480,6 +483,41 @@ option was selected.
 <p>This action executes all the tests in a single JUnit test file.  All the tests
 in that one file will be grouped as a single jtreg test for reporting purposes.
 
+<dt>testng[/fail][/manual][/othervm][/policy=<var>&lt;file&gt;</var>][/secure=<var>&lt;class&gt;</var>]
+        [/timeout=<var>&lt;seconds&gt;</var>] <var>&lt;vm-opt&gt;*</var> <var>&lt;class&gt;</var>
+<dd>
+<p>Invoke the specified class as a TestNG test.  Roughly equivalent to "<code>@run
+    main org.testng.TestNG <var>&lt;class&gt;</var></code>".  All initial argument tokens
+beginning with a dash are considered to be VM options; the first argument not
+beginning with a dash is the <var>&lt;class&gt;</var> to be invoked.  No additional arguments
+are allowed.  Passes only if the main method of TestNG returns normally and
+does not cause an exception to be thrown, from the main thread or from any
+other thread.  As with a "main" action, a "testng" action is considered to be
+finished when the main method of TestNG returns.
+
+<p>The named <var>&lt;class&gt;</var> will be compiled on demand, just as though an "<code>@run</code> build
+<var>&lt;class&gt;</var>" action had been inserted before this action.  If this action requires
+classes other than <var>&lt;class&gt;</var> to be up to date, insert an appropriate build action
+before this action.  If any <var>&lt;vm-opt&gt;</var>s are given then <code>/othervm</code> should be
+specified.
+
+<p>The use of the <code>@library</code> tag, and of the <code>/othervm</code>, <code>/manual</code>, <code>/policy</code>, and <code>/secure</code>
+options, are the same for a "testng" action as for a "main" action; see above.
+
+<p>In order to use a "testng" action, the TestNG jar file may need to be placed
+manually alongside the jtreg and javatest jar files in the jtreg installation.
+If testng.jar file is not found, and if no class named <code>org.testng.TestNG</code>
+can be found, any "testng" actions will fail, regardless of whether the <code>/fail</code>
+option was selected.
+
+<p>This action executes all the tests in a single TestNG test file.  All the tests
+in that one file will be grouped as a single jtreg test for reporting purposes.
+
+<p>Note: this action allows individual tests to be written as TestNG tests,
+and placed alongside other tests using other combinations of actions. 
+See <a href="TESTNG">below</a> for details on how to set up a directory
+containing only standard TestNG tests.
+
 <dt>applet[/fail][/manual[=(yesno|done)]][/othervm][/policy=<var>&lt;file&gt;</var>]
         [/secure=<var>&lt;class&gt;</var>][/timeout=<var>&lt;sec&gt;</var>] <var>&lt;html-file&gt;</var>
 <dd>
@@ -573,6 +611,19 @@ a failure or as some other type of error.  The <var>&lt;word&gt;</var> tokens, i
 describe why the test is being ignored.  These tokens may be displayed by the
 harness in some appropriate fashion.
 </dl>
+
+<h2><a name="TESTNG">TESTNG</a></h2>
+
+<p>A directory within the source directory structure may be configured to
+be the root of a set of TestNG tests. When so configured, all Java source
+files in or under the directory are considered to be defining files, and
+thus considered to be a test to be executed. If a file has a leading comment,
+the comment may only contain informative tags and declarative tags, and 
+may not contain any action tags.   
+
+<p>Each test within the set is deemed to have any implicit <code>@build</code>
+action specifying all the Java source files in the set, followed by an 
+implicit action to execute the test as a TestNG test.
 
 <h2><a name="DIRECTORY_CONTEXT">DIRECTORY CONTEXT</a></h2>
 
@@ -691,6 +742,9 @@ square brackets.
 A harness that supports keyword-based test selection should reject any test 
 containing keywords that are not present in this list.  
 If this property is not present then no keywords should be accepted.
+        
+<dt><code>bootclasspath.dirs <var>&lt;directories&gt;</var></code>
+<dd>Directories that when used should be placed on the bootclasspath.
     
 <dt><code>othervm.dirs <var>&lt;directories&gt;</var></code>
 <dd>Directories containing tests which should all be run in othervm mode.
@@ -704,6 +758,13 @@ the same time as other tests.
 A harness that supports concurrent test execution should ensure
 that all tests in the specified directories are run when no other
 tests in the same directory is being run.
+
+<dt><code>TestNG.dirs <var>&lt;directories&gt;</var></code>
+<dd>Directories containing TestNG-style tests.
+  
+<dt><code>lib.dirs <var>&lt;directories&gt;</var></code>
+<dd>Default library directories used by all tests in or under the directory 
+containing this property declaration.
 </dl>
 
 
