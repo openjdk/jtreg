@@ -131,7 +131,7 @@
         <mkdir dir="${dist.jtreg.dir}/doc/jtreg"/>
         <copy todir="${dist.jtreg.dir}" file="${src.doc.dir}/javatest/regtest/README"/>
         <copy todir="${dist.jtreg.dir}/doc/jtreg">
-            <fileset file="${src.doc.dir}/javatest/regtest/tag-spec.txt"/>
+            <fileset file="${src.doc.dir}/javatest/regtest/tag-spec.html"/>
             <fileset file="${build.dir}/jtreg/usage.txt"/>
         </copy>
         <xslt
@@ -212,13 +212,9 @@
                 <exclude name="images/topic.gif"/>
             </fileset>
         </copy>
-        <!-- generate the spec page from the master spec file -->
-        <texttohtml
-            textfile="${src.doc.dir}/javatest/regtest/tag-spec.txt"
-            htmlfile="${build.classes.dir}/com/sun/javatest/regtest/help/default/tag-spec.html"
-            title="The JDK Test Framework: Tag Language Specification"
-            style="body: { background-color: white; font-size: 12pt; font-family: SansSerif; margin-left: 3px }">
-        </texttohtml>
+        <!-- copy the main tag spec -->
+        <copy file="${src.doc.dir}/javatest/regtest/tag-spec.html"
+                tofile="${build.classes.dir}/com/sun/javatest/regtest/help/default/tag-spec.html"/>
         <!-- generate the usage page from the command line help -->
         <texttohtml
             textfile="${build.dir}/jtreg/usage.txt"

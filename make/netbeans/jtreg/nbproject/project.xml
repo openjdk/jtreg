@@ -117,5 +117,24 @@
                 <source-level>1.5</source-level>
             </compilation-unit>
         </java-data>
+        <spellchecker-wordlist xmlns="http://www.netbeans.org/ns/spellchecker-wordlist/1">
+            <word>applet</word>
+            <word>appletviewer</word>
+            <word>arg</word>
+            <word>checkBugId</word>
+            <word>classname</word>
+            <word>classpath</word>
+            <word>defaultExecMode</word>
+            <word>HTML</word>
+            <word>javac</word>
+            <word>javatest</word>
+            <word>jtreg</word>
+            <word>junit</word>
+            <word>JUnitCore</word>
+            <word>org</word>
+            <word>othervm</word>
+            <word>sourcepath</word>
+            <word>yesno</word>
+        </spellchecker-wordlist>
     </configuration>
 </project>

@@ -72,7 +72,7 @@ JTREG_COPYRIGHT 	= $(JTREG_IMAGEDIR)/COPYRIGHT
 JTREG_LICENSE		= $(JTREG_IMAGEDIR)/LICENSE
 JTREG_README		= $(JTREG_IMAGEDIR)/README
 JTREG_FAQ 		= $(JTREG_IMAGEDIR)/doc/jtreg/faq.html
-JTREG_TAGSPEC 		= $(JTREG_IMAGEDIR)/doc/jtreg/tag-spec.txt
+JTREG_TAGSPEC 		= $(JTREG_IMAGEDIR)/doc/jtreg/tag-spec.html
 JTREG_USAGE 		= $(JTREG_IMAGEDIR)/doc/jtreg/usage.txt
 #JTREG_DOCUMENT_CSS      = $(JTREG_IMAGEDIR)/doc/document.css
 
@@ -135,19 +135,9 @@ TARGETS.JAR.jtreg += \
 REGTEST_CLASSDIR = $(CLASSDIR)/com/sun/javatest/regtest
 REGTEST_SRCDIR = $(SRCJTDOCDIR)/regtest
 
-$(REGTEST_CLASSDIR)/help/default/tag-spec.html: $(REGTEST_SRCDIR)/tag-spec.txt
+$(REGTEST_CLASSDIR)/help/default/tag-spec.html: $(REGTEST_SRCDIR)/tag-spec.html
 	$(MKDIR) -p $(@D)
-	$(RM) $@
-	( echo '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">' ; \
-	  echo '<html><head>'; \
-	  echo '<title>The JDK Test Framework: Tag Language Specification</title>'; \
-	  echo '<style type="text/css">body: { background-color: white; font-size: 12pt; font-family: SansSerif; margin-left: 3px }</style>'; \
-	  echo '</head><body>'; \
-	  echo '<pre>'; \
-	  sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g' $(REGTEST_SRCDIR)/tag-spec.txt; \
-	  echo '</pre>';\
-	  echo '</body></html>'; \
-	) >$@
+	$(SED) -e 's/font-size:smaller//' $^ > $@
 
 $(REGTEST_CLASSDIR)/help/default/usage.html: $(BUILDDIR)/jtreg-usage.txt
 	$(MKDIR) -p $(@D)
