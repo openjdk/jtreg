@@ -709,14 +709,13 @@ public class Agent {
             agents.add(agent);
         }
 
-        synchronized void close() {
+        synchronized void flush() {
             for (Queue<Agent> agents: map.values()) {
                 for (Agent agent: agents) {
                     agent.close();
                 }
             }
             map.clear();
-            policyFile = null;
         }
 
         /** Close all agents associated with a specific scratch directory. */
