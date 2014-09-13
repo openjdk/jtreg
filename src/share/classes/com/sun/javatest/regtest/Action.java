@@ -640,7 +640,7 @@ public abstract class Action
         PARSE_NO_POLICY_NAME  = "No policy file name",
         PARSE_CANT_FIND_POLICY= "Can't find policy file: ",
         PARSE_NO_SECURE_NAME  = "No security manager file name",
-        PARSE_POLICY_OTHERVM  = "`/policy' requires use of `/othervm'",
+        PARSE_POLICY_OTHERVM  = "`/policy' and `/java.security.policy` require use of `/othervm'",
         PARSE_SECURE_OTHERVM  = "`/secure' requires use of `/othervm'",
         PARSE_TIMEOUT_MANUAL  = "`/manual' disables use of `/timeout'",
 

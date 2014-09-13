@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2014, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -103,8 +103,19 @@ public class AppletAction extends Action
             } else if (optName.equals("othervm")) {
                 othervm = true;
             } else if (optName.equals("policy")) {
+                overrideSysPolicy = true;
                 if (!script.isTestJDK11())
                     policyFN = parsePolicy(optValue);
+                else
+                    throw new ParseException(PARSE_BAD_OPT_JDK + optName);
+            } else if (optName.equals("java.security.policy")) {
+                String name = optValue;
+                if (optValue.startsWith("=")) {
+                    overrideSysPolicy = true;
+                    name = optValue.substring(1, optValue.length());
+                }
+                if (!script.isTestJDK11())
+                    policyFN = parsePolicy(name);
                 else
                     throw new ParseException(PARSE_BAD_OPT_JDK + optName);
             } else if (optName.equals("secure")) {
@@ -260,7 +271,10 @@ public class AppletAction extends Action
         if (policyFN != null) {
             // add pemission to read JTwork/classes by adding a grant entry
             newPolicyFN = addGrantEntry(policyFN);
-            command.add("-Djava.security.policy==" + newPolicyFN);
+            String cmd = overrideSysPolicy
+                            ? "-Djava.security.policy==" + newPolicyFN
+                            : "-Djava.security.policy=" + newPolicyFN;
+            command.add(cmd);
         }
 
         if (secureFN != null)
@@ -635,7 +649,7 @@ public class AppletAction extends Action
     private int     timeout  = -1;
     private String  policyFN = null;
     private String  secureFN = null;
-
+    private boolean overrideSysPolicy = false;
     private String htmlFN;
     private String clsName;
     private HTMLFileContents htmlFileContents;

@@ -132,8 +132,19 @@ public class MainAction extends Action
                 useBootClassPath = true;
                 othervm = true;
             } else if (optName.equals("policy")) {
+                overrideSysPolicy = true;
                 if (!script.isTestJDK11())
                     policyFN = parsePolicy(optValue);
+                else
+                    throw new ParseException(PARSE_BAD_OPT_JDK + optName);
+            } else if (optName.equals("java.security.policy")) {
+                String name = optValue;
+                if (optValue.startsWith("=")) {
+                    overrideSysPolicy = true;
+                    name = optValue.substring(1, optValue.length());
+                }
+                if (!script.isTestJDK11())
+                    policyFN = parsePolicy(name);
                 else
                     throw new ParseException(PARSE_BAD_OPT_JDK + optName);
             } else if (optName.equals("secure")) {
@@ -376,7 +387,8 @@ public class MainAction extends Action
         if (policyFN != null) {
             // add permission to read JTwork/classes by adding a grant entry
             newPolicyFN = addGrantEntry(policyFN);
-            javaProps.put("java.security.policy", "=" + newPolicyFN);
+            javaProps.put("java.security.policy",
+                          overrideSysPolicy ? "=" + newPolicyFN : newPolicyFN);
         }
 
         if (secureCN != null) {
@@ -888,6 +900,7 @@ public class MainAction extends Action
     private String  testClassName  = null;
     private String  policyFN = null;
     private String  secureCN = null;
+    private boolean overrideSysPolicy = false;
 
     protected boolean reverseStatus = false;
     protected boolean useBootClassPath = false;
