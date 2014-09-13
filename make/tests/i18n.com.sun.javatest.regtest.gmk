@@ -26,7 +26,7 @@
 ifdef JCOV_HOME
     JCOV_JARS=\
 	-Djcov.jar=$(JCOV_HOME)/lib/jcov.jar \
-	-Djcov_implant.jar=$(JCOV_HOME)/lib/jcov_implant.jar
+	-Djcov_network_saver.jar=$(JCOV_HOME)/lib/jcov_network_saver.jar
 else 
     STATIC_JCOV_KEYS=\
 	$(GREP) help.jcov $(JAVADIR)/com/sun/javatest/regtest/i18n.properties | $(SED) -e 's/\(.*\)=.*/i18n: \1/' >> $(@:%.ok=%.log)

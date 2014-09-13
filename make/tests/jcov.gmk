@@ -32,7 +32,7 @@ $(BUILDDIR)/jcov.agentvm.ok: \
 		$(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(JTREG_IMAGEDIR)/lib/jh.jar \
 		$(JTREG_IMAGEDIR)/lib/jcov.jar \
-		$(JTREG_IMAGEDIR)/lib/jcov_implant.jar 
+		$(JTREG_IMAGEDIR)/lib/jcov_network_saver.jar 
 	$(RM) $(@:%.ok=%/lib) $(@:%.ok=%/work) $(@:%.ok=%/report)
 	$(MKDIR) -p $(@:%.ok=%/lib)
 	$(J2SEJAVAC) -d $(@:%.ok=%/lib) `find $(TESTDIR)/javatest/regtest/jcov/src/ -name \*.java`

@@ -1178,7 +1178,7 @@ public class Main {
                 final String XMS = "-Xms";
                 final String defaultInitialHeap = "20m";
                 String insert = jcovManager.instrClasses + File.pathSeparator
-                                + jcovManager.jcov_implant_jar;
+                                + jcovManager.jcov_network_saver_jar;
                 boolean found_Xbootclasspath_p = false;
                 boolean found_Xms = false;
                 for (int i = 0; i < testVMOpts.size(); i++) {

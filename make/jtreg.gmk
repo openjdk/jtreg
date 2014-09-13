@@ -347,14 +347,16 @@ $(JTREG_IMAGEDIR)/lib/jcov.jar: $(call PosixPath,$(JCOV_HOME)/lib/jcov.jar)
 	$(MKDIR) -p $(@D)
 	$(CP) $< $@
 
-$(JTREG_IMAGEDIR)/lib/jcov_implant.jar: $(call PosixPath,$(JCOV_HOME)/lib/jcov_implant.jar)
+JCOV_NETWORK_SAVER = jcov_network_saver.jar
+
+$(JTREG_IMAGEDIR)/lib/$(JCOV_NETWORK_SAVER): $(call PosixPath,$(JCOV_HOME)/lib/$(JCOV_NETWORK_SAVER))
 	$(RM) $@
 	$(MKDIR) -p $(@D)
 	$(CP) $< $@
 
 TARGETS.ZIP.jtreg += \
     $(JTREG_IMAGEDIR)/lib/jcov.jar \
-    $(JTREG_IMAGEDIR)/lib/jcov_implant.jar
+    $(JTREG_IMAGEDIR)/lib/$(JCOV_NETWORK_SAVER)
 
 endif #JCOV_HOME
 

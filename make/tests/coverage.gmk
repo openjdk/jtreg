@@ -35,7 +35,7 @@ coverage:
 	$(RM) $(COVDIR)
 	$(MAKE) BUILDDIR=$(COVDIR)/work
 	$(JCOV) instr -template $(COVDIR)/template.xml $(COVDIR)/work/images/jtreg/lib/jtreg.jar
-	echo "Class-Path: javatest.jar jh.jar jcov_implant.jar" > $(COVDIR)/manifest
+	echo "Class-Path: javatest.jar jh.jar jcov_network_saver.jar" > $(COVDIR)/manifest
 	$(JAR) umf $(COVDIR)/manifest $(COVDIR)/work/images/jtreg/lib/jtreg.jar
 	$(JCOV) grabber -verbose -template $(COVDIR)/template.xml -output $(COVDIR)/results.xml &
 	sleep 5

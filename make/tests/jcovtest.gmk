@@ -32,7 +32,7 @@ $(BUILDDIR)/jcovtest.ok: \
 	$(JCOV) Instr \
 		-include com/sun/javatest/regtest/.\* \
 		-template $(BUILDDIR)/jcov/template.xml \
-		-implantrt $(JCOV_HOME)/lib/jcov_implant.jar \
+		-implantrt $(JCOV_HOME)/lib/jcov_network_saver.jar \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar
 	$(JCOV) Grabber \
 		-output $(BUILDDIR)/jcov/result.xml \

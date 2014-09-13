@@ -53,10 +53,10 @@ public class JCovManager {
         File f = (s != null) ? new File(s) : new File(libDir, "jcov.jar");
         if (f.exists())
             jcov_jar = f;
-        s = System.getProperty("jcov_implant.jar");
-        f = (s != null) ? new File(s) : new File(libDir, "jcov_implant.jar");
+        s = System.getProperty("jcov_network_saver.jar");
+        f = (s != null) ? new File(s) : new File(libDir, "jcov_network_saver.jar");
         if (f.exists())
-            jcov_implant_jar = f;
+            jcov_network_saver_jar = f;
 
         if (System.getProperty("jcov.port") != null)
             grabberPort = Integer.getInteger("jcov.port");
@@ -146,7 +146,7 @@ public class JCovManager {
     }
 
     boolean isJCovInstalled() {
-        return (jcov_jar != null) && (jcov_implant_jar != null);
+        return (jcov_jar != null) && (jcov_network_saver_jar != null);
     }
 
     boolean isEnabled() {
@@ -478,7 +478,7 @@ public class JCovManager {
     }
 
     File jcov_jar;
-    File jcov_implant_jar;
+    File jcov_network_saver_jar;
 
     private File classes;
     private File patch;

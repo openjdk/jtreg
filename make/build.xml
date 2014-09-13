@@ -79,7 +79,7 @@
         <condition property="jcov.ok">
             <and>
                 <available file="${jcov.home}/lib/jcov.jar"/>
-                <available file="${jcov.home}/lib/jcov_implant.jar"/>
+                <available file="${jcov.home}/lib/jcov_network_saver.jar"/>
             </and>
         </condition>
     </target>
@@ -302,7 +302,7 @@
 
     <target name="import-jcov" depends="-init" if="jcov.ok">
         <copy file="${jcov.home}/lib/jcov.jar" tofile="${dist.jtreg.dir}/lib/jcov.jar"/>
-        <copy file="${jcov.home}/lib/jcov_implant.jar" tofile="${dist.jtreg.dir}/lib/jcov_implant.jar"/>
+        <copy file="${jcov.home}/lib/jcov_network_saver.jar" tofile="${dist.jtreg.dir}/lib/jcov_network_saver.jar"/>
     </target>
 
     <target name="import-jtharness" depends="-init,import-javahelp" if="jtharness.ok">
