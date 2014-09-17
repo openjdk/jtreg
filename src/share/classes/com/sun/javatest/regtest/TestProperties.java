@@ -65,6 +65,9 @@ public class TestProperties {
         groupFiles = (gf == null)
                 ? Collections.<String>emptyList()
                 : Arrays.asList(gf.split("\\s+"));
+
+        String version = e.properties.getProperty("requiredVersion");
+        requiredVersion = new Version(version);
     }
 
     Set<String> getValidKeys(File file) throws TestSuite.Fault {
@@ -120,6 +123,10 @@ public class TestProperties {
         return e.libDirs;
     }
 
+    Version getRequiredVersion() {
+        return requiredVersion;
+    }
+
     private File canon(File f) {
         try {
             return f.getCanonicalFile();
@@ -133,6 +140,7 @@ public class TestProperties {
     /*private*/ final Set<String> validKeys;
     final ExecMode defaultExecMode;
     final List<String> groupFiles;
+    final Version requiredVersion;
 
     static class Cache {
         class Entry {

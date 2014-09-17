@@ -1056,6 +1056,14 @@ public class Main {
         testManager.addGroups(testGroupArgs);
         boolean multiRun = testManager.isMultiRun();
 
+        for (RegressionTestSuite ts: testManager.getTestSuites()) {
+            Version requiredVersion = ts.getRequiredVersion();
+            Version currentVersion = Version.getCurrent();
+            if (requiredVersion.compareTo(currentVersion) > 0) {
+                throw new Fault(i18n, "main.requiredVersion", ts.getPath(), requiredVersion.version, requiredVersion.build, currentVersion.version, currentVersion.build);
+            }
+        }
+
         if (execMode == null) {
             Set<ExecMode> modes = EnumSet.noneOf(ExecMode.class);
             for (RegressionTestSuite ts: testManager.getTestSuites()) {

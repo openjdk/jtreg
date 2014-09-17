@@ -844,7 +844,7 @@ public class RegressionScript extends Script {
     static String getVersion() {
         if (version == null) {
             StringBuilder sb = new StringBuilder();
-            Version v = Version.instance();
+            Version v = Version.getCurrent();
             sb.append(v.product == null ? "jtreg" : v.product);
             if (v.version != null)
                 sb.append(' ').append(v.version);

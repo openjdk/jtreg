@@ -203,7 +203,7 @@ public class Help {
      * @param out the stream to which to write the information
      */
     void showVersion(PrintWriter out) {
-        Version v = Version.instance();
+        Version v = Version.getCurrent();
 
         String unknown = i18n.getString("help.version.unknown");
 

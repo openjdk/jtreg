@@ -194,6 +194,10 @@ public class RegressionTestSuite extends TestSuite
         return properties.needsExclusiveAccess(td.getFile());
     }
 
+    Version getRequiredVersion() {
+        return properties.getRequiredVersion();
+    }
+
     private final TestProperties properties;
     private static final I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(RegressionTestSuite.class);
 }
