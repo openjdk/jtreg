@@ -51,7 +51,7 @@
 <p>Comments and questions to: 
 <a href="mailto:jtreg-use@openjdk.java.net">jtreg-use@openjdk.java.net</a>.
 <br>
-1.33 (draft), 8 July, 2014
+1.34 (draft), 16 September, 2014
 </div>
 
 <p>This is a specification document, not a tutorial.  For more basic information
@@ -732,6 +732,12 @@ this test-suite.
 <dd>Where to find group definition files.
 A space separated list of files. Optional files should be enclosed in 
 square brackets.
+
+<dt><code>requiredVersion <var>&lt;version&gt;</var></code>
+<dd>Minimal version of the harness required for this test-suite.
+A version string in the format "[0-9.]+ ?b[0-9]+" (without the quotes). For example
+a value of "4.1 b03" declares that at least that version of the harness is required
+to run all the tests in the test suite.
 </dl>
 
 <p>The following properties may appear in either TEST.ROOT or any TEST.properties file:
