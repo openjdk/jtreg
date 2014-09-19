@@ -347,7 +347,7 @@ public class TestProperties {
             map = new HashMap<File, SoftReference<Entry>>();
         }
 
-        Entry getEntry(File dir) throws TestSuite.Fault {
+        synchronized Entry getEntry(File dir) throws TestSuite.Fault {
             if (lastUsedEntry == null || !lastUsedEntry.dir.equals(dir))
                 lastUsedEntry = getEntryInternal(dir);
             return lastUsedEntry;
