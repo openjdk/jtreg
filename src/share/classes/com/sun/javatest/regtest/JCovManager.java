@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012, 2014, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -96,9 +96,9 @@ public class JCovManager {
             }
         },
 
-        new Option(STD, JCOV, null, "jcov/source") {
+        new Option(STD, JCOV, "jcov/source", "jcov/source", "jcov/sourcepath") {
             public void process(String opt, String arg) {
-                source = new File(arg);
+                source = new SearchPath(arg);
             }
         },
 
@@ -336,7 +336,7 @@ public class JCovManager {
         opts.add("repgen");
 
         opts.add("-source");
-        opts.add(source.getPath());
+        opts.add(source.toString());
 
         opts.add("-output");
         opts.add(report.getPath());
@@ -480,7 +480,7 @@ public class JCovManager {
 
     private File classes;
     private File patch;
-    private File source;
+    private SearchPath source;
     private String verbose;
     private boolean printEnv;
     private List<String> includeOpts = new ArrayList<String>();
