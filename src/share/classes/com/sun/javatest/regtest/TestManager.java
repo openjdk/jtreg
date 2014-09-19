@@ -120,6 +120,10 @@ public class TestManager {
         }
     }
 
+    boolean isEmpty() {
+        return map.isEmpty();
+    }
+
     boolean isMultiRun() {
         return (map.size() > 1);
     }

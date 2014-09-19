@@ -1054,6 +1054,10 @@ public class Main {
         testManager.addTests(testFileArgs, false);
         testManager.addTests(antFileArgs, true);
         testManager.addGroups(testGroupArgs);
+
+        if (testManager.isEmpty())
+            throw testManager.new NoTests();
+
         boolean multiRun = testManager.isMultiRun();
 
         for (RegressionTestSuite ts: testManager.getTestSuites()) {
