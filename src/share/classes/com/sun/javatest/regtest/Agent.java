@@ -227,7 +227,7 @@ public class Agent {
     public Status doMainAction(
             String testName,
             Map<String, String> testProps,
-            Path testClassPath,
+            SearchPath testClassPath,
             String testClass,
             List<String> testArgs,
             int timeout,
@@ -529,7 +529,7 @@ public class Agent {
                 traceOut.println("Agent.Server.doMain");
             String testName = in.readUTF();
             Map<String, String> testProps = readProperties(in);
-            Path classPath = new Path(in.readUTF());
+            SearchPath classPath = new SearchPath(in.readUTF());
             String className = in.readUTF();
             List<String> classArgs = readList(in);
             int timeout = in.readInt();

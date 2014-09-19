@@ -170,7 +170,7 @@ public class CompileAction extends Action {
                     classpathp = true;
                     // assume the next element provides the classpath, add
                     // test.classes and test.src and lib-list to it
-                    Path p = new Path(args[i+1]).append(script.getCompileClassPath());
+                    SearchPath p = new SearchPath(args[i+1]).append(script.getCompileClassPath());
                     args[i+1] = p.toString();
                 }
 
@@ -183,7 +183,7 @@ public class CompileAction extends Action {
                     sourcepathp = true;
                     // assume the next element provides the sourcepath, add test.src
                     // and lib-list to it
-                    Path p = new Path(args[i+1]).append(script.getCompileSourcePath());
+                    SearchPath p = new SearchPath(args[i+1]).append(script.getCompileSourcePath());
                     args[i+1] = p.toString();
                 }
             }
@@ -309,7 +309,7 @@ public class CompileAction extends Action {
         envArgs.addAll(Arrays.asList(script.getEnvVars()));
 
         // Why JavaTest?
-        Path cp = new Path(script.getJavaTestClassPath(), script.getCompileClassPath());
+        SearchPath cp = new SearchPath(script.getJavaTestClassPath(), script.getCompileClassPath());
         if (useCLASSPATHEnv) {
             envArgs.add("CLASSPATH=" + cp);
         }
@@ -511,7 +511,7 @@ public class CompileAction extends Action {
         Agent agent;
         try {
             JDK jdk = script.getCompileJDK();
-            Path classpath = new Path(script.getJavaTestClassPath(), jdk.getJDKClassPath());
+            SearchPath classpath = new SearchPath(script.getJavaTestClassPath(), jdk.getJDKClassPath());
             agent = script.getAgent(jdk, classpath, script.getTestVMJavaOptions());
         } catch (IOException e) {
             return error(AGENTVM_CANT_GET_VM + ": " + e);
@@ -570,7 +570,7 @@ public class CompileAction extends Action {
             String name = e.getKey();
             String value = e.getValue();
             if (name.equals("test.class.path.prefix")) {
-                Path cp = new Path(value, System.getProperty("java.class.path"));
+                SearchPath cp = new SearchPath(value, System.getProperty("java.class.path"));
                 p.put("java.class.path", cp.toString());
             } else {
                 p.put(e.getKey(), e.getValue());

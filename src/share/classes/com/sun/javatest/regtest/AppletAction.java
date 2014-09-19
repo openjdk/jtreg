@@ -234,7 +234,7 @@ public class AppletAction extends Action
         // available to main and applet actions via the system properties
         // "test.src" and "test.classes", respectively"
         List<String> command = new ArrayList<String>(6);
-        Path cp = new Path().append(script.getJavaTestClassPath()).append(script.getTestClassPath());
+        SearchPath cp = new SearchPath().append(script.getJavaTestClassPath()).append(script.getTestClassPath());
         if (script.isTestJDK11()) {
             command.add("CLASSPATH=" + cp);
         }

@@ -441,8 +441,6 @@ public class JCovManager {
 
         public void run() {
             try {
-                File javaHome = new File(System.getProperty("java.home"));
-                File java = new File(new File(javaHome, "bin"), "java");
                 List<String> args = new ArrayList<String>();
                 args.add(jdk.getJavaProg().getPath());
                 args.add("-jar");

@@ -112,6 +112,9 @@ public class JDK {
     }
 
     public File getToolsJar() {
+        // for now, we always return the file, even if if does not exist;
+        // it will automatically get filtered out if it is added to a SearchPath
+        // and does not exist for this JDK.
         return new File(new File(absJDK, "lib"), "tools.jar");
     }
 
@@ -128,18 +131,19 @@ public class JDK {
     }
 
     // only used for JDK 1.1
-    public Path getJavaClassPath() {
+    public SearchPath getJavaClassPath() {
         File jh = absJDK;
         File jh_lib = new File(jh, "lib");
 
-        return new Path(
+        return new SearchPath(
             new File(jh, "classes"),
             new File(jh_lib, "classes"),
             new File(jh_lib, "classes.zip"));
     }
 
-    public Path getJDKClassPath() {
-        return new Path(getToolsJar());
+    public SearchPath getJDKClassPath() {
+        // will return an empty path if tools.jar does not exist
+        return new SearchPath(getToolsJar());
     }
 
     boolean isVersion(Version v, RegressionParameters params) {

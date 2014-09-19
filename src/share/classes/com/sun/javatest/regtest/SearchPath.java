@@ -33,11 +33,11 @@ import java.util.List;
  * A path, as in a sequence of file system locations, such as directories,
  * zip files and jar files.
  */
-public class Path {
+public class SearchPath {
     /**
      * Create an empty path.
      */
-    Path() {
+    SearchPath() {
     }
 
     /**
@@ -45,7 +45,7 @@ public class Path {
      * Equivalent to {@code new Path().append(files)}.
      * @param files
      */
-    Path(List<File> files) {
+    SearchPath(List<File> files) {
         append(files);
     }
 
@@ -55,7 +55,7 @@ public class Path {
      * Equivalent to {@code new Path().append(files)}.
      * @param files
      */
-    Path(File... files) {
+    SearchPath(File... files) {
         append(files);
     }
 
@@ -64,7 +64,7 @@ public class Path {
      * Equivalent to {@code new Path().append(paths)}.
      * @param paths
      */
-    Path(Path... paths) {
+    SearchPath(SearchPath... paths) {
         append(paths);
     }
 
@@ -73,7 +73,7 @@ public class Path {
      * Equivalent to {@code new Path().append(paths)}.
      * @param paths
      */
-    Path(String... paths) {
+    SearchPath(String... paths) {
         append(paths);
     }
 
@@ -83,7 +83,7 @@ public class Path {
      * @param files files to be added to the path
      * @return the path itself
      */
-    Path append(List<File> files) {
+    SearchPath append(List<File> files) {
         for (File f: files) {
             if (f.exists()) {
                 if (value.length() > 0)
@@ -100,7 +100,7 @@ public class Path {
      * @param files files to be added to the path
      * @return the path itself
      */
-    Path append(File... files) {
+    SearchPath append(File... files) {
         for (File f: files) {
             if (f.exists()) {
                 if (value.length() > 0)
@@ -116,8 +116,8 @@ public class Path {
      * @param paths paths to be added to the path
      * @return the path itself
      */
-    Path append(Path... paths) {
-        for (Path p: paths) {
+    SearchPath append(SearchPath... paths) {
+        for (SearchPath p: paths) {
             if (p.value.length() > 0) {
                 if (value.length() > 0)
                     value += PATHSEP;
@@ -132,7 +132,7 @@ public class Path {
      * @param paths paths to be added to the path
      * @return the path itself
      */
-    Path append(String... paths) {
+    SearchPath append(String... paths) {
         for (String p: paths) {
             if (p.length() > 0) {
                 if (value.length() > 0)
@@ -162,7 +162,7 @@ public class Path {
      * @param path the subpath to be checked
      * @return true if this path contains the subpath
      */
-    boolean contains(Path path) {
+    boolean contains(SearchPath path) {
         return value.equals(path.value)
                 || value.startsWith(path.value + PATHSEP)
                 || value.endsWith(PATHSEP + path.value)
@@ -187,5 +187,5 @@ public class Path {
     }
 
     String value = "";
-    private static String PATHSEP = File.pathSeparator;
+    private static final String PATHSEP = File.pathSeparator;
 }

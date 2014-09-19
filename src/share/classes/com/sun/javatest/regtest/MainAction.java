@@ -349,14 +349,14 @@ public class MainAction extends Action
         // variable being set, so force the use here.
         final boolean useCLASSPATH = true;
 
-        Path cp = new Path();
-        Path bcp = new Path();
+        SearchPath cp = new SearchPath();
+        SearchPath bcp = new SearchPath();
         (useBootClassPath ? bcp : cp).append(script.getJavaTestClassPath());
 
         cp.append(script.getTestClassPath(useBootClassPath));
         bcp.append(script.getTestBootClassPath(useBootClassPath));
 
-        Path p = bcp.isEmpty() ? cp : bcp;
+        SearchPath p = bcp.isEmpty() ? cp : bcp;
         if (script.isJUnitRequired())
             p.append(script.getJUnitJar());
         if (script.isTestNGRequired())
@@ -458,7 +458,7 @@ public class MainAction extends Action
     } // runOtherJVM()
 
     protected Status runSameJVM() throws TestRunException {
-        Path runClasspath;
+        SearchPath runClasspath;
         String runMainClass;
         List<String> runMainArgs;
         if (driverClass == null) {
@@ -484,7 +484,7 @@ public class MainAction extends Action
 
         List<String> envVars = Arrays.asList(script.getEnvVars());
         String javaProg = script.getJavaProg();
-        Path rcp = new Path(script.getJavaTestClassPath(), script.getTestJDK().getJDKClassPath());
+        SearchPath rcp = new SearchPath(script.getJavaTestClassPath(), script.getTestJDK().getJDKClassPath());
         if (script.isJUnitRequired())
             rcp.append(script.getJUnitJar());
         if (script.isTestNGRequired())
@@ -510,7 +510,7 @@ public class MainAction extends Action
     } // runSameJVM
 
     private Status runAgentJVM() throws TestRunException {
-        Path runClasspath;
+        SearchPath runClasspath;
         String runMainClass;
         List<String> runMainArgs;
         if (driverClass == null) {
@@ -535,7 +535,7 @@ public class MainAction extends Action
         Map<String, String> javaProps = script.getTestProperties();
 
         JDK jdk = script.getTestJDK();
-        Path classpath = new Path(script.getJavaTestClassPath(), jdk.getJDKClassPath());
+        SearchPath classpath = new SearchPath(script.getJavaTestClassPath(), jdk.getJDKClassPath());
         if (script.isJUnitRequired())
             classpath.append(script.getJUnitJar());
         if (script.isTestNGRequired())
@@ -543,7 +543,7 @@ public class MainAction extends Action
 
         List<String> envVars = Arrays.asList(script.getEnvVars());
         String javaProg = script.getJavaProg();
-        Path rcp = new Path(classpath, runClasspath);
+        SearchPath rcp = new SearchPath(classpath, runClasspath);
         List<String> javaArgs = Arrays.asList("-classpath", rcp.toString());
         recorder.java(envVars, javaProg, javaProps, javaArgs, runMainClass, runMainArgs);
 
@@ -584,7 +584,7 @@ public class MainAction extends Action
     static Status runClass(
             String testName,
             Map<String, String> props,
-            Path classpath,
+            SearchPath classpath,
             String classname,
             String[] classArgs,
             int timeout,
@@ -596,7 +596,7 @@ public class MainAction extends Action
             String name = e.getKey();
             String value = e.getValue();
             if (name.equals("test.class.path.prefix")) {
-                Path cp = new Path(value, System.getProperty("java.class.path"));
+                SearchPath cp = new SearchPath(value, System.getProperty("java.class.path"));
                 p.put("java.class.path", cp.toString());
             } else {
                 p.put(e.getKey(), e.getValue());
@@ -613,7 +613,7 @@ public class MainAction extends Action
             ClassLoader loader;
             if (classpath != null) {
                 List<URL> urls = new ArrayList<URL>();
-                for (File f: new Path(classpath).split()) {
+                for (File f: new SearchPath(classpath).split()) {
                     try {
                         urls.add(f.toURI().toURL());
                     } catch (MalformedURLException e) {

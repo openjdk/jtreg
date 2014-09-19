@@ -1509,8 +1509,8 @@ public class Main {
         if (classPathAppendArg.size() > 0) {
             if (debugChild)
                 System.err.println("need classPathAppend: " + classPathAppendArg);
-            Path jcp = new Path(System.getProperty("java.class.path"));
-            Path cpa = filesToAbsolutePath(classPathAppendArg);
+            SearchPath jcp = new SearchPath(System.getProperty("java.class.path"));
+            SearchPath cpa = filesToAbsolutePath(classPathAppendArg);
             if (!(jcp.contains(cpa)))
                 return false;
         }
@@ -1612,7 +1612,7 @@ public class Main {
                 // See similar code in MainAction for otherVM tests.
                 // Note the CLASSPATH will not be exactly the same as for otherVM tests,
                 // because it will not have (and cannot have) the test-specific values.
-                Path cp = new Path().append(javatest_jar, jtreg_jar, testJDK.getToolsJar());
+                SearchPath cp = new SearchPath().append(javatest_jar, jtreg_jar, testJDK.getToolsJar());
 
                 String[] env = getEnvVars();
                 String[] env_cp = new String[env.length + 1];
@@ -1813,8 +1813,8 @@ public class Main {
         return files;
     }
 
-    private static Path filesToAbsolutePath(List<File> files) {
-        Path p = new Path();
+    private static SearchPath filesToAbsolutePath(List<File> files) {
+        SearchPath p = new SearchPath();
         for (File f: files) {
             p.append(getNormalizedFile(f));
         }

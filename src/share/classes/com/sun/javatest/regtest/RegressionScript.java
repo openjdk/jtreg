@@ -492,21 +492,21 @@ public class RegressionScript extends Script {
         return locations.absBaseClsDir();
     } // absTestClsTopDir()
 
-    Path getTestClassPath() throws TestClassException {
+    SearchPath getTestClassPath() throws TestClassException {
         return getTestClassPath(false);
     }
 
-    Path getTestClassPath(boolean testOnBootClassPath) throws TestClassException {
+    SearchPath getTestClassPath(boolean testOnBootClassPath) throws TestClassException {
         return getTestClassPaths(testOnBootClassPath)[0];
     } // getTestClassPath()
 
-    Path getTestBootClassPath(boolean testOnBootClassPath) throws TestClassException {
+    SearchPath getTestBootClassPath(boolean testOnBootClassPath) throws TestClassException {
         return getTestClassPaths(testOnBootClassPath)[1];
     } // getTestBootClassPath()
 
-    private Path[] getTestClassPaths(boolean testOnBootClassPath) throws TestClassException {
-        Path cp = new Path();
-        Path bcp = new Path();
+    private SearchPath[] getTestClassPaths(boolean testOnBootClassPath) throws TestClassException {
+        SearchPath cp = new SearchPath();
+        SearchPath bcp = new SearchPath();
         JDK jdk = getTestJDK();
         if (jdk.isVersion(JDK.Version.V1_1, params)) {
             cp.append(locations.absTestClsDir());
@@ -531,10 +531,10 @@ public class RegressionScript extends Script {
             cp.append(getCPAPPEND());
         }
 
-        return new Path[] { cp, bcp };
+        return new SearchPath[] { cp, bcp };
     }
 
-    private Path getCPAPPEND() {
+    private SearchPath getCPAPPEND() {
         // handle cpa option to jtreg
         String[] envVars = getEnvVars();
         for (String envVar : envVars) {
@@ -542,10 +542,10 @@ public class RegressionScript extends Script {
                 String cpa = (StringArray.splitEqual(envVar))[1];
                 // the cpa we were passed always uses '/' as FILESEP, make
                 // sure to use the proper one for the platform
-                return new Path(cpa.replace('/', File.separatorChar));
+                return new SearchPath(cpa.replace('/', File.separatorChar));
             }
         }
-        return new Path();
+        return new SearchPath();
     }
 
     private boolean useBootClassPath(File classdir) throws TestClassException {
@@ -557,10 +557,10 @@ public class RegressionScript extends Script {
         }
     }
 
-    private Path cacheCompileClassPath;
-    Path getCompileClassPath() throws TestClassException {
+    private SearchPath cacheCompileClassPath;
+    SearchPath getCompileClassPath() throws TestClassException {
         if (cacheCompileClassPath == null) {
-            cacheCompileClassPath = new Path();
+            cacheCompileClassPath = new SearchPath();
             JDK jdk = getCompileJDK();
             if (jdk.isVersion(JDK.Version.V1_1, params)) {
                 cacheCompileClassPath.append(locations.absTestClsDir());
@@ -599,7 +599,7 @@ public class RegressionScript extends Script {
     } // getCompileClassPath()
 
     // necessary only for JDK1.2 and above
-    private Path cacheCompileSourcePath;
+    private SearchPath cacheCompileSourcePath;
 
     /**
      * Returns the fully-qualified directory name where the source resides.
@@ -609,9 +609,9 @@ public class RegressionScript extends Script {
      *             contain the directory of the defining file of the test
      *             followed by the library list.
      */
-    Path getCompileSourcePath() {
+    SearchPath getCompileSourcePath() {
         if (cacheCompileSourcePath == null) {
-            cacheCompileSourcePath = new Path();
+            cacheCompileSourcePath = new SearchPath();
             cacheCompileSourcePath.append(locations.absTestSrcDir());
             cacheCompileSourcePath.append(locations.absSrcLibList());
         }
@@ -626,7 +626,7 @@ public class RegressionScript extends Script {
         return defaultExecMode;
     }
 
-    Path getJavaTestClassPath() {
+    SearchPath getJavaTestClassPath() {
         return params.getJavaTestClassPath();
     }
 
@@ -721,7 +721,7 @@ public class RegressionScript extends Script {
         switch (getExecMode()) {
             case AGENTVM:
             case SAMEVM:
-                Path path = new Path()
+                SearchPath path = new SearchPath()
                     .append(locations.absTestClsDir())
                     .append(locations.absTestSrcDir())
                     .append(locations.absClsLibList());
@@ -758,7 +758,7 @@ public class RegressionScript extends Script {
     /*
      * Get an agent for a VM with the given VM options.
      */
-    Agent getAgent(JDK jdk, Path classpath, List<String> testVMOpts) throws IOException {
+    Agent getAgent(JDK jdk, SearchPath classpath, List<String> testVMOpts) throws IOException {
         List<String> vmOpts = new ArrayList<String>();
         vmOpts.add("-classpath");
         vmOpts.add(classpath.toString());
@@ -781,7 +781,7 @@ public class RegressionScript extends Script {
         // variable being set, so ensure it is set. See equivalent code in MainAction
         // and Main.execChild. Note we cannot set exactly the same classpath as
         // for othervm, because we should not include test-specific info
-        Path cp = new Path(getJavaTestClassPath()).append(jdk.getToolsJar());
+        SearchPath cp = new SearchPath(getJavaTestClassPath()).append(jdk.getToolsJar());
         envVars.add("CLASSPATH=" + cp);
 
         Agent.Pool p = Agent.Pool.instance();

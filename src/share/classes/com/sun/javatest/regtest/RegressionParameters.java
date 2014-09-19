@@ -675,10 +675,10 @@ public class RegressionParameters
 
     //---------------------------------------------------------------------
 
-    Path getJavaTestClassPath() {
+    SearchPath getJavaTestClassPath() {
         if (javaTestClassPath == null) {
             File jtClsDir = ProductInfo.getJavaTestClassDir();
-            javaTestClassPath = new Path(jtClsDir);
+            javaTestClassPath = new SearchPath(jtClsDir);
 
             if (jtClsDir.getName().equals("javatest.jar")) {
                 File installDir = jtClsDir.getParentFile();
@@ -689,7 +689,7 @@ public class RegressionParameters
         return javaTestClassPath;
     }
 
-    private Path javaTestClassPath;
+    private SearchPath javaTestClassPath;
 
     //---------------------------------------------------------------------
 

@@ -492,7 +492,7 @@ public class Help {
         if (p != null)
             return p;
 
-        List<File> cp = new Path(System.getProperty("java.class.path")).split();
+        List<File> cp = new SearchPath(System.getProperty("java.class.path")).split();
         if (cp.size() == 1 && cp.get(0).getName().equals("jtreg.jar")) {
             return "java -jar jtreg.jar ";
         }
