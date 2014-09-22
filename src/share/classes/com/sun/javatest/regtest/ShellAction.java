@@ -219,6 +219,10 @@ public class ShellAction extends Action
             List<String> javaOpts = script.getTestJavaOptions();
             tmpArgs.add("TESTJAVAOPTS=" + fixupSep(StringUtils.join(javaOpts, " ")));
             tmpArgs.add("TESTTIMEOUTFACTOR=" + script.getTimeoutFactor());
+            File nativeDir = script.getNativeDir();
+            if (nativeDir != null) {
+                tmpArgs.add("TESTNATIVEPATH=" + nativeDir);
+            }
             tmpArgs.add("sh");
             tmpArgs.add(shellFile.getPath());
             tmpArgs.addAll(shellArgs);

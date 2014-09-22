@@ -99,6 +99,23 @@ $(BUILDDIR)/TestNativePath.ok: \
 		$(TESTDIR)/javatest/regtest/data/nativepath/NativesOK.java \
 		2>&1 | grep -q "no tests selected"
 
+	# Shell tests
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-jdk:$(JDK16HOME) \
+		-nativepath:$(NATIVEPATH) \
+		-e:CORRECTNATIVEPATH=$(NATIVEPATH) \
+		-w:$(BUILDDIR)/jtreg/nativepath.shell/work \
+		-r:$(BUILDDIR)/jtreg/nativepath.shell/report \
+		-verbose:fail \
+		$(TESTDIR)/javatest/regtest/data/nativepath/NativesOKShell.sh
+
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-jdk:$(JDK16HOME) \
+		-w:$(BUILDDIR)/jtreg/nativepath.shell/work \
+		-r:$(BUILDDIR)/jtreg/nativepath.shell/report \
+		-verbose:fail \
+		$(TESTDIR)/javatest/regtest/data/nativepath/NativesEmptyShell.sh
+
 	echo "$@ test passed at `date`" > $@
 
 
