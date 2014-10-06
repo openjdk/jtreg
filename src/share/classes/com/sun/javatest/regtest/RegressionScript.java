@@ -332,7 +332,7 @@ public class RegressionScript extends Script {
         return (int) (time * getTimeoutFactor());
     }
 
-    protected float getTimeoutFactor() {
+    protected synchronized float getTimeoutFactor() {
         if (cacheJavaTestTimeoutFactor == -1) {
             cacheJavaTestTimeoutFactor = 1; // default
             try {
