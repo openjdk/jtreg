@@ -679,7 +679,7 @@ public class Agent {
     static class Pool {
         private static Pool instance;
 
-        static Pool instance() {
+        static synchronized Pool instance() {
             if (instance == null)
                 instance = new Pool();
             return instance;
