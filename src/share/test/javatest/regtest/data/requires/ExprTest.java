@@ -35,6 +35,12 @@
  * @requires 1 <= 1 & 1 >= 1
  * @requires 2 > 1 & !(2 < 1) & 2 >= 1
  * @requires 1 == "1"
+ * @requires 1G == 1024M
+ * @requires 1M == 1024K
+ * @requires file.separator == "/" | file.separator == "\\"
+ * @requires line.separator == "\n" | file.separator == "\r\n"
+ * @requires os.maxMemory > 1M
+ * @requires os.maxSwap > 1M
  * @run main ExprTest
  */
 

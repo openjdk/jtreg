@@ -69,14 +69,16 @@ public class RegressionTestFinder extends TagTestFinder
       */
     public RegressionTestFinder(TestProperties properties) {
         this.properties = properties;
-        this.rootValidKeys = properties.validKeys;
         this.checkBugID = properties.checkBugID;
 
+        Set<String> rootValidKeys = properties.validKeys;
         validTagNames = getValidTagNames(rootValidKeys != null);
 
         exclude(excludeNames);
         addExtension(".sh", ShScriptCommentStream.class);
         addExtension(".html", HTMLCommentStream.class);
+
+        baseContext = new RegressionContext();
     }
 
     @SuppressWarnings("unchecked")
@@ -510,14 +512,16 @@ public class RegressionTestFinder extends TagTestFinder
      * @param tagValues The map of all of the current tag values.
      * @param value     The value of the entry currently being processed.
      */
-    private void processRequires(Map<String, String> tagValues, String value) {
+    private void processRequires(Map<String, String> tagValues, String value) throws TestSuite.Fault {
         if (value.trim().length() == 0) {
             parseError(tagValues, PARSE_REQUIRES_EMPTY);
             return;
         }
 
         try {
-            Expr.parse(value);
+            final Set<String> validPropNames = properties.getValidRequiresProperties(getCurrentFile());
+            Expr.Context c = new RegressionContext(baseContext, validPropNames);
+            Expr.parse(value, c);
         } catch (Expr.Fault f) {
             parseError(tagValues, PARSE_REQUIRES_SYNTAX + f.getMessage());
             return;
@@ -630,9 +634,9 @@ public class RegressionTestFinder extends TagTestFinder
     public static final String IGNORE  = "ignore";
     public static final String KEY     = "key";
     public static final String LIBRARY = "library";
+    public static final String REQUIRES = "requires";
     public static final String RUN     = "run";
     public static final String SUMMARY = "summary";
-    public static final String REQUIRES = "requires";
 
     private static final String LINESEP = System.getProperty("line.separator");
 
@@ -678,10 +682,10 @@ public class RegressionTestFinder extends TagTestFinder
 
     //----------member variables------------------------------------------------
 
-    private final Set<String> rootValidKeys;
     private final Set<String> validTagNames;
     private final TestProperties properties;
     private final boolean checkBugID;
+    private final RegressionContext baseContext;
 
     private static final I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(RegressionTestFinder.class);
     private static final boolean rejectTrailingBuild =

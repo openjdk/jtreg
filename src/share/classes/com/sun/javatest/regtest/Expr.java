@@ -38,11 +38,12 @@ public abstract class Expr {
     };
 
     public interface Context {
+        boolean isValidName(String name);
         String get(String name);
     }
 
-    public static Expr parse(String s) throws Fault {
-        Parser p = new Parser(s);
+    public static Expr parse(String s, Context c) throws Fault {
+        Parser p = new Parser(s, c);
         return p.parse();
     }
 
@@ -59,12 +60,12 @@ public abstract class Expr {
         }
     }
 
-    public int evalInt(Context c) throws Fault {
+    public long evalNumber(Context c) throws Fault {
         String s = eval(c);
         try {
-            return Integer.parseInt(s);
+            return Long.parseLong(s);
         } catch (NumberFormatException ex) {
-            throw new Fault("invalid integer value: " + s);
+            throw new Fault("invalid numeric value: " + s);
         }
     }
 
@@ -76,7 +77,8 @@ public abstract class Expr {
 
     static class Parser {
 
-        Parser(String text) throws Fault {
+        Parser(String text, Context context) throws Fault {
+            this.context = context;
             this.text = text;
             nextToken();
         }
@@ -155,7 +157,10 @@ public abstract class Expr {
                 case NAME:
                     String id = idValue;
                     nextToken();
-                    return new NameExpr(id);
+                    if (context.isValidName(id))
+                        return new NameExpr(id);
+                    else
+                        throw new Fault("invalid name: " + id);
 
                 case NOT:
                     nextToken();
@@ -281,6 +286,27 @@ public abstract class Expr {
                             throw new Fault("invalid string constant");
                         }
                         while (c != '\"') {
+                            if (c == '\\') {
+                                if (index < text.length()) {
+                                    c = text.charAt(index);
+                                    index++;
+                                } else {
+                                    throw new Fault("invalid string constant");
+                                }
+                                switch (c) {
+                                    // standard Java escapes; no Unicode (for now)
+                                    case 'b':  c = '\b'; break;
+                                    case 'f':  c = '\f'; break;
+                                    case 'n':  c = '\n'; break;
+                                    case 'r':  c = '\r'; break;
+                                    case 't':  c = '\t'; break;
+                                    case '\\': c = '\\'; break;
+                                    case '\'': c = '\''; break;
+                                    case '\"': c = '\"'; break;
+                                    default:
+                                        throw new Fault("invalid string constant");
+                                }
+                            }
                             sb.append(c);
                             if (index < text.length()) {
                                 c = text.charAt(index);
@@ -320,18 +346,23 @@ public abstract class Expr {
                             }
                             return;
                         } else if (Character.isDigit(c)) {
-                            int n = Character.digit(c, 10);
+                            int start = index - 1;
                             while (index < text.length()) {
                                 c = text.charAt(index);
                                 if (Character.isDigit(c)) {
-                                    n = n * 10 + Character.digit(c, 10);
                                     index++;
                                 } else {
+                                    switch (c) {
+                                        case 'k': case 'K':
+                                        case 'm': case 'M':
+                                        case 'g': case 'G':
+                                            index++;
+                                    }
                                     break;
                                 }
                             }
                             token = NUMBER;
-                            idValue = String.valueOf(n);
+                            idValue = text.substring(start, index);
                             return;
                         } else {
                             throw new Fault("unrecognized character: `" + c + "'");
@@ -341,6 +372,7 @@ public abstract class Expr {
             token = END;
         }
 
+        private final Context context;
         private final String text;
         private int index;
         private Token token;
@@ -432,7 +464,7 @@ public abstract class Expr {
         }
 
         public String eval(Context c) throws Fault {
-            return String.valueOf(left.evalInt(c) + right.evalInt(c));
+            return String.valueOf(left.evalNumber(c) + right.evalNumber(c));
         }
 
         int precedence() {
@@ -476,7 +508,7 @@ public abstract class Expr {
         }
 
         public String eval(Context c) throws Fault {
-            return String.valueOf(left.evalInt(c) / right.evalInt(c));
+            return String.valueOf(left.evalNumber(c) / right.evalNumber(c));
         }
 
         int precedence() {
@@ -520,7 +552,7 @@ public abstract class Expr {
         }
 
         public String eval(Context c) throws Fault {
-            return String.valueOf(left.evalInt(c) > right.evalInt(c));
+            return String.valueOf(left.evalNumber(c) > right.evalNumber(c));
         }
 
         int precedence() {
@@ -542,7 +574,7 @@ public abstract class Expr {
         }
 
         public String eval(Context c) throws Fault {
-            return String.valueOf(left.evalInt(c) >= right.evalInt(c));
+            return String.valueOf(left.evalNumber(c) >= right.evalNumber(c));
         }
 
         int precedence() {
@@ -564,7 +596,7 @@ public abstract class Expr {
         }
 
         public String eval(Context c) throws Fault {
-            return String.valueOf(left.evalInt(c) < right.evalInt(c));
+            return String.valueOf(left.evalNumber(c) < right.evalNumber(c));
         }
 
         int precedence() {
@@ -586,7 +618,7 @@ public abstract class Expr {
         }
 
         public String eval(Context c) throws Fault {
-            return String.valueOf(left.evalInt(c) <= right.evalInt(c));
+            return String.valueOf(left.evalNumber(c) <= right.evalNumber(c));
         }
 
         int precedence() {
@@ -608,7 +640,7 @@ public abstract class Expr {
         }
 
         public String eval(Context c) throws Fault {
-            return String.valueOf(left.evalInt(c) * right.evalInt(c));
+            return String.valueOf(left.evalNumber(c) * right.evalNumber(c));
         }
 
         int precedence() {
@@ -703,7 +735,21 @@ public abstract class Expr {
         }
 
         public String eval(Context c) throws Fault {
-            return value;
+            long scale;
+            char lastCh = value.charAt(value.length() -1);
+            switch (lastCh) {
+                case 'k': case 'K': scale = 1024; break;
+                case 'm': case 'M': scale = 1024 * 1024; break;
+                case 'g': case 'G': scale = 1024 * 1024 * 1024; break;
+                default:
+                    return value;
+            }
+            try {
+                String s = value.substring(0, value.length() - 1);
+                return String.valueOf(Long.parseLong(s) * scale);
+            } catch (NumberFormatException ex) {
+                throw new Fault("invalid numeric value: " + value);
+            }
         }
 
         int precedence() {
@@ -773,7 +819,7 @@ public abstract class Expr {
         }
 
         public String eval(Context c) throws Fault {
-            return String.valueOf(left.evalInt(c) % right.evalInt(c));
+            return String.valueOf(left.evalNumber(c) % right.evalNumber(c));
         }
 
         int precedence() {
@@ -819,7 +865,7 @@ public abstract class Expr {
         }
 
         public String eval(Context c) throws Fault {
-            return String.valueOf(left.evalInt(c) - right.evalInt(c));
+            return String.valueOf(left.evalNumber(c) - right.evalNumber(c));
         }
 
         int precedence() {

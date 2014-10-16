@@ -25,8 +25,11 @@
 
 package com.sun.javatest.regtest;
 
+import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.sun.management.OperatingSystemMXBean;
 
 /**
  * Utilities for handling OS name, arch and version.
@@ -41,6 +44,9 @@ public class OS {
     public final String simple_version;
 
     public final int processors;
+
+    public final long maxMemory;
+    public final long maxSwap;
 
     private static OS current;
 
@@ -125,6 +131,11 @@ public class OS {
         }
 
         processors = Runtime.getRuntime().availableProcessors();
+
+        OperatingSystemMXBean osMXBean =
+                (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
+        maxMemory = osMXBean.getTotalPhysicalMemorySize();
+        maxSwap = osMXBean.getTotalSwapSpaceSize();
     }
 
 }

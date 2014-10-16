@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2007, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2014, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -25,16 +25,27 @@
 
 package com.sun.javatest.regtest;
 
+import java.io.IOException;
+
 /**
   * Get a system property
   */
 public class GetSystemProperty
 {
     public static void main(String[] args) {
-        for (int i = 0; i < args.length; i++) {
-            String arg = args[i];
-            String v = System.getProperty(arg);
-            System.out.println(arg + "=" + (v == null ? "" : v));
+        if (args.length == 1 && args[0].equals("-all")) {
+            try {
+                System.getProperties().store(System.out, "system properties");
+            } catch (IOException e) {
+                System.err.println(e);
+                System.exit(1);
+            }
+        } else {
+            for (int i = 0; i < args.length; i++) {
+                String arg = args[i];
+                String v = System.getProperty(arg);
+                System.out.println(arg + "=" + (v == null ? "" : v));
+            }
         }
     }
 }

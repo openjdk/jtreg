@@ -79,6 +79,12 @@ public class TestProperties {
         return e.validKeys;
     }
 
+    Set<String> getValidRequiresProperties(File file) throws TestSuite.Fault {
+        File dir = file.isDirectory() ? file : file.getParentFile();
+        Cache.Entry e = cache.getEntry(dir);
+        return e.validRequiresProperties;
+    }
+
     ExecMode getDefaultExecMode() {
         return defaultExecMode;
     }
@@ -148,6 +154,7 @@ public class TestProperties {
             final File dir;
             final Properties properties;
             final Set<String> validKeys;
+            final Set<String> validRequiresProperties;
             final boolean useBootClassPath;
             private final Set<File> bootClassPathDirs;
             final boolean useOtherVM;
@@ -176,6 +183,9 @@ public class TestProperties {
                     // add the list of valid keys
                     validKeys = initSimpleSet(parent == null ? null : parent.validKeys, "keys");
 
+                    // add the list of valid properties for @requires
+                    validRequiresProperties = initSimpleSet(parent == null ? null : parent.validRequiresProperties, "requires.properties");
+
                     // add the list of bootclasspath dirs
                     bootClassPathDirs = initFileSet(parent == null ? null : parent.bootClassPathDirs, "bootclasspath.dirs", dir);
 
@@ -195,6 +205,7 @@ public class TestProperties {
                         throw new IllegalStateException("TEST.ROOT not found");
                     properties = parent.properties;
                     validKeys = parent.validKeys;
+                    validRequiresProperties = parent.validRequiresProperties;
                     bootClassPathDirs = parent.bootClassPathDirs;
                     otherVMDirs = parent.otherVMDirs;
                     exclusiveAccessDirs = parent.exclusiveAccessDirs;
@@ -367,5 +378,5 @@ public class TestProperties {
     private static final boolean allowLocalKeys =
             Boolean.parseBoolean(System.getProperty("javatest.regtest.allowLocalKeys", "true"));
 
-    private static I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(RegressionTestSuite.class);
+    private static final I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(RegressionTestSuite.class);
 }

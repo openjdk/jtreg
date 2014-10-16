@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, 2011, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2007, 2014, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -35,6 +35,7 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 
 /**
@@ -221,6 +222,47 @@ public class JDK {
         return fullVersion;
     }
 
+    public synchronized Properties getSystemProperties(RegressionParameters params) {
+        if (sysPropsMap == null)
+            sysPropsMap = new HashMap<Set<String>, Properties>();
+
+        List<String> vmOpts = params.getTestVMJavaOptions();
+        Set<String> vmOptsSet = new LinkedHashSet<String>(vmOpts);
+        Properties sysProps = sysPropsMap.get(vmOptsSet);
+        if (sysProps == null) {
+            sysProps = new Properties();
+            List<String> cmdArgs = new ArrayList<String>();
+            cmdArgs.add(getJavaProg().getPath());
+                        // set classpath via env variable
+            cmdArgs.addAll(vmOpts);
+            cmdArgs.add(GetSystemProperty.class.getName());
+            cmdArgs.add("-all");
+
+            ProcessBuilder pb = new ProcessBuilder(cmdArgs);
+            // since we are trying to determine the Java version, we have to assume
+            // the worst, and use CLASSPATH.
+            pb.environment().put("CLASSPATH", params.getJavaTestClassPath().toString());
+            pb.redirectErrorStream(true);
+            try {
+                Process p = pb.start();
+                sysProps.load(p.getInputStream());
+                int rc = p.waitFor();
+                if (rc != 0) {
+                    System.err.println("could not get system properties for " +
+                            getJavaProg() + " " + vmOpts);
+                }
+            } catch (InterruptedException e) {
+                // ignore, leave version as default
+            } catch (IOException e) {
+                // ignore, leave version as default
+            }
+
+            sysPropsMap.put(vmOptsSet, sysProps);
+        }
+
+        return sysProps;
+    }
+
     private String getOutput(Process p) {
         try {
             StringBuilder sb = new StringBuilder();
@@ -260,6 +302,8 @@ public class JDK {
     private String version;
     /** Value of java VMOPTS -version for this JDK. Lazily evaluated as needed. */
     private Map<Set<String>, String> fullVersions;
+    /** System properties java VMOPTS -version for this JDK. Lazily evaluated as needed. */
+    private Map<Set<String>, Properties> sysPropsMap;
 
     private static final String LINESEP  = System.getProperty("line.separator");
 }

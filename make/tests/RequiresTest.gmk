@@ -34,10 +34,11 @@ $(BUILDDIR)/RequiresTest.ok: \
 		-va \
 		$(TESTDIR)/javatest/regtest/data/requires  \
 			> $(@:%.ok=%/jt.log) 2>&1 || true
-	$(GREP) -s "Test results: passed: 2; error: 3" $(@:%.ok=%/jt.log) > /dev/null
+	$(GREP) -s "Test results: passed: 2; error: 4" $(@:%.ok=%/jt.log) > /dev/null
 	$(GREP) -s "No expression for @requires" $(@:%.ok=%)/report/text/summary.txt > /dev/null
-	$(GREP) -s "invalid integer value: one" $(@:%.ok=%)/report/text/summary.txt > /dev/null
+	$(GREP) -s "invalid numeric value: one" $(@:%.ok=%)/report/text/summary.txt > /dev/null
 	$(GREP) -s "Syntax error in @requires expression" $(@:%.ok=%)/report/text/summary.txt > /dev/null
+	$(GREP) -s "invalid name" $(@:%.ok=%)/report/text/summary.txt > /dev/null
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += \

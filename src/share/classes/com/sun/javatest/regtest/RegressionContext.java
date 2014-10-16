@@ -25,9 +25,12 @@
 
 package com.sun.javatest.regtest;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 
 /**
  *
@@ -35,13 +38,20 @@ import java.util.Map;
  * @author jjg
  */
 public class RegressionContext implements Expr.Context {
+    RegressionContext() {
+        this((RegressionParameters) null);
+    }
+
     RegressionContext(RegressionParameters params) {
+        this.params = params;
+        validPropNames = null;
+
+        values = new HashMap<String, String>();
         values.put("null", "null");
 
-        JDK jdk = params.getTestJDK();
+        JDK jdk = (params == null) ? null : params.getTestJDK();
         String jdkVersion = (jdk == null) ? null : jdk.getVersion(params);
-        if (jdkVersion != null)
-            values.put("jdk.version", jdkVersion);
+        values.put("jdk.version", jdkVersion != null ? jdkVersion : "unknown");
         // profile... (JDK 8)
         // modules... (JDK 9)
 
@@ -54,15 +64,48 @@ public class RegressionContext implements Expr.Context {
         values.put("os.family", os.family);
 
         values.put("os.processors", String.valueOf(os.processors));
+        values.put("os.maxMemory", String.valueOf(os.maxMemory));
+        values.put("os.maxSwap", String.valueOf(os.maxSwap));
 
-        processVMOptions(params.getTestVMJavaOptions());
+        processVMOptions((params == null) ? Collections.<String>emptyList() : params.getTestVMJavaOptions());
+    }
+
+    RegressionContext(RegressionContext base, Set<String> validPropNames) {
+        params = base.params;
+        values = base.values;
+        this.validPropNames = validPropNames;
+    }
+
+    public boolean isValidName(String name) {
+        // Names are validated on the first pass, when the set of valid
+        // test-specific property names is available.  On the second pass,
+        // we assume invalid names were detected on the first pass, and so
+        // now all names can be assumed to be valid
+        if (validPropNames == null)
+            return true;
+        if (values.containsKey(name))
+            return true;
+        if (name.startsWith("vm.opt."))
+            return true;
+        return validPropNames.contains(name);
     }
 
     public String get(String name) {
         String v = values.get(name);
         if (v == null && name.startsWith("vm.opt."))
             v = "null";
+        if (v == null)
+            v = getProperty(name);
         return v;
+    }
+
+    private String getProperty(String name) {
+        if (params == null)
+            throw new IllegalStateException();
+        if (sysProps == null) {
+            sysProps = params.getTestJDK().getSystemProperties(params);
+        }
+        return sysProps.getProperty(name);
     }
 
     @Override
@@ -144,5 +187,8 @@ public class RegressionContext implements Expr.Context {
     private static final String MODE_INT   = "Xint";
     private static final String MODE_COMP  = "Xcomp";
 
-    private final Map<String, String> values = new HashMap<String, String>();
+    private final RegressionParameters params;
+    private final Map<String, String> values;
+    private final Set<String> validPropNames;
+    private Properties sysProps;
 }

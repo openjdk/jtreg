@@ -47,7 +47,6 @@ import com.sun.javatest.Status;
 import com.sun.javatest.TestDescription;
 import com.sun.javatest.TestEnvironment;
 import com.sun.javatest.TestFilter;
-import com.sun.javatest.TestSuite;
 import com.sun.javatest.interview.BasicInterviewParameters;
 import com.sun.javatest.util.I18NResourceBundle;
 
@@ -55,8 +54,8 @@ public class RegressionParameters
     extends BasicInterviewParameters
     implements Parameters.EnvParameters
 {
-    public RegressionParameters(String tag, TestSuite testsuite) throws InterviewParameters.Fault {
-        super(tag, testsuite);
+    public RegressionParameters(String tag, RegressionTestSuite testSuite) throws InterviewParameters.Fault {
+        super(tag, testSuite);
 
         setTitle("jtreg Configuration Editor"); // I18N
         setEdited(false);
@@ -172,7 +171,7 @@ public class RegressionParameters
                     String requires = td.getParameter("requires");
                     if (requires == null)
                         return true;
-                    return Expr.parse(requires).evalBoolean(context);
+                    return Expr.parse(requires, context).evalBoolean(context);
                 } catch (Expr.Fault ex) {
                     filterFaults.put(td, "Error evaluating expression: " + ex.getMessage());
                     // While it may seem more obvious to return false in this case,
