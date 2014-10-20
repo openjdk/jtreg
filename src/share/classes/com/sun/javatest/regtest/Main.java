@@ -2380,7 +2380,7 @@ public class Main {
 
     private static final String[] DEFAULT_UNIX_ENV_VARS = {
         "DISPLAY", "GNOME_DESKTOP_SESSION_ID", "HOME", "LANG",
-        "LC_ALL", "LC_TYPE", "LPDEST", "PRINTER", "TZ", "XMODIFIERS"
+        "LC_ALL", "LC_CTYPE", "LPDEST", "PRINTER", "TZ", "XMODIFIERS"
     };
 
     private static final String[] DEFAULT_WINDOWS_ENV_VARS = {

@@ -1234,7 +1234,7 @@ public class OneZero {
                             <code>HOME</code>
                             <code>LANG</code>,
                             <code>LC_ALL</code>,
-                            <code>LC_TYPE</code>,
+                            <code>LC_CTYPE</code>,
                             <code>LPDEST</code>,
                             <code>PRINTER</code>,
                             <code>TZ</code> and
