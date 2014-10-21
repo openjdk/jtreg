@@ -252,9 +252,9 @@ public class JDK {
                             getJavaProg() + " " + vmOpts);
                 }
             } catch (InterruptedException e) {
-                // ignore, leave version as default
+                // ignore, leave properties undefined
             } catch (IOException e) {
-                // ignore, leave version as default
+                // ignore, leave properties undefined
             }
 
             sysPropsMap.put(vmOptsSet, sysProps);
