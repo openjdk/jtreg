@@ -71,13 +71,13 @@ $(JTREG_IMAGEDOCDIR)/%.html: $(SRCDOCDIR)/%.html
 	$(MKDIR) -p $(@D)
 	$(RM) $@
 	$(CP) $(@:$(JTREG_IMAGEDOCDIR)/%=$(SRCDOCDIR)/%) $@
-	chmod -w $@
+	chmod a-w $@
 
 $(JTREG_IMAGEDOCDIR)/%: $(SRCDOCDIR)/%
 	$(MKDIR) -p $(@D)
 	$(RM) $@
 	$(CP) $(@:$(JTREG_IMAGEDOCDIR)/%=$(SRCDOCDIR)/%) $@
-	chmod -w $@
+	chmod a-w $@
 
 #---------------------------------------------------------------------
 
@@ -112,7 +112,7 @@ $(IMAGES_DIR)/%.jar: pkgsToFiles.sh
 	    `sh pkgsToFiles.sh $(CLASSDIR) $($(@F:%.jar=PKGS.JAR.%))` \
 	    $(patsubst $(CLASSDIR)/%,-C $(CLASSDIR) %,$(sort $(FILES.JAR.$(@F:%.jar=%)))) \
 	    $(JAR_EXTRAS)
-	$(CHMOD) -w $@
+	$(CHMOD) a-w $@
 
 #----------------------------------------------------------------------
 #

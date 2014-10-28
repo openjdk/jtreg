@@ -368,7 +368,7 @@ $(JTREG_IMAGEDIR)/bin/jtreg: $(SRCSHAREBINDIR)/jtreg.sh
 	$(MKDIR) -p $(@D)
 	$(RM) $@
 	$(CP) $<  $@
-	$(CHMOD) +x,-w $@
+	$(CHMOD) a+x,a-w $@
 
 TARGETS.ZIP.jtreg += \
 	$(JTREG_IMAGEDIR)/bin/jtreg
@@ -388,7 +388,7 @@ $(JTREG_IMAGEDIR)/win32/bin/jtreg: \
 	  echo '#' ; \
 	) > $(BUILDDIR)/jtreg.warning.sed
 	$(SED) -f $(BUILDDIR)/jtreg.warning.sed $< > $@
-	$(CHMOD) +x,-w $@
+	$(CHMOD) a+x,a-w $@
 
 TARGETS.ZIP.jtreg += \
 	$(JTREG_IMAGEDIR)/linux/bin/jtreg \

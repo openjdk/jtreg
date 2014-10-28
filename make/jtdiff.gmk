@@ -64,7 +64,7 @@ $(JTREG_IMAGEDIR)/bin/jtdiff: $(SRCSHAREBINDIR)/jtdiff.sh
 	$(MKDIR) -p $(@D)
 	$(RM) $@
 	$(CP) $<  $@
-	$(CHMOD) +x,-w $@
+	$(CHMOD) a+x,a-w $@
 
 TARGETS.ZIP.jtreg += \
 	$(JTREG_IMAGEDIR)/bin/jtdiff
@@ -84,7 +84,7 @@ $(JTREG_IMAGEDIR)/win32/bin/jtdiff: \
 	  echo '#' ; \
 	) > $(BUILDDIR)/jtdiff.warning.sed
 	$(SED) -f $(BUILDDIR)/jtdiff.warning.sed $< > $@
-	$(CHMOD) +x,-w $@
+	$(CHMOD) a+x,a-w $@
 
 TARGETS.ZIP.jtreg += \
 	$(JTREG_IMAGEDIR)/linux/bin/jtdiff \
