@@ -373,28 +373,6 @@ $(JTREG_IMAGEDIR)/bin/jtreg: $(SRCSHAREBINDIR)/jtreg.sh
 TARGETS.ZIP.jtreg += \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 
-# maybe one of these days we'll get rid of the somewhat unnecessary OS name
-
-$(JTREG_IMAGEDIR)/linux/bin/jtreg \
-$(JTREG_IMAGEDIR)/solaris/bin/jtreg \
-$(JTREG_IMAGEDIR)/win32/bin/jtreg: \
-		$(SRCSHAREBINDIR)/jtreg.sh 
-	$(MKDIR) -p $(@D)
-	$(RM) $@
-	( echo '/# Usage/i\\' ; \
-	  echo '# !!!! This script is retained for backwards compatibility.\\' ; \
-	  echo '# !!!! At some point, it will be deleted.\\' ; \
-	  echo '# !!!! Please use $$JT_HOME/bin/jtreg instead\\' ; \
-	  echo '#' ; \
-	) > $(BUILDDIR)/jtreg.warning.sed
-	$(SED) -f $(BUILDDIR)/jtreg.warning.sed $< > $@
-	$(CHMOD) a+x,a-w $@
-
-TARGETS.ZIP.jtreg += \
-	$(JTREG_IMAGEDIR)/linux/bin/jtreg \
-	$(JTREG_IMAGEDIR)/solaris/bin/jtreg \
-	$(JTREG_IMAGEDIR)/win32/bin/jtreg 
-
 #----------------------------------------------------------------------
 #
 # release info
