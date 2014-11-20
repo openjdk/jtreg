@@ -48,17 +48,17 @@
 
 <div style="text-align:center">
 <h1>The JDK Test Framework: Tag Language Specification</h1>
-<p>Comments and questions to: 
+<p>Comments and questions to:
 <a href="mailto:jtreg-use@openjdk.java.net">jtreg-use@openjdk.java.net</a>.
 <br>
 1.35 (draft), 16 September, 2014
 </div>
 
 <p>This is a specification document, not a tutorial.  For more basic information
-please consult the jtreg FAQ at 
+please consult the jtreg FAQ at
 <a href="http://openjdk.java.net/jtreg">http://openjdk.java.net/jtreg</a>.
 
-<p style="margin: 10pt 15pt"><b>Contents:</b> 
+<p style="margin: 10pt 15pt"><b>Contents:</b>
 <a href="#LEADING_COMMENTS">Leading comments and defining files</a> &middot;
 <a href="#TAG_SYNTAX">Tag syntax</a> &middot;
 <a href="#INFORMATIONAL_TAGS">Informational tags</a> &middot;
@@ -113,10 +113,10 @@ token is a maximal contiguous sequence of non-whitespace characters.
 Whitespace characters, which include newline and carriage-return characters,
 are significant only insofar as they separate tokens.
 
-<p>Some files within the source directory structure may be configured to 
-implicitly be defining files. For all other files, the first token in the 
-leading comment in the defining file of a test must be "<code>@test</code>".  
-The harness discovers defining files by looking for such tokens: a file 
+<p>Some files within the source directory structure may be configured to
+implicitly be defining files. For all other files, the first token in the
+leading comment in the defining file of a test must be "<code>@test</code>".
+The harness discovers defining files by looking for such tokens: a file
 without comments is not a defining file; a file whose leading comment
 does not start with "<code>@test</code>" is not a defining file.
 
@@ -130,8 +130,8 @@ when comparing tag tokens; all tag tokens defined here are in lower case.  It
 is an error for the leading comment of a defining file to contain any tag token
 not defined here.
 
-<p>As a special case, the token "<code>@(#)</code>" is not treated as a tag token.  
-This token may appear in the arguments to an <code>@test</code> tag as part of the SCCS 
+<p>As a special case, the token "<code>@(#)</code>" is not treated as a tag token.
+This token may appear in the arguments to an <code>@test</code> tag as part of the SCCS
 identification string.
 
 <p>The arguments of a tag are simply the tokens that follow it.  The argument
@@ -201,25 +201,25 @@ first <code>@run</code> tag.
 <dd>
 <p>Label this test with the given keyword(s).  Some harnesses allow tests to be
 selected via boolean expressions on keywords.  The list of acceptable keywords
-may be specified in the <a href="#TEST_ROOT">TEST.ROOT</a> file (see below).  
+may be specified in the <a href="#TEST_ROOT">TEST.ROOT</a> file (see below).
 The <code>@key</code> tag may be used at most once in a given test.
 
 <dt>@requires <var>&lt;expression&gt;</var>
-<dd>Express a dependence on characteristics of the system being tested. 
+<dd>Express a dependence on characteristics of the system being tested.
 Some harnesses allow tests to be selected according to the characteristics
-of the system being tested. The expression may be composed of the 
+of the system being tested. The expression may be composed of the
 following elements:
 
 <ul>
-    <li>Named characteristics. See <a href="#requires_names">Appendix 1</a> 
+    <li>Named characteristics. See <a href="#requires_names">Appendix 1</a>
         for a complete list of the supported names.
     <li>Numeric values. Values must be decimal integers, optionally followed a
         suffix '<code>K</code>', '<code>M</code>' or '<code>G</code>', which as a
-        a multiplier of 1024, 1024*1024 and 1024*1024*1024 respectively. 
+        a multiplier of 1024, 1024*1024 and 1024*1024*1024 respectively.
         The resulting value must fit in a <code>long</code> variable.
     <li>String values, enclosed in double quotes '"'.
     <li>Boolean values '<code>true</code>' and '<code>false</code>'.
-    <li>Operators: 
+    <li>Operators:
         &nbsp;<code>(&nbsp;)</code>&nbsp;
         &nbsp;<code>*</code>&nbsp;
         &nbsp;<code>/</code>&nbsp;
@@ -234,7 +234,7 @@ following elements:
         &nbsp;<code>&amp;</code>&nbsp;
         &nbsp;<code>|</code>&nbsp;
         &nbsp;<code>!</code>
-</ul> 
+</ul>
 The <code>@requires</code> tag may be used at most once in a given test.
 </dl>
 
@@ -324,8 +324,8 @@ harnesses may provide a way for the user to submit text describing the failure.
 <dt>/policy=<var>&lt;file&gt;</var>
 <dd>
 <p>Define the Java system property "java.security.policy" to have the value
-"<code>=${TESTSRC}/</code><var>&lt;file&gt;</var>", where TESTSRC is the name of the directory 
-containing the defining file of the test.  This definition has the effect of making 
+"<code>=${TESTSRC}/</code><var>&lt;file&gt;</var>", where TESTSRC is the name of the directory
+containing the defining file of the test.  This definition has the effect of making
 the given file the sole source of security policies to be used by the security manager.
 In particular, the system security policy and the user's security policy will
 be ignored.  If the <code>/secure</code> option is not used then the default security
@@ -441,17 +441,17 @@ system properties "<code>java.security.manager</code>" and "<code>java.security.
 should be used instead.
 
 <dt>driver[/fail][/timeout=<var>&lt;seconds&gt;</var>] <var>&lt;class&gt;</var> <var>&lt;arg&gt;*</var>
-   
+
 <dd>
 <p>Invoke the main method of the specified class, passing any arguments after the class name.
-Although superficially similar to <code>@run main</code>, this is for use when 
+Although superficially similar to <code>@run main</code>, this is for use when
 it is desirable to perform additional setup or configuration before running
 the class containing the actual test code, possibly in a child VM.
 
 <p>The named <var>&lt;class&gt;</var> will be compiled on demand, just as though an "<code>@run</code> build
 <var>&lt;class&gt;</var>" action had been inserted before this action.  If this action requires
 classes other than <var>&lt;class&gt;</var> to be up to date, insert an appropriate build action
-before this action. 
+before this action.
 
 <dt>junit[/fail][/manual][/othervm][/policy=<var>&lt;file&gt;</var>][/secure=<var>&lt;class&gt;</var>]
         [/timeout=<var>&lt;seconds&gt;</var>] <var>&lt;vm-opt&gt;*</var> <var>&lt;class&gt;</var>
@@ -514,7 +514,7 @@ option was selected.
 in that one file will be grouped as a single jtreg test for reporting purposes.
 
 <p>Note: this action allows individual tests to be written as TestNG tests,
-and placed alongside other tests using other combinations of actions. 
+and placed alongside other tests using other combinations of actions.
 See <a href="TESTNG">below</a> for details on how to set up a directory
 containing only standard TestNG tests.
 
@@ -573,9 +573,9 @@ invoking the applet's <code>stop</code> and <code>destroy</code> methods (in tha
 <p>Invoke the Bourne shell to run <var>&lt;script&gt;</var> on the given <var>&lt;arg&gt;</var>s.  The <var>&lt;script&gt;</var>
 argument should the name of a file relative to the test source directory (see
 below), using "/" to separate directories and ".." to refer to parent
-directories.  Passes only if the script exits with an exit status of 0.  
+directories.  Passes only if the script exits with an exit status of 0.
 
-<p>On Unix systems, the <code>PATH</code> will be set to <code>/bin:/usr/bin</code> 
+<p>On Unix systems, the <code>PATH</code> will be set to <code>/bin:/usr/bin</code>
 and the following variables will be propagated if they are set:
     <code>DISPLAY</code>,
     <code>GNOME_DESKTOP_SESSION_ID</code>,
@@ -588,14 +588,14 @@ and the following variables will be propagated if they are set:
     <code>TZ</code> and
     <code>XMODIFIERS</code>.
 
-<p>On Windows systems, the following variables will be propagated if they are set: 
+<p>On Windows systems, the following variables will be propagated if they are set:
     <code>PATH</code>,
     <code>SystemDrive</code>,
     <code>SystemRoot</code>,
     <code>TEMP</code>,
     <code>TMP</code> and
     <code>windir</code>.
-    
+
 <p>In addition, a number of test-specific environment variables will be
 set, giving details about the test itself. See <a href="#testvars">Appendix 2</a>
 for the complete list of these variables.
@@ -618,11 +618,11 @@ harness in some appropriate fashion.
 be the root of a set of TestNG tests. When so configured, all Java source
 files in or under the directory are considered to be defining files, and
 thus considered to be a test to be executed. If a file has a leading comment,
-the comment may only contain informative tags and declarative tags, and 
-may not contain any action tags.   
+the comment may only contain informative tags and declarative tags, and
+may not contain any action tags.
 
 <p>Each test within the set is deemed to have any implicit <code>@build</code>
-action specifying all the Java source files in the set, followed by an 
+action specifying all the Java source files in the set, followed by an
 implicit action to execute the test as a TestNG test.
 
 <h2><a name="DIRECTORY_CONTEXT">DIRECTORY CONTEXT</a></h2>
@@ -684,18 +684,18 @@ standalone in its source directory.
 
 <p>Groups are defined in a test suite using one or more Java
 properties files. The names of these files must be listed in
-the "<code>groups</code>" entry in <a href="#TEST_ROOT">TEST.ROOT</a>. 
-If the filename is enclosed in square brackets, no error message 
-will be given if the file cannot be found. Within the property files, 
+the "<code>groups</code>" entry in <a href="#TEST_ROOT">TEST.ROOT</a>.
+If the filename is enclosed in square brackets, no error message
+will be given if the file cannot be found. Within the property files,
 each entry specifies items to be included or excluded from the group.
 <ul>
 <li>To include a test or directory of tests, simply specify the
-name of the test or directory. 
-<li>To exclude a test or directory of tests, use '-' followed by the 
-name of the test or directory. 
-There must be no spaces between the "-" and the name that follows. 
-<li>To include the contents of another group, use ':' followed by the name of the group. 
-There must be no spaces between the ":" and the name that follows. 
+name of the test or directory.
+<li>To exclude a test or directory of tests, use '-' followed by the
+name of the test or directory.
+There must be no spaces between the "-" and the name that follows.
+<li>To include the contents of another group, use ':' followed by the name of the group.
+There must be no spaces between the ":" and the name that follows.
 </ul>
 
 <h2><a name="SOURCE_STRUCTURE">SOURCE-DIRECTORY STRUCTURE AND TEST-SUITE CONFIGURATION FILES</a></h2>
@@ -707,10 +707,10 @@ of a test-source tree must therefore be identified by placing a file named
 TEST.ROOT in the root directory.  Exactly one such file must exist in every
 test-source tree.
 
-<p>The <a name="TEST_ROOT">TEST.ROOT</a> file contains test-suite configuration 
-information.  It is in the standard Java property-file format as described in the 
-specification of the <code>java.util.Properties</code> class.   
-Properties defined in this file apply to the entire test suite.  
+<p>The <a name="TEST_ROOT">TEST.ROOT</a> file contains test-suite configuration
+information.  It is in the standard Java property-file format as described in the
+specification of the <code>java.util.Properties</code> class.
+Properties defined in this file apply to the entire test suite.
 Additional properties files named TEST.properties may appear in subdirectories
 of the test suite, and may be used to provide additional configuration values
 that apply to files in that directory and its subdirectories.
@@ -728,9 +728,9 @@ A harness that supports multiple test execution modes may use
 this value to determine the default execution mode for tests in
 this test-suite.
 
-<dt><code>groups <var>&lt;files&gt;</var></code>       
+<dt><code>groups <var>&lt;files&gt;</var></code>
 <dd>Where to find group definition files.
-A space separated list of files. Optional files should be enclosed in 
+A space separated list of files. Optional files should be enclosed in
 square brackets.
 
 <dt><code>requiredVersion <var>&lt;version&gt;</var></code>
@@ -741,23 +741,23 @@ to run all the tests in the test suite.
 </dl>
 
 <p>The following properties may appear in either TEST.ROOT or any TEST.properties file:
-    
+
 <dl>
-<dt><code>keys <var>&lt;keywords&gt;</var></code> 
+<dt><code>keys <var>&lt;keywords&gt;</var></code>
 <dd>The set of valid keywords that can be used in @key tags.
-A harness that supports keyword-based test selection should reject any test 
-containing keywords that are not present in this list.  
+A harness that supports keyword-based test selection should reject any test
+containing keywords that are not present in this list.
 If this property is not present then no keywords should be accepted.
-        
+
 <dt><code>bootclasspath.dirs <var>&lt;directories&gt;</var></code>
 <dd>Directories that when used should be placed on the bootclasspath.
-    
+
 <dt><code>othervm.dirs <var>&lt;directories&gt;</var></code>
 <dd>Directories containing tests which should all be run in othervm mode.
 A harness that supports multiple test execution modes should ensure
 that all tests in the specified directories are run in <code>othervm</code>
 mode.
-    
+
 <dt><code>exclusiveAccess.dirs <var>&lt;directories&gt;</var></code>
 <dd>Directories containing tests which should not be run concurrently at
 the same time as other tests.
@@ -767,9 +767,9 @@ tests in the same directory is being run.
 
 <dt><code>TestNG.dirs <var>&lt;directories&gt;</var></code>
 <dd>Directories containing TestNG-style tests.
-  
+
 <dt><code>lib.dirs <var>&lt;directories&gt;</var></code>
-<dd>Default library directories used by all tests in or under the directory 
+<dd>Default library directories used by all tests in or under the directory
 containing this property declaration.
 </dl>
 
@@ -777,14 +777,14 @@ containing this property declaration.
 <h2><a name="DEFAULTS">DEFAULTS</a></h2>
 
 <p>If no <code>@run</code> tags are present in a defining file, a default is assumed depending
-upon the file's filename extension. 
+upon the file's filename extension.
 
 <table summary="defaults">
     <tr class="even"><th>File type<th>Default<th>Notes
-            
+
     <tr class="odd"><td>.java<td><code>@run main <var>&lt;name&gt;</var></code>
         <td><var>&lt;name&gt;</var> is the name of the file without the ".java" suffix
-            
+
     <tr class="even"><td>.sh<td><code>@run shell <var>&lt;file&gt;</var></code><td>
     <tr class="odd"><td>.html<td><code>@run applet <var>&lt;file&gt;</var></code><td>
 </table>
@@ -827,7 +827,7 @@ against a reference file:
  */
 </pre>
 
-<p>Remove <code>Bar</code>'s class file, if it exists, then compile <code>Foo</code>, 
+<p>Remove <code>Bar</code>'s class file, if it exists, then compile <code>Foo</code>,
 then compile <code>Bar</code>, and finally run <code>Bar</code>, which is expected to fail:
 
 <pre class="example">
@@ -881,31 +881,31 @@ paranoid.sp policy file:
 
 <tbody>
 <tr class="odd"><td><code>jdk.version</code>
-    <td>The JDK version, as given by <code>java.specification.version</code> 
+    <td>The JDK version, as given by <code>java.specification.version</code>
         system property of the test JDK.
     <td>
     <td>
-        
+
 <tr class="even"><td><code>os.name</code>
     <td>The operating system name, as given by the corresponding system property.
     <td>
     <td>
-        
+
 <tr class="odd"><td><code>os.family</code>
     <td>The operation system family, derived from the operating sytsem name.
     <td>One of <code>linux</code> <code>mac</code> <code>solaris</code> <code>windows</code>
     <td>first word of <code>os.name</code>	
-        
+
 <tr class="even"><td><code>os.arch</code>
     <td>The operating system architecture, as given by the corresponding system property.
     <td>
     <td>
-        
+
 <tr class="odd"><td><code>os.simpleArch</code>
     <td>A simplified representation of the operating system architecture.
     <td>One of <code>x64</code> <code>i586</code> <code>ppc</code>
     <td>same as <code>os.arch</code>
-  
+
 <tr class="even"><td><code>os.version</code>
     <td>The operating system version, as given by the corresponding system property.
     <td>
@@ -914,7 +914,7 @@ paranoid.sp policy file:
 <tr class="odd"><td><code>os.simpleVersion</code>
     <td>A simplified representation of the operating system version.
     <td><code><i>N</i>.0</code> or <code><i>N</i>.<i>M</i></code>,
-        where <code><i>N</i></code> and <code><i>M</i></code> 
+        where <code><i>N</i></code> and <code><i>M</i></code>
         are first two numbers in <code>os.version</code>
     <td><code>99.99</code>
 
@@ -922,27 +922,27 @@ paranoid.sp policy file:
     <td>The kind of VM, derived from the options <code>-client</code> <code>-server</code>
     <td>One of <code>client</code> <code>server</code>
     <td>
-        
+
 <tr><td><code>vm.bits</code>
     <td>The kind of VM, derived from the options <code>-d32</code> <code>-d64</code>
     <td>One of <code>d32</code> <code>d64</code>
     <td>
-        
+
 <tr class="even"><td><code>vm.gc</code>
     <td>The garbage collection strategy, derived from the option <code>-XX:+Use<i>name</i>GC</code>
     <td><code><i>name</i></code>
     <td>
-        
+
 <tr class="odd"><td><code>vm.compMode</code>
     <td>The VM compilation mode, derived from the options <code>-Xcomp</code> <code>-Xint</code> <code>-Xmixed</code>
     <td>One of <code>Xcomp</code> <code>Xint</code> <code>Xmixed</code>
     <td>
-        
+
 <tr class="even"><td><code>vm.opt.<i>switch</i></code>
     <td>A boolean VM option, derived from option <code>-XX:+<i>switch</i></code> or <code>-XX:-<i>switch</i></code>
     <td><code>true</code> <code>false</code>
     <td>
-        
+
 <tr class="odd"><td><code>vm.opt.<i>name</i></code>
     <td>A VM option, derived from option <code>-XX:<i>name</i>=<i>value</i></code>
     <td><code><i>value</i></code>
@@ -952,7 +952,7 @@ paranoid.sp policy file:
     <td>The name of the highest profile supported by the test JDK.
     <td>One of <code>compact1</code> <code>compact2</code> <code>compact3</code>
     <td>
-        
+
 <tr class="odd" style="color:gray"><td><code>module:<i>name</i></code>
     <td>Whether or not a module is available in the test JDK.
     <td>One of <code>true</code> <code>false</code>
@@ -980,13 +980,13 @@ action tag.
 <tr class="even">
 <td><code>test.src.path</code>
 <td><code>TESTSRCPATH</code>
-<td>The series of directories, including library directories, 
+<td>The series of directories, including library directories,
     for the source of the test.
 
 <tr class="odd">
 <td><code>test.classes</code>
 <td><code>TESTCLASSES</code>
-<td>The directory containing the compiled classes for source files in the 
+<td>The directory containing the compiled classes for source files in the
     directory containing the defining file of the test.
 
 <tr class="even">
@@ -1002,7 +1002,7 @@ action tag.
 <tr class="even">
 <td><code>test.tool.vm.opts</code>
 <td><code>TESTTOOLVMOPTS</code>
-<td>Additional VM options for all JVMs used in the test, each preceded by 
+<td>Additional VM options for all JVMs used in the test, each preceded by
     '<code>-J</code>', suitable for use in tool commands like "javac".
 
 <tr class="odd">
