@@ -124,6 +124,10 @@ public abstract class Expr {
                         nextToken();
                         e = new LessExpr(e, parseTerm());
                         break;
+                    case MATCH:
+                        nextToken();
+                        e = new MatchExpr(e, parseTerm());
+                        break;
                     case MUL:
                         nextToken();
                         e = new MultiplyExpr(e, parseTerm());
@@ -256,6 +260,15 @@ public abstract class Expr {
                             index++;
                         } else {
                             token = GT;
+                        }
+                        return;
+
+                    case '~':
+                        if (index < text.length() && text.charAt(index) == '=') {
+                            token = MATCH;
+                            index++;
+                        } else {
+                            throw new Fault("unexpected character after `~'");
                         }
                         return;
 
@@ -392,6 +405,7 @@ public abstract class Expr {
         LE("<="),
         LPAREN("("),
         LT("<"),
+        MATCH("~="),
         MUL("*"),
         NAME("<name>"),
         NE("!="),
@@ -628,6 +642,28 @@ public abstract class Expr {
         @Override
         public String toString() {
             return "`" + left + "<=" + right + "'";
+        }
+    }
+
+    //--------------------------------------------------------------------------
+
+    static class MatchExpr extends BinaryExpr {
+
+        MatchExpr(Expr left, Expr right) {
+            super(left, right);
+        }
+
+        public String eval(Context c) throws Fault {
+            return String.valueOf(left.eval(c).matches(right.eval(c)));
+        }
+
+        int precedence() {
+            return PREC_EQ;
+        }
+
+        @Override
+        public String toString() {
+            return "`" + left + "~=" + right + "'";
         }
     }
 
