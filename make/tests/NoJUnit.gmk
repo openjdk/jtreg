@@ -28,7 +28,7 @@
 $(BUILDDIR)/no-junit.ok: $(IMAGES_DIR)/open-jtreg.zip
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	$(UNZIP) -d $(@:%.ok=%) $(IMAGES_DIR)/open-jtreg.zip
-	JT_JAVA=$(JDK16HOME) $(@:%.ok=%)/jtreg/linux/bin/jtreg \
+	JT_JAVA=$(JDK16HOME) $(@:%.ok=%)/jtreg/bin/jtreg \
 		-w $(@:%.ok=%)/JTwork  \
 		-r $(@:%.ok=%)/JTreport \
 		$(TESTDIR)/javatest/regtest/data/basic/junit \

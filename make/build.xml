@@ -115,15 +115,11 @@
     </target>
 
     <target name="-dist-jtreg.bin" depends="jar-jtreg,-dist-jtreg.doc">
-        <copy file="${src.bin.dir}/jtreg.sh" tofile="${dist.jtreg.dir}/linux/bin/jtreg"/>
-        <copy file="${src.bin.dir}/jtreg.sh" tofile="${dist.jtreg.dir}/solaris/bin/jtreg"/>
-        <copy file="${src.bin.dir}/jtreg.sh" tofile="${dist.jtreg.dir}/win32/bin/jtreg"/>
-        <copy file="${src.bin.dir}/jtdiff.sh" tofile="${dist.jtreg.dir}/linux/bin/jtdiff"/>
-        <copy file="${src.bin.dir}/jtdiff.sh" tofile="${dist.jtreg.dir}/solaris/bin/jtdiff"/>
-        <copy file="${src.bin.dir}/jtdiff.sh" tofile="${dist.jtreg.dir}/win32/bin/jtdiff"/>
+        <copy file="${src.bin.dir}/jtreg.sh" tofile="${dist.jtreg.dir}/bin/jtreg"/>
+        <copy file="${src.bin.dir}/jtdiff.sh" tofile="${dist.jtreg.dir}/bin/jtdiff"/>
         <chmod dir="${dist.jtreg.dir}" perm="+x">
-            <include name="*/bin/jtreg"/>
-            <include name="*/bin/jtdiff"/>
+            <include name="bin/jtreg"/>
+            <include name="bin/jtdiff"/>
         </chmod>
     </target>
 
