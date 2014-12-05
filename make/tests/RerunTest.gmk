@@ -35,8 +35,11 @@ $(BUILDDIR)/RerunTest.agentvm.ok \
 $(BUILDDIR)/RerunTest.samevm.ok \
 $(BUILDDIR)/RerunTest.othervm.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	    $(JTREG_IMAGEDIR)/bin/jtreg
+	    $(JTREG_IMAGEDIR)/bin/jtreg \
+	    display.sh
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	DISPLAY=`sh display.sh` export DISPLAY ; \
+	trap "sh `pwd`/display.sh -kill" 0 ; \
 	unset GNOME_DESKTOP_SESSION_ID ; \
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-J-Djavatest.regtest.allowTrailingBuild=true \
