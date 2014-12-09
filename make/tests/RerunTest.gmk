@@ -41,6 +41,7 @@ $(BUILDDIR)/RerunTest.othervm.ok: \
 	DISPLAY=`sh display.sh` export DISPLAY ; \
 	trap "sh `pwd`/display.sh -kill" 0 ; \
 	unset GNOME_DESKTOP_SESSION_ID ; \
+	unset XMODIFIERS ; \
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-J-Djavatest.regtest.allowTrailingBuild=true \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
