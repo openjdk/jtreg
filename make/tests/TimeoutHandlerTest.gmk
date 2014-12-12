@@ -67,7 +67,7 @@ $(BUILDDIR)/TimeoutHandlerTestExternal.othervm.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
-	$(JDK19HOME)/bin/javac -cp $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	$(JDK18HOME)/bin/javac -cp $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		-d $(@:%.ok=%) \
 		$(TESTDIR)/javatest/regtest/data/timeouthandlers/MyHandler.java
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
