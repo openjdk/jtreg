@@ -55,6 +55,7 @@ import com.sun.javatest.TestResult;
 import com.sun.javatest.util.Timer;
 
 import static com.sun.javatest.regtest.RStatus.*;
+import java.util.TimerTask;
 
 public class Agent {
     public static class Fault extends Exception {
@@ -190,11 +191,15 @@ public class Agent {
             Map<String, String> testProps,
             List<String> cmdArgs,
             int timeout,
+            TimeoutHandler timeoutHandler,
             TestResult.Section trs)
             throws Fault {
-        // Timeouts are normally handled by the action itself, but, just in case,
-        // we set an extra timeout for the server, of the timeout with padding
-        Alarm alarm = new Alarm((timeout + 60) * 1000, testName, trs.getMessageWriter());
+        // Handle the timeout here (instead of in the agent) to make it possible
+        // to see the unchanged state of the Agent JVM when the timeout happens.
+        TimeoutTask timeoutTask = new TimeoutTask(timeoutHandler);
+        if (timeout > 0) {
+            timer.schedule(timeoutTask, (long)timeout * 1000);
+        }
         keepAlive.setEnabled(false);
         try {
             if (traceAgent)
@@ -204,22 +209,21 @@ public class Agent {
                 out.writeUTF(testName);
                 writeProperties(testProps);
                 writeList(cmdArgs);
-                out.writeInt(timeout);
                 out.flush();
             }
             if (traceAgent)
                 System.err.println("Agent.doCompileAction: request sent");
             return readResults(trs);
-        } catch (InterruptedException e) {
-            if (traceAgent)
-                System.err.println("Agent.doCompileAction: error " + e);
-            throw new Fault(e);
         } catch (IOException e) {
             if (traceAgent)
                 System.err.println("Agent.doCompileAction: error " + e);
+            if (timeoutTask.hasTimedOut()) {
+                throw new Fault(new Exception("Agent timed out with a timeout of "
+                    + timeout + " seconds"));
+            }
             throw new Fault(e);
         } finally {
-            alarm.cancel();
+            timeoutTask.cancel();
             keepAlive.setEnabled(true);
         }
     }
@@ -231,11 +235,15 @@ public class Agent {
             String testClass,
             List<String> testArgs,
             int timeout,
+            TimeoutHandler timeoutHandler,
             TestResult.Section trs)
             throws Fault {
-        // Timeouts are normally handled by the action itself, but, just in case,
-        // we set an extra timeout for the server, of the timeout with padding
-        Alarm alarm = new Alarm((timeout + 60) * 1000, testName, trs.getMessageWriter());
+        // Handle the timeout here (instead of in the agent) to make it possible
+        // to see the unchanged state of the Agent JVM when the timeout happens.
+        TimeoutTask timeoutTask = new TimeoutTask(timeoutHandler);
+        if (timeout > 0) {
+            timer.schedule(timeoutTask, (long)timeout * 1000);
+        }
         keepAlive.setEnabled(false);
         try {
             if (traceAgent) {
@@ -251,25 +259,59 @@ public class Agent {
                 out.writeUTF(testClassPath.toString());
                 out.writeUTF(testClass);
                 writeList(testArgs);
-                out.writeInt(timeout);
                 out.flush();
             }
             if (traceAgent)
                 System.err.println("Agent.doMainAction: request sent");
             return readResults(trs);
-        } catch (InterruptedException e) {
-            if (traceAgent)
-                System.err.println("Agent.doMainAction: error " + e);
-            throw new Fault(e);
         } catch (IOException e) {
             if (traceAgent)
                 System.err.println("Agent.doMainAction: error " + e);
+            if (timeoutTask.hasTimedOut()) {
+                throw new Fault(new Exception("Agent timed out with a timeout of "
+                    + timeout + " seconds"));
+            }
             throw new Fault(e);
         } finally {
-            alarm.cancel();
+            timeoutTask.cancel();
             keepAlive.setEnabled(true);
         }
     }
+
+
+    private class TimeoutTask extends TimerTask {
+
+        TimeoutTask(TimeoutHandler timeoutHandler) {
+            if (timeoutHandler == null) {
+                throw new NullPointerException("TimeoutHandler is required");
+            }
+            this.timeoutHandler = timeoutHandler;
+        }
+
+        @Override
+        public void run() {
+            timedOut = true;
+            timeoutHandler.handleTimeout(process);
+            // close the streams to release us from readResults()
+            try {
+                out.close();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            try {
+                in.close();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+
+        public boolean hasTimedOut() {
+            return timedOut;
+        }
+
+        private boolean timedOut = false;
+        private final TimeoutHandler timeoutHandler;
+    };
 
     public void close() {
         if (showAgent || traceAgent)
@@ -353,15 +395,10 @@ public class Agent {
         return p;
     }
 
-    Status readResults(TestResult.Section trs) throws IOException, InterruptedException {
+    Status readResults(TestResult.Section trs) throws IOException {
         Map<String, PrintWriter> streams = new HashMap<String, PrintWriter>();
         int op;
         while ((op = in.readByte()) != -1) {
-            if (Thread.interrupted()) {
-                if (traceAgent)
-                    System.err.println("Agent.readResults: interrupted");
-                throw new InterruptedException();
-            }
             switch (op) {
                 case OUTPUT: {
                     String name = in.readUTF();
@@ -417,6 +454,7 @@ public class Agent {
     final int id;
 
     static int count;
+    static java.util.Timer timer = new java.util.Timer("Agent Timeouts", true);
 
     private static final byte DO_COMPILE = 1;
     private static final byte DO_MAIN = 2;
@@ -504,7 +542,6 @@ public class Agent {
             String testName = in.readUTF();
             Map<String, String> testProps = readProperties(in);
             List<String> cmdArgs = readList(in);
-            int timeout = in.readInt();
 
             keepAlive.setEnabled(true);
             try {
@@ -512,7 +549,7 @@ public class Agent {
                         testName,
                         testProps,
                         cmdArgs,
-                        timeout,
+                        0,
                         this);
 
                 writeStatus(status);
@@ -532,10 +569,9 @@ public class Agent {
             SearchPath classPath = new SearchPath(in.readUTF());
             String className = in.readUTF();
             List<String> classArgs = readList(in);
-            int timeout = in.readInt();
 
             if (traceServer)
-                traceOut.println("Agent.Server.doMain: " + testName + " " + timeout);
+                traceOut.println("Agent.Server.doMain: " + testName);
 
             keepAlive.setEnabled(true);
             try {
@@ -545,7 +581,7 @@ public class Agent {
                         classPath,
                         className,
                         classArgs.toArray(new String[classArgs.size()]),
-                        timeout,
+                        0,
                         this);
                 writeStatus(status);
             } finally {

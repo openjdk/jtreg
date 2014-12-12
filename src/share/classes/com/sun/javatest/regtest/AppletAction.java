@@ -40,7 +40,6 @@ import java.util.Map;
 import java.util.Set;
 
 import com.sun.javatest.Status;
-import com.sun.javatest.lib.ProcessCommand;
 
 import static com.sun.javatest.regtest.RStatus.*;
 
@@ -234,9 +233,10 @@ public class AppletAction extends Action
         // available to main and applet actions via the system properties
         // "test.src" and "test.classes", respectively"
         List<String> command = new ArrayList<String>(6);
+        List<String> env = new ArrayList<String>();
         SearchPath cp = new SearchPath().append(script.getJavaTestClassPath()).append(script.getTestClassPath());
         if (script.isTestJDK11()) {
-            command.add("CLASSPATH=" + cp);
+            env.add("CLASSPATH=" + cp);
         }
         command.add(script.getJavaProg());
         if (!script.isTestJDK11()) {
@@ -287,12 +287,12 @@ public class AppletAction extends Action
         command.add(appArgFileName.getPath());
 
         // convert from List to String[]
-        String[] tmpCmd = new String[command.size()];
-        for (int i = 0; i < command.size(); i++)
-            tmpCmd[i] = command.get(i);
+        String[] cmdArgs = command.toArray(new String[command.size()]);
 
         String[] envVars = script.getEnvVars();
-        String[] cmdArgs = StringArray.join(envVars, tmpCmd);
+        for (int i = 0; i < envVars.length; i++)
+            env.add(envVars[i]);
+        String[] envArgs = env.toArray(new String[env.size()]);
 
         Status status;
         PrintWriter sysOut = section.createOutput("System.out");
@@ -301,7 +301,7 @@ public class AppletAction extends Action
             if (showCmd)
                 showCmd("applet", cmdArgs, section);
 
-            recorder.exec(cmdArgs);
+            recorder.exec(cmdArgs, envArgs);
 
             // RUN THE APPLET WRAPPER CLASS
             ProcessCommand cmd = new ProcessCommand();
@@ -320,12 +320,12 @@ public class AppletAction extends Action
             // allow only one applet to run at a time, we don't want the tester
             // to be inundated with applet tests
             synchronized(appletLock) {
-                if (timeout > 0)
-                    script.setAlarm(timeout*1000);
-                status = normalize(cmd.run(cmdArgs, sysErr, sysOut));
+                TimeoutHandler timeoutHandler =
+                    TimeoutHandlerProvider.createHandler(script, section);
+                status = normalize(cmd.exec(cmdArgs, envArgs, sysOut, sysErr,
+                                            (long)timeout * 1000, timeoutHandler));
             }
         } finally {
-            script.setAlarm(0);
             if (sysOut != null) sysOut.close();
             if (sysErr != null) sysErr.close();
         }

@@ -45,7 +45,6 @@ import java.util.Properties;
 import java.util.Set;
 
 import com.sun.javatest.Status;
-import com.sun.javatest.lib.ProcessCommand;
 
 import static com.sun.javatest.regtest.RStatus.*;
 
@@ -408,7 +407,6 @@ public class MainAction extends Action
         classArgs.addAll(runClassArgs);
 
         List<String> command = new ArrayList<String>();
-        command.addAll(envArgs);
         command.add(javaCmd);
         for (Map.Entry<String,String> e: javaProps.entrySet())
             command.add("-D" + e.getKey() + "=" + e.getValue());
@@ -440,13 +438,14 @@ public class MainAction extends Action
             cmd.setStatusForExit(Status.exitCodes[Status.FAILED], failed(EXEC_FAIL));
             cmd.setDefaultStatus(failed(UNEXPECT_SYS_EXIT));
 
-            if (timeout > 0)
-                script.setAlarm(timeout*1000);
+            TimeoutHandler timeoutHandler =
+                TimeoutHandlerProvider.createHandler(script, section);
 
-            status = normalize(cmd.run(cmdArgs, sysErr, sysOut));
+            String[] envArray = envArgs.toArray(new String[envArgs.size()]);
+            status = normalize(cmd.exec(cmdArgs, envArray, sysOut, sysErr,
+                                        (long)timeout * 1000, timeoutHandler));
 
         } finally {
-            script.setAlarm(0);
             sysOut.close();
             sysErr.close();
         }
@@ -555,6 +554,9 @@ public class MainAction extends Action
             return error(AGENTVM_CANT_GET_VM + ": " + e);
         }
 
+        TimeoutHandler timeoutHandler =
+                TimeoutHandlerProvider.createHandler(script, section);
+
         Status status;
         try {
             status = agent.doMainAction(
@@ -564,6 +566,7 @@ public class MainAction extends Action
                     runMainClass,
                     runMainArgs,
                     timeout,
+                    timeoutHandler,
                     section);
         } catch (Agent.Fault e) {
             if (e.getCause() instanceof IOException)
@@ -671,6 +674,7 @@ public class MainAction extends Action
                 if (alarm != null) {
                     alarm.cancel();
                     if (alarm.getState() != Alarm.State.WAITING && (error == null)) {
+                        err.println("Test timed out. No timeout information is available in samevm mode.");
                         error = new Error("timeout");
                         status = error(MAIN_THREAD_TIMEOUT);
                     }

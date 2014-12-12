@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013, 2014, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -38,18 +38,16 @@ public class ActionRecorder {
         this.action = action;
     }
 
-    public void exec(String[] cmd) {
+    public void exec(String[] cmd, String[] envArgs) {
         initPW();
-        final int ENV = 1, CMD = 2, ARG = 3;
-        int state = ENV;
+        // Env variables
+        for (String e: envArgs)
+            pw.println(escape(e) + CONT);
+        final int CMD = 1, ARG = 2;
+        int state = CMD;
         for (int i = 0; i < cmd.length; i++) {
             String word = cmd[i];
-            if (state == ENV && !word.matches("[A-Za-z0-9_]+=.*"))
-                state = CMD;
             switch (state) {
-                case ENV:
-                    pw.println(escape(word) + " \\");
-                    break;
                 case CMD:
                     pw.print("    ");
                     pw.print(escape(word));

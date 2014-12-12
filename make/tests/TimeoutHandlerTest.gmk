@@ -1,0 +1,101 @@
+#
+# Copyright (c) 2014, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+#----------------------------------------------------------------------
+
+#
+# Test that the default timeout handler in jtreg works
+#
+
+$(BUILDDIR)/TimeoutHandlerTestDefault.agentvm.ok \
+$(BUILDDIR)/TimeoutHandlerTestDefault.samevm.ok \
+$(BUILDDIR)/TimeoutHandlerTestDefault.othervm.ok: \
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	    $(JTREG_IMAGEDIR)/bin/jtreg
+	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(JDK18HOME) \
+		-va \
+		$(@:$(BUILDDIR)/TimeoutHandlerTestDefault.%.ok=-%) \
+		$(TESTDIR)/javatest/regtest/data/timeouthandlers/TestJavaHang.java  \
+			> $(@:%.ok=%/jt.log) 2>&1 || \
+	    true "non-zero exit code from JavaTest intentionally ignored"
+	# No timeout handling in samevm mode
+	if [ $(@:$(BUILDDIR)/TimeoutHandlerTestDefault.%.ok=%) != "samevm" ] ; then \
+          $(GREP) -s 'Running jstack' $(@:%.ok=%/jt.log) > /dev/null; \
+	else \
+          $(GREP) -s 'No timeout information is available in samevm mode' $(@:%.ok=%/jt.log) > /dev/null; \
+	fi
+	$(GREP) -s 'Test results: error: 1' $(@:%.ok=%/jt.log) > /dev/null
+	echo "test passed at `date`" > $@
+
+TESTS.timeouthandler += \
+	$(BUILDDIR)/TimeoutHandlerTestDefault.agentvm.ok \
+	$(BUILDDIR)/TimeoutHandlerTestDefault.samevm.ok \
+	$(BUILDDIR)/TimeoutHandlerTestDefault.othervm.ok
+
+#
+# Test that it is possible to supply an external timeout handler
+#
+
+$(BUILDDIR)/TimeoutHandlerTestExternal.agentvm.ok \
+$(BUILDDIR)/TimeoutHandlerTestExternal.samevm.ok \
+$(BUILDDIR)/TimeoutHandlerTestExternal.othervm.ok: \
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	    $(JTREG_IMAGEDIR)/bin/jtreg
+	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	$(JDK19HOME)/bin/javac -cp $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+		-d $(@:%.ok=%) \
+		$(TESTDIR)/javatest/regtest/data/timeouthandlers/MyHandler.java
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(JDK18HOME) \
+		-va \
+		-timeoutHandler:MyHandler \
+		-timeoutHandlerDir:$(@:%.ok=%) \
+		$(@:$(BUILDDIR)/TimeoutHandlerTestExternal.%.ok=-%) \
+		$(TESTDIR)/javatest/regtest/data/timeouthandlers/TestJavaHang.java  \
+			> $(@:%.ok=%/jt.log) 2>&1 || \
+	    true "non-zero exit code from JavaTest intentionally ignored"
+        # No timeout handling in samevm mode
+	if [ $(@:$(BUILDDIR)/TimeoutHandlerTestExternal.%.ok=%) != "samevm" ] ; then \
+            $(GREP) -s 'I am handling it!' $(@:%.ok=%/jt.log) > /dev/null; \
+	else \
+            $(GREP) -s 'No timeout information is available in samevm mode' $(@:%.ok=%/jt.log) > /dev/null; \
+	fi
+	$(GREP) -s 'Test results: error: 1' $(@:%.ok=%/jt.log) > /dev/null
+	echo "test passed at `date`" > $@
+
+TESTS.timeouthandler += \
+	$(BUILDDIR)/TimeoutHandlerTestExternal.agentvm.ok \
+	$(BUILDDIR)/TimeoutHandlerTestExternal.samevm.ok \
+	$(BUILDDIR)/TimeoutHandlerTestExternal.othervm.ok
+
+TESTS.jtreg += ${TESTS.timeouthandler}
+
+testtimeouthandlers: \
+	${TESTS.timeouthandler}
+

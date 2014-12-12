@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010, 2014, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -35,11 +35,11 @@ import com.sun.javatest.util.Timer;
  * Based on {@link Script.Alarm}.
  */
 class Alarm implements Timer.Timeable {
-    Alarm(int delay, String testName, PrintWriter out) {
+    Alarm(long delay, String testName, PrintWriter out) {
         this(delay, Thread.currentThread(), testName, out);
     }
 
-    Alarm(int delay, Thread threadToInterrupt, String testName, PrintWriter out) {
+    Alarm(long delay, Thread threadToInterrupt, String testName, PrintWriter out) {
         super();
         if (threadToInterrupt == null)
             throw new NullPointerException();
@@ -50,7 +50,7 @@ class Alarm implements Timer.Timeable {
         entry = alarmTimer.requestDelayedCallback(this, delay);
         if (debugAlarm)
             System.err.println(i18n.getString("alarm.started", this));
-        }
+    }
 
     synchronized void cancel() {
         if (debugAlarm) {
@@ -93,7 +93,7 @@ class Alarm implements Timer.Timeable {
 
     private final String testName;
     private final PrintWriter msgOut;
-    private final int delay;
+    private final long delay;
     private final Thread threadToInterrupt;
     private int count;
     private Timer.Entry entry;

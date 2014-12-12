@@ -43,7 +43,6 @@ import java.util.Properties;
 import java.util.Set;
 
 import com.sun.javatest.Status;
-import com.sun.javatest.lib.ProcessCommand;
 
 import static com.sun.javatest.regtest.RStatus.*;
 
@@ -345,7 +344,6 @@ public class CompileAction extends Action {
         }
 
         List<String> command = new ArrayList<String>();
-        command.addAll(envArgs);
         command.add(javacCmd);
         for (String opt: javacVMOpts)
             command.add("-J" + opt);
@@ -363,25 +361,23 @@ public class CompileAction extends Action {
         // PASS TO PROCESSCOMMAND
         PrintStringWriter stdOut = new PrintStringWriter();
         PrintStringWriter stdErr = new PrintStringWriter();
-        try {
-            ProcessCommand cmd = new ProcessCommand() {
-                @Override
-                protected Status getStatus(int exitCode, Status logStatus) {
-                    // logStatus is never used by javac, so ignore it
-                    JDK.Version v = script.getCompileJDKVersion();
-                    return getStatusForJavacExitCode(v, exitCode);
-                }
-            };
-            cmd.setExecDir(script.absTestScratchDir());
+        ProcessCommand cmd = new ProcessCommand() {
+            @Override
+            protected Status getStatus(int exitCode, Status logStatus) {
+                // logStatus is never used by javac, so ignore it
+                JDK.Version v = script.getCompileJDKVersion();
+                return getStatusForJavacExitCode(v, exitCode);
+            }
+        };
+        cmd.setExecDir(script.absTestScratchDir());
 
-            if (timeout > 0)
-                script.setAlarm(timeout*1000);
+        TimeoutHandler timeoutHandler =
+            TimeoutHandlerProvider.createHandler(script, section);
 
-            String[] cmdArgs = command.toArray(new String[command.size()]);
-            status = normalize(cmd.run(cmdArgs, stdErr, stdOut));
-        } finally {
-            script.setAlarm(0);
-        }
+        String[] cmdArgs = command.toArray(new String[command.size()]);
+        String[] envArray = envArgs.toArray(new String[envArgs.size()]);
+        status = normalize(cmd.exec(cmdArgs, envArray, stdOut, stdErr,
+                                    (long) timeout * 1000, timeoutHandler));
 
         PrintWriter sysOut = section.createOutput("System.out");
         sysOut.write(stdOut.getOutput());
@@ -517,6 +513,9 @@ public class CompileAction extends Action {
             return error(AGENTVM_CANT_GET_VM + ": " + e);
         }
 
+        TimeoutHandler timeoutHandler =
+            TimeoutHandlerProvider.createHandler(script, section);
+
         Status status;
         try {
             status = agent.doCompileAction(
@@ -524,6 +523,7 @@ public class CompileAction extends Action {
                     javacProps,
                     javacArgs,
                     timeout,
+                    timeoutHandler,
                     section);
         } catch (Agent.Fault e) {
             if (e.getCause() instanceof IOException)

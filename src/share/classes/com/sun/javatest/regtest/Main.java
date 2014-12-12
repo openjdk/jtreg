@@ -335,6 +335,33 @@ public class Main {
             }
         },
 
+        new Option(STD, MAIN, "", "th", "timeoutHandler") {
+            public void process(String opt, String arg) {
+                TimeoutHandlerProvider.setClassName(arg);
+                childArgs.add("-th:" + arg);
+            }
+        },
+
+        new Option(STD, MAIN, "", "thd", "timeoutHandlerDir") {
+            public void process(String opt, String arg) throws BadArgs {
+                arg = arg.trim();
+                if (arg.length() == 0)
+                    return;
+                ArrayList<File> timeoutHandlerPathArg = new ArrayList<File>();
+                for (String f: arg.split(File.pathSeparator)) {
+                    if (f.length() == 0)
+                        continue;
+                    timeoutHandlerPathArg.add(new File(f));
+                }
+                try {
+                    TimeoutHandlerProvider.setClassPath(timeoutHandlerPathArg);
+                } catch (MalformedURLException ex) {
+                    throw new BadArgs(i18n, ex.toString());
+                }
+                childArgs.add("-thd:" + filesToAbsolutePath(pathToFiles(arg)));
+            }
+        },
+
         new Option(NONE, MAIN, null, "g", "gui") {
             public void process(String opt, String arg) {
                 guiFlag = true;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2014, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -33,7 +33,6 @@ import java.util.List;
 import java.util.Set;
 
 import com.sun.javatest.Status;
-import com.sun.javatest.lib.ProcessCommand;
 
 import static com.sun.javatest.regtest.RStatus.*;
 
@@ -200,33 +199,37 @@ public class ShellAction extends Action
                                  shellFile.toString() +
                                  shellArgs + EXECQUOTE};
             */
-            List<String> tmpArgs = new ArrayList<String>();
+            List<String> env = new ArrayList<String>();
             for (int i = 0; i < envVars.length; i++)
-                tmpArgs.add(fixupSep(envVars[i]));
+                env.add(fixupSep(envVars[i]));
             Locations locations = script.locations;
-            tmpArgs.add("TESTSRC=" + fixupSep(locations.absTestSrcDir()));
-            tmpArgs.add("TESTSRCPATH=" + fixupSep(locations.absTestSrcPath()));
-            tmpArgs.add("TESTCLASSES=" + fixupSep(locations.absTestClsDir()));
-            tmpArgs.add("TESTCLASSPATH=" + fixupSep(locations.absTestClsPath()));
-            tmpArgs.add("COMPILEJAVA=" + fixupSep(script.getCompileJDK().getAbsolutePath()));
-            tmpArgs.add("TESTJAVA=" + fixupSep(script.getTestJDK().getAbsolutePath()));
+            env.add("TESTSRC=" + fixupSep(locations.absTestSrcDir()));
+            env.add("TESTSRCPATH=" + fixupSep(locations.absTestSrcPath()));
+            env.add("TESTCLASSES=" + fixupSep(locations.absTestClsDir()));
+            env.add("TESTCLASSPATH=" + fixupSep(locations.absTestClsPath()));
+            env.add("COMPILEJAVA=" + fixupSep(script.getCompileJDK().getAbsolutePath()));
+            env.add("TESTJAVA=" + fixupSep(script.getTestJDK().getAbsolutePath()));
             List<String> vmOpts = script.getTestVMOptions();
-            tmpArgs.add("TESTVMOPTS=" + fixupSep(StringUtils.join(vmOpts, " ")));
+            env.add("TESTVMOPTS=" + fixupSep(StringUtils.join(vmOpts, " ")));
             List<String> toolVMOpts = script.getTestToolVMOptions();
-            tmpArgs.add("TESTTOOLVMOPTS=" + fixupSep(StringUtils.join(toolVMOpts, " ")));
+            env.add("TESTTOOLVMOPTS=" + fixupSep(StringUtils.join(toolVMOpts, " ")));
             List<String> compilerOpts = script.getTestCompilerOptions();
-            tmpArgs.add("TESTJAVACOPTS=" + fixupSep(StringUtils.join(compilerOpts, " ")));
+            env.add("TESTJAVACOPTS=" + fixupSep(StringUtils.join(compilerOpts, " ")));
             List<String> javaOpts = script.getTestJavaOptions();
-            tmpArgs.add("TESTJAVAOPTS=" + fixupSep(StringUtils.join(javaOpts, " ")));
-            tmpArgs.add("TESTTIMEOUTFACTOR=" + script.getTimeoutFactor());
+            env.add("TESTJAVAOPTS=" + fixupSep(StringUtils.join(javaOpts, " ")));
+            env.add("TESTTIMEOUTFACTOR=" + script.getTimeoutFactor());
             File nativeDir = script.getNativeDir();
             if (nativeDir != null) {
-                tmpArgs.add("TESTNATIVEPATH=" + nativeDir);
+                env.add("TESTNATIVEPATH=" + nativeDir);
             }
-            tmpArgs.add("sh");
-            tmpArgs.add(shellFile.getPath());
-            tmpArgs.addAll(shellArgs);
-            String [] cmdArgs = tmpArgs.toArray(new String[tmpArgs.size()]);
+
+            List<String> command = new ArrayList<String>();
+            command.add("sh");
+            command.add(shellFile.getPath());
+            command.addAll(shellArgs);
+
+            String[] cmdArgs = command.toArray(new String[command.size()]);
+            String[] envArgs = env.toArray(new String[env.size()]);
 
             // PASS TO PROCESSCOMMAND
             PrintWriter sysOut = section.createOutput("System.out");
@@ -236,19 +239,17 @@ public class ShellAction extends Action
             try {
                 if (showCmd)
                     showCmd("shell", cmdArgs, section);
-                recorder.exec(cmdArgs);
+                recorder.exec(cmdArgs, envArgs);
 
                 // RUN THE SHELL SCRIPT
                 ProcessCommand cmd = new ProcessCommand();
                 cmd.setExecDir(script.absTestScratchDir());
 
-                if (timeout > 0)
-                    script.setAlarm(timeout*1000);
+                status = normalize(cmd.exec(cmdArgs, envArgs, sysOut, sysErr,
+                                            (long)timeout * 1000, null));
 
-                status = normalize(cmd.run(cmdArgs, sysErr, sysOut));
             } finally {
                 if (lock != null) lock.unlock();
-                script.setAlarm(0);
                 if (sysOut != null) sysOut.close();
                 if (sysErr != null) sysErr.close();
             }
