@@ -1645,12 +1645,14 @@ public class Main {
                 // because it will not have (and cannot have) the test-specific values.
                 SearchPath cp = new SearchPath().append(javatest_jar, jtreg_jar, testJDK.getToolsJar());
 
-                String[] env = getEnvVars();
-                String[] env_cp = new String[env.length + 1];
-                System.arraycopy(env, 0, env_cp, 0, env.length);
-                env_cp[env_cp.length - 1] = ("CLASSPATH=" + cp);
-
-                p = r.exec(cmd, env_cp, execDir);
+                ProcessBuilder pb = new ProcessBuilder();
+                pb.environment().clear();
+                pb.environment().putAll(getEnvVars());
+                pb.environment().put("CLASSPATH", cp.toString());
+                p = pb
+                    .command(cmd)
+                    .directory(execDir)
+                    .start();
             } catch (IOException e) {
                 err.println("cannot start child VM: " + e);
                 return EXIT_FAULT;
@@ -2208,7 +2210,7 @@ public class Main {
         thr.start();
     }
 
-    private String[] getEnvVars() {
+    private Map<String, String> getEnvVars() {
 
         Map<String, String> envVars = new TreeMap<String, String>();
         String osName = System.getProperty("os.name").toLowerCase();
@@ -2225,11 +2227,11 @@ public class Main {
             String k = e.getKey();
             String v = e.getValue();
             if (k.startsWith("JTREG_")) {
-                envVars.put(k, k + "=" + v);
+                envVars.put(k, v);
             }
         }
 
-        return envVars.values().toArray(new String[envVars.size()]);
+        return envVars;
     }
 
     private void addEnvVars(Map<String, String> table, String list) {
@@ -2252,10 +2254,11 @@ public class Main {
             if (eq == -1) {
                 String value = System.getenv(s);
                 if (value != null)
-                    table.put(s, s + "=" + value);
+                    table.put(s, value);
             } else if (eq > 0) {
                 String name = s.substring(0, eq);
-                table.put(name, s);
+                String value = s.substring(eq + 1);
+                table.put(name, value);
             }
         }
     }

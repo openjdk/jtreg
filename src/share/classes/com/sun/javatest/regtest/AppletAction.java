@@ -35,6 +35,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -233,10 +234,10 @@ public class AppletAction extends Action
         // available to main and applet actions via the system properties
         // "test.src" and "test.classes", respectively"
         List<String> command = new ArrayList<String>(6);
-        List<String> env = new ArrayList<String>();
+        Map<String, String> env = new LinkedHashMap<String, String>();
         SearchPath cp = new SearchPath().append(script.getJavaTestClassPath()).append(script.getTestClassPath());
         if (script.isTestJDK11()) {
-            env.add("CLASSPATH=" + cp);
+            env.put("CLASSPATH", cp.toString());
         }
         command.add(script.getJavaProg());
         if (!script.isTestJDK11()) {
@@ -289,10 +290,7 @@ public class AppletAction extends Action
         // convert from List to String[]
         String[] cmdArgs = command.toArray(new String[command.size()]);
 
-        String[] envVars = script.getEnvVars();
-        for (int i = 0; i < envVars.length; i++)
-            env.add(envVars[i]);
-        String[] envArgs = env.toArray(new String[env.size()]);
+        env.putAll(script.getEnvVars());
 
         Status status;
         PrintWriter sysOut = section.createOutput("System.out");
@@ -301,7 +299,7 @@ public class AppletAction extends Action
             if (showCmd)
                 showCmd("applet", cmdArgs, section);
 
-            recorder.exec(cmdArgs, envArgs);
+            recorder.exec(cmdArgs, env);
 
             // RUN THE APPLET WRAPPER CLASS
             ProcessCommand cmd = new ProcessCommand();
@@ -322,7 +320,7 @@ public class AppletAction extends Action
             synchronized(appletLock) {
                 TimeoutHandler timeoutHandler =
                     TimeoutHandlerProvider.createHandler(script, section);
-                status = normalize(cmd.exec(cmdArgs, envArgs, sysOut, sysErr,
+                status = normalize(cmd.exec(cmdArgs, env, sysOut, sysErr,
                                             (long)timeout * 1000, timeoutHandler));
             }
         } finally {

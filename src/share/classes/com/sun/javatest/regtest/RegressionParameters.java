@@ -29,8 +29,10 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -412,7 +414,7 @@ public class RegressionParameters
 
         v = (String) data.get(prefix + ENVVARS);
         if (v != null)
-            setEnvVars(StringArray.splitSeparator("\n", v));
+            setEnvVars(deserializeEnv(v, "\n"));
 
         v = (String) data.get(prefix + CHECK);
         if (v != null)
@@ -485,7 +487,7 @@ public class RegressionParameters
         String prefix = getTag();
 
         if (envVars != null)
-            data.put(prefix + ENVVARS, StringArray.join(envVars, "\n"));
+            data.put(prefix + ENVVARS, serializeEnv(envVars, "\n"));
 
         data.put(prefix + CHECK, String.valueOf(check));
         data.put(prefix + EXEC_MODE, String.valueOf(execMode));
@@ -530,22 +532,54 @@ public class RegressionParameters
 
     //---------------------------------------------------------------------
 
-    String[] getEnvVars() {
+    private Map<String, String> deserializeEnv(String envString, String sep) {
+        Map<String, String> env;
+        if ((envString != null) && (envString.length() != 0)) {
+            env = new LinkedHashMap<String, String>();
+            String[] envArr = StringArray.splitSeparator(sep, envString);
+            for (String e : envArr) {
+                String[] split = StringArray.splitSeparator("=", e);
+                env.put(split[0], split[1]);
+            }
+        } else {
+            env = Collections.emptyMap();
+        }
+        return env;
+    }
+
+    private String serializeEnv(Map<String, String> env, String sep) {
+        StringBuilder envString = new StringBuilder();
+        int cnt = env.size();
+        for(Map.Entry<String, String> var : env.entrySet()) {
+            envString
+                .append(var.getKey())
+                .append("=")
+                .append(var.getValue());
+            cnt--;
+            if (cnt != 0) {
+                envString.append(sep);
+            }
+        }
+        return envString.toString();
+    }
+
+    Map<String, String> getEnvVars() {
         if (envVars == null) {
             String envVarStr = System.getProperty("envVars");
-            if ((envVarStr != null) && (envVarStr.length() != 0))
-                envVars = StringArray.splitSeparator(",", envVarStr);
-            else
-                envVars = new String[0];
+            envVars = deserializeEnv(envVarStr, ",");
         }
         return envVars;
     }
 
-    void setEnvVars(String[] envVars) {
-        this.envVars = (envVars == null ? new String[0] : envVars);
+    void setEnvVars(Map<String, String> envVars) {
+        if (envVars == null) {
+            this.envVars = Collections.emptyMap();
+        } else {
+            this.envVars = envVars;
+        }
     }
 
-    private String[] envVars;
+    private Map<String, String> envVars;
 
     //---------------------------------------------------------------------
 

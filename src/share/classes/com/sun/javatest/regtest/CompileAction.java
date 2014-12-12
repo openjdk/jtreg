@@ -36,6 +36,7 @@ import java.io.PrintWriter;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -304,13 +305,13 @@ public class CompileAction extends Action {
         Map<String, String> javacProps = script.getTestProperties();
 
         // CONSTRUCT THE COMMAND LINE
-        List<String> envArgs = new ArrayList<String>();
-        envArgs.addAll(Arrays.asList(script.getEnvVars()));
+        Map<String, String> envArgs = new LinkedHashMap<String, String>();
+        envArgs.putAll(script.getEnvVars());
 
         // Why JavaTest?
         SearchPath cp = new SearchPath(script.getJavaTestClassPath(), script.getCompileClassPath());
         if (useCLASSPATHEnv) {
-            envArgs.add("CLASSPATH=" + cp);
+            envArgs.put("CLASSPATH", cp.toString());
         }
 
         String javacCmd = script.getJavacProg();
@@ -375,8 +376,7 @@ public class CompileAction extends Action {
             TimeoutHandlerProvider.createHandler(script, section);
 
         String[] cmdArgs = command.toArray(new String[command.size()]);
-        String[] envArray = envArgs.toArray(new String[envArgs.size()]);
-        status = normalize(cmd.exec(cmdArgs, envArray, stdOut, stdErr,
+        status = normalize(cmd.exec(cmdArgs, envArgs, stdOut, stdErr,
                                     (long) timeout * 1000, timeoutHandler));
 
         PrintWriter sysOut = section.createOutput("System.out");
@@ -435,10 +435,9 @@ public class CompileAction extends Action {
         if (showCmd)
             showCmd("compile", javacArgs, section);
 
-        List<String> envArgs = Arrays.asList(script.getEnvVars());
         String javacProg = script.getJavacProg();
         List<String> javacVMOpts = script.getTestVMJavaOptions();
-        recorder.javac(envArgs, javacProg, javacVMOpts, javacProps, javacArgs);
+        recorder.javac(script.getEnvVars(), javacProg, javacVMOpts, javacProps, javacArgs);
 
         Status status = runCompile(
                 script.getTestResult().getTestName(),
@@ -499,10 +498,9 @@ public class CompileAction extends Action {
         if (showCmd)
             showCmd("compile", javacArgs, section);
 
-        List<String> envArgs = Arrays.asList(script.getEnvVars());
         String javacProg = script.getJavacProg();
         List<String> javacVMOpts = script.getTestVMJavaOptions();
-        recorder.javac(envArgs, javacProg, javacVMOpts, javacProps, javacArgs);
+        recorder.javac(script.getEnvVars(), javacProg, javacVMOpts, javacProps, javacArgs);
 
         Agent agent;
         try {

@@ -38,11 +38,12 @@ public class ActionRecorder {
         this.action = action;
     }
 
-    public void exec(String[] cmd, String[] envArgs) {
+    public void exec(String[] cmd, Map<String, String> envArgs) {
         initPW();
         // Env variables
-        for (String e: envArgs)
-            pw.println(escape(e) + CONT);
+        for (Map.Entry<String, String> var : envArgs.entrySet()) {
+            pw.println(var.getKey() + "=" + escape(var.getValue()) + CONT);
+        }
         final int CMD = 1, ARG = 2;
         int state = CMD;
         for (int i = 0; i < cmd.length; i++) {
@@ -71,11 +72,12 @@ public class ActionRecorder {
             pw.println(line);
     }
 
-    public void java(List<String> envArgs, String javaCmd, Map<String, String> javaProps, List<String> javaOpts, String className, List<String> classArgs) {
+    public void java(Map<String, String> envArgs, String javaCmd, Map<String, String> javaProps, List<String> javaOpts, String className, List<String> classArgs) {
         initPW();
         // Env variables
-        for (String e: envArgs)
-            pw.println(escape(e) + CONT);
+        for (Map.Entry<String, String> var : envArgs.entrySet()) {
+            pw.println(var.getKey() + "=" + escape(var.getValue()) + CONT);
+        }
         // Java executable
         String indent = "    ";
         pw.println(indent + escape(javaCmd) + CONT);
@@ -115,11 +117,12 @@ public class ActionRecorder {
 //        pw.println();
 //    }
 
-    void javac(List<String> envArgs, String javacCmd, List<String> javacVMOpts, Map<String, String> javacProps, List<String> javacArgs) {
+    void javac(Map<String, String> envArgs, String javacCmd, List<String> javacVMOpts, Map<String, String> javacProps, List<String> javacArgs) {
         initPW();
         // Env variables
-        for (String e: envArgs)
-            pw.println(escape(e) + CONT);
+        for (Map.Entry<String, String> var : envArgs.entrySet()) {
+            pw.println(var.getKey() + "=" + escape(var.getValue()) + CONT);
+        }
         // javac executable
         String indent = "    ";
         pw.println(indent + escape(javacCmd) + CONT);

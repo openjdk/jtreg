@@ -31,6 +31,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -99,7 +100,7 @@ public class ProcessCommand
     /**
      * Execute a command.
      * @param cmd       The command to be executed
-     * @param cmdEnv    The environment to be passed to the command
+     * @param env    The environment to be passed to the command
      * @param out       A stream for logging normal output.
      * @param err       A stream for logging error output.
      * @param timeout   Timeout (in milliseconds) to wait for the launched process.
@@ -110,12 +111,15 @@ public class ProcessCommand
      * @see #run
      * @see #getStatus
      */
-    public Status exec(String[] cmd, String[] cmdEnv,
+    public Status exec(String[] cmd, Map<String, String> env,
                        PrintWriter out, PrintWriter err,
                        long timeout, TimeoutHandler timeoutHandler) {
         try {
-            Runtime r = Runtime.getRuntime();
-            Process p = (execDir == null ? r.exec(cmd, cmdEnv) : r.exec(cmd, cmdEnv, execDir));
+            ProcessBuilder pb = new ProcessBuilder(cmd);
+            pb.directory(execDir);
+            pb.environment().clear();
+            pb.environment().putAll(env);
+            Process p = pb.start();
             InputStream processIn = p.getInputStream();
             InputStream processErr = p.getErrorStream();
 

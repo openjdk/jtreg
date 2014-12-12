@@ -29,7 +29,9 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.sun.javatest.Status;
@@ -188,39 +190,27 @@ public class ShellAction extends Action
             // TAG-SPEC:  "The source, class, and Java home directories are made
             // available to shell-action scripts via the environment variables
             // TESTSRC, TESTCLASSES, and TESTJAVA."
-            String [] envVars = script.getEnvVars();
-            /*
-            String [] tmpArgs = {"sh", "-c", EXECQUOTE +
-                                 StringArray.join(envVars) +
-                                 " TESTSRC=" + script.absTestSrcDir() +
-                                 " TESTCLASSES=" + script.absTestClsDir() +
-                                 " TESTJAVA=" + script.javaHome() +
-                                 " sh " +
-                                 shellFile.toString() +
-                                 shellArgs + EXECQUOTE};
-            */
-            List<String> env = new ArrayList<String>();
-            for (int i = 0; i < envVars.length; i++)
-                env.add(fixupSep(envVars[i]));
+            Map<String, String> env = new LinkedHashMap<String, String>();
+            env.putAll(script.getEnvVars());
             Locations locations = script.locations;
-            env.add("TESTSRC=" + fixupSep(locations.absTestSrcDir()));
-            env.add("TESTSRCPATH=" + fixupSep(locations.absTestSrcPath()));
-            env.add("TESTCLASSES=" + fixupSep(locations.absTestClsDir()));
-            env.add("TESTCLASSPATH=" + fixupSep(locations.absTestClsPath()));
-            env.add("COMPILEJAVA=" + fixupSep(script.getCompileJDK().getAbsolutePath()));
-            env.add("TESTJAVA=" + fixupSep(script.getTestJDK().getAbsolutePath()));
+            env.put("TESTSRC", fixupSep(locations.absTestSrcDir()));
+            env.put("TESTSRCPATH", fixupSep(locations.absTestSrcPath()));
+            env.put("TESTCLASSES" , fixupSep(locations.absTestClsDir()));
+            env.put("TESTCLASSPATH", fixupSep(locations.absTestClsPath()));
+            env.put("COMPILEJAVA", fixupSep(script.getCompileJDK().getAbsolutePath()));
+            env.put("TESTJAVA", fixupSep(script.getTestJDK().getAbsolutePath()));
             List<String> vmOpts = script.getTestVMOptions();
-            env.add("TESTVMOPTS=" + fixupSep(StringUtils.join(vmOpts, " ")));
+            env.put("TESTVMOPTS", fixupSep(StringUtils.join(vmOpts, " ")));
             List<String> toolVMOpts = script.getTestToolVMOptions();
-            env.add("TESTTOOLVMOPTS=" + fixupSep(StringUtils.join(toolVMOpts, " ")));
+            env.put("TESTTOOLVMOPTS", fixupSep(StringUtils.join(toolVMOpts, " ")));
             List<String> compilerOpts = script.getTestCompilerOptions();
-            env.add("TESTJAVACOPTS=" + fixupSep(StringUtils.join(compilerOpts, " ")));
+            env.put("TESTJAVACOPTS", fixupSep(StringUtils.join(compilerOpts, " ")));
             List<String> javaOpts = script.getTestJavaOptions();
-            env.add("TESTJAVAOPTS=" + fixupSep(StringUtils.join(javaOpts, " ")));
-            env.add("TESTTIMEOUTFACTOR=" + script.getTimeoutFactor());
+            env.put("TESTJAVAOPTS", fixupSep(StringUtils.join(javaOpts, " ")));
+            env.put("TESTTIMEOUTFACTOR", script.getTimeoutFactor() + "");
             File nativeDir = script.getNativeDir();
             if (nativeDir != null) {
-                env.add("TESTNATIVEPATH=" + nativeDir);
+                env.put("TESTNATIVEPATH", nativeDir.getAbsolutePath());
             }
 
             List<String> command = new ArrayList<String>();
@@ -229,7 +219,6 @@ public class ShellAction extends Action
             command.addAll(shellArgs);
 
             String[] cmdArgs = command.toArray(new String[command.size()]);
-            String[] envArgs = env.toArray(new String[env.size()]);
 
             // PASS TO PROCESSCOMMAND
             PrintWriter sysOut = section.createOutput("System.out");
@@ -239,13 +228,13 @@ public class ShellAction extends Action
             try {
                 if (showCmd)
                     showCmd("shell", cmdArgs, section);
-                recorder.exec(cmdArgs, envArgs);
+                recorder.exec(cmdArgs, env);
 
                 // RUN THE SHELL SCRIPT
                 ProcessCommand cmd = new ProcessCommand();
                 cmd.setExecDir(script.absTestScratchDir());
 
-                status = normalize(cmd.exec(cmdArgs, envArgs, sysOut, sysErr,
+                status = normalize(cmd.exec(cmdArgs, env, sysOut, sysErr,
                                             (long)timeout * 1000, null));
 
             } finally {

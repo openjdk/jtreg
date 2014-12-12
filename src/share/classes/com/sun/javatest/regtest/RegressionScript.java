@@ -414,7 +414,7 @@ public class RegressionScript extends Script {
      *
      * @return     A string array containing the tunneled environment variables.
      */
-    String[] getEnvVars() {
+    Map<String, String> getEnvVars() {
         return params.getEnvVars();
     }
 
@@ -537,14 +537,12 @@ public class RegressionScript extends Script {
 
     private SearchPath getCPAPPEND() {
         // handle cpa option to jtreg
-        String[] envVars = getEnvVars();
-        for (String envVar : envVars) {
-            if (envVar.startsWith("CPAPPEND")) {
-                String cpa = (StringArray.splitEqual(envVar))[1];
-                // the cpa we were passed always uses '/' as FILESEP, make
-                // sure to use the proper one for the platform
-                return new SearchPath(cpa.replace('/', File.separatorChar));
-            }
+        Map<String, String> envVars = getEnvVars();
+        String cpa = envVars.get("CPAPPEND");
+        if (cpa != null) {
+            // the cpa we were passed always uses '/' as FILESEP, make
+            // sure to use the proper one for the platform
+            return new SearchPath(cpa.replace('/', File.separatorChar));
         }
         return new SearchPath();
     }
@@ -584,15 +582,13 @@ public class RegressionScript extends Script {
                 cacheCompileClassPath.append(params.getTestNGJar());
 
             // handle cpa option to jtreg
-            String[] envVars = getEnvVars();
-            for (String envVar : envVars) {
-                if (envVar.startsWith("CPAPPEND")) {
-                    String cpa = (StringArray.splitEqual(envVar))[1];
-                    // the cpa we were passed always uses '/' as FILESEP, make
-                    // sure to use the proper one for the platform
-                    cpa = cpa.replace('/', File.separatorChar);
-                    cacheCompileClassPath.append(cpa);
-                }
+            Map<String, String> envVars = getEnvVars();
+            String cpa = envVars.get("CPAPPEND");
+            if (cpa != null) {
+                // the cpa we were passed always uses '/' as FILESEP, make
+                // sure to use the proper one for the platform
+                cpa = cpa.replace('/', File.separatorChar);
+                cacheCompileClassPath.append(cpa);
             }
 
         }
@@ -776,14 +772,14 @@ public class RegressionScript extends Script {
                 return agent;
         }
 
-        List<String> envVars = new ArrayList<String>();
-        envVars.addAll(Arrays.asList(getEnvVars()));
+        Map<String, String> envVars = new HashMap<String, String>();
+        envVars.putAll(getEnvVars());
         // some tests are inappropriately relying on the CLASSPATH environment
         // variable being set, so ensure it is set. See equivalent code in MainAction
         // and Main.execChild. Note we cannot set exactly the same classpath as
         // for othervm, because we should not include test-specific info
         SearchPath cp = new SearchPath(getJavaTestClassPath()).append(jdk.getToolsJar());
-        envVars.add("CLASSPATH=" + cp);
+        envVars.put("CLASSPATH", cp.toString());
 
         Agent.Pool p = Agent.Pool.instance();
         Agent agent = p.getAgent(absTestScratchDir(), jdk, vmOpts, envVars);

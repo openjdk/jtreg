@@ -341,8 +341,8 @@ public class MainAction extends Action
         // TAG-SPEC:  "The source and class directories of a test are made
         // available to main and applet actions via the system properties
         // "test.src" and "test.classes", respectively"
-        List<String> envArgs = new ArrayList<String>();
-        envArgs.addAll(Arrays.asList(script.getEnvVars()));
+        Map<String, String> envArgs = new LinkedHashMap<String, String>();
+        envArgs.putAll(script.getEnvVars());
 
         // some tests are inappropriately relying on the CLASSPATH environment
         // variable being set, so force the use here.
@@ -362,7 +362,7 @@ public class MainAction extends Action
             p.append(script.getTestNGJar());
 
         if ((useCLASSPATH || script.isTestJDK11()) && !cp.isEmpty()) {
-            envArgs.add("CLASSPATH=" + cp);
+            envArgs.put("CLASSPATH", cp.toString());
         }
 
         String javaCmd = script.getJavaProg();
@@ -441,8 +441,7 @@ public class MainAction extends Action
             TimeoutHandler timeoutHandler =
                 TimeoutHandlerProvider.createHandler(script, section);
 
-            String[] envArray = envArgs.toArray(new String[envArgs.size()]);
-            status = normalize(cmd.exec(cmdArgs, envArray, sysOut, sysErr,
+            status = normalize(cmd.exec(cmdArgs, envArgs, sysOut, sysErr,
                                         (long)timeout * 1000, timeoutHandler));
 
         } finally {
@@ -481,7 +480,6 @@ public class MainAction extends Action
         // "test.src" and "test.classes", respectively"
         Map<String, String> javaProps = script.getTestProperties();
 
-        List<String> envVars = Arrays.asList(script.getEnvVars());
         String javaProg = script.getJavaProg();
         SearchPath rcp = new SearchPath(script.getJavaTestClassPath(), script.getTestJDK().getJDKClassPath());
         if (script.isJUnitRequired())
@@ -490,7 +488,7 @@ public class MainAction extends Action
             rcp.append(script.getTestNGJar());
         rcp.append(runClasspath);
         List<String> javaArgs = Arrays.asList("-classpath", rcp.toString());
-        recorder.java(envVars, javaProg, javaProps, javaArgs, runMainClass, runMainArgs);
+        recorder.java(script.getEnvVars(), javaProg, javaProps, javaArgs, runMainClass, runMainArgs);
 
         // delegate actual work to shared method
         Status status = runClass(
@@ -540,11 +538,10 @@ public class MainAction extends Action
         if (script.isTestNGRequired())
             classpath.append(script.getTestNGJar());
 
-        List<String> envVars = Arrays.asList(script.getEnvVars());
         String javaProg = script.getJavaProg();
         SearchPath rcp = new SearchPath(classpath, runClasspath);
         List<String> javaArgs = Arrays.asList("-classpath", rcp.toString());
-        recorder.java(envVars, javaProg, javaProps, javaArgs, runMainClass, runMainArgs);
+        recorder.java(script.getEnvVars(), javaProg, javaProps, javaArgs, runMainClass, runMainArgs);
 
         Agent agent;
         try {

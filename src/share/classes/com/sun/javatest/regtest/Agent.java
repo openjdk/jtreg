@@ -94,7 +94,7 @@ public class Agent {
     /**
      * Start a JDK with given JVM options.
      */
-    private Agent(File dir, JDK jdk, List<String> vmOpts, List<String> envVars,
+    private Agent(File dir, JDK jdk, List<String> vmOpts, Map<String, String> envVars,
             File policyFile) throws IOException {
         ServerSocket ss = null;
 
@@ -127,10 +127,7 @@ public class Agent {
         pb.directory(dir);
         Map<String, String> env = pb.environment();
         env.clear();
-        for (String e: envVars) {
-            int eq = e.indexOf("=");
-            env.put(e.substring(0, eq), e.substring(eq + 1));
-        }
+        env.putAll(envVars);
         process = pb.start();
 
         if (USE_SOCKETS) {
@@ -729,7 +726,7 @@ public class Agent {
             this.policyFile = policyFile;
         }
 
-        synchronized Agent getAgent(File dir, JDK jdk, List<String> vmOpts, List<String> envVars) throws IOException {
+        synchronized Agent getAgent(File dir, JDK jdk, List<String> vmOpts, Map<String, String> envVars) throws IOException {
             Queue<Agent> agents = map.get(getKey(dir, jdk, vmOpts));
             Agent a = (agents == null) ? null : agents.poll();
             if (a == null) {
