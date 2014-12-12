@@ -7,18 +7,18 @@ PATH=/bin:/usr/bin \
     %JDKHOME%/bin/javac \
         -J-Dmy.vm.option=x \
         -J-Dmy.java.option=x \
-        -J-Dtest.vm.opts=-Dmy.vm.option=x \
-        -J-Dcompile.jdk=%JDKHOME% \
-        -J-Dtest.src.path=%WS%/src/share/test/javatest/regtest/data/rerun/std \
-        -J-Dtest.src=%WS%/src/share/test/javatest/regtest/data/rerun/std \
-        -J-Dtest.tool.vm.opts=-J-Dmy.vm.option=x \
-        -J-Dtest.class.path=%WS%/build/RerunTest.agentvm/work/classes/std \
-        -J-Dtest.timeout.factor=1.0 \
-        -J-Dtest.classes=%WS%/build/RerunTest.agentvm/work/classes/std \
         -J-Dtest.class.path.prefix=%WS%/build/RerunTest.agentvm/work/classes/std:%WS%/src/share/test/javatest/regtest/data/rerun/std \
-        -J-Dtest.jdk=%JDKHOME% \
-        -J-Dtest.java.opts=-Dmy.java.option=x \
+        -J-Dtest.src=%WS%/src/share/test/javatest/regtest/data/rerun/std \
+        -J-Dtest.src.path=%WS%/src/share/test/javatest/regtest/data/rerun/std \
+        -J-Dtest.classes=%WS%/build/RerunTest.agentvm/work/classes/std \
+        -J-Dtest.class.path=%WS%/build/RerunTest.agentvm/work/classes/std \
+        -J-Dtest.vm.opts=-Dmy.vm.option=x \
+        -J-Dtest.tool.vm.opts=-J-Dmy.vm.option=x \
         -J-Dtest.compiler.opts=-XDmy.javac.option=x \
+        -J-Dtest.java.opts=-Dmy.java.option=x \
+        -J-Dtest.jdk=%JDKHOME% \
+        -J-Dcompile.jdk=%JDKHOME% \
+        -J-Dtest.timeout.factor=1.0 \
         -XDmy.javac.option=x -d %WS%/build/RerunTest.agentvm/work/classes/std -classpath %WS%/build/RerunTest.agentvm/work/classes/std:%WS%/src/share/test/javatest/regtest/data/rerun/std:%JDKHOME%/lib/tools.jar -sourcepath %WS%/src/share/test/javatest/regtest/data/rerun/std -XDignore.symbol.file=true %WS%/src/share/test/javatest/regtest/data/rerun/std/AppletTest.java
 
 ### Section applet
@@ -28,5 +28,5 @@ LANG=en_US.UTF-8 \
 MY_ENV_VAR=x \
 PATH=/bin:/usr/bin \
     %JDKHOME%/bin/java \
-        -classpath %WS%/build/images/jtreg/lib/javatest.jar:%WS%/build/images/jtreg/lib/jtreg.jar:%WS%/build/RerunTest.agentvm/work/classes/std:%WS%/src/share/test/javatest/regtest/data/rerun/std:%JDKHOME%/lib/tools.jar -Dmy.vm.option=x -Dmy.java.option=x -Dtest.vm.opts=-Dmy.vm.option=x -Dcompile.jdk=%JDKHOME% -Dtest.src.path=%WS%/src/share/test/javatest/regtest/data/rerun/std -Dtest.src=%WS%/src/share/test/javatest/regtest/data/rerun/std -Dtest.tool.vm.opts=-J-Dmy.vm.option=x -Dtest.class.path=%WS%/build/RerunTest.agentvm/work/classes/std -Dtest.timeout.factor=1.0 -Dtest.classes=%WS%/build/RerunTest.agentvm/work/classes/std -Dtest.class.path.prefix=%WS%/build/RerunTest.agentvm/work/classes/std:%WS%/src/share/test/javatest/regtest/data/rerun/std -Dtest.jdk=%JDKHOME% -Dtest.java.opts=-Dmy.java.option=x -Dtest.compiler.opts=-XDmy.javac.option=x -mx128m com.sun.javatest.regtest.AppletWrapper %WS%/build/RerunTest.agentvm/work/classes/std/AppletTest.jta
+        -classpath %WS%/build/images/jtreg/lib/javatest.jar:%WS%/build/images/jtreg/lib/jtreg.jar:%WS%/build/RerunTest.agentvm/work/classes/std:%WS%/src/share/test/javatest/regtest/data/rerun/std:%JDKHOME%/lib/tools.jar -Dmy.vm.option=x -Dmy.java.option=x -Dtest.class.path.prefix=%WS%/build/RerunTest.agentvm/work/classes/std:%WS%/src/share/test/javatest/regtest/data/rerun/std -Dtest.src=%WS%/src/share/test/javatest/regtest/data/rerun/std -Dtest.src.path=%WS%/src/share/test/javatest/regtest/data/rerun/std -Dtest.classes=%WS%/build/RerunTest.agentvm/work/classes/std -Dtest.class.path=%WS%/build/RerunTest.agentvm/work/classes/std -Dtest.vm.opts=-Dmy.vm.option=x -Dtest.tool.vm.opts=-J-Dmy.vm.option=x -Dtest.compiler.opts=-XDmy.javac.option=x -Dtest.java.opts=-Dmy.java.option=x -Dtest.jdk=%JDKHOME% -Dcompile.jdk=%JDKHOME% -Dtest.timeout.factor=1.0 -mx128m com.sun.javatest.regtest.AppletWrapper %WS%/build/RerunTest.agentvm/work/classes/std/AppletTest.jta
 

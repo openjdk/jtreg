@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -716,7 +717,7 @@ public class RegressionScript extends Script {
     // Get the standard properties to be set for tests
 
     Map<String, String> getTestProperties() throws TestClassException {
-        Map<String, String> p = new HashMap<String, String>();
+        Map<String, String> p = new LinkedHashMap<String, String>();
         // The following will be added to javac.class.path on the test JVM
         switch (getExecMode()) {
             case AGENTVM:
