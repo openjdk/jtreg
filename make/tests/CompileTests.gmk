@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2014, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -114,14 +114,20 @@ $(BUILDDIR)/CompileTest.5.ok: \
 		-compilejdk:$(JDK15HOME) \
 		-jdk:$(JDK16HOME) \
 		$(TESTDIR)/javatest/regtest/data/compilejdk/ShellTest.sh
-	echo "test passed at `date`" > $@
 	fgrep 'COMPILEJAVA=$(JDK15HOME)' $(@:%.ok=%)/work/ShellTest.jtr
 	fgrep 'TESTJAVA=$(JDK16HOME)' $(@:%.ok=%)/work/ShellTest.jtr
+	echo "test passed at `date`" > $@
 
 # Invalid JDK, to trap unexpected use; suitable for -version, not much else
 $(BUILDDIR)/not-a-jdk/bin/java:
 	mkdir -p $(@D)
-	echo 'echo "Not a JDK: $$0 $$*"' > $@
+	(   echo '#!/bin/bash' ; \
+	    echo 'if [ $${!#} = "java.specification.version" ]; then' ; \
+	    echo '    echo java.specification.version=1.2 ;' ; \
+	    echo 'else' ; \
+	    echo '    echo "Not a JDK: $$0 $$*" ;' ; \
+	    echo 'fi' ; \
+	) > $@
 	chmod +x $@
 
 # Just Java, no javac

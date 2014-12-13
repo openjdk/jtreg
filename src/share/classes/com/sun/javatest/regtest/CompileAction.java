@@ -270,10 +270,6 @@ public class CompileAction extends Action {
 
     private Status runOtherJVM() throws TestRunException {
         Status status;
-        final boolean jdk11 = script.isCompileJDK11();
-        final boolean useCLASSPATHEnv = jdk11;
-        final boolean useClassPathOpt = !jdk11;
-        final boolean useSourcePathOpt = !jdk11;
 
         // WRITE ARGUMENT FILE
         File compileArgFile;
@@ -310,9 +306,6 @@ public class CompileAction extends Action {
 
         // Why JavaTest?
         SearchPath cp = new SearchPath(script.getJavaTestClassPath(), script.getCompileClassPath());
-        if (useCLASSPATHEnv) {
-            envArgs.put("CLASSPATH", cp.toString());
-        }
 
         String javacCmd = script.getJavacProg();
 
@@ -328,12 +321,12 @@ public class CompileAction extends Action {
         }
 
         // JavaTest added, to match CLASSPATH, but not sure why JavaTest required at all
-        if (!classpathp && useClassPathOpt) {
+        if (!classpathp) {
             javacArgs.add("-classpath");
             javacArgs.add(cp.toString());
         }
 
-        if (!sourcepathp && useSourcePathOpt) {
+        if (!sourcepathp) {
             javacArgs.add("-sourcepath");
             javacArgs.add(script.getCompileSourcePath().toString());
         }

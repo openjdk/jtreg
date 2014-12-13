@@ -104,25 +104,16 @@ public class AppletAction extends Action
                 othervm = true;
             } else if (optName.equals("policy")) {
                 overrideSysPolicy = true;
-                if (!script.isTestJDK11())
-                    policyFN = parsePolicy(optValue);
-                else
-                    throw new ParseException(PARSE_BAD_OPT_JDK + optName);
+                policyFN = parsePolicy(optValue);
             } else if (optName.equals("java.security.policy")) {
                 String name = optValue;
                 if (optValue.startsWith("=")) {
                     overrideSysPolicy = true;
                     name = optValue.substring(1, optValue.length());
                 }
-                if (!script.isTestJDK11())
-                    policyFN = parsePolicy(name);
-                else
-                    throw new ParseException(PARSE_BAD_OPT_JDK + optName);
+                policyFN = parsePolicy(name);
             } else if (optName.equals("secure")) {
-                if (!script.isTestJDK11())
-                    secureFN = parseSecure(optValue);
-                else
-                    throw new ParseException(PARSE_BAD_OPT_JDK + optName);
+                secureFN = parseSecure(optValue);
             } else {
                 throw new ParseException(APPLET_BAD_OPT + optName);
             }
@@ -236,14 +227,9 @@ public class AppletAction extends Action
         List<String> command = new ArrayList<String>(6);
         Map<String, String> env = new LinkedHashMap<String, String>();
         SearchPath cp = new SearchPath().append(script.getJavaTestClassPath()).append(script.getTestClassPath());
-        if (script.isTestJDK11()) {
-            env.put("CLASSPATH", cp.toString());
-        }
         command.add(script.getJavaProg());
-        if (!script.isTestJDK11()) {
-            command.add("-classpath");
-            command.add(cp.toString());
-        }
+        command.add("-classpath");
+        command.add(cp.toString());
 
         List<String> vmOpts = new ArrayList<String>();
         vmOpts.addAll(script.getTestVMOptions());

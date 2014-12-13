@@ -509,20 +509,13 @@ public class RegressionScript extends Script {
         SearchPath cp = new SearchPath();
         SearchPath bcp = new SearchPath();
         JDK jdk = getTestJDK();
-        if (jdk.isVersion(JDK.Version.V1_1, params)) {
-            cp.append(locations.absTestClsDir());
-            cp.append(locations.absTestSrcDir());
-            cp.append(locations.absClsLibList());
-            cp.append(jdk.getJavaClassPath());
-            cp.append(jdk.getJDKClassPath());
-            cp.append(getCPAPPEND());
-        } else if (testOnBootClassPath) {
+        if (testOnBootClassPath) {
             bcp.append(locations.absTestClsDir());
             bcp.append(locations.absClsLibList());
             bcp.append(locations.absSrcJarLibList());
             bcp.append(jdk.getJDKClassPath());
             bcp.append(getCPAPPEND());
-        } else { // isTestJDK12() or above
+        } else {
             cp.append(locations.absTestClsDir());
             cp.append(locations.absTestSrcDir()); // required??
             for (File lib: locations.absClsLibList())
@@ -561,19 +554,12 @@ public class RegressionScript extends Script {
         if (cacheCompileClassPath == null) {
             cacheCompileClassPath = new SearchPath();
             JDK jdk = getCompileJDK();
-            if (jdk.isVersion(JDK.Version.V1_1, params)) {
-                cacheCompileClassPath.append(locations.absTestClsDir());
-                cacheCompileClassPath.append(locations.absTestSrcDir());
-                cacheCompileClassPath.append(locations.absClsLibList());
-                cacheCompileClassPath.append(jdk.getJavaClassPath());
-                cacheCompileClassPath.append(jdk.getJDKClassPath());
-            } else { // isTestJDK12() or above
-                cacheCompileClassPath.append(locations.absTestClsDir());
-                cacheCompileClassPath.append(locations.absTestSrcDir()); // required??
-                cacheCompileClassPath.append(locations.absClsLibList());
-                cacheCompileClassPath.append(locations.absSrcJarLibList());
-                cacheCompileClassPath.append(jdk.getJDKClassPath());
-            }
+
+            cacheCompileClassPath.append(locations.absTestClsDir());
+            cacheCompileClassPath.append(locations.absTestSrcDir()); // required??
+            cacheCompileClassPath.append(locations.absClsLibList());
+            cacheCompileClassPath.append(locations.absSrcJarLibList());
+            cacheCompileClassPath.append(jdk.getJDKClassPath());
 
             if (needJUnit)
                 cacheCompileClassPath.append(params.getJUnitJar());
@@ -671,15 +657,7 @@ public class RegressionScript extends Script {
     }
 
     JDK.Version getTestJDKVersion() {
-        try {
-            return JDK.Version.forName(getTestJDK().getVersion(params));
-        } catch (IllegalArgumentException e) {
-            return null;
-        }
-    }
-
-    boolean isTestJDK11() {
-        return params.getTestJDK().isVersion(JDK.Version.V1_1, params);
+        return getTestJDK().getVersion(params);
     }
 
     String getJavaProg() {
@@ -693,15 +671,7 @@ public class RegressionScript extends Script {
     }
 
     JDK.Version getCompileJDKVersion() {
-        try {
-            return JDK.Version.forName(getCompileJDK().getVersion(params));
-        } catch (IllegalArgumentException e) {
-            return null;
-        }
-    }
-
-    boolean isCompileJDK11() {
-        return params.getCompileJDK().isVersion(JDK.Version.V1_1, params);
+        return getCompileJDK().getVersion(params);
     }
 
     String getJavacProg() {

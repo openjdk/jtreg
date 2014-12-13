@@ -50,8 +50,8 @@ public class RegressionContext implements Expr.Context {
         values.put("null", "null");
 
         JDK jdk = (params == null) ? null : params.getTestJDK();
-        String jdkVersion = (jdk == null) ? null : jdk.getVersion(params);
-        values.put("jdk.version", jdkVersion != null ? jdkVersion : "unknown");
+        JDK.Version jdkVersion = (jdk == null) ? null : jdk.getVersion(params);
+        values.put("jdk.version", jdkVersion != null ? jdkVersion.name : "unknown");
         // profile... (JDK 8)
         // modules... (JDK 9)
 

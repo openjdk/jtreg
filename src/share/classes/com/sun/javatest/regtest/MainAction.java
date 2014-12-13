@@ -132,25 +132,16 @@ public class MainAction extends Action
                 othervm = true;
             } else if (optName.equals("policy")) {
                 overrideSysPolicy = true;
-                if (!script.isTestJDK11())
-                    policyFN = parsePolicy(optValue);
-                else
-                    throw new ParseException(PARSE_BAD_OPT_JDK + optName);
+                policyFN = parsePolicy(optValue);
             } else if (optName.equals("java.security.policy")) {
                 String name = optValue;
                 if (optValue.startsWith("=")) {
                     overrideSysPolicy = true;
                     name = optValue.substring(1, optValue.length());
                 }
-                if (!script.isTestJDK11())
-                    policyFN = parsePolicy(name);
-                else
-                    throw new ParseException(PARSE_BAD_OPT_JDK + optName);
+                policyFN = parsePolicy(name);
             } else if (optName.equals("secure")) {
-                if (!script.isTestJDK11())
-                    secureCN = parseSecure(optValue);
-                else
-                    throw new ParseException(PARSE_BAD_OPT_JDK + optName);
+                secureCN = parseSecure(optValue);
             } else {
                 throw new ParseException(MAIN_BAD_OPT + optName);
             }
@@ -361,14 +352,14 @@ public class MainAction extends Action
         if (script.isTestNGRequired())
             p.append(script.getTestNGJar());
 
-        if ((useCLASSPATH || script.isTestJDK11()) && !cp.isEmpty()) {
+        if (useCLASSPATH && !cp.isEmpty()) {
             envArgs.put("CLASSPATH", cp.toString());
         }
 
         String javaCmd = script.getJavaProg();
         List<String> javaOpts = new ArrayList<String>();
 
-        if ((!useCLASSPATH && !script.isTestJDK11()) && !cp.isEmpty()) {
+        if ((!useCLASSPATH) && !cp.isEmpty()) {
             javaOpts.add("-classpath");
             javaOpts.add(cp.toString());
         }

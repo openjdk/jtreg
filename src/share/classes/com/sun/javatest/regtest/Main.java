@@ -88,6 +88,7 @@ import com.sun.javatest.util.I18NResourceBundle;
 
 import static com.sun.javatest.regtest.Option.ArgType.*;
 
+
 /**
  * JavaTest entry point to be used to access regression extensions.
  */
@@ -1156,11 +1157,10 @@ public class Main {
             envVarArgs.add("CPAPPEND=" + filesToAbsolutePath(classPathAppendArg));
         }
 
-        if (compileJDK != null && !compileJDK.exists())
-            throw new Fault(i18n, "main.compile.jdk.not.found", compileJDK);
+        if (compileJDK != null)
+            checkJDK(compileJDK);
 
-        if (!testJDK.exists())
-            throw new Fault(i18n, "main.test.jdk.not.found", testJDK);
+        checkJDK(testJDK);
 
         if (workDirArg == null) {
             workDirArg = new File("JTwork");
@@ -1329,6 +1329,16 @@ public class Main {
             }
 
         }
+    }
+
+    void checkJDK(JDK jdk) throws Fault {
+        if (!jdk.exists())
+            throw new Fault(i18n, "main.jdk.not.found", jdk);
+        JDK.Version v = jdk.getVersion(execMode, new SearchPath(jtreg_jar, javatest_jar));
+        if (v == null)
+            throw new Fault(i18n, "main.jdk.unknown.version", jdk);
+        if (v.compareTo(com.sun.javatest.regtest.JDK.Version.V1_1) <= 0)
+            throw new Fault(i18n, "main.jdk.unsupported.version", jdk, v.name);
     }
 
     /**

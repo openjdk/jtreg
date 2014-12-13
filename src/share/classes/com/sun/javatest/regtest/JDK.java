@@ -147,22 +147,26 @@ public class JDK {
         return new SearchPath(getToolsJar());
     }
 
-    boolean isVersion(Version v, RegressionParameters params) {
-        return (getVersion(params).equals(v.name));
+    // params just used for execMode and javatestClassPath
+    public Version getVersion(RegressionParameters params) {
+        return getVersion(params.getExecMode(), params.getJavaTestClassPath());
     }
 
-    // params just used for execMode and javatestClassPath
-    public synchronized String getVersion(RegressionParameters params) {
+    public Version getVersion(ExecMode mode, SearchPath getSysPropClassPath) {
+        return Version.forName(getVersionAsString(mode, getSysPropClassPath));
+    }
+
+    private synchronized String getVersionAsString(ExecMode mode, SearchPath getSysPropClassPath) {
         if (version == null) {
             final String VERSION_PROPERTY = "java.specification.version";
             version = "unknown"; // default
-            if (params.getExecMode() == ExecMode.SAMEVM) {
+            if (mode == ExecMode.SAMEVM) {
                 version = System.getProperty(VERSION_PROPERTY);
             } else {
                 ProcessBuilder pb = new ProcessBuilder();
                 // since we are trying to determine the Java version, we have to assume
                 // the worst, and use CLASSPATH.
-                pb.environment().put("CLASSPATH", params.getJavaTestClassPath().toString());
+                pb.environment().put("CLASSPATH", getSysPropClassPath.toString());
                 pb.command(getJavaProg().getPath(), GetSystemProperty.class.getName(), VERSION_PROPERTY);
                 pb.redirectErrorStream(true);
                 try {
