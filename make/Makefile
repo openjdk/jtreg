@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1999, 2007, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1999, 2015, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -62,6 +62,9 @@ ifneq ($(JTHARNESS_HOME), $(JAVATEST_HOME))
 endif
 ifdef JCOV_HOME
 	@echo "JCOV_HOME      = $(JCOV_HOME)"
+endif
+ifdef ASMTOOLS_HOME
+	@echo "ASMTOOLS_HOME  = $(ASMTOOLS_HOME)"
 endif
 	@echo "ANTHOME        = $(ANTHOME)"
 	@echo "XALANHOME      = $(XALANHOME)"

@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1999, 2013, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1999, 2015, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -240,7 +240,7 @@ PKGS.JAR.jtreg += com.sun.javatest.regtest
 TARGETS.JAR.jtreg += $(TARGETS.com.sun.javatest.regtest)
 
 $(JTREG_IMAGEDIR)/lib/jtreg.jar: JAR_MAINCLASS = com.sun.javatest.regtest.Main
-$(JTREG_IMAGEDIR)/lib/jtreg.jar: JAR_CLASSPATH = javatest.jar jh.jar
+$(JTREG_IMAGEDIR)/lib/jtreg.jar: JAR_CLASSPATH = javatest.jar jh.jar asmtools.jar
 
 $(JTREG_IMAGEJARDIR)/jtreg.jar: \
 	$(JTREG_IMAGEDIR)/lib/javatest.jar \
@@ -359,6 +359,22 @@ TARGETS.ZIP.jtreg += \
     $(JTREG_IMAGEDIR)/lib/$(JCOV_NETWORK_SAVER)
 
 endif #JCOV_HOME
+
+#----------------------------------------------------------------------
+#
+# import AsmTools
+
+ifdef ASMTOOLS_HOME
+
+$(JTREG_IMAGEDIR)/lib/asmtools.jar: $(call PosixPath,$(ASMTOOLS_HOME)/lib/asmtools.jar)
+	$(RM) $@
+	$(MKDIR) -p $(@D)
+	$(CP) $< $@
+
+TARGETS.ZIP.jtreg += \
+    $(JTREG_IMAGEDIR)/lib/asmtools.jar \
+
+endif #ASMTOOLS_HOME
 
 #----------------------------------------------------------------------
 #
