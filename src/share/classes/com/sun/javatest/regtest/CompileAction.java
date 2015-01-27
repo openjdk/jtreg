@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -27,15 +27,19 @@ package com.sun.javatest.regtest;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringReader;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -149,12 +153,24 @@ public class CompileAction extends Action {
                 mkdirs(destDir);
 
             boolean foundJavaFile = false;
+            boolean foundAsmFile = false;
 
             for (int i = 0; i < args.length; i++) {
                 String currArg = args[i];
 
                 if (currArg.endsWith(".java")) {
                     foundJavaFile = true;
+                    File sourceFile = new File(currArg.replace('/', File.separatorChar));
+                    if (!sourceFile.isAbsolute()) {
+                        // User must have used @compile, so file must be
+                        // in the same directory as the defining file.
+                        File absSourceFile = locations.absTestSrcFile(sourceFile);
+                        if (!absSourceFile.exists())
+                            throw new RegressionScript.TestClassException(CANT_FIND_SRC + currArg);
+                        args[i] = absSourceFile.getPath();
+                    }
+                } else if (currArg.endsWith(".jasm") || currArg.endsWith("jcod")) {
+                    foundAsmFile = true;
                     File sourceFile = new File(currArg.replace('/', File.separatorChar));
                     if (!sourceFile.isAbsolute()) {
                         // User must have used @compile, so file must be
@@ -188,8 +204,16 @@ public class CompileAction extends Action {
                 }
             }
 
-            if (!foundJavaFile && !process) {
+            if (!foundJavaFile && !process && !foundAsmFile) {
                 throw new ParseException(COMPILE_NO_DOT_JAVA);
+            }
+            if (foundAsmFile) {
+                if (sourcepathp || classpathp || process) {
+                    throw new ParseException(COMPILE_OPT_DISALLOW);
+                }
+                if (reverseStatus || ref != null) {
+                    throw new ParseException(COMPILE_OPT_DISALLOW);
+                }
             }
         } catch (RegressionScript.TestClassException e) {
             throw new ParseException(e.getMessage());
@@ -201,7 +225,9 @@ public class CompileAction extends Action {
         Set<File> files = new LinkedHashSet<File>();
 
         for (String currArg : args) {
-            if (currArg.endsWith(".java")) {
+            if (currArg.endsWith(".java")
+                    || currArg.endsWith(".jasm")
+                    || currArg.endsWith(".jcod")) {
                 files.add(new File(currArg));
             }
         }
@@ -235,11 +261,21 @@ public class CompileAction extends Action {
     public Status run() throws TestRunException {
         startAction();
 
+        List<String> javacArgs = new ArrayList<String>();
+        List<String> jasmArgs = new ArrayList<String>();
+        List<String> jcodArgs = new ArrayList<String>();
+
         for (String currArg : args) {
             if (currArg.endsWith(".java")) {
                 if (!(new File(currArg)).exists())
                     throw new TestRunException(CANT_FIND_SRC + currArg);
-            }
+                javacArgs.add(currArg);
+            } else if (currArg.endsWith(".jasm")) {
+                jasmArgs.add(currArg);
+            } else if (currArg.endsWith(".jcod")) {
+                jcodArgs.add(currArg);
+            } else
+                javacArgs.add(currArg);
         }
 
         Status status;
@@ -247,18 +283,25 @@ public class CompileAction extends Action {
         if (script.isCheck()) {
             status = passed(CHECK_PASS);
         } else {
-            switch (script.getExecMode()) {
-                case AGENTVM:
-                    status = runAgentJVM();
-                    break;
-                case OTHERVM:
-                    status = runOtherJVM();
-                    break;
-                case SAMEVM:
-                    status = runSameJVM();
-                    break;
-                default:
-                    throw new AssertionError();
+            // run jasm and jcod first (if needed) in case the resulting class
+            // files will be required when compiling the .java files.
+            status = jasm(jasmArgs);
+            if (status.isPassed())
+                status = jcod(jcodArgs);
+            if (status.isPassed() && !javacArgs.isEmpty()) {
+                switch (script.getExecMode()) {
+                    case AGENTVM:
+                        status = runAgentJVM(javacArgs);
+                        break;
+                    case OTHERVM:
+                        status = runOtherJVM(javacArgs);
+                        break;
+                    case SAMEVM:
+                        status = runSameJVM(javacArgs);
+                        break;
+                    default:
+                        throw new AssertionError();
+                }
             }
         }
 
@@ -268,12 +311,68 @@ public class CompileAction extends Action {
 
     //----------internal methods------------------------------------------------
 
-    private Status runOtherJVM() throws TestRunException {
+    private Status jasm(List<String> files) {
+        return asmtools("jasm", files);
+    }
+
+    private Status jcod(List<String> files) {
+        return asmtools("jcoder", files);
+    }
+
+    private Status asmtools(String toolName, List<String> files) {
+        if (files.isEmpty())
+            return Status.passed(toolName + ": no files");
+
+        List<String> toolArgs = new ArrayList<String>();
+        toolArgs.add("-d");
+        toolArgs.add(destDir.getPath());
+        toolArgs.addAll(files);
+        try {
+            String toolClassName = "org.openjdk.asmtools." + toolName + ".Main";
+            Class<?> toolClass = Class.forName(toolClassName);
+            Constructor c = toolClass.getConstructor(new Class[] { PrintStream.class, String.class });
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            PrintStream ps = new PrintStream(baos);
+            try {
+                Object tool = c.newInstance(ps, toolName);
+                Method m = toolClass.getMethod("compile", new Class[] { String[].class });
+                Object r = m.invoke(tool, new Object[] { toolArgs.toArray(new String[0]) });
+                if (r instanceof Boolean) {
+                    boolean ok = (Boolean) r;
+                    return ok ? Status.passed(toolName + " OK") : Status.failed(toolName + " failed");
+                } else
+                    return Status.error("unexpected result from " + toolName + ": " + r.toString());
+            } finally {
+                PrintWriter out = section.createOutput(toolName);
+                out.write(baos.toString());
+                out.close();
+            }
+        } catch (ClassNotFoundException e) {
+            return Status.error("can't find " + toolName);
+//        } catch (ReflectiveOperationException e) {
+//            return Status.error("error invoking " + toolName + ": " + e);
+//        }
+        } catch (NoSuchMethodException e) {
+            return Status.error("error invoking " + toolName + ": " + e);
+        } catch (InstantiationException e) {
+            return Status.error("error invoking " + toolName + ": " + e);
+        } catch (IllegalAccessException e) {
+            return Status.error("error invoking " + toolName + ": " + e);
+        } catch (InvocationTargetException e) {
+            return Status.error("error invoking " + toolName + ": " + e);
+        } catch (IllegalArgumentException t) {
+            return Status.error("error invoking " + toolName + ": " + t);
+        } catch (SecurityException t) {
+            return Status.error("error invoking " + toolName + ": " + t);
+        }
+    }
+
+    private Status runOtherJVM(List<String> args) throws TestRunException {
         Status status;
 
         // WRITE ARGUMENT FILE
         File compileArgFile;
-        if (args.length < 10)
+        if (args.size() < 10)
             compileArgFile = null;
         else {
             script.absTestClsDir().mkdirs();
@@ -334,7 +433,7 @@ public class CompileAction extends Action {
         if (compileArgFile != null) {
             javacArgs.add("@" + compileArgFile);
         } else {
-            javacArgs.addAll(Arrays.asList(args));
+            javacArgs.addAll(args);
         }
 
         List<String> command = new ArrayList<String>();
@@ -395,7 +494,7 @@ public class CompileAction extends Action {
     } // runOtherJVM()
 
 
-    private Status runSameJVM() throws TestRunException {
+    private Status runSameJVM(List<String> args) throws TestRunException {
         // TAG-SPEC:  "The source and class directories of a test are made
         // available to main and applet actions via the system properties
         // "test.src" and "test.classes", respectively"
@@ -421,7 +520,7 @@ public class CompileAction extends Action {
             javacArgs.add(script.getCompileSourcePath().toString());
         }
 
-        javacArgs.addAll(Arrays.asList(args));
+        javacArgs.addAll(args);
 
         if (showMode)
             showMode("compile", ExecMode.SAMEVM, section);
@@ -458,7 +557,7 @@ public class CompileAction extends Action {
     } // runSameJVM()
 
 
-    private Status runAgentJVM() throws TestRunException {
+    private Status runAgentJVM(List<String> args) throws TestRunException {
         // TAG-SPEC:  "The source and class directories of a test are made
         // available to main and applet actions via the system properties
         // "test.src" and "test.classes", respectively"
@@ -484,7 +583,7 @@ public class CompileAction extends Action {
             javacArgs.add(script.getCompileSourcePath().toString());
         }
 
-        javacArgs.addAll(Arrays.asList(args));
+        javacArgs.addAll(args);
 
         if (showMode)
             showMode("compile", ExecMode.AGENTVM, section);

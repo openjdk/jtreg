@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -183,34 +183,38 @@ public class Locations {
             return Collections.singletonList(locateClass(name));
     }
 
+    private static final String[] extns = { ".java", ".jasm", ".jcod" };
+
     private ClassLocn locateClass(String className) throws TestRunException {
-        String relSrc = className.replace('.', File.separatorChar) + ".java";
-        String relCls = className.replace('.', File.separatorChar) + ".class";
-        File sf, cf;
+        for (String e: extns) {
+            String relSrc = className.replace('.', File.separatorChar) + e;
+            String relCls = className.replace('.', File.separatorChar) + ".class";
+            File sf, cf;
 
-        // Check testSrcDir
-        if ((sf = new File(absTestSrcDir, relSrc)).exists()) {
-            cf = new File(absTestClsDir, relCls);
-            LibLocn tl = new LibLocn(null, absTestSrcDir, absTestClsDir);
-            return new ClassLocn(className, tl, sf, cf);
-        }
-
-        // Check lib list
-        for (LibLocn l: libList) {
-            if ((sf = new File(l.absSrcDir, relSrc)).exists()) {
-                cf = new File(l.absClsDir, relCls);
-                return new ClassLocn(className, l, sf, cf);
-            }
-        }
-
-        // Check for file to be directly in the test dir
-        int sep = relSrc.lastIndexOf(File.separatorChar);
-        if (sep >= 0) {
-            String baseName = relSrc.substring(sep + 1);
-            if ((sf = new File(absTestSrcDir, baseName)).exists()) {
+            // Check testSrcDir
+            if ((sf = new File(absTestSrcDir, relSrc)).exists()) {
                 cf = new File(absTestClsDir, relCls);
                 LibLocn tl = new LibLocn(null, absTestSrcDir, absTestClsDir);
                 return new ClassLocn(className, tl, sf, cf);
+            }
+
+            // Check lib list
+            for (LibLocn l: libList) {
+                if ((sf = new File(l.absSrcDir, relSrc)).exists()) {
+                    cf = new File(l.absClsDir, relCls);
+                    return new ClassLocn(className, l, sf, cf);
+                }
+            }
+
+            // Check for file to be directly in the test dir
+            int sep = relSrc.lastIndexOf(File.separatorChar);
+            if (sep >= 0) {
+                String baseName = relSrc.substring(sep + 1);
+                if ((sf = new File(absTestSrcDir, baseName)).exists()) {
+                    cf = new File(absTestClsDir, relCls);
+                    LibLocn tl = new LibLocn(null, absTestSrcDir, absTestClsDir);
+                    return new ClassLocn(className, tl, sf, cf);
+                }
             }
         }
 
@@ -219,7 +223,7 @@ public class Locations {
         dirListStr.append(absTestSrcDir).append(" ");
         for (LibLocn l: libList)
             dirListStr.append(l.absSrcDir).append(" ");
-        throw new TestRunException(CANT_FIND_SRC + relSrc +
+        throw new TestRunException(CANT_FIND_CLASS + className +
                                    LIB_LIST + dirListStr);
     }
 
@@ -259,7 +263,7 @@ public class Locations {
             if (!sf.isFile())
                 continue;
             String fn = sf.getName();
-            if (!fn.endsWith(".java"))
+            if (!(fn.endsWith(".java") || fn.endsWith(".jasm") || fn.endsWith(".jcod")))
                 continue;
             String cn = fn.substring(fn.length() - 5);
             String className = (packageName == null) ? cn : packageName + "." + cn;
@@ -302,7 +306,7 @@ public class Locations {
     //----------misc statics---------------------------------------------------
 
     public static final String
-        CANT_FIND_SRC         = "Can't find source file: ",
+        CANT_FIND_CLASS        = "Can't find source for class: ",
         LIB_LIST              = " in directory-list: ",
         PATH_TESTCLASS        = "Unable to locate test class directory!?";
 }
