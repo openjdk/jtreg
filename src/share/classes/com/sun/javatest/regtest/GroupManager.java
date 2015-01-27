@@ -253,8 +253,9 @@ public class GroupManager {
 
         private boolean contains(Collection<File> files, File file) {
             for (File f: files) {
-                if (f.equals(file) || contains(f, file))
+                if (f.equals(file) || contains(f, file)) {
                     return true;
+                }
             }
             return false;
         }
@@ -269,9 +270,11 @@ public class GroupManager {
         private Set<File> filter(File dir, Collection<File> files) {
             Set<File> results = null;
             String dirPath = dir.getPath();
+            if (!dirPath.endsWith(File.separator))
+                dirPath += File.separator;
             for (File f: files) {
                 String fp = f.getPath();
-                if (fp.startsWith(dirPath + File.separator)) {
+                if (fp.startsWith(dirPath)) {
                     if (results == null) results = new LinkedHashSet<File>();
                     results.add(f);
                 }
@@ -326,7 +329,12 @@ public class GroupManager {
                     (exclude ? excludeGroups : includeGroups).add(getGroup(name));
                 } else {
                     String name = item;
-                    (exclude ? excludeFiles : includeFiles).add(new File(root, name));
+                    if (name.startsWith("/"))
+                        name = name.substring(1);
+                    if (name.endsWith("/"))
+                        name = name.substring(0, name.length() - 1);
+                    File f = name.equals("") ? root : new File(root, name);
+                    (exclude ? excludeFiles : includeFiles).add(f);
                 }
             }
         }
