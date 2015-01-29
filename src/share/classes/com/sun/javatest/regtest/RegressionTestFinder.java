@@ -410,6 +410,8 @@ public class RegressionTestFinder extends TagTestFinder
                 processRequires(tagValues, value);
             } else if (name.equals(KEY)) {
                 processKey(tagValues, value);
+            } else if (name.equals(MODULES)) {
+                processModules(tagValues, value);
             } else if (name.equals(LIBRARY)) {
                 processLibrary(tagValues, value);
             } else
@@ -571,6 +573,26 @@ public class RegressionTestFinder extends TagTestFinder
     }
 
     /**
+     * Analyse the contents of @modules.
+     * @param tagValues The map of all of the current tag values.
+     * @param value     The value of the entry currently being processed.
+     * @return    A string which contains the new value for the "key" tag.
+     */
+    private void processModules(Map<String, String> tagValues, String value)
+            throws TestSuite.Fault {
+        if (value.trim().length() == 0) {
+            parseError(tagValues, PARSE_MODULES_EMPTY);
+            return;
+        }
+
+        String oldValue = tagValues.get(MODULES);
+        if (oldValue == null)
+            tagValues.put(MODULES, value);
+        else
+            tagValues.put(MODULES, oldValue + " " + value);
+    }
+
+    /**
      * Create the library-directory list.  Pathnames are prepended left to
      * right.
      *
@@ -608,6 +630,7 @@ public class RegressionTestFinder extends TagTestFinder
         tags.add(SUMMARY);
         tags.add(AUTHOR);
         tags.add(LIBRARY);
+        tags.add(MODULES);
         tags.add(CLEAN);
         tags.add(COMPILE);
         tags.add(IGNORE);
@@ -636,6 +659,7 @@ public class RegressionTestFinder extends TagTestFinder
     public static final String IGNORE  = "ignore";
     public static final String KEY     = "key";
     public static final String LIBRARY = "library";
+    public static final String MODULES = "modules";
     public static final String REQUIRES = "requires";
     public static final String RUN     = "run";
     public static final String SUMMARY = "summary";
@@ -657,6 +681,7 @@ public class RegressionTestFinder extends TagTestFinder
         PARSE_KEY_BAD         = "Invalid key: ",
         PARSE_LIB_EMPTY       = "No value provided for `@library'",
         PARSE_LIB_AFTER_RUN   = "`@library' must appear before first `@run'",
+        PARSE_MODULES_EMPTY   = "No values provided for @modules",
         PARSE_BAD_RUN         = "Explicit action tag not allowed",
         PARSE_REQUIRES_EMPTY  = "No expression for @requires",
         PARSE_REQUIRES_SYNTAX = "Syntax error in @requires expression: ",
