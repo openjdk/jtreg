@@ -30,7 +30,6 @@
 OSNAME = $(shell uname -s)
 ifeq ($(OSNAME), SunOS)
   PLATFORM = solaris
-  JT_PLATFORM = solaris
   ARCH = $(shell uname -p)
   ifeq ($(ARCH), i386)
     ARCH=i586
@@ -38,7 +37,6 @@ ifeq ($(OSNAME), SunOS)
 endif
 ifeq ($(OSNAME), Linux)
   PLATFORM = linux
-  JT_PLATFORM = linux
   ARCH = $(shell uname -m)
   ifeq ($(ARCH), i386)
     ARCH=i586
@@ -46,7 +44,6 @@ ifeq ($(OSNAME), Linux)
 endif
 ifeq ($(OSNAME), Windows_NT)
   PLATFORM = windows
-  JT_PLATFORM = win32
   ifeq ($(word 1, $(PROCESSOR_IDENTIFIER)),ia64)
     ARCH=ia64
   else
@@ -84,7 +81,7 @@ ifdef JPRT_JTREG_HOME
 else
   JTREG_HOME = $(SLASH_JAVA)/re/jtreg/4.0/promoted/latest/binaries/jtreg
 endif
-JTREG = $(JTREG_HOME)/$(JT_PLATFORM)/bin/jtreg
+JTREG = $(JTREG_HOME)/bin/jtreg
 
 
 # Default JDK for JTREG and JCK
@@ -108,8 +105,8 @@ endif
 
 
 # Exit codes:
-# jtreg, jck:   0: OK, 1: tests failed, 2: tests error; 3+: SERIOUS
-FATAL_JTREG_EXIT = 3
+# jtreg, jck:   0: OK, 1: no tests, 2: tests failed, 3: tests error; 4+: SERIOUS
+FATAL_JTREG_EXIT = 4
 #
 # Exit -- used for final "normal" exit from "make". Redefine to "true" to avoid
 # having make exit with non-zero return code.
@@ -184,7 +181,7 @@ jtreg-test: check-jtreg FRC
           -w:$(JTREG_OUTPUT_DIR)/work \
           -jdk:$(TESTJAVA) \
           $(JAVA_ARGS:%=-vmoption:%) \
-	  $(JTREG_OPTIONS) \
+          $(JTREG_OPTIONS) \
           AAA_Pass.java $(TEST) ZZZ_Pass.java \
 	|| ( $(call EXIT_IF_FATAL,$(FATAL_JTREG_EXIT)) ; \
 	    echo $$status > $(JTREG_OUTPUT_DIR)/status.txt \

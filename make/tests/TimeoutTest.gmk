@@ -41,8 +41,38 @@ $(BUILDDIR)/TimeoutTest.ok: \
 
 #----------------------------------------------------------------------
 
-# In the following, the expected results 2,1,3 are for othervm mode.  
-# The numbers for the other modes are more problematic.
+# This is a description of the expected results in each mode:
+#
+# agentvm
+#
+# AAA_Pass: pass
+# ZZZ_Pass: pass
+# ExitTest: error (calls System.exit in Agent)
+# SlowExitTest: pass (test finishes quickly but leaves a shutdown hook active in the agent)
+# SlowInterruptibleTest: error (timeout)
+# SlowUninterruptibleTest: error (timeout)
+# pass: 3, error 3
+#
+# othervm
+#
+# AAA_Pass: pass
+# ZZZ_Pass: pass
+# ExitTest: failed (calls System.exit() with an unexpected exit code)
+# SlowExitTest: error (timeout, shutdown hook prevents othervm from shutting down)
+# SlowInterruptibleTest: error (timeout)
+# SlowUninterruptibleTest: error (timeout)
+# pass: 2, failed: 1, error: 3
+#
+# samevm
+#
+# AAA_Pass: pass
+# ZZZ_Pass: pass
+# ExitTest: pass (skipped in test)
+# SlowExitTest: pass (skipped in test)
+# SlowInterruptibleTest: error (timeout)
+# SlowUninterruptibleTest: pass (skipped in test)
+# pass: 5, error 1
+
 
 $(BUILDDIR)/TimeoutTest.agentvm.ok \
 $(BUILDDIR)/TimeoutTest.samevm.ok \
@@ -58,12 +88,23 @@ $(BUILDDIR)/TimeoutTest.othervm.ok: \
 		$(TESTDIR)/javatest/regtest/data/timeouts/test  \
 			> $(@:%.ok=%/jt.log) 2>&1 || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
-	$(GREP) -s 'Test results: passed: 2; failed: 1; error: 3' $(@:%.ok=%/jt.log)  > /dev/null
+	case $(@:$(BUILDDIR)/TimeoutTest.%.ok=%) in \
+	    othervm ) expect="Test results: passed: 2; failed: 1; error: 3" ;; \
+	    agentvm ) expect="Test results: passed: 3; error: 3" ;; \
+	    samevm )  expect="Test results: passed: 5; error: 1" ;; \
+	esac ; \
+	$(GREP) -s "$$expect" $(@:%.ok=%/jt.log) > /dev/null;
 	echo "test passed at `date`" > $@
 
 # These tests are not included by default because by their nature they are so
 # slow to run.
 # TESTS.jtreg += \
+	$(BUILDDIR)/TimeoutTest.agentvm.ok \
+	$(BUILDDIR)/TimeoutTest.samevm.ok \
+	$(BUILDDIR)/TimeoutTest.othervm.ok
+
+testtimeouts: \
+	$(BUILDDIR)/TimeoutTest.ok \
 	$(BUILDDIR)/TimeoutTest.agentvm.ok \
 	$(BUILDDIR)/TimeoutTest.samevm.ok \
 	$(BUILDDIR)/TimeoutTest.othervm.ok

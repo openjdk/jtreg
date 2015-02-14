@@ -29,7 +29,6 @@
 OSNAME = $(shell uname -s)
 ifeq ($(OSNAME), SunOS)
   PLATFORM = solaris
-  JT_PLATFORM = solaris
   ARCH = $(shell uname -p)
   ifeq ($(ARCH), i386)
     ARCH=i586
@@ -37,7 +36,6 @@ ifeq ($(OSNAME), SunOS)
 endif
 ifeq ($(OSNAME), Linux)
   PLATFORM = linux
-  JT_PLATFORM = linux
   ARCH = $(shell uname -m)
   ifeq ($(ARCH), i386)
     ARCH=i586
@@ -45,7 +43,6 @@ ifeq ($(OSNAME), Linux)
 endif
 ifeq ($(OSNAME), Windows_NT)
   PLATFORM = windows
-  JT_PLATFORM = win32
   ifeq ($(word 1, $(PROCESSOR_IDENTIFIER)),ia64)
     ARCH=ia64
   else
