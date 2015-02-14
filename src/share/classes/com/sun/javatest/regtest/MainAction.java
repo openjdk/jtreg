@@ -651,7 +651,7 @@ public class MainAction extends Action
             Alarm alarm = null;
             if (timeout > 0) {
                 PrintWriter alarmOut = outputHandler.createOutput(OutputHandler.OutputKind.LOG);
-                alarm = new Alarm(timeout * 1000, t, testName, alarmOut);
+                alarm = Alarm.schedulePeriodicInterrupt(timeout, TimeUnit.SECONDS, alarmOut, t);
             }
             Throwable error = null;
             t.start();
@@ -666,7 +666,7 @@ public class MainAction extends Action
                 tg.cleanup();
                 if (alarm != null) {
                     alarm.cancel();
-                    if (alarm.getState() != Alarm.State.WAITING && (error == null)) {
+                    if (alarm.didFire() && error == null) {
                         err.println("Test timed out. No timeout information is available in samevm mode.");
                         error = new Error("timeout");
                         status = error(MAIN_THREAD_TIMEOUT);

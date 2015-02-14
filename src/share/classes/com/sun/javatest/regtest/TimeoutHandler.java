@@ -64,7 +64,7 @@ public abstract class TimeoutHandler {
             return;
         }
 
-        Alarm a = new Alarm(TIMEOUTHANDLER_TIMEOUT, Thread.currentThread(), "Timeout Handler", log);
+        Alarm a = Alarm.schedule(TIMEOUTHANDLER_TIMEOUT, TimeUnit.MILLISECONDS, log, Thread.currentThread());
         try {
             runActions(proc, pid);
         } catch (InterruptedException ex) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -25,81 +25,199 @@
 
 package com.sun.javatest.regtest;
 
-import java.io.PrintWriter;
-
 import com.sun.javatest.util.I18NResourceBundle;
-import com.sun.javatest.util.Timer;
+
+import java.io.PrintWriter;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Provides a lightweight way of setting up and canceling timeouts.
- * Based on {@link Script.Alarm}.
  */
-class Alarm implements Timer.Timeable {
-    Alarm(long delay, String testName, PrintWriter out) {
-        this(delay, Thread.currentThread(), testName, out);
+public class Alarm  {
+
+    /**
+     * Schedule an Alarm to periodically interrupt() a specified thread.
+     * The first interrupt() will happen after the time specified by {@code delay}
+     * and {@code delayUnit}. Thereafter the thread will be interrupted every 100ms
+     * until the Alarm is canceled.
+     * @param delay run the first interrupt after this time
+     * @param unit TimeUnit for {@code delay}
+     * @param msgOut PrintWriter for logging
+     * @param threadToInterrupt The thread to call interrupt() on
+     * @return a new Alarm instance
+     */
+    public static Alarm schedulePeriodicInterrupt(long delay,
+                                                  TimeUnit unit,
+                                                  PrintWriter msgOut,
+                                                  final Thread threadToInterrupt) {
+        Interruptor runner = new Interruptor(delay, unit, msgOut, threadToInterrupt);
+        runner.future = executor
+            .scheduleWithFixedDelay(runner,
+                                    TimeUnit.MILLISECONDS.convert(delay, unit),
+                                    100,
+                                    TimeUnit.MILLISECONDS);
+        return runner;
     }
 
-    Alarm(long delay, Thread threadToInterrupt, String testName, PrintWriter out) {
-        super();
-        if (threadToInterrupt == null)
-            throw new NullPointerException();
-        this.testName = testName;
-        this.msgOut = out;
+    /**
+     * Schedule an Alarm to interrupt() a specified thread.
+     * The interrupt() will happen after the time specified by {@code delay}
+     * and {@code delayUnit}.
+     * @param delay run the interrupt after this time
+     * @param unit TimeUnit for {@code delay}
+     * @param msgOut PrintWriter for logging
+     * @param threadToInterrupt The thread to call interrupt() on
+     * @return a new Alarm instance
+     */
+    public static Alarm scheduleInterrupt(long delay,
+                                          TimeUnit unit,
+                                          PrintWriter msgOut,
+                                          final Thread threadToInterrupt) {
+        Interruptor runner = new Interruptor(delay, unit, msgOut, threadToInterrupt);
+        runner.future = executor.schedule(runner, delay, unit);
+        return runner;
+    }
+
+    /**
+     * Schedule an Alarm to run the specified Runnable.
+     * The Runnable will be run after the time specified by {@code delay}
+     * and {@code delayUnit}.
+     * @param delay run after this time
+     * @param unit TimeUnit for {@code delay}
+     * @param msgOut PrintWriter for logging
+     * @param r the Runnable
+     * @return a new Alarm instance
+     */
+    public static Alarm schedule(long delay,
+                                 TimeUnit unit,
+                                 PrintWriter msgOut,
+                                 Runnable r) {
+        RunnableAlarm runner = new RunnableAlarm(delay, unit, msgOut, r);
+        runner.future = executor.schedule(runner, delay, unit);
+        return runner;
+    }
+
+    protected boolean fired;
+    protected ScheduledFuture<?> future;
+    protected int count;
+    protected final long delay;
+    protected final TimeUnit delayUnit;
+    protected final PrintWriter msgOut;
+
+    /**
+     * Internal constructor.
+     */
+    protected Alarm(long delay, TimeUnit delayUnit, PrintWriter msgOut) {
         this.delay = delay;
-        this.threadToInterrupt = threadToInterrupt;
-        entry = alarmTimer.requestDelayedCallback(this, delay);
-        if (debugAlarm)
-            System.err.println(i18n.getString("alarm.started", this));
+        this.delayUnit = delayUnit;
+        this.msgOut = msgOut;
     }
 
-    synchronized void cancel() {
-        if (debugAlarm) {
-            System.err.println(i18n.getString("alarm.cancelled", this));
-        }
-        alarmTimer.cancel(entry);
+    /**
+     * Cancel the Alarm.
+     */
+    public void cancel() {
+        future.cancel(true);
     }
 
-    public synchronized void timeout() {
-        if (count == 0)
-            msgOut.println(i18n.getString("alarm.timeout", new Float(delay / 1000.0F)));
-        else if (count % 100 == 0) {
-            msgOut.println(i18n.getString("alarm.notResponding", new Integer(count)));
-            if (count % 1000 == 0)
-                System.err.println(i18n.getString("alarm.timedOut", new Object[]{ testName, new Integer(count) }));
+    /**
+     * Check if the Alarm has fired at least once.
+     * @return true if the alarm has fired, false otherwise
+     */
+    public boolean didFire() {
+        return fired;
+    }
+
+    /**
+     * Shared logic for all Alarms
+     */
+    protected void run() {
+        if (msgOut != null) {
+            if (count == 0) {
+                msgOut.println(i18n.getString("alarm.fired", TimeUnit.SECONDS.convert(delay, delayUnit)));
+            } else if (count % 100 == 0) {
+                msgOut.println(i18n.getString("alarm.refired", count));
+            }
         }
-        if (debugAlarm)
-            System.err.println(i18n.getString("alarm.interrupt", new Object[]{this, threadToInterrupt}));
-        threadToInterrupt.interrupt();
         count++;
-        entry = alarmTimer.requestDelayedCallback(this, 100);
+        fired = true;
     }
 
-    public static void finished() {
-        alarmTimer.finished();
+    /**
+     * Helper class to implement the Thread.interrupt() calls.
+     */
+    private static class Interruptor extends Alarm implements Runnable {
+        Thread threadToInterrupt;
+
+        public Interruptor(long delay, TimeUnit unit, PrintWriter msgOut, Thread t) {
+            super(delay, unit, msgOut);
+            threadToInterrupt = t;
+        }
+
+        public void run() {
+            super.run();
+            threadToInterrupt.interrupt();
+        }
     }
 
-    @Override
-    public String toString() {
-        return ("Alarm[" + Integer.toHexString(hashCode()) + "," + delay + "," + threadToInterrupt + "," + testName + "]");
+    /**
+     * Helper class to run a Runnable.
+     */
+    private static class RunnableAlarm extends Alarm implements Runnable {
+        Runnable r;
+
+        public RunnableAlarm(long delay, TimeUnit unit, PrintWriter msgOut, Runnable r) {
+            super(delay, unit, msgOut);
+            this.r = r;
+        }
+
+        public void run() {
+            super.run();
+            r.run();
+        }
     }
 
-    public enum State {
-        WAITING, FIRED, TIMEDOUT
+    /**
+     * An Alarm instance that can be used to initialize an Alarm variable.
+     * This instance of Alarm will never fire.
+     */
+    public static final Alarm NONE = new NoAlarm(0, TimeUnit.MILLISECONDS, null);
+
+    private static class NoAlarm extends Alarm {
+        protected NoAlarm(long delay, TimeUnit delayUnit, PrintWriter msgOut) {
+            super(delay, delayUnit, msgOut);
+        }
+
+        @Override
+        public void cancel() {
+        }
+
+        @Override
+        public boolean didFire() {
+            return false;
+        }
     }
 
-    public State getState() {
-        return (count == 0 ? State.WAITING : count < 1000 ? State.FIRED : State.TIMEDOUT);
+    /**
+     * Our own ThreadFactory to make the thread in the pool be a daemon threads.
+     */
+    private static class DaemonThreadFactory implements ThreadFactory {
+
+        ThreadFactory defaultFactory = Executors.defaultThreadFactory();
+
+        public Thread newThread(Runnable r) {
+            Thread thread = defaultFactory.newThread(r);
+            thread.setDaemon(true);
+            return thread;
+        }
     }
 
-    private final String testName;
-    private final PrintWriter msgOut;
-    private final long delay;
-    private final Thread threadToInterrupt;
-    private int count;
-    private Timer.Entry entry;
-
-
-    protected static Timer alarmTimer = new Timer();
-    private static boolean debugAlarm = Boolean.getBoolean("debug.com.sun.javatest.regtest.Alarm");
-    private static final I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(Alarm.class);
+    private static final ScheduledThreadPoolExecutor executor =
+            new ScheduledThreadPoolExecutor(1, new DaemonThreadFactory());
+    private static final I18NResourceBundle i18n =
+            I18NResourceBundle.getBundleForClass(Alarm.class);
 }

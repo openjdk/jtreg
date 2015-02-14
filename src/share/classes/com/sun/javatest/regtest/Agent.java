@@ -49,13 +49,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.concurrent.TimeUnit;
 
 import com.sun.javatest.Status;
 import com.sun.javatest.TestResult;
-import com.sun.javatest.util.Timer;
 
 import static com.sun.javatest.regtest.RStatus.*;
-import java.util.TimerTask;
 
 public class Agent {
     public static class Fault extends Exception {
@@ -188,14 +187,33 @@ public class Agent {
             Map<String, String> testProps,
             List<String> cmdArgs,
             int timeout,
-            TimeoutHandler timeoutHandler,
+            final TimeoutHandler timeoutHandler,
             TestResult.Section trs)
             throws Fault {
+        final PrintWriter messageWriter = trs.getMessageWriter();
         // Handle the timeout here (instead of in the agent) to make it possible
         // to see the unchanged state of the Agent JVM when the timeout happens.
-        TimeoutTask timeoutTask = new TimeoutTask(timeoutHandler);
+        Alarm alarm = Alarm.NONE;
         if (timeout > 0) {
-            timer.schedule(timeoutTask, (long)timeout * 1000);
+            if (timeoutHandler == null) {
+                throw new NullPointerException("TimeoutHandler is required");
+            }
+            alarm = Alarm.schedule(timeout, TimeUnit.SECONDS, messageWriter, new Runnable() {
+                public void run() {
+                    timeoutHandler.handleTimeout(process);
+                    // close the streams to release us from readResults()
+                    try {
+                        out.close();
+                    } catch (IOException ex) {
+                        ex.printStackTrace(messageWriter);
+                    }
+                    try {
+                        in.close();
+                    } catch (IOException ex) {
+                        ex.printStackTrace(messageWriter);
+                    }
+                }
+            });
         }
         keepAlive.setEnabled(false);
         try {
@@ -214,13 +232,13 @@ public class Agent {
         } catch (IOException e) {
             if (traceAgent)
                 System.err.println("Agent.doCompileAction: error " + e);
-            if (timeoutTask.hasTimedOut()) {
-                throw new Fault(new Exception("Agent timed out with a timeout of "
+            if (alarm.didFire()) {
+                throw new Fault(new Exception("Agent timed out after a timeout of "
                     + timeout + " seconds"));
             }
             throw new Fault(e);
         } finally {
-            timeoutTask.cancel();
+            alarm.cancel();
             keepAlive.setEnabled(true);
         }
     }
@@ -232,14 +250,33 @@ public class Agent {
             String testClass,
             List<String> testArgs,
             int timeout,
-            TimeoutHandler timeoutHandler,
+            final TimeoutHandler timeoutHandler,
             TestResult.Section trs)
             throws Fault {
+        final PrintWriter messageWriter = trs.getMessageWriter();
         // Handle the timeout here (instead of in the agent) to make it possible
         // to see the unchanged state of the Agent JVM when the timeout happens.
-        TimeoutTask timeoutTask = new TimeoutTask(timeoutHandler);
+        Alarm alarm = Alarm.NONE;
         if (timeout > 0) {
-            timer.schedule(timeoutTask, (long)timeout * 1000);
+            if (timeoutHandler == null) {
+                throw new NullPointerException("TimeoutHandler is required");
+            }
+            alarm = Alarm.schedule(timeout, TimeUnit.SECONDS, messageWriter, new Runnable() {
+                public void run() {
+                    timeoutHandler.handleTimeout(process);
+                    // close the streams to release us from readResults()
+                    try {
+                        out.close();
+                    } catch (Exception ex) {
+                        ex.printStackTrace(messageWriter);
+                    }
+                    try {
+                        in.close();
+                    } catch (Exception ex) {
+                        ex.printStackTrace(messageWriter);
+                    }
+                }
+            });
         }
         keepAlive.setEnabled(false);
         try {
@@ -264,51 +301,16 @@ public class Agent {
         } catch (IOException e) {
             if (traceAgent)
                 System.err.println("Agent.doMainAction: error " + e);
-            if (timeoutTask.hasTimedOut()) {
+            if (alarm.didFire()) {
                 throw new Fault(new Exception("Agent timed out with a timeout of "
                     + timeout + " seconds"));
             }
             throw new Fault(e);
         } finally {
-            timeoutTask.cancel();
+            alarm.cancel();
             keepAlive.setEnabled(true);
         }
     }
-
-
-    private class TimeoutTask extends TimerTask {
-
-        TimeoutTask(TimeoutHandler timeoutHandler) {
-            if (timeoutHandler == null) {
-                throw new NullPointerException("TimeoutHandler is required");
-            }
-            this.timeoutHandler = timeoutHandler;
-        }
-
-        @Override
-        public void run() {
-            timedOut = true;
-            timeoutHandler.handleTimeout(process);
-            // close the streams to release us from readResults()
-            try {
-                out.close();
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
-            try {
-                in.close();
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
-        }
-
-        public boolean hasTimedOut() {
-            return timedOut;
-        }
-
-        private boolean timedOut = false;
-        private final TimeoutHandler timeoutHandler;
-    };
 
     public void close() {
         if (showAgent || traceAgent)
@@ -323,9 +325,8 @@ public class Agent {
             process.destroy(); // force shutdown if necessary
         }
 
-        final int PROCESS_CLOSE_TIMEOUT = 60 * 1000; // 1 minute
         PrintWriter pw = new PrintWriter(System.err, true);
-        Alarm alarm = new Alarm(PROCESS_CLOSE_TIMEOUT, "Agent[" + id + "]", pw);
+        Alarm alarm = Alarm.schedulePeriodicInterrupt(60, TimeUnit.SECONDS, pw, Thread.currentThread());
         try {
             int rc = process.waitFor();
             if (rc != 0 || traceAgent)
@@ -451,7 +452,6 @@ public class Agent {
     final int id;
 
     static int count;
-    static java.util.Timer timer = new java.util.Timer("Agent Timeouts", true);
 
     private static final byte DO_COMPILE = 1;
     private static final byte DO_MAIN = 2;
@@ -669,25 +669,22 @@ public class Agent {
         }
 
         synchronized void setEnabled(boolean on) {
-            if (entry != null)
-                timer.cancel(entry);
+            alarm.cancel();
             if (on) {
-                entry = timer.requestDelayedCallback(ping, WRITE_TIMEOUT);
+                alarm = Alarm.schedule(WRITE_TIMEOUT, TimeUnit.SECONDS, null, ping);
             } else {
-                entry = null;
+                alarm = Alarm.NONE;
             }
         }
 
         synchronized void finished() {
             setEnabled(false);
-            timer.finished();
         }
 
-        final Timer timer = new Timer();
         final DataOutputStream out;
 
-        final Timer.Timeable ping = new Timer.Timeable() {
-            public void timeout() {
+        final Runnable ping = new Runnable() {
+            public void run() {
                 try {
                     synchronized (out) {
                         if (trace)
@@ -701,7 +698,7 @@ public class Agent {
             }
         };
 
-        Timer.Entry entry;
+        Alarm alarm = Alarm.NONE;
         final PrintStream traceOut = System.err;
         final boolean trace;
     }

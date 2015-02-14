@@ -691,10 +691,10 @@ public class CompileAction extends Action {
             if (!stat.isPassed())
                 return stat;
 
-            Alarm alarm = null;
+            Alarm alarm = Alarm.NONE;
             if (timeout > 0) {
                 PrintWriter alarmOut = outputHandler.createOutput(OutputHandler.OutputKind.LOG);
-                alarm = new Alarm(timeout * 1000, Thread.currentThread(), testName, alarmOut);
+                alarm = Alarm.schedule(timeout, TimeUnit.SECONDS, alarmOut, Thread.currentThread());
             }
             try {
                 RegressionCompileCommand jcc = new RegressionCompileCommand() {
@@ -707,8 +707,7 @@ public class CompileAction extends Action {
                 String[] c = cmdArgs.toArray(new String[cmdArgs.size()]);
                 status = normalize(jcc.run(c, err, out));
             } finally {
-                if (alarm != null)
-                    alarm.cancel();
+                alarm.cancel();
             }
 
         } finally {

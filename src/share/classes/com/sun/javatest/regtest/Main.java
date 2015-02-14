@@ -2116,7 +2116,6 @@ public class Main {
                 ok = h.batch(params);
 
                 Agent.Pool.instance().flush();
-                Alarm.finished();
                 Lock.get(params).close();
             }
 

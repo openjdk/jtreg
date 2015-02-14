@@ -33,8 +33,6 @@ import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
 
@@ -234,19 +232,26 @@ public class ProcessCommand
                 pb.environment().clear();
                 pb.environment().putAll(env);
             }
-            Process p = pb.start();
-            InputStream processIn = p.getInputStream();
-            InputStream processErr = p.getErrorStream();
+            final Process process = pb.start();
+            InputStream processIn = process.getInputStream();
+            InputStream processErr = process.getErrorStream();
 
-            // JDK 1.8 introduces a Process.waitFor(timeout) method which could
-            // be used here. We need to be backwards compatible so using
-            // interrupt() instead.
-            TimeoutTask timeoutTask = new TimeoutTask(Thread.currentThread(), timeoutHandler, p);
+            Alarm alarm = Alarm.NONE;
             if (timeout > 0) {
-                timer.schedule(timeoutTask, timeout);
+                final Thread victim = Thread.currentThread();
+                alarm = Alarm.schedule(timeout, TimeUnit.MILLISECONDS, out, new Runnable() {
+                    public void run() {
+                        if (timeoutHandler != null) {
+                            timeoutHandler.handleTimeout(process);
+                        }
+                        // JDK 1.8 introduces a Process.waitFor(timeout) method which could
+                        // be used here. We need run on 1.5 so using interrupt() instead.
+                        victim.interrupt();
+                    }
+                });
             }
 
-            OutputStream processOut = p.getOutputStream();  // input stream to process
+            OutputStream processOut = process.getOutputStream();  // input stream to process
             if (processOut != null) {
                 processOut.close();
             }
@@ -260,18 +265,18 @@ public class ProcessCommand
 
                 outCopier.join();
                 errCopier.join();
-                int exitCode = p.waitFor();
+                int exitCode = process.waitFor();
 
                 // if the timeout hasn't fired, cancel it as quickly as possible
-                timeoutTask.cancel();
+                alarm.cancel();
 
                 return getStatus(exitCode, statusScanner.exitStatus());
 
             } catch (InterruptedException e) {
-                timeoutTask.cancel();
-                p.destroy();
+                alarm.cancel();
+                process.destroy();
                 String msg;
-                if (timeoutTask.hasTimedOut()) {
+                if (alarm.didFire()) {
                     msg = "Program `" + cmd.get(0) + "' timed out!";
                 } else {
                     msg = "Program `" + cmd.get(0) + "' interrupted!";
@@ -280,7 +285,7 @@ public class ProcessCommand
             } finally {
                 processIn.close();
                 processErr.close();
-                timeoutTask.cancel();
+                alarm.cancel();
             }
         }
         catch (IOException e) {
@@ -288,33 +293,6 @@ public class ProcessCommand
             return Status.error(msg);
         }
     }
-
-    private static class TimeoutTask extends TimerTask {
-
-        TimeoutTask(Thread victim, TimeoutHandler timeoutHandler, Process process) {
-            this.victim = victim;
-            this.timeoutHandler = timeoutHandler;
-            this.process = process;
-        }
-
-        @Override
-        public void run() {
-            timedOut = true;
-            if (timeoutHandler != null) {
-                timeoutHandler.handleTimeout(process);
-            }
-            victim.interrupt();
-        }
-
-        public boolean hasTimedOut() {
-            return timedOut;
-        }
-
-        private final Thread victim;
-        private final TimeoutHandler timeoutHandler;
-        private final Process process;
-        private boolean timedOut = false;
-    };
 
     private static class StatusScanner implements StreamCopier.LineScanner {
 
@@ -381,7 +359,5 @@ public class ProcessCommand
     private PrintWriter err;
     private long timeout;
     private TimeoutHandler timeoutHandler;
-
-    private static final Timer timer = new Timer("ProcessCommand Timeouts", true);
 }
 
