@@ -43,6 +43,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import com.sun.javatest.Status;
 
@@ -332,8 +333,8 @@ public class MainAction extends Action
         // TAG-SPEC:  "The source and class directories of a test are made
         // available to main and applet actions via the system properties
         // "test.src" and "test.classes", respectively"
-        Map<String, String> envArgs = new LinkedHashMap<String, String>();
-        envArgs.putAll(script.getEnvVars());
+        Map<String, String> env = new LinkedHashMap<String, String>();
+        env.putAll(script.getEnvVars());
 
         // some tests are inappropriately relying on the CLASSPATH environment
         // variable being set, so force the use here.
@@ -353,7 +354,7 @@ public class MainAction extends Action
             p.append(script.getTestNGJar());
 
         if (useCLASSPATH && !cp.isEmpty()) {
-            envArgs.put("CLASSPATH", cp.toString());
+            env.put("CLASSPATH", cp.toString());
         }
 
         String javaCmd = script.getJavaProg();
@@ -404,7 +405,6 @@ public class MainAction extends Action
         command.addAll(filterJavaOpts(javaOpts));
         command.add(className);
         command.addAll(classArgs);
-        String[] cmdArgs = command.toArray(new String[command.size()]);
 
         // PASS TO PROCESSCOMMAND
         Status status;
@@ -414,8 +414,8 @@ public class MainAction extends Action
             if (showMode)
                 showMode(getName(), ExecMode.OTHERVM, section);
             if (showCmd)
-                showCmd(getName(), cmdArgs, section);
-            recorder.java(envArgs, javaCmd, javaProps, javaOpts, className, classArgs);
+                showCmd(getName(), command, section);
+            recorder.java(env, javaCmd, javaProps, javaOpts, className, classArgs);
 
             // RUN THE MAIN WRAPPER CLASS
             ProcessCommand cmd = new ProcessCommand();
@@ -432,8 +432,13 @@ public class MainAction extends Action
             TimeoutHandler timeoutHandler =
                 TimeoutHandlerProvider.createHandler(script, section);
 
-            status = normalize(cmd.exec(cmdArgs, envArgs, sysOut, sysErr,
-                                        (long)timeout * 1000, timeoutHandler));
+            cmd.setCommand(command)
+                .setEnvironment(env)
+                .setStreams(sysOut, sysErr)
+                .setTimeout(timeout, TimeUnit.SECONDS)
+                .setTimeoutHandler(timeoutHandler);
+
+            status = normalize(cmd.exec());
 
         } finally {
             sysOut.close();

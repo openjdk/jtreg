@@ -38,7 +38,7 @@ public class ActionRecorder {
         this.action = action;
     }
 
-    public void exec(String[] cmd, Map<String, String> envArgs) {
+    public void exec(List<String> cmd, Map<String, String> envArgs) {
         initPW();
         // Env variables
         for (Map.Entry<String, String> var : envArgs.entrySet()) {
@@ -46,13 +46,14 @@ public class ActionRecorder {
         }
         final int CMD = 1, ARG = 2;
         int state = CMD;
-        for (int i = 0; i < cmd.length; i++) {
-            String word = cmd[i];
+        int size = cmd.size();
+        for (int i = 0; i < size; i++) {
+            String word = cmd.get(i);
             switch (state) {
                 case CMD:
                     pw.print("    ");
                     pw.print(escape(word));
-                    if (i + 1 < cmd.length) {
+                    if (i + 1 < size) {
                         pw.println(" \\");
                         pw.print("       ");
                     }

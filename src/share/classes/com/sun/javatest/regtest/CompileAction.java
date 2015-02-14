@@ -46,6 +46,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import com.sun.javatest.Status;
 
@@ -400,8 +401,8 @@ public class CompileAction extends Action {
         Map<String, String> javacProps = script.getTestProperties();
 
         // CONSTRUCT THE COMMAND LINE
-        Map<String, String> envArgs = new LinkedHashMap<String, String>();
-        envArgs.putAll(script.getEnvVars());
+        Map<String, String> env = new LinkedHashMap<String, String>();
+        env.putAll(script.getEnvVars());
 
         // Why JavaTest?
         SearchPath cp = new SearchPath(script.getJavaTestClassPath(), script.getCompileClassPath());
@@ -449,7 +450,7 @@ public class CompileAction extends Action {
         if (showCmd)
             showCmd("compile", command, section);
 
-        recorder.javac(envArgs, javacCmd, javacVMOpts, javacProps, javacArgs);
+        recorder.javac(env, javacCmd, javacVMOpts, javacProps, javacArgs);
 
         // PASS TO PROCESSCOMMAND
         PrintStringWriter stdOut = new PrintStringWriter();
@@ -462,14 +463,18 @@ public class CompileAction extends Action {
                 return getStatusForJavacExitCode(v, exitCode);
             }
         };
-        cmd.setExecDir(script.absTestScratchDir());
 
         TimeoutHandler timeoutHandler =
             TimeoutHandlerProvider.createHandler(script, section);
 
-        String[] cmdArgs = command.toArray(new String[command.size()]);
-        status = normalize(cmd.exec(cmdArgs, envArgs, stdOut, stdErr,
-                                    (long) timeout * 1000, timeoutHandler));
+        cmd.setExecDir(script.absTestScratchDir())
+            .setCommand(command)
+            .setEnvironment(env)
+            .setStreams(stdOut, stdErr)
+            .setTimeout(timeout, TimeUnit.SECONDS)
+            .setTimeoutHandler(timeoutHandler);
+
+        status = normalize(cmd.exec());
 
         PrintWriter sysOut = section.createOutput("System.out");
         sysOut.write(stdOut.getOutput());

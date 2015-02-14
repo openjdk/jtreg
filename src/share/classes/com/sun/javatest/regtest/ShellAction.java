@@ -33,6 +33,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import com.sun.javatest.Status;
 
@@ -218,8 +219,6 @@ public class ShellAction extends Action
             command.add(shellFile.getPath());
             command.addAll(shellArgs);
 
-            String[] cmdArgs = command.toArray(new String[command.size()]);
-
             // PASS TO PROCESSCOMMAND
             PrintWriter sysOut = section.createOutput("System.out");
             PrintWriter sysErr = section.createOutput("System.err");
@@ -227,15 +226,18 @@ public class ShellAction extends Action
             if (lock != null) lock.lock();
             try {
                 if (showCmd)
-                    showCmd("shell", cmdArgs, section);
-                recorder.exec(cmdArgs, env);
+                    showCmd("shell", command, section);
+                recorder.exec(command, env);
 
                 // RUN THE SHELL SCRIPT
-                ProcessCommand cmd = new ProcessCommand();
-                cmd.setExecDir(script.absTestScratchDir());
+                ProcessCommand cmd = new ProcessCommand()
+                    .setExecDir(script.absTestScratchDir())
+                    .setCommand(command)
+                    .setEnvironment(env)
+                    .setStreams(sysOut, sysErr)
+                    .setTimeout(timeout, TimeUnit.SECONDS);
 
-                status = normalize(cmd.exec(cmdArgs, env, sysOut, sysErr,
-                                            (long)timeout * 1000, null));
+                status = normalize(cmd.exec());
 
             } finally {
                 if (lock != null) lock.unlock();

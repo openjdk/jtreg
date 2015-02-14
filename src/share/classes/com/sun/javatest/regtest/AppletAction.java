@@ -39,6 +39,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import com.sun.javatest.Status;
 
@@ -273,9 +274,6 @@ public class AppletAction extends Action
         command.add("com.sun.javatest.regtest.AppletWrapper");
         command.add(appArgFileName.getPath());
 
-        // convert from List to String[]
-        String[] cmdArgs = command.toArray(new String[command.size()]);
-
         env.putAll(script.getEnvVars());
 
         Status status;
@@ -283,9 +281,9 @@ public class AppletAction extends Action
         PrintWriter sysErr = section.createOutput("System.err");
         try {
             if (showCmd)
-                showCmd("applet", cmdArgs, section);
+                showCmd("applet", command, section);
 
-            recorder.exec(cmdArgs, env);
+            recorder.exec(command, env);
 
             // RUN THE APPLET WRAPPER CLASS
             ProcessCommand cmd = new ProcessCommand();
@@ -301,13 +299,19 @@ public class AppletAction extends Action
                                  failed(EXEC_FAIL));
             cmd.setDefaultStatus(failed(UNEXPECT_SYS_EXIT));
 
+            TimeoutHandler timeoutHandler =
+                TimeoutHandlerProvider.createHandler(script, section);
+
+            cmd.setCommand(command)
+                .setEnvironment(env)
+                .setStreams(sysOut, sysErr)
+                .setTimeout(timeout, TimeUnit.SECONDS)
+                .setTimeoutHandler(timeoutHandler);
+
             // allow only one applet to run at a time, we don't want the tester
             // to be inundated with applet tests
             synchronized(appletLock) {
-                TimeoutHandler timeoutHandler =
-                    TimeoutHandlerProvider.createHandler(script, section);
-                status = normalize(cmd.exec(cmdArgs, env, sysOut, sysErr,
-                                            (long)timeout * 1000, timeoutHandler));
+                status = normalize(cmd.exec());
             }
         } finally {
             if (sysOut != null) sysOut.close();

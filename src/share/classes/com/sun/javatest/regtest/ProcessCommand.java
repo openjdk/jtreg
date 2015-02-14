@@ -31,13 +31,15 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.TimeUnit;
 
 
 /**
- * A Command to execute an arbitrary OS command.
+ * A helper class to execute an arbitrary OS command.
  **/
 public class ProcessCommand
 {
@@ -48,8 +50,9 @@ public class ProcessCommand
      *
      * @param exitCode The process exit code for which to assign a status.
      * @param status The status to associate with the exit code.
+     * @return a reference to this object
      */
-    public void setStatusForExit(int exitCode, Status status) {
+    public ProcessCommand setStatusForExit(int exitCode, Status status) {
         if (statusTable == null) {
             statusTable = new HashMap();
             if (defaultStatus == null) {
@@ -57,6 +60,7 @@ public class ProcessCommand
             }
         }
         statusTable.put(exitCode, status);
+        return this;
     }
 
     /**
@@ -69,22 +73,26 @@ public class ProcessCommand
      *
      * @param status The default status to use when a specific status
      * has not been set for a particular process exit code.
+     * @return a reference to this object
      */
-    public void setDefaultStatus(Status status) {
+    public ProcessCommand setDefaultStatus(Status status) {
         if (statusTable == null) {
             statusTable = new HashMap();
         }
         defaultStatus = status;
+        return this;
     }
 
     /**
      * Set the directory in which to execute the process.
      * Use null to indicate the default directory.
      * @param dir the directory in which to execute the process.
+     * @return a reference to this object
      * @see #getExecDir
      */
-    public void setExecDir(File dir) {
+    public ProcessCommand setExecDir(File dir) {
         execDir = dir;
+        return this;
     }
 
     /**
@@ -98,27 +106,134 @@ public class ProcessCommand
     }
 
     /**
-     * Execute a command.
-     * @param cmd       The command to be executed
-     * @param env    The environment to be passed to the command
-     * @param out       A stream for logging normal output.
-     * @param err       A stream for logging error output.
-     * @param timeout   Timeout (in milliseconds) to wait for the launched process.
-     * @param timeoutHandler Handler to call in the case of a timeout,
-     *                  or null if no handler.
-     * @return          The result of the method is obtained by calling
-     *                  <code>getStatus</code> after the command completes.
-     * @see #run
+     * Sets the command to be executed.
+     * @param cmd The command to be executed
+     * @return a reference to this object
+     */
+    public ProcessCommand setCommand(List<String> cmd) {
+        this.cmd = cmd;
+        return this;
+    }
+
+    /**
+     * Gets the command to be executed.
+     * @return the command to be executed
+     */
+    public List<String> getCommand() {
+        return cmd;
+    }
+
+    /**
+     * Sets the environment for the command.
+     * @param env The environment to be passed to the command
+     * @return a reference to this object
+     */
+    public ProcessCommand setEnvironment(Map<String, String> env) {
+        this.env = env;
+        return this;
+    }
+
+    /**
+     * Gets the environment used for the command.
+     * @return the environment
+     */
+    public Map<String, String> getEnvironment() {
+        return env;
+    }
+
+    /**
+     * Set the streams for logging normal and error output.
+     * @param out the stream used for normal output
+     * @param err the stream uses for error output
+     * @return a reference to this object
+     */
+    public ProcessCommand setStreams(PrintWriter out, PrintWriter err) {
+        if (out == null) {
+            throw new IllegalArgumentException("Output stream is required");
+        }
+        if (err == null) {
+            throw new IllegalArgumentException("Error stream is required");
+        }
+        this.out = out;
+        this.err = err;
+        return this;
+    }
+
+    /**
+     * Get the stream for logging normal output.
+     * @return the stream
+     */
+    public PrintWriter getOutStream() {
+        return out;
+    }
+
+    /**
+     * Get the stream for logging error output.
+     * @return the stream
+     */
+    public PrintWriter getErrorStream() {
+        return err;
+    }
+
+    /**
+     * Set the timeout to wait for the launched process.
+     * @param timeout the timeout
+     * @param unit the unit of the timeout value
+     * @return a reference to this object
+     */
+    public ProcessCommand setTimeout(long timeout, TimeUnit unit) {
+        this.timeout = TimeUnit.MILLISECONDS.convert(timeout, unit);
+        return this;
+    }
+
+    /**
+     * Get the timeout to wait for the launched process.
+     * @return the timeout (in milliseconds)
+     */
+    public long getTimeout() {
+        return timeout;
+    }
+
+    /**
+     * Handler to call in the case of a timeout.
+     * @param timeoutHandler the handler
+     * @return a reference to this object
+     */
+    public ProcessCommand setTimeoutHandler(TimeoutHandler timeoutHandler) {
+        this.timeoutHandler = timeoutHandler;
+        return this;
+    }
+
+    /**
+     * Get the timeout handler.
+     * @return the timeout handler
+     */
+    public TimeoutHandler getTimeoutHandler() {
+        return timeoutHandler;
+    }
+
+    /**
+     * Execute the command.
+     * @return The result of the method is obtained by calling
+     *         <code>getStatus</code> after the command completes.
+     * @throws NullPointerException if an element of the command list is null
+     * @throws IndexOutOfBoundsException if the command is an empty list (has size 0)
      * @see #getStatus
      */
-    public Status exec(String[] cmd, Map<String, String> env,
-                       PrintWriter out, PrintWriter err,
-                       long timeout, TimeoutHandler timeoutHandler) {
+    public Status exec() {
+        if (out == null) {
+            throw new IllegalArgumentException("Output stream is required");
+        }
+        if (err == null) {
+            throw new IllegalArgumentException("Error stream is required");
+        }
         try {
             ProcessBuilder pb = new ProcessBuilder(cmd);
             pb.directory(execDir);
-            pb.environment().clear();
-            pb.environment().putAll(env);
+            if (env != null) {
+                pb.environment().clear();
+                pb.environment().putAll(env);
+            }
             Process p = pb.start();
             InputStream processIn = p.getInputStream();
             InputStream processErr = p.getErrorStream();
@@ -157,9 +272,9 @@ public class ProcessCommand
                 p.destroy();
                 String msg;
                 if (timeoutTask.hasTimedOut()) {
-                    msg = "Program `" + cmd[0] + "' timed out!";
+                    msg = "Program `" + cmd.get(0) + "' timed out!";
                 } else {
-                    msg = "Program `" + cmd[0] + "' interrupted!";
+                    msg = "Program `" + cmd.get(0) + "' interrupted!";
                 }
                 return Status.error(msg);
             } finally {
@@ -169,7 +284,7 @@ public class ProcessCommand
             }
         }
         catch (IOException e) {
-            String msg = "Error invoking program `" + cmd[0] + "': " + e;
+            String msg = "Error invoking program `" + cmd.get(0) + "': " + e;
             return Status.error(msg);
         }
     }
@@ -260,6 +375,12 @@ public class ProcessCommand
     private HashMap statusTable;
     private Status defaultStatus = Status.error("unknown reason");
     private File execDir;
+    private List<String> cmd;
+    private Map<String, String> env;
+    private PrintWriter out;
+    private PrintWriter err;
+    private long timeout;
+    private TimeoutHandler timeoutHandler;
 
     private static final Timer timer = new Timer("ProcessCommand Timeouts", true);
 }
