@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2001, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -50,6 +50,7 @@ import com.sun.javatest.TestDescription;
 import com.sun.javatest.TestEnvironment;
 import com.sun.javatest.TestFilter;
 import com.sun.javatest.interview.BasicInterviewParameters;
+import com.sun.javatest.regtest.agent.SearchPath;
 import com.sun.javatest.util.I18NResourceBundle;
 
 public class RegressionParameters
@@ -438,19 +439,19 @@ public class RegressionParameters
 
         v = (String) data.get(prefix + TEST_VM_OPTIONS);
         if (v != null && v.length() > 0)
-            setTestVMOptions(Arrays.asList(StringArray.splitSeparator("\n", v)));
+            setTestVMOptions(Arrays.asList(StringUtils.splitSeparator("\n", v)));
 
         v = (String) data.get(prefix + TEST_COMPILER_OPTIONS);
         if (v != null && v.length() > 0)
-            setTestCompilerOptions(Arrays.asList(StringArray.splitSeparator("\n", v)));
+            setTestCompilerOptions(Arrays.asList(StringUtils.splitSeparator("\n", v)));
 
         v = (String) data.get(prefix + TEST_JAVA_OPTIONS);
         if (v != null && v.length() > 0)
-            setTestJavaOptions(Arrays.asList(StringArray.splitSeparator("\n", v)));
+            setTestJavaOptions(Arrays.asList(StringUtils.splitSeparator("\n", v)));
 
         v = (String) data.get(prefix + RETAIN_ARGS);
         if (v != null && v.length() > 0)
-            setRetainArgs(Arrays.asList(StringArray.splitSeparator("\n", v)));
+            setRetainArgs(Arrays.asList(StringUtils.splitSeparator("\n", v)));
 
         v = (String) data.get(prefix + JUNIT);
         if (v != null)
@@ -536,9 +537,9 @@ public class RegressionParameters
         Map<String, String> env;
         if ((envString != null) && (envString.length() != 0)) {
             env = new LinkedHashMap<String, String>();
-            String[] envArr = StringArray.splitSeparator(sep, envString);
+            String[] envArr = StringUtils.splitSeparator(sep, envString);
             for (String e : envArr) {
-                String[] split = StringArray.splitSeparator("=", e);
+                String[] split = StringUtils.splitSeparator("=", e);
                 env.put(split[0], split[1]);
             }
         } else {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008, 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2007, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,27 +22,36 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.sun.javatest.regtest;
+package com.sun.javatest.regtest.agent;
 
-import java.util.Collection;
-import com.sun.javatest.regtest.agent.StringArray;
 
-/**
- * String utilities.
- * (Not restricted to -target 1.1)
- */
-public class StringUtils extends StringArray {
-    public static String join(Collection<String> list) {
-        return join(list, " ");
+public enum JDK_Version {
+    V1_1("1.1"),
+    V1_2("1.2"),
+    V1_3("1.3"),
+    V1_4("1.4"),
+    V1_5("1.5"),
+    V1_6("1.6"),
+    V1_7("1.7"),
+    V1_8("1.8"),
+    V1_9("1.9"),
+    // proactive ...
+    V1_10("1.10");
+
+    JDK_Version(String name) {
+        this.name = name;
     }
 
-    public static String join(Collection<String> list, String sep) {
-        StringBuilder sb = new StringBuilder();
-        for (String s: list) {
-            if (sb.length() > 0)
-                sb.append(sep);
-            sb.append(s);
+    public final String name;
+
+    public static JDK_Version forName(String name) {
+        for (JDK_Version v: values()) {
+            if (v.name.equals(name))
+                return v;
         }
-        return sb.toString();
+        return null;
+    }
+    public static JDK_Version forThisJVM() {
+        return forName(System.getProperty("java.specification.version"));
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -25,6 +25,7 @@
 
 package com.sun.javatest.regtest;
 
+import com.sun.javatest.regtest.agent.JDK_Version;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -50,7 +51,7 @@ public class RegressionContext implements Expr.Context {
         values.put("null", "null");
 
         JDK jdk = (params == null) ? null : params.getTestJDK();
-        JDK.Version jdkVersion = (jdk == null) ? null : jdk.getVersion(params);
+        JDK_Version jdkVersion = (jdk == null) ? null : jdk.getVersion(params);
         values.put("jdk.version", jdkVersion != null ? jdkVersion.name : "unknown");
         // profile... (JDK 8)
         // modules... (JDK 9)

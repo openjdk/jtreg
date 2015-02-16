@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -43,6 +43,7 @@ import java.util.regex.Pattern;
 
 import com.sun.javatest.util.I18NResourceBundle;
 import static com.sun.javatest.regtest.Option.ArgType.*;
+import com.sun.javatest.regtest.agent.SearchPath;
 
 /**
  * Manager to drive jcov code coverage tool.

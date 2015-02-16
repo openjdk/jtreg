@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -27,7 +27,7 @@ package com.sun.javatest.regtest;
 
 import com.sun.javatest.Status;
 
-import static com.sun.javatest.regtest.RStatus.*;
+import static com.sun.javatest.regtest.agent.RStatus.*;
 
 /**
  * This class implements the "ignore" action as described by the JDK tag
@@ -95,18 +95,18 @@ public class IgnoreAction extends Action
             case QUIET:
                 throw new IllegalStateException();
             case ERROR:
-                recorder.exec("# @ignore: " + StringArray.join(args) + "\nexit 1");
+                recorder.exec("# @ignore: " + StringUtils.join(args) + "\nexit 1");
                 if (args.length == 0)
                     status = error(IGNORE_TEST_IGNORED);
                 else
-                    status = error(IGNORE_TEST_IGNORED_C + StringArray.join(args));
+                    status = error(IGNORE_TEST_IGNORED_C + StringUtils.join(args));
                 break;
             case RUN:
-                recorder.exec("# @ignore: " + StringArray.join(args) + " (suppressed)");
+                recorder.exec("# @ignore: " + StringUtils.join(args) + " (suppressed)");
                 if (args.length == 0)
                     status = passed(IGNORE_TEST_SUPPRESSED);
                 else
-                    status = passed(IGNORE_TEST_SUPPRESSED_C + StringArray.join(args));
+                    status = passed(IGNORE_TEST_SUPPRESSED_C + StringUtils.join(args));
                 break;
             default:
                 throw new IllegalArgumentException();

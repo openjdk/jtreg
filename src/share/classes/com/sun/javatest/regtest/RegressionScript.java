@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -31,7 +31,6 @@ import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -47,8 +46,10 @@ import com.sun.javatest.TestDescription;
 import com.sun.javatest.TestEnvironment;
 import com.sun.javatest.TestResult;
 import com.sun.javatest.TestSuite;
+import com.sun.javatest.regtest.agent.JDK_Version;
 
-import static com.sun.javatest.regtest.RStatus.*;
+import static com.sun.javatest.regtest.agent.RStatus.*;
+import com.sun.javatest.regtest.agent.SearchPath;
 
 /**
   * This class interprets the TestDescription as specified by the JDK tag
@@ -255,20 +256,20 @@ public class RegressionScript extends Script {
      */
     LinkedList<Action> parseActions(String actions, boolean stopOnError) throws ParseActionsException, ParseException {
         LinkedList<Action> actionList = new LinkedList<Action>();
-        String[] runCmds = StringArray.splitTerminator(LINESEP, actions);
+        String[] runCmds = StringUtils.splitTerminator(LINESEP, actions);
         populateActionTable();
 
         for (String runCmd : runCmds) {
             // e.g. reason compile/fail/ref=Foo.ref -debug Foo.java
             // where "reason" indicates why the action should run
-            String[] tokens = StringArray.splitWS(runCmd);
+            String[] tokens = StringUtils.splitWS(runCmd);
             // [reason, compile/fail/ref=Foo.ref, -debug, Foo.java]
-            String[] verbopts = StringArray.splitSeparator("/", tokens[1]);
+            String[] verbopts = StringUtils.splitSeparator("/", tokens[1]);
             // [compile, fail, ref=Foo.ref]
             String verb = verbopts[0];
             String[][] opts = new String[verbopts.length -1][];
             for (int i = 1; i < verbopts.length; i++) {
-                opts[i-1] = StringArray.splitEqual(verbopts[i]);
+                opts[i-1] = StringUtils.splitEqual(verbopts[i]);
                 // [[fail,], [ref, Foo.ref]]
             }
             String[] args = new String[tokens.length-2];
@@ -656,7 +657,7 @@ public class RegressionScript extends Script {
         return params.getTestJDK();
     }
 
-    JDK.Version getTestJDKVersion() {
+    JDK_Version getTestJDKVersion() {
         return getTestJDK().getVersion(params);
     }
 
@@ -670,7 +671,7 @@ public class RegressionScript extends Script {
         return params.getCompileJDK();
     }
 
-    JDK.Version getCompileJDKVersion() {
+    JDK_Version getCompileJDKVersion() {
         return getCompileJDK().getVersion(params);
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -25,8 +25,7 @@
 
 package com.sun.javatest.regtest;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
+import com.sun.javatest.regtest.agent.Alarm;
 import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -37,12 +36,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.PrintWriter;
-import java.io.Writer;
-import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -54,7 +50,13 @@ import java.util.concurrent.TimeUnit;
 import com.sun.javatest.Status;
 import com.sun.javatest.TestResult;
 
-import static com.sun.javatest.regtest.RStatus.*;
+import com.sun.javatest.regtest.agent.ActionHelper;
+import com.sun.javatest.regtest.agent.AgentServer;
+import com.sun.javatest.regtest.agent.AgentServer.KeepAlive;
+import com.sun.javatest.regtest.agent.SearchPath;
+
+import static com.sun.javatest.regtest.agent.AgentServer.*;
+import static com.sun.javatest.regtest.agent.RStatus.createStatus;
 
 public class Agent {
     public static class Fault extends Exception {
@@ -66,7 +68,6 @@ public class Agent {
 
     static final boolean showAgent = Action.show("showAgent"); // mild uugh
     static final boolean traceAgent = Action.show("traceAgent");
-    static final boolean traceServer = Action.show("traceServer");
 
     /**
      * If true, communication with the Agent Server is via a socket, whose initial
@@ -83,7 +84,7 @@ public class Agent {
             System.err.println("Agent.main");
 
         try {
-            new Server(args).run();
+            new AgentServer(args).run();
         } catch (Throwable e) {
             e.printStackTrace(System.err);
             System.exit(1);
@@ -109,13 +110,13 @@ public class Agent {
             cmd.add("-Djava.security.policy=" + policyFile.toURI());
         cmd.add(Agent.class.getName());
         if (policyFile != null)
-            cmd.add(Agent.Server.ALLOW_SET_SECURITY_MANAGER);
+            cmd.add(AgentServer.ALLOW_SET_SECURITY_MANAGER);
 
         if (USE_SOCKETS) {
             ss = new ServerSocket(/*port:*/ 0, /*backlog:*/ 1);
 //            cmd.add(Agent.Server.HOST);
 //            cmd.add(String.valueOf(ss.getInetAddress().getHostAddress()));
-            cmd.add(Agent.Server.PORT);
+            cmd.add(AgentServer.PORT);
             cmd.add(String.valueOf(ss.getLocalPort()));
         }
 
@@ -352,14 +353,6 @@ public class Agent {
             out.writeUTF(s);
     }
 
-    static List<String> readList(DataInputStream in) throws IOException {
-        int n = in.readShort();
-        List<String> l = new ArrayList<String>(n);
-        for (int i = 0; i < n; i++)
-            l.add(in.readUTF());
-        return l;
-    }
-
     void writeOptionalString(String s) throws IOException {
         if (s == null)
             out.writeByte(0);
@@ -382,17 +375,6 @@ public class Agent {
         }
     }
 
-    static Map<String, String> readProperties(DataInputStream in) throws IOException {
-        int n = in.readShort();
-        Map<String, String> p = new HashMap<String, String>(n, 1.0f);
-        for (int i = 0; i < n; i++) {
-            String key = in.readUTF();
-            String value = in.readUTF();
-            p.put(key, value);
-        }
-        return p;
-    }
-
     Status readResults(TestResult.Section trs) throws IOException {
         Map<String, PrintWriter> streams = new HashMap<String, PrintWriter>();
         int op;
@@ -405,7 +387,7 @@ public class Agent {
                         System.err.println("Agent.readResults: OUTPUT \'" + name + "\' \'" + data + "\"");
                     PrintWriter pw = streams.get(name);
                     if (pw == null) {
-                        if (name.equals(Action.OutputHandler.OutputKind.LOG.name))
+                        if (name.equals(ActionHelper.OutputHandler.OutputKind.LOG.name))
                             pw = trs.getMessageWriter();
                         else
                             pw = trs.createOutput(name);
@@ -452,256 +434,6 @@ public class Agent {
     final int id;
 
     static int count;
-
-    private static final byte DO_COMPILE = 1;
-    private static final byte DO_MAIN = 2;
-    private static final byte OUTPUT = 3;
-    private static final byte STATUS = 4;
-    private static final byte KEEPALIVE = 5;
-    private static final byte CLOSE = 6;
-
-
-    static class Server implements Action.OutputHandler {
-        static final String ALLOW_SET_SECURITY_MANAGER = "-allowSetSecurityManager";
-        static final String HOST = "-host";
-        static final String PORT = "-port";
-
-        Server(String ... args) throws IOException {
-            if (traceServer)
-                traceOut.println("Agent.Server started");
-            boolean allowSetSecurityManagerFlag = false;
-            // use explicit localhost to avoid VPN issues
-            InetAddress host = InetAddress.getByName("localhost");
-            int port = -1;
-            for (int i = 0; i < args.length; i++) {
-                String arg = args[i];
-                if (arg.equals(ALLOW_SET_SECURITY_MANAGER)) {
-                    allowSetSecurityManagerFlag = true;
-                } else if (arg.equals(PORT) && i + 1 < args.length) {
-                    port = Integer.valueOf(args[++i]);
-                } else if (arg.equals(HOST) && i + 1 < args.length) {
-                    host = InetAddress.getByName(args[++i]);
-                } else
-                    throw new IllegalArgumentException(arg);
-            }
-
-            if (port > 0) {
-                Socket s = new Socket(host, port);
-                s.setSoTimeout(KeepAlive.READ_TIMEOUT);
-                in = new DataInputStream(new BufferedInputStream(s.getInputStream()));
-                out = new DataOutputStream(new BufferedOutputStream(s.getOutputStream()));
-            } else {
-                in = new DataInputStream(new BufferedInputStream(System.in));
-                out = new DataOutputStream(new BufferedOutputStream(System.out));
-            }
-            keepAlive = new KeepAlive(out, traceServer);
-
-            RegressionSecurityManager.install();
-            SecurityManager sm = System.getSecurityManager();
-            if (sm instanceof RegressionSecurityManager) {
-                RegressionSecurityManager rsm = (RegressionSecurityManager) sm;
-                rsm.setAllowPropertiesAccess(true);
-                if (allowSetSecurityManagerFlag)
-                    rsm.setAllowSetSecurityManager(true);
-                rsm.setAllowSetIO(true);
-            }
-        }
-
-        void run() throws IOException {
-            try {
-                int op;
-                while ((op = in.read()) != -1) {
-                    switch (op) {
-                        case DO_COMPILE:
-                            doCompile();
-                            break;
-                        case DO_MAIN:
-                            doMain();
-                            break;
-                        case KEEPALIVE:
-                            break;
-                        case CLOSE:
-                            return;
-                        default:
-    //                        Thread.dumpStack();
-                            throw new Error("Agent.Server: unexpected op: " + op);
-                    }
-                    out.flush();
-                }
-            } finally {
-                keepAlive.finished();
-            }
-        }
-
-        private void doCompile() throws IOException {
-            if (traceServer)
-                traceOut.println("Agent.Server.doCompile");
-            String testName = in.readUTF();
-            Map<String, String> testProps = readProperties(in);
-            List<String> cmdArgs = readList(in);
-
-            keepAlive.setEnabled(true);
-            try {
-                Status status = CompileAction.runCompile(
-                        testName,
-                        testProps,
-                        cmdArgs,
-                        0,
-                        this);
-
-                writeStatus(status);
-            } finally {
-                keepAlive.setEnabled(false);
-            }
-
-            if (traceServer)
-                traceOut.println("Agent.Server.doCompile DONE");
-        }
-
-        private void doMain() throws IOException {
-            if (traceServer)
-                traceOut.println("Agent.Server.doMain");
-            String testName = in.readUTF();
-            Map<String, String> testProps = readProperties(in);
-            SearchPath classPath = new SearchPath(in.readUTF());
-            String className = in.readUTF();
-            List<String> classArgs = readList(in);
-
-            if (traceServer)
-                traceOut.println("Agent.Server.doMain: " + testName);
-
-            keepAlive.setEnabled(true);
-            try {
-                Status status = MainAction.runClass(
-                        testName,
-                        testProps,
-                        classPath,
-                        className,
-                        classArgs.toArray(new String[classArgs.size()]),
-                        0,
-                        this);
-                writeStatus(status);
-            } finally {
-                keepAlive.setEnabled(false);
-            }
-
-            if (traceServer)
-                traceOut.println("Agent.Server.doMain DONE");
-        }
-
-        private void writeStatus(Status s) throws IOException {
-            if (traceServer)
-                traceOut.println("Agent.Server.writeStatus: " + s);
-            synchronized (out) {
-                out.writeByte(STATUS);
-                out.writeByte(s.getType());
-                out.writeUTF(s.getReason());
-            }
-            writers.clear();
-        }
-
-        private final KeepAlive keepAlive;
-        private final DataInputStream in;
-        private final DataOutputStream out;
-        private final PrintStream traceOut = System.err;
-        private Map<OutputKind, PrintWriter> writers =
-                new EnumMap<OutputKind, PrintWriter>(OutputKind.class);
-
-        public PrintWriter createOutput(final OutputKind kind) {
-            PrintWriter pw = writers.get(kind);
-            if (pw == null) {
-                pw = new PrintWriter(new Writer() {
-                    @Override
-                    public void write(char[] cbuf, int off, int len) throws IOException {
-                        if (traceServer)
-                            traceOut.println("Agent.Server.write[" + kind + "] " + new String(cbuf, off, len));
-                        final int BLOCKSIZE = 4096;
-                        while (len > 0) {
-                            int n = (len > BLOCKSIZE ? BLOCKSIZE : len);
-                            synchronized (out) {
-                                out.writeByte(OUTPUT);
-                                out.writeUTF(kind.name);
-                                out.writeUTF(new String(cbuf, off, n));
-                            }
-                            off += n;
-                            len -= n;
-                        }
-                        if (traceServer)
-                            traceOut.println("Agent.Server.write[" + kind + "]--done");
-                    }
-
-                    @Override
-                    public void flush() throws IOException {
-                        out.flush();
-                    }
-
-                    @Override
-                    public void close() throws IOException {
-                        out.flush();
-                    }
-                });
-                writers.put(kind, pw);
-            }
-            return pw;
-        }
-
-        public void createOutput(OutputKind kind, String output) {
-            PrintWriter pw = createOutput(kind);
-            pw.write(output);
-            pw.close();
-        }
-    }
-
-    /**
-     * Send KEEPALIVE bytes periodically to a stream.
-     * The bytes are written every {@code WRITE_TIMEOUT} milliseconds.
-     * The client reading the stream may use {@code READ_TIMEOUT} as a
-     * corresponding timeout to determine if the sending has stopped
-     * sending KEEPALIVE bytes.
-     */
-    static class KeepAlive {
-        static final int WRITE_TIMEOUT = 60 * 1000; // 1 minute
-        static final int READ_TIMEOUT = 2 * WRITE_TIMEOUT;
-
-        KeepAlive(DataOutputStream out, boolean trace) {
-            this.out = out;
-            this.trace = trace;
-        }
-
-        synchronized void setEnabled(boolean on) {
-            alarm.cancel();
-            if (on) {
-                alarm = Alarm.schedule(WRITE_TIMEOUT, TimeUnit.SECONDS, null, ping);
-            } else {
-                alarm = Alarm.NONE;
-            }
-        }
-
-        synchronized void finished() {
-            setEnabled(false);
-        }
-
-        final DataOutputStream out;
-
-        final Runnable ping = new Runnable() {
-            public void run() {
-                try {
-                    synchronized (out) {
-                        if (trace)
-                            traceOut.println("KeepAlive.ping");
-                        out.writeByte(KEEPALIVE);
-                        out.flush();
-                    }
-                    setEnabled(true);
-                } catch (IOException e) {
-                }
-            }
-        };
-
-        Alarm alarm = Alarm.NONE;
-        final PrintStream traceOut = System.err;
-        final boolean trace;
-    }
 
     /**
      * A reusable collection of JVMs with varying VM options.

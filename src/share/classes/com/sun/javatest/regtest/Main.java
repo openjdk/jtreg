@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -25,6 +25,7 @@
 
 package com.sun.javatest.regtest;
 
+import com.sun.javatest.regtest.agent.RegressionSecurityManager;
 import java.awt.EventQueue;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -87,6 +88,9 @@ import com.sun.javatest.util.BackupPolicy;
 import com.sun.javatest.util.I18NResourceBundle;
 
 import static com.sun.javatest.regtest.Option.ArgType.*;
+import com.sun.javatest.regtest.agent.JDK_Version;
+import com.sun.javatest.regtest.agent.SearchPath;
+import com.sun.javatest.util.StringArray;
 
 
 /**
@@ -1334,10 +1338,10 @@ public class Main {
     void checkJDK(JDK jdk) throws Fault {
         if (!jdk.exists())
             throw new Fault(i18n, "main.jdk.not.found", jdk);
-        JDK.Version v = jdk.getVersion(execMode, new SearchPath(jtreg_jar, javatest_jar));
+        JDK_Version v = jdk.getVersion(execMode, new SearchPath(jtreg_jar, javatest_jar));
         if (v == null)
             throw new Fault(i18n, "main.jdk.unknown.version", jdk);
-        if (v.compareTo(com.sun.javatest.regtest.JDK.Version.V1_1) <= 0)
+        if (v.compareTo(JDK_Version.V1_1) <= 0)
             throw new Fault(i18n, "main.jdk.unsupported.version", jdk, v.name);
     }
 

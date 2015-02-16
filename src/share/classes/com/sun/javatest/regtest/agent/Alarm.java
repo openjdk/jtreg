@@ -23,7 +23,7 @@
  * questions.
  */
 
-package com.sun.javatest.regtest;
+package com.sun.javatest.regtest.agent;
 
 import com.sun.javatest.util.I18NResourceBundle;
 
@@ -158,6 +158,7 @@ public class Alarm  {
             threadToInterrupt = t;
         }
 
+        @Override
         public void run() {
             super.run();
             threadToInterrupt.interrupt();
@@ -175,6 +176,7 @@ public class Alarm  {
             this.r = r;
         }
 
+        @Override
         public void run() {
             super.run();
             r.run();

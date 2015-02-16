@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -42,8 +42,10 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import com.sun.javatest.Status;
+import com.sun.javatest.regtest.agent.AppletWrapper;
 
-import static com.sun.javatest.regtest.RStatus.*;
+import static com.sun.javatest.regtest.agent.RStatus.*;
+import com.sun.javatest.regtest.agent.SearchPath;
 
 /**
  * This class implements the "applet" action as described by the JDK tag
@@ -271,7 +273,7 @@ public class AppletAction extends Action
             command.add("-Djava.security.manager=default");
 //      command.add("-Djava.security.debug=all");
 
-        command.add("com.sun.javatest.regtest.AppletWrapper");
+        command.add(AppletWrapper.class.getName());
         command.add(appArgFileName.getPath());
 
         env.putAll(script.getEnvVars());
@@ -446,7 +448,7 @@ public class AppletAction extends Action
             // verify that all of the required attributes are present
             String[] requiredAtts = {"code", "width", "height"};
 
-            for (int i = 0; i <requiredAtts.length; i++) {
+            for (int i = 0; i < requiredAtts.length; i++) {
                 if (appletAttrs.get(requiredAtts[i]) == null)
                     throw new ParseException(htmlFN + APPLET_MISS_REQ_ATTRIB
                                              + requiredAtts[i]);

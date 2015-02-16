@@ -29,7 +29,7 @@
 
 REGTEST-JDK11-CLASSES = AppletWrapper GetSystemProperty MainWrapper RStatus StringArray
 JAVAFILES.com.sun.javatest.regtest-jdk11 = \
-	$(REGTEST-JDK11-CLASSES:%=$(JAVADIR)/com/sun/javatest/regtest/%.java)
+	$(REGTEST-JDK11-CLASSES:%=$(JAVADIR)/com/sun/javatest/regtest/agent/%.java)
 
 # TODO: set -bootclasspath to JDK 1.1 classes?
 $(BUILDDIR)/classes.com.sun.javatest.regtest-jdk11.ok: \
@@ -236,7 +236,7 @@ FILES.JAR.jtreg += \
 #
 # create jtreg.jar
 
-PKGS.JAR.jtreg += com.sun.javatest.regtest
+PKGS.JAR.jtreg += com.sun.javatest.regtest com.sun.javatest.regtest.agent
 TARGETS.JAR.jtreg += $(TARGETS.com.sun.javatest.regtest)
 
 $(JTREG_IMAGEDIR)/lib/jtreg.jar: JAR_MAINCLASS = com.sun.javatest.regtest.Main

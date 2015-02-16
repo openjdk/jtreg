@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2007, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -25,6 +25,9 @@
 
 package com.sun.javatest.regtest;
 
+import com.sun.javatest.regtest.agent.GetSystemProperty;
+import com.sun.javatest.regtest.agent.JDK_Version;
+import com.sun.javatest.regtest.agent.SearchPath;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -42,33 +45,6 @@ import java.util.Set;
  * Info about a JDK
  */
 public class JDK {
-    enum Version {
-        V1_1("1.1"),
-        V1_2("1.2"),
-        V1_3("1.3"),
-        V1_4("1.4"),
-        V1_5("1.5"),
-        V1_6("1.6"),
-        V1_7("1.7"),
-        V1_8("1.8"),
-        V1_9("1.9"),
-        // proactive ...
-        V1_10("1.10");
-        Version(String name) {
-            this.name = name;
-        }
-        final String name;
-        static Version forName(String name) {
-            for (Version v: values()) {
-                if (v.name.equals(name))
-                    return v;
-            }
-            return null;
-        }
-        static Version forThisJVM() {
-            return forName(System.getProperty("java.specification.version"));
-        }
-    }
 
     public static JDK of(String javaHome) {
         return of(new File(javaHome));
@@ -148,12 +124,12 @@ public class JDK {
     }
 
     // params just used for execMode and javatestClassPath
-    public Version getVersion(RegressionParameters params) {
+    JDK_Version getVersion(RegressionParameters params) {
         return getVersion(params.getExecMode(), params.getJavaTestClassPath());
     }
 
-    public Version getVersion(ExecMode mode, SearchPath getSysPropClassPath) {
-        return Version.forName(getVersionAsString(mode, getSysPropClassPath));
+    JDK_Version getVersion(ExecMode mode, SearchPath getSysPropClassPath) {
+        return JDK_Version.forName(getVersionAsString(mode, getSysPropClassPath));
     }
 
     private synchronized String getVersionAsString(ExecMode mode, SearchPath getSysPropClassPath) {
@@ -174,7 +150,7 @@ public class JDK {
                     String out = getOutput(p);
                     int rc = p.waitFor();
                     if (rc == 0) {
-                        String[] v = StringArray.splitEqual(out.trim());
+                        String[] v = StringUtils.splitEqual(out.trim());
                         if (v.length == 2 && v[0].equals(VERSION_PROPERTY))
                             version = v[1];
                     }

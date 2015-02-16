@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -220,7 +220,7 @@ public class TestProperties {
             }
 
             private Set<File> initFileSet(Set<File> parent, String propertyName, File baseDir) {
-                String[] values = StringArray.splitWS(properties.getProperty(propertyName));
+                String[] values = StringUtils.splitWS(properties.getProperty(propertyName));
                 if (parent == null || values.length > 0) {
                     Set<File> set = (parent == null) ? new LinkedHashSet<File>() : new LinkedHashSet<File>(parent);
                     //set.addAll(Arrays.asList(values));
@@ -236,7 +236,7 @@ public class TestProperties {
             }
 
             private Set<String> initLibDirSet(Set<String> parent, String propertyName, File baseDir) {
-                String[] values = StringArray.splitWS(properties.getProperty(propertyName));
+                String[] values = StringUtils.splitWS(properties.getProperty(propertyName));
                 if (parent == null || values.length > 0) {
                     Set<String> set = (parent == null) ? new LinkedHashSet<String>() : new LinkedHashSet<String>(parent);
                     for (String v: values) {
@@ -252,7 +252,7 @@ public class TestProperties {
             }
 
             private Set<String> initSimpleSet(Set<String> parent, String propertyName) {
-                String[] values = StringArray.splitWS(properties.getProperty(propertyName));
+                String[] values = StringUtils.splitWS(properties.getProperty(propertyName));
                 if (parent == null || values.length > 0) {
                     Set<String> set = (parent == null) ? new LinkedHashSet<String>() : new LinkedHashSet<String>(parent);
                     set.addAll(Arrays.asList(values));

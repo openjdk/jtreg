@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -23,7 +23,7 @@
  * questions.
  */
 
-package com.sun.javatest.regtest;
+package com.sun.javatest.regtest.agent;
 
 import com.sun.javatest.Status;
 
@@ -32,23 +32,23 @@ public class RStatus {
 
     private RStatus() { }
 
-    static Status passed(String msg) {
+    public static Status passed(String msg) {
         return Status.passed(normalize(msg));
     }
 
-    static Status failed(String msg) {
+    public static Status failed(String msg) {
         return Status.failed(normalize(msg));
     }
 
-    static Status error(String msg) {
+    public static Status error(String msg) {
         return Status.error(normalize(msg));
     }
 
-    static Status createStatus(int code, String msg) {
+    public static Status createStatus(int code, String msg) {
         return new Status(code, normalize(msg));
     }
 
-    static Status normalize(Status s) {
+    public static Status normalize(Status s) {
         return new Status(s.getType(), normalize(s.getReason()));
     }
 

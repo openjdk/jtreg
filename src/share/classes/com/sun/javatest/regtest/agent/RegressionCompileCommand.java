@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -23,7 +23,7 @@
  * questions.
  */
 
-package com.sun.javatest.regtest;
+package com.sun.javatest.regtest.agent;
 
 
 import java.io.OutputStream;
@@ -37,7 +37,7 @@ import com.sun.javatest.Status;
 import com.sun.javatest.util.PathClassLoader;
 import com.sun.javatest.util.WriterStream;
 
-import static com.sun.javatest.regtest.RStatus.*;
+import static com.sun.javatest.regtest.agent.RStatus.*;
 
 // This is primarily a cut-n-paste copy of com.sun.javatest.lib.JavaCompileCommand,
 // that provides a way to map compiler exit codes to a status.

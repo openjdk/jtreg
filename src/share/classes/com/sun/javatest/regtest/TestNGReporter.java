@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -39,7 +39,7 @@ import java.util.regex.Pattern;
 import com.sun.javatest.TestDescription;
 import com.sun.javatest.TestResult;
 import com.sun.javatest.WorkDirectory;
-import com.sun.javatest.regtest.Action.OutputHandler.OutputKind;
+import com.sun.javatest.regtest.agent.ActionHelper.OutputHandler.OutputKind;
 
 /**
  * Class to generate aggregate reports for groups of TestNG tests

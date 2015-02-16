@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -25,6 +25,8 @@
 
 package com.sun.javatest.regtest;
 
+import com.sun.javatest.regtest.agent.ActionHelper;
+import com.sun.javatest.regtest.agent.MainActionHelper;
 import java.util.Iterator;
 import java.util.List;
 
@@ -78,7 +80,7 @@ public class JUnitAction extends MainAction
 
     } // init()
 
-    public static class JUnitRunner implements TestRunner {
+    public static class JUnitRunner implements MainActionHelper.TestRunner {
         public static void main(String... args) throws Exception {
             main(null, args);
         }

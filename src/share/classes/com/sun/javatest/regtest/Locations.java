@@ -113,7 +113,7 @@ public class Locations {
 
         libList = new ArrayList<LibLocn>();
         String libPath = td.getParameter("library");
-        for (String lib: StringArray.splitWS(libPath)) {
+        for (String lib: StringUtils.splitWS(libPath)) {
             boolean absLib = lib.startsWith("/");
             File s = absLib ? absBaseSrcDir : absTestSrcDir;
             File c = absLib ? absBaseClsDir : absTestClsDir;

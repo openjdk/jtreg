@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -38,6 +38,8 @@ import org.testng.reporters.XMLReporter;
 import static org.testng.ITestResult.*;
 
 import com.sun.javatest.Status;
+import com.sun.javatest.regtest.agent.JDK_Version;
+import com.sun.javatest.regtest.agent.MainActionHelper;
 import org.testng.IConfigurationListener;
 import org.testng.ITestNGListener;
 
@@ -98,8 +100,8 @@ public class TestNGAction extends MainAction {
             return super.build();
         } else {
             List<String> classes = listClasses(script.getCompileSourcePath().split());
-            JDK.Version v = script.getCompileJDKVersion();
-            String[][] buildOpts = v.compareTo(JDK.Version.V1_6) >= 0
+            JDK_Version v = script.getCompileJDKVersion();
+            String[][] buildOpts = v.compareTo(JDK_Version.V1_6) >= 0
                     ? new String[][] {{ "implicit", "none" }}
                     : new String[][] { };
             String[]   buildArgs = classes.toArray(new String[classes.size()]);
@@ -140,7 +142,7 @@ public class TestNGAction extends MainAction {
         script.saveScratchFile(TESTNG_RESULTS_XML, new File(tngPath));
     }
 
-    public static class TestNGRunner implements TestRunner {
+    public static class TestNGRunner implements MainActionHelper.TestRunner {
         public static void main(String... args) throws Exception {
             main(null, args);
         }

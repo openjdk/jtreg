@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -26,32 +26,20 @@
 package com.sun.javatest.regtest;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
-import java.security.Provider;
-import java.security.Security;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 
 import com.sun.javatest.Status;
 import com.sun.javatest.TestResult;
+import com.sun.javatest.regtest.agent.ActionHelper;
 
-import static com.sun.javatest.regtest.RStatus.*;
 
 /**
  * Action is an abstract base class providing the ability to control the
@@ -65,7 +53,7 @@ import static com.sun.javatest.regtest.RStatus.*;
  *
  * @author Iris A Garcia
  */
-public abstract class Action
+public abstract class Action extends ActionHelper
 {
     /**
      * The null constructor.
@@ -254,24 +242,6 @@ public abstract class Action
         return value;
     } // parseSecure()
 
-    //----------redirect streams------------------------------------------------
-
-    // if we wanted to allow more concurrency, we could try and acquire a lock here
-    static Status redirectOutput(PrintStream out, PrintStream err) {
-        synchronized (System.class) {
-            SecurityManager sc = System.getSecurityManager();
-            if (sc instanceof RegressionSecurityManager) {
-                boolean prev = ((RegressionSecurityManager) sc).setAllowSetIO(true);
-                System.setOut(out);
-                System.setErr(err);
-                ((RegressionSecurityManager) sc).setAllowSetIO(prev);
-            } else {
-                //return Status.error(MAIN_SECMGR_BAD);
-            }
-        }
-        return passed("OK");
-    } // redirectOutput()
-
     //----------logging methods-------------------------------------------------
 
     /**
@@ -287,7 +257,7 @@ public abstract class Action
         section = script.getTestResult().createSection(name);
 
         PrintWriter pw = section.getMessageWriter();
-        pw.println(LOG_COMMAND + name + " " + StringArray.join(args, " "));
+        pw.println(LOG_COMMAND + name + " " + StringUtils.join(args, " "));
         pw.println(LOG_REASON + reason);
 
         recorder = new ActionRecorder(this);
@@ -387,226 +357,6 @@ public abstract class Action
         return(b.toString());
     } // singleQuoteString()
 
-    //----------for saving/restoring properties---------------------------------
-
-    protected static Map<?, ?> copyProperties(Properties p) {
-        Map<Object, Object> h = new HashMap<Object, Object>();
-        for (Enumeration<?> e = p.propertyNames(); e.hasMoreElements(); ) {
-            Object key = e.nextElement();
-            h.put(key, p.get(key));
-        }
-        return h;
-    }
-
-    protected static Properties newProperties(Map<?, ?> h) {
-        Properties p = new Properties();
-        p.putAll(h);
-        return p;
-    }
-
-    //----------output handler--------------------------------------------------
-
-    /**
-     * OutputHandler provides an abstract way to get the streams used to record
-     * the output from an action of a test.
-     */
-    interface OutputHandler {
-        enum OutputKind {
-            LOG(""),
-            STDOUT("System.out"),
-            STDERR("System.err"),
-            DIRECT("direct"),
-            DIRECT_LOG("direct.log");
-            OutputKind(String name) { this.name = name; }
-            final String name;
-        };
-        PrintWriter createOutput(OutputKind kind);
-        void createOutput(OutputKind kind, String output);
-    }
-
-    static OutputHandler getOutputHandler(final TestResult.Section section) {
-        return new OutputHandler() {
-            public PrintWriter createOutput(OutputKind kind) {
-                if (kind == OutputKind.LOG)
-                    return section.getMessageWriter();
-                else
-                    return section.createOutput(kind.name);
-            }
-
-            public void createOutput(OutputKind kind, String output) {
-                PrintWriter pw = createOutput(kind);
-                pw.write(output);
-                pw.close();
-            }
-        };
-    }
-
-
-    //----------save state------------------------------------------------------
-
-    /**
-     * SaveState captures  important system state, such as the security manager,
-     * standard IO streams and system properties, and provides a way to
-     * subsequently restore that state.
-     */
-    static class SaveState {
-        SaveState() {
-            if (sysProps == null)
-                sysProps = copyProperties(System.getProperties());
-
-            // Save and setup streams for the test
-            stdOut = System.out;
-            stdErr = System.err;
-
-            // Default Locale
-            locale = Locale.getDefault();
-
-            // Save security manager in case changed by test
-            secMgr = System.getSecurityManager();
-
-            // If using default security manager, allow props access, and reset dirty bit
-            if (secMgr instanceof RegressionSecurityManager) {
-                RegressionSecurityManager rsm = (RegressionSecurityManager) secMgr;
-                rsm.setAllowPropertiesAccess(true);
-                rsm.resetPropertiesModified();
-            }
-
-            securityProviders = Security.getProviders();
-        }
-
-        Status restore(String testName, Status status) {
-            Status cleanupStatus = null;
-
-            // Reset security manager, if necessary
-            // Do this first, to ensure we reset permissions
-            try {
-                if (System.getSecurityManager() != secMgr) {
-                    AccessController.doPrivileged(new PrivilegedAction<Object>() {
-                        public Object run() {
-                            System.setSecurityManager(secMgr);
-                            return null;
-                        }
-                    });
-                    //System.setSecurityManager(secMgr);
-                }
-            } catch (SecurityException e) {
-                // If we cannot reset the security manager, we might not be able to do
-                // much at all -- such as write files.  So, be very noisy to the
-                // primary system error stream about this badly behaved test.
-                stdErr.println();
-                stdErr.println("***");
-                stdErr.println("*** " + testName);
-                stdErr.println("*** Cannot reset security manager after test");
-                stdErr.println("*** " + e.getMessage());
-                stdErr.println("***");
-                stdErr.println();
-                cleanupStatus = error(SAMEVM_CANT_RESET_SECMGR + ": " + e);
-            }
-
-            try {
-                final Provider[] sp = Security.getProviders();
-                if (!equal(securityProviders, sp)) {
-                    AccessController.doPrivileged(new PrivilegedAction<Object>() {
-                        public Object run() {
-                            for (Provider p : sp) {
-                                Security.removeProvider(p.getName());
-                            }
-                            for (Provider p : securityProviders) {
-                                Security.addProvider(p);
-                            }
-                            return null;
-                        }
-                    });
-                }
-            } catch (SecurityException e) {
-                cleanupStatus = error(SAMEVM_CANT_RESET_SECPROVS + ": " + e);
-            }
-
-
-            // Reset system properties, if necessary
-            // The default security manager tracks whether system properties may have
-            // been written: if so, we reset all the system properties, otherwise
-            // we just reset important props that were written in the test setup
-            boolean resetAllSysProps;
-            SecurityManager sm = System.getSecurityManager();
-            if (sm instanceof RegressionSecurityManager) {
-                resetAllSysProps = ((RegressionSecurityManager) sm).isPropertiesModified();
-            } else {
-                resetAllSysProps = true;
-            }
-            try {
-                if (resetAllSysProps) {
-                    System.setProperties(newProperties(sysProps));
-//                    System.err.println("reset properties");
-                } else {
-                    System.setProperty("java.class.path", (String) sysProps.get("java.class.path"));
-//                    System.err.println("no need to reset properties");
-                }
-            } catch (SecurityException e) {
-                if (cleanupStatus == null)
-                    cleanupStatus = error(SAMEVM_CANT_RESET_PROPS + ": " + e);
-            }
-
-            // Reset output streams
-            Status stat = redirectOutput(stdOut, stdErr);
-            if (cleanupStatus == null && !stat.isPassed())
-                cleanupStatus = stat;
-
-            // Reset locale
-            if (locale != Locale.getDefault()) {
-                Locale.setDefault(locale);
-            }
-
-            return (cleanupStatus != null ? cleanupStatus : status);
-        }
-
-        final SecurityManager secMgr;
-        final PrintStream stdOut;
-        final PrintStream stdErr;
-        final Locale locale;
-        final Provider[] securityProviders;
-        static Map<?, ?> sysProps;
-    }
-
-    private static <T> boolean equal(T[] a, T[] b) {
-        if (a == null || b == null)
-            return a == b;
-        if (a.length != b.length)
-            return false;
-        for (int i = 0; i < a.length; i++) {
-            if (a[i] != b[i])
-                return false;
-        }
-        return true;
-    }
-
-    //----------in memory streams-----------------------------------------------
-
-    static class PrintByteArrayOutputStream extends PrintStream {
-        PrintByteArrayOutputStream() {
-            super(new ByteArrayOutputStream());
-            s = (ByteArrayOutputStream) out;
-        }
-
-        String getOutput() {
-            return s.toString();
-        }
-
-        private final ByteArrayOutputStream s;
-    }
-
-    static class PrintStringWriter extends PrintWriter {
-        PrintStringWriter() {
-            super(new StringWriter());
-            w = (StringWriter) out;
-        }
-
-        String getOutput() {
-            return w.toString();
-        }
-
-        private final StringWriter w;
-    }
 
     //----------misc statics----------------------------------------------------
 
@@ -658,22 +408,14 @@ public abstract class Action
         // used in:  shell, main, applet
         EXEC_FAIL             = "Execution failed",
         EXEC_FAIL_EXPECT      = "Execution failed as expected",
-        EXEC_PASS             = "Execution successful",
         EXEC_PASS_UNEXPECT    = "Execution passed unexpectedly",
-        EXEC_ERROR_CLEANUP    = "Error while cleaning up threads after test",
         CHECK_PASS            = "Test description appears acceptable",
-
-        // used in:  compile, main
-        SAMEVM_CANT_RESET_SECMGR   = "Cannot reset security manager",
-        SAMEVM_CANT_RESET_SECPROVS = "Cannot reset security providers",
-        SAMEVM_CANT_RESET_PROPS    = "Cannot reset system properties",
 
         // used in:  compile, main
         AGENTVM_CANT_GET_VM      = "Cannot get VM for test",
         AGENTVM_IO_EXCEPTION     = "Agent communication error: %s; check console log for any additional details",
         AGENTVM_EXCEPTION        = "Agent error: %s; check console log for any additional details",
 
-        UNEXPECT_SYS_EXIT     = "Unexpected exit from test",
         CANT_FIND_SRC         = "Can't find source file: ",
 
         // applet
@@ -774,14 +516,6 @@ public abstract class Action
         MAIN_CANT_WRITE_ARGS  = "Can't write `main' argument file",
         MAIN_SECMGR_FILEOPS   = "Unable to create `main' argument file",
 
-        //    runSameJVM
-        MAIN_SECMGR_BAD       = "JavaTest not running its own security manager",
-        MAIN_THREAD_INTR      = "Thread interrupted: ",
-        MAIN_THREAD_TIMEOUT   = "Timeout",
-        MAIN_THREW_EXCEPT     = "`main' threw exception: ",
-        MAIN_CANT_LOAD_TEST   = "Can't load test: ",
-        MAIN_CANT_FIND_MAIN   = "Can't find `main' method",
-
         // shell
         SHELL_NO_SCRIPT_NAME  = "No script name provided for `shell'",
         SHELL_MANUAL_NO_VAL   = "Arguments to `manual' option not supported: ",
@@ -801,10 +535,6 @@ public abstract class Action
     protected static final boolean showCmd = show("showCmd");
     protected static final boolean showMode = show("showMode");
     protected static final boolean showJDK = show("showJDK");
-    static boolean show(String name) {
-        return Boolean.getBoolean("javatest.regtest." + name)
-                || (System.getenv("JTREG_" + name.toUpperCase()) != null);
-    }
 }
 
 

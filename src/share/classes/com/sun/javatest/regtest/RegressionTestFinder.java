@@ -493,7 +493,7 @@ public class RegressionTestFinder extends TagTestFinder
         StringBuilder newValue = new StringBuilder();
         if (tagValues.get(BUG) != null)
             newValue.append(tagValues.get(BUG));
-        for (String bugid : StringArray.splitWS(value)) {
+        for (String bugid : StringUtils.splitWS(value)) {
             // bugid checking can be switched on and off with an
             // environment var. that the testsuite finds
             if (checkBugID && !bugIdPattern.matcher(bugid).matches()) {
@@ -558,7 +558,7 @@ public class RegressionTestFinder extends TagTestFinder
         // make sure that the provided keys are all valid
         Set<String> validKeys = properties.getValidKeys(getCurrentFile());
         StringBuilder newValue = new StringBuilder();
-        for (String key: StringArray.splitWS(value)) {
+        for (String key: StringUtils.splitWS(value)) {
             if (!validKeys.contains(key)) {
                 parseError(tagValues, PARSE_KEY_BAD + key);
                 continue;

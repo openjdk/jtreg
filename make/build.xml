@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
- Copyright (c) 2007, 2013, Oracle and/or its affiliates. All rights reserved.
+ Copyright (c) 2007, 2015, Oracle and/or its affiliates. All rights reserved.
  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 
  This code is free software; you can redistribute it and/or modify it
@@ -95,10 +95,11 @@
     </patternset>
 
     <patternset id="jtreg.jdk11.files">
-        <include name="com/sun/javatest/regtest/AppletWrapper.java"/>
-        <include name="com/sun/javatest/regtest/GetSystemProperty.java"/>
-        <include name="com/sun/javatest/regtest/MainWrapper.java"/>
-        <include name="com/sun/javatest/regtest/StringArray.java"/>
+        <include name="com/sun/javatest/regtest/agent/AppletWrapper.java"/>
+        <include name="com/sun/javatest/regtest/agent/GetSystemProperty.java"/>
+        <include name="com/sun/javatest/regtest/agent/MainWrapper.java"/>
+        <include name="com/sun/javatest/regtest/agent/RStatus.java"/>
+        <include name="com/sun/javatest/regtest/agent/StringArray.java"/>
     </patternset>
 
     <target name="dist-jtreg"

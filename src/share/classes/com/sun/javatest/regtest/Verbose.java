@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006, 2011, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2006, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -58,7 +58,7 @@ public class Verbose {
 
     static Verbose decode(String s) {
         // FIXME, check all words are valid?
-        Set<String> opts = new HashSet<String>(Arrays.asList(StringArray.splitSeparator(",", s)));
+        Set<String> opts = new HashSet<String>(Arrays.asList(StringUtils.splitSeparator(",", s)));
         boolean defaultOpt = opts.contains("default");
         boolean summaryOpt = opts.contains("summary");
         boolean allOpt = opts.contains("all");

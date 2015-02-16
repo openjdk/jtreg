@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -23,7 +23,7 @@
  * questions.
  */
 
-package com.sun.javatest.regtest;
+package com.sun.javatest.regtest.agent;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -37,7 +37,7 @@ public class SearchPath {
     /**
      * Create an empty path.
      */
-    SearchPath() {
+    public SearchPath() {
     }
 
     /**
@@ -45,17 +45,16 @@ public class SearchPath {
      * Equivalent to {@code new Path().append(files)}.
      * @param files
      */
-    SearchPath(List<File> files) {
+    public SearchPath(List<File> files) {
         append(files);
     }
 
-
     /**
      * Create a path containing the concatenation of a series of files.
      * Equivalent to {@code new Path().append(files)}.
      * @param files
      */
-    SearchPath(File... files) {
+    public SearchPath(File... files) {
         append(files);
     }
 
@@ -64,7 +63,7 @@ public class SearchPath {
      * Equivalent to {@code new Path().append(paths)}.
      * @param paths
      */
-    SearchPath(SearchPath... paths) {
+    public SearchPath(SearchPath... paths) {
         append(paths);
     }
 
@@ -73,7 +72,7 @@ public class SearchPath {
      * Equivalent to {@code new Path().append(paths)}.
      * @param paths
      */
-    SearchPath(String... paths) {
+    public SearchPath(String... paths) {
         append(paths);
     }
 
@@ -83,7 +82,7 @@ public class SearchPath {
      * @param files files to be added to the path
      * @return the path itself
      */
-    SearchPath append(List<File> files) {
+    public SearchPath append(List<File> files) {
         for (File f: files) {
             if (f.exists()) {
                 if (value.length() > 0)
@@ -100,7 +99,7 @@ public class SearchPath {
      * @param files files to be added to the path
      * @return the path itself
      */
-    SearchPath append(File... files) {
+    public SearchPath append(File... files) {
         for (File f: files) {
             if (f.exists()) {
                 if (value.length() > 0)
@@ -116,7 +115,7 @@ public class SearchPath {
      * @param paths paths to be added to the path
      * @return the path itself
      */
-    SearchPath append(SearchPath... paths) {
+    public SearchPath append(SearchPath... paths) {
         for (SearchPath p: paths) {
             if (p.value.length() > 0) {
                 if (value.length() > 0)
@@ -132,7 +131,7 @@ public class SearchPath {
      * @param paths paths to be added to the path
      * @return the path itself
      */
-    SearchPath append(String... paths) {
+    public SearchPath append(String... paths) {
         for (String p: paths) {
             if (p.length() > 0) {
                 if (value.length() > 0)
@@ -147,7 +146,7 @@ public class SearchPath {
      * Return the series of files that are currently on the path.
      * @return the files on the path
      */
-    List<File> split() {
+    public List<File> split() {
         List<File> list = new ArrayList<File>();
         for (String s: StringArray.splitSeparator(PATHSEP, value)) {
             if (s.length() > 0) {
@@ -162,7 +161,7 @@ public class SearchPath {
      * @param path the subpath to be checked
      * @return true if this path contains the subpath
      */
-    boolean contains(SearchPath path) {
+    public boolean contains(SearchPath path) {
         return value.equals(path.value)
                 || value.startsWith(path.value + PATHSEP)
                 || value.endsWith(PATHSEP + path.value)
@@ -173,7 +172,7 @@ public class SearchPath {
      * Check if this path is empty.
      * @return true if this path does not have any files on it
      */
-    boolean isEmpty() {
+    public boolean isEmpty() {
         return (value.length() == 0);
     }
 
