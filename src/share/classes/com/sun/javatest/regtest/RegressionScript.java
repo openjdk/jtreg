@@ -334,17 +334,19 @@ public class RegressionScript extends Script {
         return (int) (time * getTimeoutFactor());
     }
 
-    protected synchronized float getTimeoutFactor() {
+    protected float getTimeoutFactor() {
         if (cacheJavaTestTimeoutFactor == -1) {
-            cacheJavaTestTimeoutFactor = 1; // default
+            // not synchronized, so in worst case may be set more than once
+            float value = 1; // default
             try {
                 // use [1] to get the floating point timeout factor
                 String f = (regEnv == null ? null : regEnv.lookup("javatestTimeoutFactor")[1]);
                 if (f != null)
-                    cacheJavaTestTimeoutFactor = Float.parseFloat(f);
+                    value = Float.parseFloat(f);
             } catch (TestEnvironment.Fault e) {
             } catch (NumberFormatException e) {
             }
+            cacheJavaTestTimeoutFactor = value;
         }
         return cacheJavaTestTimeoutFactor;
     }
