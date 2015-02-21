@@ -78,7 +78,7 @@ public class AgentServer implements ActionHelper.OutputHandler {
         public synchronized void setEnabled(boolean on) {
             alarm.cancel();
             if (on) {
-                alarm = Alarm.schedule(WRITE_TIMEOUT, TimeUnit.SECONDS, null, ping);
+                alarm = Alarm.schedule(WRITE_TIMEOUT, TimeUnit.MILLISECONDS, null, ping);
             } else {
                 alarm = Alarm.NONE;
             }
