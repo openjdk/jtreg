@@ -265,7 +265,7 @@ public class Locations {
             String fn = sf.getName();
             if (!(fn.endsWith(".java") || fn.endsWith(".jasm") || fn.endsWith(".jcod")))
                 continue;
-            String cn = fn.substring(fn.length() - 5);
+            String cn = fn.substring(0, fn.length() - 5);
             String className = (packageName == null) ? cn : packageName + "." + cn;
             File cf = new File(pkgClsDir, cn + ".class");
             results.add(new ClassLocn(className, l, sf, cf));
