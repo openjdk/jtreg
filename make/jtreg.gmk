@@ -64,6 +64,11 @@ RESOURCES.com.sun.javatest.regtest = \
 
 TARGETS.com.sun.javatest.regtest += $(RESOURCES.com.sun.javatest.regtest)
 
+RESOURCES.com.sun.javatest.regtest.agent = \
+       $(CLASSDIR)/com/sun/javatest/regtest/agent/i18n.properties
+
+TARGETS.com.sun.javatest.regtest += $(RESOURCES.com.sun.javatest.regtest.agent)
+
 #----------------------------------------------------------------------
 # 
 # Misc. doc files
