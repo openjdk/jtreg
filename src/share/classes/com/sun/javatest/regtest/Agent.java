@@ -323,7 +323,9 @@ public class Agent {
             out.write(CLOSE); // attempt clean shutdown
             out.close();
         } catch (IOException e) {
-            process.destroy(); // force shutdown if necessary
+            if (traceAgent)
+                System.err.println("Agent[" + id + "]: Killing process (" + e + ")");
+            ProcessUtils.destroyForcibly(process); // force shutdown if necessary
         }
 
         PrintWriter pw = new PrintWriter(System.err, true);
@@ -336,7 +338,7 @@ public class Agent {
             if (traceAgent)
                 System.err.println("Agent[" + id + "]: Interrupted while closing");
             System.err.println("Agent[" + id + "]: Killing process");
-            process.destroy();
+            ProcessUtils.destroyForcibly(process);
         } finally {
             alarm.cancel();
             Thread.interrupted(); // clear any interrupted status

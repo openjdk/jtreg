@@ -245,6 +245,7 @@ public class ProcessCommand
                         if (timeoutHandler != null) {
                             timeoutHandler.handleTimeout(process);
                         }
+                        ProcessUtils.destroyForcibly(process);
                         // JDK 1.8 introduces a Process.waitFor(timeout) method which could
                         // be used here. We need run on 1.5 so using interrupt() instead.
                         victim.interrupt();
@@ -275,7 +276,6 @@ public class ProcessCommand
 
             } catch (InterruptedException e) {
                 alarm.cancel();
-                process.destroy();
                 String msg;
                 if (alarm.didFire()) {
                     msg = "Program `" + cmd.get(0) + "' timed out!";

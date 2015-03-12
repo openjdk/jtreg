@@ -1708,7 +1708,7 @@ public class Main {
             return EXIT_EXCEPTION;
         } finally {
             if (p != null)
-                p.destroy();
+                ProcessUtils.destroyForcibly(p);
         }
     }
 
