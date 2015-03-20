@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -48,6 +48,7 @@ import com.sun.javatest.TestSuite;
 import com.sun.javatest.WorkDirectory;
 import com.sun.javatest.regtest.Main.Fault;
 import com.sun.javatest.util.I18NResourceBundle;
+import java.util.TreeMap;
 
 /**
  * Manage tests to be run by jtreg.
@@ -64,7 +65,7 @@ public class TestManager {
     private File reportDir;
     private File workDir;
 
-    Map<File, Entry> map = new HashMap<File, Entry>();
+    Map<File, Entry> map = new TreeMap<File, Entry>();
 
     private class Entry {
         final File rootDir;
