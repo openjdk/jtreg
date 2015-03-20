@@ -1304,12 +1304,12 @@ public class Main {
                         checkLockFiles(params.getWorkDirectory().getRoot(), "done");
                     }
                 }
-                if (verbose.multiRun)
+                if (verbose != null && verbose.multiRun)
                     out.println();
             }
 
             if (multiRun) {
-                if (verbose.multiRun) {
+                if (verbose != null && verbose.multiRun) {
                     out.println("Overall summary:");
                 }
                 testStats.showResultStats(out);
