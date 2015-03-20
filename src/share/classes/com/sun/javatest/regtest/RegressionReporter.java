@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -51,14 +51,13 @@ import com.sun.javatest.util.HTMLWriter;
  * For a multi-run, it generates the top level combined report directly.
  */
 public class RegressionReporter {
-    RegressionReporter(File workDirArg, File reportDirArg, PrintWriter out) {
-        this.workDirArg = workDirArg;
-        this.reportDirArg = reportDirArg;
-        this.out = out;
+    public RegressionReporter(PrintWriter log) {
+        this.log = log;
     }
 
-    void report(RegressionParameters params, ElapsedTimeHandler elapsedTimeHandler, TestStats testStats, boolean quiet) {
+    public void report(RegressionParameters params, ElapsedTimeHandler elapsedTimeHandler, TestStats testStats, boolean quiet) {
         File rd = params.getReportDir();
+        File wd = params.getWorkDirectory().getRoot();
 
         try {
             if (Thread.interrupted()) {
@@ -66,7 +65,7 @@ public class RegressionReporter {
                 // a report, because Report.writeReport checks if the interrupted bit is set,
                 // and will stop writing the report. This typically manifests itself as
                 // writing the HTML files but /not/ writing the text/summary.txt file.
-                out.println("WARNING: interrupt status cleared prior to writing report");
+                log.println("WARNING: interrupt status cleared prior to writing report");
             }
 
             Report r = new Report();
@@ -103,47 +102,48 @@ public class RegressionReporter {
 
                 TestNGReporter tng = TestNGReporter.instance(params.getWorkDirectory());
                 if (!tng.isEmpty())
-                    tng.writeReport(reportDirArg);
+                    tng.writeReport(rd);
             }
-            fixupReports(rd, workDirArg, reportDirArg);
+            fixupReports(rd, wd);
             if (!quiet)
                 logReportWritten(rd);
         } catch (IOException e) {
-            out.println("Error while writing report: " + e);
+            log.println("Error while writing report: " + e);
         } catch (SecurityException e) {
-            out.println("Error while writing report: " + e);
+            log.println("Error while writing report: " + e);
         }
     }
 
-    void report(TestManager testManager) throws Fault {
-        File parent = getCommonParent(testManager.getTestSuites());
+    public void report(TestManager testManager, File reportDir) throws Fault {
+        this.testManager = testManager;
+        this.reportDir = reportDir;
+
+        parent = getCommonParent(testManager.getTestSuites());
         // ignore the case where the common parent is just the root directory
         if (parent != null && parent.getParentFile() == null)
             parent = null;
 
         try {
             if (reportKinds.contains("html"))
-                writeHTMLReport(testManager, parent);
+                writeHTMLReport();
 
             if (reportKinds.contains("text")) {
-                writeCombinedSummary(testManager);
+                writeCombinedSummary();
                 // for extra marks, write a combined elapsedTime file
             }
 
-            writeIndex(parent);
+            writeIndex();
 
-            logReportWritten(reportDirArg);
+            logReportWritten(reportDir);
         } catch (IOException e) {
-            out.println("Error while writing report: " + e);
+            log.println("Error while writing report: " + e);
         }
     }
 
-    void logReportWritten(File reportDir) {
-        File report = new File(reportDir, "report.html"); // std through version 3.*
-        if (!report.exists())
-            report = new File(new File(reportDir, "html"), "report.html"); // version 4.*
+    private void logReportWritten(File reportDir) {
+        File report = new File(new File(reportDir, "html"), "report.html");
         if (report.exists())
-            out.println("Report written to " + canon(report));
+            log.println("Report written to " + canon(report));
     }
 
     /**
@@ -151,11 +151,11 @@ public class RegressionReporter {
      * The page is a simple table containing rows
      *      testsuite (link to work subdir) (link to report subdir)
      */
-    void writeHTMLReport(TestManager testManager, File parent) throws IOException, Fault {
+    private void writeHTMLReport() throws IOException, Fault {
         String title = (parent == null)
                 ? "MultiRun Report"
                 : "MultiRun Report: " + parent;
-        File htmlDir = new File(reportDirArg, "html");
+        File htmlDir = new File(reportDir, "html");
         htmlDir.mkdirs();
         File report = new File(htmlDir, "report.html");
         BufferedWriter htmlOut = new BufferedWriter(new FileWriter(report));
@@ -222,28 +222,27 @@ public class RegressionReporter {
      * file system, rewrite HTML files in the report directory, replacing
      * absolute paths for the work directory with relative paths.
      */
-    private void fixupReports(File dir, File work, File report) {
+    private void fixupReports(File report, File work) {
         // ensure all files normalized
-        dir = getCanonicalFile(dir);
         work = getCanonicalFile(work);
         report = getCanonicalFile(report);
 
         String canonWorkPath = getCanonicalURIPath(work);
         File workParent = work.getParentFile();
         File reportParent = report.getParentFile();
-        File htmlDir = new File(dir, "html");
+        File htmlDir = new File(report, "html");
 
         if (equal(work, report)) {
-            fixupReportFiles(dir,     canonWorkPath, ".");
+            fixupReportFiles(report,  canonWorkPath, ".");
             fixupReportFiles(htmlDir, canonWorkPath, "..");
         } else if (equal(report, workParent)) {
-            fixupReportFiles(dir,     canonWorkPath, work.getName());
+            fixupReportFiles(report,  canonWorkPath, work.getName());
             fixupReportFiles(htmlDir, canonWorkPath, "../" + work.getName());
         } else if (equal(work, reportParent)) {
-            fixupReportFiles(dir,     canonWorkPath, "..");
+            fixupReportFiles(report,  canonWorkPath, "..");
             fixupReportFiles(htmlDir, canonWorkPath, "../..");
         } else if (equal(workParent, reportParent)) {
-            fixupReportFiles(dir,     canonWorkPath, "../" + work.getName());
+            fixupReportFiles(report,  canonWorkPath, "../" + work.getName());
             fixupReportFiles(htmlDir, canonWorkPath, "../../" + work.getName());
         }
     }
@@ -264,7 +263,7 @@ public class RegressionReporter {
                             .replace("href=\"" + oldPath + "\"", "href=\"" + newPath + "\"")
                             .replace("href=\"" + dirPath + "\"", "href=\".\""));
                 } catch (IOException e) {
-                    out.println("Error while updating report: " + e);
+                    log.println("Error while updating report: " + e);
                 }
             }
         }
@@ -288,8 +287,8 @@ public class RegressionReporter {
         }
     }
 
-    private void writeCombinedSummary(TestManager testManager) throws IOException, Main.Fault {
-        File textDir = new File(reportDirArg, "text");
+    private void writeCombinedSummary() throws IOException, Main.Fault {
+        File textDir = new File(reportDir, "text");
         textDir.mkdirs();
         File report = new File(textDir, "summary.txt");
         BufferedWriter summaryOut = new BufferedWriter(new FileWriter(report));
@@ -308,11 +307,11 @@ public class RegressionReporter {
         }
     }
 
-    private void writeIndex(File parent) throws IOException {
+    private void writeIndex() throws IOException {
         String title = (parent == null)
                 ? "MultiRun Report"
                 : "MultiRun Report: " + parent;
-        File index = new File(reportDirArg, "index.html");
+        File index = new File(reportDir, "index.html");
         BufferedWriter indexOut = new BufferedWriter(new FileWriter(index));
         try {
             HTMLWriter html = new HTMLWriter(indexOut);
@@ -436,9 +435,11 @@ public class RegressionReporter {
         return (t1 == null ? t2 == null : t1.equals(t2));
     }
 
-    File workDirArg;
-    File reportDirArg;
-    PrintWriter out;
+    final PrintWriter log;
+
+    private File reportDir;
+    private TestManager testManager;
+    private File parent;
 
     DateFormat df = DateFormat.getDateTimeInstance();
     String backups = System.getProperty("javatest.report.backups"); // default: none

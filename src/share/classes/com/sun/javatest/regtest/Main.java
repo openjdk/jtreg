@@ -1308,8 +1308,8 @@ public class Main {
 
             if (multiRun) {
                 testStats.showResultStats(out);
-                RegressionReporter r = new RegressionReporter(workDirArg, reportDirArg, out);
-                r.report(testManager);
+                RegressionReporter r = new RegressionReporter(out);
+                r.report(testManager, reportDirArg);
                 if (!reportOnlyFlag)
                     out.println("Results written to " + canon(workDirArg));
             }
@@ -2127,7 +2127,7 @@ public class Main {
                 stats.showResultStats(out);
 
             if (reportRequired) {
-                RegressionReporter r = new RegressionReporter(workDirArg, reportDirArg, out);
+                RegressionReporter r = new RegressionReporter(out);
                 r.report(params, elapsedTimeHandler, stats, quiet);
             }
 
