@@ -77,21 +77,6 @@ public class Agent {
     static final boolean USE_SOCKETS = true;
 
     /**
-     * Main program used to invoke and run the server in child JVMs
-     */
-    public static void main(String... args) {
-        if (traceServer)
-            System.err.println("Agent.main");
-
-        try {
-            new AgentServer(args).run();
-        } catch (Throwable e) {
-            e.printStackTrace(System.err);
-            System.exit(1);
-        }
-    }
-
-    /**
      * Start a JDK with given JVM options.
      */
     private Agent(File dir, JDK jdk, List<String> vmOpts, Map<String, String> envVars,
@@ -108,7 +93,7 @@ public class Agent {
         cmd.addAll(vmOpts);
         if (policyFile != null)
             cmd.add("-Djava.security.policy=" + policyFile.toURI());
-        cmd.add(Agent.class.getName());
+        cmd.add(AgentServer.class.getName());
         if (policyFile != null)
             cmd.add(AgentServer.ALLOW_SET_SECURITY_MANAGER);
 

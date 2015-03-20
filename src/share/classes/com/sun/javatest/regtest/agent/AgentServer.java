@@ -46,6 +46,21 @@ import java.util.concurrent.TimeUnit;
 
 public class AgentServer implements ActionHelper.OutputHandler {
 
+    /**
+     * Main program used to invoke and run the server in child JVMs
+     */
+    public static void main(String... args) {
+        if (traceServer)
+            System.err.println("AgentServer.main");
+
+        try {
+            new AgentServer(args).run();
+        } catch (Throwable e) {
+            e.printStackTrace(System.err);
+            System.exit(1);
+        }
+    }
+
     public static final boolean traceServer = ActionHelper.show("traceServer");
 
     public static final String ALLOW_SET_SECURITY_MANAGER = "-allowSetSecurityManager";
