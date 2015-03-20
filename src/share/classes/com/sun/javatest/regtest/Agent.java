@@ -25,7 +25,6 @@
 
 package com.sun.javatest.regtest;
 
-import com.sun.javatest.regtest.agent.Alarm;
 import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -53,6 +52,7 @@ import com.sun.javatest.TestResult;
 import com.sun.javatest.regtest.agent.ActionHelper;
 import com.sun.javatest.regtest.agent.AgentServer;
 import com.sun.javatest.regtest.agent.AgentServer.KeepAlive;
+import com.sun.javatest.regtest.agent.Alarm;
 import com.sun.javatest.regtest.agent.SearchPath;
 
 import static com.sun.javatest.regtest.agent.AgentServer.*;
