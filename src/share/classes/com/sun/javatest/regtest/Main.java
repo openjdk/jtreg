@@ -1304,9 +1304,14 @@ public class Main {
                         checkLockFiles(params.getWorkDirectory().getRoot(), "done");
                     }
                 }
+                if (verbose.multiRun)
+                    out.println();
             }
 
             if (multiRun) {
+                if (verbose.multiRun) {
+                    out.println("Overall summary:");
+                }
                 testStats.showResultStats(out);
                 RegressionReporter r = new RegressionReporter(out);
                 r.report(testManager, reportDirArg);

@@ -52,7 +52,8 @@ public class Verbose {
             "fail",
             "error",
             "nopass",
-            "time"
+            "time",
+            "multirun"
         };
     }
 
