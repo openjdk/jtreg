@@ -607,8 +607,8 @@ public class CompileAction extends Action {
             JDK jdk = script.getCompileJDK();
             SearchPath classpath = new SearchPath(script.getJavaTestClassPath(), jdk.getJDKClassPath());
             agent = script.getAgent(jdk, classpath, script.getTestVMJavaOptions());
-        } catch (IOException e) {
-            return error(AGENTVM_CANT_GET_VM + ": " + e);
+        } catch (Agent.Fault e) {
+            return error(AGENTVM_CANT_GET_VM + ": " + e.getCause());
         }
 
         TimeoutHandler timeoutHandler =

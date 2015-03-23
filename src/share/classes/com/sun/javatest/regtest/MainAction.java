@@ -537,8 +537,8 @@ public class MainAction extends Action
         try {
             agent = script.getAgent(jdk, classpath,
                     filterJavaOpts(script.getTestVMJavaOptions()));
-        } catch (IOException e) {
-            return error(AGENTVM_CANT_GET_VM + ": " + e);
+        } catch (Agent.Fault e) {
+            return error(AGENTVM_CANT_GET_VM + ": " + e.getCause());
         }
 
         TimeoutHandler timeoutHandler =

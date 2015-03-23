@@ -70,52 +70,41 @@ public class Agent {
     static final boolean traceAgent = Action.show("traceAgent");
 
     /**
-     * If true, communication with the Agent Server is via a socket, whose initial
-     * port is communicated on the command line when the server is started.
-     * If false, communication is via stdin/stdout.
-     */
-    static final boolean USE_SOCKETS = true;
-
-    /**
      * Start a JDK with given JVM options.
      */
     private Agent(File dir, JDK jdk, List<String> vmOpts, Map<String, String> envVars,
-            File policyFile) throws IOException {
-        ServerSocket ss = null;
+            File policyFile) throws Fault {
+        try {
+            id = count++;
+            this.jdk = jdk;
+            this.scratchDir = dir;
+            this.vmOpts = vmOpts;
 
-        id = count++;
-        this.jdk = jdk;
-        this.scratchDir = dir;
-        this.vmOpts = vmOpts;
+            List<String> cmd = new ArrayList<String>();
+            cmd.add(jdk.getJavaProg().getPath());
+            cmd.addAll(vmOpts);
+            if (policyFile != null)
+                cmd.add("-Djava.security.policy=" + policyFile.toURI());
+            cmd.add(AgentServer.class.getName());
+            if (policyFile != null)
+                cmd.add(AgentServer.ALLOW_SET_SECURITY_MANAGER);
 
-        List<String> cmd = new ArrayList<String>();
-        cmd.add(jdk.getJavaProg().getPath());
-        cmd.addAll(vmOpts);
-        if (policyFile != null)
-            cmd.add("-Djava.security.policy=" + policyFile.toURI());
-        cmd.add(AgentServer.class.getName());
-        if (policyFile != null)
-            cmd.add(AgentServer.ALLOW_SET_SECURITY_MANAGER);
-
-        if (USE_SOCKETS) {
-            ss = new ServerSocket(/*port:*/ 0, /*backlog:*/ 1);
-//            cmd.add(Agent.Server.HOST);
-//            cmd.add(String.valueOf(ss.getInetAddress().getHostAddress()));
+            ServerSocket ss = new ServerSocket(/*port:*/ 0, /*backlog:*/ 1);
             cmd.add(AgentServer.PORT);
             cmd.add(String.valueOf(ss.getLocalPort()));
-        }
 
-        if (showAgent || traceAgent)
-            System.err.println("Agent[" + id + "]: Started " + cmd);
+            if (showAgent || traceAgent)
+                System.err.println("Agent[" + id + "]: Started " + cmd);
 
-        ProcessBuilder pb = new ProcessBuilder(cmd);
-        pb.directory(dir);
-        Map<String, String> env = pb.environment();
-        env.clear();
-        env.putAll(envVars);
-        process = pb.start();
+            ProcessBuilder pb = new ProcessBuilder(cmd);
+            pb.directory(dir);
+            Map<String, String> env = pb.environment();
+            env.clear();
+            env.putAll(envVars);
+            process = pb.start();
+            copyStream("stdout", process.getInputStream(), System.out);
+            copyStream("stderr", process.getErrorStream(), System.err);
 
-        if (USE_SOCKETS) {
             try {
                 final int ACCEPT_TIMEOUT = 60*1000; // 1 minute, for server to start and "phone home"
                 ss.setSoTimeout(ACCEPT_TIMEOUT);
@@ -123,20 +112,16 @@ public class Agent {
                 s.setSoTimeout(KeepAlive.READ_TIMEOUT);
                 in = new DataInputStream(s.getInputStream());
                 out = new DataOutputStream(s.getOutputStream());
-                copyStream("stdout", process.getInputStream(), System.out);
-                copyStream("stderr", process.getErrorStream(), System.err);
             } finally {
                 ss.close();
             }
-        } else {
-            in = new DataInputStream(process.getInputStream());
-            out = new DataOutputStream(process.getOutputStream());
-            copyStream("stderr", process.getErrorStream(), System.err);
-        }
 
-        keepAlive = new KeepAlive(out, traceAgent);
-        // send keep-alive messages to server while not executing actions
-        keepAlive.setEnabled(true);
+            keepAlive = new KeepAlive(out, traceAgent);
+            // send keep-alive messages to server while not executing actions
+            keepAlive.setEnabled(true);
+        } catch (IOException e) {
+            throw new Fault(e);
+        }
     }
 
     void copyStream(final String name, final InputStream in, final PrintStream out) {
@@ -255,7 +240,7 @@ public class Agent {
                         out.close();
                     } catch (Exception ex) {
                         ex.printStackTrace(messageWriter);
-                    }
+                }
                     try {
                         in.close();
                     } catch (Exception ex) {
@@ -442,7 +427,8 @@ public class Agent {
             this.policyFile = policyFile;
         }
 
-        synchronized Agent getAgent(File dir, JDK jdk, List<String> vmOpts, Map<String, String> envVars) throws IOException {
+        synchronized Agent getAgent(File dir, JDK jdk, List<String> vmOpts, Map<String, String> envVars)
+                throws Fault {
             Queue<Agent> agents = map.get(getKey(dir, jdk, vmOpts));
             Agent a = (agents == null) ? null : agents.poll();
             if (a == null) {
@@ -487,7 +473,7 @@ public class Agent {
             return (dir.getAbsolutePath() + " " + jdk.getAbsoluteFile() + " " + StringUtils.join(vmOpts, " "));
         }
 
-        private Map<String, Queue<Agent>> map;
+        private final Map<String, Queue<Agent>> map;
         private File policyFile;
     }
 }

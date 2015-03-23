@@ -728,7 +728,7 @@ public class RegressionScript extends Script {
     /*
      * Get an agent for a VM with the given VM options.
      */
-    Agent getAgent(JDK jdk, SearchPath classpath, List<String> testVMOpts) throws IOException {
+    Agent getAgent(JDK jdk, SearchPath classpath, List<String> testVMOpts) throws Agent.Fault {
         List<String> vmOpts = new ArrayList<String>();
         vmOpts.add("-classpath");
         vmOpts.add(classpath.toString());
