@@ -24,6 +24,9 @@
  */
 package com.sun.javatest.regtest.agent;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 
 public enum JDK_Version {
     V1_1("1.1"),
@@ -34,20 +37,29 @@ public enum JDK_Version {
     V1_6("1.6"),
     V1_7("1.7"),
     V1_8("1.8"),
-    V1_9("1.9"),
+    V9("9"),
     // proactive ...
-    V1_10("1.10");
+    V10("10");
 
     JDK_Version(String name) {
         this.name = name;
+        this.major = name.startsWith("1.") ? name.substring(2) : name;
     }
 
     public final String name;
+    private final String major;
 
     public static JDK_Version forName(String name) {
-        for (JDK_Version v: values()) {
-            if (v.name.equals(name))
-                return v;
+        // for now, always allow/ignore optional leading 1.
+        Pattern p = Pattern.compile("(1\\.)?([1-9][0-9]*).*");
+        Matcher m = p.matcher(name);
+        if (m.matches()) {
+            String major = m.group(2);
+            for (JDK_Version v : values()) {
+                if (v.major.equals(major)) {
+                    return v;
+                }
+            }
         }
         return null;
     }
