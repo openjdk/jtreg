@@ -709,6 +709,23 @@ public class RegressionParameters
 
     //---------------------------------------------------------------------
 
+    void setAsmToolsJar(File asmToolsJar) {
+        asmToolsJar.getClass(); // null check
+        this.asmToolsJar = asmToolsJar;
+    }
+
+    File getAsmToolsJar() {
+        if (asmToolsJar == null) {
+            File jtClsDir = ProductInfo.getJavaTestClassDir();
+            asmToolsJar = new File(jtClsDir.getParentFile(), "asmtools.jar");
+        }
+        return asmToolsJar;
+    }
+
+    private File asmToolsJar;
+
+    //---------------------------------------------------------------------
+
     SearchPath getJavaTestClassPath() {
         if (javaTestClassPath == null) {
             File jtClsDir = ProductInfo.getJavaTestClassDir();

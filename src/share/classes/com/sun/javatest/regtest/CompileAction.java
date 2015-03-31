@@ -63,7 +63,6 @@ import com.sun.javatest.regtest.agent.SearchPath;
  */
 public class CompileAction extends Action {
     public static final String NAME = "compile";
-    private Object CompileHelper;
 
     /**
      * {@inheritdoc}
@@ -268,12 +267,14 @@ public class CompileAction extends Action {
         List<String> javacArgs = new ArrayList<String>();
         List<String> jasmArgs = new ArrayList<String>();
         List<String> jcodArgs = new ArrayList<String>();
+        boolean runJavac = false;
 
         for (String currArg : args) {
             if (currArg.endsWith(".java")) {
                 if (!(new File(currArg)).exists())
                     throw new TestRunException(CANT_FIND_SRC + currArg);
                 javacArgs.add(currArg);
+                runJavac = true;
             } else if (currArg.endsWith(".jasm")) {
                 jasmArgs.add(currArg);
             } else if (currArg.endsWith(".jcod")) {
@@ -289,10 +290,12 @@ public class CompileAction extends Action {
         } else {
             // run jasm and jcod first (if needed) in case the resulting class
             // files will be required when compiling the .java files.
-            status = jasm(jasmArgs);
-            if (status.isPassed())
+            status = passed("Not yet run");
+            if (status.isPassed() && !jasmArgs.isEmpty())
+                status = jasm(jasmArgs);
+            if (status.isPassed() && !jcodArgs.isEmpty())
                 status = jcod(jcodArgs);
-            if (status.isPassed() && !javacArgs.isEmpty()) {
+            if (status.isPassed() && runJavac) {
                 switch (script.getExecMode()) {
                     case AGENTVM:
                         status = runAgentJVM(javacArgs);
@@ -333,6 +336,7 @@ public class CompileAction extends Action {
         toolArgs.addAll(files);
         try {
             String toolClassName = "org.openjdk.asmtools." + toolName + ".Main";
+            recorder.asmtools(toolClassName, toolArgs);
             Class<?> toolClass = Class.forName(toolClassName);
             Constructor c = toolClass.getConstructor(new Class[] { PrintStream.class, String.class });
             ByteArrayOutputStream baos = new ByteArrayOutputStream();

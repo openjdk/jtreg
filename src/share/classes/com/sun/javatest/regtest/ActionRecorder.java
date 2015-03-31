@@ -144,6 +144,25 @@ public class ActionRecorder {
         pw.println();
     }
 
+    public void asmtools(String toolClassName, List<String> toolArgs) {
+        initPW();
+        String javaHome = System.getProperty("java.home");
+        String javaCmd = new File(javaHome, "bin/java").toString();
+        // Java executable
+        String indent = "    ";
+        pw.println(indent + escape(javaCmd) + CONT);
+        // additional JVM options
+        pw.println(indent + "-classpath " + action.script.getAsmToolsJar() + CONT);
+        // class name
+        pw.print(indent + escape(toolClassName));
+        // class args
+        for (String a: toolArgs) {
+            pw.print(" ");
+            pw.print(escape(a));
+        }
+        pw.println();
+    }
+
     public void close() {
         if (pw != null)
             pw.close();

@@ -1730,35 +1730,21 @@ public class Main {
                 throw new Fault(i18n, "main.cantFind.jtreg.jar");
         }
 
-        String junit_jar_prop = System.getProperty("junit.jar");
-        if (junit_jar_prop != null)
-            junit_jar = new File(junit_jar_prop);
-        else {
-            try {
-                junit_jar = findJar("junit.jar", "lib/junit.jar", org.junit.runner.JUnitCore.class);
-            } catch (NoClassDefFoundError ex) {
-            }
-        }
+        junit_jar = findJar("junit.jar", "lib/junit.jar", "org.junit.runner.JUnitCore");
         if (junit_jar == null) {
             // Leave a place-holder for the optional jar.
             junit_jar = new File(jtreg_jar.getParentFile(), "junit.jar");
         }
         // no convenient version info for junit.jar
 
-        String testng_jar_prop = System.getProperty("testng.jar");
-        if (testng_jar_prop != null)
-            testng_jar = new File(testng_jar_prop);
-        else {
-            try {
-                testng_jar = findJar("testng.jar", "lib/testng.jar", org.testng.annotations.Test.class);
-            } catch (NoClassDefFoundError ex) {
-            }
-        }
+        testng_jar = findJar("testng.jar", "lib/testng.jar", "org.testng.annotations.Test");
         if (testng_jar == null) {
             // Leave a place-holder for the optional jar.
             testng_jar = new File(jtreg_jar.getParentFile(), "testng.jar");
         }
         help.addJarVersionHelper("TestNG", testng_jar, "META-INF/maven/org.testng/testng/pom.properties");
+
+        asmtools_jar = findJar("asmtools.jar", "lib/asmtools.jar", "org.openjdk.asmtools.Main");
     }
 
     void initPolicyFile() throws Fault {
@@ -1971,6 +1957,9 @@ public class Main {
 
             if (testng_jar != null)
                 rp.setTestNGJar(testng_jar);
+
+            if (asmtools_jar != null)
+                rp.setAsmToolsJar(asmtools_jar);
 
             if (timeLimitArg != null) {
                 try {
@@ -2286,6 +2275,10 @@ public class Main {
     }
 
     private File findJar(String jarProp, String pathFromHome, Class<?> c) {
+        return findJar(jarProp, pathFromHome, c.getName());
+    }
+
+    private File findJar(String jarProp, String pathFromHome, String className) {
         if (jarProp != null) {
             String v = System.getProperty(jarProp);
             if (v != null)
@@ -2298,18 +2291,21 @@ public class Main {
                 return new File(v, pathFromHome);
         }
 
-        if (c != null)  {
+        if (className != null)  {
+            String resName = className.replace(".", "/") + ".class";
             try {
-                String className = c.getName().replace(".", "/") + ".class";
-                // use URI to avoid encoding issues, e.g. Program%20Files
-                URI uri = getClass().getClassLoader().getResource(className).toURI();
-                if (uri.getScheme().equals("jar")) {
-                    String ssp = uri.getRawSchemeSpecificPart();
-                    int sep = ssp.lastIndexOf("!");
-                    uri = new URI(ssp.substring(0, sep));
+                URL url = getClass().getClassLoader().getResource(resName);
+                if (url != null) {
+                    // use URI to avoid encoding issues, e.g. Program%20Files
+                    URI uri = url.toURI();
+                    if (uri.getScheme().equals("jar")) {
+                        String ssp = uri.getRawSchemeSpecificPart();
+                        int sep = ssp.lastIndexOf("!");
+                        uri = new URI(ssp.substring(0, sep));
+                    }
+                    if (uri.getScheme().equals("file"))
+                        return new File(uri.getPath());
                 }
-                if (uri.getScheme().equals("file"))
-                    return new File(uri.getPath());
             } catch (URISyntaxException ignore) {
                 ignore.printStackTrace(System.err);
             }
@@ -2414,6 +2410,7 @@ public class Main {
     File jtreg_jar;
     File junit_jar;
     File testng_jar;
+    File asmtools_jar;
     File policyFile;
 
     JCovManager jcovManager;

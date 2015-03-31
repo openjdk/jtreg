@@ -632,6 +632,10 @@ public class RegressionScript extends Script {
         return params.getTestNGJar();
     }
 
+    File getAsmToolsJar() {
+        return params.getAsmToolsJar();
+    }
+
     TestNGReporter getTestNGReporter() {
         return TestNGReporter.instance(workDir);
     }
