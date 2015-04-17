@@ -47,7 +47,7 @@ public enum JDK_Version {
     }
 
     public final String name;
-    private final String major;
+    public final String major;
 
     public static JDK_Version forName(String name) {
         // for now, always allow/ignore optional leading 1.
