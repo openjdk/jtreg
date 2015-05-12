@@ -198,6 +198,10 @@ public class RegressionTestSuite extends TestSuite
         return properties.getRequiredVersion();
     }
 
+    Set<File> getExternalLibRoots(TestDescription td) throws TestSuite.Fault {
+        return properties.getExternalLibs(td.getFile());
+    }
+
     private final TestProperties properties;
     private static final I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(RegressionTestSuite.class);
 }

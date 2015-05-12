@@ -112,14 +112,41 @@ public class Locations {
         }
 
         libList = new ArrayList<LibLocn>();
-        String libPath = td.getParameter("library");
-        for (String lib: StringUtils.splitWS(libPath)) {
-            boolean absLib = lib.startsWith("/");
-            File s = absLib ? absBaseSrcDir : absTestSrcDir;
-            File c = absLib ? absBaseClsDir : absTestClsDir;
-            libList.add(new LibLocn(lib, normalize(new File(s, lib)),
-                    normalize(new File(c, lib))));
+        String libs = td.getParameter("library");
+        for (String lib: StringUtils.splitWS(libs)) {
+            libList.add(getLibLocn(td, lib));
         }
+    }
+
+    private LibLocn getLibLocn(TestDescription td, String lib) throws TestClassException {
+        if (lib.startsWith("/")) {
+            if (new File(absBaseSrcDir, lib).exists())
+                return createLibLocn(lib, absBaseSrcDir, absBaseClsDir);
+            else {
+                try {
+                    for (File extRoot: params.getTestSuite().getExternalLibRoots(td)) {
+                        if (new File(extRoot, lib).exists()) {
+                            // since absBaseSrcDir/lib does not exist, we can safely
+                            // use absBaseClsDir/lib for the compiled classes
+                            return createLibLocn(lib, extRoot, absBaseClsDir);
+                        }
+                    }
+                } catch (RegressionTestSuite.Fault e) {
+                    throw new TestClassException(CANT_FIND_LIB + e);
+                }
+            }
+        } else {
+            if (new File(absTestSrcDir, lib).exists())
+                return createLibLocn(lib, absTestSrcDir, absTestClsDir);
+        }
+        throw new TestClassException(CANT_FIND_LIB + lib);
+    }
+
+    private LibLocn createLibLocn(String lib, File absSrcDir, File absClsDir) {
+        return new LibLocn(lib,
+                normalize(new File(absSrcDir, lib)),
+                normalize(new File(absClsDir, lib))
+            );
     }
 
     File absTestSrcDir() {
@@ -306,7 +333,8 @@ public class Locations {
     //----------misc statics---------------------------------------------------
 
     public static final String
-        CANT_FIND_CLASS        = "Can't find source for class: ",
+        CANT_FIND_CLASS       = "Can't find source for class: ",
         LIB_LIST              = " in directory-list: ",
-        PATH_TESTCLASS        = "Unable to locate test class directory!?";
+        PATH_TESTCLASS        = "Unable to locate test class directory!?",
+        CANT_FIND_LIB         = "Can't find library: ";
 }

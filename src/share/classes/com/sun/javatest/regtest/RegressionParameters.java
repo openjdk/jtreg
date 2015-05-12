@@ -66,6 +66,13 @@ public class RegressionParameters
 
     //---------------------------------------------------------------------
 
+    @Override
+    public RegressionTestSuite getTestSuite() {
+        return (RegressionTestSuite) super.getTestSuite();
+    }
+
+    //---------------------------------------------------------------------
+
     public void setTests(Collection<String> tests) {
         setTests(tests == null ? null : tests.toArray(new String[tests.size()]));
     }

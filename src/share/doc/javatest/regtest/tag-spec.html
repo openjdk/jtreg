@@ -176,9 +176,28 @@ harness, but may be used by the harness in generating reports.
 
 <dt>@library <var>&lt;path|jar&gt;+</var>
 <dd>
-<p>Add one or more pathnames or jar filenames to the library-directory list.  Each
-argument must be relative using forward slashes and ".." to denote parent
+<p>Add one or more pathnames or jar filenames to the library-directory list.  
+Each argument must use forward slash to separate file name components, and
+may use ".." to denote parent directories. Using ".." to reference directories
+outside the test hierarchy is currently allowed but is strongly discouraged.
+
+<ul>
+<li>If an argument is relative (that is, it does not begin with '/'), it will
+be evaluated relative to the directory containing the test.
+<li>If an argument begins with '/', it will first be evaluated relative to the
+root directory of the test suite. If the result does not identify an existing
+directory, it will be evaluated against each entry of a search path in turn,
+until an existing directory is found.  The search path is specified by the
+<code>external.lib.roots</code> entry in the test suite 
+<a href="#config">configuration files</a>.
+</ul>
+
+<p>It is an error if any of the arguments in the library-directory list does
+not identify an existing directory.
+<!-- 
+Each argument must be relative using forward slashes and ".." to denote parent
 directories.  The names are prepended to the list from right to left.
+-->
 
 <p>When the harness runs a test it adds the library list to the class path used by
 the virtual machine.  The class path will consist of the test-class directory,
@@ -699,7 +718,8 @@ There must be no spaces between the "-" and the name that follows.
 There must be no spaces between the ":" and the name that follows.
 </ul>
 
-<h2><a name="SOURCE_STRUCTURE">SOURCE-DIRECTORY STRUCTURE AND TEST-SUITE CONFIGURATION FILES</a></h2>
+<h2><a name="SOURCE_STRUCTURE">SOURCE-DIRECTORY STRUCTURE</a> AND 
+<a name="config">TEST-SUITE CONFIGURATION FILES</a></h2>
 
 <p>This specification places no constraints upon the structure of a tree of source
 directories.  Some test harnesses may be able to provide more robust behavior or
@@ -745,33 +765,38 @@ to run all the tests in the test suite.
 
 <dl>
 <dt><code>keys <var>&lt;keywords&gt;</var></code>
-<dd>The set of valid keywords that can be used in @key tags.
+<dd><p>The set of valid keywords that can be used in @key tags.
 A harness that supports keyword-based test selection should reject any test
 containing keywords that are not present in this list.
 If this property is not present then no keywords should be accepted.
 
 <dt><code>bootclasspath.dirs <var>&lt;directories&gt;</var></code>
-<dd>Directories that when used should be placed on the bootclasspath.
+<dd><p>Directories that when used should be placed on the bootclasspath.
 
 <dt><code>othervm.dirs <var>&lt;directories&gt;</var></code>
-<dd>Directories containing tests which should all be run in othervm mode.
+<dd><p>Directories containing tests which should all be run in othervm mode.
 A harness that supports multiple test execution modes should ensure
 that all tests in the specified directories are run in <code>othervm</code>
 mode.
 
 <dt><code>exclusiveAccess.dirs <var>&lt;directories&gt;</var></code>
-<dd>Directories containing tests which should not be run concurrently at
+<dd><p>Directories containing tests which should not be run concurrently at
 the same time as other tests.
 A harness that supports concurrent test execution should ensure
 that all tests in the specified directories are run when no other
 tests in the same directory is being run.
 
 <dt><code>TestNG.dirs <var>&lt;directories&gt;</var></code>
-<dd>Directories containing TestNG-style tests.
+<dd><p>Directories containing TestNG-style tests.
 
 <dt><code>lib.dirs <var>&lt;directories&gt;</var></code>
-<dd>Default library directories used by all tests in or under the directory
+<dd><p>Default library directories used by all tests in or under the directory
 containing this property declaration.
+
+<dt><code>external.lib.roots <var>&lt;directories&gt;</var></code>
+<dd><p>A search path for libraries specified in an <code>@library</code> tag.
+Relative paths will be evaluated relative to the directory containing the
+configuration file.
 </dl>
 
 
