@@ -42,7 +42,8 @@ $(GroupTest.GROUPS:%=$(BUILDDIR)/GroupTest.%.ok): \
 		$(TESTDIR)/javatest/regtest/data/groups:$(@:$(BUILDDIR)/GroupTest.%.ok=%) ; \
             status=$$? ; echo status=$$status ; \
             case "$(@:$(BUILDDIR)/GroupTest.%.ok=%)" in \
-		g6 | g10 | g15 ) expect=1 ;; \
+		g6 )  expect=1 ;; \
+		g10 ) expect=5 ;; \
                 * ) expect=0 ;; \
             esac ; \
             if [ "$$status" != "$$expect" ]; then echo "unexpected exit: $$status" ; exit 1; fi

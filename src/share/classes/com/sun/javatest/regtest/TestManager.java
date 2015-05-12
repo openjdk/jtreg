@@ -64,6 +64,7 @@ public class TestManager {
     private final File baseDir;
     private File reportDir;
     private File workDir;
+    boolean allowEmptyGroups = true;
 
     Map<File, Entry> map = new TreeMap<File, Entry>();
 
@@ -220,7 +221,7 @@ public class TestManager {
         if (e == null)
             throw new IllegalArgumentException();
         if (e.all)
-            return Collections.<String>emptySet();
+            return null;
         WorkDirectory wd = getWorkDirectory(ts);
         Set<String> tests = new LinkedHashSet<String>();
         for (Map.Entry<String,Boolean> me: e.files.entrySet()) {
@@ -236,7 +237,7 @@ public class TestManager {
             if (validatePath(wd, test))
                 tests.add(test);
         }
-        if (tests.isEmpty())
+        if (tests.isEmpty() && (!allowEmptyGroups || e.groups.isEmpty()))
             throw new NoTests();
         return tests;
     }
@@ -379,7 +380,12 @@ public class TestManager {
             Set<File> results = new LinkedHashSet<File>();
             GroupManager gm = e.testSuite.getGroupManager(out);
             for (String group: e.groups) {
-                results.addAll(gm.getFiles(group));
+                try {
+                    results.addAll(gm.getFiles(group));
+                } catch (GroupManager.InvalidGroup ex) {
+                    throw new Main.Fault(i18n, "tm.invalidGroup", group);
+
+                }
             }
             return results;
         } catch (IOException ex) {

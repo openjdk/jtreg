@@ -78,6 +78,8 @@ public class GroupManager {
     private Collection<String> ignoreDirs = Collections.<String>emptySet();
     private Collection<String> allowExtns = Collections.<String>emptySet();
 
+    class InvalidGroup extends Exception { }
+
     GroupManager(PrintWriter out, File root, List<String> files) throws IOException {
         this.out = out;
         this.root = root;
@@ -125,8 +127,11 @@ public class GroupManager {
         ignoreDirs = new HashSet<String>(names);
     }
 
-    Set<File> getFiles(String group) {
-        return getGroup(group).getFiles();
+    Set<File> getFiles(String group) throws InvalidGroup {
+        Group g = getGroup(group);
+        if (g.invalid)
+            throw new InvalidGroup();
+        return g.getFiles();
     }
 
     private Group getGroup(String name) {
@@ -187,12 +192,14 @@ public class GroupManager {
 
     private void error(File f, Group g, String message) {
         out.println(f + ": group " + g + ": " + message);
+        g.invalid = true;
     }
 
     private class Group {
         final String name;
         final List<Entry> entries;
         private Set<File> files;
+        boolean invalid;
 
         Group(String name) {
             this.name = name;
@@ -307,10 +314,10 @@ public class GroupManager {
     class Entry {
         final File origin;
 
-        Set<File> includeFiles = new LinkedHashSet<File>();
-        Set<File> excludeFiles = new LinkedHashSet<File>();
-        Set<Group> includeGroups = new LinkedHashSet<Group>();
-        Set<Group> excludeGroups = new LinkedHashSet<Group>();
+        final Set<File> includeFiles = new LinkedHashSet<File>();
+        final Set<File> excludeFiles = new LinkedHashSet<File>();
+        final Set<Group> includeGroups = new LinkedHashSet<Group>();
+        final Set<Group> excludeGroups = new LinkedHashSet<Group>();
 
         Entry(File origin, File root, String def) {
             this.origin = origin;
@@ -341,7 +348,8 @@ public class GroupManager {
 
         @Override
         public String toString() {
-            return "Entry[inclFiles" + includeFiles
+            return "Entry[origin:" + origin
+                    + "inclFiles:" + includeFiles
                     + ",exclFiles:" + excludeFiles
                     + ",inclGroups:" + includeGroups
                     + ",exclGroups:" + excludeGroups

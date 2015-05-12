@@ -1265,6 +1265,7 @@ public class Main {
                 throw new Fault(i18n, "main.onlyOneTestSuiteInGuiMode");
 
             testStats = new TestStats();
+            boolean foundEmptyGroup = false;
 
             for (RegressionTestSuite ts: testManager.getTestSuites()) {
 
@@ -1272,6 +1273,9 @@ public class Main {
                     out.println("Running tests in " + ts.getRootDir());
 
                 RegressionParameters params = createParameters(testManager, ts);
+                String[] tests = params.getTests();
+                if (tests != null && tests.length == 0)
+                    foundEmptyGroup = true;
 
                 checkLockFiles(params.getWorkDirectory().getRoot(), "start");
 
@@ -1321,7 +1325,7 @@ public class Main {
 
             return (testStats.counts[Status.ERROR] > 0 ? EXIT_TEST_ERROR
                     : testStats.counts[Status.FAILED] > 0 ? EXIT_TEST_FAILED
-                    : testStats.counts[Status.PASSED] == 0 ? EXIT_NO_TESTS
+                    : testStats.counts[Status.PASSED] == 0 && !foundEmptyGroup ? EXIT_NO_TESTS
                     : errors != 0 ? EXIT_FAULT
                     : EXIT_OK);
 
@@ -1376,16 +1380,21 @@ public class Main {
                     out.println(i18n.getString("main.groups.nogroups"));
                 } else {
                     for (String g: gset) {
-                        out.print(g);
-                        out.print(":");
-                        Set<String> fset = new TreeSet<String>(new NaturalComparator(false));
-                        for (File f : gm.getFiles(g))
-                            fset.add(ts.getRootDir().toURI().relativize(f.toURI()).getPath());
-                        for (String f: fset) {
-                            out.print(" ");
-                            out.print(f);
+                        try {
+                            Set<File> files = gm.getFiles(g);
+                            out.print(g);
+                            out.print(":");
+                            Set<String> fset = new TreeSet<String>(new NaturalComparator(false));
+                            for (File f : files)
+                                fset.add(ts.getRootDir().toURI().relativize(f.toURI()).getPath());
+                            for (String f: fset) {
+                                out.print(" ");
+                                out.print(f);
+                            }
+                            out.println();
+                        } catch (GroupManager.InvalidGroup ex) {
+                            out.println(i18n.getString("tm.invalidGroup", g));
                         }
-                        out.println();
                     }
                 }
             } catch (IOException e) {
@@ -2048,6 +2057,7 @@ public class Main {
                     tr = iter.next();
                 }
                 if (tr == null) {
+                    out.println("No test specified");
                     ok = false;
                 } else if (tr.getStatus().isNotRun()) {
                     out.println("Test has not been run");
@@ -2111,7 +2121,8 @@ public class Main {
                     elapsedTimeHandler.register(h);
                 }
 
-                ok = h.batch(params);
+                String[] tests = params.getTests();
+                ok = (tests != null && tests.length == 0) || h.batch(params);
 
                 Agent.Pool.instance().flush();
                 Lock.get(params).close();
@@ -2149,6 +2160,8 @@ public class Main {
         TestFilter[] filters = params.getFilters();
         if (tests == null)
             return trt.getIterator(filters);
+        else if (tests.length == 0)
+            return Collections.<TestResult>emptySet().iterator();
         else
             return trt.getIterator(tests, filters);
     }
