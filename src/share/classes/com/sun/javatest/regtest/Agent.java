@@ -240,7 +240,7 @@ public class Agent {
                         out.close();
                     } catch (Exception ex) {
                         ex.printStackTrace(messageWriter);
-                }
+                    }
                     try {
                         in.close();
                     } catch (Exception ex) {
