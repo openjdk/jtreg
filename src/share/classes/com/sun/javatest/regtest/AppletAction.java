@@ -237,6 +237,7 @@ public class AppletAction extends Action
         List<String> vmOpts = new ArrayList<String>();
         vmOpts.addAll(script.getTestVMOptions());
         vmOpts.addAll(script.getTestJavaOptions());
+        vmOpts.addAll(script.getTestDebugOptions());
         command.addAll(vmOpts);
 
         for (Map.Entry<String, String> e: script.getTestProperties().entrySet()) {

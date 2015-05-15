@@ -820,6 +820,20 @@ public class RegressionParameters
 
     //---------------------------------------------------------------------
 
+    List<String> getTestDebugOptions() {
+        if (testDebugOpts == null)
+            testDebugOpts = new ArrayList<String>();
+        return testDebugOpts;
+    }
+
+    void setTestDebugOptions(List<String> testJavaOpts) {
+        this.testDebugOpts = testJavaOpts;
+    }
+
+    private List<String> testDebugOpts;
+
+    //---------------------------------------------------------------------
+
     List<String> getRetainArgs() {
         return retainArgs;
     }

@@ -418,6 +418,8 @@ public class CompileAction extends Action {
 
         List<String> javacVMOpts = new ArrayList<String>();
         javacVMOpts.addAll(script.getTestVMOptions());
+        if (script.getCompileJDK().equals(script.getTestJDK()))
+            javacVMOpts.addAll(script.getTestDebugOptions());
 
         List<String> javacArgs = new ArrayList<String>();
         javacArgs.addAll(script.getTestCompilerOptions());
@@ -610,7 +612,10 @@ public class CompileAction extends Action {
         try {
             JDK jdk = script.getCompileJDK();
             SearchPath classpath = new SearchPath(script.getJavaTestClassPath(), jdk.getJDKClassPath());
-            agent = script.getAgent(jdk, classpath, script.getTestVMJavaOptions());
+            List<String> vmOpts = jdk.equals(script.getTestJDK())
+                    ? join(script.getTestVMOptions(), script.getTestDebugOptions())
+                    : script.getTestVMOptions();
+            agent = script.getAgent(jdk, classpath, vmOpts);
         } catch (Agent.Fault e) {
             return error(AGENTVM_CANT_GET_VM + ": " + e.getCause());
         }
