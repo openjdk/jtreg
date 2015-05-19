@@ -31,6 +31,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -357,6 +358,14 @@ public abstract class Action extends ActionHelper
         return(b.toString());
     } // singleQuoteString()
 
+    //--------------------------------------------------------------------------
+
+    protected static <T> List<T> join(List<T> l1, List<T> l2) {
+        List<T> result = new ArrayList<T>();
+        result.addAll(l1);
+        result.addAll(l2);
+        return result;
+    }
 
     //----------misc statics----------------------------------------------------
 

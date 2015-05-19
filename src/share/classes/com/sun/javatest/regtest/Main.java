@@ -709,6 +709,16 @@ public class Main {
             }
         },
 
+        new Option(STD, JDK, null, "debug") {
+            public void process(String opt, String arg) {
+                arg = arg.trim();
+                if (arg.length() == 0)
+                    return;
+                testDebugOpts.addAll(Arrays.asList(arg.split("\\s+")));
+                childArgs.add(opt);
+            }
+        },
+
         new Option(REST, DOC, "help", "h", "help", "usage") {
             public void process(String opt, String arg) {
                 help.setCommandLineHelpQuery(arg);
@@ -1121,6 +1131,9 @@ public class Main {
 
         if (execMode == ExecMode.SAMEVM && !testJavaOpts.isEmpty())
             throw new Fault(i18n, "main.cant.mix.samevm.java.options");
+
+        if (execMode == ExecMode.SAMEVM && !testDebugOpts.isEmpty())
+            throw new Fault(i18n, "main.cant.mix.samevm.debug.options");
 
         if (execMode == ExecMode.SAMEVM && compileJDK != null)
             throw new Fault(i18n, "main.cant.mix.samevm.compile.jdk.options");
@@ -1953,6 +1966,9 @@ public class Main {
             if (testJavaOpts.size() > 0)
                 rp.setTestJavaOptions(testJavaOpts);
 
+            if (testDebugOpts.size() > 0)
+                rp.setTestDebugOptions(testDebugOpts);
+
             rp.setCheck(checkFlag);
             rp.setExecMode(execMode);
             rp.setEnvVars(getEnvVars());
@@ -2405,6 +2421,7 @@ public class Main {
     private List<String> testCompilerOpts = new ArrayList<String>();
     private List<String> testJavaOpts = new ArrayList<String>();
     private List<String> testVMOpts = new ArrayList<String>();
+    private List<String> testDebugOpts = new ArrayList<String>();
     private boolean checkFlag;
     private boolean listTestsFlag;
     private boolean showGroupsFlag;

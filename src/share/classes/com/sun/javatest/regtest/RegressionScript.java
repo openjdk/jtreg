@@ -451,6 +451,13 @@ public class RegressionScript extends Script {
     }
 
     /**
+     * Debug options for tests
+     */
+    List<String> getTestDebugOptions() {
+        return params.getTestDebugOptions();
+    }
+
+    /**
      * compiler options
      */
     List<String> getTestCompilerOptions() {

@@ -364,6 +364,7 @@ public class MainAction extends Action
         }
 
         javaOpts.addAll(script.getTestVMJavaOptions());
+        javaOpts.addAll(script.getTestDebugOptions());
 
         Map<String, String> javaProps = new LinkedHashMap<String, String>();
         javaProps.putAll(script.getTestProperties());
@@ -536,7 +537,7 @@ public class MainAction extends Action
         Agent agent;
         try {
             agent = script.getAgent(jdk, classpath,
-                    filterJavaOpts(script.getTestVMJavaOptions()));
+                    filterJavaOpts(join(script.getTestVMJavaOptions(), script.getTestDebugOptions())));
         } catch (Agent.Fault e) {
             return error(AGENTVM_CANT_GET_VM + ": " + e.getCause());
         }
