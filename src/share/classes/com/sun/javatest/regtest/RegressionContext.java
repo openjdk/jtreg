@@ -94,20 +94,20 @@ public class RegressionContext implements Expr.Context {
 
     public String get(String name) {
         String v = values.get(name);
-        if (v == null && name.startsWith("vm.opt."))
-            v = "null";
-        if (v == null)
-            v = getProperty(name);
+        if (v == null) {
+            v = name.startsWith("vm.opt.") ? "null" : getProperty(name, "null");
+        }
+
         return v;
     }
 
-    private String getProperty(String name) {
+    private String getProperty(String name, String dflt) {
         if (params == null)
             throw new IllegalStateException();
         if (sysProps == null) {
             sysProps = params.getTestJDK().getSystemProperties(params);
         }
-        return sysProps.getProperty(name);
+        return sysProps.getProperty(name, dflt);
     }
 
     @Override
