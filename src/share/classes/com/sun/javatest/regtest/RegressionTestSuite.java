@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2000, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -52,13 +52,14 @@ public class RegressionTestSuite extends TestSuite
 {
     static Map<File, SoftReference<RegressionTestSuite>> cache;
 
-    public static RegressionTestSuite open(File testSuiteRoot) throws Fault {
+    public static RegressionTestSuite open(File testSuiteRoot,
+            TestFinder.ErrorHandler errHandler) throws Fault {
         if (cache == null)
             cache = new HashMap<File, SoftReference<RegressionTestSuite>>();
         SoftReference<RegressionTestSuite> ref = cache.get(testSuiteRoot);
         RegressionTestSuite ts = (ref == null) ? null : ref.get();
         if (ts == null) {
-            ts = new RegressionTestSuite(testSuiteRoot);
+            ts = new RegressionTestSuite(testSuiteRoot, errHandler);
             cache.put(testSuiteRoot, new SoftReference<RegressionTestSuite>(ts));
         }
         return ts;
@@ -68,9 +69,10 @@ public class RegressionTestSuite extends TestSuite
      * @param testSuiteRoot the root directory of the test suite
      * @throws Fault Thrown if there are problems reading TEST.ROOT.
      */
-    public RegressionTestSuite(File testSuiteRoot) throws Fault {
+    public RegressionTestSuite(File testSuiteRoot, TestFinder.ErrorHandler errHandler) throws Fault {
         super(testSuiteRoot);
-        properties = new TestProperties(getRootDir());
+        properties = new TestProperties(getRootDir(), errHandler);
+        this.errHandler = errHandler;
         setTestFinder(createTestFinder());
     }
 
@@ -82,7 +84,7 @@ public class RegressionTestSuite extends TestSuite
     @Override
     protected TestFinder createTestFinder() throws Fault {
         try {
-            TestFinder f = new RegressionTestFinder(properties);
+            TestFinder f = new RegressionTestFinder(properties, errHandler);
             f.init(new String[] { }, getRoot(), null);
             return f;
         } catch (TestFinder.Fault e) {
@@ -202,6 +204,7 @@ public class RegressionTestSuite extends TestSuite
         return properties.getExternalLibs(td.getFile());
     }
 
+    private final TestFinder.ErrorHandler errHandler;
     private final TestProperties properties;
     private static final I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(RegressionTestSuite.class);
 }

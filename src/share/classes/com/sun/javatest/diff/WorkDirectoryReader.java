@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2007, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -34,6 +34,7 @@ import java.io.InputStream;
 import java.util.Iterator;
 import java.util.Properties;
 
+import com.sun.javatest.TestFinder;
 import com.sun.javatest.TestResult;
 import com.sun.javatest.TestResultTable;
 import com.sun.javatest.TestSuite;
@@ -58,7 +59,11 @@ public class WorkDirectoryReader implements DiffReader {
         // files, we can't use the standard WorkDirectory.open call.
         File tsp = getTestSuitePath(file);
         if (tsp != null && new File(tsp, "TEST.ROOT").exists()) {
-            TestSuite ts = new RegressionTestSuite(tsp);
+            TestSuite ts = new RegressionTestSuite(tsp, new TestFinder.ErrorHandler() {
+                public void error(String msg) {
+                    WorkDirectoryReader.this.error(msg);
+                }
+            });
             wd = WorkDirectory.open(file, ts);
         } else
             wd = WorkDirectory.open(file);
@@ -104,6 +109,10 @@ public class WorkDirectoryReader implements DiffReader {
             }
             return null;
         }
+    }
+
+    private void error(String msg) {
+        System.err.println("Error: " + msg);
     }
 
     private File file;;

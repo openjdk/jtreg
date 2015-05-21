@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -33,6 +33,7 @@ import com.sun.javatest.Parameters;
 import com.sun.javatest.Status;
 import com.sun.javatest.TestDescription;
 import com.sun.javatest.TestFilter;
+import com.sun.javatest.TestFinder;
 import com.sun.javatest.TestResult;
 import com.sun.javatest.TestResultTable;
 import com.sun.javatest.TestSuite;
@@ -76,7 +77,12 @@ public class Basic
         System.out.println("mode:      " + modeOpt);
 
         try {
-            testSuite = new RegressionTestSuite(new File(testSuitePath));
+            testSuite = new RegressionTestSuite(new File(testSuitePath),
+                new TestFinder.ErrorHandler() {
+                    public void error(String msg) {
+                        System.err.println("Error: " + msg);
+                    }
+                });
 
             File wd = new File(workDirPath);
             if (WorkDirectory.isWorkDirectory(wd))

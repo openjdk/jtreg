@@ -413,7 +413,7 @@ public class Main {
                 for (IgnoreKind k: IgnoreKind.values()) {
                     if (arg.equalsIgnoreCase(k.toString())) {
                         if (k == IgnoreKind.QUIET)
-                            keywordsExprArg = combineKeywords(keywordsExprArg, "!ignore");
+                            extraKeywordExpr = combineKeywords(extraKeywordExpr, "!ignore");
                         ignoreKind = k;
                         childArgs.add(opt);
                         return;
@@ -462,42 +462,42 @@ public class Main {
 
         new Option(NONE, SELECT, "a-m", "a", "automatic", "automagic") {
             public void process(String opt, String arg) {
-                keywordsExprArg = combineKeywords(keywordsExprArg, AUTOMATIC);
+                extraKeywordExpr = combineKeywords(extraKeywordExpr, AUTOMATIC);
                 childArgs.add(opt);
             }
         },
 
         new Option(NONE, SELECT, "a-m", "m", "manual") {
             public void process(String opt, String arg) {
-                keywordsExprArg = combineKeywords(keywordsExprArg, MANUAL);
+                extraKeywordExpr = combineKeywords(extraKeywordExpr, MANUAL);
                 childArgs.add(opt);
             }
         },
 
         new Option(NONE, SELECT, "shell-noshell", "shell") {
             public void process(String opt, String arg) {
-                keywordsExprArg = combineKeywords(keywordsExprArg, "shell");
+                extraKeywordExpr = combineKeywords(extraKeywordExpr, "shell");
                 childArgs.add(opt);
             }
         },
 
         new Option(NONE, SELECT, "shell-noshell", "noshell") {
             public void process(String opt, String arg) {
-                keywordsExprArg = combineKeywords(keywordsExprArg, "!shell");
+                extraKeywordExpr = combineKeywords(extraKeywordExpr, "!shell");
                 childArgs.add(opt);
             }
         },
 
         new Option(STD, SELECT, null, "bug") {
             public void process(String opt, String arg) {
-                keywordsExprArg = combineKeywords(keywordsExprArg, "bug" + arg);
+                extraKeywordExpr = combineKeywords(extraKeywordExpr, "bug" + arg);
                 childArgs.add(opt);
             }
         },
 
         new Option(STD, SELECT, null, "k", "keywords") {
             public void process(String opt, String arg) {
-                keywordsExprArg = combineKeywords(keywordsExprArg, "(" + arg + ")");
+                userKeywordExpr = arg;
                 childArgs.add(opt);
             }
         },
@@ -755,7 +755,7 @@ public class Main {
     //---------- Ant Invocation ------------------------------------------------
 
     public static class Ant extends MatchingTask {
-        private Main m = new Main();
+        private final Main m = new Main();
         private File jdk;
         private File dir;
         private File reportDir;
@@ -777,7 +777,7 @@ public class Main {
         private String resultProperty;
         private String failureProperty;
         private String errorProperty;
-        private List<Commandline.Argument> args = new ArrayList<Commandline.Argument>();
+        private final List<Commandline.Argument> args = new ArrayList<Commandline.Argument>();
 
         public void setDir(File dir) {
             this.dir = dir;
@@ -1079,6 +1079,15 @@ public class Main {
             return EXIT_OK;
         }
 
+        if (userKeywordExpr != null) {
+            userKeywordExpr = userKeywordExpr.replace("-", "_");
+            try {
+                Keywords.create(Keywords.EXPR, userKeywordExpr);
+            } catch (Keywords.Fault e) {
+                throw new Fault(i18n, "main.badKeywords", e.getMessage());
+            }
+        }
+
         File baseDir;
         if (baseDirArg == null) {
             baseDir = new File(System.getProperty("user.dir"));
@@ -1092,7 +1101,11 @@ public class Main {
         if (antFileList != null)
             antFileArgs.addAll(readFileList(new File(antFileList)));
 
-        TestManager testManager = new TestManager(out, baseDir);
+        TestManager testManager = new TestManager(out, baseDir, new TestFinder.ErrorHandler() {
+            public void error(String msg) {
+                Main.this.error(msg);
+            }
+        });
         testManager.addTests(testFileArgs, false);
         testManager.addTests(antFileArgs, true);
         testManager.addGroups(testGroupArgs);
@@ -1269,7 +1282,7 @@ public class Main {
             Harness.setClassDir(ProductInfo.getJavaTestClassDir());
 
             // Allow keywords to begin with a numeric
-            Keywords.setAllowNumericKeywords(true);
+            Keywords.setAllowNumericKeywords(RegressionKeywords.allowNumericKeywords);
 
             if (httpdFlag)
                 startHttpServer();
@@ -1450,8 +1463,7 @@ public class Main {
      */
     private static String[] expandAtFiles(String[] args) throws Fault {
         List<String> newArgs = new ArrayList<String>();
-        for (int i = 0; i < args.length; i++) {
-            String arg = args[i];
+        for (String arg : args) {
             if (arg.length() > 1 && arg.charAt(0) == '@') {
                 arg = arg.substring(1);
                 if (arg.charAt(0) == '@') {
@@ -1845,8 +1857,8 @@ public class Main {
                 throw new InterruptedException();
         }
 
-        private BufferedReader in;
-        private PrintWriter out;
+        private final BufferedReader in;
+        private final PrintWriter out;
         private boolean done;
         private static int serial;
 
@@ -1902,8 +1914,13 @@ public class Main {
 
             rp.setTests(testManager.getTests(testSuite));
 
-            if (keywordsExprArg != null)
-                rp.setKeywordsExpr(keywordsExprArg);
+            if (userKeywordExpr != null || extraKeywordExpr != null) {
+                String expr =
+                        (userKeywordExpr == null) ? extraKeywordExpr
+                        : (extraKeywordExpr == null) ? userKeywordExpr
+                        : "(" + userKeywordExpr + ") & " + extraKeywordExpr;
+                rp.setKeywordsExpr(expr);
+            }
 
             rp.setExcludeLists(excludeListArgs.toArray(new File[excludeListArgs.size()]));
 
@@ -1911,10 +1928,10 @@ public class Main {
                 rp.setPriorStatusValues((boolean[]) null);
             else {
                 boolean[] b = new boolean[Status.NUM_STATES];
-                b[Status.PASSED]  = (priorStatusValuesArg.indexOf("pass") != -1);
-                b[Status.FAILED]  = (priorStatusValuesArg.indexOf("fail") != -1);
-                b[Status.ERROR]   = (priorStatusValuesArg.indexOf("erro") != -1);
-                b[Status.NOT_RUN] = (priorStatusValuesArg.indexOf("notr") != -1);
+                b[Status.PASSED]  = priorStatusValuesArg.contains("pass");
+                b[Status.FAILED]  = priorStatusValuesArg.contains("fail");
+                b[Status.ERROR]   = priorStatusValuesArg.contains("erro");
+                b[Status.NOT_RUN] = priorStatusValuesArg.contains("notr");
                 rp.setPriorStatusValues(b);
             }
 
@@ -2125,12 +2142,6 @@ public class Main {
                         Main.this.error(msg);
                     }
                 });
-                params.getWorkDirectory().getTestResultTable().getTestFinder().setErrorHandler(
-                        new TestFinder.ErrorHandler() {
-                    public void error(String msg) {
-                        Main.this.error(msg);
-                    }
-                });
 
                 if (reportRequired) {
                     elapsedTimeHandler = new ElapsedTimeHandler();
@@ -2209,15 +2220,16 @@ public class Main {
             }
             public boolean isBackupRequired(File file) {
                 if (ignoreExtns != null) {
-                    for (int i = 0; i < ignoreExtns.length; i++) {
-                        if (file.getPath().endsWith(ignoreExtns[i]))
+                    for (String ignoreExtn : ignoreExtns) {
+                        if (file.getPath().endsWith(ignoreExtn)) {
                             return false;
+                        }
                     }
                 }
                 return true;
             }
-            private int numBackupsToKeep = Integer.getInteger("javatest.backup.count", 5).intValue();
-            private String[] ignoreExtns = StringArray.split(System.getProperty("javatest.backup.ignore", ".jtr"));
+            private final int numBackupsToKeep = Integer.getInteger("javatest.backup.count", 5);
+            private final String[] ignoreExtns = StringArray.split(System.getProperty("javatest.backup.ignore", ".jtr"));
         };
     }
 
@@ -2392,7 +2404,8 @@ public class Main {
     private File workDirArg;
     private List<String> retainArgs;
     private List<File> excludeListArgs = new ArrayList<File>();
-    private String keywordsExprArg;
+    private String userKeywordExpr;
+    private String extraKeywordExpr;
     private String concurrencyArg;
     private String timeoutFactorArg;
     private String priorStatusValuesArg;
@@ -2401,7 +2414,7 @@ public class Main {
     private List<File> testFileArgs = new ArrayList<File>();
     // TODO: consider making this a "pathset" to detect redundant specification
     // of directories and paths within them.
-    private List<File> antFileArgs = new ArrayList<File>();
+    private final List<File> antFileArgs = new ArrayList<File>();
 
     // these args are jtreg extras
     private File baseDirArg;

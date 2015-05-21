@@ -39,6 +39,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+import com.sun.javatest.TestFinder;
 import com.sun.javatest.TestSuite;
 import com.sun.javatest.util.I18NResourceBundle;
 
@@ -47,7 +48,9 @@ import com.sun.javatest.util.I18NResourceBundle;
  * in TEST.properties in subdirectories.
  */
 public class TestProperties {
-    TestProperties(File rootDir) throws TestSuite.Fault {
+    TestProperties(File rootDir, TestFinder.ErrorHandler errHandler) {
+        this.errHandler = errHandler;
+
         cache = new Cache(canon(rootDir));
         Cache.Entry e = cache.getEntry(cache.rootDir);
 
@@ -139,6 +142,10 @@ public class TestProperties {
         return e.extLibRoots;
     }
 
+    private void error(I18NResourceBundle i18n, String key, Object... args) {
+        errHandler.error(i18n.getString(key, args));
+    }
+
     private File canon(File f) {
         try {
             return f.getCanonicalFile();
@@ -147,6 +154,7 @@ public class TestProperties {
         }
     }
 
+    private final TestFinder.ErrorHandler errHandler;
     private final Cache cache;
     /*private*/ final boolean checkBugID;
     /*private*/ final Set<String> validKeys;
@@ -154,7 +162,7 @@ public class TestProperties {
     final List<String> groupFiles;
     final Version requiredVersion;
 
-    static class Cache {
+    class Cache {
         class Entry {
             final Entry parent;
             final File dir;
@@ -172,7 +180,7 @@ public class TestProperties {
             final Set<String> libDirs;
             final Set<File> extLibRoots;
 
-            Entry(Entry parent, File dir) throws TestSuite.Fault {
+            Entry(Entry parent, File dir) {
                 this.parent = parent;
                 this.dir = dir;
 
@@ -184,11 +192,11 @@ public class TestProperties {
                         properties.load(in);
                         in.close();
                     } catch (IOException e) {
-                        throw new TestSuite.Fault(i18n, "suite.cantRead", file);
+                        error(i18n, "props.cantRead", file);
                     }
 
                     // add the list of valid keys
-                    validKeys = initSimpleSet(parent == null ? null : parent.validKeys, "keys");
+                    validKeys = initKeywordSet(parent == null ? null : parent.validKeys, "keys");
 
                     // add the list of valid properties for @requires
                     validRequiresProperties = initSimpleSet(parent == null ? null : parent.validRequiresProperties, "requires.properties");
@@ -254,6 +262,25 @@ public class TestProperties {
                         File f = toFile(baseDir, v);
                         if (f != null) {
                             set.add("/" + rootDir.toURI().relativize(f.toURI()));
+                        }
+                    }
+                    return Collections.unmodifiableSet(set);
+                } else {
+                    return parent;
+                }
+            }
+
+            private Set<String> initKeywordSet(Set<String> parent, String propertyName) {
+                String[] values = StringUtils.splitWS(properties.getProperty(propertyName));
+                if (parent == null || values.length > 0) {
+                    Set<String> set = (parent == null) ? new LinkedHashSet<String>() : new LinkedHashSet<String>(parent);
+                    for (String v: values) {
+                        try {
+                            RegressionKeywords.validateKey(v);
+                            set.add(v.replace("-", "_"));
+                        } catch (RegressionKeywords.Fault e) {
+                            File file = new File(dir, (parent == null) ? "TEST.ROOT" : "TEST.properties");
+                            error(i18n, "props.bad.keyword", new Object[] { file, v, e.getMessage() });
                         }
                     }
                     return Collections.unmodifiableSet(set);
@@ -369,13 +396,13 @@ public class TestProperties {
             map = new HashMap<File, SoftReference<Entry>>();
         }
 
-        synchronized Entry getEntry(File dir) throws TestSuite.Fault {
+        synchronized Entry getEntry(File dir) {
             if (lastUsedEntry == null || !lastUsedEntry.dir.equals(dir))
                 lastUsedEntry = getEntryInternal(dir);
             return lastUsedEntry;
         }
 
-        private Entry getEntryInternal(File dir) throws TestSuite.Fault {
+        private Entry getEntryInternal(File dir) {
             SoftReference<Entry> ref = map.get(dir);
             Entry e = (ref == null) ? null : ref.get();
             if (e == null) {

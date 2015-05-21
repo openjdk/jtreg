@@ -67,7 +67,8 @@ public class RegressionTestFinder extends TagTestFinder
       * the allowable comment formats.
       * @param properties the test suite properties manager
       */
-    public RegressionTestFinder(TestProperties properties) {
+    public RegressionTestFinder(TestProperties properties, ErrorHandler errHandler) {
+        setErrorHandler(errHandler);
         this.properties = properties;
         this.checkBugID = properties.checkBugID;
 
@@ -136,7 +137,7 @@ public class RegressionTestFinder extends TagTestFinder
                 super.scanFile(file);
             }
         } catch (TestSuite.Fault e) {
-            error(i18n, "finder.cant.read.test.properties", new Object[] { e });
+            error(i18n, "finder.cant.read.test.properties", new Object[] { e.getMessage() });
         }
     }
 
@@ -559,13 +560,14 @@ public class RegressionTestFinder extends TagTestFinder
         Set<String> validKeys = properties.getValidKeys(getCurrentFile());
         StringBuilder newValue = new StringBuilder();
         for (String key: StringUtils.splitWS(value)) {
-            if (!validKeys.contains(key)) {
+            String k = key.replace("-", "_");
+            if (!validKeys.contains(k)) {
                 parseError(tagValues, PARSE_KEY_BAD + key);
                 continue;
             }
             if (newValue.length() > 0)
                 newValue.append(" ");
-            newValue.append(key);
+            newValue.append(k);
         }
 
         if (newValue.length() > 0)

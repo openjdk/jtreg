@@ -32,7 +32,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -40,7 +39,9 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.TreeMap;
 
+import com.sun.javatest.TestFinder;
 import com.sun.javatest.TestResult;
 import com.sun.javatest.TestResultTable;
 import com.sun.javatest.TestResultTable.TreeIterator;
@@ -48,7 +49,6 @@ import com.sun.javatest.TestSuite;
 import com.sun.javatest.WorkDirectory;
 import com.sun.javatest.regtest.Main.Fault;
 import com.sun.javatest.util.I18NResourceBundle;
-import java.util.TreeMap;
 
 /**
  * Manage tests to be run by jtreg.
@@ -60,6 +60,7 @@ public class TestManager {
         }
     }
 
+    private final TestFinder.ErrorHandler errHandler;
     private final PrintWriter out;
     private final File baseDir;
     private File reportDir;
@@ -84,9 +85,10 @@ public class TestManager {
         }
     }
 
-    TestManager(PrintWriter out, File baseDir) {
+    TestManager(PrintWriter out, File baseDir, TestFinder.ErrorHandler errHandler) {
         this.out = out;
         this.baseDir = baseDir.getAbsoluteFile();
+        this.errHandler = errHandler;
     }
 
     void addTests(Collection<File> testFiles, boolean ignoreEmptyFiles) throws Fault {
@@ -135,7 +137,7 @@ public class TestManager {
         for (Entry e: map.values()) {
             if (e.testSuite == null) {
                 try {
-                e.testSuite = RegressionTestSuite.open(e.rootDir);
+                e.testSuite = RegressionTestSuite.open(e.rootDir, errHandler);
                 if (!e.testSuite.getRootDir().equals(e.rootDir)) {
                     System.err.println("e.testSuite.getRootDir(): " + e.testSuite.getRootDir());
                     System.err.println("e.rootDir: " + e.rootDir);
