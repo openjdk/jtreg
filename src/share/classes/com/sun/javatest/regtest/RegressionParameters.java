@@ -51,7 +51,6 @@ import com.sun.javatest.TestEnvironment;
 import com.sun.javatest.TestFilter;
 import com.sun.javatest.interview.BasicInterviewParameters;
 import com.sun.javatest.regtest.agent.SearchPath;
-import com.sun.javatest.util.I18NResourceBundle;
 
 public class RegressionParameters
     extends BasicInterviewParameters
@@ -549,10 +548,10 @@ public class RegressionParameters
                 String[] split = StringUtils.splitSeparator("=", e);
                 env.put(split[0], split[1]);
             }
+            return Collections.unmodifiableMap(env);
         } else {
-            env = Collections.emptyMap();
+            return Collections.emptyMap();
         }
-        return env;
     }
 
     private String serializeEnv(Map<String, String> env, String sep) {
@@ -583,7 +582,7 @@ public class RegressionParameters
         if (envVars == null) {
             this.envVars = Collections.emptyMap();
         } else {
-            this.envVars = envVars;
+            this.envVars = Collections.unmodifiableMap(new LinkedHashMap<String, String>(envVars));
         }
     }
 
@@ -753,12 +752,12 @@ public class RegressionParameters
 
     List<String> getTestVMOptions() {
         if (testVMOpts == null)
-            testVMOpts = new ArrayList<String>();
+            testVMOpts = Collections.emptyList();
         return testVMOpts;
     }
 
     void setTestVMOptions(List<String> testVMOpts) {
-        this.testVMOpts = testVMOpts;
+        this.testVMOpts = Collections.unmodifiableList(new ArrayList<String>(testVMOpts));
     }
 
     private List<String> testVMOpts;
@@ -770,7 +769,7 @@ public class RegressionParameters
         List<String> testToolVMOpts = new ArrayList<String>();
         for (String s: getTestVMOptions())
             testToolVMOpts.add("-J" + s);
-        return testToolVMOpts;
+        return Collections.unmodifiableList(testToolVMOpts);
     }
 
     /**
@@ -787,19 +786,19 @@ public class RegressionParameters
         if (nativeDir != null)
             opts.add("-Djava.library.path=" + nativeDir.getAbsolutePath());
 
-        return opts;
+        return Collections.unmodifiableList(opts);
     }
 
     //---------------------------------------------------------------------
 
     List<String> getTestCompilerOptions() {
         if (testCompilerOpts == null)
-            testCompilerOpts = new ArrayList<String>();
+            testCompilerOpts = Collections.emptyList();
         return testCompilerOpts;
     }
 
     void setTestCompilerOptions(List<String> testCompilerOpts) {
-        this.testCompilerOpts = testCompilerOpts;
+        this.testCompilerOpts = Collections.unmodifiableList(new ArrayList<String>(testCompilerOpts));
     }
 
     private List<String> testCompilerOpts;
@@ -808,12 +807,12 @@ public class RegressionParameters
 
     List<String> getTestJavaOptions() {
         if (testJavaOpts == null)
-            testJavaOpts = new ArrayList<String>();
+            testJavaOpts = Collections.emptyList();
         return testJavaOpts;
     }
 
     void setTestJavaOptions(List<String> testJavaOpts) {
-        this.testJavaOpts = testJavaOpts;
+        this.testJavaOpts = Collections.unmodifiableList(new ArrayList<String>(testJavaOpts));
     }
 
     private List<String> testJavaOpts;
@@ -822,12 +821,12 @@ public class RegressionParameters
 
     List<String> getTestDebugOptions() {
         if (testDebugOpts == null)
-            testDebugOpts = new ArrayList<String>();
+            testDebugOpts = Collections.emptyList();
         return testDebugOpts;
     }
 
     void setTestDebugOptions(List<String> testJavaOpts) {
-        this.testDebugOpts = testJavaOpts;
+        this.testDebugOpts = Collections.unmodifiableList(new ArrayList<String>(testJavaOpts));
     }
 
     private List<String> testDebugOpts;
@@ -839,13 +838,14 @@ public class RegressionParameters
     }
 
     void setRetainArgs(List<String> retainArgs) {
-        this.retainArgs = retainArgs;
 
         retainStatusSet.clear();
         if (retainArgs == null) {
             // equivalent to "none"
             retainFilesPattern = null;
             return;
+        } else {
+            this.retainArgs = Collections.unmodifiableList(new ArrayList<String>(retainArgs));
         }
 
         StringBuilder sb = new StringBuilder();
@@ -950,8 +950,5 @@ public class RegressionParameters
     private List<String> retainArgs;
     private final Set<Integer> retainStatusSet = new HashSet<Integer>(4);
     private Pattern retainFilesPattern;
-
-    private static final I18NResourceBundle i18n =
-            I18NResourceBundle.getBundleForClass(RegressionParameters.class);
 
 }
