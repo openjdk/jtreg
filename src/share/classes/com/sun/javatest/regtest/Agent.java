@@ -66,8 +66,8 @@ public class Agent {
         }
     }
 
-    static final boolean showAgent = Action.show("showAgent"); // mild uugh
-    static final boolean traceAgent = Action.show("traceAgent");
+    static final boolean showAgent = Action.config("showAgent"); // mild uugh
+    static final boolean traceAgent = Action.config("traceAgent");
 
     /**
      * Start a JDK with given JVM options.

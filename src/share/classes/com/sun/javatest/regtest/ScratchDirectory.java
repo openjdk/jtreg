@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -63,7 +63,7 @@ abstract class ScratchDirectory {
             return new ThreadSafeScratchDir(params, td);
     }
 
-    private static final boolean verboseScratchDir = Action.show("verboseScratchDir");
+    private static final boolean verboseScratchDir = Action.config("verboseScratchDir");
 
     /** The execution parameters for the current test. */
     protected final RegressionParameters params;

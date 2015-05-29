@@ -498,7 +498,7 @@ public class JCovManager {
     String version;
 
     private Thread grabber;
-    static final boolean showJCov = Action.show("showJCov");
+    static final boolean showJCov = Action.config("showJCov");
 
     private static I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(Main.class);
 }

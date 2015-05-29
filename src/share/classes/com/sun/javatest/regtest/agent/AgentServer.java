@@ -61,7 +61,7 @@ public class AgentServer implements ActionHelper.OutputHandler {
         }
     }
 
-    public static final boolean traceServer = ActionHelper.show("traceServer");
+    public static final boolean traceServer = ActionHelper.config("traceServer");
 
     public static final String ALLOW_SET_SECURITY_MANAGER = "-allowSetSecurityManager";
     public static final String HOST = "-host";

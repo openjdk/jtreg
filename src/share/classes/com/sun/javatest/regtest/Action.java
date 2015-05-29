@@ -541,9 +541,9 @@ public abstract class Action extends ActionHelper
     protected /*final*/ ActionRecorder recorder;
     private long startTime;
 
-    protected static final boolean showCmd = show("showCmd");
-    protected static final boolean showMode = show("showMode");
-    protected static final boolean showJDK = show("showJDK");
+    protected static final boolean showCmd = config("showCmd");
+    protected static final boolean showMode = config("showMode");
+    protected static final boolean showJDK = config("showJDK");
 }
 
 
