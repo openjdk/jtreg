@@ -38,6 +38,7 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -193,8 +194,8 @@ public class Agent {
             synchronized (out) {
                 out.writeByte(DO_COMPILE);
                 out.writeUTF(testName);
-                writeProperties(testProps);
-                writeList(cmdArgs);
+                writeMap(testProps);
+                writeCollection(cmdArgs);
                 out.flush();
             }
             if (traceAgent)
@@ -260,10 +261,10 @@ public class Agent {
             synchronized (out) {
                 out.writeByte(DO_MAIN);
                 out.writeUTF(testName);
-                writeProperties(testProps);
+                writeMap(testProps);
                 out.writeUTF(testClassPath.toString());
                 out.writeUTF(testClass);
-                writeList(testArgs);
+                writeCollection(testArgs);
                 out.flush();
             }
             if (traceAgent)
@@ -319,7 +320,7 @@ public class Agent {
             System.err.println("Agent[" + id + "]: Closed");
     }
 
-    void writeList(List<String> list) throws IOException {
+    void writeCollection(Collection<String> list) throws IOException {
         out.writeShort(list.size());
         for (String s: list)
             out.writeUTF(s);
@@ -339,7 +340,7 @@ public class Agent {
         return (b == 0) ? null : in.readUTF();
     }
 
-    void writeProperties(Map<String, String> p) throws IOException {
+    void writeMap(Map<String, String> p) throws IOException {
         out.writeShort(p.size());
         for (Map.Entry<String, String> e: p.entrySet()) {
             out.writeUTF(e.getKey());
