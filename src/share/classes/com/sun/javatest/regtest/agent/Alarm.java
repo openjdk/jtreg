@@ -101,7 +101,7 @@ public class Alarm  {
         return runner;
     }
 
-    protected boolean fired;
+    protected volatile boolean fired;
     protected ScheduledFuture<?> future;
     protected int count;
     protected final long delay;
