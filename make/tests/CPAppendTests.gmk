@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2015, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -61,21 +61,6 @@ $(BUILDDIR)/CPAppend/othervm.ok: \
 		$(TESTDIR)/javatest/regtest/cpappend/test
 	echo "test passed at `date`" > $@
 
-# Run test in -samevm mode
-#
-$(BUILDDIR)/CPAppend/samevm.ok: \
-	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	    $(JTREG_IMAGEDIR)/bin/jtreg \
-	    $(BUILDDIR)/CPAppend/classes/p/Lib.class
-	JTREG_USE_AGENTVM_FOR_SAMEVM=false \
-	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
-		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(J2SEHOME) \
-		-samevm -J-Djavatest.regtest.debugChild=true -va \
-		-cpa:$(BUILDDIR)/CPAppend/classes \
-		$(TESTDIR)/javatest/regtest/cpappend/test
-	echo "test passed at `date`" > $@
-
 # Run test in -agentvm mode
 #
 $(BUILDDIR)/CPAppend/agentvm.ok: \
@@ -93,6 +78,5 @@ $(BUILDDIR)/CPAppend/agentvm.ok: \
 TESTS.jtreg += \
 	$(BUILDDIR)/CPAppend/neg.ok \
 	$(BUILDDIR)/CPAppend/othervm.ok \
-	$(BUILDDIR)/CPAppend/agentvm.ok \
-	$(BUILDDIR)/CPAppend/samevm.ok
+	$(BUILDDIR)/CPAppend/agentvm.ok
 

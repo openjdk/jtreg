@@ -701,7 +701,6 @@ public class RegressionScript extends Script {
         // The following will be added to javac.class.path on the test JVM
         switch (getExecMode()) {
             case AGENTVM:
-            case SAMEVM:
                 SearchPath path = new SearchPath()
                     .append(locations.absTestClsDir())
                     .append(locations.absTestSrcDir())

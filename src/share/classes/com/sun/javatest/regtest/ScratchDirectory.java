@@ -55,9 +55,7 @@ abstract class ScratchDirectory {
 
     /** Get a scratch directory appropriate for the given parameters. */
     static ScratchDirectory get(RegressionParameters params, ExecMode mode, TestDescription td) {
-        if (mode == ExecMode.SAMEVM)
-            return new SimpleScratchDirectory(params, td);
-        else if (mode == ExecMode.OTHERVM && params.isRetainEnabled())
+        if (mode == ExecMode.OTHERVM && params.isRetainEnabled())
             return new TestResultScratchDir(params, td);
         else
             return new ThreadSafeScratchDir(params, td);
@@ -315,7 +313,7 @@ abstract class ScratchDirectory {
         CANON_FILE_EXC        = "Problem determining canonical file: ";
 
     /**
-     * Simple, basic scratch directory, in workdir/scratch, for samevm mode
+     * Simple, basic scratch directory, in workdir/scratch, for agentvm mode
      */
     static class SimpleScratchDirectory extends ScratchDirectory {
 
@@ -385,8 +383,6 @@ abstract class ScratchDirectory {
             }
 
             File getNextDir(RegressionParameters params) {
-                if (params.getExecMode() == ExecMode.SAMEVM)
-                    throw new AssertionError();
                 serial++;
                 return getDir(params);
             }

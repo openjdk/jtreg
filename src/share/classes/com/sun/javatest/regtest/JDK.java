@@ -136,29 +136,25 @@ public class JDK {
         if (version == null) {
             final String VERSION_PROPERTY = "java.specification.version";
             version = "unknown"; // default
-            if (mode == ExecMode.SAMEVM) {
-                version = System.getProperty(VERSION_PROPERTY);
-            } else {
-                ProcessBuilder pb = new ProcessBuilder();
-                // since we are trying to determine the Java version, we have to assume
-                // the worst, and use CLASSPATH.
-                pb.environment().put("CLASSPATH", getSysPropClassPath.toString());
-                pb.command(getJavaProg().getPath(), GetSystemProperty.class.getName(), VERSION_PROPERTY);
-                pb.redirectErrorStream(true);
-                try {
-                    Process p = pb.start();
-                    String out = getOutput(p);
-                    int rc = p.waitFor();
-                    if (rc == 0) {
-                        String[] v = StringUtils.splitEqual(out.trim());
-                        if (v.length == 2 && v[0].equals(VERSION_PROPERTY))
-                            version = v[1];
-                    }
-                } catch (InterruptedException e) {
-                    // ignore, leave version as default
-                } catch (IOException e) {
-                    // ignore, leave version as default
+            ProcessBuilder pb = new ProcessBuilder();
+            // since we are trying to determine the Java version, we have to assume
+            // the worst, and use CLASSPATH.
+            pb.environment().put("CLASSPATH", getSysPropClassPath.toString());
+            pb.command(getJavaProg().getPath(), GetSystemProperty.class.getName(), VERSION_PROPERTY);
+            pb.redirectErrorStream(true);
+            try {
+                Process p = pb.start();
+                String out = getOutput(p);
+                int rc = p.waitFor();
+                if (rc == 0) {
+                    String[] v = StringUtils.splitEqual(out.trim());
+                    if (v.length == 2 && v[0].equals(VERSION_PROPERTY))
+                        version = v[1];
                 }
+            } catch (InterruptedException e) {
+                // ignore, leave version as default
+            } catch (IOException e) {
+                // ignore, leave version as default
             }
 
             // java.specification.version is not defined in JDK1.1.*

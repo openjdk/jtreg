@@ -111,7 +111,7 @@ public class Main {
     public static final String MAIN = "main";           // main set of options
     public static final String SELECT = "select";       // test selection options
     public static final String JDK = "jdk";             // specify JDK to use
-    public static final String MODE = "mode";           // sameVM or otherVM
+    public static final String MODE = "mode";           // agentM or otherVM
     public static final String VERBOSE = "verbose";     // verbose controls
     public static final String DOC = "doc";             // help or doc info
 
@@ -133,49 +133,42 @@ public class Main {
                     if (verbose == null)
                         throw new BadArgs(i18n, "main.unknownVerbose", arg);
                 }
-                childArgs.add(opt);
             }
         },
 
         new Option(NONE, VERBOSE, "verbose", "v1") {
             public void process(String opt, String arg) {
                 verbose = Verbose.SUMMARY;
-                childArgs.add(opt);
             }
         },
 
         new Option(NONE, VERBOSE, "verbose", "va") {
             public void process(String opt, String arg) {
                 verbose = Verbose.ALL;
-                childArgs.add(opt);
             }
         },
 
         new Option(NONE, VERBOSE, "verbose", "vp") {
             public void process(String opt, String arg) {
                 verbose = Verbose.PASS;
-                childArgs.add(opt);
             }
         },
 
         new Option(NONE, VERBOSE, "verbose", "vf") {
             public void process(String opt, String arg) {
                 verbose = Verbose.FAIL;
-                childArgs.add(opt);
             }
         },
 
         new Option(NONE, VERBOSE, "verbose", "ve") {
             public void process(String opt, String arg) {
                 verbose = Verbose.ERROR;
-                childArgs.add(opt);
             }
         },
 
         new Option(NONE, VERBOSE, "verbose", "vt") {
             public void process(String opt, String arg) {
                 verbose = Verbose.TIME;
-                childArgs.add(opt);
             }
         },
 
@@ -194,7 +187,6 @@ public class Main {
         new Option(OLD, MAIN, "", "w", "workDir") {
             public void process(String opt, String arg) {
                 workDirArg = new File(arg);
-                childArgs.add("-w:" + getNormalizedFile(workDirArg));
             }
         },
 
@@ -213,14 +205,12 @@ public class Main {
                 if (retainArgs.contains("none") && retainArgs.size() > 1) {
                     throw new BadArgs(i18n, "main.badRetainNone", arg);
                 }
-                childArgs.add(opt);
             }
         },
 
         new Option(OLD, MAIN, "", "r", "reportDir") {
             public void process(String opt, String arg) {
                 reportDirArg = new File(arg);
-                childArgs.add("-r:" + getNormalizedFile(reportDirArg));
             }
         },
 
@@ -246,21 +236,18 @@ public class Main {
         new Option(STD, MAIN, "", "timeout", "timeoutFactor") {
             public void process(String opt, String arg) {
                 timeoutFactorArg = arg;
-                childArgs.add(opt);
             }
         },
 
         new Option(STD, MAIN, "", "tl", "timelimit") {
             public void process(String opt, String arg) {
                 timeLimitArg = arg;
-                childArgs.add(opt);
             }
         },
 
         new Option(STD, MAIN, "", "conc", "concurrency") {
             public void process(String opt, String arg) {
                 concurrencyArg = arg;
-                childArgs.add(opt);
             }
         },
 
@@ -268,14 +255,12 @@ public class Main {
             public void process(String opt, String arg) {
                 xmlFlag = true;
                 xmlVerifyFlag = "verify".equals(arg);
-                childArgs.add(opt);
             }
         },
 
         new Option(STD, MAIN, "", "dir") {
             public void process(String opt, String arg) {
                 baseDirArg = new File(arg);
-                childArgs.add("-dir:" + getNormalizedFile(baseDirArg));
             }
         },
 
@@ -287,7 +272,6 @@ public class Main {
             public void process(String opt, String arg) {
                 boolean b = (arg == null || Arrays.asList("yes", "on", "true").contains(arg));
                 allowSetSecurityManagerFlag = b;
-                childArgs.add(opt);
             }
         },
 
@@ -298,7 +282,6 @@ public class Main {
             }
             public void process(String opt, String arg) {
                 priorStatusValuesArg = arg.toLowerCase();
-                childArgs.add(opt);
             }
         },
 
@@ -306,22 +289,18 @@ public class Main {
             public void process(String opt, String arg) {
                 File f = getNormalizedFile(new File(arg));
                 excludeListArgs.add(f);
-                childArgs.add("-exclude:" + f);
             }
         },
 
         new Option(NONE, MAIN, null, "startHttpd") {
             public void process(String opt, String arg) {
                 httpdFlag = true;
-                childArgs.add(opt);
             }
         },
 
         new Option(OLD, MAIN, "", "o", "observer") {
             public void process(String opt, String arg) {
                 observerClassName = arg;
-                childArgs.add(opt);
-                childArgs.add(arg);
             }
         },
 
@@ -336,14 +315,12 @@ public class Main {
                         continue;
                     observerPathArg.add(new File(f));
                 }
-                childArgs.add("-op:" + filesToAbsolutePath(pathToFiles(arg)));
             }
         },
 
         new Option(STD, MAIN, "", "th", "timeoutHandler") {
             public void process(String opt, String arg) {
                 TimeoutHandlerProvider.setClassName(arg);
-                childArgs.add("-th:" + arg);
             }
         },
 
@@ -363,14 +340,12 @@ public class Main {
                 } catch (MalformedURLException ex) {
                     throw new BadArgs(i18n, ex.toString());
                 }
-                childArgs.add("-thd:" + filesToAbsolutePath(pathToFiles(arg)));
             }
         },
 
         new Option(NONE, MAIN, null, "g", "gui") {
             public void process(String opt, String arg) {
                 guiFlag = true;
-                childArgs.add(opt);
             }
         },
 
@@ -396,7 +371,6 @@ public class Main {
         new Option(NONE, MAIN, "ignore", "noignore") {
             public void process(String opt, String arg) {
                 ignoreKind = IgnoreKind.RUN;
-                childArgs.add(opt);
             }
         },
 
@@ -415,7 +389,6 @@ public class Main {
                         if (k == IgnoreKind.QUIET)
                             extraKeywordExpr = combineKeywords(extraKeywordExpr, "!ignore");
                         ignoreKind = k;
-                        childArgs.add(opt);
                         return;
                     }
                 }
@@ -442,7 +415,6 @@ public class Main {
                     throw new BadArgs(i18n, "main.cantCreateLockFile", arg);
                 }
                 exclusiveLockArg = f;
-                childArgs.add("-lock:" + f);
             }
         },
 
@@ -456,74 +428,60 @@ public class Main {
                 if (!f.isDirectory())
                     throw new BadArgs(i18n, "main.nativePathNotDir", arg);
                 nativeDirArg = f;
-                childArgs.add("-nativepath:" + getNormalizedFile(nativeDirArg));
             }
         },
 
         new Option(NONE, SELECT, "a-m", "a", "automatic", "automagic") {
             public void process(String opt, String arg) {
                 extraKeywordExpr = combineKeywords(extraKeywordExpr, AUTOMATIC);
-                childArgs.add(opt);
             }
         },
 
         new Option(NONE, SELECT, "a-m", "m", "manual") {
             public void process(String opt, String arg) {
                 extraKeywordExpr = combineKeywords(extraKeywordExpr, MANUAL);
-                childArgs.add(opt);
             }
         },
 
         new Option(NONE, SELECT, "shell-noshell", "shell") {
             public void process(String opt, String arg) {
                 extraKeywordExpr = combineKeywords(extraKeywordExpr, "shell");
-                childArgs.add(opt);
             }
         },
 
         new Option(NONE, SELECT, "shell-noshell", "noshell") {
             public void process(String opt, String arg) {
                 extraKeywordExpr = combineKeywords(extraKeywordExpr, "!shell");
-                childArgs.add(opt);
             }
         },
 
         new Option(STD, SELECT, null, "bug") {
             public void process(String opt, String arg) {
                 extraKeywordExpr = combineKeywords(extraKeywordExpr, "bug" + arg);
-                childArgs.add(opt);
             }
         },
 
         new Option(STD, SELECT, null, "k", "keywords") {
             public void process(String opt, String arg) {
                 userKeywordExpr = arg;
-                childArgs.add(opt);
             }
         },
 
         new Option(NONE, MODE, "svm-ovm", "ovm", "othervm") {
             public void process(String opt, String arg) {
                 execMode = ExecMode.OTHERVM;
-                childArgs.add(opt);
             }
         },
 
         new Option(NONE, MODE, "svm-ovm", "s", "svm", "samevm") {
             public void process(String opt, String arg) {
-                // allow backdoor way to treat samevm optioms as meaning agentvm
-                if (isTrue(System.getenv("JTREG_USE_AGENTVM_FOR_SAMEVM")))
-                    execMode = ExecMode.AGENTVM;
-                else
-                    execMode = ExecMode.SAMEVM;
-                childArgs.add(opt);
+                execMode = ExecMode.SAMEVM;
             }
         },
 
         new Option(NONE, MODE, "svm-ovm", "avm", "agentvm") {
             public void process(String opt, String arg) {
                 execMode = ExecMode.AGENTVM;
-                childArgs.add(opt);
             }
         },
 
@@ -549,8 +507,6 @@ public class Main {
                         continue;
                     classPathAppendArg.add(new File(f));
                 }
-                // needed in child for @compile
-                childArgs.add("-cpa:" + filesToAbsolutePath(pathToFiles(arg)));
             }
         },
 
@@ -675,7 +631,6 @@ public class Main {
                 if (arg.length() == 0)
                     return;
                 testCompilerOpts.add(arg);
-                childArgs.add(opt);
             }
         },
 
@@ -685,7 +640,6 @@ public class Main {
                 if (arg.length() == 0)
                     return;
                 testCompilerOpts.addAll(Arrays.asList(arg.split("\\s+")));
-                childArgs.add(opt);
             }
         },
 
@@ -695,7 +649,6 @@ public class Main {
                 if (arg.length() == 0)
                     return;
                 testJavaOpts.add(arg);
-                childArgs.add(opt);
             }
         },
 
@@ -705,7 +658,6 @@ public class Main {
                 if (arg.length() == 0)
                     return;
                 testJavaOpts.addAll(Arrays.asList(arg.split("\\s+")));
-                childArgs.add(opt);
             }
         },
 
@@ -715,7 +667,6 @@ public class Main {
                 if (arg.length() == 0)
                     return;
                 testDebugOpts.addAll(Arrays.asList(arg.split("\\s+")));
-                childArgs.add(opt);
             }
         },
 
@@ -743,7 +694,6 @@ public class Main {
                     testGroupArgs.add(arg);
                 else
                     testFileArgs.add(new File(arg));
-                childArgs.add(arg);
             }
 
             Pattern groupPtn = System.getProperty("os.name").matches("(?i)windows.*")
@@ -1079,6 +1029,10 @@ public class Main {
             return EXIT_OK;
         }
 
+        if (execMode == ExecMode.SAMEVM) {
+            execMode = ExecMode.AGENTVM;
+        }
+
         if (userKeywordExpr != null) {
             userKeywordExpr = userKeywordExpr.replace("-", "_");
             try {
@@ -1142,22 +1096,8 @@ public class Main {
             }
         }
 
-        if (execMode == ExecMode.SAMEVM && !testJavaOpts.isEmpty())
-            throw new Fault(i18n, "main.cant.mix.samevm.java.options");
-
-        if (execMode == ExecMode.SAMEVM && !testDebugOpts.isEmpty())
-            throw new Fault(i18n, "main.cant.mix.samevm.debug.options");
-
-        if (execMode == ExecMode.SAMEVM && compileJDK != null)
-            throw new Fault(i18n, "main.cant.mix.samevm.compile.jdk.options");
-
-        if (execMode == ExecMode.SAMEVM && concurrencyArg != null)
-            throw new Fault(i18n, "main.cant.mix.samevm.concurrency.options");
-
         if (testJDK == null) {
-            String s = null;
-            if (execMode != ExecMode.SAMEVM)
-                s = System.getenv("JAVA_HOME");
+            String s = System.getenv("JAVA_HOME");
             if (s == null || s.length() == 0) {
                 s = System.getProperty("java.home");
                 if (s == null || s.length() == 0)
@@ -1172,10 +1112,7 @@ public class Main {
         }
 
         if (jitFlag == false) {
-            if (execMode == ExecMode.SAMEVM)
-                testVMOpts.add("-Djava.compiler=");
-            else
-                envVarArgs.add("JAVA_COMPILER=");
+            envVarArgs.add("JAVA_COMPILER=");
         }
 
         if (classPathAppendArg.size() > 0) {
@@ -1194,12 +1131,10 @@ public class Main {
 
         if (workDirArg == null) {
             workDirArg = new File("JTwork");
-            childArgs.add(0, "-w:" + getNormalizedFile(workDirArg));
         }
 
         if (reportDirArg == null && !noReportFlag) {
             reportDirArg = new File("JTreport");
-            childArgs.add(0, "-r:" + getNormalizedFile(reportDirArg));
         }
 
         makeDir(workDirArg, false);
@@ -1228,11 +1163,10 @@ public class Main {
                     initPolicyFile();
                     Agent.Pool.instance().setSecurityPolicy(policyFile);
                     break;
-                case SAMEVM:
-                    initPolicyFile();
-                    break;
                 case OTHERVM:
                     break;
+                default:
+                    throw new AssertionError();
             }
         }
 
@@ -1275,10 +1209,6 @@ public class Main {
         }
 
         try {
-
-            if (!isThisVMOK())
-                return execChild();
-
             Harness.setClassDir(ProductInfo.getJavaTestClassDir());
 
             // Allow keywords to begin with a numeric
@@ -1308,20 +1238,6 @@ public class Main {
                 // Before we install our own security manager (which will restrict access
                 // to the system properties), take a copy of the system properties.
                 TestEnvironment.addDefaultPropTable("(system properties)", System.getProperties());
-
-                // TODO: take SecurityManager into account for isThisVMOK
-                if (execMode == ExecMode.SAMEVM) {
-                    RegressionSecurityManager.install();
-                    SecurityManager sm = System.getSecurityManager();
-                    if (sm instanceof RegressionSecurityManager) {
-                        RegressionSecurityManager rsm = (RegressionSecurityManager) sm;
-                        rsm.setAllowPropertiesAccess(true);
-                        if (allowSetSecurityManagerFlag)
-                            rsm.setAllowSetSecurityManager(true);
-                        // experimental
-                        rsm.setAllowSetIO(true);
-                    }
-                }
 
                 if (guiFlag) {
                     showTool(params);
@@ -1428,6 +1344,7 @@ public class Main {
             }
         }
     }
+
     /**
      * Show the set of tests defined by the parameters on the command line.
      * Filters (like keywords and status) are taken into account.
@@ -1535,220 +1452,8 @@ public class Main {
         }
     }
 
-    private static void writeFileList(File file, List<File> list) throws Fault {
-        try {
-            BufferedWriter out = new BufferedWriter(new FileWriter(file));
-            for (File f: list) {
-                String p = f.getPath();
-                out.write(p);
-                out.newLine();
-            }
-            out.close();
-        } catch (IOException e) {
-            throw new Fault(i18n, "main.cantWrite", file, e);
-        }
-    }
-
     public int[] getTestStats() {
         return testStats.counts;
-    }
-
-    private boolean isThisVMOK() {
-        if (reportOnlyFlag || checkFlag || listTestsFlag
-                || showStream != null || execMode != ExecMode.SAMEVM)
-            return true;
-
-        // sameVM tests can use this VM if
-        // - the current directory is the required scratch directory
-        // - the current VM is the required test VM
-        // - there are no outstanding VM options
-        // - there is no classpath append
-        // - don't allow setSecurityManager
-
-        File scratchDir = canon(new File(workDirArg, "scratch"));
-        File currDir = canon(new File(""));
-        if (!currDir.equals(scratchDir)) {
-            if (debugChild)
-                System.err.println("dir mismatch: " + currDir + " " + scratchDir);
-            return false;
-        }
-
-        File currJDKHome = canon(new File(System.getProperty("java.home")));
-        if (currJDKHome.getName().toLowerCase().equals("jre"))
-            currJDKHome = currJDKHome.getParentFile();
-        if (!currJDKHome.equals(testJDK.getCanonicalFile())) {
-            if (debugChild)
-                System.err.println("jdk mismatch: " + currJDKHome + " " + testJDK + " (" + testJDK.getCanonicalFile() + ")");
-            return false;
-        }
-
-        boolean isChild = (System.getProperty("javatest.child") != null);
-
-        if (!isChild && !testVMOpts.isEmpty()) {
-            if (debugChild)
-                System.err.println("need VM opts: " + testVMOpts);
-            return false;
-        }
-
-        if (classPathAppendArg.size() > 0) {
-            if (debugChild)
-                System.err.println("need classPathAppend: " + classPathAppendArg);
-            SearchPath jcp = new SearchPath(System.getProperty("java.class.path"));
-            SearchPath cpa = filesToAbsolutePath(classPathAppendArg);
-            if (!(jcp.contains(cpa)))
-                return false;
-        }
-
-        if (!isChild && allowSetSecurityManagerFlag) {
-            if (debugChild)
-                System.err.println("need policy file for setSecurityManager");
-            return false;
-        }
-
-        return true;
-    }
-
-    // TODO use @file for args?
-    private int execChild() throws Fault {
-        if (System.getProperty("javatest.child") != null)
-            throw new AssertionError();
-
-        File childJDKHome = getNormalizedFile(testJDK.getAbsoluteFile());
-        File childJava = new File(new File(childJDKHome, "bin"), "java");
-        File childTools  = new File(new File(childJDKHome, "lib"), "tools.jar");
-        File scratchDir = canon(new File(workDirArg, "scratch"));
-
-        List<String> c = new ArrayList<String>();
-        c.add(childJava.getPath());
-
-        c.add("-classpath");
-        List<File> classpath = new ArrayList<File>();
-        classpath.add(jtreg_jar);
-        if (childTools.exists())
-            classpath.add(childTools);
-        if (junit_jar.exists())
-            classpath.add(junit_jar);
-        if (testng_jar.exists())
-            classpath.add(testng_jar);
-        classpath.addAll(classPathAppendArg);
-        c.add(filesToAbsolutePath(classpath).toString());
-
-        c.addAll(testVMOpts);
-        if (nativeDirArg != null)
-            c.add("-Djava.library.path=" + nativeDirArg.getAbsolutePath());
-
-        if (allowSetSecurityManagerFlag)
-            c.add("-Djava.security.policy=" + policyFile.toURI());
-
-        // Tunnel Ant file args separately from command line tests, so that
-        // they can be treated specially in the child VM:  invalid files
-        // specified by the user on the command line give an error;
-        // invalid files given as part of an Ant fileset are ignored.
-        if (antFileArgs.size() > 0) {
-            try {
-                File file = File.createTempFile("jtreg.", ".tmp", scratchDir);
-                writeFileList(file, antFileArgs);
-                c.add("-D" + JAVATEST_ANT_FILE_LIST + "=" + file);
-            } catch (IOException e) {
-                throw new Fault(i18n, "main.cantWriteTempFile", e);
-            }
-        }
-
-        for (Map.Entry<?, ?> e: System.getProperties().entrySet()) {
-            String name = (String) e.getKey();
-            if (name.startsWith("javatest.") || name.startsWith("jtreg."))
-                c.add("-D" + name + "=" + e.getValue());
-        }
-
-        c.add("-Djavatest.child=true");
-
-        if (junit_jar != null)
-            c.add("-Djunit.jar=" + junit_jar.getPath());
-
-        if (testng_jar != null)
-            c.add("-Dtestng.jar=" + testng_jar.getPath());
-
-        c.add(Main.class.getName());
-
-        for (String o: testVMOpts)
-            c.add("-vmoption:" + o);
-
-        if (baseDirArg == null)
-            c.add("-dir:" + System.getProperty("user.dir"));
-
-        c.addAll(childArgs);
-
-        String[] cmd = c.toArray(new String[c.size()]);
-        File execDir = scratchDir;
-
-        if (debugChild) {
-            System.err.println("Starting JavaTest child");
-            System.err.println("Dir " + execDir + "; Command " + c);
-        }
-
-        Runtime r = Runtime.getRuntime();
-        Process p = null;
-
-        try {
-            try {
-                // strictly speaking, we do not need to set the CLASSPATH for the child VM,
-                // but we do it to maximize the consistency between sameVM and otherVM env.
-                // See similar code in MainAction for otherVM tests.
-                // Note the CLASSPATH will not be exactly the same as for otherVM tests,
-                // because it will not have (and cannot have) the test-specific values.
-                SearchPath cp = new SearchPath().append(javatest_jar, jtreg_jar, testJDK.getToolsJar());
-
-                ProcessBuilder pb = new ProcessBuilder();
-                pb.environment().clear();
-                pb.environment().putAll(getEnvVars());
-                pb.environment().put("CLASSPATH", cp.toString());
-                p = pb
-                    .command(cmd)
-                    .directory(execDir)
-                    .start();
-            } catch (IOException e) {
-                err.println("cannot start child VM: " + e);
-                return EXIT_FAULT;
-            }
-
-            InputStream childOut = p.getInputStream(); // output stream from process
-            StreamCopier childOutCopier = new StreamCopier(childOut, out);
-            childOutCopier.start();
-            InputStream childErr = p.getErrorStream();
-            StreamCopier childErrCopier = new StreamCopier(childErr, err);
-            childErrCopier.start();
-
-            OutputStream childIn = p.getOutputStream();  // input stream to process
-            if (childIn != null)
-                childIn.close();
-
-            // wait for the stream copiers to complete
-            childOutCopier.waitUntilDone();
-            childErrCopier.waitUntilDone();
-
-            // wait for the process to complete;
-            int exitCode = p.waitFor();
-            p = null;
-
-            if (debugChild) {
-                System.err.println("JavaTest child process: rc=" + exitCode);
-            }
-
-            childOut.close();
-            childErr.close();
-
-            return exitCode;
-
-        } catch (IOException e) {
-            // TODO handle exception
-            return EXIT_EXCEPTION;
-        } catch (InterruptedException e) {
-            // TODO handle exception
-            return EXIT_EXCEPTION;
-        } finally {
-            if (p != null)
-                ProcessUtils.destroyForcibly(p);
-        }
     }
 
     void findSystemJarFiles() throws Fault {
@@ -2458,9 +2163,6 @@ public class Main {
 
     JCovManager jcovManager;
 
-    // the list of args to be passed down to a  child VM
-    private List<String> childArgs = new ArrayList<String>();
-
     private TestStats testStats;
 
     private static final String AUTOMATIC = "!manual";
@@ -2476,8 +2178,6 @@ public class Main {
     };
 
     private static final String JAVATEST_ANT_FILE_LIST = "javatest.ant.file.list";
-
-    private static boolean debugChild = Boolean.getBoolean("javatest.regtest.debugChild");
 
     private static I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(Main.class);
 }

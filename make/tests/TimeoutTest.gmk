@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2015, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -62,20 +62,9 @@ $(BUILDDIR)/TimeoutTest.ok: \
 # SlowInterruptibleTest: error (timeout)
 # SlowUninterruptibleTest: error (timeout)
 # pass: 2, failed: 1, error: 3
-#
-# samevm
-#
-# AAA_Pass: pass
-# ZZZ_Pass: pass
-# ExitTest: pass (skipped in test)
-# SlowExitTest: pass (skipped in test)
-# SlowInterruptibleTest: error (timeout)
-# SlowUninterruptibleTest: pass (skipped in test)
-# pass: 5, error 1
 
 
 $(BUILDDIR)/TimeoutTest.agentvm.ok \
-$(BUILDDIR)/TimeoutTest.samevm.ok \
 $(BUILDDIR)/TimeoutTest.othervm.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
@@ -91,7 +80,6 @@ $(BUILDDIR)/TimeoutTest.othervm.ok: \
 	case $(@:$(BUILDDIR)/TimeoutTest.%.ok=%) in \
 	    othervm ) expect="Test results: passed: 2; failed: 1; error: 3" ;; \
 	    agentvm ) expect="Test results: passed: 3; error: 3" ;; \
-	    samevm )  expect="Test results: passed: 5; error: 1" ;; \
 	esac ; \
 	$(GREP) -s "$$expect" $(@:%.ok=%/jt.log) > /dev/null;
 	echo "test passed at `date`" > $@
@@ -100,11 +88,9 @@ $(BUILDDIR)/TimeoutTest.othervm.ok: \
 # slow to run.
 # TESTS.jtreg += \
 	$(BUILDDIR)/TimeoutTest.agentvm.ok \
-	$(BUILDDIR)/TimeoutTest.samevm.ok \
 	$(BUILDDIR)/TimeoutTest.othervm.ok
 
 testtimeouts: \
 	$(BUILDDIR)/TimeoutTest.ok \
 	$(BUILDDIR)/TimeoutTest.agentvm.ok \
-	$(BUILDDIR)/TimeoutTest.samevm.ok \
 	$(BUILDDIR)/TimeoutTest.othervm.ok

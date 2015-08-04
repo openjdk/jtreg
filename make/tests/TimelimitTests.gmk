@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2015, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -32,7 +32,7 @@ $(BUILDDIR)/timelimit.none.ok: \
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(J2SEHOME) \
-		-samevm \
+		-agentvm \
 		$(TESTDIR)/javatest/regtest/timelimit/  \
 			> $(@:%.ok=%/jt.log) 2>&1
 	$(GREP) -s 'Test results: passed: 3' $(@:%.ok=%/jt.log)  > /dev/null
@@ -47,7 +47,7 @@ $(BUILDDIR)/timelimit.150.ok: \
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(J2SEHOME) \
-		-samevm \
+		-agentvm \
 		-timelimit:150 \
 		$(TESTDIR)/javatest/regtest/timelimit/  \
 			> $(@:%.ok=%/jt.log) 2>&1
@@ -63,7 +63,7 @@ $(BUILDDIR)/timelimit.300.ok: \
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(J2SEHOME) \
-		-samevm \
+		-agentvm \
 		-timelimit:300 \
 		$(TESTDIR)/javatest/regtest/timelimit/  \
 			> $(@:%.ok=%/jt.log) 2>&1
@@ -79,7 +79,7 @@ $(BUILDDIR)/timelimit.500.ok: \
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(J2SEHOME) \
-		-samevm \
+		-agentvm \
 		-timelimit:500 \
 		$(TESTDIR)/javatest/regtest/timelimit/  \
 			> $(@:%.ok=%/jt.log) 2>&1
@@ -95,7 +95,7 @@ $(BUILDDIR)/timelimit.bad.ok: \
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(J2SEHOME) \
-		-samevm \
+		-agentvm \
 		-timelimit:bad \
 		$(TESTDIR)/javatest/regtest/timelimit/  \
 			> $(@:%.ok=%/jt.log) 2>&1  || \

@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2014, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2015, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -65,7 +65,6 @@ else
 endif
 
 $(BUILDDIR)/Basic.othervm.ok \
-$(BUILDDIR)/Basic.samevm.ok \
 $(BUILDDIR)/Basic.agentvm.ok: \
 		$(BUILDDIR)/testClasses \
                 $(JTREG_IMAGEDIR)/lib/jtreg.jar \
@@ -91,7 +90,6 @@ $(BUILDDIR)/Basic.agentvm.ok: \
 		-Ddebug.com.sun.javatest.TestRunner=true \
 		-Djavatest.regtest.allowTrailingBuild=true \
 		-Djavatest.regtest.showCmd=true \
-		-Djavatest.regtest.debugChild=true \
 		-Djavatest.regtest.debugOptions=true \
 		Basic \
 		    $(BASIC_TESTS) \
@@ -106,6 +104,5 @@ $(BUILDDIR)/Basic.agentvm.ok: \
 
 INITIAL_TESTS += \
 	$(BUILDDIR)/Basic.othervm.ok \
-	$(BUILDDIR)/Basic.agentvm.ok \
-	$(BUILDDIR)/Basic.samevm.ok
+	$(BUILDDIR)/Basic.agentvm.ok
 

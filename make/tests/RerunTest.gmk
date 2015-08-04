@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2013, 2014, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2013, 2015, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -23,16 +23,13 @@
 # questions.
 #
 
-# -javaoption is not permitted in samevm mode
 $(BUILDDIR)/RerunTest.agentvm.ok \
 $(BUILDDIR)/RerunTest.othervm.ok:  JAVAOPTION =-javaoption:-Dmy.java.option=x
 
-# -javacoption is not permitted in samevm mode
 $(BUILDDIR)/RerunTest.agentvm.ok \
 $(BUILDDIR)/RerunTest.othervm.ok:  JAVACOPTION=-javacoption:-XDmy.javac.option=x
 
 $(BUILDDIR)/RerunTest.agentvm.ok \
-$(BUILDDIR)/RerunTest.samevm.ok \
 $(BUILDDIR)/RerunTest.othervm.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg \
@@ -76,6 +73,5 @@ $(BUILDDIR)/RerunTest.othervm.ok: \
 ifneq ($(OS_NAME), windows)
 TESTS.jtreg += \
 	$(BUILDDIR)/RerunTest.agentvm.ok \
-	$(BUILDDIR)/RerunTest.samevm.ok \
 	$(BUILDDIR)/RerunTest.othervm.ok
 endif

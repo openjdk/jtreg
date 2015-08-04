@@ -303,9 +303,6 @@ public class CompileAction extends Action {
                     case OTHERVM:
                         status = runOtherJVM(javacArgs);
                         break;
-                    case SAMEVM:
-                        status = runSameJVM(javacArgs);
-                        break;
                     default:
                         throw new AssertionError();
                 }
@@ -506,70 +503,6 @@ public class CompileAction extends Action {
 
         return status;
     } // runOtherJVM()
-
-
-    private Status runSameJVM(List<String> args) throws TestRunException {
-        // TAG-SPEC:  "The source and class directories of a test are made
-        // available to main and applet actions via the system properties
-        // "test.src" and "test.classes", respectively"
-        Map<String, String> javacProps = script.getTestProperties();
-
-        // CONSTRUCT THE COMMAND LINE
-        List<String> javacArgs = new ArrayList<String>();
-
-        javacArgs.addAll(script.getTestCompilerOptions());
-
-        if (destDir != null) {
-            javacArgs.add("-d");
-            javacArgs.add(destDir.toString());
-        }
-
-        if (!classpathp) {
-            javacArgs.add("-classpath");
-            javacArgs.add(script.getCompileClassPath().toString());
-        }
-
-        if (!sourcepathp) { // must be JDK1.4 or greater, to even run JavaTest 3
-            javacArgs.add("-sourcepath");
-            javacArgs.add(script.getCompileSourcePath().toString());
-        }
-
-        javacArgs.addAll(args);
-
-        if (showMode)
-            showMode("compile", ExecMode.SAMEVM, section);
-        if (showCmd)
-            showCmd("compile", javacArgs, section);
-
-        String javacProg = script.getJavacProg();
-        List<String> javacVMOpts = script.getTestVMJavaOptions();
-        recorder.javac(script.getEnvVars(), javacProg, javacVMOpts, javacProps, javacArgs);
-
-        Status status = CompileActionHelper.runCompile(
-                script.getTestResult().getTestName(),
-                javacProps,
-                javacArgs,
-                timeout,
-                getOutputHandler(section));
-
-        // EVALUATE THE RESULTS
-        status = checkReverse(status, reverseStatus);
-
-        // COMPARE OUTPUT TO GOLDENFILE IF REQUIRED
-        // tag-spec says that "standard error is redirected to standard out
-        // so that /ref can be used."  Simulate this by concatenating streams.
-        if ((ref != null) && status.isPassed()) {
-            String outString = getOutput(OutputHandler.OutputKind.DIRECT);
-            String errString = getOutput(OutputHandler.OutputKind.DIRECT_LOG);
-            String stdOutString = getOutput(OutputHandler.OutputKind.STDOUT);
-            String stdErrString = getOutput(OutputHandler.OutputKind.STDERR);
-            String combined = (outString + errString + stdOutString + stdErrString);
-            status = checkGoldenFile(combined, status);
-        }
-
-        return status;
-    } // runSameJVM()
-
 
     private Status runAgentJVM(List<String> args) throws TestRunException {
         // TAG-SPEC:  "The source and class directories of a test are made

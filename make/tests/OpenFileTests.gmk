@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2011, 2013, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2011, 2015, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -58,33 +58,11 @@ $(BUILDDIR)/OpenFileTests.othervm.ok: \
 	echo "test passed at `date`" > $@
 
 #####
-# In samevm mode, jtreg cannot run the tests successfully. 
-# The first test will succeed; all subsequent ones will fail
-# because the scratch directory cannot be cleared.
-
-$(BUILDDIR)/OpenFileTests.samevm.ok: \
-	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	$(JTREG_IMAGEDIR)/bin/jtreg
-	if [ -d $(@:%.ok=%) ]; then $(CHMOD) -R +w $(@:%.ok=%) && $(RM) $(@:%.ok=%) ; fi
-	$(MKDIR) $(@:%.ok=%)
-	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
-		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(JDK17HOME) \
-		$(@:$(BUILDDIR)/OpenFileTests.%.ok=-%) \
-		$(TESTDIR)/javatest/regtest/data/openfiles \
-			> $(@:%.ok=%/jt.log) 2>&1 || \
-	    true "non-zero exit code from JavaTest intentionally ignored"
-	$(GREP) -s 'Test results: passed: 5' $(@:%.ok=%/jt.log)  > /dev/null
-	$(CHMOD) -R +w $(@:%.ok=%)
-	echo "test passed at `date`" > $@
-
-#####
 # In agent mode with -retain, the tests all return error
 # because the selected files cannot be retained
 
 $(BUILDDIR)/OpenFileTests.agentvm.retain.ok \
-$(BUILDDIR)/OpenFileTests.othervm.retain.ok \
-$(BUILDDIR)/OpenFileTests.samevm.retain.ok: \
+$(BUILDDIR)/OpenFileTests.othervm.retain.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	if [ -d $(@:%.ok=%) ]; then $(CHMOD) -R +w $(@:%.ok=%) && $(RM) $(@:%.ok=%) ; fi
@@ -107,6 +85,5 @@ TESTS.jtreg += \
 	$(BUILDDIR)/OpenFileTests.agentvm.retain.ok \
 	$(BUILDDIR)/OpenFileTests.othervm.ok \
 	$(BUILDDIR)/OpenFileTests.othervm.retain.ok \
-	$(BUILDDIR)/OpenFileTests.samevm.ok \
 	$(BUILDDIR)/OpenFileTests.othervm.retain.ok
 endif

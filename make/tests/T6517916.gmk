@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2011, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2015, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -46,7 +46,7 @@ $(BUILDDIR)/T6517916.ok: \
 		-jar $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		-w $(@:%.ok=%)/work/svm \
 		-r $(@:%.ok=%)/report/svm \
-		-svm \
+		-avm \
 		$(TESTDIR)/javatest/regtest/6517916
 	$(SED) -e 's|:[^:]*ovm/classes:|:|' -e 's|:[^:]*/6517916:|:|' \
 		$(T6517916-ENVIRONMENT-NORMALIZATIONS) \

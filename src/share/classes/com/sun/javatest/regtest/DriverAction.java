@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -95,15 +95,5 @@ public class DriverAction extends MainAction
                 results.add(arg);
         }
         return results;
-    }
-
-    @Override
-    protected Status runSameJVM() throws TestRunException {
-        List<String> l1 = script.getTestVMJavaOptions();
-        List<String> l2 = filterJavaOpts(l1);
-        if (!l1.equals(l2))
-            section.getMessageWriter().println("Warning: using @run driver in samevm mode with conflicting JVM options");
-
-        return super.runSameJVM();
     }
 }

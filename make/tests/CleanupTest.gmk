@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2011, 2014, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2011, 2015, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -50,33 +50,11 @@ $(BUILDDIR)/CleanupTests.othervm.ok: \
 	$(CHMOD) -R +w $(@:%.ok=%)
 	echo "test passed at `date`" > $@
 
-#####
-# In samevm mode, jtreg cannot run the tests successfully. 
-# The first test will succeed; all subsequent ones will fail
-# because the scratch directory cannot be cleared.
-
-$(BUILDDIR)/CleanupTests.samevm.ok: \
-	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	$(JTREG_IMAGEDIR)/bin/jtreg
-	if [ -d $(@:%.ok=%) ]; then $(CHMOD) -R +w $(@:%.ok=%) && $(RM) $(@:%.ok=%) ; fi
-	$(MKDIR) $(@:%.ok=%)
-	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
-		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(J2SEHOME) \
-		$(@:$(BUILDDIR)/CleanupTests.%.ok=-%) \
-		$(TESTDIR)/javatest/regtest/data/cleanup \
-			> $(@:%.ok=%/jt.log) 2>&1 || \
-	    true "non-zero exit code from JavaTest intentionally ignored"
-	$(GREP) -s 'Test results: passed: 1; error: ' $(@:%.ok=%/jt.log)  > /dev/null
-	$(CHMOD) -R +w $(@:%.ok=%)
-	echo "test passed at `date`" > $@
-
 
 #####
 # In agentvm and othervm mode using concurrency, jtreg should successfully 
 # run each test by moving to a new scratch directory when it can't clear 
 # the previous one.
-# You cannot use concurrency with samevm mode.
 
 $(BUILDDIR)/CleanupTests.agentvm.conc.ok \
 $(BUILDDIR)/CleanupTests.othervm.conc.ok: \
@@ -156,6 +134,5 @@ TESTS.jtreg += \
 	$(BUILDDIR)/CleanupTests.agentvm.retain.ok \
 	$(BUILDDIR)/CleanupTests.othervm.ok \
 	$(BUILDDIR)/CleanupTests.othervm.conc.ok \
-	$(BUILDDIR)/CleanupTests.othervm.retain.ok \
-	$(BUILDDIR)/CleanupTests.samevm.ok
+	$(BUILDDIR)/CleanupTests.othervm.retain.ok
 endif

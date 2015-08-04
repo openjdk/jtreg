@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2015, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -72,31 +72,8 @@ $(BUILDDIR)/BadTests.agentvm.ok: \
 	if [ $${agents} -ne 3 ]; then echo "Unexpected number of agents used: $${agents}" ; exit 1 ; fi
 	echo "test passed at `date`" > $@
 
-# Run bad tests in samevm mode
-# jtreg exits premature because of inappropriate use of exit
-# exit code 57 (from the bad test)
-# only 7 .jtr files written, no report etc
-#
-$(BUILDDIR)/BadTests.samevm.ok: \
-	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	$(JTREG_IMAGEDIR)/bin/jtreg
-	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
-	JTREG_USE_AGENTVM_FOR_SAMEVM=false \
-	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
-		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(J2SEHOME) \
-		-samevm \
-		$(TESTDIR)/javatest/regtest/data/badtests \
-			> $(@:%.ok=%/jt.log) 2>&1 || \
-	( status=$$? ; \
-	  if [ $${status} -ne 57 ]; then echo "Unexpected exit from jtreg: $${status}" ; exit 1 ; fi )
-	( files=`$(FIND) $(@:%.ok=%)/work -name \*.jtr | wc -l` ; \
-	  if [ $${files} -ne 7 ]; then echo "Unexpected number of files: $${files}" ; exit 1 ; fi )
-	echo "test passed at `date`" > $@
-
 ifneq ($(OS_NAME), windows)
 TESTS.jtreg += \
 	$(BUILDDIR)/BadTests.othervm.ok \
-	$(BUILDDIR)/BadTests.agentvm.ok \
-	$(BUILDDIR)/BadTests.samevm.ok
+	$(BUILDDIR)/BadTests.agentvm.ok
 endif

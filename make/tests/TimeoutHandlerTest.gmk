@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2014, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2014, 2015, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -30,7 +30,6 @@
 #
 
 $(BUILDDIR)/TimeoutHandlerTestDefault.agentvm.ok \
-$(BUILDDIR)/TimeoutHandlerTestDefault.samevm.ok \
 $(BUILDDIR)/TimeoutHandlerTestDefault.othervm.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
@@ -43,18 +42,12 @@ $(BUILDDIR)/TimeoutHandlerTestDefault.othervm.ok: \
 		$(TESTDIR)/javatest/regtest/data/timeouthandlers/TestJavaHang.java  \
 			> $(@:%.ok=%/jt.log) 2>&1 || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
-	# No timeout handling in samevm mode
-	if [ $(@:$(BUILDDIR)/TimeoutHandlerTestDefault.%.ok=%) != "samevm" ] ; then \
-          $(GREP) -s 'Running jstack' $(@:%.ok=%/jt.log) > /dev/null; \
-	else \
-          $(GREP) -s 'No timeout information is available in samevm mode' $(@:%.ok=%/jt.log) > /dev/null; \
-	fi
+	$(GREP) -s 'Running jstack' $(@:%.ok=%/jt.log) > /dev/null;
 	$(GREP) -s 'Test results: error: 1' $(@:%.ok=%/jt.log) > /dev/null
 	echo "test passed at `date`" > $@
 
 TESTS.timeouthandler += \
 	$(BUILDDIR)/TimeoutHandlerTestDefault.agentvm.ok \
-	$(BUILDDIR)/TimeoutHandlerTestDefault.samevm.ok \
 	$(BUILDDIR)/TimeoutHandlerTestDefault.othervm.ok
 
 #
@@ -62,7 +55,6 @@ TESTS.timeouthandler += \
 #
 
 $(BUILDDIR)/TimeoutHandlerTestExternal.agentvm.ok \
-$(BUILDDIR)/TimeoutHandlerTestExternal.samevm.ok \
 $(BUILDDIR)/TimeoutHandlerTestExternal.othervm.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
@@ -80,18 +72,12 @@ $(BUILDDIR)/TimeoutHandlerTestExternal.othervm.ok: \
 		$(TESTDIR)/javatest/regtest/data/timeouthandlers/TestJavaHang.java  \
 			> $(@:%.ok=%/jt.log) 2>&1 || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
-        # No timeout handling in samevm mode
-	if [ $(@:$(BUILDDIR)/TimeoutHandlerTestExternal.%.ok=%) != "samevm" ] ; then \
-            $(GREP) -s 'I am handling it!' $(@:%.ok=%/jt.log) > /dev/null; \
-	else \
-            $(GREP) -s 'No timeout information is available in samevm mode' $(@:%.ok=%/jt.log) > /dev/null; \
-	fi
+	$(GREP) -s 'I am handling it!' $(@:%.ok=%/jt.log) > /dev/null;
 	$(GREP) -s 'Test results: error: 1' $(@:%.ok=%/jt.log) > /dev/null
 	echo "test passed at `date`" > $@
 
 TESTS.timeouthandler += \
 	$(BUILDDIR)/TimeoutHandlerTestExternal.agentvm.ok \
-	$(BUILDDIR)/TimeoutHandlerTestExternal.samevm.ok \
 	$(BUILDDIR)/TimeoutHandlerTestExternal.othervm.ok
 
 TESTS.jtreg += ${TESTS.timeouthandler}

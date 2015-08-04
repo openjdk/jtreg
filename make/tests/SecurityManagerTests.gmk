@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2015, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -31,7 +31,7 @@ $(BUILDDIR)/GoodSecurityManagerTest.ok: \
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(J2SEHOME) \
-		-samevm -allowSetSecurityManager \
+		-agentvm -allowSetSecurityManager \
 		$(TESTDIR)/javatest/regtest/data/SecurityManager/pass
 	echo "test passed at `date`" > $@
 
@@ -47,7 +47,7 @@ $(BUILDDIR)/BadSecurityManagerTest.ok: \
 	- $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(J2SEHOME) \
-		-samevm -allowSetSecurityManager \
+		-agentvm -allowSetSecurityManager \
 		$(TESTDIR)/javatest/regtest/data/SecurityManager/error \
 		2>&1 | tee $(@:%.ok=%)/out.txt
 	grep "Cannot reset security manager" $(@:%.ok=%)/out.txt
@@ -58,21 +58,21 @@ TESTS.jtreg += \
 
 #----------------------------------------------------------------------
 
-$(BUILDDIR)/SecurityManagerTest_samevm_forbid.ok: \
+$(BUILDDIR)/SecurityManagerTest_agentvm_forbid.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	$(MKDIR) -p $(@:%.ok=%)/
 	- $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(J2SEHOME) \
-		-samevm -allowSetSecurityManager:no \
+		-agentvm -allowSetSecurityManager:no \
 		$(TESTDIR)/javatest/regtest/data/SecurityManager \
 		2>&1 | tee $(@:%.ok=%)/out.txt
 	grep "Test results: failed: 5" $(@:%.ok=%)/out.txt
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += \
-	$(BUILDDIR)/SecurityManagerTest_samevm_forbid.ok
+	$(BUILDDIR)/SecurityManagerTest_agentvm_forbid.ok
 
 #----------------------------------------------------------------------
 

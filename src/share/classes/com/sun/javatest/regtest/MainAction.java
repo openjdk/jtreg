@@ -263,9 +263,6 @@ public class MainAction extends Action
                     case OTHERVM:
                         status = runOtherJVM();
                         break;
-                    case SAMEVM:
-                        status = runSameJVM();
-                        break;
                     default:
                         throw new AssertionError();
                 }
@@ -445,57 +442,6 @@ public class MainAction extends Action
 
         return status;
     } // runOtherJVM()
-
-    protected Status runSameJVM() throws TestRunException {
-        SearchPath runClasspath;
-        String runMainClass;
-        List<String> runMainArgs;
-        if (driverClass == null) {
-            runClasspath = script.getTestClassPath();
-            runMainClass = testClassName;
-            runMainArgs = testClassArgs;
-        } else {
-            runClasspath = script.getTestClassPath();
-            runMainClass = driverClass;
-            runMainArgs = new ArrayList<String>();
-            runMainArgs.add(script.getTestResult().getTestName());
-            runMainArgs.add(testClassName);
-            runMainArgs.addAll(testClassArgs);
-        }
-
-        if (showMode)
-            showMode(getName(), ExecMode.SAMEVM, section);
-
-        // TAG-SPEC:  "The source and class directories of a test are made
-        // available to main and applet actions via the system properties
-        // "test.src" and "test.classes", respectively"
-        Map<String, String> javaProps = script.getTestProperties();
-
-        String javaProg = script.getJavaProg();
-        SearchPath rcp = new SearchPath(script.getJavaTestClassPath(), script.getTestJDK().getJDKClassPath());
-        if (script.isJUnitRequired())
-            rcp.append(script.getJUnitJar());
-        if (script.isTestNGRequired())
-            rcp.append(script.getTestNGJar());
-        rcp.append(runClasspath);
-        List<String> javaArgs = Arrays.asList("-classpath", rcp.toString());
-        recorder.java(script.getEnvVars(), javaProg, javaProps, javaArgs, runMainClass, runMainArgs);
-
-        // delegate actual work to shared method
-        Status status = MainActionHelper.runClass(
-                script.getTestResult().getTestName(),
-                javaProps,
-                runClasspath,
-                runMainClass,
-                runMainArgs.toArray(new String[runMainArgs.size()]),
-                timeout,
-                getOutputHandler(section));
-
-        // EVALUATE THE RESULTS
-        status = checkReverse(status, reverseStatus);
-
-        return status;
-    } // runSameJVM
 
     private Status runAgentJVM() throws TestRunException {
         SearchPath runClasspath;

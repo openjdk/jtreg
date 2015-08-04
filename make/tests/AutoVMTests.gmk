@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2011, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2015, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -31,14 +31,14 @@ $(BUILDDIR)/autovm/tests.ok: $(AUTOVM_FILES) \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/lib/jh.jar
-	for ts in none agentvm othervm samevm ; do \
+	for ts in none agentvm othervm; do \
 	    $(MKDIR) -p $(BUILDDIR)/autovm/tests/default.$$ts ; \
 	    rsync --recursive --delete $(TESTDIR)/javatest/regtest/data/autovm/ $(BUILDDIR)/autovm/tests/default.$$ts/ ; \
 	    if [ $$ts != none ]; then \
 		echo "defaultExecMode=$$ts" >> $(BUILDDIR)/autovm/tests/default.$$ts/TEST.ROOT ; \
 	    fi \
 	done ; \
-	for mode in none agentvm othervm samevm ; do for ts in none agentvm othervm samevm ; do \
+	for mode in none agentvm othervm ; do for ts in none agentvm othervm ; do \
 	    $(J2SEJAVA) -Djavatest.regtest.showMode=true -jar $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		-jdk:$(J2SEHOME) \
 		-w $(BUILDDIR)/autovm/jtreg/mode.$$mode/ts.$$ts/work \
@@ -54,7 +54,6 @@ $(BUILDDIR)/autovm/tests.ok: $(AUTOVM_FILES) \
 		    */work/*/othervm/* ) expect_compile=OTHERVM ;; \
 		    */mode.agentvm/* | */mode.none/ts.agentvm/* ) expect_compile=AGENTVM ;; \
 		    */mode.none/ts.none/* | */mode.none/ts.othervm/* | */mode.othervm/* ) expect_compile=OTHERVM ;; \
-		    */mode.samevm/* | */mode.none/ts.samevm/* ) expect_compile=SAMEVM ;; \
 		    * ) echo "Can't match $$file" ; exit 1 ;; \
 		esac ; \
 		case $$file in \

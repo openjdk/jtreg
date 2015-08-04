@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2011, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2015, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -41,7 +41,7 @@ $(BUILDDIR)/T6517728.ok:	$(TESTDIR)/javatest/regtest/6517728/T6517728A.java \
 	$(J2SEJAVA) $(JTREG_JAVA_OPTS) -jar $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		-w $(@:%.ok=%)/work/svm \
 		-r $(@:%.ok=%)/report/svm \
-		-svm \
+		-avm \
 		$(TESTDIR)/javatest/regtest/6517728/T6517728A.java
 	echo "test passed at `date`" > $@
 

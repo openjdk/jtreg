@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2015, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -26,7 +26,6 @@
 #----------------------------------------------------------------------
 
 #JTREG_OPTS += \
-#	-J-Djavatest.regtest.debugChild=true \
 #	-J-Djavatest.regtest.debugOptions=true
 
 $(BUILDDIR)/TestVMOpts.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
@@ -37,13 +36,6 @@ $(BUILDDIR)/TestVMOpts.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		-w:$(BUILDDIR)/jtreg/cmd.othervm/work \
 		-r:$(BUILDDIR)/jtreg/cmd.othervm/report \
 		-verbose:fail \
-		$(TESTDIR)/javatest/regtest/data/vmopts
-	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
-		-jdk:$(JDK16HOME) -Dfoo=bar -Xbootclasspath/p:baz \
-		-w:$(BUILDDIR)/jtreg/cmd.samevm/work \
-		-r:$(BUILDDIR)/jtreg/cmd.samevm/report \
-		-verbose:fail \
-		-samevm \
 		$(TESTDIR)/javatest/regtest/data/vmopts
 	JAVA_HOME=$(JDK16HOME) $(ANT) -f $(TESTDIR)/javatest/regtest/data/vmopts/build.xml \
 		-Dbuild.jtreg=$(BUILDDIR)/jtreg \

@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2015, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -26,19 +26,6 @@
 
 #----------------------------------------------------------------------
 
-$(BUILDDIR)/javacExitCodes.jdk5.samevm.ok: \
-	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	    $(JTREG_IMAGEDIR)/bin/jtreg
-	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
-	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
-		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(JDK15HOME) \
-		-samevm \
-		$(TESTDIR)/javatest/regtest/testJavacExitCodes/  \
-			> $(@:%.ok=%/jt.log) 2>&1 || \
-	    true "non-zero exit code from JavaTest intentionally ignored"
-	$(GREP) -s 'Test results: passed: 4; failed: 4' $(@:%.ok=%/jt.log)  > /dev/null
-	echo "test passed at `date`" > $@
 
 $(BUILDDIR)/javacExitCodes.jdk5.othervm.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
@@ -52,20 +39,6 @@ $(BUILDDIR)/javacExitCodes.jdk5.othervm.ok: \
 			> $(@:%.ok=%/jt.log) 2>&1 || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
 	$(GREP) -s 'Test results: passed: 4; failed: 4' $(@:%.ok=%/jt.log)  > /dev/null
-	echo "test passed at `date`" > $@
-
-$(BUILDDIR)/javacExitCodes.jdk6.samevm.ok: \
-	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	    $(JTREG_IMAGEDIR)/bin/jtreg
-	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
-	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
-		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(JDK16HOME) \
-		-samevm \
-		$(TESTDIR)/javatest/regtest/testJavacExitCodes/  \
-			> $(@:%.ok=%/jt.log) 2>&1 || \
-	    true "non-zero exit code from JavaTest intentionally ignored"
-	$(GREP) -s 'Test results: passed: 2; failed: 2; error: 4' $(@:%.ok=%/jt.log)  > /dev/null
 	echo "test passed at `date`" > $@
 
 $(BUILDDIR)/javacExitCodes.jdk6.othervm.ok: \
@@ -83,8 +56,6 @@ $(BUILDDIR)/javacExitCodes.jdk6.othervm.ok: \
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += \
-	$(BUILDDIR)/javacExitCodes.jdk5.samevm.ok \
 	$(BUILDDIR)/javacExitCodes.jdk5.othervm.ok \
-	$(BUILDDIR)/javacExitCodes.jdk6.samevm.ok \
 	$(BUILDDIR)/javacExitCodes.jdk6.othervm.ok
 
