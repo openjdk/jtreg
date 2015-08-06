@@ -111,6 +111,12 @@ public abstract class Action extends ActionHelper
         dir.mkdirs();
     }
 
+    public File getArgFile() {
+        File f = script.absTestWorkFile(getName() + "." + script.getNextSerial() + ".jta");
+        f.getParentFile().mkdirs();
+        return f;
+    }
+
    //------------------- parsing -----------------------------------------------
 
     /**

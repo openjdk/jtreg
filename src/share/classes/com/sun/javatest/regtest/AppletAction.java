@@ -26,12 +26,14 @@
 package com.sun.javatest.regtest;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -201,25 +203,20 @@ public class AppletAction extends Action
 
     private Status runOtherJVM() throws TestRunException {
         // WRITE ARGUMENT FILE
-        File appArgFileName = new File(script.absTestClsDir(),
-                clsName + RegressionScript.WRAPPEREXTN);
-        FileWriter fw;
+        File argFile = getArgFile();
         try {
-            fw = new FileWriter(appArgFileName);
-            fw.write(clsName + "\0");
-            fw.write(script.absTestSrcDir() + "\0");
-            fw.write(script.absTestClsDir() + "\0");
-            fw.write(script.getTestClassPath() + "\0");
-            fw.write(manual + "\0");
-            fw.write(htmlFileContents.getBody() + "\0");
-            fw.write(toString(htmlFileContents.getAppletParams()) + "\0");
-            fw.write(toString(htmlFileContents.getAppletAttrs()) + "\0");
-            fw.close();
+            Writer w = new BufferedWriter(new FileWriter(argFile));
+            w.write(clsName + "\0");
+            w.write(script.absTestSrcDir() + "\0");
+            w.write(script.absTestClsDir() + "\0");
+            w.write(script.getTestClassPath() + "\0");
+            w.write(manual + "\0");
+            w.write(htmlFileContents.getBody() + "\0");
+            w.write(toString(htmlFileContents.getAppletParams()) + "\0");
+            w.write(toString(htmlFileContents.getAppletAttrs()) + "\0");
+            w.close();
         } catch (IOException e) {
             return error(APPLET_CANT_WRITE_ARGS);
-        } catch (SecurityException e) {
-            // shouldn't happen since JavaTestSecurityManager allows file ops
-            return error(APPLET_SECMGR_FILEOPS);
         }
 
         // CONSTRUCT THE COMMAND LINE
@@ -275,7 +272,7 @@ public class AppletAction extends Action
 //      command.add("-Djava.security.debug=all");
 
         command.add(AppletWrapper.class.getName());
-        command.add(appArgFileName.getPath());
+        command.add(argFile.getPath());
 
         env.putAll(script.getEnvVars());
 

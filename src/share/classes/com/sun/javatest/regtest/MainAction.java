@@ -25,6 +25,7 @@
 
 package com.sun.javatest.regtest;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -39,14 +40,14 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import com.sun.javatest.Status;
-import com.sun.javatest.regtest.agent.MainActionHelper;
 import com.sun.javatest.regtest.agent.MainWrapper;
+import com.sun.javatest.regtest.agent.SearchPath;
+
 import static com.sun.javatest.regtest.agent.RStatus.createStatus;
 import static com.sun.javatest.regtest.agent.RStatus.error;
 import static com.sun.javatest.regtest.agent.RStatus.failed;
 import static com.sun.javatest.regtest.agent.RStatus.normalize;
 import static com.sun.javatest.regtest.agent.RStatus.passed;
-import com.sun.javatest.regtest.agent.SearchPath;
 
 /**
  * This class implements the "main" action as described by the JDK tag
@@ -303,20 +304,14 @@ public class MainAction extends Action
         }
 
         // WRITE ARGUMENT FILE
-        File mainArgFile =
-            new File(script.absTestClsDir(), testClassName + RegressionScript.WRAPPEREXTN);
-        mainArgFile.getParentFile().mkdirs();
-        FileWriter fw;
+        File argFile = getArgFile();
         try {
-            fw = new FileWriter(mainArgFile);
-            fw.write(runClassName + "\0");
-            fw.write(StringUtils.join(runClassArgs) + "\0" );
-            fw.close();
+            BufferedWriter w = new BufferedWriter(new FileWriter(argFile));
+            w.write(runClassName + "\0");
+            w.write(StringUtils.join(runClassArgs) + "\0" );
+            w.close();
         } catch (IOException e) {
             return error(MAIN_CANT_WRITE_ARGS);
-        } catch (SecurityException e) {
-            // shouldn't happen since JavaTestSecurityManager allows file ops
-            return error(MAIN_SECMGR_FILEOPS);
         }
 
         // CONSTRUCT THE COMMAND LINE
@@ -386,7 +381,7 @@ public class MainAction extends Action
 
         String className = MainWrapper.class.getName();
         List<String> classArgs = new ArrayList<String>();
-        classArgs.add(mainArgFile.getPath());
+        classArgs.add(argFile.getPath());
 
         classArgs.addAll(runClassArgs);
 

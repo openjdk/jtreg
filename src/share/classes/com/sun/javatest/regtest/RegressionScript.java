@@ -487,6 +487,10 @@ public class RegressionScript extends Script {
 
     //----------------------- computing paths ---------------------------------
 
+    File absTestWorkFile(String name) {
+        return locations.absTestWorkFile(name);
+    }
+
     File absTestSrcDir() {
         return locations.absTestSrcDir();
     } // absTestSrcDir()
@@ -840,8 +844,6 @@ public class RegressionScript extends Script {
     static String version;
 
     //----------misc statics---------------------------------------------------
-
-    static final String WRAPPEREXTN = ".jta";
 
     private static final String LINESEP  = System.getProperty("line.separator");
 

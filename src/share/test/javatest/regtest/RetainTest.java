@@ -153,7 +153,7 @@ public class RetainTest
                     scan(f, files);
             }
             else {
-                if (!name.endsWith(".jtr"))
+                if (!name.endsWith(".jtr") && !name.endsWith(".jta"))
                     files.add(f);
             }
         }

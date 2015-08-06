@@ -50,9 +50,9 @@ import java.util.concurrent.TimeUnit;
 import com.sun.javatest.Status;
 import com.sun.javatest.regtest.agent.CompileActionHelper;
 import com.sun.javatest.regtest.agent.JDK_Version;
+import com.sun.javatest.regtest.agent.SearchPath;
 
 import static com.sun.javatest.regtest.agent.RStatus.*;
-import com.sun.javatest.regtest.agent.SearchPath;
 
 /**
  * This class implements the "compile" action as described by the JDK tag
@@ -376,18 +376,13 @@ public class CompileAction extends Action {
         Status status;
 
         // WRITE ARGUMENT FILE
-        File compileArgFile;
+        File argFile;
         if (args.size() < 10)
-            compileArgFile = null;
+            argFile = null;
         else {
-            script.absTestClsDir().mkdirs();
-            String baseName = new File(script.getTestResult().getWorkRelativePath())
-                    .getName().replace(".jtr", ".compile.");
-            //compileArgFile = File.createTempFile(baseName, RegressionScript.WRAPPEREXTN, script.absTestClsDir());
-            compileArgFile = new File(script.absTestClsDir(), baseName + script.getNextSerial() + RegressionScript.WRAPPEREXTN);
-            BufferedWriter w;
+            argFile = getArgFile();
             try {
-                w = new BufferedWriter(new FileWriter(compileArgFile));
+                BufferedWriter w = new BufferedWriter(new FileWriter(argFile));
                 for (String arg: args) {
                     w.write(arg);
                     w.newLine();
@@ -437,8 +432,8 @@ public class CompileAction extends Action {
             javacArgs.add(script.getCompileSourcePath().toString());
         }
 
-        if (compileArgFile != null) {
-            javacArgs.add("@" + compileArgFile);
+        if (argFile != null) {
+            javacArgs.add("@" + argFile);
         } else {
             javacArgs.addAll(args);
         }

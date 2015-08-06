@@ -81,6 +81,7 @@ public class Locations {
     private final File absTestSrcDir;
     private final File absBaseClsDir;
     private final File absTestClsDir;
+    private final File absTestWorkDir;
     private final List<LibLocn> libList;
 
     Locations(RegressionEnvironment regEnv, TestDescription td)
@@ -100,6 +101,13 @@ public class Locations {
 
         absBaseSrcDir = params.getTestSuite().getRootDir();
         absTestSrcDir = new File(absBaseSrcDir, relTestDir);
+
+        String testWorkDir = td.getRootRelativeFile().getPath().replaceAll("(?i)\\.[a-z]+", "");
+        String id = td.getId();
+        if (id != null)
+            testWorkDir += "_" + id;
+        testWorkDir += ".d";
+        absTestWorkDir = params.getWorkDirectory().getFile(testWorkDir);
 
         try {
             String[] testClsDir = regEnv.lookup("testClassDir");
@@ -199,6 +207,10 @@ public class Locations {
         for (LibLocn l: libList)
             list.add(l.absClsDir);
         return list;
+    }
+
+    File absTestWorkFile(String name) {
+        return new File(absTestWorkDir, name);
     }
 
     List<ClassLocn> locateClasses(String name) throws TestRunException {
