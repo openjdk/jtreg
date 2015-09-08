@@ -90,20 +90,29 @@ public abstract class TimeoutHandler {
     /**
      * Get the process id of the specified process.
      * @param proc
-     * @return Process id
+     * @return Process id, 0 if pid isn't found
      */
-    private static long getProcessId(Process proc) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchFieldException   {
+    protected long getProcessId(Process proc) {
         try {
-            Method getPid = Process.class.getMethod("getPid");
-            return (Long) getPid.invoke(proc);
-        } catch (NoSuchMethodException ignore) {
-            // This exception is expected on pre JDK 9,
-            // try a fallback method that only works on Unix platforms
-            return getProcessIdPreJdk9(proc);
+            try {
+                Method getPid = Process.class.getMethod("getPid");
+                return (Long) getPid.invoke(proc);
+            } catch (NoSuchMethodException ignore) {
+                // This exception is expected on pre JDK 9,
+                // try a fallback method that only works on Unix platforms
+                return getProcessIdPreJdk9(proc);
+            }
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        } catch (InvocationTargetException e) {
+            throw new RuntimeException(e);
+        } catch (NoSuchFieldException e) {
+            throw new RuntimeException(e);
         }
     }
 
-    private static long getProcessIdPreJdk9(Process proc) throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException {
+    private static long getProcessIdPreJdk9(Process proc)
+            throws IllegalAccessException, NoSuchFieldException {
         if (proc.getClass().getName().equals("java.lang.UNIXProcess")) {
             Field f = proc.getClass().getDeclaredField("pid");
             boolean oldValue = f.isAccessible();
