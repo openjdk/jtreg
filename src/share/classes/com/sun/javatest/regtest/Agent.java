@@ -45,6 +45,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import com.sun.javatest.Status;
@@ -67,7 +68,7 @@ public class Agent {
         }
     }
 
-    static final boolean showAgent = Action.config("showAgent"); // mild uugh
+    static final boolean showAgent = Action.config("showAgent");
     static final boolean traceAgent = Action.config("traceAgent");
 
     /**
@@ -218,6 +219,7 @@ public class Agent {
     public Status doMainAction(
             String testName,
             Map<String, String> testProps,
+            Set<String> modules,
             SearchPath testClassPath,
             String testClass,
             List<String> testArgs,
@@ -262,6 +264,7 @@ public class Agent {
                 out.writeByte(DO_MAIN);
                 out.writeUTF(testName);
                 writeMap(testProps);
+                writeCollection(modules);
                 out.writeUTF(testClassPath.toString());
                 out.writeUTF(testClass);
                 writeCollection(testArgs);
@@ -320,9 +323,9 @@ public class Agent {
             System.err.println("Agent[" + id + "]: Closed");
     }
 
-    void writeCollection(Collection<String> list) throws IOException {
-        out.writeShort(list.size());
-        for (String s: list)
+    void writeCollection(Collection<String> c) throws IOException {
+        out.writeShort(c.size());
+        for (String s: c)
             out.writeUTF(s);
     }
 
@@ -340,9 +343,9 @@ public class Agent {
         return (b == 0) ? null : in.readUTF();
     }
 
-    void writeMap(Map<String, String> p) throws IOException {
-        out.writeShort(p.size());
-        for (Map.Entry<String, String> e: p.entrySet()) {
+    void writeMap(Map<String, String> map) throws IOException {
+        out.writeShort(map.size());
+        for (Map.Entry<String, String> e: map.entrySet()) {
             out.writeUTF(e.getKey());
             out.writeUTF(e.getValue());
         }

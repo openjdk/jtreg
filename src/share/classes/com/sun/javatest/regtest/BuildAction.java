@@ -103,7 +103,9 @@ public class BuildAction extends Action
         super.init(opts, args, reason, script);
 
         for (String[] opt : opts) {
-            if (opt[0].equals("implicit") && opt[1].equals("none")) {
+            String optName = opt[0];
+            String optValue = opt[1];
+            if (optName.equals("implicit") && optValue.equals("none")) {
                 implicitOpt = "-implicit:none";
                 continue;
             }

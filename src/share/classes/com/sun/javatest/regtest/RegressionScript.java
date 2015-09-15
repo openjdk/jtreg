@@ -26,14 +26,15 @@
 package com.sun.javatest.regtest;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -115,6 +116,14 @@ public class RegressionScript extends Script {
             defaultExecMode = testSuite.useOtherVM(td) ? ExecMode.OTHERVM : params.getExecMode();
             useBootClassPath = testSuite.useBootClassPath(td.getRootRelativePath());
 
+            String mods = td.getParameter("modules");
+            modules = (mods == null)
+                    ? testSuite.getModules(td)
+                    : new LinkedHashSet(Arrays.asList(mods.split("\\s+")));
+            if (!modules.isEmpty()) {
+                testResult.putProperty("modules", StringUtils.join(modules));
+            }
+
             LinkedList<Action> actionList = parseActions(actions, true);
 
             needJUnit = false;
@@ -133,6 +142,14 @@ public class RegressionScript extends Script {
             }
             if (needTestNG && !params.isTestNGAvailable()) {
                 throw new TestRunException("TestNG not available: see the FAQ or online help for details");
+            }
+
+            useXoverride = false;
+            for (Action a: actionList) {
+                if (a.needOverrideModules()) {
+                    useXoverride = true;
+                    break;
+                }
             }
 
             scratchDirectory = ScratchDirectory.get(params, defaultExecMode, td);
@@ -485,6 +502,13 @@ public class RegressionScript extends Script {
         return params.getNativeDir();
     }
 
+    /**
+     * Get content of @modules.
+     */
+    Set<String> getModules() {
+        return modules;
+    }
+
     //----------------------- computing paths ---------------------------------
 
     File absTestWorkFile(String name) {
@@ -564,7 +588,10 @@ public class RegressionScript extends Script {
     }
 
     private SearchPath cacheCompileClassPath;
-    SearchPath getCompileClassPath() throws TestClassException {
+    SearchPath getCompileClassPath(String module) throws TestClassException {
+        if (module != null)
+            return new SearchPath(locations.absTestClsDir(module));
+
         if (cacheCompileClassPath == null) {
             cacheCompileClassPath = new SearchPath();
             JDK jdk = getCompileJDK();
@@ -606,7 +633,10 @@ public class RegressionScript extends Script {
      *             contain the directory of the defining file of the test
      *             followed by the library list.
      */
-    SearchPath getCompileSourcePath() {
+    SearchPath getCompileSourcePath(String module) {
+        if (module != null)
+            return new SearchPath(locations.absTestSrcDir(module));
+
         if (cacheCompileSourcePath == null) {
             cacheCompileSourcePath = new SearchPath();
             cacheCompileSourcePath.append(locations.absTestSrcDir());
@@ -617,6 +647,14 @@ public class RegressionScript extends Script {
 
     boolean useBootClassPath() {
         return useBootClassPath;
+    }
+
+    boolean useXoverride() {
+        return useXoverride;
+    }
+
+    boolean useModulePath() {
+        return useModulePath;
     }
 
     ExecMode getExecMode() {
@@ -722,6 +760,8 @@ public class RegressionScript extends Script {
         p.put("test.jdk", getTestJDK().getAbsolutePath());
         p.put("compile.jdk", getCompileJDK().getAbsolutePath());
         p.put("test.timeout.factor", String.valueOf(getTimeoutFactor()));
+        if (modules != null && !modules.isEmpty())
+            p.put("test.modules", StringUtils.join(modules, " "));
         File nativeDir = getNativeDir();
         if (nativeDir != null)
             p.put("test.nativepath", nativeDir.getAbsolutePath());
@@ -747,6 +787,9 @@ public class RegressionScript extends Script {
         vmOpts.add("-classpath");
         vmOpts.add(classpath.toString());
         vmOpts.addAll(testVMOpts);
+        if (params.getTestJDK().hasModules()) {
+            vmOpts.add("-Xoverride:" + params.getWorkDirectory().getFile("modules"));
+        }
 
         /*
          * A script only uses one agent at a time, and only one, maybe two,
@@ -851,8 +894,7 @@ public class RegressionScript extends Script {
         CANT_INSTANTIATE      = "Unable to instantiate: ",
         NOT_EXT_ACTION        = " does not extend Action",
         ILLEGAL_ACCESS_INIT   = "Illegal access to init method: ",
-        BAD_ACTION            = "Bad action for script: ",
-        ADD_BAD_SUBTYPE       = "Class must be a subtype of ";
+        BAD_ACTION            = "Bad action for script: ";
 
     //----------member variables-----------------------------------------------
 
@@ -863,9 +905,12 @@ public class RegressionScript extends Script {
     private RegressionParameters params;
     private RegressionTestSuite testSuite;
     private boolean useBootClassPath;
+    private boolean useXoverride;
+    private boolean useModulePath;
     private ExecMode defaultExecMode;
     private boolean needJUnit;
     private boolean needTestNG;
+    private Set<String> modules;
     private ScratchDirectory scratchDirectory;
     Locations locations;
 

@@ -203,6 +203,9 @@ public class RegressionTestSuite extends TestSuite
     Set<File> getExternalLibRoots(TestDescription td) throws TestSuite.Fault {
         return properties.getExternalLibs(td.getFile());
     }
+    Set<String> getModules(TestDescription td) throws TestSuite.Fault {
+        return properties.getModules(td.getFile());
+    }
 
     private final TestFinder.ErrorHandler errHandler;
     private final TestProperties properties;

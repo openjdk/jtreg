@@ -34,12 +34,16 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Info about a JDK
@@ -198,6 +202,52 @@ public class JDK {
         return fullVersion;
     }
 
+    public boolean hasModules() {
+        return !getModules(Collections.<String>emptySet()).isEmpty();
+    }
+
+    // for now, we do a direct invocation of the JVM with -limitmods.
+    // in time, we should merge this with the invocation to collect system properties
+    // and other test-suite-specific values for @requires
+    public synchronized Map<String,String> getModules(Collection<String> vmOpts) {
+        if (modulesMap == null)
+            modulesMap = new HashMap<Set<String>, Map<String,String>>();
+
+        Set<String> vmOptsSet = new LinkedHashSet<String>(vmOpts);
+        Map<String,String> modules = modulesMap.get(vmOptsSet);
+        if (modules == null) {
+            modules = new LinkedHashMap<String,String>();
+            List<String> cmdArgs = new ArrayList<String>();
+            cmdArgs.add(getJavaProg().getPath());
+            cmdArgs.addAll(vmOpts);
+            cmdArgs.add("-listmods");
+
+            ProcessBuilder pb = new ProcessBuilder(cmdArgs);
+            pb.redirectErrorStream(true);
+            try {
+                Process p = pb.start();
+                List<String> lines = getOutputLines(p);
+                int rc = p.waitFor();
+                // note: -listmods typically returns rc=1; ignore for now
+                Pattern modulePattern = Pattern.compile("^([A-Za-z][A-Za-z0-9._]*)(@[0-9][0-9.]*| *\\([^)]*\\))$");
+                for (String line: lines) {
+                    Matcher m = modulePattern.matcher(line);
+                    if (m.matches()) {
+                        modules.put(m.group(1), line);
+                    }
+                }
+            } catch (InterruptedException e) {
+                // ignore
+            } catch (IOException e) {
+                // ignore
+            }
+
+            modulesMap.put(vmOptsSet, modules);
+        }
+
+        return modules;
+    }
+
     public synchronized Properties getSystemProperties(RegressionParameters params) {
         if (sysPropsMap == null)
             sysPropsMap = new HashMap<Set<String>, Properties>();
@@ -253,6 +303,20 @@ public class JDK {
         }
     }
 
+    private List<String> getOutputLines(Process p) {
+        try {
+            List<String> lines = new ArrayList<String>();
+            BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            String line;
+            while ((line = r.readLine()) != null) {
+                lines.add(line);
+            }
+            return lines;
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
     @Override
     public String toString() {
         return getPath();
@@ -280,6 +344,8 @@ public class JDK {
     private Map<Set<String>, String> fullVersions;
     /** System properties java VMOPTS -version for this JDK. Lazily evaluated as needed. */
     private Map<Set<String>, Properties> sysPropsMap;
+    /** Modules for this JDK. Lazily evaluated as needed. */
+    private Map<Set<String>, Map<String,String>> modulesMap;
 
     private static final String LINESEP  = System.getProperty("line.separator");
 }

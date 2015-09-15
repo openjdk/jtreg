@@ -232,8 +232,7 @@ public class AppletAction extends Action
         command.add(cp.toString());
 
         List<String> vmOpts = new ArrayList<String>();
-        vmOpts.addAll(script.getTestVMOptions());
-        vmOpts.addAll(script.getTestJavaOptions());
+        vmOpts.addAll(updateAddExports(script.getTestVMJavaOptions()));
         vmOpts.addAll(script.getTestDebugOptions());
         command.addAll(vmOpts);
 

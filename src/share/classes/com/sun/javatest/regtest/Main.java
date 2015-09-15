@@ -25,12 +25,12 @@
 
 package com.sun.javatest.regtest;
 
-import com.sun.javatest.regtest.agent.RegressionSecurityManager;
 import java.awt.EventQueue;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -667,6 +667,16 @@ public class Main {
                 if (arg.length() == 0)
                     return;
                 testDebugOpts.addAll(Arrays.asList(arg.split("\\s+")));
+            }
+        },
+
+        new Option(OLD, JDK, null, "limitmods") {
+            public void process(String opt, String arg) {
+                arg = arg.trim();
+                if (arg.length() == 0)
+                    return;
+                testVMOpts.add("-limitmods");
+                testVMOpts.add(arg);
             }
         },
 
@@ -1530,7 +1540,6 @@ public class Main {
         @SuppressWarnings("deprecation")
         @Override
         public void run() {
-            //System.out.println("Copying stream");
             try {
                 String line;
                 while ((line = in.readLine()) != null) {
@@ -1853,6 +1862,10 @@ public class Main {
                     elapsedTimeHandler.register(h);
                 }
 
+                if (params.getTestJDK().hasModules()) {
+                    initOverrideModule(params.getWorkDirectory());
+                }
+
                 String[] tests = params.getTests();
                 ok = (tests != null && tests.length == 0) || h.batch(params);
 
@@ -1880,6 +1893,43 @@ public class Main {
         } finally {
             out.flush();
             err.flush();
+        }
+    }
+
+    private void initOverrideModule(WorkDirectory wd) {
+        File modulesDir = wd.getFile("modules");
+        File javaBaseDir = new File(modulesDir, "java.base");
+        // can't use class constants because it's a restricted package
+        String[] classes = {
+            "java/lang/reflect/JTRegModuleHelper.class"
+        };
+        for (String c: classes) {
+            File f = new File(javaBaseDir, c);
+            if (!f.exists()) {
+                // Eventually, this should be updated to use try-with-resources
+                // and Files.copy(stream, path)
+                InputStream from = null;
+                OutputStream to = null;
+                try {
+                    from = getClass().getClassLoader().getResourceAsStream(c);
+                    f.getParentFile().mkdirs();
+                    to = new FileOutputStream(f);
+                    byte[] buf = new byte[8192];
+                    int n;
+                    while ((n = from.read(buf, 0, buf.length)) != -1) {
+                        to.write(buf, 0, n);
+                    }
+                } catch (Throwable t) {
+                    out.println("Cannot init module override directory: " + t);
+                } finally {
+                    try {
+                        if (from != null) from.close();
+                        if (to != null) to.close();
+                    } catch (IOException e) {
+                        out.println("Cannot init module override directory: " + e);
+                    }
+                }
+            }
         }
     }
 

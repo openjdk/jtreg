@@ -32,6 +32,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -42,16 +43,19 @@ public class Locations {
         final String name;
         final File absSrcDir;
         final File absClsDir;
+        final boolean modular;
 
-        LibLocn(String name, File absSrcDir, File absClsDir) {
+        LibLocn(String name, File absSrcDir, File absClsDir, boolean modular) {
             this.name = name;
             this.absSrcDir = absSrcDir;
             this.absClsDir = absClsDir;
+            this.modular = modular;
         }
 
         @Override
         public String toString() {
-            return "LibLocn(" + name + ",src:" + absSrcDir + ",cls:" + absClsDir + ")";
+            return "LibLocn(" + name + ",src:" + absSrcDir + ",cls:" + absClsDir
+                    + (modular ? ",mod" : "");
         }
     }
 
@@ -76,6 +80,7 @@ public class Locations {
      }
 
     private final RegressionParameters params;
+    private final Map<String,String> availModules;
     private final String relTestDir;
     private final File absBaseSrcDir;
     private final File absTestSrcDir;
@@ -87,6 +92,7 @@ public class Locations {
     Locations(RegressionEnvironment regEnv, TestDescription td)
             throws TestClassException {
         this.params = regEnv.params;
+        availModules = params.getTestJDK().getModules(params.getTestVMJavaOptions());
 
         String packageRoot = td.getParameter("packageRoot");
         if (packageRoot != null) {
@@ -151,14 +157,32 @@ public class Locations {
     }
 
     private LibLocn createLibLocn(String lib, File absSrcDir, File absClsDir) {
-        return new LibLocn(lib,
-                normalize(new File(absSrcDir, lib)),
-                normalize(new File(absClsDir, lib))
-            );
+        boolean modular = false;
+        File absLibSrcDir = normalize(new File(absSrcDir, lib));
+        if (absLibSrcDir.isDirectory()) {
+            for (File f: absLibSrcDir.listFiles()) {
+                if (f.isDirectory()) {
+                    if (isSystemModule(f.getName()) || new File(f, "module-info.java").exists()) {
+                        modular = true;
+                        break;
+                    }
+                }
+            }
+        }
+        File absLibClsDir = normalize(new File(absClsDir, lib));
+        return new LibLocn(lib, absLibSrcDir, absLibClsDir, modular);
+    }
+
+    boolean isSystemModule(String name) {
+        return (availModules != null) && availModules.containsKey(name);
     }
 
     File absTestSrcDir() {
         return absTestSrcDir;
+    }
+
+    File absTestSrcDir(String module) {
+        return (module == null) ? absTestSrcDir : new File(absTestSrcDir, module);
     }
 
     List<File> absTestSrcPath() {
@@ -194,6 +218,11 @@ public class Locations {
         return absTestClsDir;
     }
 
+    File absTestClsDir(String module) {
+        // TODO: for now, assume use of override dir
+        return (module == null) ? absTestClsDir : new File(absTestOverrideDir(), module);
+    }
+
     List<File> absTestClsPath() {
         List<File> list = new ArrayList<File>();
         list.add(absTestClsDir);
@@ -211,6 +240,14 @@ public class Locations {
 
     File absTestWorkFile(String name) {
         return new File(absTestWorkDir, name);
+    }
+
+    File absTestModulesDir() {
+        return absTestWorkFile("modules");
+    }
+
+    File absTestOverrideDir() {
+        return absTestWorkFile("override");
     }
 
     List<ClassLocn> locateClasses(String name) throws TestRunException {
@@ -233,7 +270,7 @@ public class Locations {
             // Check testSrcDir
             if ((sf = new File(absTestSrcDir, relSrc)).exists()) {
                 cf = new File(absTestClsDir, relCls);
-                LibLocn tl = new LibLocn(null, absTestSrcDir, absTestClsDir);
+                LibLocn tl = new LibLocn(null, absTestSrcDir, absTestClsDir, false);
                 return new ClassLocn(className, tl, sf, cf);
             }
 
@@ -251,7 +288,7 @@ public class Locations {
                 String baseName = relSrc.substring(sep + 1);
                 if ((sf = new File(absTestSrcDir, baseName)).exists()) {
                     cf = new File(absTestClsDir, relCls);
-                    LibLocn tl = new LibLocn(null, absTestSrcDir, absTestClsDir);
+                    LibLocn tl = new LibLocn(null, absTestSrcDir, absTestClsDir, false);
                     return new ClassLocn(className, tl, sf, cf);
                 }
             }
@@ -270,7 +307,7 @@ public class Locations {
         List<ClassLocn> results = new ArrayList<ClassLocn>();
 
         // Check testSrcDir
-        LibLocn tl = new LibLocn(null, absTestSrcDir, absTestClsDir);
+        LibLocn tl = new LibLocn(null, absTestSrcDir, absTestClsDir, false);
         locateClassesInPackage(packageName, tl, results);
 
         // Check lib list
@@ -311,9 +348,12 @@ public class Locations {
         }
     }
 
-    File absTestSrcFile(File srcFile) {
+    File absTestSrcFile(String module, File srcFile) {
         if (srcFile.isAbsolute())
             throw new IllegalArgumentException();
+        if (module != null) {
+            return new File(new File(absTestSrcDir, module), srcFile.getPath());
+        }
         return new File(absTestSrcDir, srcFile.getPath());
     }
 
@@ -325,10 +365,10 @@ public class Locations {
 
     private static final AtomicInteger uniqueId = new AtomicInteger(0);
 
-    private static final ThreadLocal<Integer> uniqueNum =
-        new ThreadLocal<Integer> () {
-            @Override protected Integer initialValue() {
-                return uniqueId.getAndIncrement();
+    private static final ThreadLocal<Integer> uniqueNum = new ThreadLocal<Integer>() {
+        @Override
+        protected Integer initialValue() {
+            return uniqueId.getAndIncrement();
         }
     };
 

@@ -209,6 +209,9 @@ public class ShellAction extends Action
             List<String> javaOpts = script.getTestJavaOptions();
             env.put("TESTJAVAOPTS", fixupSep(StringUtils.join(javaOpts, " ")));
             env.put("TESTTIMEOUTFACTOR", script.getTimeoutFactor() + "");
+            Set<String> modules = script.getModules();
+            if (modules != null && !modules.isEmpty())
+                env.put("TESTMODULES", StringUtils.join(modules, " "));
             File nativeDir = script.getNativeDir();
             if (nativeDir != null) {
                 env.put("TESTNATIVEPATH", nativeDir.getAbsolutePath());

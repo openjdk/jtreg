@@ -89,6 +89,10 @@ public abstract class Action extends ActionHelper
         this.script = script;
     }
 
+    public boolean needOverrideModules() {
+        return false;
+    }
+
     /**
      * The method that does the work of the action.  The necessary work for the
      * given action is defined by the tag specification.
@@ -152,6 +156,42 @@ public abstract class Action extends ActionHelper
             throw new ParseException(PARSE_FAIL_UEXPECT + value);
         return true;
     } // parseFail()
+
+    /**
+     * This method parses the <em>module</em> action option used by some
+     * actions.
+     *
+     * @param value The proposed value of the module
+     * @return     True if the value is a legal identifier.
+     * @exception  ParseException If there is an associated value.
+     */
+    protected String parseModule(String value) throws ParseException {
+        if (value == null)
+            throw new ParseException(PARSE_MODULE_NONE);
+        if (!isQualifiedName(value))
+            throw new ParseException(PARSE_MODULE_INVALID + value);
+        return value;
+    }
+
+    private boolean isQualifiedName(String name) {
+        boolean beginIdent = true;
+        for (int i = 0; i < name.length(); i++) {
+            char ch = name.charAt(i);
+            if (beginIdent) {
+                if (!Character.isJavaIdentifierStart(ch)) {
+                    return false;
+                }
+                beginIdent = false;
+            } else {
+                if (ch == '.') {
+                    beginIdent = true;
+                } else if (!Character.isJavaIdentifierPart(ch)) {
+                    return false;
+                }
+            }
+        }
+        return !beginIdent;
+    }
 
     //--------------------------------------------------------------------------
 
@@ -373,6 +413,58 @@ public abstract class Action extends ActionHelper
         return result;
     }
 
+    //----------module exports----------------------------------------------------
+
+    protected List<String> updateAddExports(List<String> opts) {
+        if (!script.getTestJDK().hasModules())
+            return opts;
+
+        Set<String> modules = script.getModules();
+
+        boolean needAddExports = false;
+        for (String s: modules) {
+            if (s.contains("/")) {
+                needAddExports = true;
+                break;
+            }
+        }
+        if (!needAddExports)
+            return opts;
+
+        List<String> updatedOpts = new ArrayList<String>();
+        boolean seenAddExports = false;
+        for (String opt: opts) {
+            if (!seenAddExports && opt.startsWith("-XaddExports:")) {
+                opt = updateAddExports(opt, modules);
+                seenAddExports = true;
+            }
+            updatedOpts.add(opt);
+        }
+        if (!seenAddExports) {
+            updatedOpts.add(updateAddExports("-XaddExports:", modules));
+        }
+
+        return updatedOpts;
+    }
+
+    private String updateAddExports(String opt, Set<String> modules) {
+        String suffix = "=ALL-UNNAMED";
+        for (String m: modules) {
+            String m_suffix = m + suffix;
+            if (m.contains("/") && !includesExport(opt, m_suffix)) {
+                if (opt.endsWith(":"))
+                    opt += m_suffix;
+                else
+                    opt += "," + m_suffix;
+            }
+        }
+        return opt;
+    }
+
+    protected boolean includesExport(String opt, String arg) {
+        return opt.matches("-XaddExports:(.*,)?\\Q" + arg + "\\E(,.*)?");
+    }
+
     //----------misc statics----------------------------------------------------
 
     protected static final String FILESEP  = System.getProperty("file.separator");
@@ -399,6 +491,8 @@ public abstract class Action extends ActionHelper
         PARSE_TIMEOUT_NONE    = "No timeout value",
         PARSE_TIMEOUT_BAD_INT = "Bad integer specification: ",
         PARSE_FAIL_UEXPECT    = "Unexpected value for `fail': ",
+        PARSE_MODULE_NONE     = "No module name",
+        PARSE_MODULE_INVALID  = "Invalid module name",
 
         // policy and security manager
         PARSE_BAD_OPT_JDK     = "Option not allowed using provided test JDK: ",

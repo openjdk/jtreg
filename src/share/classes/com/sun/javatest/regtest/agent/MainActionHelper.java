@@ -36,6 +36,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import com.sun.javatest.Status;
@@ -49,6 +50,7 @@ public class MainActionHelper extends ActionHelper {
     public static Status runClass(
             String testName,
             Map<String, String> props,
+            Set<String> modules,
             SearchPath classpath,
             String classname,
             String[] classArgs,
@@ -85,6 +87,7 @@ public class MainActionHelper extends ActionHelper {
                     }
                 }
                 loader = new URLClassLoader(urls.toArray(new URL[urls.size()]));
+                ModuleHelper.addModuleExports(modules, loader);
                 c = loader.loadClass(classname);
             } else {
                 loader = null;
@@ -170,6 +173,10 @@ public class MainActionHelper extends ActionHelper {
             err.println("JavaTest Message: " + classname + " in file " + classname + ".java");
             err.println();
             status = error(MAIN_CANT_FIND_MAIN);
+        } catch (ModuleHelper.Fault e) {
+            if (e.getCause() != null)
+                e.printStackTrace(err);
+            status = error(MAIN_CANT_INIT_MODULE_EXPORTS + e.getMessage());
         } finally {
             status = saved.restore(testName, status);
         }
@@ -191,7 +198,8 @@ public class MainActionHelper extends ActionHelper {
         MAIN_THREAD_TIMEOUT   = "Timeout",
         MAIN_THREW_EXCEPT     = "`main' threw exception: ",
         MAIN_CANT_LOAD_TEST   = "Can't load test: ",
-        MAIN_CANT_FIND_MAIN   = "Can't find `main' method";
+        MAIN_CANT_FIND_MAIN   = "Can't find `main' method",
+        MAIN_CANT_INIT_MODULE_EXPORTS = "Can't init module exports: ";
 
     /**
      * Marker interface for test driver classes, which need to be passed a class

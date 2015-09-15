@@ -99,7 +99,7 @@ public class TestNGAction extends MainAction {
         if (userSpecified) {
             return super.build();
         } else {
-            List<String> classes = listClasses(script.getCompileSourcePath().split());
+            List<String> classes = listClasses(script.getCompileSourcePath(null).split());
             JDK_Version v = script.getCompileJDKVersion();
             String[][] buildOpts = v.compareTo(JDK_Version.V1_6) >= 0
                     ? new String[][] {{ "implicit", "none" }}

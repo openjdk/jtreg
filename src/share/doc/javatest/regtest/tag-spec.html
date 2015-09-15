@@ -51,7 +51,7 @@
 <p>Comments and questions to:
 <a href="mailto:jtreg-use@openjdk.java.net">jtreg-use@openjdk.java.net</a>.
 <br>
-1.37 (draft), 16 April, 2015
+1.38-jigsaw (draft), 23 July, 2015
 </div>
 
 <p>This is a specification document, not a tutorial.  For more basic information
@@ -224,7 +224,8 @@ may be specified in the <a href="#TEST_ROOT">TEST.ROOT</a> file (see below).
 The <code>@key</code> tag may be used at most once in a given test.
 
 <dt>@requires <var>&lt;expression&gt;</var>
-<dd>Express a dependence on characteristics of the system being tested.
+<dd>
+<p>Express a dependence on characteristics of the system being tested.
 Some harnesses allow tests to be selected according to the characteristics
 of the system being tested. The expression may be composed of the
 following elements:
@@ -255,7 +256,18 @@ following elements:
         &nbsp;<code>|</code>&nbsp;
         &nbsp;<code>!</code>
 </ul>
-The <code>@requires</code> tag may be used at most once in a given test.
+<p>The <code>@requires</code> tag may be used multiple times in a given test.
+If it is used more than once, the expressions in the individual instances will
+be enclosed in parentheses and combined with '&amp;'.</p>
+
+<dt>@modules <var>&lt;module[/package]&gt;+</var>
+<dd>
+<p>Express a dependence on a modules in the system being tested, and optionally,
+on selected internal packages in some or all of those modules.
+<p>If no dependencies are specified, a default set of dependencies will be read
+from the test suite <a href="#config">configuration files</a>.
+<p>A test will not be run if the system being tested does not contain any of the
+required modules.
 </dl>
 
 <h2><a name="ACTION_TAGS">ACTION TAGS</a></h2>
@@ -728,8 +740,8 @@ of a test-source tree must therefore be identified by placing a file named
 TEST.ROOT in the root directory.  Exactly one such file must exist in every
 test-source tree.
 
-<p>The <a name="TEST_ROOT">TEST.ROOT</a> file contains test-suite configuration
-information.  It is in the standard Java property-file format as described in the
+<p>The <a name="TEST_ROOT">TEST.ROOT</a> file contains test-suite configuration 
+information. It is in the standard Java property-file format as described in the
 specification of the <code>java.util.Properties</code> class.
 Properties defined in this file apply to the entire test suite.
 Additional properties files named TEST.properties may appear in subdirectories
@@ -740,25 +752,25 @@ that apply to files in that directory and its subdirectories.
 
 <dl>
 <dt><code>checkBugId true|false</code>
-<dd>Whether or not to check the format of strings in @bug tags.
-Checking is disabled if this property is set to <code>false</code>.
+<dd><p>Whether or not to check the format of strings in @bug tags.
+Checking is disabled if this property is set to <code>false</code>.</p>
 
 <dt><code>defaultExecMode agentvm|othervm|samevm</code>
-<dd>The default execution mode for tests in the test suite.
+<dd><p>The default execution mode for tests in the test suite.
 A harness that supports multiple test execution modes may use
 this value to determine the default execution mode for tests in
-this test-suite.
+this test-suite.</p>
 
 <dt><code>groups <var>&lt;files&gt;</var></code>
-<dd>Where to find group definition files.
+<dd><p>Where to find group definition files.
 A space separated list of files. Optional files should be enclosed in
-square brackets.
+square brackets.</p>
 
 <dt><code>requiredVersion <var>&lt;version&gt;</var></code>
-<dd>Minimal version of the harness required for this test-suite.
+<dd><p>Minimal version of the harness required for this test-suite.
 A version string in the format "[0-9.]+ ?b[0-9]+" (without the quotes). For example
 a value of "4.1 b03" declares that at least that version of the harness is required
-to run all the tests in the test suite.
+to run all the tests in the test suite.</p>
 </dl>
 
 <p>The following properties may appear in either TEST.ROOT or any TEST.properties file:
@@ -768,35 +780,41 @@ to run all the tests in the test suite.
 <dd><p>The set of valid keywords that can be used in @key tags.
 A harness that supports keyword-based test selection should reject any test
 containing keywords that are not present in this list.
-If this property is not present then no keywords should be accepted.
+If this property is not present then no keywords should be accepted.</p>
 
 <dt><code>bootclasspath.dirs <var>&lt;directories&gt;</var></code>
-<dd><p>Directories that when used should be placed on the bootclasspath.
+<dd><p>Directories that when used should be placed on the bootclasspath.</p>
 
 <dt><code>othervm.dirs <var>&lt;directories&gt;</var></code>
 <dd><p>Directories containing tests which should all be run in othervm mode.
 A harness that supports multiple test execution modes should ensure
 that all tests in the specified directories are run in <code>othervm</code>
-mode.
+mode.</p>
 
 <dt><code>exclusiveAccess.dirs <var>&lt;directories&gt;</var></code>
 <dd><p>Directories containing tests which should not be run concurrently at
 the same time as other tests.
 A harness that supports concurrent test execution should ensure
 that all tests in the specified directories are run when no other
-tests in the same directory is being run.
+tests in the same directory is being run.</p>
 
 <dt><code>TestNG.dirs <var>&lt;directories&gt;</var></code>
-<dd><p>Directories containing TestNG-style tests.
+<dd><p>Directories containing TestNG-style tests.</p>
 
 <dt><code>lib.dirs <var>&lt;directories&gt;</var></code>
 <dd><p>Default library directories used by all tests in or under the directory
-containing this property declaration.
+containing this property declaration.</p>
 
 <dt><code>external.lib.roots <var>&lt;directories&gt;</var></code>
 <dd><p>A search path for libraries specified in an <code>@library</code> tag.
 Relative paths will be evaluated relative to the directory containing the
-configuration file.
+configuration file.</p>
+
+<dt><code>modules <var>&lt;module[/package]&gt;+</var></code>
+<dd>
+<p>Express a default dependence, for tests in this directory and its subdirectories, 
+on modules in the system being tested, and optionally,
+on selected internal packages in some or all of those modules.</p>
 </dl>
 
 

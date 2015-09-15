@@ -108,6 +108,16 @@ ifndef JDK18HOME
 endif
 JDK18HOME := $(call FullPath,$(JDK18HOME))
 
+ifndef JDK19HOME
+  ifdef SLASHJAVA
+    JDK19HOME = $(SLASHJAVA)/re/jdk/1.9.0/promoted/latest/binaries/linux-i586
+  endif
+endif
+JDK19HOME := $(call FullPath,$(JDK19HOME))
+
+# optional, for now
+# JIGSAWHOME
+
 # J2SE for most classes
 J2SEHOME = $(JDK15HOME)
 J2SEJAVA = $(J2SEHOME)/bin/java

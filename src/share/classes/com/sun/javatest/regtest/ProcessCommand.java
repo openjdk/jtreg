@@ -219,7 +219,7 @@ public class ProcessCommand
      * @throws IndexOutOfBoundsException if the command is an empty list (has size 0)
      * @see #getStatus
      */
-    public Status exec() {
+     public Status exec() {
         if (out == null) {
             throw new IllegalArgumentException("Output stream is required");
         }

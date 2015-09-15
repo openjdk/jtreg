@@ -132,6 +132,12 @@ public class TestProperties {
         return e.libDirs;
     }
 
+    Set<String> getModules(File file) throws TestSuite.Fault {
+        File dir = file.isDirectory() ? file : file.getParentFile();
+        Cache.Entry e = cache.getEntry(dir);
+        return e.modules;
+    }
+
     Version getRequiredVersion() {
         return requiredVersion;
     }
@@ -179,6 +185,7 @@ public class TestProperties {
             private final Set<File> testNGDirs;
             final Set<String> libDirs;
             final Set<File> extLibRoots;
+            final Set<String> modules;
 
             Entry(Entry parent, File dir) {
                 this.parent = parent;
@@ -218,6 +225,9 @@ public class TestProperties {
 
                     // add the list of external library roots
                     extLibRoots = initFileSet(parent == null ? null : parent.extLibRoots, "external.lib.roots", dir);
+
+                    // add the list of default modules used by tests
+                    modules = initSimpleSet(parent == null ? null : parent.modules, "modules");
                 } else {
                     if (parent == null)
                         throw new IllegalStateException("TEST.ROOT not found");
@@ -230,6 +240,7 @@ public class TestProperties {
                     testNGDirs = parent.testNGDirs;
                     libDirs = parent.libDirs;
                     extLibRoots = parent.extLibRoots;
+                    modules = parent.modules;
                 }
 
                 useBootClassPath= initUseBootClassPath(parent, dir);

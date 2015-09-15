@@ -73,6 +73,11 @@ public class CompileAction extends Action {
         return NAME;
     }
 
+    @Override
+    public boolean needOverrideModules() {
+        return (module != null);
+    }
+
     /**
      * A method used by sibling classes to run both the init() and run()
      * method of CompileAction.
@@ -138,6 +143,8 @@ public class CompileAction extends Action {
                 ref = parseRef(optValue);
             } else if (optName.equals("process")) {
                 process = true;
+            } else if (optName.equals("module")) {
+                module = parseModule(optValue);
             } else {
                 throw new ParseException(COMPILE_BAD_OPT + optName);
             }
@@ -151,7 +158,7 @@ public class CompileAction extends Action {
         try {
             Locations locations = script.locations;
             if (destDir == null)
-                destDir = locations.absTestClsDir();
+                destDir = locations.absTestClsDir(module);
             if (!script.isCheck())
                 mkdirs(destDir);
 
@@ -167,18 +174,21 @@ public class CompileAction extends Action {
                     if (!sourceFile.isAbsolute()) {
                         // User must have used @compile, so file must be
                         // in the same directory as the defining file.
-                        File absSourceFile = locations.absTestSrcFile(sourceFile);
+                        File absSourceFile = locations.absTestSrcFile(module, sourceFile);
                         if (!absSourceFile.exists())
                             throw new RegressionScript.TestClassException(CANT_FIND_SRC + currArg);
                         args[i] = absSourceFile.getPath();
                     }
                 } else if (currArg.endsWith(".jasm") || currArg.endsWith("jcod")) {
+                    if (module != null) {
+                        throw new ParseException(COMPILE_OPT_DISALLOW);
+                    }
                     foundAsmFile = true;
                     File sourceFile = new File(currArg.replace('/', File.separatorChar));
                     if (!sourceFile.isAbsolute()) {
                         // User must have used @compile, so file must be
                         // in the same directory as the defining file.
-                        File absSourceFile = locations.absTestSrcFile(sourceFile);
+                        File absSourceFile = locations.absTestSrcFile(null, sourceFile);
                         if (!absSourceFile.exists())
                             throw new RegressionScript.TestClassException(CANT_FIND_SRC + currArg);
                         args[i] = absSourceFile.getPath();
@@ -186,24 +196,29 @@ public class CompileAction extends Action {
                 }
 
                 if (currArg.equals("-classpath") || currArg.equals("-cp")) {
+                    if (module != null) {
+                        throw new ParseException(COMPILE_OPT_DISALLOW);
+                    }
                     classpathp = true;
                     // assume the next element provides the classpath, add
                     // test.classes and test.src and lib-list to it
-                    SearchPath p = new SearchPath(args[i+1]).append(script.getCompileClassPath());
+                    SearchPath p = new SearchPath(args[i+1]).append(script.getCompileClassPath(null));
+                    args[i+1] = p.toString();
+                }
+
+                if (currArg.equals("-sourcepath")) {
+                    if (module != null) {
+                        throw new ParseException(COMPILE_OPT_DISALLOW);
+                    }
+                    sourcepathp = true;
+                    // assume the next element provides the sourcepath, add test.src
+                    // and lib-list to it
+                    SearchPath p = new SearchPath(args[i+1]).append(script.getCompileSourcePath(module));
                     args[i+1] = p.toString();
                 }
 
                 if (currArg.equals("-d")) {
                     throw new ParseException(COMPILE_OPT_DISALLOW);
-                }
-
-                // note that -sourcepath is only valid for JDK1.2 and beyond
-                if (currArg.equals("-sourcepath")) {
-                    sourcepathp = true;
-                    // assume the next element provides the sourcepath, add test.src
-                    // and lib-list to it
-                    SearchPath p = new SearchPath(args[i+1]).append(script.getCompileSourcePath());
-                    args[i+1] = p.toString();
                 }
             }
 
@@ -403,8 +418,7 @@ public class CompileAction extends Action {
         Map<String, String> env = new LinkedHashMap<String, String>();
         env.putAll(script.getEnvVars());
 
-        // Why JavaTest?
-        SearchPath cp = new SearchPath(script.getJavaTestClassPath(), script.getCompileClassPath());
+        SearchPath cp = script.getCompileClassPath(module);
 
         String javacCmd = script.getJavacProg();
 
@@ -429,8 +443,23 @@ public class CompileAction extends Action {
 
         if (!sourcepathp) {
             javacArgs.add("-sourcepath");
-            javacArgs.add(script.getCompileSourcePath().toString());
+            javacArgs.add(script.getCompileSourcePath(module).toString());
         }
+
+        if (module != null) {
+            javacArgs.add("-Xmodule:" + module);
+        }
+
+        if (script.useXoverride()) {
+            javacArgs.add("-Xoverride:" + script.locations.absTestOverrideDir().getPath());
+        }
+
+        if (script.useModulePath()) {
+            javacArgs.add("-modulepath");
+            javacArgs.add(script.locations.absTestModulesDir().getPath());
+        }
+
+        javacArgs = updateAddExports(javacArgs);
 
         if (argFile != null) {
             javacArgs.add("@" + argFile);
@@ -517,13 +546,28 @@ public class CompileAction extends Action {
 
         if (!classpathp) {
             javacArgs.add("-classpath");
-            javacArgs.add(script.getCompileClassPath().toString());
+            javacArgs.add(script.getCompileClassPath(module).toString());
         }
 
-        if (!sourcepathp) { // must be JDK1.4 or greater, to even run JavaTest 3
+        if (!sourcepathp) {
             javacArgs.add("-sourcepath");
-            javacArgs.add(script.getCompileSourcePath().toString());
+            javacArgs.add(script.getCompileSourcePath(module).toString());
         }
+
+        if (module != null) {
+            javacArgs.add("-Xmodule:" + module);
+        }
+
+        if (script.useXoverride()) {
+            javacArgs.add("-Xoverride:" + script.absTestWorkFile("override").getPath());
+        }
+
+        if (script.useModulePath()) {
+            javacArgs.add("-modulepath");
+            javacArgs.add(script.absTestWorkFile("modules").getPath());
+        }
+
+        javacArgs = updateAddExports(javacArgs);
 
         javacArgs.addAll(args);
 
@@ -704,4 +748,5 @@ public class CompileAction extends Action {
     private boolean classpathp  = false;
     private boolean sourcepathp = false;
     private boolean process = false;
+    private String module = null;
 }

@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -187,6 +188,24 @@ public class MainAction extends Action
             if (secureCN != null)
                 throw new ParseException(PARSE_SECURE_OTHERVM);
         }
+
+        if (!othervm && !useModuleExportAPI) {
+            for (String m: script.getModules()) {
+                if (m.contains("/")) { // possible need for -XaddExports
+                    boolean found = false;
+                    for (String vmOpt: script.getTestVMJavaOptions()) {
+                        if (includesExport(vmOpt, m)) {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        othervm = true;
+                        break;
+                    }
+                }
+            }
+        }
     } // init()
 
     public List<String> getJavaArgs() {
@@ -241,6 +260,9 @@ public class MainAction extends Action
      *             the test.
      */
     public Status run() throws TestRunException {
+        if (script.useXoverride())
+            othervm = true;
+
         Status status;
 
         if (!(status = build()).isPassed())
@@ -355,7 +377,16 @@ public class MainAction extends Action
             javaOpts.add("-Xbootclasspath/a:" + bcp.toString());
         }
 
-        javaOpts.addAll(script.getTestVMJavaOptions());
+        if (script.useXoverride()) {
+            javaOpts.add("-Xoverride:" + script.locations.absTestOverrideDir().getPath());
+        }
+
+        if (script.useModulePath()) {
+            javaOpts.add("-modulepath");
+            javaOpts.add(script.locations.absTestModulesDir().getPath());
+        }
+
+        javaOpts.addAll(updateAddExports(script.getTestVMJavaOptions()));
         javaOpts.addAll(script.getTestDebugOptions());
 
         Map<String, String> javaProps = new LinkedHashMap<String, String>();
@@ -491,6 +522,7 @@ public class MainAction extends Action
             status = agent.doMainAction(
                     script.getTestResult().getTestName(),
                     javaProps,
+                    jdk.hasModules() ? script.getModules() : Collections.<String>emptySet(),
                     runClasspath,
                     runMainClass,
                     runMainArgs,
@@ -573,4 +605,6 @@ public class MainAction extends Action
     protected boolean nativeCode = false;
     private int     timeout = -1;
     private String  manual  = "unset";
+
+    private final boolean useModuleExportAPI = true; // config("useModuleExportAPI");
 }

@@ -42,7 +42,8 @@ $(BUILDDIR)/classes.com.sun.javatest.regtest-jdk11.ok: \
 	echo "classes built at `date`" > $@
 
 JAVAFILES.com.sun.javatest.regtest-j2se := \
-	$(filter-out $(JAVAFILES.com.sun.javatest.regtest-jdk11), $(shell $(FIND) $(JAVADIR)/com/sun/javatest/regtest -name \*.java ))
+	$(filter-out $(JAVAFILES.com.sun.javatest.regtest-jdk11), $(shell $(FIND) $(JAVADIR)/com/sun/javatest/regtest -name \*.java )) \
+	$(JAVADIR)/java/lang/reflect/JTRegModuleHelper.java
 
 $(BUILDDIR)/classes.com.sun.javatest.regtest.ok: \
 		$(JAVAFILES.com.sun.javatest.regtest-j2se) \
@@ -241,7 +242,10 @@ FILES.JAR.jtreg += \
 #
 # create jtreg.jar
 
-PKGS.JAR.jtreg += com.sun.javatest.regtest com.sun.javatest.regtest.agent
+PKGS.JAR.jtreg += \
+	com.sun.javatest.regtest \
+	com.sun.javatest.regtest.agent \
+	java.lang.reflect
 TARGETS.JAR.jtreg += $(TARGETS.com.sun.javatest.regtest)
 
 $(JTREG_IMAGEDIR)/lib/jtreg.jar: JAR_MAINCLASS = com.sun.javatest.regtest.Main

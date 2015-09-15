@@ -50,6 +50,7 @@ import com.sun.javatest.TestDescription;
 import com.sun.javatest.TestEnvironment;
 import com.sun.javatest.TestFilter;
 import com.sun.javatest.interview.BasicInterviewParameters;
+import com.sun.javatest.regtest.agent.JDK_Version;
 import com.sun.javatest.regtest.agent.SearchPath;
 
 public class RegressionParameters
@@ -144,11 +145,19 @@ public class RegressionParameters
     @Override
     public TestFilter getRelevantTestFilter() {
         if (relevantTestFilter == UNSET) {
+            List<TestFilter> filters = new ArrayList<TestFilter>();
+            TestFilter mf = getModulesFilter();
+            if (mf != null)
+                filters.add(mf);
+
             TestFilter rf = getRequiresFilter();
+            filters.add(rf);
+
             TestFilter tlf = getTimeLimitFilter();
-            TestFilter f = (tlf == null)
-                    ? rf
-                    : new CompositeFilter(new TestFilter[] { rf, tlf });
+            if (tlf != null)
+                filters.add(tlf);
+
+            TestFilter f = new CompositeFilter(filters.toArray(new TestFilter[filters.size()]));
             relevantTestFilter = new CachingTestFilter(f);
         }
         return relevantTestFilter;
@@ -156,6 +165,51 @@ public class RegressionParameters
     }
 
     CachingTestFilter relevantTestFilter = UNSET;
+
+    TestFilter getModulesFilter() {
+        JDK jdk = getTestJDK();
+        if (jdk == null || jdk.getVersion(this).compareTo(JDK_Version.V9) == -1)
+            return null;
+
+        final Map<String,String> availModules = jdk.getModules(getTestVMJavaOptions());
+        if (availModules.isEmpty())
+            return null;
+
+        return new TestFilter() {
+            @Override
+            public String getName() {
+                return "ModulesFilter";
+            }
+
+            @Override
+            public String getDescription() {
+                return "Select tests for which all required modules are available";
+            }
+
+            @Override
+            public String getReason() {
+                return "A required module is not available";
+            }
+
+            @Override
+            public boolean accepts(TestDescription td) {
+                String reqdModules = td.getParameter("modules");
+                if (reqdModules == null)
+                    return true;
+
+                for (String m: reqdModules.split(" ")) {
+                    if (m.length() == 0)
+                        continue;
+                    int slash = m.indexOf("/");
+                    String name = slash == -1 ? m : m.substring(0, slash);
+                    if (!availModules.containsKey(name))
+                        return false;
+                }
+
+                return true;
+            }
+        };
+    }
 
     TestFilter getRequiresFilter() {
         return new TestFilter() {
@@ -175,7 +229,7 @@ public class RegressionParameters
             }
 
             @Override
-            public boolean accepts(TestDescription td) throws TestFilter.Fault {
+            public boolean accepts(TestDescription td) {
                 try {
                     String requires = td.getParameter("requires");
                     if (requires == null)

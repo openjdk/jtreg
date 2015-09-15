@@ -39,8 +39,10 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 
@@ -199,7 +201,7 @@ public class AgentServer implements ActionHelper.OutputHandler {
             traceOut.println("Agent.Server.doCompile");
         }
         String testName = in.readUTF();
-        Map<String, String> testProps = readProperties(in);
+        Map<String, String> testProps = readMap(in);
         List<String> cmdArgs = readList(in);
         keepAlive.setEnabled(true);
         try {
@@ -218,7 +220,8 @@ public class AgentServer implements ActionHelper.OutputHandler {
             traceOut.println("Agent.Server.doMain");
         }
         String testName = in.readUTF();
-        Map<String, String> testProps = readProperties(in);
+        Map<String, String> testProps = readMap(in);
+        Set<String> modules = readSet(in);
         SearchPath classPath = new SearchPath(in.readUTF());
         String className = in.readUTF();
         List<String> classArgs = readList(in);
@@ -227,7 +230,13 @@ public class AgentServer implements ActionHelper.OutputHandler {
         }
         keepAlive.setEnabled(true);
         try {
-            Status status = MainActionHelper.runClass(testName, testProps, classPath, className, classArgs.toArray(new String[classArgs.size()]), 0, this);
+            Status status = MainActionHelper.runClass(
+                    testName,
+                    testProps,
+                    modules,
+                    classPath,
+                    className,
+                    classArgs.toArray(new String[classArgs.size()]), 0, this);
             writeStatus(status);
         } finally {
             keepAlive.setEnabled(false);
@@ -245,7 +254,15 @@ public class AgentServer implements ActionHelper.OutputHandler {
         return l;
     }
 
-    static Map<String, String> readProperties(DataInputStream in) throws IOException {
+    static Set<String> readSet(DataInputStream in) throws IOException {
+        int n = in.readShort();
+        Set<String> s = new LinkedHashSet<String>(n);
+        for (int i = 0; i < n; i++)
+            s.add(in.readUTF());
+        return s;
+    }
+
+    static Map<String, String> readMap(DataInputStream in) throws IOException {
         int n = in.readShort();
         Map<String, String> p = new HashMap<String, String>(n, 1.0f);
         for (int i = 0; i < n; i++) {
