@@ -794,7 +794,7 @@ public class RegressionTestFinder extends TagTestFinder
         IGNORE_ACTION  =       getActionPattern("ignore");
 
     private static Pattern getActionPattern(String name) {
-        return Pattern.compile("(?s).*\\Q" + Action.REASON_USER_SPECIFIED + " " + name + "\\E\\b.*");
+        return Pattern.compile("(?s).*(" + Action.REASON_USER_SPECIFIED + "|" + Action.REASON_ASSUMED_ACTION + ") \\Q" + name + "\\E\\b.*");
     }
 
     private static Pattern getOptionPattern(String name) {
