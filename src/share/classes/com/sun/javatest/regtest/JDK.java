@@ -206,7 +206,7 @@ public class JDK {
         return !getModules(Collections.<String>emptySet()).isEmpty();
     }
 
-    // for now, we do a direct invocation of the JVM with -limitmods.
+    // for now, we do a direct invocation of the JVM with -listmods.
     // in time, we should merge this with the invocation to collect system properties
     // and other test-suite-specific values for @requires
     public synchronized Map<String,String> getModules(Collection<String> vmOpts) {
