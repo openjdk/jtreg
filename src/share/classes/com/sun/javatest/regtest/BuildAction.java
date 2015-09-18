@@ -38,6 +38,7 @@ import java.util.Set;
 
 import com.sun.javatest.Status;
 import com.sun.javatest.regtest.Locations.ClassLocn;
+import com.sun.javatest.regtest.Locations.LibLocn;
 
 import static com.sun.javatest.regtest.agent.RStatus.*;
 
@@ -162,10 +163,11 @@ public class BuildAction extends Action
         startAction();
 
         // step 1: see which files need compiling, and group them according
-        // to the value of the -d flag that will be required
+        // to the value of the library in which they appear, and hence
+        // -d flag that will be required
         PrintWriter pw = section.getMessageWriter();
         long now = System.currentTimeMillis();
-        Map<File, List<File>> filesToCompile = new LinkedHashMap<File, List<File>>();
+        Map<LibLocn, List<ClassLocn>> classLocnsToCompile = new LinkedHashMap<LibLocn, List<ClassLocn>>();
         for (String arg: args) {
             // the argument to build is a classname or package name with wildcards
             for (ClassLocn cl: script.locations.locateClasses(arg)) {
@@ -175,19 +177,18 @@ public class BuildAction extends Action
                     pw.println(BUILD_FUTURE_SOURCE_2);
                 }
                 if (!cl.isUpToDate()) {
-                    File destDir = cl.lib.absClsDir;
-                    List<File> filesForDest = filesToCompile.get(destDir);
-                    if (filesForDest == null) {
-                        filesForDest = new ArrayList<File>();
-                        filesToCompile.put(destDir, filesForDest);
+                    List<ClassLocn> classLocnsForLib = classLocnsToCompile.get(cl.lib);
+                    if (classLocnsForLib == null) {
+                        classLocnsForLib = new ArrayList<ClassLocn>();
+                        classLocnsToCompile.put(cl.lib, classLocnsForLib);
                     }
-                    filesForDest.add(cl.absSrcFile);
+                    classLocnsForLib.add(cl);
                 }
             }
         }
 
         // step 2: perform the compilations, if any
-        if (filesToCompile.isEmpty()) {
+        if (classLocnsToCompile.isEmpty()) {
             status = passed(BUILD_UP_TO_DATE);
         } else {
             status = null;
@@ -195,9 +196,10 @@ public class BuildAction extends Action
             for (File dir: script.locations.absClsLibList()) {
                 dir.mkdirs();
             }
-            for (Map.Entry<File,List<File>> e: filesToCompile.entrySet()) {
-                File destDir = e.getKey();
-                List<File> filesForDest = e.getValue();
+            for (Map.Entry<LibLocn,List<ClassLocn>> e: classLocnsToCompile.entrySet()) {
+                LibLocn lib = e.getKey();
+                File destDir = lib.absClsDir;
+                List<ClassLocn> classLocnsForDest = e.getValue();
                 CompileAction ca = new CompileAction();
                 String[][] compOpts = { };
                 // RFE:  For now we just compile dir at a time in isolation
@@ -208,7 +210,9 @@ public class BuildAction extends Action
                     compileArgs.add("-XDignore.symbol.file=true");
                 if (implicitOpt != null)
                     compileArgs.add(implicitOpt);
-                compileArgs.addAll(asStrings(filesForDest));
+                for (ClassLocn cl: classLocnsForDest) {
+                    compileArgs.add(cl.absSrcFile.getPath());
+                }
                 String[] compArgs = compileArgs.toArray(new String[compileArgs.size()]);
                 Status s =  ca.compile(destDir, compOpts, compArgs, SREASON_FILE_TOO_OLD, script);
                 if (!s.isPassed()) {

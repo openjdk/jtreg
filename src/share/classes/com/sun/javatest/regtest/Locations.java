@@ -204,7 +204,7 @@ public class Locations {
         List<File> list = new ArrayList<File>();
         for (LibLocn l: libList) {
             File f = l.absSrcDir;
-            if (f.getName().endsWith(".jar") && f.exists())
+            if (f.isFile() && f.getName().endsWith(".jar") && f.exists())
                 list.add(f);
         }
         return list;
