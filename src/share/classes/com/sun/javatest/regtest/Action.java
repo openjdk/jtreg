@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.sun.javatest.Status;
@@ -80,7 +81,7 @@ public abstract class Action extends ActionHelper
      * @exception  ParseException If the options or arguments are not expected
      *             for the action or are improperly formated.
      */
-    public void init(String[][] opts, String[] args, String reason,
+    public void init(Map<String,String> opts, List<String> args, String reason,
             RegressionScript script)
             throws ParseException {
         this.opts = opts;
@@ -632,8 +633,8 @@ public abstract class Action extends ActionHelper
 
     //----------member variables------------------------------------------------
 
-    protected /*final*/ String[][] opts;
-    protected /*final*/ String[] args;
+    protected /*final*/ Map<String,String> opts;
+    protected /*final*/ List<String> args;
     protected /*final*/ String reason;
     protected /*final*/ RegressionScript script;
 

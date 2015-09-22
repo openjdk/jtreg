@@ -27,6 +27,8 @@ package com.sun.javatest.regtest;
 
 import java.io.File;
 import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.sun.javatest.Status;
@@ -68,16 +70,16 @@ public class CleanAction extends Action
      *             for the action or are improperly formated.
      */
     @Override
-    public void init(String[][] opts, String[] args, String reason,
+    public void init(Map<String,String> opts, List<String> args, String reason,
                      RegressionScript script)
         throws ParseException
     {
         super.init(opts, args, reason, script);
 
-        if (opts.length != 0)
+        if (!opts.isEmpty())
             throw new ParseException(CLEAN_UNEXPECT_OPT);
 
-        if (args.length == 0)
+        if (args.isEmpty())
             throw new ParseException(CLEAN_NO_CLASSNAME);
 
         for (String currArg : args) {
@@ -108,16 +110,16 @@ public class CleanAction extends Action
         if (script.isCheck()) {
             status = passed(CHECK_PASS);
         } else {
-            for (int i = 0; i < args.length; i++) {
+            for (String arg : args) {
                 // NOTE -- should probably clean library-compiled classes
                 // as well.
 
-                if (args[i].equals("*"))
+                if (arg.equals("*"))
                     // clean default package
-                    args[i] = ".*";
-                if (args[i].endsWith(".*")) {
+                    arg = ".*";
+                if (arg.endsWith(".*")) {
                     // clean any package
-                    String path = args[i].substring(0, args[i].length() -2);
+                    String path = arg.substring(0, arg.length() -2);
                     path = path.replace('.', File.separatorChar);
                     File dir = script.absTestClsDir();
                     if (!path.equals(""))
@@ -146,7 +148,7 @@ public class CleanAction extends Action
                 } else {
                     // clean class file
                     File victim = new File(script.absTestClsDir(),
-                                           args[i].replace('.', File.separatorChar) + ".class");
+                                           arg.replace('.', File.separatorChar) + ".class");
                     recorder.exec("rm -f " + victim);
                     if (victim.exists() && !victim.delete())
                         return error(CLEAN_RM_FAILED + victim);

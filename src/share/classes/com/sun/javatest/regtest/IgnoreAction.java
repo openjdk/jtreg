@@ -25,6 +25,9 @@
 
 package com.sun.javatest.regtest;
 
+import java.util.List;
+import java.util.Map;
+
 import com.sun.javatest.Status;
 
 import static com.sun.javatest.regtest.agent.RStatus.*;
@@ -63,13 +66,13 @@ public class IgnoreAction extends Action
      *             for the action or are improperly formated.
      */
     @Override
-    public void init(String[][] opts, String[] args, String reason,
+    public void init(Map<String,String> opts, List<String> args, String reason,
                      RegressionScript script)
         throws ParseException
     {
         super.init(opts, args, reason, script);
 
-        if (opts.length != 0)
+        if (!opts.isEmpty())
             throw new ParseException(IGNORE_UNEXPECT_OPTS);
     } // init()
 
@@ -96,14 +99,14 @@ public class IgnoreAction extends Action
                 throw new IllegalStateException();
             case ERROR:
                 recorder.exec("# @ignore: " + StringUtils.join(args) + "\nexit 1");
-                if (args.length == 0)
+                if (args.isEmpty())
                     status = error(IGNORE_TEST_IGNORED);
                 else
                     status = error(IGNORE_TEST_IGNORED_C + StringUtils.join(args));
                 break;
             case RUN:
                 recorder.exec("# @ignore: " + StringUtils.join(args) + " (suppressed)");
-                if (args.length == 0)
+                if (args.isEmpty())
                     status = passed(IGNORE_TEST_SUPPRESSED);
                 else
                     status = passed(IGNORE_TEST_SUPPRESSED_C + StringUtils.join(args));

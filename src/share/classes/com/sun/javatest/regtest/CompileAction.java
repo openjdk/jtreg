@@ -92,7 +92,7 @@ public class CompileAction extends Action {
      * @see #init
      * @see #run
      */
-    public Status compile(File destDir, String[][] opts, String[] args, String reason,
+    public Status compile(File destDir, Map<String,String> opts, List<String> args, String reason,
             RegressionScript script) throws TestRunException {
         this.destDir = destDir;
         init(opts, args, reason, script);
@@ -123,17 +123,17 @@ public class CompileAction extends Action {
      *             for the action or are improperly formated.
      */
     @Override
-    public void init(String[][] opts, String[] args, String reason,
+    public void init(Map<String,String> opts, List<String> args, String reason,
                 RegressionScript script)
             throws ParseException {
         super.init(opts, args, reason, script);
 
-        if (args.length == 0)
+        if (args.isEmpty())
             throw new ParseException(COMPILE_NO_CLASSNAME);
 
-        for (String[] opt : opts) {
-            String optName = opt[0];
-            String optValue = opt[1];
+        for (Map.Entry<String,String> e: opts.entrySet()) {
+            String optName  = e.getKey();
+            String optValue = e.getValue();
 
             if (optName.equals("fail")) {
                 reverseStatus = parseFail(optValue);
@@ -165,8 +165,9 @@ public class CompileAction extends Action {
             boolean foundJavaFile = false;
             boolean foundAsmFile = false;
 
-            for (int i = 0; i < args.length; i++) {
-                String currArg = args[i];
+            for (int i = 0; i < args.size(); i++) {
+                // note: in the following code, some args are overrwritten in place
+                String currArg = args.get(i);
 
                 if (currArg.endsWith(".java")) {
                     foundJavaFile = true;
@@ -177,7 +178,7 @@ public class CompileAction extends Action {
                         File absSourceFile = locations.absTestSrcFile(module, sourceFile);
                         if (!absSourceFile.exists())
                             throw new RegressionScript.TestClassException(CANT_FIND_SRC + currArg);
-                        args[i] = absSourceFile.getPath();
+                        args.set(i, absSourceFile.getPath());
                     }
                 } else if (currArg.endsWith(".jasm") || currArg.endsWith("jcod")) {
                     if (module != null) {
@@ -191,7 +192,7 @@ public class CompileAction extends Action {
                         File absSourceFile = locations.absTestSrcFile(null, sourceFile);
                         if (!absSourceFile.exists())
                             throw new RegressionScript.TestClassException(CANT_FIND_SRC + currArg);
-                        args[i] = absSourceFile.getPath();
+                        args.set(i, absSourceFile.getPath());
                     }
                 }
 
@@ -202,8 +203,9 @@ public class CompileAction extends Action {
                     classpathp = true;
                     // assume the next element provides the classpath, add
                     // test.classes and test.src and lib-list to it
-                    SearchPath p = new SearchPath(args[i+1]).append(script.getCompileClassPath(null));
-                    args[i+1] = p.toString();
+                    SearchPath p = new SearchPath(args.get(i+1)).append(script.getCompileClassPath(null));
+                    args.set(i+1, p.toString());
+                    i++;
                 }
 
                 if (currArg.equals("-sourcepath")) {
@@ -213,8 +215,9 @@ public class CompileAction extends Action {
                     sourcepathp = true;
                     // assume the next element provides the sourcepath, add test.src
                     // and lib-list to it
-                    SearchPath p = new SearchPath(args[i+1]).append(script.getCompileSourcePath(module));
-                    args[i+1] = p.toString();
+                    SearchPath p = new SearchPath(args.get(i+1)).append(script.getCompileSourcePath(module));
+                    args.set(i+1, p.toString());
+                    i++;
                 }
 
                 if (currArg.equals("-d")) {

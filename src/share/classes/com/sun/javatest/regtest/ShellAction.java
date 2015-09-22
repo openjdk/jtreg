@@ -76,18 +76,18 @@ public class ShellAction extends Action
      *             for the action or are improperly formated.
      */
     @Override
-    public void init(String [][] opts, String [] args, String reason,
+    public void init(Map<String,String> opts, List<String> args, String reason,
                      RegressionScript script)
         throws ParseException
     {
         super.init(opts, args, reason, script);
 
-        if (args.length == 0)
+        if (args.isEmpty())
             throw new ParseException(SHELL_NO_SCRIPT_NAME);
 
-        for (int i = 0; i < opts.length; i++) {
-            String optName  = opts[i][0];
-            String optValue = opts[i][1];
+        for (Map.Entry<String,String> e: opts.entrySet()) {
+            String optName  = e.getKey();
+            String optValue = e.getValue();
 
             if (optName.equals("fail")) {
                 reverseStatus = parseFail(optValue);
@@ -112,7 +112,7 @@ public class ShellAction extends Action
 
         // the first argument is the name of the shell script, the rest are
         // arguments to the shell script
-        shellFN = args[0];
+        shellFN = args.get(0);
         //shellArgs = "";
 //        shellArgs = new ArrayList();
 //      for (int i = 1; i < args.length; i++) {
@@ -123,11 +123,11 @@ public class ShellAction extends Action
         // as in: @run shell test.sh abc 'def ghi jkl' mno
         shellArgs = new ArrayList<String>();
         StringBuilder curr = null;
-        for (int i = 1; i < args.length; i++) {
+        for (int i = 1; i < args.size(); i++) {
             if (curr == null)
-                curr = new StringBuilder(args[i]);
+                curr = new StringBuilder(args.get(i));
             else
-                curr.append(" ").append(args[i]);
+                curr.append(" ").append(args.get(i));
             if (isEvenQuotes(curr)) {
                 shellArgs.add(curr.toString().replace("'", ""));
                 curr = null;

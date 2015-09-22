@@ -25,9 +25,9 @@
 
 package com.sun.javatest.regtest;
 
-import com.sun.javatest.Status;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * This class implements the "driver" action, which is a variation of "main".
@@ -64,20 +64,20 @@ public class DriverAction extends MainAction
      *             for the action or are improperly formated.
      */
     @Override
-    public void init(String[][] opts, String[] args, String reason,
+    public void init(Map<String,String> opts, List<String> args, String reason,
                      RegressionScript script)
         throws ParseException
     {
-        if (args.length == 0) {
+        if (args.isEmpty()) {
             throw new ParseException(DRIVER_NO_CLASSNAME);
         } else {
-            String cn = args[0];
+            String cn = args.get(0);
             if (cn.startsWith("-"))
                 throw new ParseException(DRIVER_UNEXPECT_VMOPT);
         }
 
-        for (int i = 0; i < opts.length; i++) {
-            String optName  = opts[i][0];
+        for (Map.Entry<String,String> e: opts.entrySet()) {
+            String optName  = e.getKey();
             if (optName.equals("fail")
                     || optName.equals("timeout"))
                 continue;

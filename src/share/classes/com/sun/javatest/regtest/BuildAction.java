@@ -29,6 +29,7 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -75,7 +76,7 @@ public class BuildAction extends Action
      * @see #init
      * @see #run
      */
-    public Status build(String[][] opts, String[] args, String reason,
+    public Status build(Map<String,String> opts, List<String> args, String reason,
                         RegressionScript script) throws TestRunException
     {
         init(opts, args, reason, script);
@@ -97,15 +98,15 @@ public class BuildAction extends Action
      *             for the action or are improperly formated.
      */
     @Override
-    public void init(String[][] opts, String[] args, String reason,
+    public void init(Map<String,String> opts, List<String> args, String reason,
                      RegressionScript script)
         throws ParseException
     {
         super.init(opts, args, reason, script);
 
-        for (String[] opt : opts) {
-            String optName = opt[0];
-            String optValue = opt[1];
+        for (Map.Entry<String,String> e: opts.entrySet()) {
+            String optName  = e.getKey();
+            String optValue = e.getValue();
             if (optName.equals("implicit") && optValue.equals("none")) {
                 implicitOpt = "-implicit:none";
                 continue;
@@ -113,7 +114,7 @@ public class BuildAction extends Action
             throw new ParseException(BUILD_UNEXPECT_OPT);
         }
 
-        if (args.length == 0)
+        if (args.isEmpty())
             throw new ParseException(BUILD_NO_CLASSNAME);
 
         for (String currArg : args) {
@@ -201,19 +202,18 @@ public class BuildAction extends Action
                 File destDir = lib.absClsDir;
                 List<ClassLocn> classLocnsForDest = e.getValue();
                 CompileAction ca = new CompileAction();
-                String[][] compOpts = { };
+                Map<String,String> compOpts = Collections.emptyMap();
                 // RFE:  For now we just compile dir at a time in isolation
                 // A better solution would be to put other dirs on source path
                 // and use -implicit:none
-                List<String> compileArgs = new ArrayList<String>();
+                List<String> compArgs = new ArrayList<String>();
                 if (IGNORE_SYMBOL_FILE)
-                    compileArgs.add("-XDignore.symbol.file=true");
+                    compArgs.add("-XDignore.symbol.file=true");
                 if (implicitOpt != null)
-                    compileArgs.add(implicitOpt);
+                    compArgs.add(implicitOpt);
                 for (ClassLocn cl: classLocnsForDest) {
-                    compileArgs.add(cl.absSrcFile.getPath());
+                    compArgs.add(cl.absSrcFile.getPath());
                 }
-                String[] compArgs = compileArgs.toArray(new String[compileArgs.size()]);
                 Status s =  ca.compile(destDir, compOpts, compArgs, SREASON_FILE_TOO_OLD, script);
                 if (!s.isPassed()) {
                     status = s;

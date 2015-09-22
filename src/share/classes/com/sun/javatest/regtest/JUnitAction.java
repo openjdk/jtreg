@@ -25,10 +25,11 @@
 
 package com.sun.javatest.regtest;
 
-import com.sun.javatest.regtest.agent.ActionHelper;
-import com.sun.javatest.regtest.agent.MainActionHelper;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+
+import com.sun.javatest.regtest.agent.MainActionHelper;
 
 /**
  * This class implements the "junit" action, which is a variation of "main".
@@ -66,11 +67,11 @@ public class JUnitAction extends MainAction
      *             for the action or are improperly formated.
      */
     @Override
-    public void init(String[][] opts, String[] args, String reason,
+    public void init(Map<String,String> opts, List<String> args, String reason,
                      RegressionScript script)
         throws ParseException
     {
-        if (args.length == 0)
+        if (args.isEmpty())
             throw new ParseException(JUNIT_NO_CLASSNAME);
 
         init(opts, args, reason, script, JUnitRunner.class.getName());

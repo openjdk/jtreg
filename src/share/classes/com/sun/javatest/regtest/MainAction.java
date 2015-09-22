@@ -88,7 +88,7 @@ public class MainAction extends Action
      *             for the action or are improperly formated.
      */
     @Override
-    public void init(String[][] opts, String[] args, String reason,
+    public void init(Map<String,String> opts, List<String> args, String reason,
                      RegressionScript script)
         throws ParseException
     {
@@ -100,19 +100,19 @@ public class MainAction extends Action
      * Supports extra driverClass option, to interpose before main class.
      * @param driverClass actual class to invoke, with main class as first argument
      */
-    void init(String[][] opts, String[] args, String reason,
+    void init(Map<String,String> opts, List<String> args, String reason,
                      RegressionScript script,
                      String driverClass)
         throws ParseException
     {
         super.init(opts, args, reason, script);
 
-        if (args.length == 0)
+        if (args.isEmpty())
             throw new ParseException(MAIN_NO_CLASSNAME);
 
-        for (String[] opt : opts) {
-            String optName = opt[0];
-            String optValue = opt[1];
+        for (Map.Entry<String,String> e: opts.entrySet()) {
+            String optName  = e.getKey();
+            String optValue = e.getValue();
 
             if (optName.equals("fail")) {
                 reverseStatus = parseFail(optValue);
@@ -163,18 +163,19 @@ public class MainAction extends Action
 
         // separate the arguments into the options to java, the
         // classname and the parameters to the named class
-        for (int i = 0; i < args.length; i++) {
+        for (int i = 0; i < args.size(); i++) {
+            String arg = args.get(i);
             if (testClassName == null) {
-                if (args[i].startsWith("-")) {
-                    testJavaArgs.add(args[i]);
-                    if ((args[i].equals("-cp") || args[i].equals("-classpath"))
-                        && (i+1 < args.length))
-                        testJavaArgs.add(args[++i]);
+                if (arg.startsWith("-")) {
+                    testJavaArgs.add(arg);
+                    if ((arg.equals("-cp") || arg.equals("-classpath"))
+                        && (i+1 < args.size()))
+                        testJavaArgs.add(args.get(++i));
                 } else {
-                    testClassName = args[i];
+                    testClassName = arg;
                 }
             } else {
-                testClassArgs.add(args[i]);
+                testClassArgs.add(arg);
             }
         }
 
@@ -226,8 +227,8 @@ public class MainAction extends Action
     public Set<File> getSourceFiles() {
         Set<File> files = new LinkedHashSet<File>();
         if (testClassName != null) {
-            String[][] buildOpts = {};
-            String[]   buildArgs = {testClassName.replace(File.separatorChar, '.')};
+            Map<String,String> buildOpts = Collections.emptyMap();
+            List<String> buildArgs = Arrays.asList(testClassName.replace(File.separatorChar, '.'));
             try {
                 BuildAction ba = new BuildAction();
                 ba.init(buildOpts, buildArgs, SREASON_ASSUMED_BUILD, script);
@@ -304,8 +305,8 @@ public class MainAction extends Action
         // TAG-SPEC:  "The named <class> will be compiled on demand, just as
         // though an "@run build <class>" action had been inserted before
         // this action."
-        String[][] buildOpts = {};
-        String[]   buildArgs = {testClassName.replace(File.separatorChar, '.')};
+        Map<String,String> buildOpts = Collections.emptyMap();
+        List<String> buildArgs = Arrays.asList(testClassName.replace(File.separatorChar, '.'));
         BuildAction ba = new BuildAction();
         return ba.build(buildOpts, buildArgs, SREASON_ASSUMED_BUILD, script);
     }

@@ -28,7 +28,9 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.testng.ITestContext;
 import org.testng.ITestListener;
@@ -40,6 +42,7 @@ import static org.testng.ITestResult.*;
 import com.sun.javatest.Status;
 import com.sun.javatest.regtest.agent.JDK_Version;
 import com.sun.javatest.regtest.agent.MainActionHelper;
+
 import org.testng.IConfigurationListener;
 import org.testng.ITestNGListener;
 
@@ -77,7 +80,7 @@ public class TestNGAction extends MainAction {
      *             for the action or are improperly formated.
      */
     @Override
-    public void init(String[][] opts, String[] args, String reason,
+    public void init(Map<String,String> opts, List<String> args, String reason,
                      RegressionScript script)
         throws ParseException
     {
@@ -101,10 +104,10 @@ public class TestNGAction extends MainAction {
         } else {
             List<String> classes = listClasses(script.getCompileSourcePath(null).split());
             JDK_Version v = script.getCompileJDKVersion();
-            String[][] buildOpts = v.compareTo(JDK_Version.V1_6) >= 0
-                    ? new String[][] {{ "implicit", "none" }}
-                    : new String[][] { };
-            String[]   buildArgs = classes.toArray(new String[classes.size()]);
+            Map<String,String> buildOpts = new HashMap<String,String>();
+            if (v.compareTo(JDK_Version.V1_6) >= 0)
+                buildOpts.put("implicit", "none");
+            List<String>   buildArgs = classes;
             BuildAction ba = new BuildAction();
             return ba.build(buildOpts, buildArgs, SREASON_ASSUMED_BUILD, script);
         }

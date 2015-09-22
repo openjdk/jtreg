@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -86,18 +87,18 @@ public class AppletAction extends Action
      *             for the action or are improperly formated.
      */
     @Override
-    public void init(String[][] opts, String[] args, String reason,
+    public void init(Map<String,String> opts, List<String> args, String reason,
                      RegressionScript script)
         throws ParseException
     {
         super.init(opts, args, reason, script);
 
-        if (args.length != 1)
+        if (args.size() != 1)
             throw new ParseException(APPLET_ONE_ARG_REQ);
 
-        for (int i = 0; i < opts.length; i++) {
-            String optName  = opts[i][0];
-            String optValue = opts[i][1];
+        for (Map.Entry<String,String> e: opts.entrySet()) {
+            String optName  = e.getKey();
+            String optValue = e.getValue();
 
             if (optName.equals("fail")) {
                 reverseStatus = parseFail(optValue);
@@ -141,7 +142,7 @@ public class AppletAction extends Action
                 throw new ParseException(PARSE_SECURE_OTHERVM);
         }
 
-        htmlFN   = args[0];
+        htmlFN   = args.get(0);
     } // init()
 
     @Override
@@ -174,8 +175,8 @@ public class AppletAction extends Action
         clsName = htmlFileContents.getAppletAttrs().get("code");
         if (clsName.endsWith(".class"))
             clsName = clsName.substring(0, clsName.lastIndexOf(".class"));
-        String[][] buildOpts = {};
-        String[]   buildArgs = {clsName};
+        Map<String,String> buildOpts = Collections.emptyMap();
+        List<String> buildArgs = Arrays.asList(clsName);
         BuildAction ba = new BuildAction();
         if (!(status = ba.build(buildOpts, buildArgs, SREASON_ASSUMED_BUILD, script)).isPassed())
             return status;
@@ -445,10 +446,10 @@ public class AppletAction extends Action
             // verify that all of the required attributes are present
             String[] requiredAtts = {"code", "width", "height"};
 
-            for (int i = 0; i < requiredAtts.length; i++) {
-                if (appletAttrs.get(requiredAtts[i]) == null)
-                    throw new ParseException(htmlFN + APPLET_MISS_REQ_ATTRIB
-                                             + requiredAtts[i]);
+            for (String requiredAtt : requiredAtts) {
+                if (appletAttrs.get(requiredAtt) == null) {
+                    throw new ParseException(htmlFN + APPLET_MISS_REQ_ATTRIB + requiredAtt);
+                }
             }
 
             // We currently do not support "archive".

@@ -284,14 +284,15 @@ public class RegressionScript extends Script {
             String[] verbopts = StringUtils.splitSeparator("/", tokens[1]);
             // [compile, fail, ref=Foo.ref]
             String verb = verbopts[0];
-            String[][] opts = new String[verbopts.length -1][];
+            Map<String,String> opts = new LinkedHashMap<String,String>();
             for (int i = 1; i < verbopts.length; i++) {
-                opts[i-1] = StringUtils.splitEqual(verbopts[i]);
+                String[] keyValue = StringUtils.splitEqual(verbopts[i]);
+                opts.put(keyValue[0], keyValue[1]);
                 // [[fail,], [ref, Foo.ref]]
             }
-            String[] args = new String[tokens.length-2];
+            List<String> args = new ArrayList<String>();
             for (int i = 2; i < tokens.length; i++)
-                args[i-2] = tokens[i];
+                args.add(tokens[i]);
             // [-debug, Foo.java] (everything after the big options token)
             Class<?> c = null;
             try {
