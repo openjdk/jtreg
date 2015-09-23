@@ -40,6 +40,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -314,6 +315,7 @@ public class CompileAction extends Action {
             if (status.isPassed() && !jcodArgs.isEmpty())
                 status = jcod(jcodArgs);
             if (status.isPassed() && runJavac) {
+                javacArgs = getJavacCommandArgs(javacArgs);
                 switch (script.getExecMode()) {
                     case AGENTVM:
                         status = runAgentJVM(javacArgs);
@@ -390,46 +392,7 @@ public class CompileAction extends Action {
         }
     }
 
-    private Status runOtherJVM(List<String> args) throws TestRunException {
-        Status status;
-
-        // WRITE ARGUMENT FILE
-        File argFile;
-        if (args.size() < 10)
-            argFile = null;
-        else {
-            argFile = getArgFile();
-            try {
-                BufferedWriter w = new BufferedWriter(new FileWriter(argFile));
-                for (String arg: args) {
-                    w.write(arg);
-                    w.newLine();
-                }
-                w.close();
-            } catch (IOException e) {
-                return error(COMPILE_CANT_WRITE_ARGS);
-            } catch (SecurityException e) {
-                // shouldn't happen since JavaTestSecurityManager allows file ops
-                return error(COMPILE_SECMGR_FILEOPS);
-            }
-        }
-
-        // Set test.src and test.classes for the benefit of annotation processors
-        Map<String, String> javacProps = script.getTestProperties();
-
-        // CONSTRUCT THE COMMAND LINE
-        Map<String, String> env = new LinkedHashMap<String, String>();
-        env.putAll(script.getEnvVars());
-
-        SearchPath cp = script.getCompileClassPath(module);
-
-        String javacCmd = script.getJavacProg();
-
-        List<String> javacVMOpts = new ArrayList<String>();
-        javacVMOpts.addAll(script.getTestVMOptions());
-        if (script.getCompileJDK().equals(script.getTestJDK()))
-            javacVMOpts.addAll(script.getTestDebugOptions());
-
+    private List<String> getJavacCommandArgs(List<String> args) throws TestRunException {
         List<String> javacArgs = new ArrayList<String>();
         javacArgs.addAll(script.getTestCompilerOptions());
 
@@ -441,7 +404,7 @@ public class CompileAction extends Action {
         // JavaTest added, to match CLASSPATH, but not sure why JavaTest required at all
         if (!classpathp) {
             javacArgs.add("-classpath");
-            javacArgs.add(cp.toString());
+            javacArgs.add(script.getCompileClassPath(module).toString());
         }
 
         if (!sourcepathp) {
@@ -462,12 +425,47 @@ public class CompileAction extends Action {
             javacArgs.add(script.locations.absTestModulesDir().getPath());
         }
 
+        javacArgs.addAll(args);
+
         javacArgs = updateAddExports(javacArgs);
 
-        if (argFile != null) {
-            javacArgs.add("@" + argFile);
-        } else {
-            javacArgs.addAll(args);
+        return javacArgs;
+    }
+
+    private Status runOtherJVM(List<String> javacArgs) throws TestRunException {
+        Status status;
+
+        // Set test.src and test.classes for the benefit of annotation processors
+        Map<String, String> javacProps = script.getTestProperties();
+
+        // CONSTRUCT THE COMMAND LINE
+        Map<String, String> env = new LinkedHashMap<String, String>();
+        env.putAll(script.getEnvVars());
+
+        String javacCmd = script.getJavacProg();
+
+        List<String> javacVMOpts = new ArrayList<String>();
+        javacVMOpts.addAll(script.getTestVMOptions());
+        if (script.getCompileJDK().equals(script.getTestJDK()))
+            javacVMOpts.addAll(script.getTestDebugOptions());
+
+        // WRITE ARGUMENT FILE
+        if (javacArgs.size() >= 10) {
+            File argFile = getArgFile();
+            try {
+                BufferedWriter w = new BufferedWriter(new FileWriter(argFile));
+                for (String arg: javacArgs) {
+                    w.write(arg);
+                    w.newLine();
+                }
+                w.close();
+            } catch (IOException e) {
+                return error(COMPILE_CANT_WRITE_ARGS);
+            } catch (SecurityException e) {
+                // shouldn't happen since JavaTestSecurityManager allows file ops
+                return error(COMPILE_SECMGR_FILEOPS);
+            }
+            javacArgs = Arrays.asList("@" + argFile);
         }
 
         List<String> command = new ArrayList<String>();
@@ -531,48 +529,11 @@ public class CompileAction extends Action {
         return status;
     } // runOtherJVM()
 
-    private Status runAgentJVM(List<String> args) throws TestRunException {
+    private Status runAgentJVM(List<String> javacArgs) throws TestRunException {
         // TAG-SPEC:  "The source and class directories of a test are made
         // available to main and applet actions via the system properties
         // "test.src" and "test.classes", respectively"
         Map<String, String> javacProps = script.getTestProperties();
-
-        // CONSTRUCT THE COMMAND LINE
-        List<String> javacArgs = new ArrayList<String>();
-
-        javacArgs.addAll(script.getTestCompilerOptions());
-
-        if (destDir != null) {
-            javacArgs.add("-d");
-            javacArgs.add(destDir.toString());
-        }
-
-        if (!classpathp) {
-            javacArgs.add("-classpath");
-            javacArgs.add(script.getCompileClassPath(module).toString());
-        }
-
-        if (!sourcepathp) {
-            javacArgs.add("-sourcepath");
-            javacArgs.add(script.getCompileSourcePath(module).toString());
-        }
-
-        if (module != null) {
-            javacArgs.add("-Xmodule:" + module);
-        }
-
-        if (script.useXoverride()) {
-            javacArgs.add("-Xoverride:" + script.absTestWorkFile("override").getPath());
-        }
-
-        if (script.useModulePath()) {
-            javacArgs.add("-modulepath");
-            javacArgs.add(script.absTestWorkFile("modules").getPath());
-        }
-
-        javacArgs = updateAddExports(javacArgs);
-
-        javacArgs.addAll(args);
 
         if (showMode)
             showMode("compile", ExecMode.AGENTVM, section);
