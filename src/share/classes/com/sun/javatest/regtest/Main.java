@@ -2224,7 +2224,7 @@ public class Main {
     };
 
     private static final String[] DEFAULT_WINDOWS_ENV_VARS = {
-        "SystemDrive", "SystemRoot", "windir", "TMP", "TEMP"
+        "SystemDrive", "SystemRoot", "windir", "TMP", "TEMP", "TZ"
     };
 
     private static final String JAVATEST_ANT_FILE_LIST = "javatest.ant.file.list";
