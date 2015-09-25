@@ -1863,7 +1863,7 @@ public class Main {
                 }
 
                 if (params.getTestJDK().hasModules()) {
-                    initOverrideModule(params.getWorkDirectory());
+                    initModuleHelper(params.getWorkDirectory());
                 }
 
                 String[] tests = params.getTests();
@@ -1896,7 +1896,7 @@ public class Main {
         }
     }
 
-    private void initOverrideModule(WorkDirectory wd) {
+    private void initModuleHelper(WorkDirectory wd) {
         File modulesDir = wd.getFile("modules");
         File javaBaseDir = new File(modulesDir, "java.base");
         // can't use class constants because it's a restricted package
@@ -1920,13 +1920,13 @@ public class Main {
                         to.write(buf, 0, n);
                     }
                 } catch (Throwable t) {
-                    out.println("Cannot init module override directory: " + t);
+                    out.println("Cannot init module patch directory: " + t);
                 } finally {
                     try {
                         if (from != null) from.close();
                         if (to != null) to.close();
                     } catch (IOException e) {
-                        out.println("Cannot init module override directory: " + e);
+                        out.println("Cannot init module patch directory: " + e);
                     }
                 }
             }

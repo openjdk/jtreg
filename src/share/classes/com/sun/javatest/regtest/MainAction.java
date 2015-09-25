@@ -261,7 +261,7 @@ public class MainAction extends Action
      *             the test.
      */
     public Status run() throws TestRunException {
-        if (script.useXoverride())
+        if (script.useXpatch())
             othervm = true;
 
         Status status;
@@ -378,8 +378,8 @@ public class MainAction extends Action
             javaOpts.add("-Xbootclasspath/a:" + bcp.toString());
         }
 
-        if (script.useXoverride()) {
-            javaOpts.add("-Xoverride:" + script.locations.absTestOverrideDir().getPath());
+        if (script.useXpatch()) {
+            javaOpts.add("-Xpatch:" + script.locations.absTestPatchDir().getPath());
         }
 
         if (script.useModulePath()) {

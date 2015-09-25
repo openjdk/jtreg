@@ -144,10 +144,10 @@ public class RegressionScript extends Script {
                 throw new TestRunException("TestNG not available: see the FAQ or online help for details");
             }
 
-            useXoverride = false;
+            useXpatch = false;
             for (Action a: actionList) {
                 if (a.needOverrideModules()) {
-                    useXoverride = true;
+                    useXpatch = true;
                     break;
                 }
             }
@@ -650,8 +650,8 @@ public class RegressionScript extends Script {
         return useBootClassPath;
     }
 
-    boolean useXoverride() {
-        return useXoverride;
+    boolean useXpatch() {
+        return useXpatch;
     }
 
     boolean useModulePath() {
@@ -789,7 +789,7 @@ public class RegressionScript extends Script {
         vmOpts.add(classpath.toString());
         vmOpts.addAll(testVMOpts);
         if (params.getTestJDK().hasModules()) {
-            vmOpts.add("-Xoverride:" + params.getWorkDirectory().getFile("modules"));
+            vmOpts.add("-Xpatch:" + params.getWorkDirectory().getFile("modules"));
         }
 
         /*
@@ -906,7 +906,7 @@ public class RegressionScript extends Script {
     private RegressionParameters params;
     private RegressionTestSuite testSuite;
     private boolean useBootClassPath;
-    private boolean useXoverride;
+    private boolean useXpatch;
     private boolean useModulePath;
     private ExecMode defaultExecMode;
     private boolean needJUnit;

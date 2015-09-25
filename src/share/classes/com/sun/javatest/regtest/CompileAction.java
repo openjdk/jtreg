@@ -416,8 +416,8 @@ public class CompileAction extends Action {
             javacArgs.add("-Xmodule:" + module);
         }
 
-        if (script.useXoverride()) {
-            javacArgs.add("-Xoverride:" + script.locations.absTestOverrideDir().getPath());
+        if (script.useXpatch()) {
+            javacArgs.add("-Xpatch:" + script.locations.absTestPatchDir().getPath());
         }
 
         if (script.useModulePath()) {

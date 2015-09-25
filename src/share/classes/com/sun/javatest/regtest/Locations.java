@@ -219,8 +219,8 @@ public class Locations {
     }
 
     File absTestClsDir(String module) {
-        // TODO: for now, assume use of override dir
-        return (module == null) ? absTestClsDir : new File(absTestOverrideDir(), module);
+        // TODO: for now, assume use of patch dir
+        return (module == null) ? absTestClsDir : new File(absTestPatchDir(), module);
     }
 
     List<File> absTestClsPath() {
@@ -246,8 +246,8 @@ public class Locations {
         return absTestWorkFile("modules");
     }
 
-    File absTestOverrideDir() {
-        return absTestWorkFile("override");
+    File absTestPatchDir() {
+        return absTestWorkFile("patch");
     }
 
     List<ClassLocn> locateClasses(String name) throws TestRunException {
