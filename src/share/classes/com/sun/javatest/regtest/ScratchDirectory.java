@@ -203,13 +203,19 @@ abstract class ScratchDirectory {
             return true;
 
         boolean ok = true;
-        for (File file: dir.listFiles()) {
-            if (isDirectory(file)) {
-                ok &= deleteFiles(file, p, match, true, badFiles, log);
-            } else {
-                boolean deleteFile = (p == null) || (p.matcher(file.getName()).matches() == match);
-                if (deleteFile && !delete(file, badFiles, log)) {
-                    ok = false;
+        File[] children = dir.listFiles();
+        if (children == null) { // should always be not null, but sometimes it is
+            log.println("warning: cannot list contents of directory " + dir);
+            ok = false;
+        } else {
+            for (File file: dir.listFiles()) {
+                if (isDirectory(file)) {
+                    ok &= deleteFiles(file, p, match, true, badFiles, log);
+                } else {
+                    boolean deleteFile = (p == null) || (p.matcher(file.getName()).matches() == match);
+                    if (deleteFile && !delete(file, badFiles, log)) {
+                        ok = false;
+                    }
                 }
             }
         }
