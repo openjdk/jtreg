@@ -237,6 +237,7 @@ public class ProcessCommand
             InputStream processIn = process.getInputStream();
             InputStream processErr = process.getErrorStream();
 
+            long start = System.currentTimeMillis();
             Alarm alarm = Alarm.NONE;
             if (timeout > 0) {
                 final Thread victim = Thread.currentThread();
@@ -276,12 +277,16 @@ public class ProcessCommand
 
             } catch (InterruptedException e) {
                 alarm.cancel();
+
                 String msg;
                 if (alarm.didFire()) {
-                    msg = "Program `" + cmd.get(0) + "' timed out!";
+                    msg = "Program `" + cmd.get(0) + "' timed out";
                 } else {
-                    msg = "Program `" + cmd.get(0) + "' interrupted!";
+                    msg = "Program `" + cmd.get(0) + "' interrupted";
                 }
+                long end = System.currentTimeMillis();
+                msg += " (timeout set to " + timeout + "ms, elapsed time was " + (end - start) + "ms).";
+
                 return Status.error(msg);
             } finally {
                 processIn.close();
