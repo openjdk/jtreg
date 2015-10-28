@@ -128,6 +128,8 @@ public class CompileAction extends Action {
                 RegressionScript script)
             throws ParseException {
         super.init(opts, args, reason, script);
+        if (reason.startsWith(SREASON_USER_SPECIFIED))
+            addDebugOpts = true;
 
         if (args.isEmpty())
             throw new ParseException(COMPILE_NO_CLASSNAME);
@@ -446,7 +448,7 @@ public class CompileAction extends Action {
 
         List<String> javacVMOpts = new ArrayList<String>();
         javacVMOpts.addAll(script.getTestVMOptions());
-        if (script.getCompileJDK().equals(script.getTestJDK()))
+        if (addDebugOpts && script.getCompileJDK().equals(script.getTestJDK()))
             javacVMOpts.addAll(script.getTestDebugOptions());
 
         // WRITE ARGUMENT FILE
@@ -713,4 +715,5 @@ public class CompileAction extends Action {
     private boolean sourcepathp = false;
     private boolean process = false;
     private String module = null;
+    private boolean addDebugOpts = false;
 }
