@@ -550,7 +550,7 @@ public class CompileAction extends Action {
         try {
             JDK jdk = script.getCompileJDK();
             SearchPath classpath = new SearchPath(script.getJavaTestClassPath(), jdk.getJDKClassPath());
-            List<String> vmOpts = jdk.equals(script.getTestJDK())
+            List<String> vmOpts = addDebugOpts && jdk.equals(script.getTestJDK())
                     ? join(script.getTestVMOptions(), script.getTestDebugOptions())
                     : script.getTestVMOptions();
             agent = script.getAgent(jdk, classpath, vmOpts);

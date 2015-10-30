@@ -23,7 +23,13 @@
 # questions.
 #
 
-$(BUILDDIR)/DebugTest.ok: \
+# Although we run the same tests in the same manner (apart from the 
+# mode option) for agentvm and othervm mode, currently, the detection
+# of whether or not an action is run with/without debug options is
+# different in the two modes. Ideally, the rerun sections should be
+# updated to be more equivalent.
+
+$(BUILDDIR)/DebugTest.othervm.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -40,6 +46,30 @@ $(BUILDDIR)/DebugTest.ok: \
 	fi
 	echo "test passed at `date`" > $@
 
+TESTS.jtreg += $(BUILDDIR)/DebugTest.othervm.ok
 
-TESTS.jtreg += $(BUILDDIR)/DebugTest.ok
+
+$(BUILDDIR)/DebugTest.agentvm.ok: \
+	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	$(JTREG_IMAGEDIR)/bin/jtreg
+	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-J-Djavatest.regtest.allowTrailingBuild=true \
+		-J-Djavatest.regtest.showAgent=true \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(J2SEHOME) \
+		-agentvm \
+		-debug:-Ddebug=true \
+		$(TESTDIR)/javatest/regtest/data/debug \
+			> $(@:%.ok=%/jt.log) 2>&1 ; rc=$$? 
+	agents=`$(GREP) '^Agent...: Started' $(@:%.ok=%)/jt.log | wc -l` ; \
+ 	debugAgents=`$(GREP) '^Agent...: Started.*-Ddebug=true' $(@:%.ok=%)/jt.log | wc -l` ; \
+	if [ "$$agents" != 2 -o "$$debugAgents" != 1 ]; then \
+	    $(GREP) '^Agent...: Started' $(@:%.ok=%)/jt.log ; \
+	    echo "unexpected use of -debug options"; exit 1; \
+	fi
+	echo "test passed at `date`" > $@
+
+TESTS.jtreg += $(BUILDDIR)/DebugTest.agentvm.ok
+
 
