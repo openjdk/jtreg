@@ -102,7 +102,7 @@ public class ShellAction extends Action
 
         if (manual.equals("unset")) {
             if (timeout < 0)
-                timeout = script.getActionTimeout(0);
+                timeout = script.getActionTimeout(-1);
         } else {
             if (timeout >= 0)
                 // can't have both timeout and manual

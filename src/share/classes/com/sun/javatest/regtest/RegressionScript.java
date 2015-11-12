@@ -343,11 +343,11 @@ public class RegressionScript extends Script {
      *
      * @param time The initial timeout which may need to be scaled according
      *             to the provided timeoutFactor.  If the initial timeout is
-     *             zero, then the default timeout will be returned.
+     *             less than zero, then the default timeout will be returned.
      * @return     The timeout in seconds.
      */
     protected int getActionTimeout(int time) {
-        if (time == 0)
+        if (time < 0)
             time = 120;
         return (int) (time * getTimeoutFactor());
     }

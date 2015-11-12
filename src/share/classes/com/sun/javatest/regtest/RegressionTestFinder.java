@@ -352,6 +352,11 @@ public class RegressionTestFinder extends TagTestFinder
         Matcher m = p.matcher(value);
         while (m.find()) {
             int t = Integer.parseInt(m.group(1));
+            if (t == 0) {
+                // zero means no-limit
+                maxTimeout = 0;
+                break;
+            }
             if (t > maxTimeout)
                 maxTimeout = t;
         }

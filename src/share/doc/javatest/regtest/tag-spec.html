@@ -51,7 +51,7 @@
 <p>Comments and questions to:
 <a href="mailto:jtreg-use@openjdk.java.net">jtreg-use@openjdk.java.net</a>.
 <br>
-1.38-jigsaw (draft), 23 July, 2015
+1.39-jigsaw (draft), 12 Nov, 2015
 </div>
 
 <p>This is a specification document, not a tutorial.  For more basic information
@@ -321,8 +321,9 @@ it passed, and vice versa.
 <dd>
 <p>Specify the timeout value.  The default timeout is two minutes.  If an action
 does not finish before the timeout expires, it fails.  The timeout period
-applies to the entire action, not to particular steps of the action.  The
-/timeout option may not be given in conjunction with the <code>/manual</code> option.
+applies to the entire action, not to particular steps of the action. A value of 
+zero means there is no timeout. The /timeout option may not be given in
+conjunction with the <code>/manual</code> option.
 
 <dt>/ref=<var>&lt;file&gt;</var>
 <dd>

@@ -278,7 +278,8 @@ public class RegressionParameters
                 String maxTimeoutValue = td.getParameter("maxTimeout");
                 if (maxTimeoutValue != null) {
                     try {
-                        if (Integer.parseInt(maxTimeoutValue) > timeLimit)
+                        int maxTimeout = Integer.parseInt(maxTimeoutValue);
+                        if (maxTimeout == 0 || maxTimeout > timeLimit)
                             return false;
                     } catch (NumberFormatException e) {
                         // ignore

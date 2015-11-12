@@ -154,7 +154,7 @@ public class CompileAction extends Action {
         }
 
         if (timeout < 0)
-            timeout = script.getActionTimeout(0);
+            timeout = script.getActionTimeout(-1);
 
         // add absolute path name to all the .java files create appropriate
         // class directories
