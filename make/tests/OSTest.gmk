@@ -26,6 +26,7 @@
 #----------------------------------------------------------------------
 
 $(BUILDDIR)/OSTest.ok: \
+	    $(TESTDIR)/javatest/regtest/OSTest.java \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(MKDIR) -p $(@:%.ok=%)/classes

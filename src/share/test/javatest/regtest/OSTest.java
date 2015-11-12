@@ -35,6 +35,7 @@ public class OSTest {
 
     void run() {
         String[] arches = {
+            "aarch64",
             "amd64",
             "arm",
             "armsflt",
@@ -124,6 +125,7 @@ public class OSTest {
         private static final String arm = "arm";
         private static final String armsflt = "armsflt";
         private static final String armvfp = "armvfp";
+        private static final String aarch64 = "aarch64"; // NEW
 
         private static String mapOsArch(String arch) {
             String validArch = null;
@@ -160,6 +162,8 @@ public class OSTest {
                 validArch = armsflt;
             } else if (armvfp.equalsIgnoreCase(arch)) {
                 validArch = armvfp;
+            } else if (aarch64.equalsIgnoreCase(arch)) {
+                validArch = aarch64;
             }
             return validArch;
         }

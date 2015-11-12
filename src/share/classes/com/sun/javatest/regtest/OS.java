@@ -103,7 +103,10 @@ public class OS {
         else
             family = name.replaceFirst("^([^ ]+).*", "$1"); // use first word of name
 
-        if (arch.contains("64") && !arch.equals("ia64") && !arch.equals("ppc64"))
+         if (arch.contains("64")
+                 && !arch.equals("ia64")
+                 && !arch.equals("ppc64")
+                 && !arch.equals("aarch64"))
             simple_arch = "x64";
         else if (arch.contains("86"))
             simple_arch = "i586";
