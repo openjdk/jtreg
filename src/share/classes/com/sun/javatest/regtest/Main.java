@@ -2206,7 +2206,7 @@ public class Main {
     private List<File> observerPathArg;
     private String timeoutHandlerClassName;
     private List<File> timeoutHandlerPathArg;
-    private long timeoutHandlerTimeoutArg;
+    private long timeoutHandlerTimeoutArg = -1; // -1: default; 0: no timeout; >0: timeout in seconds
     private List<String> testCompilerOpts = new ArrayList<String>();
     private List<String> testJavaOpts = new ArrayList<String>();
     private List<String> testVMOpts = new ArrayList<String>();

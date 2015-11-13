@@ -620,7 +620,7 @@ public class RegressionParameters
             data.put(prefix + TIMEOUT_HANDLER_PATH, sb.toString());
         }
 
-        if (timeoutHandlerTimeout != 0) {
+        if (timeoutHandlerTimeout != -1) {  // -1: default; 0: no timeout; >0: timeout in seconds
             data.put(prefix + TIMEOUT_HANDLER_TIMEOUT, String.valueOf(timeoutHandlerTimeout));
         }
     }
@@ -1089,6 +1089,8 @@ public class RegressionParameters
             timeoutHandlerProvider.setClassName(timeoutHandlerClassName);
             if (timeoutHandlerPath != null && !timeoutHandlerPath.isEmpty())
                 timeoutHandlerProvider.setClassPath(timeoutHandlerPath);
+            if (timeoutHandlerTimeout != -1)
+                timeoutHandlerProvider.setTimeout(timeoutHandlerTimeout);
         }
         return timeoutHandlerProvider;
     }

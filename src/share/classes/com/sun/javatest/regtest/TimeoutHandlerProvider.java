@@ -34,7 +34,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 /**
  * This class keeps track of which TimeoutHandler implementation to use
@@ -44,7 +43,8 @@ public class TimeoutHandlerProvider {
 
     private String className;
     private ClassLoader loader;
-    private long timeout = TimeUnit.MILLISECONDS.convert(300, TimeUnit.SECONDS);
+    private static final long defaultTimeout = 300; // seconds
+    private long timeout = defaultTimeout;
 
     /**
      * Set the class name of the TimeoutHandler sub-class.
@@ -97,7 +97,7 @@ public class TimeoutHandlerProvider {
                 TimeoutHandler th = (TimeoutHandler) ctor.newInstance(log, outDir, testJDK);
                 th.setTimeout(timeout);
                 return th;
-            } catch(Exception ex) {
+            } catch (Exception ex) {
                 log.println("Failed to instantiate timeout handler: " + className);
                 ex.printStackTrace(log);
                 log.println("Reverting to the default timeout handler.");
@@ -108,10 +108,11 @@ public class TimeoutHandlerProvider {
 
     /**
      * Set the timeout for the timeout handler.
+     * -1: default timeout; 0: no timeout; >0: timeout in seconds
      * @param timeout a timeout in seconds
      */
     public void setTimeout(long timeout) {
-        this.timeout = timeout;
+        this.timeout = (timeout == -1) ? defaultTimeout : timeout;
     }
 
     public long getTimeout() {
