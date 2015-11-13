@@ -17,7 +17,7 @@ PATH=/bin:/usr/bin \
         -J-Dtest.jdk=%JDKHOME% \
         -J-Dcompile.jdk=%JDKHOME% \
         -J-Dtest.timeout.factor=1.0 \
-        -XDmy.javac.option=x -d %WS%/build/RerunTest.othervm/work/classes/std -classpath %WS%/build/RerunTest.othervm/work/classes/std:%WS%/src/share/test/javatest/regtest/data/rerun/std:%JDKHOME%/lib/tools.jar -sourcepath %WS%/src/share/test/javatest/regtest/data/rerun/std -XDignore.symbol.file=true %WS%/src/share/test/javatest/regtest/data/rerun/std/AppletTest.java
+        -XDmy.javac.option=x -d %WS%/build/RerunTest.othervm/work/classes/std -sourcepath %WS%/src/share/test/javatest/regtest/data/rerun/std -classpath %WS%/build/RerunTest.othervm/work/classes/std:%JDKHOME%/lib/tools.jar -XDignore.symbol.file=true %WS%/src/share/test/javatest/regtest/data/rerun/std/AppletTest.java
 
 ### Section applet
 DISPLAY=%DISPLAY%

@@ -1,0 +1,9 @@
+./classes/compileAction/packages/p/C.class
+./compileAction/patch/CompilePatch.d/patch/java.base/java/io/IOHelper.class
+./compileAction/usermods/CompileUserMod.d/modules/um1/module-info.class
+./compileAction/usermods/CompileUserMod.d/modules/um1/um1_p1/um1_p1_C.class
+./compileAction/usermods/CompileUserMods.d/modules/um2/module-info.class
+./compileAction/usermods/CompileUserMods.d/modules/um2/um2_p1/um2_p1_C.class
+./compileAction/usermods/CompileUserMods.d/modules/um3/module-info.class
+./compileAction/usermods/CompileUserMods.d/modules/um3/p/um3_p1_C.class
+./patch/java.base/java/lang/reflect/JTRegModuleHelper.class

@@ -84,6 +84,7 @@ public class RegressionScript extends Script {
         regEnv = (RegressionEnvironment) env;
         params = regEnv.params;
         testSuite = (RegressionTestSuite) params.getTestSuite();
+        systemModules = params.getTestJDK().getModules(params.getTestVMJavaOptions());
 
         String filterFault = params.filterFaults.get(td);
         if (filterFault != null)
@@ -149,7 +150,7 @@ public class RegressionScript extends Script {
 
             useXpatch = false;
             for (Action a: actionList) {
-                if (a.needOverrideModules()) {
+                if (a.needPatchModules()) {
                     useXpatch = true;
                     break;
                 }
@@ -593,26 +594,23 @@ public class RegressionScript extends Script {
         }
     }
 
-    private SearchPath cacheCompileClassPath;
     SearchPath getCompileClassPath(String module) {
-        if (module != null)
+        if (module != null) {
             return new SearchPath(locations.absTestClsDir(module));
-
-        if (cacheCompileClassPath == null) {
-            cacheCompileClassPath = new SearchPath();
+        } else {
+            SearchPath p = new SearchPath();
             JDK jdk = getCompileJDK();
 
-            cacheCompileClassPath.append(locations.absTestClsDir());
-            cacheCompileClassPath.append(locations.absTestSrcDir()); // required??
-            cacheCompileClassPath.append(locations.absLibClsList(LibLocn.Kind.PACKAGE));
-            cacheCompileClassPath.append(locations.absLibSrcJarList());
-            cacheCompileClassPath.append(jdk.getJDKClassPath());
+            p.append(locations.absTestClsDir());
+            p.append(locations.absLibClsList(LibLocn.Kind.PACKAGE));
+            p.append(locations.absLibSrcJarList());
+            p.append(jdk.getJDKClassPath());
 
             if (needJUnit)
-                cacheCompileClassPath.append(params.getJUnitJar());
+                p.append(params.getJUnitJar());
 
             if (needTestNG)
-                cacheCompileClassPath.append(params.getTestNGJar());
+                p.append(params.getTestNGJar());
 
             // handle cpa option to jtreg
             Map<String, String> envVars = getEnvVars();
@@ -621,11 +619,11 @@ public class RegressionScript extends Script {
                 // the cpa we were passed always uses '/' as FILESEP, make
                 // sure to use the proper one for the platform
                 cpa = cpa.replace('/', File.separatorChar);
-                cacheCompileClassPath.append(cpa);
+                p.append(cpa);
             }
 
+            return p;
         }
-        return cacheCompileClassPath;
     } // getCompileClassPath()
 
     // necessary only for JDK1.2 and above
@@ -920,6 +918,7 @@ public class RegressionScript extends Script {
     private RegressionEnvironment regEnv;
     private RegressionParameters params;
     private RegressionTestSuite testSuite;
+    Map<String,String> systemModules;
     private boolean useBootClassPath;
     private boolean useXpatch;
     private boolean useModulePath;

@@ -45,8 +45,8 @@ import com.sun.javatest.regtest.agent.ActionHelper;
 
 /**
  * Action is an abstract base class providing the ability to control the
- * behaviour of each step in a JDK test description.  This class requires that
- * all derived classes implement the <em>init</em> method (where arguements are
+ * behavior of each step in a JDK test description.  This class requires that
+ * all derived classes implement the <em>init</em> method (where arguments are
  * processed and other initializations occur) and the <em>run</em> method (where
  * the actual work for the action occurs.  In addition to these methods, the
  * Action abstract class contains a variety of protected methods for parsing and
@@ -90,7 +90,7 @@ public abstract class Action extends ActionHelper
         this.script = script;
     }
 
-    public boolean needOverrideModules() {
+    public boolean needPatchModules() {
         return false;
     }
 
@@ -575,6 +575,7 @@ public abstract class Action extends ActionHelper
         COMPILE_GOLD_FAIL     = "Output does not match reference file: ",
         COMPILE_GOLD_LINE     = ", line ",
         COMPILE_GOLD_READ_PROB= "Problem reading reference file: ",
+        COMPILE_MODULES_UEXPECT    = "Unexpected value for `modules': ",
 
         COMPILE_CANT_CREATE_ARG_FILE = "Can't create `compile' argument file",
         COMPILE_CANT_WRITE_ARGS  = "Can't write `compile' argument file",

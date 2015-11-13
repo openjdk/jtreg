@@ -49,6 +49,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import com.sun.javatest.Status;
+import com.sun.javatest.regtest.Locations.LibLocn;
 import com.sun.javatest.regtest.agent.CompileActionHelper;
 import com.sun.javatest.regtest.agent.JDK_Version;
 import com.sun.javatest.regtest.agent.SearchPath;
@@ -57,7 +58,8 @@ import static com.sun.javatest.regtest.agent.RStatus.*;
 
 /**
  * This class implements the "compile" action as described by the JDK tag
- * specification.
+ * specification. It is also invoked implicitly as needed by the "build"
+ * action.
  *
  * @author Iris A Garcia
  * @see Action
@@ -75,8 +77,8 @@ public class CompileAction extends Action {
     }
 
     @Override
-    public boolean needOverrideModules() {
-        return (module != null);
+    public boolean needPatchModules() {
+        return (module != null) && script.systemModules.containsKey(module);
     }
 
     /**
@@ -93,9 +95,9 @@ public class CompileAction extends Action {
      * @see #init
      * @see #run
      */
-    public Status compile(File destDir, Map<String,String> opts, List<String> args, String reason,
+    Status compile(LibLocn libLocn, Map<String,String> opts, List<String> args, String reason,
             RegressionScript script) throws TestRunException {
-        this.destDir = destDir;
+        this.libLocn = libLocn;
         init(opts, args, reason, script);
         return run();
     } // compile()
@@ -148,9 +150,17 @@ public class CompileAction extends Action {
                 process = true;
             } else if (optName.equals("module")) {
                 module = parseModule(optValue);
+            } else if (optName.equals("modules")) {
+                if (optValue != null)
+                    throw new ParseException(COMPILE_MODULES_UEXPECT + optValue);
+                multiModule = true;
             } else {
                 throw new ParseException(COMPILE_BAD_OPT + optName);
             }
+        }
+
+        if (module != null && multiModule) {
+            throw new ParseException("Bad combination of options: /module=" + module + ", /modules");
         }
 
         if (timeout < 0)
@@ -159,8 +169,11 @@ public class CompileAction extends Action {
         // add absolute path name to all the .java files create appropriate
         // class directories
         Locations locations = script.locations;
-        if (destDir == null)
-            destDir = locations.absTestClsDir(module);
+        if (libLocn == null) {
+            destDir = multiModule ? locations.absTestModulesDir() : locations.absTestClsDir(module);
+        } else {
+            destDir = (module == null) ? libLocn.absClsDir : new File(libLocn.absClsDir, module);
+        }
         if (!script.isCheck())
             mkdirs(destDir);
 
@@ -199,7 +212,7 @@ public class CompileAction extends Action {
             }
 
             if (currArg.equals("-classpath") || currArg.equals("-cp")) {
-                if (module != null) {
+                if (module != null || multiModule) {
                     throw new ParseException(COMPILE_OPT_DISALLOW);
                 }
                 classpathp = true;
@@ -211,7 +224,7 @@ public class CompileAction extends Action {
             }
 
             if (currArg.equals("-sourcepath")) {
-                if (module != null) {
+                if (module != null || multiModule) {
                     throw new ParseException(COMPILE_OPT_DISALLOW);
                 }
                 sourcepathp = true;
@@ -390,6 +403,32 @@ public class CompileAction extends Action {
         }
     }
 
+    /**
+     * Determine the arguments for the compilation.
+     * Three different types of compilation are supported.
+     * <ul>
+     * <li>Compilation of classes in the unnamed module.
+     *     This is the default "classic" compilation.
+     *     The output directory should be a package-oriented directory.
+     *     Sources and classes for the unnamed module are put on the
+     *     sourcepath and classpath.
+     * <li>Compilation of classes in a single named user module.
+     *     This mode is indicated by the option /module=module-name
+     *     where module-name is not the name of a system module.
+     *     The output directory should be the appropriate subdirectory
+     *     of a module-oriented directory.
+     *     The output directory should appear on the classpath.
+     *     Sources and classes for the unnamed module are <i>not</i> available.
+     * <li>Compilation of classes to patch those in a system module.
+     *     This mode is indicated by the option /module=module-name
+     *     where module-name is the name of a system module.
+     * <li>Compilation of classes in one or more named user modules.
+     *     This mode is indicated by the option /modules.
+     *     The output directory should be a module-oriented directory.
+     *     Sources and classes for the unnamed module are put on the
+     *     sourcepath and classpath.
+     * </ul>
+     */
     private List<String> getJavacCommandArgs(List<String> args) throws TestRunException {
         List<String> javacArgs = new ArrayList<String>();
         javacArgs.addAll(script.getTestCompilerOptions());
@@ -399,19 +438,26 @@ public class CompileAction extends Action {
             javacArgs.add(destDir.toString());
         }
 
-        // JavaTest added, to match CLASSPATH, but not sure why JavaTest required at all
+        if (module != null && script.systemModules.containsKey(module)) {
+            javacArgs.add("-Xmodule:" + module);
+        }
+
+        // modulesourcepath and sourcepath are mutually exclusive
+        if (multiModule) {
+            File msp = (libLocn == null) ? script.locations.absTestSrcDir() : libLocn.absSrcDir;
+            javacArgs.add("-modulesourcepath");
+            javacArgs.add(msp.getPath());
+        } else {
+            if (!sourcepathp) {
+                javacArgs.add("-sourcepath");
+                javacArgs.add(script.getCompileSourcePath(module).toString());
+            }
+        }
+
         if (!classpathp) {
+            // Need to refine what it means to put absTestClsDir unconditionally on the compilePath
             javacArgs.add("-classpath");
             javacArgs.add(script.getCompileClassPath(module).toString());
-        }
-
-        if (!sourcepathp) {
-            javacArgs.add("-sourcepath");
-            javacArgs.add(script.getCompileSourcePath(module).toString());
-        }
-
-        if (module != null) {
-            javacArgs.add("-Xmodule:" + module);
         }
 
         if (script.useXpatch()) {
@@ -702,6 +748,7 @@ public class CompileAction extends Action {
 
     //----------member variables------------------------------------------------
 
+    private LibLocn libLocn;
     private File destDir;
 
     private boolean reverseStatus = false;
@@ -711,5 +758,6 @@ public class CompileAction extends Action {
     private boolean sourcepathp = false;
     private boolean process = false;
     private String module = null;
+    private boolean multiModule = false;
     private boolean addDebugOpts = false;
 }

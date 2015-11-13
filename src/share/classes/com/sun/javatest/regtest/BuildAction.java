@@ -203,8 +203,7 @@ public class BuildAction extends Action
             }
             for (Map.Entry<LibLocn,List<ClassLocn>> e: classLocnsToCompile.entrySet()) {
                 LibLocn lib = e.getKey();
-                File destDir = lib.absClsDir;
-                List<ClassLocn> classLocnsForDest = e.getValue();
+                List<ClassLocn> classLocnsForLib = e.getValue();
                 CompileAction ca = new CompileAction();
                 Map<String,String> compOpts = Collections.emptyMap();
                 // RFE:  For now we just compile dir at a time in isolation
@@ -215,10 +214,10 @@ public class BuildAction extends Action
                     compArgs.add("-XDignore.symbol.file=true");
                 if (implicitOpt != null)
                     compArgs.add(implicitOpt);
-                for (ClassLocn cl: classLocnsForDest) {
+                for (ClassLocn cl: classLocnsForLib) {
                     compArgs.add(cl.absSrcFile.getPath());
                 }
-                Status s =  ca.compile(destDir, compOpts, compArgs, SREASON_FILE_TOO_OLD, script);
+                Status s =  ca.compile(lib, compOpts, compArgs, SREASON_FILE_TOO_OLD, script);
                 if (!s.isPassed()) {
                     status = s;
                     break;

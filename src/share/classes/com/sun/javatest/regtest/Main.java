@@ -1915,8 +1915,8 @@ public class Main {
     }
 
     private void initModuleHelper(WorkDirectory wd) {
-        File modulesDir = wd.getFile("modules");
-        File javaBaseDir = new File(modulesDir, "java.base");
+        File patchDir = wd.getFile("patch");
+        File javaBaseDir = new File(patchDir, "java.base");
         // can't use class constants because it's a restricted package
         String[] classes = {
             "java/lang/reflect/JTRegModuleHelper.class"

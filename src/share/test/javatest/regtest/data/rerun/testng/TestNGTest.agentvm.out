@@ -19,7 +19,7 @@ PATH=/bin:/usr/bin \
         -J-Dtest.jdk=%JDKHOME% \
         -J-Dcompile.jdk=%JDKHOME% \
         -J-Dtest.timeout.factor=1.0 \
-        -XDmy.javac.option=x -d %WS%/build/RerunTest.agentvm/work/classes/testng -classpath %WS%/build/RerunTest.agentvm/work/classes/testng:%WS%/src/share/test/javatest/regtest/data/rerun/testng:%JDKHOME%/lib/tools.jar:%WS%/build/images/jtreg/lib/testng.jar -sourcepath %WS%/src/share/test/javatest/regtest/data/rerun/testng -XDignore.symbol.file=true -implicit:none %WS%/src/share/test/javatest/regtest/data/rerun/testng/TestNGTest.java
+        -XDmy.javac.option=x -d %WS%/build/RerunTest.agentvm/work/classes/testng -sourcepath %WS%/src/share/test/javatest/regtest/data/rerun/testng -classpath %WS%/build/RerunTest.agentvm/work/classes/testng:%JDKHOME%/lib/tools.jar:%WS%/build/images/jtreg/lib/testng.jar -XDignore.symbol.file=true -implicit:none %WS%/src/share/test/javatest/regtest/data/rerun/testng/TestNGTest.java
 
 ### Section testng
 DISPLAY=%DISPLAY%
