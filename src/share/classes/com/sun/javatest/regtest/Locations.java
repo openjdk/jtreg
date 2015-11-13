@@ -33,7 +33,6 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.sun.javatest.TestDescription;
-import com.sun.javatest.TestEnvironment;
 import com.sun.javatest.regtest.RegressionScript.TestClassException;
 
 /**
@@ -111,9 +110,9 @@ public class Locations {
     private final File absTestWorkDir;
     private final List<LibLocn> libList;
 
-    Locations(RegressionEnvironment regEnv, TestDescription td)
+    Locations(RegressionParameters params, TestDescription td)
             throws TestClassException {
-        this.params = regEnv.params;
+        this.params = params;
         availModules = params.getTestJDK().getModules(params.getTestVMJavaOptions());
 
         String packageRoot = td.getParameter("packageRoot");
@@ -137,15 +136,8 @@ public class Locations {
         testWorkDir += ".d";
         absTestWorkDir = params.getWorkDirectory().getFile(testWorkDir);
 
-        try {
-            String[] testClsDir = regEnv.lookup("testClassDir");
-            if (testClsDir == null || testClsDir.length != 1)
-                throw new TestClassException(PATH_TESTCLASS);
-            absBaseClsDir = getThreadSafeDir(testClsDir[0]);
-            absTestClsDir = new File(absBaseClsDir, relTestDir);
-        } catch (TestEnvironment.Fault e) {
-            throw new TestClassException(PATH_TESTCLASS);
-        }
+        absBaseClsDir = getThreadSafeDir(params.getWorkDirectory().getFile("classes"));
+        absTestClsDir = new File(absBaseClsDir, relTestDir);
 
         libList = new ArrayList<LibLocn>();
         String libs = td.getParameter("library");
@@ -394,10 +386,10 @@ public class Locations {
         }
     };
 
-    private File getThreadSafeDir(String name) {
+    private File getThreadSafeDir(File file) {
         return (params.getConcurrency() == 1)
-                ? new File(name)
-                : new File(name, String.valueOf(getCurrentThreadId()));
+                ? file
+                : new File(file, String.valueOf(getCurrentThreadId()));
     }
 
     private static int getCurrentThreadId() {

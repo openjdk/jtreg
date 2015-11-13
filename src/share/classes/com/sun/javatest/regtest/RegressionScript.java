@@ -112,7 +112,7 @@ public class RegressionScript extends Script {
         PrintWriter msgPW = testResult.getTestCommentWriter();
 
         try {
-            locations = new Locations(regEnv, td);
+            locations = new Locations(params, td);
 
             // defaultExecMode may still be overridden in individual actions with /othervm
             defaultExecMode = testSuite.useOtherVM(td) ? ExecMode.OTHERVM : params.getExecMode();
@@ -237,9 +237,7 @@ public class RegressionScript extends Script {
         this.td = td;
         try {
             if (locations == null) {
-                RegressionEnvironment e = (RegressionEnvironment) p.getEnv();
-                e.put("testClassDir", "/NO/CLASSES/");
-                locations = new Locations(e, td);
+                locations = new Locations(p, td);
             }
             String actions = td.getParameter("run");
             LinkedList<Action> actionList = parseActions(actions, false);
