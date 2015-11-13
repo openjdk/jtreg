@@ -21,7 +21,10 @@
  * questions.
  */
 
-module m1 {
-    exports m1p;
-}
+package um4_p2.um4_q2.um4_r2;
 
+public class um4_p2_q2_r2_B1 {
+    public void run() {
+        System.out.println(getClass().getName());
+    }
+}

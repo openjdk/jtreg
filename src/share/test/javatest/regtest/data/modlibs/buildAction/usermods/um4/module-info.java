@@ -21,11 +21,7 @@
  * questions.
  */
 
-package m2p;
-
-public class C {
-    public void run() {
-        System.out.println(getClass().getName());
-    }
+module um4 {
+    exports um4_p1_q1_r1;
+    exports um4_p2_q2_r2;
 }
-

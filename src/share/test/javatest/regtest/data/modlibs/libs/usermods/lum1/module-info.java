@@ -21,7 +21,7 @@
  * questions.
  */
 
-module m2 {
-    exports m2p;
+module lum1 {
+    exports lum1_p1;
 }
 

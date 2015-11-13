@@ -29,19 +29,19 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.text.DateFormat;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import com.sun.javatest.Status;
 import com.sun.javatest.regtest.Locations.ClassLocn;
 import com.sun.javatest.regtest.Locations.LibLocn;
 
-import static com.sun.javatest.regtest.agent.RStatus.*;
+import static com.sun.javatest.regtest.agent.RStatus.passed;
 
 /**
  * This class implements the "build" action as described by the JDK tag
@@ -117,10 +117,11 @@ public class BuildAction extends Action
         if (args.isEmpty())
             throw new ParseException(BUILD_NO_CLASSNAME);
 
+        Pattern p = Pattern.compile("(?i)([a-z_][.a-z0-9_$]*/)?(([a-z][.a-z0-9_$]*)(\\.\\*)?|\\*|module-info)");
         for (String currArg : args) {
-            if ((currArg.indexOf(File.separatorChar) != -1)
-                    || (currArg.indexOf('/') != -1))
+            if (!p.matcher(currArg).matches()) {
                 throw new ParseException(BUILD_BAD_CLASSNAME + currArg);
+            }
         }
     } // init()
 
@@ -159,8 +160,6 @@ public class BuildAction extends Action
      *          the test.
      */
     public Status run() throws TestRunException {
-        Status status;
-
         startAction();
 
         // step 1: see which files need compiling, and group them according
@@ -193,6 +192,7 @@ public class BuildAction extends Action
         }
 
         // step 2: perform the compilations, if any
+        Status status;
         if (classLocnsToCompile.isEmpty()) {
             status = passed(BUILD_UP_TO_DATE);
         } else {
@@ -201,28 +201,31 @@ public class BuildAction extends Action
             for (File dir: script.locations.absLibClsList(LibLocn.Kind.PACKAGE)) {
                 dir.mkdirs();
             }
+
+            // compile libraries first
             for (Map.Entry<LibLocn,List<ClassLocn>> e: classLocnsToCompile.entrySet()) {
-                LibLocn lib = e.getKey();
-                List<ClassLocn> classLocnsForLib = e.getValue();
-                CompileAction ca = new CompileAction();
-                Map<String,String> compOpts = Collections.emptyMap();
-                // RFE:  For now we just compile dir at a time in isolation
-                // A better solution would be to put other dirs on source path
-                // and use -implicit:none
-                List<String> compArgs = new ArrayList<String>();
-                if (IGNORE_SYMBOL_FILE)
-                    compArgs.add("-XDignore.symbol.file=true");
-                if (implicitOpt != null)
-                    compArgs.add(implicitOpt);
-                for (ClassLocn cl: classLocnsForLib) {
-                    compArgs.add(cl.absSrcFile.getPath());
-                }
-                Status s =  ca.compile(lib, compOpts, compArgs, SREASON_FILE_TOO_OLD, script);
-                if (!s.isPassed()) {
-                    status = s;
-                    break;
+                if (e.getKey().name != null) {
+                    Status s = compileLibrary(e.getKey(), e.getValue());
+                    if (!s.isPassed()) {
+                        status = s;
+                        break;
+                    }
                 }
             }
+
+            // compile test code
+            if (status == null) {
+                for (Map.Entry<LibLocn,List<ClassLocn>> e: classLocnsToCompile.entrySet()) {
+                    if (e.getKey().name == null) {
+                        Status s = compileLibrary(e.getKey(), e.getValue());
+                        if (!s.isPassed()) {
+                            status = s;
+                            break;
+                        }
+                    }
+                }
+            }
+
             if (status == null)
                 status = passed(BUILD_SUCC);
         }
@@ -231,12 +234,63 @@ public class BuildAction extends Action
         return status;
     } // run()
 
-    private List<String> asStrings(List<File> files) {
-        List<String> strings = new ArrayList<String>();
-        int i = 0;
-        for (File f: files)
-            strings.add(f.getPath());
-        return strings;
+    private Status compileLibrary(LibLocn libLocn, List<ClassLocn> classLocns) throws TestRunException {
+        switch (libLocn.kind) {
+            case PACKAGE:
+                return compileFiles(libLocn, false, null, getSrcFiles(classLocns));
+
+            case USER_MODULE:
+                return compileFiles(libLocn, true, null, getSrcFiles(classLocns));
+
+            case SYS_MODULE:
+                Map<String, List<File>> filesForModule = new LinkedHashMap<String, List<File>>();
+                for (ClassLocn cl: classLocns) {
+                    List<File> files = filesForModule.get(cl.optModule);
+                    if (files == null) {
+                        filesForModule.put(cl.optModule, files = new ArrayList<File>());
+                    }
+                    files.add(cl.absSrcFile);
+                }
+                for (Map.Entry<String, List<File>> e: filesForModule.entrySet()) {
+                    Status s = compileFiles(libLocn, false, e.getKey(), e.getValue());
+                    if (!s.isPassed())
+                        return s;
+                }
+                return passed(BUILD_SUCC);
+
+            default:
+                throw new AssertionError();
+        }
+    }
+
+    private Status compileFiles(LibLocn libLocn, boolean isMulti, String moduleName, List<File> files) throws TestRunException {
+        Map<String,String> compOpts = new LinkedHashMap<String,String>();
+        if (isMulti) {
+            compOpts.put("modules", null);
+        }
+        if (moduleName != null) {
+            compOpts.put("module", moduleName);
+        }
+
+        List<String> compArgs = new ArrayList<String>();
+        if (IGNORE_SYMBOL_FILE)
+            compArgs.add("-XDignore.symbol.file=true");
+        if (implicitOpt != null)
+            compArgs.add(implicitOpt);
+
+        for (File file: files)
+            compArgs.add(file.getPath());
+
+        CompileAction ca = new CompileAction();
+        return ca.compile(libLocn, compOpts, compArgs, SREASON_FILE_TOO_OLD, script);
+    }
+
+    private List<File> getSrcFiles(List<ClassLocn> classLocns) {
+        List<File> files = new ArrayList<File>();
+        for (ClassLocn cl: classLocns) {
+            files.add(cl.absSrcFile);
+        }
+        return files;
     }
 
     //----------member variables------------------------------------------------

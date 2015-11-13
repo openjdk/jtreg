@@ -21,9 +21,9 @@
  * questions.
  */
 
-package p;
+package um5_p1.um5_q1.um5_r1;
 
-public class C {
+public class um5_p1_q1_r1_B2 {
     public void run() {
         System.out.println(getClass().getName());
     }

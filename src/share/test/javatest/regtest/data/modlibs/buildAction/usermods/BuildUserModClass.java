@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999, 2007, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -21,32 +21,7 @@
  * questions.
  */
 
-/* @test
- * @summary Passed: Compilation successful
- * @clean DirTest
- * @clean dir.DirTest
- * @run build dir.DirTest
+/*
+ * @test
+ * @build um1/module-info um1/um1_p1.um1_p1_B
  */
-
-/* @test
- * @summary Passed: Execution successful
- * @clean DirTest
- * @clean dir.DirTest
- * @run main dir.DirTest
- */
-
-/* @test
- * @summary Error: Parse classname provided for `build': dir#DirTest
- * @clean DirTest
- * @clean dir.DirTest
- * @run build dir#DirTest
- */
-
-// Verify that we can compile and run a file specified by classname only.
-// Verify that the class names are specified properly.
-
-public class DirTest {
-    public static void main(String [] args) {
-        throw RuntimeException("Wrong file compiled/run!");
-    }
-}

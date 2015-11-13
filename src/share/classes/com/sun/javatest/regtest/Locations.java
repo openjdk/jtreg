@@ -593,8 +593,10 @@ public class Locations {
         for (File sf: pkgSrcDir.listFiles()) {
             String fn = sf.getName();
             if (sf.isDirectory()) {
-                if (recursive)
-                    locateClassesInPackage(l, optModule, optPackage + "." + fn, true, results);
+                if (recursive) {
+                    String subpkg = (optPackage == null) ? fn : optPackage + "." + fn;
+                    locateClassesInPackage(l, optModule, subpkg, true, results);
+                }
             } else if (sf.isFile() && hasExtn(fn, extns)) {
                 String cn = fn.substring(0, fn.lastIndexOf("."));
                 String className = (optPackage == null) ? cn : optPackage + "." + cn;
