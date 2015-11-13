@@ -25,15 +25,16 @@
 
 package com.sun.javatest.regtest;
 
-import com.sun.javatest.TestDescription;
-import com.sun.javatest.TestEnvironment;
-import com.sun.javatest.regtest.RegressionScript.TestClassException;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import com.sun.javatest.TestDescription;
+import com.sun.javatest.TestEnvironment;
+import com.sun.javatest.regtest.RegressionScript.TestClassException;
 
 /**
  * Utilities to locate source and class files used by a test.
@@ -50,6 +51,27 @@ public class Locations {
             this.absSrcDir = absSrcDir;
             this.absClsDir = absClsDir;
             this.modular = modular;
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            if (other instanceof LibLocn) {
+                LibLocn l = (LibLocn) other;
+                return (name == null ? l.name == null : name.equals(l.name)
+                        && absSrcDir.equals(l.absSrcDir)
+                        && absClsDir.equals(l.absClsDir)
+                        && modular == l.modular);
+            } else {
+                return false;
+            }
+        }
+
+        @Override
+        public int hashCode() {
+            return ((name == null ? 0 : name.hashCode()) << 7)
+                    + (absSrcDir.hashCode() << 5)
+                    + (absClsDir.hashCode() << 3)
+                    + (modular ? 1 : 2);
         }
 
         @Override
