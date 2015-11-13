@@ -172,7 +172,14 @@ public class MainAction extends Action
                         && (i+1 < args.size()))
                         testJavaArgs.add(args.get(++i));
                 } else {
-                    testClassName = arg;
+                    int sep = arg.indexOf("/");
+                    if (sep == -1) {
+                        testModuleName = null;
+                        testClassName = arg;
+                    } else {
+                        testModuleName = arg.substring(0, sep);
+                        testClassName = arg.substring(sep + 1);
+                    }
                 }
             } else {
                 testClassArgs.add(arg);
@@ -212,11 +219,14 @@ public class MainAction extends Action
     public List<String> getJavaArgs() {
         return testJavaArgs;
     }
-    public List<String> getClassArgs() {
-        return testClassArgs;
+    public String getModuleName() {
+        return testModuleName;
     }
     public String getClassName() {
         return testClassName;
+    }
+    public List<String> getClassArgs() {
+        return testClassArgs;
     }
 
     List<String> filterJavaOpts(List<String> args) {
@@ -228,7 +238,8 @@ public class MainAction extends Action
         Set<File> files = new LinkedHashSet<File>();
         if (testClassName != null) {
             Map<String,String> buildOpts = Collections.emptyMap();
-            List<String> buildArgs = Arrays.asList(testClassName.replace(File.separatorChar, '.'));
+            String buildArg = (testModuleName == null) ? testClassName : testModuleName + '/' + testClassName;
+            List<String> buildArgs = Arrays.asList(buildArg);
             try {
                 BuildAction ba = new BuildAction();
                 ba.init(buildOpts, buildArgs, SREASON_ASSUMED_BUILD, script);
@@ -306,19 +317,23 @@ public class MainAction extends Action
         // though an "@run build <class>" action had been inserted before
         // this action."
         Map<String,String> buildOpts = Collections.emptyMap();
-        List<String> buildArgs = Arrays.asList(testClassName.replace(File.separatorChar, '.'));
+        String buildArg = (testModuleName == null) ? testClassName : testModuleName + '/' + testClassName;
+        List<String> buildArgs = Arrays.asList(buildArg);
         BuildAction ba = new BuildAction();
         return ba.build(buildOpts, buildArgs, SREASON_ASSUMED_BUILD, script);
     }
 
     private Status runOtherJVM() throws TestRunException {
         // Arguments to wrapper:
+        String runModuleName;
         String runClassName;
         List<String> runClassArgs;
         if (driverClass == null) {
+            runModuleName = testModuleName;
             runClassName = testClassName;
             runClassArgs = testClassArgs;
         } else {
+            runModuleName = null;
             runClassName = driverClass;
             runClassArgs = new ArrayList<String>();
             runClassArgs.add(script.getTestResult().getTestName());
@@ -330,8 +345,9 @@ public class MainAction extends Action
         File argFile = getArgFile();
         try {
             BufferedWriter w = new BufferedWriter(new FileWriter(argFile));
+            w.write((runModuleName == null) ? "\0" : runModuleName + "\0");
             w.write(runClassName + "\0");
-            w.write(StringUtils.join(runClassArgs) + "\0" );
+            w.write(StringUtils.join(runClassArgs) + "\0");
             w.close();
         } catch (IOException e) {
             return error(MAIN_CANT_WRITE_ARGS);
@@ -379,12 +395,32 @@ public class MainAction extends Action
         }
 
         if (script.useXpatch()) {
+            // what about merging with externally supplied patch dir?
+            // what about patch libs?
             javaOpts.add("-Xpatch:" + script.locations.absTestPatchDir().getPath());
         }
+        SearchPath pp = new SearchPath();
+        if (script.hasTestPatchMods()) {
+            pp.append(script.locations.absTestPatchDir());
+        }
+        pp.append(script.locations.absLibClsList(Locations.LibLocn.Kind.SYS_MODULE));
+        if (!pp.isEmpty()) {
+            javaOpts.add("-Xpatch:" + pp);
+        }
 
-        if (script.useModulePath()) {
+        SearchPath mp = new SearchPath();
+        if (script.hasTestUserMods()) {
+            mp.append(script.locations.absTestModulesDir());
+        }
+        mp.append(script.locations.absLibClsList(Locations.LibLocn.Kind.USER_MODULE));
+        if (!mp.isEmpty()) {
             javaOpts.add("-modulepath");
-            javaOpts.add(script.locations.absTestModulesDir().getPath());
+            javaOpts.add(mp.toString());
+        }
+
+        if (testModuleName != null) {
+            javaOpts.add("-addmods");
+            javaOpts.add(testModuleName);
         }
 
         javaOpts.addAll(updateAddExports(script.getTestVMJavaOptions()));
@@ -595,6 +631,7 @@ public class MainAction extends Action
     private final List<String>  testJavaArgs = new ArrayList<String>();
     private final List<String>  testClassArgs = new ArrayList<String>();
     private String  driverClass = null;
+    private String  testModuleName  = null;
     private String  testClassName  = null;
     private String  policyFN = null;
     private String  secureCN = null;

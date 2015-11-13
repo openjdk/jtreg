@@ -54,6 +54,8 @@ public class MainWrapper
             String[] fileArgs = StringArray.splitTerminator("\0", out.toString());
 
             int i = 0;
+            String mn                = fileArgs[i++];
+            mainModuleName = (mn.length() == 0) ? null : mn;
             mainClassName            = fileArgs[i++];
             String stringifiedArgs   = fileArgs[i++];
             mainArgs = StringArray.splitWS(stringifiedArgs);
@@ -83,13 +85,21 @@ public class MainWrapper
     {
         public void run() {
             try {
-                Class c = Class.forName(mainClassName);
-                Class[] argTypes = { String[].class };
-                Method method = c.getMethod("main", argTypes);
-                Object[] runArgs = { mainArgs };
+                ClassLoader cl;
+                if (mainModuleName != null) {
+                    Class layerClass = Class.forName("java.lang.reflect.Layer");
+                    Method bootMethod = layerClass.getMethod("boot", new Class[] { });
+                    Object bootLayer = bootMethod.invoke(null, new Object[] { });
+                    Method findLoaderMth = layerClass.getMethod("findLoader", new Class[] { String.class });
+                    cl = (ClassLoader) findLoaderMth.invoke(bootLayer, new Object[] { mainModuleName });
+                } else {
+                    cl = getClass().getClassLoader();
+                }
 
                 // RUN JAVA PROGRAM
-                method.invoke(null, runArgs);
+                Class c = Class.forName(mainClassName, false, cl);
+                Method mainMethod = c.getMethod("main", new Class[] { String[].class });
+                mainMethod.invoke(null, new Object[] { mainArgs });
 
             } catch (InvocationTargetException e) {
                 e.getTargetException().printStackTrace();
@@ -179,6 +189,7 @@ public class MainWrapper
         MAIN_CANT_LOAD_TEST   = "Can't load test: ",
         MAIN_CANT_FIND_MAIN   = "Can't find `main' method";
 
+    private static String mainModuleName;
     private static String mainClassName;
     private static String [] mainArgs;
 }

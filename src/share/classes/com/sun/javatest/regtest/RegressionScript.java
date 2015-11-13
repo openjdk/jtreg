@@ -657,8 +657,31 @@ public class RegressionScript extends Script {
         return useXpatch;
     }
 
+    boolean hasTestPatchMods() {
+        File testModulesDir = locations.absTestPatchDir();
+        if (testModulesDir.isDirectory()) {
+            for (File f: testModulesDir.listFiles()) {
+                if (f.isDirectory())
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    // currently unused
     boolean useModulePath() {
         return useModulePath;
+    }
+
+    boolean hasTestUserMods() {
+        File testModulesDir = locations.absTestModulesDir();
+        if (testModulesDir.isDirectory()) {
+            for (File f: testModulesDir.listFiles()) {
+                if (f.isDirectory())
+                    return true;
+            }
+        }
+        return false;
     }
 
     ExecMode getExecMode() {

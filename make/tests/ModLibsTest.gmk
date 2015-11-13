@@ -35,7 +35,7 @@ $(BUILDDIR)/ModLibsTest.ok: \
 		-J-Djavatest.regtest.allowTrailingBuild=true \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JIGSAWHOME) \
-		-agentvm \
+		-othervm \
 		$(TESTDIR)/javatest/regtest/data/modlibs
 	( cd $(@:%.ok=%)/work ; $(FIND) . -name \*.class ) | \
 		$(SORT) > $(@:%.ok=%)/found-classes.txt
