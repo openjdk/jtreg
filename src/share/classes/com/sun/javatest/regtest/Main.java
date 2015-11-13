@@ -114,6 +114,7 @@ public class Main {
     public static final String MODE = "mode";           // agentM or otherVM
     public static final String VERBOSE = "verbose";     // verbose controls
     public static final String DOC = "doc";             // help or doc info
+    public static final String TIMEOUT = "timeout";     // timeout-related options
 
     List<Option> options = Arrays.asList(
         new Option(OPT, VERBOSE, "verbose", "v", "verbose") {
@@ -233,13 +234,13 @@ public class Main {
             }
         },
 
-        new Option(STD, MAIN, "", "timeout", "timeoutFactor") {
+        new Option(STD, TIMEOUT, "", "timeout", "timeoutFactor") {
             public void process(String opt, String arg) {
                 timeoutFactorArg = arg;
             }
         },
 
-        new Option(STD, MAIN, "", "tl", "timelimit") {
+        new Option(STD, TIMEOUT, "", "tl", "timelimit") {
             public void process(String opt, String arg) {
                 timeLimitArg = arg;
             }
@@ -318,13 +319,13 @@ public class Main {
             }
         },
 
-        new Option(STD, MAIN, "", "th", "timeoutHandler") {
+        new Option(STD, TIMEOUT, "", "th", "timeoutHandler") {
             public void process(String opt, String arg) {
                 TimeoutHandlerProvider.setClassName(arg);
             }
         },
 
-        new Option(STD, MAIN, "", "thd", "timeoutHandlerDir") {
+        new Option(STD, TIMEOUT, "", "thd", "timeoutHandlerDir") {
             public void process(String opt, String arg) throws BadArgs {
                 arg = arg.trim();
                 if (arg.length() == 0)
