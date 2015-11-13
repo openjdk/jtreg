@@ -158,89 +158,85 @@ public class CompileAction extends Action {
 
         // add absolute path name to all the .java files create appropriate
         // class directories
-        try {
-            Locations locations = script.locations;
-            if (destDir == null)
-                destDir = locations.absTestClsDir(module);
-            if (!script.isCheck())
-                mkdirs(destDir);
+        Locations locations = script.locations;
+        if (destDir == null)
+            destDir = locations.absTestClsDir(module);
+        if (!script.isCheck())
+            mkdirs(destDir);
 
-            boolean foundJavaFile = false;
-            boolean foundAsmFile = false;
+        boolean foundJavaFile = false;
+        boolean foundAsmFile = false;
 
-            for (int i = 0; i < args.size(); i++) {
-                // note: in the following code, some args are overrwritten in place
-                String currArg = args.get(i);
+        for (int i = 0; i < args.size(); i++) {
+            // note: in the following code, some args are overrwritten in place
+            String currArg = args.get(i);
 
-                if (currArg.endsWith(".java")) {
-                    foundJavaFile = true;
-                    File sourceFile = new File(currArg.replace('/', File.separatorChar));
-                    if (!sourceFile.isAbsolute()) {
-                        // User must have used @compile, so file must be
-                        // in the same directory as the defining file.
-                        File absSourceFile = locations.absTestSrcFile(module, sourceFile);
-                        if (!absSourceFile.exists())
-                            throw new RegressionScript.TestClassException(CANT_FIND_SRC + currArg);
-                        args.set(i, absSourceFile.getPath());
-                    }
-                } else if (currArg.endsWith(".jasm") || currArg.endsWith("jcod")) {
-                    if (module != null) {
-                        throw new ParseException(COMPILE_OPT_DISALLOW);
-                    }
-                    foundAsmFile = true;
-                    File sourceFile = new File(currArg.replace('/', File.separatorChar));
-                    if (!sourceFile.isAbsolute()) {
-                        // User must have used @compile, so file must be
-                        // in the same directory as the defining file.
-                        File absSourceFile = locations.absTestSrcFile(null, sourceFile);
-                        if (!absSourceFile.exists())
-                            throw new RegressionScript.TestClassException(CANT_FIND_SRC + currArg);
-                        args.set(i, absSourceFile.getPath());
-                    }
+            if (currArg.endsWith(".java")) {
+                foundJavaFile = true;
+                File sourceFile = new File(currArg.replace('/', File.separatorChar));
+                if (!sourceFile.isAbsolute()) {
+                    // User must have used @compile, so file must be
+                    // in the same directory as the defining file.
+                    File absSourceFile = locations.absTestSrcFile(module, sourceFile);
+                    if (!absSourceFile.exists())
+                        throw new ParseException(CANT_FIND_SRC + currArg);
+                    args.set(i, absSourceFile.getPath());
                 }
-
-                if (currArg.equals("-classpath") || currArg.equals("-cp")) {
-                    if (module != null) {
-                        throw new ParseException(COMPILE_OPT_DISALLOW);
-                    }
-                    classpathp = true;
-                    // assume the next element provides the classpath, add
-                    // test.classes and test.src and lib-list to it
-                    SearchPath p = new SearchPath(args.get(i+1)).append(script.getCompileClassPath(null));
-                    args.set(i+1, p.toString());
-                    i++;
-                }
-
-                if (currArg.equals("-sourcepath")) {
-                    if (module != null) {
-                        throw new ParseException(COMPILE_OPT_DISALLOW);
-                    }
-                    sourcepathp = true;
-                    // assume the next element provides the sourcepath, add test.src
-                    // and lib-list to it
-                    SearchPath p = new SearchPath(args.get(i+1)).append(script.getCompileSourcePath(module));
-                    args.set(i+1, p.toString());
-                    i++;
-                }
-
-                if (currArg.equals("-d")) {
+            } else if (currArg.endsWith(".jasm") || currArg.endsWith("jcod")) {
+                if (module != null) {
                     throw new ParseException(COMPILE_OPT_DISALLOW);
+                }
+                foundAsmFile = true;
+                File sourceFile = new File(currArg.replace('/', File.separatorChar));
+                if (!sourceFile.isAbsolute()) {
+                    // User must have used @compile, so file must be
+                    // in the same directory as the defining file.
+                    File absSourceFile = locations.absTestSrcFile(null, sourceFile);
+                    if (!absSourceFile.exists())
+                        throw new ParseException(CANT_FIND_SRC + currArg);
+                    args.set(i, absSourceFile.getPath());
                 }
             }
 
-            if (!foundJavaFile && !process && !foundAsmFile) {
-                throw new ParseException(COMPILE_NO_DOT_JAVA);
-            }
-            if (foundAsmFile) {
-                if (sourcepathp || classpathp || process) {
+            if (currArg.equals("-classpath") || currArg.equals("-cp")) {
+                if (module != null) {
                     throw new ParseException(COMPILE_OPT_DISALLOW);
                 }
-                if (reverseStatus || ref != null) {
+                classpathp = true;
+                // assume the next element provides the classpath, add
+                // test.classes and test.src and lib-list to it
+                SearchPath p = new SearchPath(args.get(i+1)).append(script.getCompileClassPath(null));
+                args.set(i+1, p.toString());
+                i++;
+            }
+
+            if (currArg.equals("-sourcepath")) {
+                if (module != null) {
                     throw new ParseException(COMPILE_OPT_DISALLOW);
                 }
+                sourcepathp = true;
+                // assume the next element provides the sourcepath, add test.src
+                // and lib-list to it
+                SearchPath p = new SearchPath(args.get(i+1)).append(script.getCompileSourcePath(module));
+                args.set(i+1, p.toString());
+                i++;
             }
-        } catch (RegressionScript.TestClassException e) {
-            throw new ParseException(e.getMessage());
+
+            if (currArg.equals("-d")) {
+                throw new ParseException(COMPILE_OPT_DISALLOW);
+            }
+        }
+
+        if (!foundJavaFile && !process && !foundAsmFile) {
+            throw new ParseException(COMPILE_NO_DOT_JAVA);
+        }
+        if (foundAsmFile) {
+            if (sourcepathp || classpathp || process) {
+                throw new ParseException(COMPILE_OPT_DISALLOW);
+            }
+            if (reverseStatus || ref != null) {
+                throw new ParseException(COMPILE_OPT_DISALLOW);
+            }
         }
     } // init()
 

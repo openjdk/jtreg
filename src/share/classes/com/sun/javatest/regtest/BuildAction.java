@@ -133,7 +133,7 @@ public class BuildAction extends Action
                 for (ClassLocn cl: script.locations.locateClasses(arg)) {
                     files.add(cl.absSrcFile);
                 }
-            } catch (TestRunException ignore) {
+            } catch (Locations.Fault ignore) {
             }
         }
         return files;
@@ -170,21 +170,25 @@ public class BuildAction extends Action
         long now = System.currentTimeMillis();
         Map<LibLocn, List<ClassLocn>> classLocnsToCompile = new LinkedHashMap<LibLocn, List<ClassLocn>>();
         for (String arg: args) {
-            // the argument to build is a classname or package name with wildcards
-            for (ClassLocn cl: script.locations.locateClasses(arg)) {
-                if (cl.absSrcFile.lastModified() > now) {
-                    pw.println(String.format(BUILD_FUTURE_SOURCE, cl.absSrcFile,
-                            DateFormat.getDateTimeInstance().format(new Date(cl.absSrcFile.lastModified()))));
-                    pw.println(BUILD_FUTURE_SOURCE_2);
-                }
-                if (!cl.isUpToDate()) {
-                    List<ClassLocn> classLocnsForLib = classLocnsToCompile.get(cl.lib);
-                    if (classLocnsForLib == null) {
-                        classLocnsForLib = new ArrayList<ClassLocn>();
-                        classLocnsToCompile.put(cl.lib, classLocnsForLib);
+            try {
+                // the argument to build is a classname or package name with wildcards
+                for (ClassLocn cl: script.locations.locateClasses(arg)) {
+                    if (cl.absSrcFile.lastModified() > now) {
+                        pw.println(String.format(BUILD_FUTURE_SOURCE, cl.absSrcFile,
+                                DateFormat.getDateTimeInstance().format(new Date(cl.absSrcFile.lastModified()))));
+                        pw.println(BUILD_FUTURE_SOURCE_2);
                     }
-                    classLocnsForLib.add(cl);
+                    if (!cl.isUpToDate()) {
+                        List<ClassLocn> classLocnsForLib = classLocnsToCompile.get(cl.lib);
+                        if (classLocnsForLib == null) {
+                            classLocnsForLib = new ArrayList<ClassLocn>();
+                            classLocnsToCompile.put(cl.lib, classLocnsForLib);
+                        }
+                        classLocnsForLib.add(cl);
+                    }
                 }
+            } catch (Locations.Fault e) {
+                throw new TestRunException(e.getMessage());
             }
         }
 
@@ -194,7 +198,7 @@ public class BuildAction extends Action
         } else {
             status = null;
             // ensure that all directories are created for any library classes
-            for (File dir: script.locations.absClsLibList()) {
+            for (File dir: script.locations.absLibClsList(LibLocn.Kind.PACKAGE)) {
                 dir.mkdirs();
             }
             for (Map.Entry<LibLocn,List<ClassLocn>> e: classLocnsToCompile.entrySet()) {

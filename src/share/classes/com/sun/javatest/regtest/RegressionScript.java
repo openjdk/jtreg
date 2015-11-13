@@ -48,11 +48,12 @@ import com.sun.javatest.TestDescription;
 import com.sun.javatest.TestEnvironment;
 import com.sun.javatest.TestResult;
 import com.sun.javatest.TestSuite;
+import com.sun.javatest.regtest.Locations.LibLocn;
 import com.sun.javatest.regtest.agent.JDK_Version;
-
-import static com.sun.javatest.regtest.agent.RStatus.*;
-
 import com.sun.javatest.regtest.agent.SearchPath;
+
+import static com.sun.javatest.regtest.agent.RStatus.error;
+import static com.sun.javatest.regtest.agent.RStatus.passed;
 
 /**
   * This class interprets the TestDescription as specified by the JDK tag
@@ -185,6 +186,8 @@ public class RegressionScript extends Script {
             status = error(msg);
         } catch (TestSuite.Fault e) {
             status = error(e.getMessage());
+        } catch (Locations.Fault e) {
+            status = error(e.getMessage());
         } catch (ParseActionsException e) {
             status = error(e.getMessage());
         } catch (TestRunException e) {
@@ -249,7 +252,9 @@ public class RegressionScript extends Script {
                     files.addAll(a);
             }
             return files;
-        } catch (TestRunException e) {
+        } catch (Locations.Fault e) {
+            return Collections.<File>emptySet();
+        } catch (ParseException e) {
             return Collections.<File>emptySet();
         } catch (ParseActionsException shouldNotHappen) {
             throw new Error(shouldNotHappen);
@@ -550,16 +555,16 @@ public class RegressionScript extends Script {
         JDK jdk = getTestJDK();
         if (testOnBootClassPath) {
             bcp.append(locations.absTestClsDir());
-            bcp.append(locations.absClsLibList());
-            bcp.append(locations.absSrcJarLibList());
+            bcp.append(locations.absLibClsList(LibLocn.Kind.PACKAGE));
+            bcp.append(locations.absLibSrcJarList());
             bcp.append(jdk.getJDKClassPath());
             bcp.append(getCPAPPEND());
         } else {
             cp.append(locations.absTestClsDir());
             cp.append(locations.absTestSrcDir()); // required??
-            for (File lib: locations.absClsLibList())
+            for (File lib: locations.absLibClsList(LibLocn.Kind.PACKAGE))
                 (useBootClassPath(lib) ? bcp : cp).append(lib);
-            cp.append(locations.absSrcJarLibList());
+            cp.append(locations.absLibSrcJarList());
             cp.append(jdk.getJDKClassPath());
             cp.append(getCPAPPEND());
         }
@@ -589,7 +594,7 @@ public class RegressionScript extends Script {
     }
 
     private SearchPath cacheCompileClassPath;
-    SearchPath getCompileClassPath(String module) throws TestClassException {
+    SearchPath getCompileClassPath(String module) {
         if (module != null)
             return new SearchPath(locations.absTestClsDir(module));
 
@@ -599,8 +604,8 @@ public class RegressionScript extends Script {
 
             cacheCompileClassPath.append(locations.absTestClsDir());
             cacheCompileClassPath.append(locations.absTestSrcDir()); // required??
-            cacheCompileClassPath.append(locations.absClsLibList());
-            cacheCompileClassPath.append(locations.absSrcJarLibList());
+            cacheCompileClassPath.append(locations.absLibClsList(LibLocn.Kind.PACKAGE));
+            cacheCompileClassPath.append(locations.absLibSrcJarList());
             cacheCompileClassPath.append(jdk.getJDKClassPath());
 
             if (needJUnit)
@@ -641,7 +646,7 @@ public class RegressionScript extends Script {
         if (cacheCompileSourcePath == null) {
             cacheCompileSourcePath = new SearchPath();
             cacheCompileSourcePath.append(locations.absTestSrcDir());
-            cacheCompileSourcePath.append(locations.absSrcLibList());
+            cacheCompileSourcePath.append(locations.absLibSrcList(LibLocn.Kind.PACKAGE));
         }
         return cacheCompileSourcePath;
     } // getCompileSourcePath()
@@ -757,7 +762,7 @@ public class RegressionScript extends Script {
                 SearchPath path = new SearchPath()
                     .append(locations.absTestClsDir())
                     .append(locations.absTestSrcDir())
-                    .append(locations.absClsLibList());
+                    .append(locations.absLibClsList(LibLocn.Kind.PACKAGE));
                 p.put("test.class.path.prefix", path.toString());
         }
         p.put("test.src", locations.absTestSrcDir().getPath());

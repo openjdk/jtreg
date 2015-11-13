@@ -170,7 +170,7 @@ public class CleanAction extends Action
                     if (cl.absSrcFile.exists())
                         files.add(cl.absSrcFile);
                 }
-            } catch (TestRunException ignore) {
+            } catch (Locations.Fault ignore) {
             }
         }
         return files;
