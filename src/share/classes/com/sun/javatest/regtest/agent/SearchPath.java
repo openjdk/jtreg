@@ -27,10 +27,13 @@ package com.sun.javatest.regtest.agent;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
- * A path, as in a sequence of file system locations, such as directories,
+ * A path, as in an ordered set of file system locations, such as directories,
  * zip files and jar files.
  */
 public class SearchPath {
@@ -38,15 +41,6 @@ public class SearchPath {
      * Create an empty path.
      */
     public SearchPath() {
-    }
-
-    /**
-     * Create a path containing the concatenation of a series of files.
-     * Equivalent to {@code new Path().append(files)}.
-     * @param files
-     */
-    public SearchPath(List<File> files) {
-        append(files);
     }
 
     /**
@@ -82,12 +76,10 @@ public class SearchPath {
      * @param files files to be added to the path
      * @return the path itself
      */
-    public SearchPath append(List<File> files) {
+    public SearchPath append(Collection<File> files) {
         for (File f: files) {
             if (f.exists()) {
-                if (value.length() > 0)
-                    value += PATHSEP;
-                value += f.getPath();
+                entries.add(f);
             }
         }
         return this;
@@ -102,9 +94,7 @@ public class SearchPath {
     public SearchPath append(File... files) {
         for (File f: files) {
             if (f.exists()) {
-                if (value.length() > 0)
-                    value += PATHSEP;
-                value += f.getPath();
+                entries.add(f);
             }
         }
         return this;
@@ -117,11 +107,7 @@ public class SearchPath {
      */
     public SearchPath append(SearchPath... paths) {
         for (SearchPath p: paths) {
-            if (p.value.length() > 0) {
-                if (value.length() > 0)
-                    value += PATHSEP;
-                value += p.value;
-            }
+            entries.addAll(p.entries);
         }
         return this;
     }
@@ -133,12 +119,36 @@ public class SearchPath {
      */
     public SearchPath append(String... paths) {
         for (String p: paths) {
-            if (p.length() > 0) {
-                if (value.length() > 0)
-                    value += PATHSEP;
-                value += p;
+            for (String q: p.split(PATHSEP)) {
+                if (q.length() > 0) {
+                    File f = new File(q);
+                    if (f.exists()) {
+                        entries.add(f);
+                    }
+                }
             }
         }
+        return this;
+    }
+
+    /**
+     * Remove files from a path.
+     * @param files files to be removed from the path
+     * @return the path itself
+     */
+    public SearchPath removeAll(Collection<File> files) {
+        entries.removeAll(files);
+        return this;
+    }
+
+
+    /**
+     * Retain just specified files on a path.
+     * @param files files to be retained the path
+     * @return the path itself
+     */
+    public SearchPath retainAll(Collection<File> files) {
+        entries.retainAll(files);
         return this;
     }
 
@@ -147,25 +157,7 @@ public class SearchPath {
      * @return the files on the path
      */
     public List<File> split() {
-        List<File> list = new ArrayList<File>();
-        for (String s: StringArray.splitSeparator(PATHSEP, value)) {
-            if (s.length() > 0) {
-                list.add(new File(s));
-            }
-        }
-        return list;
-    }
-
-    /**
-     * Check if this path contains a subpath.
-     * @param path the subpath to be checked
-     * @return true if this path contains the subpath
-     */
-    public boolean contains(SearchPath path) {
-        return value.equals(path.value)
-                || value.startsWith(path.value + PATHSEP)
-                || value.endsWith(PATHSEP + path.value)
-                || value.contains(PATHSEP + path.value + PATHSEP);
+        return new ArrayList<File>(entries);
     }
 
     /**
@@ -173,7 +165,7 @@ public class SearchPath {
      * @return true if this path does not have any files on it
      */
     public boolean isEmpty() {
-        return (value.length() == 0);
+        return entries.isEmpty();
     }
 
     /**
@@ -182,9 +174,18 @@ public class SearchPath {
      */
     @Override
     public String toString() {
-        return value;
+        StringBuilder sb = new StringBuilder();
+        for (File e: entries) {
+            if (sb.length() > 0)
+                sb.append(PATHSEP);
+            sb.append(e);
+        }
+        return sb.toString();
     }
 
-    private String value = "";
+    // For now, with only append operations, a LinkedHashSet is good enough.
+    // If we wanted more flexible operations, it may be desirable to keep
+    // both a list (to record the order) and a set (to help detect duplicates).
+    private final Set<File> entries = new LinkedHashSet<File>();
     private static final String PATHSEP = File.pathSeparator;
 }
