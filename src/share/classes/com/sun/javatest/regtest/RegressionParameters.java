@@ -469,6 +469,7 @@ public class RegressionParameters
     private static final String NATIVEDIR = ".nativeDir";
     private static final String TIMEOUT_HANDLER = ".timeoutHandler";
     private static final String TIMEOUT_HANDLER_PATH = ".timeoutHandlerPath";
+    private static final String TIMEOUT_HANDLER_TIMEOUT = ".timeoutHandlerTimeout";
 
     @Override @SuppressWarnings("rawtypes")
     public void load(Map data, boolean checkChecksum) throws Interview.Fault {
@@ -548,6 +549,10 @@ public class RegressionParameters
         v = (String) data.get(prefix + TIMEOUT_HANDLER_PATH);
         if (v != null)
             setTimeoutHandlerPath(v);
+
+        v = (String) data.get(prefix + TIMEOUT_HANDLER_TIMEOUT);
+        if (v != null)
+            setTimeoutHandlerTimeout(v);
     }
 
     @Override @SuppressWarnings({"unchecked", "rawtypes"})
@@ -613,6 +618,10 @@ public class RegressionParameters
                 sep = File.pathSeparator;
             }
             data.put(prefix + TIMEOUT_HANDLER_PATH, sb.toString());
+        }
+
+        if (timeoutHandlerTimeout != 0) {
+            data.put(prefix + TIMEOUT_HANDLER_TIMEOUT, String.valueOf(timeoutHandlerTimeout));
         }
     }
 
@@ -1057,6 +1066,21 @@ public class RegressionParameters
     }
 
     private List<File> timeoutHandlerPath;
+
+
+    void setTimeoutHandlerTimeout(long timeout) {
+        this.timeoutHandlerTimeout = timeout;
+    }
+
+    private void setTimeoutHandlerTimeout(String timeout) {
+        this.timeoutHandlerTimeout = Long.parseLong(timeout);
+    }
+
+    long getTimeoutHandlerTimeout() {
+        return timeoutHandlerTimeout;
+    }
+
+    private long timeoutHandlerTimeout;
 
     // Ideally, this method would be better on a "shared execution context" object
     TimeoutHandlerProvider getTimeoutHandlerProvider() throws MalformedURLException {

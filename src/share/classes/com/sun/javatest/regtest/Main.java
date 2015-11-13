@@ -339,6 +339,16 @@ public class Main {
             }
         },
 
+        new Option(STD, TIMEOUT, "", "thtimeout", "timeoutHandlerTimeout") {
+            public void process(String opt, String arg) throws BadArgs {
+                try {
+                    timeoutHandlerTimeoutArg = Long.parseLong(arg);
+                } catch (NumberFormatException e) {
+                    throw new BadArgs(i18n, "main.badTimeoutHandlerTimeout");
+                }
+            }
+        },
+
         new Option(NONE, MAIN, null, "g", "gui") {
             public void process(String opt, String arg) {
                 guiFlag = true;
@@ -1674,6 +1684,10 @@ public class Main {
                 rp.setTimeoutHandlerPath(timeoutHandlerPathArg);
             }
 
+            if (timeoutHandlerTimeoutArg != 0) {
+                rp.setTimeoutHandlerTimeout(timeoutHandlerTimeoutArg);
+            }
+
             File rd = testManager.getReportDirectory(testSuite);
             if (rd != null)
                 rp.setReportDir(rd);
@@ -2192,6 +2206,7 @@ public class Main {
     private List<File> observerPathArg;
     private String timeoutHandlerClassName;
     private List<File> timeoutHandlerPathArg;
+    private long timeoutHandlerTimeoutArg;
     private List<String> testCompilerOpts = new ArrayList<String>();
     private List<String> testJavaOpts = new ArrayList<String>();
     private List<String> testVMOpts = new ArrayList<String>();

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -26,6 +26,7 @@
 package com.sun.javatest.regtest;
 
 import com.sun.javatest.TestResult.Section;
+
 import java.io.File;
 import java.io.PrintWriter;
 import java.lang.reflect.Constructor;
@@ -33,6 +34,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * This class keeps track of which TimeoutHandler implementation to use
@@ -42,6 +44,7 @@ public class TimeoutHandlerProvider {
 
     private String className;
     private ClassLoader loader;
+    private long timeout = TimeUnit.MILLISECONDS.convert(300, TimeUnit.SECONDS);
 
     /**
      * Set the class name of the TimeoutHandler sub-class.
@@ -91,7 +94,9 @@ public class TimeoutHandlerProvider {
             try {
                 Class<TimeoutHandler> clz = loadClass();
                 Constructor ctor = clz.getDeclaredConstructor(PrintWriter.class, File.class, File.class);
-                return (TimeoutHandler) ctor.newInstance(log, outDir, testJDK);
+                TimeoutHandler th = (TimeoutHandler) ctor.newInstance(log, outDir, testJDK);
+                th.setTimeout(timeout);
+                return th;
             } catch(Exception ex) {
                 log.println("Failed to instantiate timeout handler: " + className);
                 ex.printStackTrace(log);
@@ -99,5 +104,17 @@ public class TimeoutHandlerProvider {
             }
         }
         return new DefaultTimeoutHandler(log, outDir, testJDK);
+    }
+
+    /**
+     * Set the timeout for the timeout handler.
+     * @param timeout a timeout in seconds
+     */
+    public void setTimeout(long timeout) {
+        this.timeout = timeout;
+    }
+
+    public long getTimeout() {
+        return timeout;
     }
 }

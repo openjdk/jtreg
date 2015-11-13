@@ -42,13 +42,16 @@ public abstract class TimeoutHandler {
     protected final File outputDir;
     protected final File testJdk;
 
-    private static final long TIMEOUTHANDLER_TIMEOUT =
-        TimeUnit.MILLISECONDS.convert(300, TimeUnit.SECONDS);
+    private long timeout;
 
     public TimeoutHandler(PrintWriter log, File outputDir, File testJdk) {
         this.log = log;
         this.outputDir = outputDir;
         this.testJdk = testJdk;
+    }
+
+    public void setTimeout(long timeout) {
+        this.timeout = timeout;
     }
 
     public final void handleTimeout(Process proc) {
@@ -65,7 +68,7 @@ public abstract class TimeoutHandler {
             return;
         }
 
-        Alarm a = Alarm.schedule(TIMEOUTHANDLER_TIMEOUT, TimeUnit.MILLISECONDS, log, Thread.currentThread());
+        Alarm a = timeout <= 0 ? Alarm.NONE : Alarm.schedule(timeout, TimeUnit.SECONDS, log, Thread.currentThread());
         try {
             runActions(proc, pid);
         } catch (InterruptedException ex) {
