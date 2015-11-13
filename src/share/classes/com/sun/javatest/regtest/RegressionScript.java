@@ -33,6 +33,7 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -42,6 +43,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import com.sun.javatest.ProductInfo;
 import com.sun.javatest.Script;
 import com.sun.javatest.Status;
 import com.sun.javatest.TestDescription;
@@ -148,11 +150,18 @@ public class RegressionScript extends Script {
                 throw new TestRunException("TestNG not available: see the FAQ or online help for details");
             }
 
-            useXpatch = false;
-            for (Action a: actionList) {
-                if (a.needPatchModules()) {
-                    useXpatch = true;
-                    break;
+            if (!locations.absLibClsList(LibLocn.Kind.SYS_MODULE).isEmpty()) {
+                useXpatch = true;
+            } else {
+                // check actions for test-specific modules
+                actionLoop:
+                for (Action a: actionList) {
+                    for (String m: a.getModules()) {
+                        if (systemModules.containsKey(m)) {
+                            useXpatch = true;
+                            break actionLoop;
+                        }
+                    }
                 }
             }
 
@@ -538,53 +547,6 @@ public class RegressionScript extends Script {
         return locations.absBaseClsDir();
     } // absTestClsTopDir()
 
-    SearchPath getTestClassPath() throws TestClassException {
-        return getTestClassPath(false);
-    }
-
-    SearchPath getTestClassPath(boolean testOnBootClassPath) throws TestClassException {
-        return getTestClassPaths(testOnBootClassPath)[0];
-    } // getTestClassPath()
-
-    SearchPath getTestBootClassPath(boolean testOnBootClassPath) throws TestClassException {
-        return getTestClassPaths(testOnBootClassPath)[1];
-    } // getTestBootClassPath()
-
-    private SearchPath[] getTestClassPaths(boolean testOnBootClassPath) throws TestClassException {
-        SearchPath cp = new SearchPath();
-        SearchPath bcp = new SearchPath();
-        JDK jdk = getTestJDK();
-        if (testOnBootClassPath) {
-            bcp.append(locations.absTestClsDir());
-            bcp.append(locations.absLibClsList(LibLocn.Kind.PACKAGE));
-            bcp.append(locations.absLibSrcJarList());
-            bcp.append(jdk.getJDKClassPath());
-            bcp.append(getCPAPPEND());
-        } else {
-            cp.append(locations.absTestClsDir());
-            cp.append(locations.absTestSrcDir()); // required??
-            for (File lib: locations.absLibClsList(LibLocn.Kind.PACKAGE))
-                (useBootClassPath(lib) ? bcp : cp).append(lib);
-            cp.append(locations.absLibSrcJarList());
-            cp.append(jdk.getJDKClassPath());
-            cp.append(getCPAPPEND());
-        }
-
-        return new SearchPath[] { cp, bcp };
-    }
-
-    private SearchPath getCPAPPEND() {
-        // handle cpa option to jtreg
-        Map<String, String> envVars = getEnvVars();
-        String cpa = envVars.get("CPAPPEND");
-        if (cpa != null) {
-            // the cpa we were passed always uses '/' as FILESEP, make
-            // sure to use the proper one for the platform
-            return new SearchPath(cpa.replace('/', File.separatorChar));
-        }
-        return new SearchPath();
-    }
-
     private boolean useBootClassPath(File classdir) throws TestClassException {
         try {
             String rel = locations.absBaseClsDir().toURI().relativize(classdir.toURI()).getPath();
@@ -594,60 +556,219 @@ public class RegressionScript extends Script {
         }
     }
 
-    SearchPath getCompileClassPath(String module) {
-        if (module != null) {
-            return new SearchPath(locations.absTestClsDir(module));
+    enum PathKind {
+        BOOTCLASSPATH_APPEND,
+        CLASSPATH,
+        MODULEPATH,
+        MODULESOURCEPATH,
+        PATCHPATH,
+        SOURCEPATH
+    }
+
+    Map<PathKind, SearchPath> getCompilePaths(LibLocn libLocn, boolean multiModule, String module) {
+        SearchPath bcp = new SearchPath();
+        SearchPath cp = new SearchPath();
+        SearchPath mp = new SearchPath();
+        SearchPath msp = new SearchPath();
+        SearchPath pp = new SearchPath();
+        SearchPath sp = new SearchPath();
+
+        // Test:
+        if (libLocn == null || libLocn.name == null) {
+            if (multiModule) {
+                msp.append(locations.absTestSrcDir());
+            } else {
+                File testSrcDir = locations.absTestSrcDir(module);
+                sp.append(testSrcDir);
+                // Ideally, the source directory need only go on the source path
+                // but some tests rely on precompiled .class files existing in
+                // the source directory. Allow such legacy usage for package-
+                // oriented tests, and also put the source dir on classpath.
+                // Note: it is not enough to just put it on the classpath only
+                // in those cases where there are other items on the source path.
+                cp.append(testSrcDir);
+            }
+        }
+
+        if (!multiModule)
+            cp.append(locations.absTestClsDir());
+
+        if (useModulePath()) {
+            mp.append(locations.absTestModulesDir());
+        }
+
+        if (useXpatch()) {
+            pp.append(locations.absTestPatchDir());
+        }
+
+        // Libraries:
+        if (libLocn != null) {
+            if (multiModule)
+                msp.append(libLocn.absSrcDir);
+            else if (module != null)
+                sp.append(new File(libLocn.absSrcDir, module));
+        }
+
+        if (module == null) {
+            sp.append(locations.absLibSrcList(LibLocn.Kind.PACKAGE));
+        }
+
+        // could split stuff onto bootclasspath to match execution paths, but not necessary
+        cp.append(locations.absLibClsList(LibLocn.Kind.PACKAGE));
+        cp.append(locations.absLibSrcJarList());
+
+        if (useModulePath()) {
+            mp.append(locations.absLibClsList(LibLocn.Kind.USER_MODULE));
+        }
+
+        if (useXpatch()) {
+            pp.append(locations.absLibClsList(LibLocn.Kind.SYS_MODULE));
+        }
+
+        // Frameworks:
+        if (multiModule) {
+            if (needJUnit || needTestNG) {
+                // for now, explicitly use the $JTREG_HOME/lib directory
+                // but note, this ignores any user-specific setting for
+                // overridding junit.jar and testng.jar.
+                File jtClsDir = ProductInfo.getJavaTestClassDir();
+                mp.append(jtClsDir.getParentFile());
+            }
         } else {
-            SearchPath p = new SearchPath();
-            JDK jdk = getCompileJDK();
-
-            p.append(locations.absTestClsDir());
-            p.append(locations.absLibClsList(LibLocn.Kind.PACKAGE));
-            p.append(locations.absLibSrcJarList());
-            p.append(jdk.getJDKClassPath());
-
             if (needJUnit)
-                p.append(params.getJUnitJar());
+                cp.append(params.getJUnitJar());
 
             if (needTestNG)
-                p.append(params.getTestNGJar());
+                cp.append(params.getTestNGJar());
+        }
 
-            // handle cpa option to jtreg
-            Map<String, String> envVars = getEnvVars();
-            String cpa = envVars.get("CPAPPEND");
-            if (cpa != null) {
-                // the cpa we were passed always uses '/' as FILESEP, make
-                // sure to use the proper one for the platform
-                cpa = cpa.replace('/', File.separatorChar);
-                p.append(cpa);
+        // Extras:
+
+        // tools.jar, when present
+        JDK jdk = getCompileJDK();
+        cp.append(jdk.getJDKClassPath());
+
+        // handle cpa option to jtreg
+        Map<String, String> envVars = getEnvVars();
+        String cpa = envVars.get("CPAPPEND");
+        if (cpa != null) {
+            // the cpa we were passed always uses '/' as FILESEP, make
+            // sure to use the proper one for the platform
+            cpa = cpa.replace('/', File.separatorChar);
+            cp.append(cpa);
+        }
+
+        // Results:
+        Map<PathKind, SearchPath> map = new EnumMap(PathKind.class);
+        if (!bcp.isEmpty())
+            map.put(PathKind.BOOTCLASSPATH_APPEND, bcp);
+        if (!cp.isEmpty())
+            map.put(PathKind.CLASSPATH, cp);
+        if (!mp.isEmpty())
+            map.put(PathKind.MODULEPATH, mp);
+        if (!msp.isEmpty())
+            map.put(PathKind.MODULESOURCEPATH, msp);
+        if (!pp.isEmpty())
+            map.put(PathKind.PATCHPATH, pp);
+        if (!sp.isEmpty())
+            map.put(PathKind.SOURCEPATH, sp);
+        return map;
+    }
+
+    Map<PathKind, SearchPath> getExecutionPaths(
+            boolean multiModule, String module, boolean testOnBootClassPath, boolean include_jtreg)
+                throws TestClassException {
+        SearchPath bcp = new SearchPath();
+        SearchPath cp = new SearchPath();
+        SearchPath mp = new SearchPath();
+        SearchPath pp = new SearchPath();
+
+        // Test:
+        SearchPath tp = testOnBootClassPath ? bcp : cp;
+        tp.append(locations.absTestClsDir());
+        tp.append(locations.absTestSrcDir()); // include source dir for access to resource files
+
+        if (hasTestPatchMods()) {
+            pp.append(locations.absTestPatchDir());
+        }
+
+        if (hasTestUserMods()) {
+            mp.append(locations.absTestModulesDir());
+        }
+
+
+        // Libraries:
+        if (testOnBootClassPath) {
+            // all libraries unconditionally also on bootclasspath
+            bcp.append(locations.absLibClsList(LibLocn.Kind.PACKAGE));
+            bcp.append(locations.absLibSrcJarList());
+        } else {
+            // only put libraries on bootclasspath that need to be there
+            for (File lib: locations.absLibClsList(LibLocn.Kind.PACKAGE)) {
+                (useBootClassPath(lib) ? bcp : cp).append(lib);
             }
-
-            return p;
+            cp.append(locations.absLibSrcJarList());
         }
-    } // getCompileClassPath()
 
-    // necessary only for JDK1.2 and above
-    private SearchPath cacheCompileSourcePath;
-
-    /**
-     * Returns the fully-qualified directory name where the source resides.
-     *
-     * @param fileName The exact name of the file to locate.
-     * @param dirList  A list of directories in which to search. The list will
-     *             contain the directory of the defining file of the test
-     *             followed by the library list.
-     */
-    SearchPath getCompileSourcePath(String module) {
-        if (module != null)
-            return new SearchPath(locations.absTestSrcDir(module));
-
-        if (cacheCompileSourcePath == null) {
-            cacheCompileSourcePath = new SearchPath();
-            cacheCompileSourcePath.append(locations.absTestSrcDir());
-            cacheCompileSourcePath.append(locations.absLibSrcList(LibLocn.Kind.PACKAGE));
+        if (useModulePath()) {
+            mp.append(locations.absLibClsList(LibLocn.Kind.USER_MODULE));
         }
-        return cacheCompileSourcePath;
-    } // getCompileSourcePath()
+
+        if (useXpatch()) {
+            pp.append(locations.absLibClsList(LibLocn.Kind.SYS_MODULE));
+        }
+
+        // Frameworks:
+        if (multiModule) {
+            // assert !testOnBootClassPath && !useXPatch()
+            if (needJUnit || needTestNG) {
+                // for now, explicitly use the $JTREG_HOME/lib directory
+                // but note, this ignores any user-specific setting for
+                // overridding junit.jar and testng.jar.
+                File jtClsDir = ProductInfo.getJavaTestClassDir();
+                mp.append(jtClsDir.getParentFile());
+            }
+        } else {
+            SearchPath fp = (!bcp.isEmpty() || useXpatch()) ? bcp : cp;
+            if (needJUnit)
+                fp.append(params.getJUnitJar());
+
+            if (needTestNG)
+                fp.append(params.getTestNGJar());
+        }
+
+        // Extras:
+
+        // tools.jar, when present
+        JDK jdk = getCompileJDK();
+        tp.append(jdk.getJDKClassPath());
+
+        // handle cpa option to jtreg
+        Map<String, String> envVars = getEnvVars();
+        String cpa = envVars.get("CPAPPEND");
+        if (cpa != null) {
+            // the cpa we were passed always uses '/' as FILESEP, make
+            // sure to use the proper one for the platform
+            cpa = cpa.replace('/', File.separatorChar);
+            cp.append(cpa);
+        }
+
+        // javatest.jar and jtreg.jar
+        if (include_jtreg) {
+            (testOnBootClassPath ? bcp : cp).append(getJavaTestClassPath());
+        }
+
+        Map<PathKind, SearchPath> map = new EnumMap(PathKind.class);
+        if (!bcp.isEmpty())
+            map.put(PathKind.BOOTCLASSPATH_APPEND, bcp);
+        if (!cp.isEmpty())
+            map.put(PathKind.CLASSPATH, cp);
+        if (!mp.isEmpty())
+            map.put(PathKind.MODULEPATH, mp);
+        if (!pp.isEmpty())
+            map.put(PathKind.PATCHPATH, pp);
+        return map;
+    }
 
     boolean useBootClassPath() {
         return useBootClassPath;
@@ -845,7 +966,7 @@ public class RegressionScript extends Script {
         // variable being set, so ensure it is set. See equivalent code in MainAction
         // and Main.execChild. Note we cannot set exactly the same classpath as
         // for othervm, because we should not include test-specific info
-        SearchPath cp = new SearchPath(getJavaTestClassPath()).append(jdk.getToolsJar());
+        SearchPath cp = new SearchPath(jdk.getToolsJar()).append(getJavaTestClassPath());
         envVars.put("CLASSPATH", cp.toString());
 
         Agent.Pool p = Agent.Pool.instance();

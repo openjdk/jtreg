@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -90,10 +91,6 @@ public abstract class Action extends ActionHelper
         this.script = script;
     }
 
-    public boolean needPatchModules() {
-        return false;
-    }
-
     /**
      * The method that does the work of the action.  The necessary work for the
      * given action is defined by the tag specification.
@@ -110,6 +107,14 @@ public abstract class Action extends ActionHelper
      **/
     public Set<File> getSourceFiles() {
         return null;
+    }
+
+    /**
+     * Get the set of modules directly referenced in this action.
+     * @return the set of modules used by this action.
+     */
+    public Set<String> getModules() {
+        return Collections.emptySet();
     }
 
     static synchronized void mkdirs(File dir) {

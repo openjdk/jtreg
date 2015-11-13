@@ -41,6 +41,8 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import com.sun.javatest.Status;
+import com.sun.javatest.regtest.Locations.LibLocn;
+import com.sun.javatest.regtest.RegressionScript.PathKind;
 import com.sun.javatest.regtest.agent.MainWrapper;
 import com.sun.javatest.regtest.agent.SearchPath;
 
@@ -168,6 +170,12 @@ public class MainAction extends Action
             if (testClassName == null) {
                 if (arg.startsWith("-")) {
                     testJavaArgs.add(arg);
+                    // The following is questionable, in that no attention
+                    // is paid to this value, other than to copy it to the
+                    // othervm command, where it will supersede the computed
+                    // value that takes @libraries into account.
+                    // Compare this handling to the handling of -classpath
+                    // and -sourcepath for @compile in CompileAction.
                     if ((arg.equals("-cp") || arg.equals("-classpath"))
                         && (i+1 < args.size()))
                         testJavaArgs.add(args.get(++i));
@@ -323,12 +331,15 @@ public class MainAction extends Action
 
     private Status runOtherJVM() throws TestRunException {
         // Arguments to wrapper:
+        String runModuleName;
         String runModuleClassName;
         List<String> runClassArgs;
         if (driverClass == null) {
+            runModuleName = testModuleName;
             runModuleClassName = join(testModuleName, testClassName);
             runClassArgs = testClassArgs;
         } else {
+            runModuleName = null;
             runModuleClassName = driverClass;
             runClassArgs = new ArrayList<String>();
             runClassArgs.add(script.getTestResult().getTestName());
@@ -359,58 +370,32 @@ public class MainAction extends Action
         // variable being set, so force the use here.
         final boolean useCLASSPATH = true;
 
-        SearchPath cp = new SearchPath();
-        SearchPath bcp = new SearchPath();
-        (useBootClassPath ? bcp : cp).append(script.getJavaTestClassPath());
+        LibLocn.Kind testKind;
+        try {
+            testKind = script.locations.getDirKind(script.locations.absTestSrcDir());
+        } catch (Locations.Fault e) {
+            throw new TestRunException("Cannot determine test src directory", e);
+        }
+        boolean multiModule = (testKind == LibLocn.Kind.USER_MODULE);
 
-        cp.append(script.getTestClassPath(useBootClassPath));
-        bcp.append(script.getTestBootClassPath(useBootClassPath));
+        Map<PathKind, SearchPath> paths =
+                script.getExecutionPaths(multiModule, runModuleName, useBootClassPath, true);
 
-        SearchPath p = bcp.isEmpty() ? cp : bcp;
-        if (script.isJUnitRequired())
-            p.append(script.getJUnitJar());
-        if (script.isTestNGRequired())
-            p.append(script.getTestNGJar());
-
-        if (useCLASSPATH && !cp.isEmpty()) {
+        SearchPath cp = paths.get(PathKind.CLASSPATH);
+        if (useCLASSPATH && (cp != null) && !cp.isEmpty()) {
             env.put("CLASSPATH", cp.toString());
         }
 
         String javaCmd = script.getJavaProg();
         List<String> javaOpts = new ArrayList<String>();
 
-        if ((!useCLASSPATH) && !cp.isEmpty()) {
-            javaOpts.add("-classpath");
-            javaOpts.add(cp.toString());
+        if (!useCLASSPATH) {
+            addPath(javaOpts, "-classpath", cp);
         }
 
-        if (!bcp.isEmpty()) {
-            javaOpts.add("-Xbootclasspath/a:" + bcp.toString());
-        }
-
-        if (script.useXpatch()) {
-            // what about merging with externally supplied patch dir?
-            // what about patch libs?
-            javaOpts.add("-Xpatch:" + script.locations.absTestPatchDir().getPath());
-        }
-        SearchPath pp = new SearchPath();
-        if (script.hasTestPatchMods()) {
-            pp.append(script.locations.absTestPatchDir());
-        }
-        pp.append(script.locations.absLibClsList(Locations.LibLocn.Kind.SYS_MODULE));
-        if (!pp.isEmpty()) {
-            javaOpts.add("-Xpatch:" + pp);
-        }
-
-        SearchPath mp = new SearchPath();
-        if (script.hasTestUserMods()) {
-            mp.append(script.locations.absTestModulesDir());
-        }
-        mp.append(script.locations.absLibClsList(Locations.LibLocn.Kind.USER_MODULE));
-        if (!mp.isEmpty()) {
-            javaOpts.add("-modulepath");
-            javaOpts.add(mp.toString());
-        }
+        addPath(javaOpts, "-Xbootclasspath/a:", paths.get(PathKind.BOOTCLASSPATH_APPEND));
+        addPath(javaOpts, "-Xpatch:", paths.get(PathKind.PATCHPATH));
+        addPath(javaOpts, "-modulepath", paths.get(PathKind.MODULEPATH));
 
         if (testModuleName != null) {
             javaOpts.add("-addmods");
@@ -500,22 +485,58 @@ public class MainAction extends Action
         return status;
     } // runOtherJVM()
 
+
+    // move up to Action??
+    void addPath(List<String> args, String opt, SearchPath path) {
+        if (path != null && !path.isEmpty()) {
+            if (opt.endsWith(":"))
+                args.add(opt + path);
+            else {
+                args.add(opt);
+                args.add(path.toString());
+            }
+        }
+    }
+
     private Status runAgentJVM() throws TestRunException {
-        SearchPath runClasspath;
+        String runModuleName;
         String runMainClass;
         List<String> runMainArgs;
         if (driverClass == null) {
-            runClasspath = script.getTestClassPath();
+            runModuleName = testModuleName;
             runMainClass = testClassName;
             runMainArgs = testClassArgs;
         } else {
-            runClasspath = script.getTestClassPath();
+            runModuleName = null;
             runMainClass = driverClass;
             runMainArgs = new ArrayList<String>();
             runMainArgs.add(script.getTestResult().getTestName());
             runMainArgs.add(testClassName);
             runMainArgs.addAll(testClassArgs);
         }
+
+        LibLocn.Kind testKind;
+        try {
+            testKind = script.locations.getDirKind(script.locations.absTestSrcDir());
+        } catch (Locations.Fault e) {
+            throw new TestRunException("Cannot determine test src directory", e);
+        }
+        boolean multiModule = (testKind == LibLocn.Kind.USER_MODULE);
+
+        Map<PathKind, SearchPath> paths =
+                script.getExecutionPaths(multiModule, runModuleName, useBootClassPath, true);
+
+        JDK jdk = script.getTestJDK();
+        List<File> stdLibs = new SearchPath()
+                .append(script.getJavaTestClassPath())
+                .append(jdk.getJDKClassPath())
+                .append(script.getJUnitJar())
+                .append(script.getTestNGJar())
+                .split();
+
+        SearchPath classpath = paths.get(PathKind.CLASSPATH);
+        SearchPath agentClasspath = new SearchPath(classpath).retainAll(stdLibs);
+        SearchPath runClasspath = new SearchPath(classpath).removeAll(stdLibs);
 
         if (showMode)
             showMode(getName(), ExecMode.AGENTVM, section);
@@ -525,21 +546,13 @@ public class MainAction extends Action
         // "test.src" and "test.classes", respectively"
         Map<String, String> javaProps = script.getTestProperties();
 
-        JDK jdk = script.getTestJDK();
-        SearchPath classpath = new SearchPath(script.getJavaTestClassPath(), jdk.getJDKClassPath());
-        if (script.isJUnitRequired())
-            classpath.append(script.getJUnitJar());
-        if (script.isTestNGRequired())
-            classpath.append(script.getTestNGJar());
-
         String javaProg = script.getJavaProg();
-        SearchPath rcp = new SearchPath(classpath, runClasspath);
-        List<String> javaArgs = Arrays.asList("-classpath", rcp.toString());
+        List<String> javaArgs = Arrays.asList("-classpath", classpath.toString());
         recorder.java(script.getEnvVars(), javaProg, javaProps, javaArgs, runMainClass, runMainArgs);
 
         Agent agent;
         try {
-            agent = script.getAgent(jdk, classpath,
+            agent = script.getAgent(jdk, agentClasspath,
                     filterJavaOpts(join(script.getTestVMJavaOptions(), script.getTestDebugOptions())));
         } catch (Agent.Fault e) {
             return error(AGENTVM_CANT_GET_VM + ": " + e.getCause());

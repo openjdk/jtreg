@@ -19,5 +19,5 @@ PATH=/bin:/usr/bin \
         -J-Dtest.jdk=%JDKHOME% \
         -J-Dcompile.jdk=%JDKHOME% \
         -J-Dtest.timeout.factor=1.0 \
-        -XDmy.javac.option=x -d %WS%/build/RerunTest.agentvm/work/classes/std -sourcepath %WS%/src/share/test/javatest/regtest/data/rerun/std -classpath %WS%/build/RerunTest.agentvm/work/classes/std:%JDKHOME%/lib/tools.jar %WS%/src/share/test/javatest/regtest/data/rerun/std/CompileTest.java
+        -XDmy.javac.option=x -d %WS%/build/RerunTest.agentvm/work/classes/std -sourcepath %WS%/src/share/test/javatest/regtest/data/rerun/std -classpath %WS%/src/share/test/javatest/regtest/data/rerun/std:%WS%/build/RerunTest.agentvm/work/classes/std:%JDKHOME%/lib/tools.jar %WS%/src/share/test/javatest/regtest/data/rerun/std/CompileTest.java
 

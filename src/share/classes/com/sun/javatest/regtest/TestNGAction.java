@@ -28,20 +28,26 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.testng.ITestContext;
 import org.testng.ITestListener;
 import org.testng.ITestResult;
 import org.testng.TestNG;
 import org.testng.reporters.XMLReporter;
+
 import static org.testng.ITestResult.*;
 
 import com.sun.javatest.Status;
+import com.sun.javatest.regtest.Locations.LibLocn;
 import com.sun.javatest.regtest.agent.JDK_Version;
 import com.sun.javatest.regtest.agent.MainActionHelper;
+import com.sun.javatest.regtest.agent.SearchPath;
 
 import org.testng.IConfigurationListener;
 import org.testng.ITestNGListener;
@@ -102,7 +108,10 @@ public class TestNGAction extends MainAction {
         if (userSpecified) {
             return super.build();
         } else {
-            List<String> classes = listClasses(script.getCompileSourcePath(null).split());
+            Set<File> srcDirs = new LinkedHashSet<File>();
+            srcDirs.add(script.locations.absTestSrcDir());
+            srcDirs.addAll(script.locations.absLibSrcList(LibLocn.Kind.PACKAGE));
+            List<String> classes = listClasses(srcDirs);
             JDK_Version v = script.getCompileJDKVersion();
             Map<String,String> buildOpts = new HashMap<String,String>();
             if (v.compareTo(JDK_Version.V1_6) >= 0)
@@ -113,7 +122,7 @@ public class TestNGAction extends MainAction {
         }
     }
 
-    List<String> listClasses(List<File> roots) {
+    List<String> listClasses(Collection<File> roots) {
         List<String> classes = new ArrayList<String>();
         for (File root: roots)
             listClasses(root, null, classes);

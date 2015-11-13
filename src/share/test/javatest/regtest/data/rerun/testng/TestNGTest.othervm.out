@@ -25,7 +25,7 @@ HOME=%HOME%
 LANG=en_US.UTF-8 \
 MY_ENV_VAR=x \
 PATH=/bin:/usr/bin \
-CLASSPATH=%WS%/build/images/jtreg/lib/javatest.jar:%WS%/build/images/jtreg/lib/jtreg.jar:%WS%/build/RerunTest.othervm/work/classes/testng:%WS%/src/share/test/javatest/regtest/data/rerun/testng:%JDKHOME%/lib/tools.jar:%WS%/build/images/jtreg/lib/testng.jar \
+CLASSPATH=%WS%/build/RerunTest.othervm/work/classes/testng:%WS%/src/share/test/javatest/regtest/data/rerun/testng:%WS%/build/images/jtreg/lib/testng.jar:%JDKHOME%/lib/tools.jar:%WS%/build/images/jtreg/lib/javatest.jar:%WS%/build/images/jtreg/lib/jtreg.jar \
     %JDKHOME%/bin/java \
         -Dtest.src=%WS%/src/share/test/javatest/regtest/data/rerun/testng \
         -Dtest.src.path=%WS%/src/share/test/javatest/regtest/data/rerun/testng \

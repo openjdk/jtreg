@@ -41,6 +41,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -50,6 +51,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.sun.javatest.Status;
 import com.sun.javatest.regtest.Locations.LibLocn;
+import com.sun.javatest.regtest.RegressionScript.PathKind;
 import com.sun.javatest.regtest.agent.CompileActionHelper;
 import com.sun.javatest.regtest.agent.JDK_Version;
 import com.sun.javatest.regtest.agent.SearchPath;
@@ -74,11 +76,6 @@ public class CompileAction extends Action {
     @Override
     public String getName() {
         return NAME;
-    }
-
-    @Override
-    public boolean needPatchModules() {
-        return (module != null) && script.systemModules.containsKey(module);
     }
 
     /**
@@ -150,10 +147,12 @@ public class CompileAction extends Action {
                 process = true;
             } else if (optName.equals("module")) {
                 module = parseModule(optValue);
+                modules = Collections.singleton(module);
             } else if (optName.equals("modules")) {
                 if (optValue != null)
                     throw new ParseException(COMPILE_MODULES_UEXPECT + optValue);
                 multiModule = true;
+                modules = new LinkedHashSet<String>();
             } else {
                 throw new ParseException(COMPILE_BAD_OPT + optName);
             }
@@ -162,6 +161,9 @@ public class CompileAction extends Action {
         if (module != null && multiModule) {
             throw new ParseException("Bad combination of options: /module=" + module + ", /modules");
         }
+
+        if (module == null && !multiModule)
+            modules = Collections.<String>emptySet();
 
         if (timeout < 0)
             timeout = script.getActionTimeout(-1);
@@ -190,6 +192,8 @@ public class CompileAction extends Action {
                 if (!sourceFile.isAbsolute()) {
                     // User must have used @compile, so file must be
                     // in the same directory as the defining file.
+                    if (multiModule)
+                        addModule(currArg);
                     File absSourceFile = locations.absTestSrcFile(module, sourceFile);
                     if (!absSourceFile.exists())
                         throw new ParseException(CANT_FIND_SRC + currArg);
@@ -204,6 +208,8 @@ public class CompileAction extends Action {
                 if (!sourceFile.isAbsolute()) {
                     // User must have used @compile, so file must be
                     // in the same directory as the defining file.
+                    if (multiModule)
+                        addModule(currArg);
                     File absSourceFile = locations.absTestSrcFile(null, sourceFile);
                     if (!absSourceFile.exists())
                         throw new ParseException(CANT_FIND_SRC + currArg);
@@ -216,10 +222,6 @@ public class CompileAction extends Action {
                     throw new ParseException(COMPILE_OPT_DISALLOW);
                 }
                 classpathp = true;
-                // assume the next element provides the classpath, add
-                // test.classes and test.src and lib-list to it
-                SearchPath p = new SearchPath(args.get(i+1)).append(script.getCompileClassPath(null));
-                args.set(i+1, p.toString());
                 i++;
             }
 
@@ -228,10 +230,6 @@ public class CompileAction extends Action {
                     throw new ParseException(COMPILE_OPT_DISALLOW);
                 }
                 sourcepathp = true;
-                // assume the next element provides the sourcepath, add test.src
-                // and lib-list to it
-                SearchPath p = new SearchPath(args.get(i+1)).append(script.getCompileSourcePath(module));
-                args.set(i+1, p.toString());
                 i++;
             }
 
@@ -266,6 +264,11 @@ public class CompileAction extends Action {
         }
 
         return files;
+    }
+
+    @Override
+    public Set<String> getModules() {
+        return modules;
     }
 
     /**
@@ -430,6 +433,8 @@ public class CompileAction extends Action {
      * </ul>
      */
     private List<String> getJavacCommandArgs(List<String> args) throws TestRunException {
+        Map<PathKind, SearchPath> compilePaths = script.getCompilePaths(libLocn, multiModule, module);
+
         List<String> javacArgs = new ArrayList<String>();
         javacArgs.addAll(script.getTestCompilerOptions());
 
@@ -444,29 +449,39 @@ public class CompileAction extends Action {
 
         // modulesourcepath and sourcepath are mutually exclusive
         if (multiModule) {
-            File msp = (libLocn == null) ? script.locations.absTestSrcDir() : libLocn.absSrcDir;
-            javacArgs.add("-modulesourcepath");
-            javacArgs.add(msp.getPath());
+            addPathOption(javacArgs, "-modulesourcepath", compilePaths.get(PathKind.MODULESOURCEPATH));
         } else {
-            if (!sourcepathp) {
-                javacArgs.add("-sourcepath");
-                javacArgs.add(script.getCompileSourcePath(module).toString());
+            SearchPath sp = compilePaths.get(PathKind.SOURCEPATH);
+            if (sourcepathp) {
+                mergePathOption(args, "-sourcepath", sp);
+            } else {
+                addPathOption(javacArgs, "-sourcepath", sp);
             }
         }
 
-        if (!classpathp) {
-            // Need to refine what it means to put absTestClsDir unconditionally on the compilePath
-            javacArgs.add("-classpath");
-            javacArgs.add(script.getCompileClassPath(module).toString());
+        // Need to refine what it means to put absTestClsDir unconditionally on the compilePath
+        SearchPath cp = compilePaths.get(PathKind.CLASSPATH);
+        if (classpathp) {
+            mergePathOption(args, "-classpath", cp);
+        } else {
+            addPathOption(javacArgs, "-classpath", cp);
         }
 
-        if (script.useXpatch()) {
-            javacArgs.add("-Xpatch:" + script.locations.absTestPatchDir().getPath());
-        }
+        addPathOption(javacArgs, "-modulepath", compilePaths.get(PathKind.MODULEPATH));
 
-        if (script.useModulePath()) {
-            javacArgs.add("-modulepath");
-            javacArgs.add(script.locations.absTestModulesDir().getPath());
+        SearchPath pp = compilePaths.get(PathKind.PATCHPATH);
+        addPathOption(javacArgs, "-Xpatch:", pp);
+        if (pp != null && !pp.isEmpty() && cp != null && !cp.isEmpty()) {
+            // provide addReads from patch modules to unnamed module(s).
+            Set<String> patchModules = getModules(pp);
+            StringBuilder sb = new StringBuilder();
+            String sep = "-XaddReads:";
+            for (String s: patchModules) {
+                sb.append(sep).append(s).append("=ALL-UNNAMED");
+                sep = ",";
+            }
+            // TODO: in time, this should be a merge
+            javacArgs.add(sb.toString());
         }
 
         javacArgs.addAll(args);
@@ -474,6 +489,57 @@ public class CompileAction extends Action {
         javacArgs = updateAddExports(javacArgs);
 
         return javacArgs;
+    }
+
+    Set<String> getModules(SearchPath pp) {
+        Set<String> results = new LinkedHashSet<String>();
+        for (File dir: pp.split()) {
+            getModules(dir, results);
+        }
+        return results;
+    }
+
+    void getModules(File dir, Set<String> results) {
+        for (File f: dir.listFiles()) {
+            if (isModule(f))
+                results.add(f.getName());
+        }
+    }
+
+    boolean isModule(File f) {
+        if (f.isDirectory()) {
+            if (script.systemModules.containsKey(f.getName())) {
+                return true;
+            }
+            if (new File(f, "module-info.class").exists())
+                return true;
+            if (new File(f, "module-info.java").exists())
+                return true;
+        }
+        return false;
+    }
+
+    // move up to Action??  See also MainAction.addPathOption
+    void addPathOption(List<String> args, String opt, SearchPath path) {
+        if (path != null && !path.isEmpty()) {
+            if (opt.endsWith(":"))
+                args.add(opt + path);
+            else {
+                args.add(opt);
+                args.add(path.toString());
+            }
+        }
+    }
+
+    void mergePathOption(List<String> args, String opt, SearchPath p) {
+        for (int i = 0; i < args.size(); i++) {
+            String arg = args.get(i);
+            if (arg.equals(opt) || (arg.equals("-cp") && opt.equals("-classpath"))) {
+                args.set(i + 1, new SearchPath(args.get(i + 1)).append(p).toString());
+                return;
+            }
+        }
+        throw new IllegalStateException("option not found");
     }
 
     private Status runOtherJVM(List<String> javacArgs) throws TestRunException {
@@ -591,11 +657,11 @@ public class CompileAction extends Action {
         Agent agent;
         try {
             JDK jdk = script.getCompileJDK();
-            SearchPath classpath = new SearchPath(script.getJavaTestClassPath(), jdk.getJDKClassPath());
+            SearchPath agentClasspath = new SearchPath(jdk.getJDKClassPath(), script.getJavaTestClassPath());
             List<String> vmOpts = addDebugOpts && jdk.equals(script.getTestJDK())
                     ? join(script.getTestVMOptions(), script.getTestDebugOptions())
                     : script.getTestVMOptions();
-            agent = script.getAgent(jdk, classpath, vmOpts);
+            agent = script.getAgent(jdk, agentClasspath, vmOpts);
         } catch (Agent.Fault e) {
             return error(AGENTVM_CANT_GET_VM + ": " + e.getCause());
         }
@@ -746,6 +812,12 @@ public class CompileAction extends Action {
         }
     } // compareGoldenFile()
 
+    private void addModule(String file) {
+        int sep = file.indexOf('/');
+        if (sep > 0)
+            modules.add(file.substring(0, sep));
+    }
+
     //----------member variables------------------------------------------------
 
     private LibLocn libLocn;
@@ -759,5 +831,6 @@ public class CompileAction extends Action {
     private boolean process = false;
     private String module = null;
     private boolean multiModule = false;
+    private Set<String> modules;
     private boolean addDebugOpts = false;
 }

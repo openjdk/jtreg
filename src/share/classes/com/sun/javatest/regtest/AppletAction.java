@@ -45,9 +45,11 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import com.sun.javatest.Status;
+import com.sun.javatest.regtest.RegressionScript.PathKind;
 import com.sun.javatest.regtest.agent.AppletWrapper;
 
 import static com.sun.javatest.regtest.agent.RStatus.*;
+
 import com.sun.javatest.regtest.agent.SearchPath;
 
 /**
@@ -203,14 +205,16 @@ public class AppletAction extends Action
     //----------internal methods------------------------------------------------
 
     private Status runOtherJVM() throws TestRunException {
+        Map<PathKind, SearchPath> execPaths = script.getExecutionPaths(false, null, false, true);
+        Map<PathKind, SearchPath> compatExecPaths = script.getExecutionPaths(false, null, false, false);
         // WRITE ARGUMENT FILE
         File argFile = getArgFile();
         try {
             Writer w = new BufferedWriter(new FileWriter(argFile));
             w.write(clsName + "\0");
-            w.write(script.absTestSrcDir() + "\0");
-            w.write(script.absTestClsDir() + "\0");
-            w.write(script.getTestClassPath() + "\0");
+            w.write(script.absTestSrcDir() + "\0");                     // not used by AppletWrapper
+            w.write(script.absTestClsDir() + "\0");                     // not used by AppletWrapper
+            w.write(compatExecPaths.get(PathKind.CLASSPATH) + "\0");    // not used by AppletWrapper
             w.write(manual + "\0");
             w.write(htmlFileContents.getBody() + "\0");
             w.write(toString(htmlFileContents.getAppletParams()) + "\0");
@@ -227,10 +231,9 @@ public class AppletAction extends Action
         // "test.src" and "test.classes", respectively"
         List<String> command = new ArrayList<String>(6);
         Map<String, String> env = new LinkedHashMap<String, String>();
-        SearchPath cp = new SearchPath().append(script.getJavaTestClassPath()).append(script.getTestClassPath());
         command.add(script.getJavaProg());
         command.add("-classpath");
-        command.add(cp.toString());
+        command.add(execPaths.get(PathKind.CLASSPATH).toString());
 
         List<String> vmOpts = new ArrayList<String>();
         vmOpts.addAll(updateAddExports(script.getTestVMJavaOptions()));

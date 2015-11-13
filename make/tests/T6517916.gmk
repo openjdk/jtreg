@@ -48,7 +48,7 @@ $(BUILDDIR)/T6517916.ok: \
 		-r $(@:%.ok=%)/report/svm \
 		-avm \
 		$(TESTDIR)/javatest/regtest/6517916
-	$(SED) -e 's|:[^:]*ovm/classes:|:|' -e 's|:[^:]*/6517916:|:|' \
+	$(SED) -e 's|=[^:]*ovm/classes:|=|' -e 's|=[^:]*/6517916:|=|' \
 		$(T6517916-ENVIRONMENT-NORMALIZATIONS) \
 		< $(@:%.ok=%)/work/ovm/scratch/T6517916.out \
 		> $(@:%.ok=%)/work/ovm/scratch/T6517916.out2
