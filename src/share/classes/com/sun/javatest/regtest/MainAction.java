@@ -449,7 +449,7 @@ public class MainAction extends Action
             cmd.setDefaultStatus(failed(UNEXPECT_SYS_EXIT));
 
             TimeoutHandler timeoutHandler =
-                TimeoutHandlerProvider.createHandler(script, section);
+                script.getTimeoutHandlerProvider().createHandler(script, section);
 
             cmd.setCommand(command)
                 .setEnvironment(env)
@@ -516,7 +516,7 @@ public class MainAction extends Action
         }
 
         TimeoutHandler timeoutHandler =
-                TimeoutHandlerProvider.createHandler(script, section);
+                script.getTimeoutHandlerProvider().createHandler(script, section);
 
         Status status;
         try {

@@ -321,7 +321,7 @@ public class Main {
 
         new Option(STD, TIMEOUT, "", "th", "timeoutHandler") {
             public void process(String opt, String arg) {
-                TimeoutHandlerProvider.setClassName(arg);
+                timeoutHandlerClassName = arg;
             }
         },
 
@@ -330,16 +330,11 @@ public class Main {
                 arg = arg.trim();
                 if (arg.length() == 0)
                     return;
-                ArrayList<File> timeoutHandlerPathArg = new ArrayList<File>();
+                timeoutHandlerPathArg = new ArrayList<File>();
                 for (String f: arg.split(File.pathSeparator)) {
                     if (f.length() == 0)
                         continue;
                     timeoutHandlerPathArg.add(new File(f));
-                }
-                try {
-                    TimeoutHandlerProvider.setClassPath(timeoutHandlerPathArg);
-                } catch (MalformedURLException ex) {
-                    throw new BadArgs(i18n, ex.toString());
                 }
             }
         },
@@ -1671,6 +1666,14 @@ public class Main {
                 }
             }
 
+            if (timeoutHandlerClassName != null) {
+                rp.setTimeoutHandler(timeoutHandlerClassName);
+            }
+
+            if (timeoutHandlerPathArg != null) {
+                rp.setTimeoutHandlerPath(timeoutHandlerPathArg);
+            }
+
             File rd = testManager.getReportDirectory(testSuite);
             if (rd != null)
                 rp.setReportDir(rd);
@@ -2187,6 +2190,8 @@ public class Main {
     private String timeLimitArg;
     private String observerClassName;
     private List<File> observerPathArg;
+    private String timeoutHandlerClassName;
+    private List<File> timeoutHandlerPathArg;
     private List<String> testCompilerOpts = new ArrayList<String>();
     private List<String> testJavaOpts = new ArrayList<String>();
     private List<String> testVMOpts = new ArrayList<String>();

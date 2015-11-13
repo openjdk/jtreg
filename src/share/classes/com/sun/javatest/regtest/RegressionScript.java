@@ -28,6 +28,7 @@ package com.sun.javatest.regtest;
 import java.io.File;
 import java.io.PrintWriter;
 import java.net.InetAddress;
+import java.net.MalformedURLException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -50,6 +51,7 @@ import com.sun.javatest.TestSuite;
 import com.sun.javatest.regtest.agent.JDK_Version;
 
 import static com.sun.javatest.regtest.agent.RStatus.*;
+
 import com.sun.javatest.regtest.agent.SearchPath;
 
 /**
@@ -706,6 +708,16 @@ public class RegressionScript extends Script {
     }
 
     private int nextSerial = 0;
+
+    //--------------------------------------------------------------------------
+
+    TimeoutHandlerProvider getTimeoutHandlerProvider() throws TestRunException {
+        try {
+            return params.getTimeoutHandlerProvider();
+        } catch (MalformedURLException e) {
+            throw new TestRunException("Can't get timeout handler provider", e);
+        }
+    }
 
     //--------------------------------------------------------------------------
 

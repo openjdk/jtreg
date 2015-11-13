@@ -40,14 +40,14 @@ import java.util.List;
  */
 public class TimeoutHandlerProvider {
 
-    private static String className;
-    private static ClassLoader loader;
+    private String className;
+    private ClassLoader loader;
 
     /**
      * Set the class name of the TimeoutHandler sub-class.
      * @param name
      */
-    public static void setClassName(String name) {
+    public void setClassName(String name) {
         className = name;
     }
 
@@ -56,7 +56,7 @@ public class TimeoutHandlerProvider {
      * @param path
      * @throws java.net.MalformedURLException
      */
-    public static void setClassPath(List<File> path) throws MalformedURLException {
+    public void setClassPath(List<File> path) throws MalformedURLException {
         URL[] urls = new URL[path.size()];
         int u = 0;
         for (File f: path) {
@@ -69,7 +69,7 @@ public class TimeoutHandlerProvider {
      * Load the class specified by setClassName and setClassPath.
      * @throws ClassNotFoundException
      */
-    private static Class<TimeoutHandler> loadClass() throws ClassNotFoundException {
+    private Class<TimeoutHandler> loadClass() throws ClassNotFoundException {
         Class<?> handlerClass;
         if (loader == null) {
             handlerClass = Class.forName(className);
@@ -82,7 +82,7 @@ public class TimeoutHandlerProvider {
     /**
      * Create an instance of the TimeoutHandler that has been configured.
      */
-    public static TimeoutHandler createHandler(RegressionScript script, Section section) {
+    public TimeoutHandler createHandler(RegressionScript script, Section section) {
         PrintWriter log = section.getMessageWriter();
         File outDir = script.absTestScratchDir();
         File testJDK = script.getTestJDK().getAbsoluteFile();

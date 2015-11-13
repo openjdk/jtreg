@@ -300,7 +300,7 @@ public class AppletAction extends Action
             cmd.setDefaultStatus(failed(UNEXPECT_SYS_EXIT));
 
             TimeoutHandler timeoutHandler =
-                TimeoutHandlerProvider.createHandler(script, section);
+                script.getTimeoutHandlerProvider().createHandler(script, section);
 
             cmd.setCommand(command)
                 .setEnvironment(env)

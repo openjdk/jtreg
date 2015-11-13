@@ -26,6 +26,7 @@
 package com.sun.javatest.regtest;
 
 import java.io.File;
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -466,6 +467,8 @@ public class RegressionParameters
     private static final String REPORTDIR = ".reportDir";
     private static final String EXCLUSIVE_LOCK = ".exclLock";
     private static final String NATIVEDIR = ".nativeDir";
+    private static final String TIMEOUT_HANDLER = ".timeoutHandler";
+    private static final String TIMEOUT_HANDLER_PATH = ".timeoutHandlerPath";
 
     @Override @SuppressWarnings("rawtypes")
     public void load(Map data, boolean checkChecksum) throws Interview.Fault {
@@ -537,6 +540,14 @@ public class RegressionParameters
         v = (String) data.get(prefix + NATIVEDIR);
         if (v != null)
             setNativeDir(new File(v));
+
+        v = (String) data.get(prefix + TIMEOUT_HANDLER);
+        if (v != null)
+            setTimeoutHandler(v);
+
+        v = (String) data.get(prefix + TIMEOUT_HANDLER_PATH);
+        if (v != null)
+            setTimeoutHandlerPath(v);
     }
 
     @Override @SuppressWarnings({"unchecked", "rawtypes"})
@@ -590,6 +601,19 @@ public class RegressionParameters
 
         if (nativeDir != null)
             data.put(prefix + NATIVEDIR, nativeDir.getPath());
+
+        if (timeoutHandlerClassName != null)
+            data.put(prefix + TIMEOUT_HANDLER, timeoutHandlerClassName);
+
+        if (timeoutHandlerPath != null) {
+            StringBuilder sb = new StringBuilder();
+            String sep = "";
+            for (File file: timeoutHandlerPath) {
+                sb.append(sep).append(file);
+                sep = File.pathSeparator;
+            }
+            data.put(prefix + TIMEOUT_HANDLER_PATH, sb.toString());
+        }
     }
 
     //---------------------------------------------------------------------
@@ -999,6 +1023,53 @@ public class RegressionParameters
     }
 
     private File nativeDir;
+
+    //---------------------------------------------------------------------
+
+    void setTimeoutHandler(String timeoutHandlerClassName) {
+        timeoutHandlerClassName.getClass(); // null check
+        this.timeoutHandlerClassName = timeoutHandlerClassName;
+    }
+
+    String getTimeoutHandler() {
+        return timeoutHandlerClassName;
+    }
+
+    private String timeoutHandlerClassName;
+
+    void setTimeoutHandlerPath(String timeoutHandlerPath) {
+        timeoutHandlerPath.getClass(); // null check
+        this.timeoutHandlerPath = new ArrayList<File>();
+        for (String f: timeoutHandlerPath.split(File.pathSeparator)) {
+            if (f.length() > 0) {
+                this.timeoutHandlerPath.add(new File(f));
+            }
+        }
+    }
+
+    void setTimeoutHandlerPath(List<File> timeoutHandlerPath) {
+        timeoutHandlerPath.getClass(); // null check
+        this.timeoutHandlerPath = timeoutHandlerPath;
+    }
+
+    List<File> getTimeoutHandlerPath() {
+        return timeoutHandlerPath;
+    }
+
+    private List<File> timeoutHandlerPath;
+
+    // Ideally, this method would be better on a "shared execution context" object
+    TimeoutHandlerProvider getTimeoutHandlerProvider() throws MalformedURLException {
+        if (timeoutHandlerProvider == null) {
+            timeoutHandlerProvider = new TimeoutHandlerProvider();
+            timeoutHandlerProvider.setClassName(timeoutHandlerClassName);
+            if (timeoutHandlerPath != null && !timeoutHandlerPath.isEmpty())
+                timeoutHandlerProvider.setClassPath(timeoutHandlerPath);
+        }
+        return timeoutHandlerProvider;
+    }
+
+    private TimeoutHandlerProvider timeoutHandlerProvider;
 
     //---------------------------------------------------------------------
 

@@ -498,7 +498,7 @@ public class CompileAction extends Action {
         };
 
         TimeoutHandler timeoutHandler =
-            TimeoutHandlerProvider.createHandler(script, section);
+            script.getTimeoutHandlerProvider().createHandler(script, section);
 
         cmd.setExecDir(script.absTestScratchDir())
             .setCommand(command)
@@ -559,7 +559,7 @@ public class CompileAction extends Action {
         }
 
         TimeoutHandler timeoutHandler =
-            TimeoutHandlerProvider.createHandler(script, section);
+            script.getTimeoutHandlerProvider().createHandler(script, section);
 
         Status status;
         try {
