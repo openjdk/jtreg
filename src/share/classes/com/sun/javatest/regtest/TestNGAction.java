@@ -27,8 +27,9 @@ package com.sun.javatest.regtest;
 import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -47,7 +48,6 @@ import com.sun.javatest.Status;
 import com.sun.javatest.regtest.Locations.LibLocn;
 import com.sun.javatest.regtest.agent.JDK_Version;
 import com.sun.javatest.regtest.agent.MainActionHelper;
-import com.sun.javatest.regtest.agent.SearchPath;
 
 import org.testng.IConfigurationListener;
 import org.testng.ITestNGListener;
@@ -108,21 +108,35 @@ public class TestNGAction extends MainAction {
         if (userSpecified) {
             return super.build();
         } else {
-            Set<File> srcDirs = new LinkedHashSet<File>();
-            srcDirs.add(script.locations.absTestSrcDir());
-            srcDirs.addAll(script.locations.absLibSrcList(LibLocn.Kind.PACKAGE));
-            List<String> classes = listClasses(srcDirs);
             JDK_Version v = script.getCompileJDKVersion();
             Map<String,String> buildOpts = new HashMap<String,String>();
             if (v.compareTo(JDK_Version.V1_6) >= 0)
                 buildOpts.put("implicit", "none");
-            List<String>   buildArgs = classes;
+            Set<String> buildArgs = new LinkedHashSet<String>();
+            Locations locations = script.locations;
+            buildArgs.addAll(listModules(locations.absLibSrcList(LibLocn.Kind.SYS_MODULE)));
+            buildArgs.addAll(listModules(locations.absLibSrcList(LibLocn.Kind.USER_MODULE)));
+            buildArgs.addAll(listClasses(locations.absLibSrcList(LibLocn.Kind.PACKAGE)));
+            try {
+                File testSrcDir = locations.absTestSrcDir();
+                switch (locations.getDirKind(testSrcDir)) {
+                    case PACKAGE:
+                        buildArgs.addAll(listClasses(Collections.singletonList(testSrcDir)));
+                        break;
+                    case SYS_MODULE:
+                    case USER_MODULE:
+                        buildArgs.addAll(listModules(Collections.singletonList(testSrcDir)));
+                        break;
+                }
+            } catch (Locations.Fault e) {
+                return Status.error(e.getMessage());
+            }
             BuildAction ba = new BuildAction();
-            return ba.build(buildOpts, buildArgs, SREASON_ASSUMED_BUILD, script);
+            return ba.build(buildOpts, new ArrayList<String>(buildArgs), SREASON_ASSUMED_BUILD, script);
         }
     }
 
-    List<String> listClasses(Collection<File> roots) {
+    private List<String> listClasses(List<File> roots) {
         List<String> classes = new ArrayList<String>();
         for (File root: roots)
             listClasses(root, null, classes);
@@ -139,6 +153,17 @@ public class TestNGAction extends MainAction {
                 classes.add(pkg == null ? c_name : pkg + "." + c_name);
             }
         }
+    }
+
+    private Set<String> listModules(List<File> roots) {
+        Set<String> modules = new LinkedHashSet<String>();
+        for (File root: roots) {
+            for (File f: root.listFiles()) {
+                if (f.isDirectory())
+                    modules.add(f.getName() + "/*");
+            }
+        }
+        return modules;
     }
 
     private static final File TESTNG_RESULTS_XML = new File("testng-results.xml");
@@ -167,7 +192,24 @@ public class TestNGAction extends MainAction {
             int sep = moduleClassName.indexOf('/');
             String moduleName = (sep == -1) ? null : moduleClassName.substring(0, sep);
             String className  = (sep == -1) ? moduleClassName : moduleClassName.substring(sep + 1);
-            Class<?> mainClass = (loader == null) ? Class.forName(className) : loader.loadClass(className);
+
+            //Class<?> mainClass = (loader == null) ? Class.forName(className) : loader.loadClass(className);
+
+            ClassLoader cl;
+            if (moduleName != null) {
+                Class layerClass = Class.forName("java.lang.reflect.Layer");
+                Method bootMethod = layerClass.getMethod("boot", new Class[] { });
+                Object bootLayer = bootMethod.invoke(null, new Object[] { });
+                Method findLoaderMth = layerClass.getMethod("findLoader", new Class[] { String.class });
+                cl = (ClassLoader) findLoaderMth.invoke(bootLayer, new Object[] { moduleName });
+            } else if (loader != null) {
+                cl = loader;
+            } else {
+                cl = TestNGRunner.class.getClassLoader();
+            }
+
+            Class mainClass = Class.forName(className, false, cl);
+
             RegressionListener listener = new RegressionListener();
             TestNG testng = new TestNG(false);
             testng.setDefaultSuiteName(testName);

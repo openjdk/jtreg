@@ -127,6 +127,7 @@ public class CompileAction extends Action {
                 RegressionScript script)
             throws ParseException {
         super.init(opts, args, reason, script);
+
         if (reason.startsWith(SREASON_USER_SPECIFIED))
             addDebugOpts = true;
 

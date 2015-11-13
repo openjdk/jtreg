@@ -122,6 +122,12 @@ public class Locations {
                     && absClsFile.canRead()
                     && (absClsFile.lastModified() > absSrcFile.lastModified());
         }
+
+        @Override
+        public String toString() {
+            return "ClassLocn(" + lib.name + "," + optModule + "," + className +
+                    "," + absSrcFile + "," + absClsFile + ")";
+        }
      }
 
     private final RegressionTestSuite testSuite;
@@ -132,6 +138,8 @@ public class Locations {
     private final File absTestSrcDir;
     private final File absBaseClsDir;
     private final File absTestClsDir;
+    private final File absTestPatchDir;
+    private final File absTestModulesDir;
     private final File absTestWorkDir;
     private final List<LibLocn> libList;
 
@@ -154,7 +162,7 @@ public class Locations {
         absBaseSrcDir = params.getTestSuite().getRootDir();
         absTestSrcDir = new File(absBaseSrcDir, relTestDir);
 
-        String testWorkDir = td.getRootRelativeFile().getPath().replaceAll("(?i)\\.[a-z]+", "");
+        String testWorkDir = td.getRootRelativeFile().getPath().replaceAll("(?i)\\.[a-z]+$", "");
         String id = td.getId();
         if (id != null)
             testWorkDir += "_" + id;
@@ -164,6 +172,15 @@ public class Locations {
         absBaseClsDir = getThreadSafeDir(params.getWorkDirectory().getFile("classes"),
                 params.getConcurrency());
         absTestClsDir = new File(absBaseClsDir, relTestDir);
+
+        if (packageRoot == null) {
+            absTestPatchDir = absTestWorkFile("patches");
+            absTestModulesDir = absTestWorkFile("modules");
+        } else {
+            // the following is not ideal, but neither is the entire $wd/classes directory hierarchy
+            absTestPatchDir = new File(absTestClsDir, "patches");
+            absTestModulesDir = new File(absTestClsDir, "modules");
+        }
 
         libList = new ArrayList<LibLocn>();
         String libs = td.getParameter("library");
@@ -409,7 +426,7 @@ public class Locations {
      * modules for a test.
      */
     File absTestModulesDir() {
-        return absTestWorkFile("modules");
+        return absTestModulesDir;
     }
 
     /**
@@ -417,7 +434,7 @@ public class Locations {
      * modules for a test.
      */
     File absTestPatchDir() {
-        return absTestWorkFile("patch");
+        return absTestPatchDir;
     }
 
     /**

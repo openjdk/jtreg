@@ -259,6 +259,13 @@ public class MainAction extends Action
         return files;
     }
 
+    @Override
+    public Set<String> getModules() {
+        return (testModuleName == null)
+                ? Collections.<String>emptySet()
+                : Collections.singleton(testModuleName);
+    }
+
     /**
      * The method that does the work of the action.  The necessary work for the
      * given action is defined by the tag specification.

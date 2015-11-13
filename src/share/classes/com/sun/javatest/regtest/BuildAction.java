@@ -140,6 +140,17 @@ public class BuildAction extends Action
         return files;
     }
 
+    @Override
+    public Set<String> getModules() {
+        Set<String> modules = new LinkedHashSet<String>();
+        for (String arg: args) {
+            int sep = arg.indexOf("/");
+            if (sep > 0)
+                modules.add(arg.substring(0, sep));
+        }
+        return modules;
+    }
+
     /**
      * The method that does the work of the action.  The necessary work for the
      * given action is defined by the tag specification.
@@ -170,7 +181,6 @@ public class BuildAction extends Action
         Map<LibLocn, List<ClassLocn>> classLocnsToCompile = new LinkedHashMap<LibLocn, List<ClassLocn>>();
         for (String arg: args) {
             try {
-                // the argument to build is a classname or package name with wildcards
                 for (ClassLocn cl: script.locations.locateClasses(arg)) {
                     if (cl.absSrcFile.lastModified() > now) {
                         pw.println(String.format(BUILD_FUTURE_SOURCE, cl.absSrcFile,

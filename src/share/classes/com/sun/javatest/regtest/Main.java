@@ -1915,7 +1915,7 @@ public class Main {
     }
 
     private void initModuleHelper(WorkDirectory wd) {
-        File patchDir = wd.getFile("patch");
+        File patchDir = wd.getFile("patches");
         File javaBaseDir = new File(patchDir, "java.base");
         // can't use class constants because it's a restricted package
         String[] classes = {

@@ -142,20 +142,25 @@ public class RegressionTestFinder extends TagTestFinder
     }
 
     protected void scanTestNGFile(File tngRoot, File file) throws TestSuite.Fault {
+        Map<String,String> tagValues;
         if (isTestNGTest(file)) {
+            String className = inferClass(tngRoot, file);
             BufferedReader in = null;
             try {
                 in = new BufferedReader(new FileReader(file));
-                Map<String,String> tagValues = readTestNGComments(file, in);
+                tagValues = readTestNGComments(file, in);
                 if (tagValues == null) {
                     tagValues = new HashMap<String,String>();
                     // could read more of file looking for annotations like @Test, @Factory
                     // to guess whether this is really a test file or not
                 }
-                String p = tngRoot.toURI().relativize(file.toURI()).getPath();
-                String className = p.substring(0, p.length() - 5).replace("/", ".");
+
                 tagValues.put("packageRoot", getRootDir().toURI().relativize(tngRoot.toURI()).getPath());
-                tagValues.put("testngClass", className);
+                if (className == null) {
+                    tagValues.put("error", "cannot determine class name");
+                } else {
+                    tagValues.put("testngClass", className);
+                }
                 tagValues.put("library", StringUtils.join(properties.getLibDirs(file), " "));
                 foundTestDescription(tagValues, file, /*line*/0);
             } catch (IOException e) {
@@ -167,6 +172,44 @@ public class RegressionTestFinder extends TagTestFinder
                 }
             }
         }
+    }
+
+    private String inferClass(File tngRoot, File file) {
+        String path = tngRoot.toURI().relativize(file.toURI()).getPath();
+        String pkg = readPackageDeclaration(file);
+        String fn = file.getName();
+        String cn = fn.replace(".java", "");
+        String pkg_fn = (pkg == null) ? file.getName() : pkg.replace('.', '/') + "/" + fn;
+        if (path.equalsIgnoreCase(pkg_fn)) {
+            return (pkg == null) ? cn : pkg + "." + cn;
+        } else if (path.toLowerCase().endsWith("/" + pkg_fn.toLowerCase())) {
+            String mn = path.substring(0, path.length() - pkg_fn.length());
+            return mn + ((pkg == null) ? cn : pkg + "." + cn);
+        } else {
+            return null;
+        }
+    }
+
+    private String readPackageDeclaration(File file) {
+        Pattern pkg = Pattern.compile("(?i)^\\s*package\\s+([a-z$_][a-z$_0-9.]*)\\s*;\\s*$");
+        BufferedReader in = null;
+        try {
+            in = new BufferedReader(new FileReader(file));
+            String line;
+            while ((line = in.readLine()) != null) {
+                Matcher m = pkg.matcher(line);
+                if (m.matches())
+                    return m.group(1);
+            }
+        } catch (IOException e) {
+            error(i18n, "finder.ioError", file);
+        } finally {
+            try {
+                if (in != null) in.close();
+            } catch (IOException e) {
+            }
+        }
+        return null;
     }
 
     private Map<String,String> readTestNGComments(File file, BufferedReader in) throws IOException {
@@ -205,7 +248,10 @@ public class RegressionTestFinder extends TagTestFinder
     protected boolean isTestNGTest(File file) {
         // for now, ignore comments and annotations, and
         // assume *.java is a test
-        return file.getName().endsWith(".java");
+        String name = file.getName();
+        return name.endsWith(".java")
+                && !name.equals("module-info.java")
+                && !name.equals("package-info.java");
     }
 
     private File canon(File f) {
