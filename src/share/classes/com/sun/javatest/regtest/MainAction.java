@@ -238,8 +238,7 @@ public class MainAction extends Action
         Set<File> files = new LinkedHashSet<File>();
         if (testClassName != null) {
             Map<String,String> buildOpts = Collections.emptyMap();
-            String buildArg = (testModuleName == null) ? testClassName : testModuleName + '/' + testClassName;
-            List<String> buildArgs = Arrays.asList(buildArg);
+            List<String> buildArgs = Arrays.asList(join(testModuleName, testClassName));
             try {
                 BuildAction ba = new BuildAction();
                 ba.init(buildOpts, buildArgs, SREASON_ASSUMED_BUILD, script);
@@ -317,27 +316,23 @@ public class MainAction extends Action
         // though an "@run build <class>" action had been inserted before
         // this action."
         Map<String,String> buildOpts = Collections.emptyMap();
-        String buildArg = (testModuleName == null) ? testClassName : testModuleName + '/' + testClassName;
-        List<String> buildArgs = Arrays.asList(buildArg);
+        List<String> buildArgs = Arrays.asList(join(testModuleName, testClassName));
         BuildAction ba = new BuildAction();
         return ba.build(buildOpts, buildArgs, SREASON_ASSUMED_BUILD, script);
     }
 
     private Status runOtherJVM() throws TestRunException {
         // Arguments to wrapper:
-        String runModuleName;
-        String runClassName;
+        String runModuleClassName;
         List<String> runClassArgs;
         if (driverClass == null) {
-            runModuleName = testModuleName;
-            runClassName = testClassName;
+            runModuleClassName = join(testModuleName, testClassName);
             runClassArgs = testClassArgs;
         } else {
-            runModuleName = null;
-            runClassName = driverClass;
+            runModuleClassName = driverClass;
             runClassArgs = new ArrayList<String>();
             runClassArgs.add(script.getTestResult().getTestName());
-            runClassArgs.add(testClassName);
+            runClassArgs.add(join(testModuleName, testClassName));
             runClassArgs.addAll(testClassArgs);
         }
 
@@ -345,8 +340,7 @@ public class MainAction extends Action
         File argFile = getArgFile();
         try {
             BufferedWriter w = new BufferedWriter(new FileWriter(argFile));
-            w.write((runModuleName == null) ? "\0" : runModuleName + "\0");
-            w.write(runClassName + "\0");
+            w.write(runModuleClassName + "\0");
             w.write(StringUtils.join(runClassArgs) + "\0");
             w.close();
         } catch (IOException e) {
@@ -623,6 +617,10 @@ public class MainAction extends Action
         }
 
         return status;
+    }
+
+    private String join(String moduleName, String className) {
+        return (moduleName == null) ? className : moduleName + '/' + className;
     }
 
 

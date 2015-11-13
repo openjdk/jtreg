@@ -154,8 +154,11 @@ public class TestNGAction extends MainAction {
             if (args.length != 2)
                 throw new Error("wrong number of arguments");
             String testName = args[0];
-//            Class<?> mainClass = Class.forName(args[1], true, loader);
-            Class<?> mainClass = (loader == null) ? Class.forName(args[1]) : loader.loadClass(args[1]);
+            String moduleClassName = args[1];
+            int sep = moduleClassName.indexOf('/');
+            String moduleName = (sep == -1) ? null : moduleClassName.substring(0, sep);
+            String className  = (sep == -1) ? moduleClassName : moduleClassName.substring(sep + 1);
+            Class<?> mainClass = (loader == null) ? Class.forName(className) : loader.loadClass(className);
             RegressionListener listener = new RegressionListener();
             TestNG testng = new TestNG(false);
             testng.setDefaultSuiteName(testName);

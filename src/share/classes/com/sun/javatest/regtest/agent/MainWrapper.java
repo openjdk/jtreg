@@ -27,7 +27,6 @@ package com.sun.javatest.regtest.agent;
 
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
@@ -39,33 +38,37 @@ import java.lang.reflect.Method;
 public class MainWrapper
 {
     public static void main(String [] args) {
+        String moduleName;
+        String className;
+        String[] classArgs;
+
         try {
             FileReader in = new FileReader(args[0]);
 
-            StringWriter out = new StringWriter();
+            StringBuilder sb = new StringBuilder();
             char[] buf = new char[1024];
             int howMany;
 
             while ((howMany = in.read(buf)) > 0)
-                out.write(buf, 0, howMany);
-            out.close();
+                sb.append(buf, 0, howMany);
             in.close();
 
-            String[] fileArgs = StringArray.splitTerminator("\0", out.toString());
+            String[] fileArgs = StringArray.splitTerminator("\0", sb.toString());
 
             int i = 0;
-            String mn                = fileArgs[i++];
-            mainModuleName = (mn.length() == 0) ? null : mn;
-            mainClassName            = fileArgs[i++];
-            String stringifiedArgs   = fileArgs[i++];
-            mainArgs = StringArray.splitWS(stringifiedArgs);
+            String moduleClassName = fileArgs[i++];
+            int sep = moduleClassName.indexOf('/');
+            moduleName = (sep == -1) ? null : moduleClassName.substring(0, sep);
+            className  = (sep == -1) ? moduleClassName : moduleClassName.substring(sep + 1);
+            classArgs = StringArray.splitWS(fileArgs[i++]);
         } catch (IOException e) {
             RStatus.failed(MAIN_CANT_READ_ARGS).exit();
+            throw new IllegalStateException(); // implies exit() didn't sucees
         }
 
         // RUN JAVA IN ANOTHER THREADGROUP
         MainThreadGroup tg = new  MainThreadGroup();
-        Thread t = new Thread(tg, new MainThread(), "MainThread");
+        Thread t = new Thread(tg, new MainThread(moduleName, className, classArgs), "MainThread");
         t.start();
         try {
             t.join();
@@ -81,49 +84,54 @@ public class MainWrapper
 
     } // main()
 
-    static class MainThread extends Thread
-    {
+    static class MainThread extends Thread {
+        MainThread(String moduleName, String className, String[] args) {
+            this.moduleName = moduleName;
+            this.className = className;
+            this.args = args;
+        }
+
         public void run() {
             try {
                 ClassLoader cl;
-                if (mainModuleName != null) {
+                if (moduleName != null) {
                     Class layerClass = Class.forName("java.lang.reflect.Layer");
                     Method bootMethod = layerClass.getMethod("boot", new Class[] { });
                     Object bootLayer = bootMethod.invoke(null, new Object[] { });
                     Method findLoaderMth = layerClass.getMethod("findLoader", new Class[] { String.class });
-                    cl = (ClassLoader) findLoaderMth.invoke(bootLayer, new Object[] { mainModuleName });
+                    cl = (ClassLoader) findLoaderMth.invoke(bootLayer, new Object[] { moduleName });
                 } else {
                     cl = getClass().getClassLoader();
                 }
 
                 // RUN JAVA PROGRAM
-                Class c = Class.forName(mainClassName, false, cl);
+                Class c = Class.forName(className, false, cl);
                 Method mainMethod = c.getMethod("main", new Class[] { String[].class });
-                mainMethod.invoke(null, new Object[] { mainArgs });
+                mainMethod.invoke(null, new Object[] { args });
 
             } catch (InvocationTargetException e) {
-                e.getTargetException().printStackTrace();
+                e.getTargetException().printStackTrace(System.err);
                 System.err.println();
                 System.err.println("JavaTest Message: Test threw exception: " + e.getTargetException());
                 System.err.println("JavaTest Message: shutting down test");
                 System.err.println();
                 RStatus.failed(MAIN_THREW_EXCEPT + e.getTargetException()).exit();
             } catch (ClassNotFoundException e) {
-                e.printStackTrace();
+                e.printStackTrace(System.err);
                 System.err.println();
                 System.err.println("JavaTest Message: main() method must be in a public class named");
-                System.err.println("JavaTest Message: " + mainClassName + " in file " + mainClassName + ".java");
+                System.err.println("JavaTest Message: " + className + " in file " + className + ".java");
                 System.err.println();
                 RStatus.error(MAIN_CANT_LOAD_TEST + e).exit();
             } catch (NoSuchMethodException e) {
-                e.printStackTrace();
+                e.printStackTrace(System.err);
                 System.err.println();
                 System.err.println("JavaTest Message: main() method must be in a public class named");
-                System.err.println("JavaTest Message: " + mainClassName + " in file " + mainClassName + ".java");
+                System.err.println("JavaTest Message: " + className + " in file " + className + ".java");
                 System.err.println();
                 RStatus.error(MAIN_CANT_FIND_MAIN).exit();
             } catch (IllegalAccessException e) {
-                e.printStackTrace();
+                e.printStackTrace(System.err);
                 System.err.println();
                 System.err.println("JavaTest Message: Verify that the class defining the test is");
                 System.err.println("JavaTest Message: declared public (test invoked via reflection)");
@@ -131,6 +139,10 @@ public class MainWrapper
                 RStatus.error(e.toString()).exit();
             }
         } // run
+
+        private final String moduleName;
+        private final String className;
+        private final String [] args;
     }
 
     static class MainThreadGroup extends ThreadGroup
@@ -142,7 +154,7 @@ public class MainWrapper
         public void uncaughtException(Thread t, Throwable e) {
             if (e instanceof ThreadDeath)
                 return;
-            e.printStackTrace();
+            e.printStackTrace(System.err);
             if ((uncaughtThrowable == null) && (!cleanMode)) {
                 uncaughtThrowable = e;
                 uncaughtThread    = t;
@@ -175,7 +187,7 @@ public class MainWrapper
 
         //----------member variables--------------------------------------------
 
-        private boolean cleanMode   = false;
+        private final boolean cleanMode   = false;
         Throwable uncaughtThrowable = null;
         Thread    uncaughtThread    = null;
     }
@@ -188,8 +200,4 @@ public class MainWrapper
         MAIN_THREW_EXCEPT     = "`main' threw exception: ",
         MAIN_CANT_LOAD_TEST   = "Can't load test: ",
         MAIN_CANT_FIND_MAIN   = "Can't find `main' method";
-
-    private static String mainModuleName;
-    private static String mainClassName;
-    private static String [] mainArgs;
 }
