@@ -271,8 +271,11 @@ public class Locations {
                         throw new Fault(MIXED_LIB + absSrcDir);
                     }
                 } else {
-                    // allow for now: one of the self tests has a "dummy" library
-                    // throw new Fault(BAD_FILE_IN_LIB + lib);
+                    if (kind == null) {
+                        kind = LibLocn.Kind.PACKAGE;
+                    } else if (kind != LibLocn.Kind.PACKAGE) {
+                        throw new Fault(MIXED_LIB + absSrcDir);
+                    }
                 }
             } else {
                 // allow for now
@@ -675,5 +678,5 @@ public class Locations {
         CANT_FIND_LIB         = "Can't find library: ",
         BAD_LIB               = "Bad file for library: ",
         BAD_FILE_IN_LIB       = "Bad file in library: ",
-        MIXED_LIB             = "Can't mix system and user modules in library: ";
+        MIXED_LIB             = "Can't mix packages, system patch modules and user modules in library: ";
 }

@@ -381,7 +381,8 @@ public class MainAction extends Action
         try {
             testKind = script.locations.getDirKind(script.locations.absTestSrcDir());
         } catch (Locations.Fault e) {
-            throw new TestRunException("Cannot determine test src directory", e);
+            throw new TestRunException("Cannot determine test src directory kind: "
+                    + script.locations.absTestSrcDir(), e);
         }
         boolean multiModule = (testKind == LibLocn.Kind.USER_MODULE);
 
