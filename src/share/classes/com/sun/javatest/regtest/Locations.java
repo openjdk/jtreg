@@ -678,5 +678,5 @@ public class Locations {
         CANT_FIND_LIB         = "Can't find library: ",
         BAD_LIB               = "Bad file for library: ",
         BAD_FILE_IN_LIB       = "Bad file in library: ",
-        MIXED_LIB             = "Can't mix packages, system patch modules and user modules in library: ";
+        MIXED_LIB             = "Can't mix packages, user modules, and patches for system module in library: ";
 }
