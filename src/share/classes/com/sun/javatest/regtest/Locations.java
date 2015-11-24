@@ -28,8 +28,10 @@ package com.sun.javatest.regtest;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.sun.javatest.TestDescription;
@@ -243,6 +245,36 @@ public class Locations {
     }
 
     /**
+     * Get the set of kinds of contents of a source directory.
+     * The set will include:
+     * <ul>
+     * <li>USER_MODULE, if the source directory contains one or more directories
+     *      which in turn contain module-info.java
+     * <li>SYS_MODULE, if the source directory contains one or more directories
+     *      directory whose names match that of a system module
+     * <li>PACKAGE, if the source directory contains a directory which is neither
+     *      of the above
+     * </ul>
+     */
+    Set<LibLocn.Kind> getDirKinds(File absSrcDir) {
+        Set<LibLocn.Kind> kinds = EnumSet.noneOf(LibLocn.Kind.class);
+        for (File f: absSrcDir.listFiles()) {
+            if (f.isDirectory()) {
+                if (isSystemModule(f.getName())) {
+                    kinds.add(LibLocn.Kind.SYS_MODULE);
+                } else if (new File(f, "module-info.java").exists()) {
+                    kinds.add(LibLocn.Kind.USER_MODULE);
+                } else {
+                    kinds.add(LibLocn.Kind.PACKAGE);
+                }
+            } else {
+                // ignore for now; could categorize as UNNAMED_PACKAGE?
+            }
+        }
+        return kinds;
+    }
+
+    /**
      * Get the kind of a source directory.
      * The kind is one of:
      * <ul>
@@ -255,34 +287,15 @@ public class Locations {
      * It is an error if the source directory contains both user modules and system modules.
      */
     LibLocn.Kind getDirKind(File absSrcDir) throws Fault {
-        LibLocn.Kind kind = null;
-        for (File f: absSrcDir.listFiles()) {
-            if (f.isDirectory()) {
-                if (isSystemModule(f.getName())) {
-                    if (kind == null) {
-                        kind = LibLocn.Kind.SYS_MODULE;
-                    } else if (kind != LibLocn.Kind.SYS_MODULE) {
-                        throw new Fault(MIXED_LIB + absSrcDir);
-                    }
-                } else if (new File(f, "module-info.java").exists()) {
-                    if (kind == null) {
-                        kind = LibLocn.Kind.USER_MODULE;
-                    } else if (kind != LibLocn.Kind.USER_MODULE) {
-                        throw new Fault(MIXED_LIB + absSrcDir);
-                    }
-                } else {
-                    if (kind == null) {
-                        kind = LibLocn.Kind.PACKAGE;
-                    } else if (kind != LibLocn.Kind.PACKAGE) {
-                        throw new Fault(MIXED_LIB + absSrcDir);
-                    }
-                }
-            } else {
-                // allow for now
-                // throw new Fault(BAD_FILE_IN_LIB + lib);
-            }
+        Set<LibLocn.Kind> kinds = getDirKinds(absSrcDir);
+        switch (kinds.size()) {
+            case 0:
+                return LibLocn.Kind.PACKAGE;
+            case 1:
+                return kinds.iterator().next();
+            default:
+                throw new Fault(MIXED_LIB + absSrcDir);
         }
-        return (kind == null) ? LibLocn.Kind.PACKAGE : kind;
     }
 
     boolean isSystemModule(String name) {

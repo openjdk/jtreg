@@ -33,6 +33,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -377,14 +378,8 @@ public class MainAction extends Action
         // variable being set, so force the use here.
         final boolean useCLASSPATH = true;
 
-        LibLocn.Kind testKind;
-        try {
-            testKind = script.locations.getDirKind(script.locations.absTestSrcDir());
-        } catch (Locations.Fault e) {
-            throw new TestRunException("Cannot determine test src directory kind: "
-                    + script.locations.absTestSrcDir(), e);
-        }
-        boolean multiModule = (testKind == LibLocn.Kind.USER_MODULE);
+        Set<LibLocn.Kind> testKinds = script.locations.getDirKinds(script.locations.absTestSrcDir());
+        boolean multiModule = testKinds.equals(EnumSet.of(LibLocn.Kind.USER_MODULE));
 
         Map<PathKind, SearchPath> paths =
                 script.getExecutionPaths(multiModule, runModuleName, useBootClassPath, true);
@@ -523,13 +518,8 @@ public class MainAction extends Action
             runMainArgs.addAll(testClassArgs);
         }
 
-        LibLocn.Kind testKind;
-        try {
-            testKind = script.locations.getDirKind(script.locations.absTestSrcDir());
-        } catch (Locations.Fault e) {
-            throw new TestRunException("Cannot determine test src directory", e);
-        }
-        boolean multiModule = (testKind == LibLocn.Kind.USER_MODULE);
+        Set<LibLocn.Kind> testKinds = script.locations.getDirKinds(script.locations.absTestSrcDir());
+        boolean multiModule = testKinds.equals(EnumSet.of(LibLocn.Kind.USER_MODULE));
 
         Map<PathKind, SearchPath> paths =
                 script.getExecutionPaths(multiModule, runModuleName, useBootClassPath, true);
