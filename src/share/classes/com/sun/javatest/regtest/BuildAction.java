@@ -117,13 +117,18 @@ public class BuildAction extends Action
         if (args.isEmpty())
             throw new ParseException(BUILD_NO_CLASSNAME);
 
-        Pattern p = Pattern.compile("(?i)([a-z_][.a-z0-9_$]*/)?(([a-z][.a-z0-9_$]*)(\\.\\*)?|\\*|module-info)");
         for (String currArg : args) {
-            if (!p.matcher(currArg).matches()) {
+            if (!BUILD_PTN.matcher(currArg).matches()) {
                 throw new ParseException(BUILD_BAD_CLASSNAME + currArg);
             }
         }
     } // init()
+
+    private static final String IGNORE_CASE = "(?i)";
+    private static final String OPT_MODULE = "([a-z_][.a-z0-9_$]*/)?";
+    private static final String PKG_CLASS = "(([a-z_][.a-z0-9_$]*)(\\.\\*)?)";
+    private static final String PKG_CLASS_OR_OTHER = "(" + PKG_CLASS + "|\\*|module-info)";
+    static final Pattern BUILD_PTN = Pattern.compile(IGNORE_CASE + OPT_MODULE + PKG_CLASS_OR_OTHER);
 
     @Override
     public Set<File> getSourceFiles() {
