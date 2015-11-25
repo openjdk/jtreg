@@ -25,7 +25,7 @@
 
 #----------------------------------------------------------------------
 
-$(BUILDDIR)/ModulesTestNoLimitMods.ok: \
+$(BUILDDIR)/ModulesTest_NoLimitMods.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	$(MKDIR) -p $(@:%.ok=%)/classes
@@ -37,15 +37,15 @@ $(BUILDDIR)/ModulesTestNoLimitMods.ok: \
 	$(GREP) -s '^Test results: passed: 4$$' $(@:%.ok=%/jt.log)  > /dev/null
 	echo $@ passed at `date` > $@
 
-$(BUILDDIR)/ModulesTestLimitMods_java.base.ok \
-$(BUILDDIR)/ModulesTestLimitMods_java.se.ok: \
+$(BUILDDIR)/ModulesTest_LimitMods_java.base.ok \
+$(BUILDDIR)/ModulesTest_LimitMods_java.se.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	$(MKDIR) -p $(@:%.ok=%)/classes
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JIGSAWHOME) \
-		-limitmods $(@:$(BUILDDIR)/ModulesTestLimitMods_%.ok=%) \
+		-javaoptions:"-limitmods $(@:$(BUILDDIR)/ModulesTest_LimitMods_%.ok=%)" \
 		$(TESTDIR)/javatest/regtest/data/modules \
 			> $(@:%.ok=%/jt.log) 2>&1 
 	$(GREP) -s '^Test results: passed: 2$$' $(@:%.ok=%/jt.log)  > /dev/null
@@ -54,8 +54,8 @@ $(BUILDDIR)/ModulesTestLimitMods_java.se.ok: \
 ifdef JIGSAWHOME
 
 TESTS.jtreg += \
-	$(BUILDDIR)/ModulesTestNoLimitMods.ok \
-	$(BUILDDIR)/ModulesTestLimitMods_java.base.ok \
-	$(BUILDDIR)/ModulesTestLimitMods_java.se.ok \
+	$(BUILDDIR)/ModulesTest_NoLimitMods.ok \
+	$(BUILDDIR)/ModulesTest_LimitMods_java.base.ok \
+	$(BUILDDIR)/ModulesTest_LimitMods_java.se.ok \
 
-endif #JCOV_HOME
+endif #JIGSAW_HOME
