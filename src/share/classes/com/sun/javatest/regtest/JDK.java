@@ -229,7 +229,7 @@ public class JDK {
                 List<String> lines = getOutputLines(p);
                 int rc = p.waitFor();
                 // note: -listmods typically returns rc=1; ignore for now
-                Pattern modulePattern = Pattern.compile("^([A-Za-z][A-Za-z0-9._]*)(@[0-9][0-9.]*| *\\([^)]*\\))$");
+                Pattern modulePattern = Pattern.compile("(?i)^([a-z][a-z0-9._]*)(@[a-z0-9][-a-z0-9.]*| *\\([^)]*\\))$");
                 for (String line: lines) {
                     Matcher m = modulePattern.matcher(line);
                     if (m.matches()) {
