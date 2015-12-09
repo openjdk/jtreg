@@ -161,6 +161,12 @@ public class TestManager {
         workDir = wd;
     }
 
+    File getWorkDirectory() {
+        if (workDir == null)
+            throw new IllegalStateException();
+        return workDir;
+    }
+
     WorkDirectory getWorkDirectory(RegressionTestSuite ts) throws Fault {
         Entry e = map.get(ts.getRootDir());
         if (e == null)
@@ -192,6 +198,12 @@ public class TestManager {
         if (reportDir != null)
             throw new IllegalStateException();
         reportDir = rd;
+    }
+
+    File getReportDirectory() {
+        if (reportDir == null)
+            throw new IllegalStateException();
+        return reportDir;
     }
 
     File getReportDirectory(RegressionTestSuite ts) throws Fault {

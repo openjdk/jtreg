@@ -1276,7 +1276,7 @@ public class Main {
                 }
                 testStats.showResultStats(out);
                 RegressionReporter r = new RegressionReporter(out);
-                r.report(testManager, reportDirArg);
+                r.report(testManager);
                 if (!reportOnlyFlag)
                     out.println("Results written to " + canon(workDirArg));
             }

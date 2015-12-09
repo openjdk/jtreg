@@ -114,9 +114,9 @@ public class RegressionReporter {
         }
     }
 
-    public void report(TestManager testManager, File reportDir) throws Fault {
+    public void report(TestManager testManager) throws Fault {
         this.testManager = testManager;
-        this.reportDir = reportDir;
+        this.reportDir = testManager.getReportDirectory();
 
         parent = getCommonParent(testManager.getTestSuites());
         // ignore the case where the common parent is just the root directory
@@ -133,6 +133,8 @@ public class RegressionReporter {
             }
 
             writeIndex();
+
+            fixupReports(reportDir, testManager.getWorkDirectory());
 
             logReportWritten(reportDir);
         } catch (IOException e) {
@@ -244,6 +246,10 @@ public class RegressionReporter {
         } else if (equal(workParent, reportParent)) {
             fixupReportFiles(report,  canonWorkPath, "../" + work.getName());
             fixupReportFiles(htmlDir, canonWorkPath, "../../" + work.getName());
+        } else if (equal(workParent.getParentFile(), reportParent.getParentFile())) {
+            // This case is notable for multi-run jobs
+            fixupReportFiles(report,  canonWorkPath, "../../" + workParent.getName() + "/" + work.getName());
+            fixupReportFiles(htmlDir, canonWorkPath, "../../../" + workParent.getName() + "/" + work.getName());
         }
     }
 
