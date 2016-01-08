@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015, 2016, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,6 +22,6 @@
  */
 
 module um4 {
-    exports um4_p1_q1_r1;
-    exports um4_p2_q2_r2;
+    exports um4_p1.um4_q1.um4_r1;
+    exports um4_p2.um4_q2.um4_r2;
 }
