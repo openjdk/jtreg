@@ -44,6 +44,7 @@ public class Locations {
      * Used to report problems that are found.
      */
     static class Fault extends Exception {
+        private static final long serialVersionUID = 1L;
         Fault(String msg) {
             super(msg);
         }
@@ -58,7 +59,7 @@ public class Locations {
      * the location of the source and class files of the test itself.
      */
     static class LibLocn {
-        static enum Kind { PACKAGE, SYS_MODULE, USER_MODULE };
+        static enum Kind { PACKAGE, PRECOMPILED_JAR, SYS_MODULE, USER_MODULE };
         final String name;
         final File absSrcDir;
         final File absClsDir;
@@ -236,16 +237,17 @@ public class Locations {
      * @throws Fault if there is an error resolving the library location
      */
     private LibLocn createLibLocn(String lib, File absSrcDir, File absClsDir) throws Fault {
-        File absLibSrcDir = normalize(new File(absSrcDir, lib));
-        LibLocn.Kind kind = null;
-        if (absLibSrcDir.isDirectory()) {
-            kind = getDirKind(absLibSrcDir);
-        } else if (absLibSrcDir.getName().endsWith(".jar")) {
-            kind = LibLocn.Kind.PACKAGE;
-        } else
-            throw new Fault(BAD_LIB + lib);
-        File absLibClsDir = normalize(new File(absClsDir, lib));
-        return new LibLocn(lib, absLibSrcDir, absLibClsDir, kind);
+        File absLib = normalize(new File(absSrcDir, lib));
+        if (absLib.isFile() && absLib.getName().endsWith(".jar")) {
+            return new LibLocn(lib, null, absLib, LibLocn.Kind.PRECOMPILED_JAR);
+        } else {
+            if (!absLib.isDirectory())
+                throw new Fault(BAD_LIB + lib);
+            File absLibSrcDir = absLib;
+            File absLibClsDir = normalize(new File(absClsDir, lib));
+            LibLocn.Kind kind = getDirKind(absLibSrcDir);
+            return new LibLocn(lib, absLibSrcDir, absLibClsDir, kind);
+        }
     }
 
     /**
@@ -361,12 +363,11 @@ public class Locations {
     /**
      * Get a list of all jar-file libraries in the test suite.
      */
-    // Consider modelling this as a specific kind of library?
     List<File> absLibSrcJarList() {
         List<File> list = new ArrayList<File>();
         for (LibLocn l: libList) {
-            if (l.kind == LibLocn.Kind.PACKAGE) {
-                File f = l.absSrcDir;
+            if (l.kind == LibLocn.Kind.PRECOMPILED_JAR) {
+                File f = l.absClsDir;
                 if (f.isFile() && f.getName().endsWith(".jar") && f.exists())
                     list.add(f);
             }
@@ -414,8 +415,10 @@ public class Locations {
         List<File> list = new ArrayList<File>();
         list.add(absTestClsDir);
         for (LibLocn l: libList) {
-            if (l.kind == LibLocn.Kind.PACKAGE) {
-                list.add(l.absClsDir);
+            switch (l.kind) {
+                case PACKAGE:
+                case PRECOMPILED_JAR:
+                    list.add(l.absClsDir);
             }
         }
         return list;

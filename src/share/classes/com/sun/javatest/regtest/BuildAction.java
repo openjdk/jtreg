@@ -275,6 +275,7 @@ public class BuildAction extends Action
                 }
                 return passed(BUILD_SUCC);
 
+            case PRECOMPILED_JAR:
             default:
                 throw new AssertionError();
         }

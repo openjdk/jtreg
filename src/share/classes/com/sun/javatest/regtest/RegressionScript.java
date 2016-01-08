@@ -85,7 +85,7 @@ public class RegressionScript extends Script {
 
         regEnv = (RegressionEnvironment) env;
         params = regEnv.params;
-        testSuite = (RegressionTestSuite) params.getTestSuite();
+        testSuite = params.getTestSuite();
         systemModules = params.getTestJDK().getModules(params.getTestVMJavaOptions());
 
         String filterFault = params.filterFaults.get(td);
@@ -125,7 +125,7 @@ public class RegressionScript extends Script {
             String mods = td.getParameter("modules");
             modules = (mods == null)
                     ? testSuite.getModules(td)
-                    : new LinkedHashSet(Arrays.asList(mods.split("\\s+")));
+                    : new LinkedHashSet<String>(Arrays.asList(mods.split("\\s+")));
             if (!modules.isEmpty()) {
                 testResult.putProperty("modules", StringUtils.join(modules));
             }
@@ -187,6 +187,9 @@ public class RegressionScript extends Script {
                         case PACKAGE:
                             kind = "packages";
                             break;
+                        case PRECOMPILED_JAR:
+                            kind = "precompiled jar";
+                            break;
                         case SYS_MODULE:
                             kind = "system module patches";
                             break;
@@ -197,8 +200,14 @@ public class RegressionScript extends Script {
                             kind = "unknown";
                     }
                     msgPW.println("Library " + lib.name + "; kind: " + kind);
-                    msgPW.println("   Source directory: " + lib.absSrcDir);
-                    msgPW.println("   Class directory: " + lib.absClsDir);
+                    if (lib.absSrcDir != null) {
+                        msgPW.println("   source directory: " + lib.absSrcDir);
+                    }
+                    if (lib.absClsDir.isFile() && lib.absClsDir.getName().endsWith(".jar")) {
+                        msgPW.println("   jar file: " + lib.absClsDir);
+                    } else {
+                        msgPW.println("   class directory: " + lib.absClsDir);
+                    }
                 }
 
                 while (! actionList.isEmpty()) {
@@ -680,7 +689,7 @@ public class RegressionScript extends Script {
         }
 
         // Results:
-        Map<PathKind, SearchPath> map = new EnumMap(PathKind.class);
+        Map<PathKind, SearchPath> map = new EnumMap<PathKind, SearchPath>(PathKind.class);
         if (!bcp.isEmpty())
             map.put(PathKind.BOOTCLASSPATH_APPEND, bcp);
         if (!cp.isEmpty())
@@ -779,7 +788,7 @@ public class RegressionScript extends Script {
             (testOnBootClassPath ? bcp : cp).append(getJavaTestClassPath());
         }
 
-        Map<PathKind, SearchPath> map = new EnumMap(PathKind.class);
+        Map<PathKind, SearchPath> map = new EnumMap<PathKind, SearchPath>(PathKind.class);
         if (!bcp.isEmpty())
             map.put(PathKind.BOOTCLASSPATH_APPEND, bcp);
         if (!cp.isEmpty())
@@ -925,7 +934,8 @@ public class RegressionScript extends Script {
                 SearchPath path = new SearchPath()
                     .append(locations.absTestClsDir())
                     .append(locations.absTestSrcDir())
-                    .append(locations.absLibClsList(LibLocn.Kind.PACKAGE));
+                    .append(locations.absLibClsList(LibLocn.Kind.PACKAGE))
+                    .append(locations.absLibSrcJarList());
                 p.put("test.class.path.prefix", path.toString());
         }
         p.put("test.src", locations.absTestSrcDir().getPath());
