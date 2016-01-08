@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2016, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -180,6 +180,27 @@ public class RegressionScript extends Script {
                     msgPW.println("compile JDK: " + getCompileJDK().getFullVersion(getTestToolVMOptions()));
                     msgPW.println("test JDK: " + getTestJDK().getFullVersion(getTestVMOptions()));
                 }
+
+                for (LibLocn lib: locations.getLibs()) {
+                    String kind;
+                    switch (lib.kind) {
+                        case PACKAGE:
+                            kind = "packages";
+                            break;
+                        case SYS_MODULE:
+                            kind = "system module patches";
+                            break;
+                        case USER_MODULE:
+                            kind = "user modules";
+                            break;
+                        default:
+                            kind = "unknown";
+                    }
+                    msgPW.println("Library " + lib.name + "; kind: " + kind);
+                    msgPW.println("   Source directory: " + lib.absSrcDir);
+                    msgPW.println("   Class directory: " + lib.absClsDir);
+                }
+
                 while (! actionList.isEmpty()) {
                     Action action = actionList.remove();
                     status = action.run();

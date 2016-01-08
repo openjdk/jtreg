@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2016, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -250,6 +250,8 @@ public class BuildAction extends Action
     } // run()
 
     private Status compileLibrary(LibLocn libLocn, List<ClassLocn> classLocns) throws TestRunException {
+        showClasses(libLocn, classLocns);
+
         switch (libLocn.kind) {
             case PACKAGE:
                 return compileFiles(libLocn, false, null, getSrcFiles(classLocns));
@@ -306,6 +308,28 @@ public class BuildAction extends Action
             files.add(cl.absSrcFile);
         }
         return files;
+    }
+
+    private void showClasses(LibLocn lib, List<ClassLocn> toCompile) {
+        PrintWriter pw = section.getMessageWriter();
+
+        if (lib.name == null) {
+            pw.println("Test directory:");
+        } else {
+            pw.println("Library " + lib.name + ":");
+        }
+
+        String sep = "  compile: ";
+        for (ClassLocn cl: toCompile) {
+            pw.print(sep);
+            if (cl.optModule != null) {
+                pw.print(cl.optModule);
+                pw.print("/");
+            }
+            pw.print(cl.className);
+            sep = ", ";
+        }
+        pw.println();
     }
 
     //----------member variables------------------------------------------------
