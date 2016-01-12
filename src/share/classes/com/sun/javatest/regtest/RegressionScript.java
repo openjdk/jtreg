@@ -734,8 +734,12 @@ public class RegressionScript extends Script {
             bcp.append(locations.absLibSrcJarList());
         } else {
             // only put libraries on bootclasspath that need to be there
-            for (File lib: locations.absLibClsList(LibLocn.Kind.PACKAGE)) {
-                (useBootClassPath(lib) ? bcp : cp).append(lib);
+            for (LibLocn libLocn: locations.getLibs()) {
+                if (libLocn.kind == LibLocn.Kind.PACKAGE) {
+                    SearchPath p = (useBootClassPath(libLocn.absClsDir)) ? bcp : cp;
+                    p.append(libLocn.absClsDir);
+                    p.append(libLocn.absSrcDir); // include source dir for access to resource files
+                }
             }
             cp.append(locations.absLibSrcJarList());
         }
