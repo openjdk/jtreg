@@ -35,6 +35,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.sun.javatest.TestDescription;
+import com.sun.javatest.regtest.agent.SearchPath;
 
 /**
  * Utilities to locate source and class files used by a test.
@@ -135,6 +136,8 @@ public class Locations {
 
     private final RegressionTestSuite testSuite;
     private final Map<String,String> systemModules;
+    private final SearchPath jtpath;
+    private final JDK testJDK;
 
     private final String relTestDir;
     private final File absBaseSrcDir;
@@ -150,6 +153,8 @@ public class Locations {
             throws Fault {
         testSuite = params.getTestSuite();
         systemModules = params.getTestJDK().getModules(params.getTestVMJavaOptions());
+        jtpath = params.getJavaTestClassPath();
+        testJDK = params.getTestJDK();
 
         String packageRoot = td.getParameter("packageRoot");
         if (packageRoot != null) {
@@ -218,6 +223,23 @@ public class Locations {
                     }
                 } catch (RegressionTestSuite.Fault e) {
                     throw new Fault(CANT_FIND_LIB + e);
+                }
+            }
+        } else if (lib.startsWith("${") && lib.endsWith(".jar")) {
+            int end = lib.indexOf("}/");
+            if (end != -1) {
+                String name = lib.substring(2, end);
+                File dir = null;
+                if (name.equals("java.home")) {
+                    dir = new File(testJDK.getPath());
+                } else if (name.equals("jtreg.home")) {
+                    dir = jtpath.split().get(0).getParentFile().getParentFile();
+                }
+                if (dir != null) {
+                    String libTail = lib.substring(end + 2);
+                    File absLib = new File(dir, libTail);
+                    if (absLib.exists())
+                        return new LibLocn(lib, null, absLib, LibLocn.Kind.PRECOMPILED_JAR);
                 }
             }
         } else {
