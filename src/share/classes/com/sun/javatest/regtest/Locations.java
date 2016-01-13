@@ -210,12 +210,13 @@ public class Locations {
      */
     private LibLocn getLibLocn(TestDescription td, String lib) throws Fault {
         if (lib.startsWith("/")) {
-            if (new File(absBaseSrcDir, lib).exists())
+            String libTail = lib.substring(1);
+            if (new File(absBaseSrcDir, libTail).exists())
                 return createLibLocn(lib, absBaseSrcDir, absBaseClsDir);
             else {
                 try {
                     for (File extRoot: testSuite.getExternalLibRoots(td)) {
-                        if (new File(extRoot, lib).exists()) {
+                        if (new File(extRoot, libTail).exists()) {
                             // since absBaseSrcDir/lib does not exist, we can safely
                             // use absBaseClsDir/lib for the compiled classes
                             return createLibLocn(lib, extRoot, absBaseClsDir);
@@ -259,7 +260,8 @@ public class Locations {
      * @throws Fault if there is an error resolving the library location
      */
     private LibLocn createLibLocn(String lib, File absSrcDir, File absClsDir) throws Fault {
-        File absLib = normalize(new File(absSrcDir, lib));
+        String relLib = (lib.startsWith("/") ? lib.substring(1) : lib);
+        File absLib = normalize(new File(absSrcDir, relLib));
         if (absLib.isFile() && absLib.getName().endsWith(".jar")) {
             return new LibLocn(lib, null, absLib, LibLocn.Kind.PRECOMPILED_JAR);
         } else {
