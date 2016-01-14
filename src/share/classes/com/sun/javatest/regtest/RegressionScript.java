@@ -25,7 +25,14 @@
 
 package com.sun.javatest.regtest;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
@@ -43,7 +50,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import com.sun.javatest.ProductInfo;
 import com.sun.javatest.Script;
 import com.sun.javatest.Status;
 import com.sun.javatest.TestDescription;
@@ -595,7 +601,8 @@ public class RegressionScript extends Script {
         SOURCEPATH
     }
 
-    Map<PathKind, SearchPath> getCompilePaths(LibLocn libLocn, boolean multiModule, String module) {
+    Map<PathKind, SearchPath> getCompilePaths(LibLocn libLocn, boolean multiModule, String module)
+            throws TestRunException {
         SearchPath bcp = new SearchPath();
         SearchPath cp = new SearchPath();
         SearchPath mp = new SearchPath();
@@ -658,11 +665,15 @@ public class RegressionScript extends Script {
         // Frameworks:
         if (multiModule) {
             if (needJUnit || needTestNG) {
-                // for now, explicitly use the $JTREG_HOME/lib directory
-                // but note, this ignores any user-specific setting for
-                // overridding junit.jar and testng.jar.
-                File jtClsDir = ProductInfo.getJavaTestClassDir();
-                mp.append(jtClsDir.getParentFile());
+                // Put necessary jar files onto the module path as automatic modules.
+                // We cannot use the ${jtreg.home}/lib directory directly since it contains
+                // other jar files which are not valid as automatic modules.
+                File md = workDir.getFile("modules");
+                if (needJUnit)
+                    install(params.getJUnitJar(), md);
+                if (needTestNG)
+                    install(params.getTestNGJar(), md);
+                mp.append(md);
             }
         } else {
             if (needJUnit)
@@ -707,7 +718,7 @@ public class RegressionScript extends Script {
 
     Map<PathKind, SearchPath> getExecutionPaths(
             boolean multiModule, String module, boolean testOnBootClassPath, boolean include_jtreg)
-                throws TestClassException {
+                throws TestRunException {
         SearchPath bcp = new SearchPath();
         SearchPath cp = new SearchPath();
         SearchPath mp = new SearchPath();
@@ -725,7 +736,6 @@ public class RegressionScript extends Script {
         if (hasTestUserMods()) {
             mp.append(locations.absTestModulesDir());
         }
-
 
         // Libraries:
         if (testOnBootClassPath) {
@@ -756,11 +766,15 @@ public class RegressionScript extends Script {
         if (multiModule) {
             // assert !testOnBootClassPath && !useXPatch()
             if (needJUnit || needTestNG) {
-                // for now, explicitly use the $JTREG_HOME/lib directory
-                // but note, this ignores any user-specific setting for
-                // overridding junit.jar and testng.jar.
-                File jtClsDir = ProductInfo.getJavaTestClassDir();
-                mp.append(jtClsDir.getParentFile());
+                // Put necessary jar files onto the module path as automatic modules.
+                // We cannot use the ${jtreg.home}/lib directory directly since it contains
+                // other jar files which are not valid as automatic modules.
+                File md = workDir.getFile("modules");
+                if (needJUnit)
+                    install(params.getJUnitJar(), md);
+                if (needTestNG)
+                    install(params.getTestNGJar(), md);
+                mp.append(md);
             }
         } else {
             SearchPath fp = (!bcp.isEmpty() || useXpatch()) ? bcp : cp;
@@ -802,6 +816,45 @@ public class RegressionScript extends Script {
         if (!pp.isEmpty())
             map.put(PathKind.PATCHPATH, pp);
         return map;
+    }
+
+    private void install(File jar, File dir) throws TestRunException {
+        synchronized (params.getWorkDirectory()) { // avoid multiple tests doing simultaneous install
+            if (dir.exists()) {
+                if (!dir.isDirectory())
+                    throw new TestRunException("modules in work directory is not a directory");
+            } else {
+                dir.mkdirs();
+            }
+            File target = new File(dir, jar.getName());
+            if (target.exists()
+                    && target.length() == jar.length()
+                    && target.lastModified() == jar.lastModified()) {
+                return;
+            }
+
+            // Eventually replace with java.nio.file.Files::copy
+            try {
+                OutputStream out = new BufferedOutputStream(new FileOutputStream(target));
+                try {
+                    InputStream in = new BufferedInputStream(new FileInputStream(jar));
+                    try {
+                        byte[] buf = new byte[8192];
+                        int n;
+                        while ((n = in.read(buf)) != -1) {
+                            out.write(buf, 0, n);
+                        }
+                    } finally {
+                        in.close();
+                    }
+                } finally {
+                    out.close();
+                }
+                target.setLastModified(jar.lastModified());
+            } catch (IOException e) {
+                throw new TestRunException("cannot init modules directory", e);
+            }
+        }
     }
 
     boolean useBootClassPath() {
