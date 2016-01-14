@@ -124,7 +124,9 @@ public class TestStats {
 
     public void report(Report report) throws IOException {
         File reportDir = report.getReportDir();
-        File file = new File(reportDir, "text/stats.txt");
+        File reportTextDir = new File(reportDir, "text");
+        reportTextDir.mkdirs();
+        File file = new File(reportTextDir, "stats.txt");
         report(file);
     }
 

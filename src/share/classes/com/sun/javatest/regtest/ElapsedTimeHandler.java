@@ -84,7 +84,9 @@ public class ElapsedTimeHandler {
 
     public void report(Report report) throws IOException {
         File reportDir = report.getReportDir();
-        File file = new File(reportDir, "text/timeStats.txt");
+        File reportTextDir = new File(reportDir, "text");
+        reportTextDir.mkdirs();
+        File file = new File(reportTextDir, "timeStats.txt");
         report(file);
     }
 

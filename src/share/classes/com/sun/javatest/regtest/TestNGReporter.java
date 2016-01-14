@@ -108,7 +108,9 @@ public class TestNGReporter {
     }
 
     public void writeReport(File reportDir) throws IOException {
-        File f = new File(reportDir, "text/testng.txt");
+        File reportTextDir = new File(reportDir, "text");
+        reportTextDir.mkdirs();
+        File f = new File(reportTextDir, "testng.txt");
         PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(f)));
         for (Map.Entry<String,Info> e: infoMap.entrySet()) {
             out.println(e.getKey() + " " + e.getValue());
