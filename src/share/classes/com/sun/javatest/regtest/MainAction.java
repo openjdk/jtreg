@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2016, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -390,22 +390,23 @@ public class MainAction extends Action
         }
 
         String javaCmd = script.getJavaProg();
-        List<String> javaOpts = new ArrayList<String>();
+        JDKOpts javaOpts = new JDKOpts();
 
         if (!useCLASSPATH) {
-            addPath(javaOpts, "-classpath", cp);
+            javaOpts.addPath("-classpath", cp);
         }
 
-        addPath(javaOpts, "-Xbootclasspath/a:", paths.get(PathKind.BOOTCLASSPATH_APPEND));
-        addPath(javaOpts, "-Xpatch:", paths.get(PathKind.PATCHPATH));
-        addPath(javaOpts, "-modulepath", paths.get(PathKind.MODULEPATH));
+        javaOpts.addPath("-Xbootclasspath/a:", paths.get(PathKind.BOOTCLASSPATH_APPEND));
+        javaOpts.addPath("-Xpatch:", paths.get(PathKind.PATCHPATH));
+        javaOpts.addPath("-modulepath", paths.get(PathKind.MODULEPATH));
 
         if (testModuleName != null) {
             javaOpts.add("-addmods");
             javaOpts.add(testModuleName);
         }
 
-        javaOpts.addAll(updateAddExports(script.getTestVMJavaOptions()));
+        javaOpts.addAll(getAddExports());
+        javaOpts.addAll(script.getTestVMJavaOptions());
         javaOpts.addAll(script.getTestDebugOptions());
 
         Map<String, String> javaProps = new LinkedHashMap<String, String>();
@@ -439,7 +440,7 @@ public class MainAction extends Action
         command.add(javaCmd);
         for (Map.Entry<String,String> e: javaProps.entrySet())
             command.add("-D" + e.getKey() + "=" + e.getValue());
-        command.addAll(filterJavaOpts(javaOpts));
+        command.addAll(filterJavaOpts(javaOpts.toList()));
         command.add(className);
         command.addAll(classArgs);
 
@@ -452,7 +453,7 @@ public class MainAction extends Action
                 showMode(getName(), ExecMode.OTHERVM, section);
             if (showCmd)
                 showCmd(getName(), command, section);
-            recorder.java(env, javaCmd, javaProps, javaOpts, className, classArgs);
+            recorder.java(env, javaCmd, javaProps, javaOpts.toList(), className, classArgs);
 
             // RUN THE MAIN WRAPPER CLASS
             ProcessCommand cmd = new ProcessCommand();

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2016, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -421,9 +421,9 @@ public abstract class Action extends ActionHelper
 
     //----------module exports----------------------------------------------------
 
-    protected List<String> updateAddExports(List<String> opts) {
+    protected List<String> getAddExports() {
         if (!script.getTestJDK().hasModules())
-            return opts;
+            return Collections.<String>emptyList();
 
         Set<String> modules = script.getModules();
 
@@ -435,36 +435,21 @@ public abstract class Action extends ActionHelper
             }
         }
         if (!needAddExports)
-            return opts;
+            return Collections.<String>emptyList();
 
-        List<String> updatedOpts = new ArrayList<String>();
-        boolean seenAddExports = false;
-        for (String opt: opts) {
-            if (!seenAddExports && opt.startsWith("-XaddExports:")) {
-                opt = updateAddExports(opt, modules);
-                seenAddExports = true;
-            }
-            updatedOpts.add(opt);
-        }
-        if (!seenAddExports) {
-            updatedOpts.add(updateAddExports("-XaddExports:", modules));
-        }
-
-        return updatedOpts;
-    }
-
-    private String updateAddExports(String opt, Set<String> modules) {
+        StringBuilder sb = new StringBuilder();
+        String sep = "-XaddExports:";
         String suffix = "=ALL-UNNAMED";
         for (String m: modules) {
-            String m_suffix = m + suffix;
-            if (m.contains("/") && !includesExport(opt, m_suffix)) {
-                if (opt.endsWith(":"))
-                    opt += m_suffix;
-                else
-                    opt += "," + m_suffix;
+            if (m.contains("/")) {
+                sb.append(sep);
+                sb.append(m);
+                sb.append(suffix);
+                sep = ",";
             }
         }
-        return opt;
+
+        return Collections.singletonList(sb.toString());
     }
 
     protected boolean includesExport(String opt, String arg) {

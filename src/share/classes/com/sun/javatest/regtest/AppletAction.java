@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2016, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -235,10 +235,11 @@ public class AppletAction extends Action
         command.add("-classpath");
         command.add(execPaths.get(PathKind.CLASSPATH).toString());
 
-        List<String> vmOpts = new ArrayList<String>();
-        vmOpts.addAll(updateAddExports(script.getTestVMJavaOptions()));
+        JDKOpts vmOpts = new JDKOpts();
+        vmOpts.addAll(getAddExports());
+        vmOpts.addAll(script.getTestVMJavaOptions());
         vmOpts.addAll(script.getTestDebugOptions());
-        command.addAll(vmOpts);
+        command.addAll(vmOpts.toList());
 
         for (Map.Entry<String, String> e: script.getTestProperties().entrySet()) {
             command.add("-D" + e.getKey() + "=" + e.getValue());

@@ -1029,9 +1029,8 @@ public class RegressionScript extends Script {
      * Get an agent for a VM with the given VM options.
      */
     Agent getAgent(JDK jdk, SearchPath classpath, List<String> testVMOpts) throws Agent.Fault {
-        List<String> vmOpts = new ArrayList<String>();
-        vmOpts.add("-classpath");
-        vmOpts.add(classpath.toString());
+        JDKOpts vmOpts = new JDKOpts();
+        vmOpts.addAll("-classpath", classpath.toString());
         vmOpts.addAll(testVMOpts);
         if (params.getTestJDK().hasModules()) {
             vmOpts.add("-Xpatch:" + params.getWorkDirectory().getFile("patches"));
@@ -1044,7 +1043,7 @@ public class RegressionScript extends Script {
          * record the agents that the script has already obtained for use.
          */
         for (Agent agent: agents) {
-            if (agent.matches(absTestScratchDir(), jdk, vmOpts))
+            if (agent.matches(absTestScratchDir(), jdk, vmOpts.toList()))
                 return agent;
         }
 
@@ -1058,7 +1057,7 @@ public class RegressionScript extends Script {
         envVars.put("CLASSPATH", cp.toString());
 
         Agent.Pool p = Agent.Pool.instance();
-        Agent agent = p.getAgent(absTestScratchDir(), jdk, vmOpts, envVars);
+        Agent agent = p.getAgent(absTestScratchDir(), jdk, vmOpts.toList(), envVars);
         agents.add(agent);
         return agent;
     }

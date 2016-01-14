@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2016, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -370,12 +370,12 @@ public class CompileAction extends Action {
             String toolClassName = "org.openjdk.asmtools." + toolName + ".Main";
             recorder.asmtools(toolClassName, toolArgs);
             Class<?> toolClass = Class.forName(toolClassName);
-            Constructor c = toolClass.getConstructor(new Class[] { PrintStream.class, String.class });
+            Constructor<?> c = toolClass.getConstructor(new Class<?>[] { PrintStream.class, String.class });
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             PrintStream ps = new PrintStream(baos);
             try {
                 Object tool = c.newInstance(ps, toolName);
-                Method m = toolClass.getMethod("compile", new Class[] { String[].class });
+                Method m = toolClass.getMethod("compile", new Class<?>[] { String[].class });
                 Object r = m.invoke(tool, new Object[] { toolArgs.toArray(new String[0]) });
                 if (r instanceof Boolean) {
                     boolean ok = (Boolean) r;
@@ -436,8 +436,9 @@ public class CompileAction extends Action {
     private List<String> getJavacCommandArgs(List<String> args) throws TestRunException {
         Map<PathKind, SearchPath> compilePaths = script.getCompilePaths(libLocn, multiModule, module);
 
-        List<String> javacArgs = new ArrayList<String>();
+        JDKOpts javacArgs = new JDKOpts();
         javacArgs.addAll(script.getTestCompilerOptions());
+        javacArgs.addAll(getAddExports());
 
         if (destDir != null) {
             javacArgs.add("-d");
@@ -450,28 +451,19 @@ public class CompileAction extends Action {
 
         // modulesourcepath and sourcepath are mutually exclusive
         if (multiModule) {
-            addPathOption(javacArgs, "-modulesourcepath", compilePaths.get(PathKind.MODULESOURCEPATH));
+            javacArgs.addPath("-modulesourcepath", compilePaths.get(PathKind.MODULESOURCEPATH));
         } else {
-            SearchPath sp = compilePaths.get(PathKind.SOURCEPATH);
-            if (sourcepathp) {
-                mergePathOption(args, "-sourcepath", sp);
-            } else {
-                addPathOption(javacArgs, "-sourcepath", sp);
-            }
+            javacArgs.addPath("-sourcepath", compilePaths.get(PathKind.SOURCEPATH));
         }
 
         // Need to refine what it means to put absTestClsDir unconditionally on the compilePath
         SearchPath cp = compilePaths.get(PathKind.CLASSPATH);
-        if (classpathp) {
-            mergePathOption(args, "-classpath", cp);
-        } else {
-            addPathOption(javacArgs, "-classpath", cp);
-        }
+        javacArgs.addPath("-classpath", cp);
 
-        addPathOption(javacArgs, "-modulepath", compilePaths.get(PathKind.MODULEPATH));
+        javacArgs.addPath("-modulepath", compilePaths.get(PathKind.MODULEPATH));
 
         SearchPath pp = compilePaths.get(PathKind.PATCHPATH);
-        addPathOption(javacArgs, "-Xpatch:", pp);
+        javacArgs.addPath("-Xpatch:", pp);
         if (pp != null && !pp.isEmpty() && cp != null && !cp.isEmpty()) {
             // provide addReads from patch modules to unnamed module(s).
             Set<String> patchModules = getModules(pp);
@@ -487,9 +479,7 @@ public class CompileAction extends Action {
 
         javacArgs.addAll(args);
 
-        javacArgs = updateAddExports(javacArgs);
-
-        return javacArgs;
+        return javacArgs.toList();
     }
 
     Set<String> getModules(SearchPath pp) {
@@ -518,29 +508,6 @@ public class CompileAction extends Action {
                 return true;
         }
         return false;
-    }
-
-    // move up to Action??  See also MainAction.addPathOption
-    void addPathOption(List<String> args, String opt, SearchPath path) {
-        if (path != null && !path.isEmpty()) {
-            if (opt.endsWith(":"))
-                args.add(opt + path);
-            else {
-                args.add(opt);
-                args.add(path.toString());
-            }
-        }
-    }
-
-    void mergePathOption(List<String> args, String opt, SearchPath p) {
-        for (int i = 0; i < args.size(); i++) {
-            String arg = args.get(i);
-            if (arg.equals(opt) || (arg.equals("-cp") && opt.equals("-classpath"))) {
-                args.set(i + 1, new SearchPath(args.get(i + 1)).append(p).toString());
-                return;
-            }
-        }
-        throw new IllegalStateException("option not found");
     }
 
     private Status runOtherJVM(List<String> javacArgs) throws TestRunException {
