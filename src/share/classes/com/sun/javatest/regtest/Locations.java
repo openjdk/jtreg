@@ -26,6 +26,8 @@
 package com.sun.javatest.regtest;
 
 import java.io.File;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -211,9 +213,10 @@ public class Locations {
     private LibLocn getLibLocn(TestDescription td, String lib) throws Fault {
         if (lib.startsWith("/")) {
             String libTail = lib.substring(1);
-            if (new File(absBaseSrcDir, libTail).exists())
+            checkLibPath(libTail);
+            if (new File(absBaseSrcDir, libTail).exists()) {
                 return createLibLocn(lib, absBaseSrcDir, absBaseClsDir);
-            else {
+            } else {
                 try {
                     for (File extRoot: testSuite.getExternalLibRoots(td)) {
                         if (new File(extRoot, libTail).exists()) {
@@ -244,10 +247,21 @@ public class Locations {
                 }
             }
         } else {
+            checkLibPath(relTestDir + "/" + lib);
             if (new File(absTestSrcDir, lib).exists())
                 return createLibLocn(lib, absTestSrcDir, absTestClsDir);
         }
         throw new Fault(CANT_FIND_LIB + lib);
+    }
+
+    private void checkLibPath(String lib) throws Fault {
+        try {
+            String l = new URI(lib).normalize().toString();
+            if (l.equals("..") || l.startsWith("../"))
+                throw new Fault("effective library path is outside the test suite: " + l);
+        } catch (URISyntaxException e) {
+            throw new Fault("invalid library path: " + lib);
+        }
     }
 
     /**
