@@ -247,7 +247,7 @@ public class Locations {
                 }
             }
         } else {
-            checkLibPath(relTestDir + "/" + lib);
+            checkLibPath(relTestDir.replace(File.separatorChar, '/') + "/" + lib);
             if (new File(absTestSrcDir, lib).exists())
                 return createLibLocn(lib, absTestSrcDir, absTestClsDir);
         }

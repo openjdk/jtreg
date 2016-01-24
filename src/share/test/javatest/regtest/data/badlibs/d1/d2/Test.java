@@ -46,6 +46,11 @@
  * @library [syntax]
  */
 
+/*
+ * @test
+ * @library abc\def
+ */
+
 public class Test {
     public static void main(String... args) {
         throw new Error("This test should not execute!");

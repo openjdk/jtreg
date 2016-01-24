@@ -36,9 +36,34 @@ $(BUILDDIR)/BadLibsTest.ok: \
 		$(TESTDIR)/javatest/regtest/data/badlibs \
 			> $(@:%.ok=%/jt.log) 2>&1 || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
-	$(GREP) -s 'Test results: error: 5' $(@:%.ok=%/jt.log)  > /dev/null
+	$(GREP) -s 'Test results: error: 6' $(@:%.ok=%/jt.log)  > /dev/null
+	if $(GREP) 'failed to clean up files after test' $(@:%.ok=%/report/text/summary.txt) ; then \
+	    echo 'Error: unexpected error message found'; exit 1; \
+	fi
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += \
 	$(BUILDDIR)/BadLibsTest.ok
 
+#-------------------------------------------------------------------------------
+#
+$(BUILDDIR)/BadLibsTest.retain.ok: \
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	    $(JTREG_IMAGEDIR)/bin/jtreg
+	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(JDK16HOME) \
+			> $(@:%.ok=%/jt.log) 2>&1 \
+		-retain:all \
+		$(TESTDIR)/javatest/regtest/data/badlibs \
+			> $(@:%.ok=%/jt.log) 2>&1 || \
+	    true "non-zero exit code from JavaTest intentionally ignored"
+	$(GREP) -s 'Test results: error: 6' $(@:%.ok=%/jt.log)  > /dev/null
+	if $(GREP) 'failed to clean up files after test' $(@:%.ok=%/report/text/summary.txt) ; then \
+	    echo 'Error: unexpected error message found'; exit 1; \
+	fi
+	echo "test passed at `date`" > $@
+
+TESTS.jtreg += \
+	$(BUILDDIR)/BadLibsTest.retain.ok

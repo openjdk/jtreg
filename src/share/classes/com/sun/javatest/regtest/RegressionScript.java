@@ -246,14 +246,10 @@ public class RegressionScript extends Script {
             int hours = elapsed / (1000 * 60 * 60);
             testResult.putProperty("elapsed", String.format("%d %d:%02d:%02d.%03d",
                     elapsed, hours, mins, secs, millis));
-            if (params.isRetainEnabled()) {
+            if (scratchDirectory != null && params.isRetainEnabled()) {
                 String errmsg = null;
                 try {
-                    if (scratchDirectory != null) {
-                        scratchDirectory.retainFiles(status, msgPW);
-                    } else {
-                        errmsg = "No scratch directory";
-                    }
+                    scratchDirectory.retainFiles(status, msgPW);
                 } catch (InterruptedException e) {
                     errmsg = "Interrupted! " + e.getLocalizedMessage();
                 } catch (ScratchDirectory.Fault e) {
