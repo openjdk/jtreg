@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001, 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2001, 2016, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -143,6 +143,16 @@ public class RegressionParameters
      */
     Map<TestDescription, String> filterFaults = new HashMap<TestDescription, String>();
 
+    /* A RegressionContext is used by various filters, but initializing it may throw an
+     * exception. Therefore, it should be initialized explicitly, and the exception
+     * handled, rather than lazily, in circumstances where the exception might be ignored.
+     */
+    private Expr.Context exprContext;
+
+    void initExprContext() throws JDK.Fault {
+        exprContext = new RegressionContext(this);
+    }
+
     @Override
     public TestFilter getRelevantTestFilter() {
         if (relevantTestFilter == UNSET) {
@@ -172,7 +182,7 @@ public class RegressionParameters
         if (jdk == null || jdk.getVersion(this).compareTo(JDK_Version.V9) == -1)
             return null;
 
-        final Map<String,String> availModules = jdk.getModules(getTestVMJavaOptions());
+        final Set<String> availModules = jdk.getModules(this);
         if (availModules.isEmpty())
             return null;
 
@@ -203,7 +213,7 @@ public class RegressionParameters
                         continue;
                     int slash = m.indexOf("/");
                     String name = slash == -1 ? m : m.substring(0, slash);
-                    if (!availModules.containsKey(name))
+                    if (!availModules.contains(name))
                         return false;
                 }
 
@@ -235,7 +245,7 @@ public class RegressionParameters
                     String requires = td.getParameter("requires");
                     if (requires == null)
                         return true;
-                    return Expr.parse(requires, context).evalBoolean(context);
+                    return Expr.parse(requires, exprContext).evalBoolean(exprContext);
                 } catch (Expr.Fault ex) {
                     filterFaults.put(td, "Error evaluating expression: " + ex.getMessage());
                     // While it may seem more obvious to return false in this case,
@@ -247,9 +257,6 @@ public class RegressionParameters
                     return true;
                 }
             }
-
-            private final Expr.Context context =
-                    new RegressionContext(RegressionParameters.this);
         };
     }
 

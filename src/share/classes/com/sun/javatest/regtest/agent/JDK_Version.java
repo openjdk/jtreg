@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2007, 2016, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -50,6 +50,9 @@ public enum JDK_Version {
     public final String major;
 
     public static JDK_Version forName(String name) {
+        if (name == null)
+            return null;
+
         // for now, always allow/ignore optional leading 1.
         Pattern p = Pattern.compile("(1\\.)?([1-9][0-9]*).*");
         Matcher m = p.matcher(name);

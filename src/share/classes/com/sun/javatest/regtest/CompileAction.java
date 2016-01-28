@@ -445,7 +445,7 @@ public class CompileAction extends Action {
             javacArgs.add(destDir.toString());
         }
 
-        if (module != null && script.systemModules.containsKey(module)) {
+        if (module != null && script.systemModules.contains(module)) {
             javacArgs.add("-Xmodule:" + module);
         }
 
@@ -499,7 +499,7 @@ public class CompileAction extends Action {
 
     boolean isModule(File f) {
         if (f.isDirectory()) {
-            if (script.systemModules.containsKey(f.getName())) {
+            if (script.systemModules.contains(f.getName())) {
                 return true;
             }
             if (new File(f, "module-info.class").exists())

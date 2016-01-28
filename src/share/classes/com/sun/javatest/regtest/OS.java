@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2016, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -28,6 +28,7 @@ package com.sun.javatest.regtest;
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 import com.sun.management.OperatingSystemMXBean;
 
@@ -58,6 +59,16 @@ public class OS {
             current = new OS(name, arch, version);
         }
         return current;
+    }
+
+    public static OS forProps(Properties sysProps) {
+        String name = System.getProperty("os.name");
+        String arch = System.getProperty("os.arch");
+        String version = System.getProperty("os.version");
+        return new OS(
+                (name == null) ? "unknown" : name,
+                (arch == null) ? "unknown" : arch,
+                (version == null) ? "unknown" : version);
     }
 
     // On JPRT, we see the following various types of values for these properties

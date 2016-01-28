@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2007, 2016, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -25,30 +25,45 @@
 
 package com.sun.javatest.regtest;
 
-import com.sun.javatest.regtest.agent.GetSystemProperty;
-import com.sun.javatest.regtest.agent.JDK_Version;
-import com.sun.javatest.regtest.agent.SearchPath;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
+import com.sun.javatest.regtest.agent.GetJDKProperties;
+import com.sun.javatest.regtest.agent.GetSystemProperty;
+import com.sun.javatest.regtest.agent.JDK_Version;
+import com.sun.javatest.regtest.agent.SearchPath;
 
 /**
  * Info about a JDK
  */
 public class JDK {
+    /**
+     * Used to report problems that are found.
+     */
+    static class Fault extends Exception {
+        private static final long serialVersionUID = 1L;
+        Fault(String msg) {
+            super(msg);
+        }
+
+        Fault(String msg, Throwable cause) {
+            super(msg, cause);
+        }
+    }
 
     public static JDK of(String javaHome) {
         return of(new File(javaHome));
@@ -67,6 +82,25 @@ public class JDK {
         this.jdk = jdk;
         absJDK = jdk.getAbsoluteFile();
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || !(o instanceof JDK))
+            return false;
+        JDK other = (JDK) o;
+        return absJDK.equals(other.absJDK);
+    }
+
+    @Override
+    public int hashCode() {
+        return absJDK.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return getPath();
+    }
+
 
     public File getFile() {
         return jdk;
@@ -127,16 +161,19 @@ public class JDK {
         return new SearchPath(getToolsJar());
     }
 
-    // params just used for execMode and javatestClassPath
+    // params just used for javatestClassPath
+    // could use values from getProperties if available
     JDK_Version getVersion(RegressionParameters params) {
-        return getVersion(params.getExecMode(), params.getJavaTestClassPath());
+        return getVersion(params.getJavaTestClassPath());
     }
 
-    JDK_Version getVersion(ExecMode mode, SearchPath getSysPropClassPath) {
-        return JDK_Version.forName(getVersionAsString(mode, getSysPropClassPath));
+    // could use values from getProperties if available
+    JDK_Version getVersion(SearchPath getSysPropClassPath) {
+        return JDK_Version.forName(getVersionAsString(getSysPropClassPath));
     }
 
-    private synchronized String getVersionAsString(ExecMode mode, SearchPath getSysPropClassPath) {
+    // could use values from getProperties if available
+    private synchronized String getVersionAsString(SearchPath getSysPropClassPath) {
         if (version == null) {
             final String VERSION_PROPERTY = "java.specification.version";
             version = "unknown"; // default
@@ -181,10 +218,10 @@ public class JDK {
             cmdArgs.addAll(vmOpts);
             cmdArgs.add("-version");
 
-            ProcessBuilder pb = new ProcessBuilder(cmdArgs);
-            pb.redirectErrorStream(true);
             try {
-                Process p = pb.start();
+                Process p = new ProcessBuilder(cmdArgs)
+                        .redirectErrorStream(true)
+                        .start();
                 String out = getOutput(p);
                 int rc = p.waitFor();
                 if (rc == 0) {
@@ -203,90 +240,151 @@ public class JDK {
     }
 
     public boolean hasModules() {
-        return !getModules(Collections.<String>emptySet()).isEmpty();
+        // whether or not a JDK has modules is independent of the params used,
+        // so arbitrarily use the first (and typically only) one.
+        for (RegressionParameters p: jdkPropsMap.keySet()) {
+            return !getModules(p).isEmpty();
+        }
+        // jdk.getProperties should be called early on, to avoid this happening
+        throw new IllegalStateException();
     }
 
-    // for now, we do a direct invocation of the JVM with -listmods.
-    // in time, we should merge this with the invocation to collect system properties
-    // and other test-suite-specific values for @requires
-    public synchronized Map<String,String> getModules(Collection<String> vmOpts) {
+    /**
+     * Get the set of installed modules for this JDK.
+     * This is determined by running {@link GetJDKProperties}, which will include
+     * a property giving the set of installed modules, if any.
+     * @param params to help run GetJDKProperties
+     * @return the set of installed modules
+     */
+    public synchronized Set<String> getModules(RegressionParameters params) {
         if (modulesMap == null)
-            modulesMap = new HashMap<Set<String>, Map<String,String>>();
+            modulesMap = new HashMap<RegressionParameters, Set<String>>();
 
-        Set<String> vmOptsSet = new LinkedHashSet<String>(vmOpts);
-        Map<String,String> modules = modulesMap.get(vmOptsSet);
+        Set<String> modules = modulesMap.get(params);
         if (modules == null) {
-            modules = new LinkedHashMap<String,String>();
-            List<String> cmdArgs = new ArrayList<String>();
-            cmdArgs.add(getJavaProg().getPath());
-            cmdArgs.addAll(vmOpts);
-            cmdArgs.add("-listmods");
-
-            ProcessBuilder pb = new ProcessBuilder(cmdArgs);
-            pb.redirectErrorStream(true);
             try {
-                Process p = pb.start();
-                List<String> lines = getOutputLines(p);
-                int rc = p.waitFor();
-                // note: -listmods typically returns rc=1; ignore for now
-                Pattern modulePattern = Pattern.compile("(?i)^([a-z][a-z0-9._]*)(@[a-z0-9][-a-z0-9.]*| *\\([^)]*\\))$");
-                for (String line: lines) {
-                    Matcher m = modulePattern.matcher(line);
-                    if (m.matches()) {
-                        modules.put(m.group(1), line);
-                    }
-                }
-            } catch (InterruptedException e) {
-                // ignore
-            } catch (IOException e) {
-                // ignore
+            Properties props = getProperties(params);
+            String m = props.getProperty(GetJDKProperties.JTREG_INSTALLED_MODULES);
+            if (m == null)
+                modules = Collections.emptySet();
+            else {
+                modules = new LinkedHashSet<String>(Arrays.asList(m.split(" +")));
             }
-
-            modulesMap.put(vmOptsSet, modules);
+            modulesMap.put(params, modules);
+            } catch (Fault f) {
+                throw new IllegalStateException(f);
+            }
         }
 
         return modules;
     }
 
-    public synchronized Properties getSystemProperties(RegressionParameters params) {
-        if (sysPropsMap == null)
-            sysPropsMap = new HashMap<Set<String>, Properties>();
+    /**
+     * Get properties of the JDK under test.
+     * The properties include:
+     * <ul>
+     * <li>any properties set up by any classes declared in the extraPropDefns entry in the
+     *     TEST.ROOT file
+     * <li>the system properties
+     * <li>additional properties for internal use, such as jtreg.installed.modules
+     * </ul>
+     * @param parsm used to help invoke GetJDKProperties
+     */
+    public synchronized Properties getProperties(RegressionParameters params) throws Fault {
+        if (jdkPropsMap == null)
+            jdkPropsMap = new HashMap<RegressionParameters, Properties>();
 
-        List<String> vmOpts = params.getTestVMJavaOptions();
-        Set<String> vmOptsSet = new LinkedHashSet<String>(vmOpts);
-        Properties sysProps = sysPropsMap.get(vmOptsSet);
-        if (sysProps == null) {
-            sysProps = new Properties();
-            List<String> cmdArgs = new ArrayList<String>();
-            cmdArgs.add(getJavaProg().getPath());
-                        // set classpath via env variable
-            cmdArgs.addAll(vmOpts);
-            cmdArgs.add(GetSystemProperty.class.getName());
-            cmdArgs.add("-all");
-
-            ProcessBuilder pb = new ProcessBuilder(cmdArgs);
-            // since we are trying to determine the Java version, we have to assume
-            // the worst, and use CLASSPATH.
-            pb.environment().put("CLASSPATH", params.getJavaTestClassPath().toString());
-            pb.redirectErrorStream(true);
+        Properties jdkProps = jdkPropsMap.get(params);
+        if (jdkProps == null) {
+            ExtraPropDefns epd = params.getTestSuite().getExtraPropDefns();
             try {
-                Process p = pb.start();
-                sysProps.load(p.getInputStream());
-                int rc = p.waitFor();
-                if (rc != 0) {
-                    System.err.println("could not get system properties for " +
-                            getJavaProg() + " " + vmOpts);
-                }
-            } catch (InterruptedException e) {
-                // ignore, leave properties undefined
-            } catch (IOException e) {
-                // ignore, leave properties undefined
+                epd.compile(params, params.getCompileJDK(), params.getWorkDirectory().getFile("extraPropDefns"));
+            } catch (ExtraPropDefns.Fault e) {
+                throw new Fault(e.getMessage(), e);
             }
 
-            sysPropsMap.put(vmOptsSet, sysProps);
+            List<String> cmdArgs = new ArrayList<String>();
+            cmdArgs.add(getJavaProg().getPath());
+
+            cmdArgs.add("-classpath");
+            SearchPath cp = new SearchPath(params.getJavaTestClassPath());
+            cp.append(epd.getClassDir());
+            cmdArgs.add(cp.toString());
+
+            SearchPath bcp = new SearchPath(epd.getBootClassDir());
+            if (!bcp.isEmpty()) {
+                cmdArgs.add("-Xbootclasspath/a:" + bcp);
+            }
+
+            List<String> vmOpts = params.getTestVMJavaOptions();
+            cmdArgs.addAll(vmOpts);
+            cmdArgs.addAll(epd.getVMOpts());
+
+            cmdArgs.add(GetJDKProperties.class.getName());
+
+            cmdArgs.addAll(epd.getClasses());
+
+            jdkProps = new Properties();
+            try {
+                File scratchDir = params.getWorkDirectory().getFile("scratch");
+                // The scratch directory probably already exists, but just in case,
+                // we ensure that it does.
+                scratchDir.mkdirs();
+                final Process p = new ProcessBuilder(cmdArgs)
+                        .directory(scratchDir)
+                        .start();
+                asyncCopy(p.getErrorStream(), System.err);
+                jdkProps.load(p.getInputStream());
+                int rc = p.waitFor();
+                if (rc != 0) {
+                    throw new Fault("failed to get JDK properties for "
+                            + getJavaProg() + " " + join(" ", vmOpts) + "; exit code " + rc);
+                }
+            } catch (InterruptedException e) {
+                throw new Fault("Error accessing extra property definitions: " + e, e);
+            } catch (IOException e) {
+                throw new Fault("Error accessing extra property definitions: " + e, e);
+            }
+
+            jdkPropsMap.put(params, jdkProps);
         }
 
-        return sysProps;
+        return jdkProps;
+    }
+
+    // replace with String.join when jtreg uses JDK 1.8
+    private String join(String sep, List<?> list) {
+        StringBuilder sb = new StringBuilder();
+        for (Object item: list) {
+            if (sb.length() > 0)
+                sb.append(sep);
+            sb.append(item);
+        }
+        return sb.toString();
+    }
+
+    private <T> List<T> concat(List<T> l1, List<T> l2) {
+        List<T> result = new ArrayList<T>();
+        result.addAll(l1);
+        result.addAll(l2);
+        return result;
+    }
+
+    private void asyncCopy(final InputStream in, final PrintStream out) {
+        new Thread() {
+            @Override
+            public void run() {
+                try {
+                    BufferedReader err = new BufferedReader(new InputStreamReader(in));
+                    String line;
+                    while ((line = err.readLine()) != null) {
+                        out.println(line);
+                    }
+                } catch (IOException e) {
+
+                }
+            }
+        }.start();
     }
 
     private String getOutput(Process p) {
@@ -302,38 +400,87 @@ public class JDK {
             return e.toString();
         }
     }
-
-    private List<String> getOutputLines(Process p) {
-        try {
-            List<String> lines = new ArrayList<String>();
-            BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()));
-            String line;
-            while ((line = r.readLine()) != null) {
-                lines.add(line);
-            }
-            return lines;
-        } catch (IOException e) {
-            return null;
-        }
-    }
-
-    @Override
-    public String toString() {
-        return getPath();
-    }
-
-    @Override
-    public int hashCode() {
-        return absJDK.hashCode();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (o == null || !(o instanceof JDK))
-            return false;
-        JDK other = (JDK) o;
-        return absJDK.equals(other.absJDK);
-    }
+//
+//    private List<String> compileExtraPropDefns(File srcDir, Map<String,String> extraPropDefns,
+//            File classDir, File bootClassDir) throws Fault {
+//        compile(bootClassDir, null, srcDir, asList(extraPropDefns.get("bootlib")));
+//        compile(classDir, bootClassDir, srcDir, asList(extraPropDefns.get("bootlib")));
+//        return compile(classDir, bootClassDir, srcDir, extraPropDefns.get("classes"));
+//    }
+//
+//    private List<String> compile(File classDir, List<File> classpath, File srcDir, List<String> files) throws Fault {
+//        if (files.isEmpty())
+//            return Collections.emptyList();
+//
+//        List<String> classNames = new ArrayList<String>();
+//        List<String> javacArgs = new ArrayList<String>();
+//        javacArgs.add("-d");
+//        javacArgs.add(classDir.getPath());
+//        classDir.mkdirs();
+//
+//            // no need to differentiate -classpath and -Xbootclasspath/a: at compile time
+//        javacArgs.add("-classpath");
+//        if (classpath != null && !classpath.isEmpty()) {
+//            javacArgs.add(join(File.pathSeparator, classpath) + File.pathSeparator + classDir);
+//        } else {
+//            javacArgs.add(classDir.getPath());
+//        }
+//
+//        boolean needCompilation = false;
+//
+//        if (!classDir.exists()) {
+//            needCompilation = true;
+//            classDir.mkdirs();
+//        }
+//
+//        for (String d: files) {
+//            boolean optional;
+//            if (d.startsWith("[") && d.endsWith("]")) {
+//                optional = true;
+//                d = d.substring(1, d.length() - 1);
+//            } else {
+//                optional = false;
+//            }
+//
+//            File sf = new File(srcDir, d);
+//            if (!sf.exists()) {
+//                if (!optional) {
+//                    System.err.println("Cannot find file " + d + " for extra property definitions");
+//                }
+//                continue;
+//            }
+//            javacArgs.add(sf.getPath());
+//            classNames.add(sf.getName().replaceAll(".java", ""));
+//
+//            File cf = new File(classDir, sf.getName().replaceAll("\\.java$", ".class"));
+//            if (!cf.exists() || sf.lastModified() > cf.lastModified()) {
+//                needCompilation = true;
+//            }
+//        }
+//
+//        if (needCompilation) {
+//            StringWriter sw = new StringWriter();
+//            PrintWriter pw = new PrintWriter(sw);
+//            RegressionCompileCommand rcc = new RegressionCompileCommand();
+//            List<String> rccArgs = new ArrayList<String>();
+//            rccArgs.addAll(Arrays.asList("-cp", getToolsJar().getPath(), "-"));
+//            rccArgs.addAll(javacArgs);
+//            Status s = rcc.run(rccArgs.toArray(new String[rccArgs.size()]), pw, pw);
+//            pw.flush();
+//            if (!s.isPassed()) {
+//                System.err.println("Compilation of extra property definition files failed.");
+//                System.err.println(s);
+//                String out = sw.toString();
+//                if (out.length() > 0){
+//                    System.err.println(out);
+//                }
+//                throw new Fault("Compilation of extra property definition files failed.");
+//            }
+//        }
+//
+//        return classNames;
+//    }
+//
 
     private final File jdk;
     private final File absJDK;
@@ -342,10 +489,10 @@ public class JDK {
     private String version;
     /** Value of java VMOPTS -version for this JDK. Lazily evaluated as needed. */
     private Map<Set<String>, String> fullVersions;
-    /** System properties java VMOPTS -version for this JDK. Lazily evaluated as needed. */
-    private Map<Set<String>, Properties> sysPropsMap;
+    /** JDK properties for this JDK. Lazily evaluated as needed. */
+    private Map<RegressionParameters, Properties> jdkPropsMap;
     /** Modules for this JDK. Lazily evaluated as needed. */
-    private Map<Set<String>, Map<String,String>> modulesMap;
+    private Map<RegressionParameters, Set<String>> modulesMap;
 
     private static final String LINESEP  = System.getProperty("line.separator");
 }

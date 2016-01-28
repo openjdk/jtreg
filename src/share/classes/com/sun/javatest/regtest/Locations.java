@@ -32,7 +32,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -137,7 +136,7 @@ public class Locations {
      }
 
     private final RegressionTestSuite testSuite;
-    private final Map<String,String> systemModules;
+    private final Set<String> systemModules;
     private final SearchPath jtpath;
     private final JDK testJDK;
 
@@ -154,7 +153,7 @@ public class Locations {
     Locations(RegressionParameters params, TestDescription td)
             throws Fault {
         testSuite = params.getTestSuite();
-        systemModules = params.getTestJDK().getModules(params.getTestVMJavaOptions());
+        systemModules = params.getTestJDK().getModules(params);
         jtpath = params.getJavaTestClassPath();
         testJDK = params.getTestJDK();
 
@@ -343,7 +342,7 @@ public class Locations {
     }
 
     boolean isSystemModule(String name) {
-        return (systemModules != null) && systemModules.containsKey(name);
+        return (systemModules != null) && systemModules.contains(name);
     }
 
     /**

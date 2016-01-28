@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014, 2016, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -39,25 +39,43 @@ import java.util.Set;
  * @author jjg
  */
 public class RegressionContext implements Expr.Context {
-    RegressionContext() {
-        this((RegressionParameters) null);
+    static RegressionContext getDefault() {
+        try {
+            return new RegressionContext(null);
+        } catch (JDK.Fault f) {
+            throw new IllegalStateException();
+        }
     }
 
-    RegressionContext(RegressionParameters params) {
+    RegressionContext(RegressionParameters params) throws JDK.Fault {
         this.params = params;
         validPropNames = null;
 
         values = new HashMap<String, String>();
         values.put("null", "null");
 
-        JDK jdk = (params == null) ? null : params.getTestJDK();
-        JDK_Version jdkVersion = (jdk == null) ? null : jdk.getVersion(params);
+        JDK_Version jdkVersion;
+        OS os;
+        if (params == null) {
+            jdkVersion = null;
+            os = OS.current();
+        } else {
+            JDK jdk = params.getTestJDK();
+            Properties jdkProps = jdk.getProperties(params);
+            for (Map.Entry<?, ?> e: jdkProps.entrySet()) {
+                values.put((String) e.getKey(), (String) e.getValue());
+            }
+
+            jdkVersion = JDK_Version.forName(jdkProps.getProperty("java.specification.version"));
+            os = OS.forProps(jdkProps);
+        }
+
         values.put("jdk.version", jdkVersion != null ? jdkVersion.name : "unknown");
         values.put("jdk.version.major", jdkVersion != null ? jdkVersion.major : "0");
+
         // profile... (JDK 8)
         // modules... (JDK 9)
 
-        OS os = OS.current();
         values.put("os.name", os.name );
         values.put("os.arch", os.arch );
         values.put("os.simpleArch", os.simple_arch);
@@ -94,20 +112,7 @@ public class RegressionContext implements Expr.Context {
 
     public String get(String name) {
         String v = values.get(name);
-        if (v == null) {
-            v = name.startsWith("vm.opt.") ? "null" : getProperty(name, "null");
-        }
-
-        return v;
-    }
-
-    private String getProperty(String name, String dflt) {
-        if (params == null)
-            throw new IllegalStateException();
-        if (sysProps == null) {
-            sysProps = params.getTestJDK().getSystemProperties(params);
-        }
-        return sysProps.getProperty(name, dflt);
+        return (v == null) ? "null" : v;
     }
 
     @Override
@@ -158,18 +163,24 @@ public class RegressionContext implements Expr.Context {
         }
 
         String NULL = "null";
-        values.put("vm.flavor", (vm != null) ? vm : NULL);
-        values.put("vm.bits", (bit != null) ? bit : NULL);
-        values.put("vm.gc", (gc != null) ? gc : NULL);
-        values.put("vm.compMode", (compMode != null) ? compMode : NULL);
+        putIfAbsent(values, "vm.flavor", (vm != null) ? vm : NULL);
+        putIfAbsent(values, "vm.bits", (bit != null) ? bit : NULL);
+        putIfAbsent(values, "vm.gc", (gc != null) ? gc : NULL);
+        putIfAbsent(values, "vm.compMode", (compMode != null) ? compMode : NULL);
 
         for (Map.Entry<String,Boolean> e: vmBools.entrySet()) {
-            values.put("vm.opt." + e.getKey(), String.valueOf(e.getValue()));
+            putIfAbsent(values, "vm.opt." + e.getKey(), String.valueOf(e.getValue()));
         }
 
         for (Map.Entry<String,String> e: vmProps.entrySet()) {
-            values.put("vm.opt." + e.getKey(), String.valueOf(e.getValue()));
+            putIfAbsent(values, "vm.opt." + e.getKey(), String.valueOf(e.getValue()));
         }
+    }
+
+    // replace with Map.putIfAbsent when jtreg uses JDK 1.8
+    private void putIfAbsent(Map<String, String> map, String key, String value) {
+        if (!map.containsKey(key))
+            map.put(key, value);
     }
 
     private static final String VM_PREFIX  = "-XX:";
@@ -192,5 +203,4 @@ public class RegressionContext implements Expr.Context {
     private final RegressionParameters params;
     private final Map<String, String> values;
     private final Set<String> validPropNames;
-    private Properties sysProps;
 }

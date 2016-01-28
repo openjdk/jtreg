@@ -92,7 +92,7 @@ public class RegressionScript extends Script {
         regEnv = (RegressionEnvironment) env;
         params = regEnv.params;
         testSuite = params.getTestSuite();
-        systemModules = params.getTestJDK().getModules(params.getTestVMJavaOptions());
+        systemModules = params.getTestJDK().getModules(params);
 
         String filterFault = params.filterFaults.get(td);
         if (filterFault != null)
@@ -163,7 +163,7 @@ public class RegressionScript extends Script {
                 actionLoop:
                 for (Action a: actionList) {
                     for (String m: a.getModules()) {
-                        if (systemModules.containsKey(m)) {
+                        if (systemModules.contains(m)) {
                             useXpatch = true;
                             break actionLoop;
                         }
@@ -1145,7 +1145,7 @@ public class RegressionScript extends Script {
     private RegressionEnvironment regEnv;
     private RegressionParameters params;
     private RegressionTestSuite testSuite;
-    Map<String,String> systemModules;
+    Set<String> systemModules;
     private boolean useBootClassPath;
     private boolean useXpatch;
     private boolean useModulePath;

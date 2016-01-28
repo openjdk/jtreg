@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2016, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -1305,7 +1305,7 @@ public class Main {
     void checkJDK(JDK jdk) throws Fault {
         if (!jdk.exists())
             throw new Fault(i18n, "main.jdk.not.found", jdk);
-        JDK_Version v = jdk.getVersion(execMode, new SearchPath(jtreg_jar, javatest_jar));
+        JDK_Version v = jdk.getVersion(new SearchPath(jtreg_jar, javatest_jar));
         if (v == null)
             throw new Fault(i18n, "main.jdk.unknown.version", jdk);
         if (v.compareTo(JDK_Version.V1_1) <= 0)
@@ -1746,10 +1746,14 @@ public class Main {
             if (nativeDirArg != null)
                 rp.setNativeDir(nativeDirArg);
 
+            rp.initExprContext(); // will invoke/init jdk.getProperties(params)
+
             return rp;
         } catch (TestSuite.Fault f) {
             // TODO: fix bad string -- need more helpful resource here
             throw new Fault(i18n, "main.cantOpenTestSuite", testSuite.getRootDir(), f);
+        } catch (JDK.Fault f) {
+            throw new Fault(i18n, "main.cantGetJDKProperties", testJDK, f.getMessage());
         }
     }
 
@@ -1937,7 +1941,7 @@ public class Main {
                     while ((n = from.read(buf, 0, buf.length)) != -1) {
                         to.write(buf, 0, n);
                     }
-                } catch (Throwable t) {
+                } catch (IOException t) {
                     out.println("Cannot init module patch directory: " + t);
                 } finally {
                     try {

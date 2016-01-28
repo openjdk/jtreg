@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2016, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -71,6 +71,18 @@ public class TestProperties {
 
         String version = e.properties.getProperty("requiredVersion");
         requiredVersion = new Version(version);
+
+        String epd = e.properties.getProperty("requires.extraPropDefns");
+        if (epd == null) {
+            extraPropDefns = new ExtraPropDefns();
+        } else {
+            extraPropDefns = new ExtraPropDefns(
+                    epd,
+                    e.properties.getProperty("requires.extraPropDefns.libs"),
+                    e.properties.getProperty("requires.extraPropDefns.bootlibs"),
+                    e.properties.getProperty("requires.extraPropDefns.vmOpts")
+            );
+        }
     }
 
     Set<String> getValidKeys(File file) throws TestSuite.Fault {
@@ -148,6 +160,10 @@ public class TestProperties {
         return e.extLibRoots;
     }
 
+    ExtraPropDefns getExtraPropDefns() {
+        return extraPropDefns;
+    }
+
     private void error(I18NResourceBundle i18n, String key, Object... args) {
         errHandler.error(i18n.getString(key, args));
     }
@@ -167,6 +183,7 @@ public class TestProperties {
     final ExecMode defaultExecMode;
     final List<String> groupFiles;
     final Version requiredVersion;
+    final ExtraPropDefns extraPropDefns;
 
     class Cache {
         class Entry {
