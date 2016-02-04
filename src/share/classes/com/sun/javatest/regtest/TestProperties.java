@@ -80,6 +80,7 @@ public class TestProperties {
                     epd,
                     e.properties.getProperty("requires.extraPropDefns.libs"),
                     e.properties.getProperty("requires.extraPropDefns.bootlibs"),
+                    e.properties.getProperty("requires.extraPropDefns.javacOpts"),
                     e.properties.getProperty("requires.extraPropDefns.vmOpts")
             );
         }

@@ -90,6 +90,12 @@ public class ExtraPropDefns {
     private final List<String> bootLibs;
 
     /**
+     * Additional javac options to be specified when compiling the classes to get the
+     * values of the extra properties.
+     */
+    private final List<String> javacOpts;
+
+    /**
      * Additional VM options to be specified when running the classes to get the
      * values of the extra properties.
      */
@@ -116,13 +122,14 @@ public class ExtraPropDefns {
     private List<String> classes;
 
     ExtraPropDefns() {
-        this(null, null, null, null);
+        this(null, null, null, null, null);
     }
 
-    ExtraPropDefns(String classes, String libs, String bootLibs, String vmOpts) {
+    ExtraPropDefns(String classes, String libs, String bootLibs, String javacOpts, String vmOpts) {
         this.files = asList(classes);
         this.libs = asList(libs);
         this.bootLibs = asList(bootLibs);
+        this.javacOpts = asList(javacOpts);
         this.vmOpts = asList(vmOpts);
         log = System.err;
     }
@@ -166,6 +173,8 @@ public class ExtraPropDefns {
         // no need to differentiate -classpath and -Xbootclasspath/a: at compile time
         javacArgs.add("-classpath");
         javacArgs.add(new SearchPath(classDir).append(classpath).toString());
+
+        javacArgs.addAll(javacOpts);
 
         boolean needCompilation = false;
 
