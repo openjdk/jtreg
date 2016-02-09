@@ -122,24 +122,12 @@ public class RegressionContext implements Expr.Context {
 
     private void processVMOptions(List<String> vmOptions) {
         String gc = null;
-        String bit = null;
-        String vm = null;
         String compMode = null;
         Map<String, Boolean> vmBools = new HashMap<String, Boolean>();
         Map<String, String> vmProps = new HashMap<String, String>();
 
         for (String opt: vmOptions) {
-            if (opt.equals("-" + D64)) {
-                bit = D64;
-            } else if (opt.equals("-" + D32)) {
-                bit = D32;
-            } else if (opt.equals("-" + VM_SERVER)) {
-                vm = VM_SERVER;
-            } else if (opt.equals("-" + VM_CLIENT)) {
-                vm = VM_CLIENT;
-            } else if (opt.equals("-" + VM_MINIMAL)) {
-                vm = VM_MINIMAL;
-            } else if (opt.equals("-" + MODE_MIXED)) {
+            if (opt.equals("-" + MODE_MIXED)) {
                 compMode = MODE_MIXED;
             } else if (opt.equals("-" + MODE_INT)) {
                 compMode = MODE_INT;
@@ -163,8 +151,8 @@ public class RegressionContext implements Expr.Context {
         }
 
         String NULL = "null";
-        putIfAbsent(values, "vm.flavor", (vm != null) ? vm : NULL);
-        putIfAbsent(values, "vm.bits", (bit != null) ? bit : NULL);
+        putIfAbsent(values, "vm.flavor", NULL);
+        putIfAbsent(values, "vm.bits", NULL);
         putIfAbsent(values, "vm.gc", (gc != null) ? gc : NULL);
         putIfAbsent(values, "vm.compMode", (compMode != null) ? compMode : NULL);
 
@@ -188,13 +176,6 @@ public class RegressionContext implements Expr.Context {
     private static final String OFF_PREFIX = VM_PREFIX + "-";
     private static final String GC_PREFIX  = ON_PREFIX + "Use";
     private static final String GC_SUFFIX  = "GC";
-
-    private static final String D64 = "D64";
-    private static final String D32 = "D32";
-
-    private static final String VM_SERVER  = "server";
-    private static final String VM_CLIENT  = "client";
-    private static final String VM_MINIMAL = "minimal";
 
     private static final String MODE_MIXED = "Xmixed";
     private static final String MODE_INT   = "Xint";
