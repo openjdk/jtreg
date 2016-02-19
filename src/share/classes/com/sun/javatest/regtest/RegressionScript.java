@@ -1007,6 +1007,16 @@ public class RegressionScript extends Script {
         File nativeDir = getNativeDir();
         if (nativeDir != null)
             p.put("test.nativepath", nativeDir.getAbsolutePath());
+        if (useXpatch()) {
+            SearchPath pp = new SearchPath();
+            pp.append(locations.absLibClsList(LibLocn.Kind.SYS_MODULE));
+            p.put("test.patch.path", pp.toString());
+        }
+        if (useModulePath()) {
+            SearchPath pp = new SearchPath();
+            pp.append(locations.absLibClsList(LibLocn.Kind.USER_MODULE));
+            p.put("test.module.path", pp.toString());
+        }
         return Collections.unmodifiableMap(p);
     }
     // where
