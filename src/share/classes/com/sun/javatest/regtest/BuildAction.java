@@ -126,7 +126,7 @@ public class BuildAction extends Action
 
     private static final String IGNORE_CASE = "(?i)";
     private static final String OPT_MODULE = "([a-z_][.a-z0-9_$]*/)?";
-    private static final String PKG_CLASS = "(([a-z_][.a-z0-9_$]*)(\\.\\*)?)";
+    private static final String PKG_CLASS = "(([a-z_][.a-z0-9_$]*)(\\.\\*|\\.package-info)?)";
     private static final String PKG_CLASS_OR_OTHER = "(" + PKG_CLASS + "|\\*|module-info)";
     static final Pattern BUILD_PTN = Pattern.compile(IGNORE_CASE + OPT_MODULE + PKG_CLASS_OR_OTHER);
 
