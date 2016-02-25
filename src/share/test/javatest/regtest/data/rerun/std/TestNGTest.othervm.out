@@ -17,7 +17,11 @@ PATH=/bin:/usr/bin \
         -J-Dtest.jdk=%JDKHOME% \
         -J-Dcompile.jdk=%JDKHOME% \
         -J-Dtest.timeout.factor=1.0 \
-        -XDmy.javac.option=x -d %WS%/build/RerunTest.othervm/work/classes/std -sourcepath %WS%/src/share/test/javatest/regtest/data/rerun/std -classpath %WS%/src/share/test/javatest/regtest/data/rerun/std:%WS%/build/RerunTest.othervm/work/classes/std:%WS%/build/images/jtreg/lib/testng.jar:%JDKHOME%/lib/tools.jar -XDignore.symbol.file=true %WS%/src/share/test/javatest/regtest/data/rerun/std/TestNGTest.java
+        -XDmy.javac.option=x \
+        -d %WS%/build/RerunTest.othervm/work/classes/std \
+        -sourcepath %WS%/src/share/test/javatest/regtest/data/rerun/std \
+        -classpath %WS%/src/share/test/javatest/regtest/data/rerun/std:%WS%/build/RerunTest.othervm/work/classes/std:%WS%/build/images/jtreg/lib/testng.jar:%JDKHOME%/lib/tools.jar \
+        -XDignore.symbol.file=true %WS%/src/share/test/javatest/regtest/data/rerun/std/TestNGTest.java
 
 ### Section testng
 DISPLAY=%DISPLAY%
@@ -38,6 +42,7 @@ CLASSPATH=%WS%/build/RerunTest.othervm/work/classes/std:%WS%/src/share/test/java
         -Dtest.jdk=%JDKHOME% \
         -Dcompile.jdk=%JDKHOME% \
         -Dtest.timeout.factor=1.0 \
-        -Dmy.vm.option=x -Dmy.java.option=x \
+        -Dmy.vm.option=x \
+        -Dmy.java.option=x \
         com.sun.javatest.regtest.agent.MainWrapper %WS%/build/RerunTest.othervm/work/std/TestNGTest.d/testng.0.jta std/TestNGTest.java TestNGTest
 

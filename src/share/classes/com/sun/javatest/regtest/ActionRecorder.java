@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013, 2016, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -47,21 +47,28 @@ public class ActionRecorder {
         final int CMD = 1, ARG = 2;
         int state = CMD;
         int size = cmd.size();
+        String indent = "    ";
+        String sep = indent;
         for (int i = 0; i < size; i++) {
             String word = cmd.get(i);
             switch (state) {
                 case CMD:
-                    pw.print("    ");
+                    pw.print(indent);
                     pw.print(escape(word));
-                    if (i + 1 < size) {
-                        pw.println(" \\");
-                        pw.print("       ");
-                    }
+                    if (i + 1 < size)
+                        pw.println(CONT);
                     state = ARG;
+                    indent += "    ";
+                    sep = indent;
                     break;
                 case ARG:
-                    pw.print(' ');
+                    if (word.startsWith("-") && sep.equals(" ")) {
+                        pw.println(CONT);
+                        sep = indent;
+                    }
+                    pw.print(sep);
                     pw.print(escape(word));
+                    sep = " ";
             }
         }
         pw.println();
@@ -84,12 +91,17 @@ public class ActionRecorder {
         pw.println(indent + escape(javaCmd) + CONT);
         // System properties
         indent += "    ";
-        for (Map.Entry<String, String> e: javaProps.entrySet())
+        for (Map.Entry<String, String> e: javaProps.entrySet()) {
             pw.println(indent + "-D" + escape(e.getKey()) + "=" + escape(e.getValue()) + CONT);
+        }
         // additional JVM options
         if (javaOpts.size() > 0) {
             String sep = indent;
-            for (String o: javaOpts) {
+            for (String o : javaOpts) {
+                if (o.startsWith("-") && sep.equals(" ")) {
+                    pw.println(CONT);
+                    sep = indent;
+                }
                 pw.print(sep);
                 pw.print(escape(o));
                 sep = " ";
@@ -106,18 +118,6 @@ public class ActionRecorder {
         pw.println();
     }
 
-//    public void javac(String[] cmdArgs) {
-//        initPW();
-//        // what about env variables, including the TEST.* variables?
-//        File javac = action.script.getCompileJDK().getJavacProg();
-//        pw.print(escape(javac.getAbsolutePath()));
-//        for (String arg: cmdArgs) {
-//            pw.print(" ");
-//            pw.print(escape(arg));
-//        }
-//        pw.println();
-//    }
-
     void javac(Map<String, String> envArgs, String javacCmd, List<String> javacVMOpts, Map<String, String> javacProps, List<String> javacArgs) {
         initPW();
         // Env variables
@@ -133,10 +133,15 @@ public class ActionRecorder {
             pw.println(indent + "-J" + escape(o) + CONT);
         }
         // System properties
-        for (Map.Entry<String, String> e: javacProps.entrySet())
+        for (Map.Entry<String, String> e: javacProps.entrySet()) {
             pw.println(indent + "-J-D" + escape(e.getKey()) + "=" + escape(e.getValue()) + CONT);
+        }
         String sep = indent;
         for (String a: javacArgs) {
+            if (a.startsWith("-") && sep.equals(" ")) {
+                pw.println(CONT);
+                sep = indent;
+            }
             pw.print(sep);
             pw.print(escape(a));
             sep = " ";
