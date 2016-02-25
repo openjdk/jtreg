@@ -25,7 +25,7 @@ identifier.
 
 Release Notes.
 
-This is jtreg, version 4.0. jtreg is to designed as a set of extensions to
+This is jtreg, version 4.1. jtreg is to designed as a set of extensions to
 Sun's JavaTest harness, which is also available under an open source license
 under the name JT Harness.  jtreg 4.0 is suitable for use with JavaTest or 
 JT Harness, version 4.1.3 or later. (Note: Older versions of JT Harness have
@@ -91,7 +91,6 @@ LICENSE         License file
 doc/            Documentation files
 legal/          Copyright and license files for JavaTest or JT Harness
 lib/     	Directory containing the JAR files needed to run jtreg
-linux/bin/ 	Miscellaneous utility script for use on Linux
-solaris/bin/ 	Miscellaneous utility script for use on Solaris
-win32/bin/ 	Miscellaneous utility script for use with MKS or Cygwin on 
-                Microsoft Windows platforms
+bin/ 		Miscellaneous utility script for use on Linux, Solaris
+		and for Cygwin on Microsoft Windows platforms
+
