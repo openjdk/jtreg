@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -36,6 +36,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import com.sun.javatest.Status;
+import com.sun.javatest.regtest.TimeoutHandler;
 import com.sun.javatest.regtest.config.Locations;
 import com.sun.javatest.regtest.config.Modules;
 import com.sun.javatest.regtest.config.ParseException;
@@ -241,13 +242,17 @@ public class ShellAction extends Action
                     showCmd("shell", command, section);
                 recorder.exec(command, env);
 
+                TimeoutHandler timeoutHandler =
+                        script.getTimeoutHandlerProvider().createHandler(this.getClass(), script, section);
+
                 // RUN THE SHELL SCRIPT
                 ProcessCommand cmd = new ProcessCommand()
                     .setExecDir(script.absTestScratchDir())
                     .setCommand(command)
                     .setEnvironment(env)
                     .setStreams(sysOut, sysErr)
-                    .setTimeout(timeout, TimeUnit.SECONDS);
+                    .setTimeout(timeout, TimeUnit.SECONDS)
+                    .setTimeoutHandler(timeoutHandler);
 
                 status = normalize(cmd.exec());
 

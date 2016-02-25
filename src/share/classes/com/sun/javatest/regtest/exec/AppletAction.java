@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -310,7 +310,7 @@ public class AppletAction extends Action
             cmd.setDefaultStatus(failed(UNEXPECT_SYS_EXIT));
 
             TimeoutHandler timeoutHandler =
-                script.getTimeoutHandlerProvider().createHandler(script, section);
+                script.getTimeoutHandlerProvider().createHandler(this.getClass(), script, section);
 
             cmd.setCommand(command)
                 .setEnvironment(env)

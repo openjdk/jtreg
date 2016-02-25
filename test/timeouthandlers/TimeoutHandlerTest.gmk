@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2014, 2015, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2014, 2017, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -46,9 +46,26 @@ $(BUILDDIR)/TimeoutHandlerTestDefault.othervm.ok: \
 	$(GREP) -s 'Test results: error: 1' $(@:%.ok=%/jt.log) > /dev/null
 	echo "test passed at `date`" > $@
 
+$(BUILDDIR)/TimeoutHandlerTestDefault.shell.ok: \
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	    $(JTREG_IMAGEDIR)/bin/jtreg
+	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(JDK18HOME) \
+		-va \
+		-timeoutFactor:0.1 \
+		$(TESTDIR)/timeouthandlers/TestShellHang.sh  \
+			> $(@:%.ok=%/jt.log) 2>&1 || \
+	   true "non-zero exit code from JavaTest intentionally ignored"
+	$(GREP) -v -s 'Running jstack' $(@:%.ok=%/jt.log) > /dev/null;
+	$(GREP) -s 'Test results: error: 1' $(@:%.ok=%/jt.log) > /dev/null
+	echo "test passed at `date`" > $@
+
 TESTS.timeouthandler += \
 	$(BUILDDIR)/TimeoutHandlerTestDefault.agentvm.ok \
-	$(BUILDDIR)/TimeoutHandlerTestDefault.othervm.ok
+	$(BUILDDIR)/TimeoutHandlerTestDefault.othervm.ok \
+	$(BUILDDIR)/TimeoutHandlerTestDefault.shell.ok
 
 #
 # Test that it is possible to supply an external timeout handler
@@ -76,9 +93,31 @@ $(BUILDDIR)/TimeoutHandlerTestExternal.othervm.ok: \
 	$(GREP) -s 'Test results: error: 1' $(@:%.ok=%/jt.log) > /dev/null
 	echo "test passed at `date`" > $@
 
+$(BUILDDIR)/TimeoutHandlerTestDefault.shell.ok: \
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	    $(JTREG_IMAGEDIR)/bin/jtreg
+	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	$(JDK18HOME)/bin/javac -cp $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+		-d $(@:%.ok=%) \
+		$(TESTDIR)/timeouthandlers/MyHandler.java
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(JDK18HOME) \
+		-va \
+		-timeoutFactor:0.1 \
+		-timeoutHandler:MyHandler \
+		-timeoutHandlerDir:$(@:%.ok=%) \
+		$(TESTDIR)/timeouthandlers/TestShellHang.sh  \
+			> $(@:%.ok=%/jt.log) 2>&1 || \
+	   true "non-zero exit code from JavaTest intentionally ignored"
+	$(GREP) -v -s 'Running jstack' $(@:%.ok=%/jt.log) > /dev/null;
+	$(GREP) -s 'Test results: error: 1' $(@:%.ok=%/jt.log) > /dev/null
+	echo "test passed at `date`" > $@
+
 TESTS.timeouthandler += \
 	$(BUILDDIR)/TimeoutHandlerTestExternal.agentvm.ok \
-	$(BUILDDIR)/TimeoutHandlerTestExternal.othervm.ok
+	$(BUILDDIR)/TimeoutHandlerTestExternal.othervm.ok \
+	$(BUILDDIR)/TimeoutHandlerTestExternal.shell.ok
 
 TESTS.jtreg += ${TESTS.timeouthandler}
 

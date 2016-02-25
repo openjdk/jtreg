@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -87,11 +87,12 @@ public class TimeoutHandlerProvider {
 
     /**
      * Create an instance of the {@code TimeoutHandler} that has been configured.
+     * @param actionClass the class of the action
      * @param script the script with which the timeout handler will be associated
      * @param section the section in the scripts test rult object in which to write messages
      * @return the object
      */
-    public TimeoutHandler createHandler(RegressionScript script, Section section) {
+    public TimeoutHandler createHandler(Class<? extends Action> actionClass, RegressionScript script, Section section) {
         PrintWriter log = section.getMessageWriter();
         File outDir = script.absTestScratchDir();
         File testJDK = script.getTestJDK().getAbsoluteFile();
@@ -109,6 +110,12 @@ public class TimeoutHandlerProvider {
                 log.println("Reverting to the default timeout handler.");
             }
         }
+
+        // DefaultTimeoutHandler does not support shell actions
+        if (actionClass == ShellAction.class) {
+            return null;
+        }
+
         return new DefaultTimeoutHandler(log, outDir, testJDK);
     }
 
