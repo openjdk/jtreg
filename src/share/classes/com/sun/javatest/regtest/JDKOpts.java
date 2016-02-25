@@ -104,9 +104,9 @@ public class JDKOpts {
         }
 
         if (opt.startsWith("-Xpatch:")) {
-            updateOpt(opt, File.pathSeparator);
+            updateOpt(opt, ":", File.pathSeparator);
         } else if (opt.startsWith("-XaddExports:")) {
-            updateOpt(opt, ",");
+            updateAddExports(opt);
         } else if (opt.startsWith("-")) {
             opts.add(opt);
         } else if (pending != null) {
@@ -125,8 +125,27 @@ public class JDKOpts {
         pending = null;
     }
 
-    private void updateOpt(String opt, String sep) {
+    private void updateAddExports(String opt) {
         int i = opt.indexOf(":");
+        String key = opt.substring(0, i + 1);
+        String optValues = opt.substring(i + 1);
+        if (optValues.matches(".*=.*,.*=.*")) {
+             // temp allow for old usage with multiple mod/pkg=target values
+            for (String optValue: optValues.split(",")) {
+                int eq = optValue.indexOf("=");
+                if (eq > 0) {
+                    updateOpt(opt, "=", ",");
+                } else {
+                    opts.add(opt); // pass through bad opts
+                }
+            }
+        } else {
+            updateOpt(opt, "=", ",");
+        }
+    }
+
+    private void updateOpt(String opt, String keySep, String valSep) {
+        int i = opt.indexOf(keySep);
         String key = opt.substring(0, i + 1);
         String optValues = opt.substring(i + 1);
         Integer pos = index.get(key);
@@ -135,13 +154,13 @@ public class JDKOpts {
             index.put(key, opts.size() - 1);
         } else {
             Set<String> allValues = new LinkedHashSet<String>();
-            String[] oldValues = opts.get(pos).substring(i + 1).split(sep);
+            String[] oldValues = opts.get(pos).substring(i + 1).split(valSep);
             allValues.addAll(Arrays.asList(oldValues));
-            allValues.addAll(Arrays.asList(optValues.split(sep)));
+            allValues.addAll(Arrays.asList(optValues.split(valSep)));
             StringBuilder sb = new StringBuilder(key);
             for (String v: allValues) {
                 if (sb.length() > key.length()) {
-                    sb.append(sep);
+                    sb.append(valSep);
                 }
                 sb.append(v);
             }

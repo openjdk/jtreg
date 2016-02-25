@@ -81,8 +81,8 @@ public class JDKOptsTest {
 
     @Test
     void testXaddExports() {
-        String[] opts = { "-XaddExports:m1/p1=ALL-UNNAMED", "-XaddExports:m2/p2=ALL-UNNAMED" };
-        String[] expect = { "-XaddExports:m1/p1=ALL-UNNAMED,m2/p2=ALL-UNNAMED" };
+        String[] opts = { "-XaddExports:m1/p1=ALL-UNNAMED", "-XaddExports:m2/p2=ALL-UNNAMED", "-XaddExports:m1/p1=m11" };
+        String[] expect = { "-XaddExports:m1/p1=ALL-UNNAMED,m11", "-XaddExports:m2/p2=ALL-UNNAMED" };
         test(opts, expect);
     }
 
@@ -91,13 +91,18 @@ public class JDKOptsTest {
         String[] opts = {
             "-classpath", "cp1", "-sourcepath", "sp1", "-Xpatch:xp1", "-XaddExports:m1/p1=ALL-UNNAMED",
             "-classpath", "cp2", "-sourcepath", "sp2", "-Xpatch:xp2", "-XaddExports:m2/p2=ALL-UNNAMED",
-            "-classpath", "cp3", "-sourcepath", "sp3", "-Xpatch:xp3", "-XaddExports:m3/p3=ALL-UNNAMED"
+            "-classpath", "cp3", "-sourcepath", "sp3", "-Xpatch:xp3", "-XaddExports:m3/p3=ALL-UNNAMED",
+            "-XaddExports:m1/p1=m11",
+            "-XaddExports:m2/p2=m22",
+            "-XaddExports:m3/p3=m33",
         };
         String[] expect = {
             "-classpath", "cp1" + PS + "cp2" + PS + "cp3",
             "-sourcepath", "sp1" + PS + "sp2" + PS + "sp3",
             "-Xpatch:xp1" + PS + "xp2" + PS + "xp3",
-            "-XaddExports:m1/p1=ALL-UNNAMED,m2/p2=ALL-UNNAMED,m3/p3=ALL-UNNAMED",
+            "-XaddExports:m1/p1=ALL-UNNAMED,m11",
+            "-XaddExports:m2/p2=ALL-UNNAMED,m22",
+            "-XaddExports:m3/p3=ALL-UNNAMED,m33",
         };
         test(opts, expect);
     }

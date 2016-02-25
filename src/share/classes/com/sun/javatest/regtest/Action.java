@@ -437,19 +437,13 @@ public abstract class Action extends ActionHelper
         if (!needAddExports)
             return Collections.<String>emptyList();
 
-        StringBuilder sb = new StringBuilder();
-        String sep = "-XaddExports:";
-        String suffix = "=ALL-UNNAMED";
+        List<String> list = new ArrayList<String>();
         for (String m: modules) {
             if (m.contains("/")) {
-                sb.append(sep);
-                sb.append(m);
-                sb.append(suffix);
-                sep = ",";
+                list.add("-XaddExports:" + m + "=ALL-UNNAMED");
             }
         }
-
-        return Collections.singletonList(sb.toString());
+        return list;
     }
 
     protected boolean includesExport(String opt, String arg) {
