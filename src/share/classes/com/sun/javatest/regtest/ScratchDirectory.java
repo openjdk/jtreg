@@ -230,6 +230,14 @@ abstract class ScratchDirectory {
             cantDelete.remove(f);
             return true;
         } else {
+//            // See CODETOOLS-7901369
+//            // The following needs JDK 1.6, and/or convert jtreg to use nio.file.Path
+//            if (!f.canWrite()) {
+//                if (f.setWritable(true) && f.delete()) {
+//                    cantDelete.remove(f);
+//                    return true;
+//                }
+//            }
             if (verboseScratchDir) {
                 log.println("warning: failed to delete "
                         + (f.isDirectory() ? "directory " : "")
