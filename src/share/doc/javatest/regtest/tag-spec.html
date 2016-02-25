@@ -1,7 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
    "http://www.w3.org/TR/html4/loose.dtd">
 <!--
- Copyright (c) 2006, 2015, Oracle and/or its affiliates. All rights reserved.
+ Copyright (c) 2006, 2016, Oracle and/or its affiliates. All rights reserved.
  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 
  This code is free software; you can redistribute it and/or modify it
@@ -51,7 +51,7 @@
 <p>Comments and questions to:
 <a href="mailto:jtreg-use@openjdk.java.net">jtreg-use@openjdk.java.net</a>.
 <br>
-1.39-jigsaw (draft), 12 Nov, 2015
+1.40 (draft), 17 February, 2016
 </div>
 
 <p>This is a specification document, not a tutorial.  For more basic information
@@ -176,44 +176,80 @@ harness, but may be used by the harness in generating reports.
 
 <dt>@library <var>&lt;path|jar&gt;+</var>
 <dd>
-<p>Add one or more pathnames or jar filenames to the library-directory list.  
+<p>Add one or more pathnames or jar filenames to the library path list.
 Each argument must use forward slash to separate file name components, and
-may use ".." to denote parent directories. Using ".." to reference directories
-outside the test hierarchy is currently allowed but is strongly discouraged.
+may use ".." to denote parent directories. 
 
 <ul>
 <li>If an argument is relative (that is, it does not begin with '/'), it will
-be evaluated relative to the directory containing the test.
+    be evaluated relative to the directory containing the test.
+    It is an error if the resulting path is outside the test suite.
 <li>If an argument begins with '/', it will first be evaluated relative to the
-root directory of the test suite. If the result does not identify an existing
-directory, it will be evaluated against each entry of a search path in turn,
-until an existing directory is found.  The search path is specified by the
-<code>external.lib.roots</code> entry in the test suite 
-<a href="#config">configuration files</a>.
+    root directory of the test suite.
+    It is an error if the resulting path is outside the test suite.
+    If the result does not identify an existing directory, it will be further
+    evaluated against each entry of a search path in turn, until an existing
+    directory is found.
+    The search path is specified by the <code>external.lib.roots</code> entry
+    in the test suite <a href="#config">configuration files</a>.
+<li>An argument may begin with <code>${java.home}/</code> to refer to libraries
+    bundled with the JDK being tested.
+    An argument may begin with <code>${jtreg.home}/</code> to refer to libraries
+    bundled with the jtreg test harness.
 </ul>
 
-<p>It is an error if any of the arguments in the library-directory list does
-not identify an existing directory.
-<!-- 
-Each argument must be relative using forward slashes and ".." to denote parent
-directories.  The names are prepended to the list from right to left.
--->
+<p>It is an error if any of the entries in the library path list does
+not identify an existing directory or jar file.
 
-<p>When the harness runs a test it adds the library list to the class path used by
-the virtual machine.  The class path will consist of the test-class directory,
-the current test-source directory, the library list with each element resolved
-against the test-class directory, and the system class directories or zip/jar
-files of the build being tested.  The class path will be computed in the same
-fashion when the harness compiles a class.
+<p>Each entry in the library path list is categorized according to its content.
+<ul>
+<li><b>packages</b>: the contents are one or more source files arranged in a
+    standard package hierarchy.
+<li><b>user modules</b>: the contents are one or more directories, each containing
+    the complete source code for a user module. Each directory must be named for
+    the module it contains, and the directory must directly contain a module declaration
+    (<i>module-info.java</i>).
+<li><b>system module patch</b>: the contents are one or more directories,
+    each containing source files to be compiled and used to patch modules in
+    the system image being tested. Each directory must be named for the module
+    to be patched, and the directory must <i>not</i> contain a module declaration
+    (<i>module-info.java</i> or <i>module-info.class</i>).
+    The source files in each directory must be organized in a standard package hierarchy.
+<li><b>precompiled jar file</b>: the entry is a jar file containing precompiled
+    class files.
+</ul>
+<p>It is an error if any entry in the library path list cannot be categorized.
+In particular, any one entry in the library path cannot contain more than one type of
+content.
+It is highly recommended that a library directory should only contain content directly
+related to the library; it should not contain subdirectories containing other content,
+such as tests, or other separate libraries.
 
-<p>Classes in library directories are not automatically compiled.  A test that
-relies upon library classes should contain appropriate <code>@build</code> directives to
-ensure that the classes will be compiled.
+<p>In general, classes in library directories are not automatically compiled
+as part of a compilation command explicitly naming the source files containing 
+those classes. A test that relies upon library classes should contain appropriate
+<code>@build</code> directives to ensure that the classes will be compiled.
+It is strongly recommended that tests do not rely on the use of implicit compilation
+by the Java compiler. Such an approach is generally fragile, and may lead to
+incomplete recompilation when a test or library code has been modified.
 
+<p>If a library directory is used by a directory of <a href="#TESTNG">TestNG</a> tests,
+all the classes in a library directory will be automatically compiled by means of implicit
+<code>@build</code> tags.
+
+<p>When the harness compiles a test, the source code for each entry (if any) will be
+placed on the appropriate source path, and any previously compiled classes for each entry
+will be placed on the class path, application module path or module patch path as
+appropriate.
+When the harness runs a test, the compiled classes for each entry
+will be placed on the class path, application module path or module patch path as
+appropriate.
+
+<p>
 <p>The <code>@library</code> tag may be used more than once.  It may only be used before the
-first <code>@run</code> tag.
+first <code>@run</code> tag (either explicit or implicit.)
 
-<p>The <code>@library</code> tag and the library list have nothing to do with the search path
+<p>The <code>@library</code> tag and the library path list have nothing to do with the search path
 (i.e., the PATH environment variable) defined in shell actions.
 
 <dt>@key <var>&lt;keyword&gt;+</var>
@@ -223,16 +259,34 @@ selected via boolean expressions on keywords.  The list of acceptable keywords
 may be specified in the <a href="#TEST_ROOT">TEST.ROOT</a> file (see below).
 The <code>@key</code> tag may be used at most once in a given test.
 
+<dt>@modules <var>&lt;module&gt;[/&lt;package&gt;]+</var>
+<dd>
+<p>Express a dependence on a modules in the system being tested, and optionally,
+on selected internal packages in some or all of those modules.
+
+<p>If no dependencies are specified explicitly, a default set of dependencies will be read
+from the <code>modules</code> entry in test suite <a href="#config">configuration files</a>.
+
+<p>A test will not be run if the system being tested does not contain all of the
+specified modules.
+
+<p><i>Note:</i> Specifying an entry that includes a dependence on an internal package
+    is essentially equivalent to using
+    <code>-XaddExports:<var>&lt;module&gt;</var>/<var>&lt;package&gt;</var>ALL-UNNAMED</code>
+    when the test is compiled and run.
+
 <dt>@requires <var>&lt;expression&gt;</var>
 <dd>
 <p>Express a dependence on characteristics of the system being tested.
 Some harnesses allow tests to be selected according to the characteristics
-of the system being tested. The expression may be composed of the
-following elements:
+of the system being tested. 
+The expression may be composed of the following elements:
 
 <ul>
     <li>Named characteristics. See <a href="#requires_names">Appendix 1</a>
-        for a complete list of the supported names.
+        for a complete list of the standard supported names, and details of the
+        test-suite <a href="#config">configuration files</a> for information on
+        how to extend the set with additional names specific to the test-suite.
     <li>Numeric values. Values must be decimal integers, optionally followed a
         suffix '<code>K</code>', '<code>M</code>' or '<code>G</code>', which as a
         a multiplier of 1024, 1024*1024 and 1024*1024*1024 respectively.
@@ -260,14 +314,6 @@ following elements:
 If it is used more than once, the expressions in the individual instances will
 be enclosed in parentheses and combined with '&amp;'.</p>
 
-<dt>@modules <var>&lt;module[/package]&gt;+</var>
-<dd>
-<p>Express a dependence on a modules in the system being tested, and optionally,
-on selected internal packages in some or all of those modules.
-<p>If no dependencies are specified, a default set of dependencies will be read
-from the test suite <a href="#config">configuration files</a>.
-<p>A test will not be run if the system being tested does not contain any of the
-required modules.
 </dl>
 
 <h2><a name="ACTION_TAGS">ACTION TAGS</a></h2>
@@ -334,7 +380,7 @@ specified, the output must match in order for the action to pass.
 
 <dt>/othervm
 <dd>
-<p>Some test harnesses run tests in the same VM as the harness itself.  This
+<p>Some test harnesses reuse a VM between tests.  This
 option forces the action to be run in a fresh VM subprocess.  Use this option
 if you need to specify VM options, or if the action might crash the VM.
 
@@ -387,9 +433,14 @@ assumed.
 the name of a class, not the name of a class file, so the ".class" suffix
 should not be given.
 
-<p>A class name may be a simple class name (e.g., "Foo"), or a simple class name
-preceded by a package name (e.g., "bar.Foo", "baz.bar.Foo").  If a class in a
-non-Java package is specified, then the source file for that class must be in
+<p>A class name may be specified in one of the following ways:
+<ul>
+<li>a simple class name: e.g., "Foo"
+<li>a package name followed by a simple name: e.g., "bar.Foo", "baz.bar.Foo"
+<li>a module name followed by either <code>module-info</code> or a fully qualified class name:
+    e.g., "myModule/module-info", "myModule/baz.bar.Foo"
+</ul>
+If a class in a non-Java package is specified, then the source file for that class must be in
 the corresponding directory relative to the directory containing the defining
 file of the test.
 
@@ -397,8 +448,14 @@ file of the test.
 <h3><a name="WILDCARDS">CLASS-NAME WILDCARDS</a></h3>
 
 <p>Some actions take either class names or class-name wildcards as arguments.  A
-class-name wildcard is either "*", meaning all classes in the default package,
-or "<var>&lt;package-name&gt;</var>.*", meaning all classes in the named package.
+class-name wildcard can be specified in one of the following ways:
+<ul>
+<li>"*", meaning all classes in the default package
+<li>"<var>&lt;package-name&gt;</var>.*", meaning all classes in the named package
+<li>"<var>&lt;module-name&gt;</var>/<var>&lt;package-name&gt;</var>.*", meaning all classes
+    in the named package in the named module
+<li>"<var>&lt;module-name&gt;</var>/*", meaning all classes in the named module
+</ul>
 
 
 <h3><a name="ACTION_TYPES">ACTION TYPES</a></h3>
@@ -411,15 +468,17 @@ or "<var>&lt;package-name&gt;</var>.*", meaning all classes in the named package
 <p>Build classes on demand.  Each argument may be a class name, as described
 above, or a class-name wildcard.  To locate a source file for a named class,
 the harness takes the first matching file found by looking in the test-source
-directory and then in each directory of the library-directory list.  To locate
-the source files denoted by a wildcard, the harness evaluates the wildcard
-relative to test-source directory and relative to each directory of the
-library-directory list, taking all matches.  Each discovered class will be
+directory and then in each appropriate directory of the library path list.
+To locate the source files denoted by a wildcard, the harness evaluates the
+wildcard relative to test-source directory and relative to each directory of
+the library path list, taking all matches.  Each discovered class will be
 compiled if its corresponding class file does not exist or is older than its
 source file.  Intended primarily for use before main and applet actions that
 require more than one class to be compiled.  Passes only if the compiler
 finishes without error, or if none of the specified classes need to be
 compiled.
+
+<p>It is an error for a build action to be the last action in a test description.
 
 <dt>clean <var>&lt;classname-or-wildcard&gt;+</var>
 
@@ -428,18 +487,38 @@ compiled.
 be a class name or a class-name wildcard.  Intended primarily for compiler
 tests.  Always passes.
 
-<dt>compile[/fail][/ref=<var>&lt;file&gt;</var>][/timeout=<var>&lt;seconds&gt;</var>] <var>&lt;arg&gt;+</var>
+<dt>compile[/fail][/ref=<var>&lt;file&gt;</var>][/timeout=<var>&lt;seconds&gt;</var>][/process][/module=<var>&lt;module-name&gt;</var>] <var>&lt;arg&gt;+</var>
 <dd>
 <p>Invoke the compiler on the given <var>&lt;arg&gt;</var>s, which may include any compiler option
 other than the "<code>-d</code>" option.  Equivalent to "javac <var>&lt;arg&gt;+</var>", therefore to specify
 source files the ".java" suffix must be included.  Source file names should be
 relative pathnames using forward slashes and ".." to denote parent directories;
-they are interpreted relative to the directory containing the defining file of
+they are normally interpreted relative to the directory containing the defining file of
 the test.  Standard output and standard error are concatenated (not
 interleaved) so that <code>/ref</code> may be used.  Intended primarily for compiler tests;
 non-compiler tests should generally use build actions.  The timeout period, if
 specified, applies to the entire compile action, not to the compilation of each
 individual source file.  Passes only if the compiler finishes without error.
+
+<p>The <code>/process</code> option can be given to indicate that the compilation
+includes the use of an annotation processor and that no source files are being compiled.
+If <code>/process</code> is not given, at least one source file must be specified.
+
+<p>The <code>/module=<var>&lt;module-name&gt;</var></code> option is used to compile
+a patch for a module in the system image. In this one situation, the source files must be in
+a subdirectory named for the module, relative to the directory containing the defining
+file of the test. Neither the module directory nor the list of source files may contain
+a <code>module-info.java</code> file.
+Internally, this option corresponds to using the javac
+<code>-Xmodule:<var>&lt;module-name&gt;</var></code> option.
+
+<p>User modules can be compiled by placing the code for the modules in subdirectories
+named for the modules. Each directory should have a corresponding <code>module-info.java</code>
+file.No other options are required: in particular, <code>/module=<var>&lt;module-name&gt;</var></code>
+should <i>not</i> be used; that option is just used for patches to system modules.
+To avoid confusion, it is highly recommended that tests containing user modules should be placed
+in their own directory, and should not contain any other directories apart from the directories
+used to contain module source code.
 
 <p>The use of the <code>-classpath</code> and <code>-sourcepath</code> options as arguments to the compile
 action is discouraged; the <code>@library</code> tag is often more appropriate.
@@ -735,12 +814,14 @@ There must be no spaces between the ":" and the name that follows.
 <h2><a name="SOURCE_STRUCTURE">SOURCE-DIRECTORY STRUCTURE</a> AND 
 <a name="config">TEST-SUITE CONFIGURATION FILES</a></h2>
 
-<p>This specification places no constraints upon the structure of a tree of source
+<p>This specification places few constraints upon the structure of a tree of source
 directories.  Some test harnesses may be able to provide more robust behavior or
 more succinct reports when they can identify the root of such a tree.  The root
 of a test-source tree must therefore be identified by placing a file named
 TEST.ROOT in the root directory.  Exactly one such file must exist in every
 test-source tree.
+
+
 
 <p>The <a name="TEST_ROOT">TEST.ROOT</a> file contains test-suite configuration 
 information. It is in the standard Java property-file format as described in the
@@ -773,6 +854,31 @@ square brackets.</p>
 A version string in the format "[0-9.]+ ?b[0-9]+" (without the quotes). For example
 a value of "4.1 b03" declares that at least that version of the harness is required
 to run all the tests in the test suite.</p>
+
+<dt><code>requires.extraPropDefns <var>&lt;source-files&gt;</var></code><br>
+<dd><p>This option is used to provide source files for classes that will be used at the
+beginning of each test run, to determine additional characteristics of the system for
+use with the <code>@requires</code> tag. Each class must implement
+<code>java.util.concurrent.Callable&lt;java.util.Properties&gt;</code>.
+When invoked, the <code>call()</code> method should return properties that can be referenced in
+an expression in a <code>@requires</code> tag. <i>Note:</i> the names of the
+properties that may be returned by calling these classes must also be declared in
+a <code>requires.properties</code> entry.
+<p>If this option is specified, the following additional options may also be specified:
+<ul>
+<li><code>requires.extraPropDefns.libs <var>&lt;source-files&gt;</var></code>
+    &mdash; source files for classes that will be put on the classpath when the
+    primary classes are run.
+<li><code>requires.extraPropDefns.bootlibs <var>&lt;source-files&gt;</var></code>
+    &mdash; source files for classes that will be put on the bootclasspath when the
+    primary classes are run.
+<li><code>requires.extraPropDefns.javacOpts <var>&lt;options&gt;</var></code>
+    &mdash; options that will be passed to javac when the source files are compiled.
+<li><code>requires.extraPropDefns.vmOpts <var>&lt;options&gt;</var></code>
+    &mdash; options that will be passed to VM when the classes are executed.
+</ul>
+<p>In all of these options, if a source file is enclosed in square brackets, no error message
+will be given if the file is not available.
 </dl>
 
 <p>The following properties may appear in either TEST.ROOT or any TEST.properties file:
@@ -817,6 +923,12 @@ configuration file.</p>
 <p>Express a default dependence, for tests in this directory and its subdirectories, 
 on modules in the system being tested, and optionally,
 on selected internal packages in some or all of those modules.</p>
+
+<dt><code>requires.properties</code> <var>&lt;property-name]&gt;+</var>
+<dd>Declare property names that may be used in a <code>@requires</code> expression.
+The names may identify either system properties or additional test-suite specific
+properties return by calling the classes defined by the <code>@requires.extraPropDefns</code>
+family of configuration values.
 </dl>
 
 
@@ -916,6 +1028,9 @@ paranoid.sp policy file:
 
 <h2 class="appendix"><a name="requires_names">APPENDIX 1: SUPPORTED NAMES FOR @requires</a></h2>
 
+<p><i>Note:</i> See the details for the test-suite <a href="#config">configuration files</a>
+for information on how to extend the set of supported names for a particular test suite.
+
 <table summary="Supported names for <code>@requires</code>">
 <thead>
 <tr class="even">
@@ -970,42 +1085,42 @@ paranoid.sp policy file:
         are first two numbers in <code>os.version</code>
     <td><code>99.99</code>
 
-<tr class="odd"><td><code>vm.flavor</code>
-    <td>The kind of VM, derived from the options <code>-client</code> <code>-server</code>
-    <td>One of <code>client</code> <code>server</code>
+<tr class="odd"><td><code>os.processors</code>
+    <td>The number of processors on this system
+    <td>The value as determined by <code>Runtime::availableProcessors</code>
     <td>
 
-<tr class="even"><td><code>vm.bits</code>
-    <td>The kind of VM, derived from the options <code>-d32</code> <code>-d64</code>
-    <td>One of <code>d32</code> <code>d64</code>
+<tr class="even"><td><code>os.maxMemory</code>
+    <td>The maximum amount of memory available on this system.
+    <td>The value as determined by <code>OperatingSystemMXBean::getTotalPhysicalMemorySize</code>
     <td>
 
-<tr class="odd"><td><code>vm.gc</code>
+<tr class="odd"><td><code>os.maxSwap</code>
+    <td>The maximum amount of swap space available on this system.
+    <td>The value as determined by <code>OperatingSystemMXBean::getTotalSwapSpaceSize</code>
+    <td>
+
+<tr class="even"><td><code>vm.gc</code>
     <td>The garbage collection strategy, derived from the option <code>-XX:+Use<i>name</i>GC</code>
     <td><code><i>name</i></code>
     <td>
 
-<tr class="even"><td><code>vm.compMode</code>
-    <td>The VM compilation mode, derived from the options <code>-Xcomp</code> <code>-Xint</code> <code>-Xmixed</code>
-    <td>One of <code>Xcomp</code> <code>Xint</code> <code>Xmixed</code>
-    <td>
-
-<tr class="odd"><td><code>vm.opt.<i>switch</i></code>
+<tr class="even"><td><code>vm.opt.<i>switch</i></code>
     <td>A boolean VM option, derived from option <code>-XX:+<i>switch</i></code> or <code>-XX:-<i>switch</i></code>
     <td><code>true</code> <code>false</code>
     <td>
 
-<tr class="even"><td><code>vm.opt.<i>name</i></code>
+<tr class="odd"><td><code>vm.opt.<i>name</i></code>
     <td>A VM option, derived from option <code>-XX:<i>name</i>=<i>value</i></code>
     <td><code><i>value</i></code>
     <td>
 	
-<tr class="odd" style="color:gray"><td><code>profile</code>
+<tr class="even" style="color:gray"><td><code>profile</code>
     <td>The name of the highest profile supported by the test JDK.
     <td>One of <code>compact1</code> <code>compact2</code> <code>compact3</code>
     <td>
 
-<tr class="even" style="color:gray"><td><code>module:<i>name</i></code>
+<tr class="odd" style="color:gray"><td><code>module:<i>name</i></code>
     <td>Whether or not a module is available in the test JDK.
     <td>One of <code>true</code> <code>false</code>
     <td>
@@ -1089,6 +1204,11 @@ action tag.
 <td><code>test.nativepath</code>
 <td><code>TESTNATIVEPATH</code>
 <td>The location of native executables used in the tests.
+
+<tr class="odd">
+<td><code>test.modules</code>
+<td><code>TESTMODULES</code>
+<td>The module dependencies of the test, if any, defined in the <code>@modules</code> tag.
 
 </tbody>
 </table>
