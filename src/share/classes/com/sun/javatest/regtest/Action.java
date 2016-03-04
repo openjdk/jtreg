@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -42,6 +43,7 @@ import java.util.Set;
 import com.sun.javatest.Status;
 import com.sun.javatest.TestResult;
 import com.sun.javatest.regtest.agent.ActionHelper;
+import com.sun.javatest.regtest.agent.SearchPath;
 
 
 /**
@@ -417,6 +419,39 @@ public abstract class Action extends ActionHelper
         result.addAll(l1);
         result.addAll(l2);
         return result;
+    }
+
+    //--------------------------------------------------------------------------
+
+    Set<String> getModules(SearchPath pp) {
+        if (pp == null)
+            return Collections.emptySet();
+
+        Set<String> results = new LinkedHashSet<String>();
+        for (File dir: pp.split()) {
+            getModules(dir, results);
+        }
+        return results;
+    }
+
+    void getModules(File dir, Set<String> results) {
+        for (File f: dir.listFiles()) {
+            if (isModule(f))
+                results.add(f.getName());
+        }
+    }
+
+    boolean isModule(File f) {
+        if (f.isDirectory()) {
+            if (script.systemModules.contains(f.getName())) {
+                return true;
+            }
+            if (new File(f, "module-info.class").exists())
+                return true;
+            if (new File(f, "module-info.java").exists())
+                return true;
+        }
+        return false;
     }
 
     //----------module exports----------------------------------------------------

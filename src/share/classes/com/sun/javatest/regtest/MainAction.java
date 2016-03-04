@@ -400,9 +400,13 @@ public class MainAction extends Action
         javaOpts.addPath("-Xpatch:", paths.get(PathKind.PATCHPATH));
         javaOpts.addPath("-modulepath", paths.get(PathKind.MODULEPATH));
 
-        if (testModuleName != null) {
+        Set<String> addMods = new LinkedHashSet<String>();
+        if (testModuleName != null)
+            addMods.add(testModuleName);
+        addMods.addAll(getModules(paths.get(PathKind.MODULEPATH)));
+        if (!addMods.isEmpty()) {
             javaOpts.add("-addmods");
-            javaOpts.add(testModuleName);
+            javaOpts.add(StringUtils.join(addMods, ","));
         }
 
         javaOpts.addAll(getAddExports());

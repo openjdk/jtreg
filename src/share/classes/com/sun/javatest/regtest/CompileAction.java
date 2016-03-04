@@ -477,37 +477,15 @@ public class CompileAction extends Action {
             javacArgs.add(sb.toString());
         }
 
+        Set<String> userMods = getModules(compilePaths.get(PathKind.MODULEPATH));
+        if (!userMods.isEmpty()) {
+            javacArgs.add("-addmods");
+            javacArgs.add(StringUtils.join(userMods, ","));
+        }
+
         javacArgs.addAll(args);
 
         return javacArgs.toList();
-    }
-
-    Set<String> getModules(SearchPath pp) {
-        Set<String> results = new LinkedHashSet<String>();
-        for (File dir: pp.split()) {
-            getModules(dir, results);
-        }
-        return results;
-    }
-
-    void getModules(File dir, Set<String> results) {
-        for (File f: dir.listFiles()) {
-            if (isModule(f))
-                results.add(f.getName());
-        }
-    }
-
-    boolean isModule(File f) {
-        if (f.isDirectory()) {
-            if (script.systemModules.contains(f.getName())) {
-                return true;
-            }
-            if (new File(f, "module-info.class").exists())
-                return true;
-            if (new File(f, "module-info.java").exists())
-                return true;
-        }
-        return false;
     }
 
     private Status runOtherJVM(List<String> javacArgs) throws TestRunException {

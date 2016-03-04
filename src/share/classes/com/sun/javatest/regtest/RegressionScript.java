@@ -171,6 +171,10 @@ public class RegressionScript extends Script {
                 }
             }
 
+            if (!locations.absLibClsList(LibLocn.Kind.USER_MODULE).isEmpty()) {
+                useModulePath = true;
+            }
+
             scratchDirectory = ScratchDirectory.get(params, defaultExecMode, td);
             scratchDirectory.init(msgPW);
 
