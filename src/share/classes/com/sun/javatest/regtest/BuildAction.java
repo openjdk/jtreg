@@ -40,6 +40,7 @@ import java.util.regex.Pattern;
 import com.sun.javatest.Status;
 import com.sun.javatest.regtest.Locations.ClassLocn;
 import com.sun.javatest.regtest.Locations.LibLocn;
+import com.sun.javatest.regtest.agent.JDK_Version;
 
 import static com.sun.javatest.regtest.agent.RStatus.passed;
 
@@ -291,7 +292,7 @@ public class BuildAction extends Action
         }
 
         List<String> compArgs = new ArrayList<String>();
-        if (IGNORE_SYMBOL_FILE)
+        if (useIgnoreSymbolFile())
             compArgs.add("-XDignore.symbol.file=true");
         if (implicitOpt != null)
             compArgs.add(implicitOpt);
@@ -333,8 +334,12 @@ public class BuildAction extends Action
         pw.println();
     }
 
+    private boolean useIgnoreSymbolFile() {
+        int c = script.getCompileJDKVersion().compareTo(JDK_Version.V9);
+        return (c < 0) ? true : (c == 0) ? !script.getCompileJDK().hasModules() : false;
+    }
+
     //----------member variables------------------------------------------------
 
     private String implicitOpt;
-    private static final boolean IGNORE_SYMBOL_FILE = true;
 }
