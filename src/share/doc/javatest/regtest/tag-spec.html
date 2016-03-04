@@ -857,12 +857,12 @@ to run all the tests in the test suite.</p>
 
 <dt><code>requires.extraPropDefns <var>&lt;source-files&gt;</var></code><br>
 <dd><p>This option is used to provide source files for classes that will be used at the
-beginning of each test run, to determine additional characteristics of the system for
+beginning of each test suite run, to determine additional characteristics of the system for
 use with the <code>@requires</code> tag. Each class must implement
-<code>java.util.concurrent.Callable&lt;java.util.Properties&gt;</code>.
+<code>java.util.concurrent.Callable&lt;java.util.Map&lt;String, String&gt;&gt;</code>.
 When invoked, the <code>call()</code> method should return properties that can be referenced in
 an expression in a <code>@requires</code> tag. <i>Note:</i> the names of the
-properties that may be returned by calling these classes must also be declared in
+new properties that may be returned by calling these classes must also be declared in
 a <code>requires.properties</code> entry.
 <p>If this option is specified, the following additional options may also be specified:
 <ul>
@@ -877,7 +877,7 @@ a <code>requires.properties</code> entry.
 <li><code>requires.extraPropDefns.vmOpts <var>&lt;options&gt;</var></code>
     &mdash; options that will be passed to VM when the classes are executed.
 </ul>
-<p>In all of these options, if a source file is enclosed in square brackets, no error message
+<p>In this family of options, if a source file is enclosed in square brackets, no error message
 will be given if the file is not available.
 </dl>
 
