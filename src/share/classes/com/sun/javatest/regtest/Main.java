@@ -582,6 +582,18 @@ public class Main {
             }
         },
 
+        new Option(STD, JDK, null, "Xpatch") {
+            public void process(String opt, String arg) {
+                // old style for now: -Xpatch:<path>
+                testVMOpts.add("-Xpatch:" + filesToAbsolutePath(pathToFiles(arg)));
+//                // new style, to come:  -Xpatch:<module>=<path>
+//                int eq = arg.indexOf("=");
+//                testVMOpts.add("-Xpatch:"
+//                        + arg.substring(0, eq + 1)
+//                        + filesToAbsolutePath(pathToFiles(arg.substring(eq + 1))));
+            }
+        },
+
         new Option(WILDCARD, JDK, null, "X") {
             public void process(String opt, String arg) {
                 // This is a change in spec. Previously. -X was used to tunnel
