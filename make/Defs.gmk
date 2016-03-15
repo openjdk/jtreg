@@ -303,7 +303,7 @@ IMAGESRC_SRCDIR = $(IMAGESRC_TOPDIR)/src/share/classes
 # Version tags
 #
 # BUILD_* variables are normally set (overridden) by RE builds
-BUILD_VERSION = 4.1
+BUILD_VERSION = 4.2
 BUILD_MILESTONE = dev
 BUILD_NUMBER = b00
 
