@@ -1040,9 +1040,10 @@ public class Main {
      */
     public final int run(String[] args) throws
             BadArgs, Fault, Harness.Fault, InterruptedException {
-        if (args.length > 0)
-            new OptionDecoder(options).decodeArgs(expandAtFiles(args));
-        else {
+        if (args.length > 0) {
+            expandedArgs = expandAtFiles(args);
+            new OptionDecoder(options).decodeArgs(expandedArgs);
+        } else {
             help = new Help(options);
             help.setCommandLineHelpQuery(null);
         }
@@ -1186,6 +1187,23 @@ public class Main {
         if (!noReportFlag) {
             makeDir(reportDirArg, false);
             testManager.setReportDirectory(reportDirArg);
+
+            if (expandedArgs != null) {
+                File reportTextDir = new File(reportDirArg, "text");
+                makeDir(reportTextDir, true);
+                File cmdArgsFile = new File(reportTextDir, "cmdArgs.txt");
+                // update to use try-with-resources and lambda
+                try {
+                    BufferedWriter cmdArgsWriter = new BufferedWriter(new FileWriter(cmdArgsFile));
+                    for (String arg: expandedArgs) {
+                        cmdArgsWriter.append(arg);
+                        cmdArgsWriter.newLine();
+                    }
+                    cmdArgsWriter.close();
+                } catch (IOException e) {
+                    System.err.println("Error writing " + cmdArgsFile + ": " + e);
+                }
+            }
         }
 
         if (allowSetSecurityManagerFlag) {
@@ -1409,7 +1427,7 @@ public class Main {
      * files are not supported. The '@' character itself can be quoted with
      * the sequence '@@'.
      */
-    private static String[] expandAtFiles(String[] args) throws Fault {
+    private static List<String> expandAtFiles(String[] args) throws Fault {
         List<String> newArgs = new ArrayList<String>();
         for (String arg : args) {
             if (arg.length() > 1 && arg.charAt(0) == '@') {
@@ -1423,7 +1441,7 @@ public class Main {
                 newArgs.add(arg);
             }
         }
-        return newArgs.toArray(new String[newArgs.size()]);
+        return newArgs;
     }
 
     private static void loadCmdFile(String name, List<String> args) throws Fault {
@@ -2191,6 +2209,8 @@ public class Main {
 
     private PrintWriter out;
     private PrintWriter err;
+
+    private List<String> expandedArgs;
 
     // this first group of args are the "standard" JavaTest args
     private File workDirArg;
