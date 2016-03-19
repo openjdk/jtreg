@@ -1101,7 +1101,10 @@ public class Main {
             Version requiredVersion = ts.getRequiredVersion();
             Version currentVersion = Version.getCurrent();
             if (requiredVersion.compareTo(currentVersion) > 0) {
-                throw new Fault(i18n, "main.requiredVersion", ts.getPath(), requiredVersion.version, requiredVersion.build, currentVersion.version, currentVersion.build);
+                throw new Fault(i18n, "main.requiredVersion",
+                        ts.getPath(),
+                        requiredVersion.version, requiredVersion.build,
+                        currentVersion.version, currentVersion.build);
             }
         }
 

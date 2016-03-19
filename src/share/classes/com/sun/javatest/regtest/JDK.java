@@ -41,6 +41,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 import com.sun.javatest.regtest.agent.GetJDKProperties;
 import com.sun.javatest.regtest.agent.GetSystemProperty;
@@ -205,6 +207,9 @@ public class JDK {
         return version;
     }
 
+    /**
+     * Return the JDK -version output
+     */
     public synchronized String getFullVersion(Collection<String> vmOpts) {
         if (fullVersions == null)
             fullVersions = new HashMap<Set<String>, String>();
@@ -212,7 +217,7 @@ public class JDK {
         Set<String> vmOptsSet = new LinkedHashSet<String>(vmOpts);
         String fullVersion = fullVersions.get(vmOptsSet);
         if (fullVersion == null) {
-            fullVersion = jdk.getPath();  // default
+            fullVersion = "";  // default
             List<String> cmdArgs = new ArrayList<String>();
             cmdArgs.add(getJavaProg().getPath());
             cmdArgs.addAll(vmOpts);
@@ -225,7 +230,7 @@ public class JDK {
                 String out = getOutput(p);
                 int rc = p.waitFor();
                 if (rc == 0) {
-                    fullVersion = "(" + jdk + ")" + LINESEP + out;
+                    fullVersion = out;
                 }
             } catch (InterruptedException e) {
                 // ignore, leave version as default
@@ -238,6 +243,38 @@ public class JDK {
 
         return fullVersion;
     }
+
+    public boolean hasOldSymbolFile() {
+        if (hasOldSymbolFile == null) {
+            if (version != null) {
+                JDK_Version v = JDK_Version.forName(version);
+                if (v.compareTo(JDK_Version.V1_5) <= 0 || v.compareTo(JDK_Version.V10) >= 0) {
+                    hasOldSymbolFile = false;
+                    return hasOldSymbolFile;
+                }
+            }
+            File ctSym = new File(new File(absJDK, "lib"), "ct.sym");
+            if (ctSym.exists()) {
+                try {
+                    // convert to try-with-resources when possible
+                    JarFile jar = new JarFile(ctSym);
+                    try {
+                        JarEntry e = jar.getJarEntry("META-INF/sym/rt.jar/java/lang/Object.class");
+                        hasOldSymbolFile = (e != null);
+                    } finally {
+                        jar.close();
+                    }
+                } catch (IOException e) {
+                    hasOldSymbolFile = false;
+                }
+            } else {
+                hasOldSymbolFile = false;
+            }
+        }
+        return hasOldSymbolFile;
+    }
+
+    private Boolean hasOldSymbolFile = null;
 
     public boolean hasModules() {
         // whether or not a JDK has modules is independent of the params used,

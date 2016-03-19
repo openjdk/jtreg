@@ -118,6 +118,10 @@ public class RegressionScript extends Script {
             testResult.putProperty(p, System.getProperty(p));
         }
         testResult.putProperty("jtregVersion", getVersion());
+        testResult.putProperty("testJDK", getTestJDK().getAbsolutePath());
+        if (!getCompileJDK().equals(getTestJDK())) {
+            testResult.putProperty("compileJDK", getCompileJDK().getAbsolutePath());
+        }
 
         PrintWriter msgPW = testResult.getTestCommentWriter();
 
@@ -185,10 +189,10 @@ public class RegressionScript extends Script {
             else {
                 if (getTestJDK().equals(getCompileJDK())) {
                     // output for default case unchanged
-                    msgPW.println("JDK under test: " + getTestJDK().getFullVersion(getTestVMOptions()));
+                    printJDKInfo(msgPW, "JDK under test", getTestJDK(), getTestVMOptions());
                 } else {
-                    msgPW.println("compile JDK: " + getCompileJDK().getFullVersion(getTestToolVMOptions()));
-                    msgPW.println("test JDK: " + getTestJDK().getFullVersion(getTestVMOptions()));
+                    printJDKInfo(msgPW, "compile JDK", getCompileJDK(), Collections.<String>emptyList());
+                    printJDKInfo(msgPW, "test JDK", getTestJDK(), getTestVMOptions());
                 }
 
                 for (LibLocn lib: locations.getLibs()) {
@@ -273,6 +277,16 @@ public class RegressionScript extends Script {
         }
         return status;
     } // run()
+
+    private void printJDKInfo(PrintWriter pw, String label, JDK jdk, List<String> opts) {
+        pw.print(label);
+        pw.print(": ");
+        pw.println(jdk.getAbsoluteFile());
+        String v = jdk.getFullVersion(opts);
+        if (v.length() > 0) {
+            pw.println(v);
+        }
+    }
 
     /**
      * Get the set of source files used by the actions in a test description.

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006, 2011, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2006, 2016, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -26,6 +26,8 @@
 package com.sun.javatest.regtest;
 
 import java.io.PrintWriter;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.sun.javatest.Harness;
 import com.sun.javatest.Status;
@@ -191,7 +193,10 @@ public class VerboseHandler {
         try {
             TestDescription td = tr.getDescription();
             out.println("TEST: " + td.getRootRelativeURL());
-            out.println(getTestJDK(tr));
+            String testJDK = getTestJDK(tr);
+            if (testJDK != null) {
+                out.println("TEST JDK: " + testJDK);
+            }
 
             StringBuilder sb = new StringBuilder();
             for (int i = 1; i < tr.getSectionCount(); i++) {
@@ -282,26 +287,18 @@ public class VerboseHandler {
 
 
     /**
-     * Find the JDK under test.  This string is sent to the System message
-     * section.  This method takes advantage of the fact that desired
-     * string begins with <code>JDK under test: </code>, ends with a line
-     * separator, and is the last string in the test result's default
-     * message stream.
+     * Find the JDK under test.
      *
      * @param tr The test result where all sections are stored.
-     * @return The string indicating the JDK under test.
+     * @return The string indicating the JDK under test, or null if not found
      */
     private String getTestJDK(TestResult tr) {
         try {
-            TestResult.Section section = tr.getSection(0);
-            String msg = section.getOutput(TestResult.MESSAGE_OUTPUT_NAME);
-            int pos = msg.indexOf("JDK under test: ");
-            if (pos >= 0)
-                return msg.substring(pos, msg.length() - 1);
-        } catch (TestResult.ReloadFault f) {
+            return tr.getProperty("testJDK");
+        } catch (TestResult.Fault f) {
             f.printStackTrace(System.err);
         }
-        return "???";
+        return null;
     } // getTestJDK()
 
     //----------member variables-------------------------------------------

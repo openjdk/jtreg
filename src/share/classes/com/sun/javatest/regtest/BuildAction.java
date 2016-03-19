@@ -292,7 +292,7 @@ public class BuildAction extends Action
         }
 
         List<String> compArgs = new ArrayList<String>();
-        if (useIgnoreSymbolFile())
+        if (script.getCompileJDK().hasOldSymbolFile())
             compArgs.add("-XDignore.symbol.file=true");
         if (implicitOpt != null)
             compArgs.add(implicitOpt);
@@ -332,11 +332,6 @@ public class BuildAction extends Action
             sep = ", ";
         }
         pw.println();
-    }
-
-    private boolean useIgnoreSymbolFile() {
-        int c = script.getCompileJDKVersion().compareTo(JDK_Version.V9);
-        return (c < 0) ? true : (c == 0) ? !script.getCompileJDK().hasModules() : false;
     }
 
     //----------member variables------------------------------------------------
