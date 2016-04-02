@@ -235,7 +235,7 @@ public class AppletAction extends Action
         command.add("-classpath");
         command.add(execPaths.get(PathKind.CLASSPATH).toString());
 
-        JDKOpts vmOpts = new JDKOpts();
+        JDKOpts vmOpts = new JDKOpts(script.useNewXpatch());
         vmOpts.addAll(getAddExports());
         vmOpts.addAll(script.getTestVMJavaOptions());
         vmOpts.addAll(script.getTestDebugOptions());

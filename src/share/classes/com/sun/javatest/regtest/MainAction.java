@@ -390,7 +390,7 @@ public class MainAction extends Action
         }
 
         String javaCmd = script.getJavaProg();
-        JDKOpts javaOpts = new JDKOpts();
+        JDKOpts javaOpts = new JDKOpts(script.useNewXpatch());
 
         if (!useCLASSPATH) {
             javaOpts.addPath("-classpath", cp);

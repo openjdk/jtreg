@@ -436,7 +436,7 @@ public class CompileAction extends Action {
     private List<String> getJavacCommandArgs(List<String> args) throws TestRunException {
         Map<PathKind, SearchPath> compilePaths = script.getCompilePaths(libLocn, multiModule, module);
 
-        JDKOpts javacArgs = new JDKOpts();
+        JDKOpts javacArgs = new JDKOpts(script.useNewXpatch());
         javacArgs.addAll(script.getTestCompilerOptions());
         javacArgs.addAll(getAddExports());
 

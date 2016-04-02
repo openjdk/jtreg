@@ -26,9 +26,11 @@
 package com.sun.javatest.regtest;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -47,11 +49,17 @@ import com.sun.javatest.regtest.agent.SearchPath;
 public class JDKOpts {
     private final List<String> opts;
     private final Map<String, Integer> index;
+    private final boolean useNewXpatch;
     private String pending;
 
     public JDKOpts() {
+        this(true);
+    }
+
+    public JDKOpts(boolean useNewXpatch) {
         opts = new ArrayList<String>();
         index = new HashMap<String, Integer>();
+        this.useNewXpatch = useNewXpatch;
     }
 
     public boolean isEmpty() {
@@ -104,7 +112,11 @@ public class JDKOpts {
         }
 
         if (opt.startsWith("-Xpatch:")) {
-            updateOpt(opt, ":", File.pathSeparator);
+            if (useNewXpatch) {
+                updateNewXpatch(opt);
+            } else {
+                updateOldXpatch(opt);
+            }
         } else if (opt.startsWith("-XaddExports:")) {
             updateAddExports(opt);
         } else if (opt.startsWith("-")) {
@@ -141,6 +153,46 @@ public class JDKOpts {
             }
         } else {
             updateOpt(opt, "=", ",");
+        }
+    }
+
+    private void updateOldXpatch(String opt) {
+        // -Xpatch:path
+        int eq = opt.indexOf("=");
+        if (eq == -1) {
+            updateOpt(opt, ":", File.pathSeparator);
+        } else {
+            String modName = opt.substring(opt.indexOf(":") + 1, eq);
+            SearchPath newStylePath = new SearchPath(opt.substring(eq + 1));
+            for (File f : newStylePath.split()) {
+                if (f.isDirectory() && f.getName().equals(modName)) {
+                    updateOpt("-Xpatch:" + f.getParentFile(), ":", File.pathSeparator);
+                } else {
+                    throw new IllegalArgumentException("Cannot convert path to old Xpatch: form: "
+                            + f);
+                }
+            }
+        }
+    }
+
+    private void updateNewXpatch(String opt) {
+        // -Xpatch:module=path
+        int eq = opt.indexOf("=");
+        if (eq == -1) {
+            SearchPath oldStylePath = new SearchPath(opt.substring(eq + 1));
+            for (File dir : oldStylePath.split()) {
+                File[] subdirs = dir.listFiles();
+                if (subdirs != null) {
+                    Arrays.sort(subdirs); // for repeatability; good enough for now
+                    for (File subdir: subdirs) {
+                        if (subdir.isDirectory()) {
+                            updateOpt("-Xpatch:" + subdir.getName() + "=" + subdir, "=", File.pathSeparator);
+                        }
+                    }
+                }
+            }
+        } else {
+            updateOpt(opt, "=", File.pathSeparator);
         }
     }
 

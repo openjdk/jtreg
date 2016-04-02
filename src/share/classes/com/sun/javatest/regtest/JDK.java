@@ -340,23 +340,24 @@ public class JDK {
                 throw new Fault(e.getMessage(), e);
             }
 
-            List<String> cmdArgs = new ArrayList<String>();
-            cmdArgs.add(getJavaProg().getPath());
-
-            cmdArgs.add("-classpath");
+            JDKOpts jdkOpts = new JDKOpts(params.getTestSuite().useNewXpatch());
+            jdkOpts.add("-classpath");
             SearchPath cp = new SearchPath(params.getJavaTestClassPath());
             cp.append(epd.getClassDir());
-            cmdArgs.add(cp.toString());
+            jdkOpts.add(cp.toString());
 
             SearchPath bcp = new SearchPath(epd.getBootClassDir());
             if (!bcp.isEmpty()) {
-                cmdArgs.add("-Xbootclasspath/a:" + bcp);
+                jdkOpts.add("-Xbootclasspath/a:" + bcp);
             }
 
             List<String> vmOpts = params.getTestVMJavaOptions();
-            cmdArgs.addAll(vmOpts);
-            cmdArgs.addAll(epd.getVMOpts());
+            jdkOpts.addAll(vmOpts);
+            jdkOpts.addAll(epd.getVMOpts());
 
+            List<String> cmdArgs = new ArrayList<String>();
+            cmdArgs.add(getJavaProg().getPath());
+            cmdArgs.addAll(jdkOpts.toList());
             cmdArgs.add(GetJDKProperties.class.getName());
 
             cmdArgs.addAll(epd.getClasses());
