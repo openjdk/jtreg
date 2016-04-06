@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2007, 2016, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -31,6 +31,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import com.sun.javatest.util.I18NResourceBundle;
@@ -48,7 +49,7 @@ public class OptionDecoder {
                     break;
                 default:
                     for (String n: o.names)
-                        simpleOptions.put(n.toLowerCase(), o);
+                        simpleOptions.put(n.toLowerCase(Locale.US), o);
             }
         }
     }
@@ -97,6 +98,14 @@ public class OptionDecoder {
                 break;
             case STD:        // -opt:arg
                 if (value == null)
+                    throw new BadArgs(i18n, "opt.missing.value", arg);
+                break;
+            case SEP:        // -opt arg
+                if (value != null)
+                    throw new BadArgs(i18n, "opt.unexpected.value", arg);
+                if (iter.hasNext())
+                    value = iter.next();
+                else
                     throw new BadArgs(i18n, "opt.missing.value", arg);
                 break;
             case OLD:        // -opt:arg or -opt arg

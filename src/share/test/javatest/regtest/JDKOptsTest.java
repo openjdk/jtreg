@@ -52,6 +52,20 @@ public class JDKOptsTest {
     }
 
     @Test
+    void testAddMods() {
+        String[] opts = { "-addmods", "m1,m2", "-addmods", "m2,m3" };
+        String[] expect = { "-addmods", "m1,m2,m3" };
+        test(opts, expect);
+    }
+
+    @Test
+    void testLimitMods() {
+        String[] opts = { "-limitmods", "m2,m1", "-limitmods", "m3,m2" };
+        String[] expect = { "-limitmods", "m2,m1,m3" };
+        test(opts, expect);
+    }
+
+    @Test
     void testXpatch_oldXpatch() {
         String[] opts = { "-Xpatch:a", "-Xpatch:b" };
         String[] expect = { "-Xpatch:a" + PS + "b" };
@@ -197,12 +211,16 @@ public class JDKOptsTest {
             "-classpath", "cp1", "-sourcepath", "sp1", "-Xpatch:xp1=xp1", "-XaddExports:m1/p1=ALL-UNNAMED",
             "-classpath", "cp2", "-sourcepath", "sp2", "-Xpatch:xp2=xp2", "-XaddExports:m2/p2=ALL-UNNAMED",
             "-classpath", "cp3", "-sourcepath", "sp3", "-Xpatch:xp3=xp3", "-XaddExports:m3/p3=ALL-UNNAMED",
+            "-addmods", "m1,m2,m3",
+            "-limitmods", "m1,m2,m3",
             "-Xpatch:xp1=xp1a",
             "-Xpatch:xp2=xp2a",
             "-Xpatch:xp3=xp3a",
             "-XaddExports:m1/p1=m11",
             "-XaddExports:m2/p2=m22",
             "-XaddExports:m3/p3=m33",
+            "-addmods", "m2,m3,m4",
+            "-limitmods", "m2,m3,m4",
         };
         String[] expect = {
             "-classpath", "cp1" + PS + "cp2" + PS + "cp3",
@@ -213,6 +231,8 @@ public class JDKOptsTest {
             "-XaddExports:m2/p2=ALL-UNNAMED,m22",
             "-Xpatch:xp3=xp3" + PS + "xp3a",
             "-XaddExports:m3/p3=ALL-UNNAMED,m33",
+            "-addmods", "m1,m2,m3,m4",
+            "-limitmods", "m1,m2,m3,m4"
         };
         test(opts, expect);
     }

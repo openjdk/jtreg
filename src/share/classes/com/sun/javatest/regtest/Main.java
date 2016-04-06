@@ -552,6 +552,20 @@ public class Main {
             }
         },
 
+        new Option(SEP, JDK, null, "addmods") {
+            public void process(String opt, String arg) {
+                testVMOpts.add(opt);
+                testVMOpts.add(arg);
+            }
+        },
+
+        new Option(SEP, JDK, null, "limitmods") {
+            public void process(String opt, String arg) {
+                testVMOpts.add(opt);
+                testVMOpts.add(arg);
+            }
+        },
+
         new Option(WILDCARD, JDK, null, "XX", "Xms", "Xmx") {
             public void process(String opt, String arg) {
                 testVMOpts.add(opt);
@@ -688,16 +702,6 @@ public class Main {
                 if (arg.length() == 0)
                     return;
                 testDebugOpts.addAll(Arrays.asList(arg.split("\\s+")));
-            }
-        },
-
-        new Option(OLD, JDK, null, "limitmods") {
-            public void process(String opt, String arg) {
-                arg = arg.trim();
-                if (arg.length() == 0)
-                    return;
-                testVMOpts.add("-limitmods");
-                testVMOpts.add(arg);
             }
         },
 

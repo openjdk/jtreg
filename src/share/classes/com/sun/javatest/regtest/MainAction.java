@@ -171,15 +171,15 @@ public class MainAction extends Action
             if (testClassName == null) {
                 if (arg.startsWith("-")) {
                     testJavaArgs.add(arg);
-                    // The following is questionable, in that no attention
-                    // is paid to this value, other than to copy it to the
-                    // othervm command, where it will supersede the computed
-                    // value that takes @libraries into account.
-                    // Compare this handling to the handling of -classpath
-                    // and -sourcepath for @compile in CompileAction.
-                    if ((arg.equals("-cp") || arg.equals("-classpath"))
-                        && (i+1 < args.size()))
+                    if ((arg.equals("-addmods") || arg.equals("-limitmods"))
+                            && (i + 1 < args.size())) {
                         testJavaArgs.add(args.get(++i));
+                    } else if ((arg.equals("-cp") || arg.equals("-classpath"))
+                            && (i + 1 < args.size())) {
+                        // Note that this value will be merged by JDKOpts with
+                        // any values required to take @library paths into account
+                        testJavaArgs.add(args.get(++i));
+                    }
                 } else {
                     int sep = arg.indexOf("/");
                     if (sep == -1) {
