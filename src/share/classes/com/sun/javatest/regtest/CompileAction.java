@@ -296,7 +296,7 @@ public class CompileAction extends Action {
      *          the action.
      */
     public Status run() throws TestRunException {
-        startAction();
+        startAction(true);
 
         List<String> javacArgs = new ArrayList<String>();
         List<String> jasmArgs = new ArrayList<String>();
@@ -506,6 +506,7 @@ public class CompileAction extends Action {
             javacVMOpts.addAll(script.getTestDebugOptions());
 
         // WRITE ARGUMENT FILE
+        List<String> fullJavacArgs = javacArgs;
         if (javacArgs.size() >= 10) {
             File argFile = getArgFile();
             try {
@@ -537,6 +538,12 @@ public class CompileAction extends Action {
         if (showCmd)
             showCmd("compile", command, section);
 
+        new ModuleConfig("Boot Layer (javac execution environment")
+                .setFromOpts(javacVMOpts)
+                .write(configWriter);
+        new ModuleConfig("javac compilation environment")
+                .setFromOpts(fullJavacArgs)
+                .write(configWriter);
         recorder.javac(env, javacCmd, javacVMOpts, javacProps, javacArgs);
 
         // PASS TO PROCESSCOMMAND
@@ -608,6 +615,7 @@ public class CompileAction extends Action {
                     ? join(script.getTestVMOptions(), script.getTestDebugOptions())
                     : script.getTestVMOptions();
             agent = script.getAgent(jdk, agentClasspath, vmOpts);
+            new ModuleConfig("Boot Layer (javac execution environment)").setFromOpts(agent.vmOpts).write(configWriter);
         } catch (Agent.Fault e) {
             return error(AGENTVM_CANT_GET_VM + ": " + e.getCause());
         }
@@ -617,6 +625,9 @@ public class CompileAction extends Action {
 
         Status status;
         try {
+            new ModuleConfig("javac compilation environment")
+                    .setFromOpts(javacArgs)
+                    .write(configWriter);
             status = agent.doCompileAction(
                     script.getTestResult().getTestName(),
                     javacProps,

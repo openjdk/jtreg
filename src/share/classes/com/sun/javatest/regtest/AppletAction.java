@@ -183,7 +183,7 @@ public class AppletAction extends Action
         if (!(status = ba.build(buildOpts, buildArgs, SREASON_ASSUMED_BUILD, script)).isPassed())
             return status;
 
-        startAction();
+        startAction(false);
 
         if (script.isCheck()) {
             // If we're only running check on the contents of the test

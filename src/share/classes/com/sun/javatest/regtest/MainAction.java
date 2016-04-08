@@ -298,7 +298,7 @@ public class MainAction extends Action
         if (nativeCode && script.getNativeDir() == null)
             return error(MAIN_NO_NATIVES);
 
-        startAction();
+        startAction(true);
 
         if (script.isCheck()) {
             status = passed(CHECK_PASS);
@@ -457,6 +457,7 @@ public class MainAction extends Action
                 showMode(getName(), ExecMode.OTHERVM, section);
             if (showCmd)
                 showCmd(getName(), command, section);
+            new ModuleConfig("Boot Layer").setFromOpts(javaOpts).write(configWriter);
             recorder.java(env, javaCmd, javaProps, javaOpts.toList(), className, classArgs);
 
             // RUN THE MAIN WRAPPER CLASS
@@ -557,6 +558,7 @@ public class MainAction extends Action
         try {
             agent = script.getAgent(jdk, agentClasspath,
                     filterJavaOpts(join(script.getTestVMJavaOptions(), script.getTestDebugOptions())));
+            new ModuleConfig("Boot Layer").setFromOpts(agent.vmOpts).write(configWriter);
         } catch (Agent.Fault e) {
             return error(AGENTVM_CANT_GET_VM + ": " + e.getCause());
         }
@@ -566,10 +568,16 @@ public class MainAction extends Action
 
         Status status;
         try {
+            Set<String> runModules =
+                    jdk.hasModules() ? script.getModules() : Collections.<String>emptySet();
+            new ModuleConfig("Test Layer")
+                    .setModules(runModules)
+                    .setClassPath(runClasspath)
+                    .write(configWriter);
             status = agent.doMainAction(
                     script.getTestResult().getTestName(),
                     javaProps,
-                    jdk.hasModules() ? script.getModules() : Collections.<String>emptySet(),
+                    runModules,
                     runClasspath,
                     runMainClass,
                     runMainArgs,

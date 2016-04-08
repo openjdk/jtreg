@@ -307,7 +307,7 @@ public abstract class Action extends ActionHelper
      * reason: [reason_string]
      * </pre>
      */
-    protected void startAction() {
+    protected void startAction(boolean initConfig) {
         String name = getName();
         section = script.getTestResult().createSection(name);
 
@@ -316,6 +316,8 @@ public abstract class Action extends ActionHelper
         pw.println(LOG_REASON + reason);
 
         recorder = new ActionRecorder(this);
+        if (initConfig)
+        configWriter = section.createOutput("configuration");
 
         startTime = (new Date()).getTime();
     } // startAction()
@@ -660,6 +662,7 @@ public abstract class Action extends ActionHelper
 
     protected /*final*/ TestResult.Section section;
     protected /*final*/ ActionRecorder recorder;
+    protected /*final*/ PrintWriter configWriter;
     private long startTime;
 
     protected static final boolean showCmd = config("showCmd");

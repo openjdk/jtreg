@@ -177,7 +177,7 @@ public class BuildAction extends Action
      *          the test.
      */
     public Status run() throws TestRunException {
-        startAction();
+        startAction(false);
 
         // step 1: see which files need compiling, and group them according
         // to the value of the library in which they appear, and hence
