@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006, 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2006, 2016, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -182,7 +182,13 @@ public class Version implements Comparable<Version> {
         if (build == null) {
             return 0;
         }
-        String b = build.substring(1, build.length());
-        return Integer.parseInt(b);
+
+        if (build.matches("b[0-9]+")) {
+            String b = build.substring(1, build.length());
+            return Integer.parseInt(b);
+        } else {
+            // ignore malformed or invalid build numbers
+            return 0;
+        }
     }
 }
