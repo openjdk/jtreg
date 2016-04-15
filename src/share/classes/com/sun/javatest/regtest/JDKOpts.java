@@ -26,11 +26,9 @@
 package com.sun.javatest.regtest;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -198,7 +196,7 @@ public class JDKOpts {
         // -Xpatch:module=path
         int eq = opt.indexOf("=");
         if (eq == -1) {
-            SearchPath oldStylePath = new SearchPath(opt.substring(eq + 1));
+            SearchPath oldStylePath = new SearchPath(opt.substring(opt.indexOf(":") + 1));
             for (File dir : oldStylePath.split()) {
                 File[] subdirs = dir.listFiles();
                 if (subdirs != null) {
