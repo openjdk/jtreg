@@ -2078,8 +2078,8 @@ public class Main {
     private Map<String, String> getEnvVars() {
 
         Map<String, String> envVars = new TreeMap<String, String>();
-        String osName = System.getProperty("os.name").toLowerCase();
-        if (osName.startsWith("windows")) {
+        OS os = OS.current();
+        if (os.family.equals("windows")) {
             addEnvVars(envVars, DEFAULT_WINDOWS_ENV_VARS);
             // TODO PATH? MKS? Cygwin?
             addEnvVars(envVars, "PATH"); // accept user's path, for now
@@ -2093,6 +2093,23 @@ public class Main {
             String v = e.getValue();
             if (k.startsWith("JTREG_")) {
                 envVars.put(k, v);
+            }
+        }
+
+        if (nativeDirArg != null) {
+            String libPathName;
+            if (os.family.equals("windows")) {
+                libPathName = "PATH";
+            } else if (os.family.equals("mac")) {
+                libPathName = "DYLD_LIBRARY_PATH";
+            } else {
+                libPathName = "LD_LIBRARY_PATH";
+            }
+            String libPath = envVars.get(libPathName);
+            if (libPath == null) {
+                envVars.put(libPathName, nativeDirArg.getPath());
+            } else {
+                envVars.put(libPathName, libPath + File.pathSeparator + nativeDirArg.getPath());
             }
         }
 
