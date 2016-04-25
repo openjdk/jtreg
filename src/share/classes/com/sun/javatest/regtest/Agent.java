@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010, 2016, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -219,7 +219,7 @@ public class Agent {
     public Status doMainAction(
             String testName,
             Map<String, String> testProps,
-            Set<String> modules,
+            Set<String> addExports,
             SearchPath testClassPath,
             String testClass,
             List<String> testArgs,
@@ -264,7 +264,7 @@ public class Agent {
                 out.writeByte(DO_MAIN);
                 out.writeUTF(testName);
                 writeMap(testProps);
-                writeCollection(modules);
+                writeCollection(addExports);
                 out.writeUTF(testClassPath.toString());
                 out.writeUTF(testClass);
                 writeCollection(testArgs);

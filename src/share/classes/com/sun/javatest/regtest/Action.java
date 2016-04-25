@@ -316,8 +316,9 @@ public abstract class Action extends ActionHelper
         pw.println(LOG_REASON + reason);
 
         recorder = new ActionRecorder(this);
-        if (initConfig)
-        configWriter = section.createOutput("configuration");
+        if (initConfig) {
+            configWriter = section.createOutput("configuration");
+        }
 
         startTime = (new Date()).getTime();
     } // startAction()
@@ -365,9 +366,24 @@ public abstract class Action extends ActionHelper
         pw.println();
     } // showCmd()
 
+    // this has largely been superseded by the default show mode code
     protected void showMode(String action, ExecMode mode, TestResult.Section section) {
         PrintWriter pw = section.getMessageWriter();
-        pw.println("Mode: " + mode);
+        pw.println("MODE: " + mode);
+    }
+
+    protected void showMode(ExecMode mode) {
+        showMode(mode, null);
+    }
+
+    protected void showMode(ExecMode mode, Set<String> reasons) {
+        PrintWriter pw = section.getMessageWriter();
+        pw.print("Mode: " + mode.name().toLowerCase());
+        if (reasons != null && !reasons.isEmpty()) {
+            pw.print(" ");
+            pw.print(reasons);
+        }
+        pw.println();
     }
 
     /**

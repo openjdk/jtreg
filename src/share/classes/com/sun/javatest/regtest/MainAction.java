@@ -59,6 +59,7 @@ import static com.sun.javatest.regtest.agent.RStatus.passed;
  *
  * @author Iris A Garcia
  * @see Action
+ * @see com.sun.javatest.regtest.agent.MainActionHelper
  */
 public class MainAction extends Action
 {
@@ -113,6 +114,8 @@ public class MainAction extends Action
         if (args.isEmpty())
             throw new ParseException(MAIN_NO_CLASSNAME);
 
+        boolean othervm = false;
+
         for (Map.Entry<String,String> e: opts.entrySet()) {
             String optName  = e.getKey();
             String optValue = e.getValue();
@@ -125,11 +128,12 @@ public class MainAction extends Action
                 timeout  = parseTimeout(optValue);
             } else if (optName.equals("othervm")) {
                 othervm = true;
+                othervmOverrideReasons.add("/othervm specified");
             } else if (optName.equals("native")) {
                 nativeCode = true;
             } else if (optName.equals("bootclasspath")) {
                 useBootClassPath = true;
-                othervm = true;
+                othervmOverrideReasons.add("/bootclasspath specified");
             } else if (optName.equals("policy")) {
                 overrideSysPolicy = true;
                 policyFN = parsePolicy(optValue);
@@ -161,8 +165,10 @@ public class MainAction extends Action
             this.driverClass = driverClass;
         }
 
-        if (script.useBootClassPath())
-            useBootClassPath = othervm = true;
+        if (script.useBootClassPath()) {
+            useBootClassPath = true;
+            othervmOverrideReasons.add("test or library uses bootclasspath");
+        }
 
         // separate the arguments into the options to java, the
         // classname and the parameters to the named class
@@ -197,7 +203,10 @@ public class MainAction extends Action
 
         if (testClassName == null)
             throw new ParseException(MAIN_NO_CLASSNAME);
+
         if (!othervm) {
+            // None of these need be fatal any more: we could just automatically
+            // set othervm mode if any of the following conditions arise.
             if (testJavaArgs.size() > 0)
                 throw new ParseException(testJavaArgs + MAIN_UNEXPECT_VMOPT);
             if (policyFN != null)
@@ -217,7 +226,7 @@ public class MainAction extends Action
                         }
                     }
                     if (!found) {
-                        othervm = true;
+                        othervmOverrideReasons.add("test needs -XaddExports");
                         break;
                     }
                 }
@@ -279,16 +288,13 @@ public class MainAction extends Action
      * cause an exception to be thrown by the main or any subsidiary threads.
      * It fails otherwise.
      *
-     * If the <em>othervm</em> option is present, this action requires that the
-     * JVM support multiple processes.
-     *
      * @return     The result of the action.
      * @exception  TestRunException If an unexpected error occurs while running
      *             the test.
      */
     public Status run() throws TestRunException {
         if (script.useXpatch())
-            othervm = true;
+            othervmOverrideReasons.add("test or library overrides a system module");
 
         Status status;
 
@@ -306,11 +312,13 @@ public class MainAction extends Action
             Lock lock = script.getLockIfRequired();
             if (lock != null) lock.lock();
             try {
-                switch (othervm ? ExecMode.OTHERVM : script.getExecMode()) {
+                switch (!othervmOverrideReasons.isEmpty() ? ExecMode.OTHERVM : script.getExecMode()) {
                     case AGENTVM:
+                        showMode(ExecMode.AGENTVM);
                         status = runAgentJVM();
                         break;
                     case OTHERVM:
+                        showMode(ExecMode.OTHERVM, othervmOverrideReasons);
                         status = runOtherJVM();
                         break;
                     default:
@@ -396,8 +404,10 @@ public class MainAction extends Action
             javaOpts.addPath("-classpath", cp);
         }
 
-        javaOpts.addPath("-Xbootclasspath/a:", paths.get(PathKind.BOOTCLASSPATH_APPEND));
-        javaOpts.addPath("-Xpatch:", paths.get(PathKind.PATCHPATH));
+        SearchPath bcpa = paths.get(PathKind.BOOTCLASSPATH_APPEND);
+        SearchPath pp = paths.get(PathKind.PATCHPATH);
+        javaOpts.addPath("-Xbootclasspath/a:", bcpa);
+        javaOpts.addPath("-Xpatch:", pp);
         javaOpts.addPath("-modulepath", paths.get(PathKind.MODULEPATH));
 
         Set<String> addMods = new LinkedHashSet<String>();
@@ -407,6 +417,13 @@ public class MainAction extends Action
         if (!addMods.isEmpty()) {
             javaOpts.add("-addmods");
             javaOpts.add(StringUtils.join(addMods, ","));
+        }
+
+        if (pp != null && !pp.isEmpty() && bcpa != null && !bcpa.isEmpty()) {
+            // provide addReads from patch modules to unnamed module(s).
+            for (String s: getModules(pp)) {
+                javaOpts.add("-XaddReads:" + s + "=ALL-UNNAMED");
+            }
         }
 
         javaOpts.addAll(getAddExports());
@@ -494,19 +511,6 @@ public class MainAction extends Action
         return status;
     } // runOtherJVM()
 
-
-    // move up to Action??
-    void addPath(List<String> args, String opt, SearchPath path) {
-        if (path != null && !path.isEmpty()) {
-            if (opt.endsWith(":"))
-                args.add(opt + path);
-            else {
-                args.add(opt);
-                args.add(path.toString());
-            }
-        }
-    }
-
     private Status runAgentJVM() throws TestRunException {
         String runModuleName;
         String runMainClass;
@@ -568,16 +572,17 @@ public class MainAction extends Action
 
         Status status;
         try {
-            Set<String> runModules =
+            Set<String> runAddExports =
                     jdk.hasModules() ? script.getModules() : Collections.<String>emptySet();
             new ModuleConfig("Test Layer")
-                    .setModules(runModules)
+                    .setAddExportsToUnnamed(runAddExports)
                     .setClassPath(runClasspath)
                     .write(configWriter);
+            // This calls through to MainActionHelper.runClass
             status = agent.doMainAction(
                     script.getTestResult().getTestName(),
                     javaProps,
-                    runModules,
+                    runAddExports,
                     runClasspath,
                     runMainClass,
                     runMainArgs,
@@ -661,10 +666,11 @@ public class MainAction extends Action
 
     protected boolean reverseStatus = false;
     protected boolean useBootClassPath = false;
-    protected boolean othervm = false;
+    protected Set<String> othervmOverrideReasons = new LinkedHashSet<String>();
     protected boolean nativeCode = false;
     private int     timeout = -1;
     private String  manual  = "unset";
 
-    private final boolean useModuleExportAPI = true; // config("useModuleExportAPI");
+    // No longer necessary?
+    private static final boolean useModuleExportAPI = true; // config("useModuleExportAPI");
 }

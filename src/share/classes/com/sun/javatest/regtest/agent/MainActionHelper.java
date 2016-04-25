@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2016, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -50,7 +50,7 @@ public class MainActionHelper extends ActionHelper {
     public static Status runClass(
             String testName,
             Map<String, String> props,
-            Set<String> modules,
+            Set<String> addExports,
             SearchPath classpath,
             String classname,
             String[] classArgs,
@@ -87,7 +87,7 @@ public class MainActionHelper extends ActionHelper {
                     }
                 }
                 loader = new URLClassLoader(urls.toArray(new URL[urls.size()]));
-                ModuleHelper.addModuleExports(modules, loader);
+                ModuleHelper.addModuleExports(addExports, loader);
                 c = loader.loadClass(classname);
             } else {
                 loader = null;

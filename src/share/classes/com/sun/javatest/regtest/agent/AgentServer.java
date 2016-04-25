@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010, 2016, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -221,7 +221,7 @@ public class AgentServer implements ActionHelper.OutputHandler {
         }
         String testName = in.readUTF();
         Map<String, String> testProps = readMap(in);
-        Set<String> modules = readSet(in);
+        Set<String> addExports = readSet(in);
         SearchPath classPath = new SearchPath(in.readUTF());
         String className = in.readUTF();
         List<String> classArgs = readList(in);
@@ -233,7 +233,7 @@ public class AgentServer implements ActionHelper.OutputHandler {
             Status status = MainActionHelper.runClass(
                     testName,
                     testProps,
-                    modules,
+                    addExports,
                     classPath,
                     className,
                     classArgs.toArray(new String[classArgs.size()]), 0, this);

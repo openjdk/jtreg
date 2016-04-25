@@ -101,39 +101,36 @@ public class JDKOpts {
     }
 
     public void add(String opt) {
-        if (opt.equals("-classpath")
+        if (pending != null) {
+            // this is the "value" to the preceding option
+            updateOpt(pending, opt, pendingSeparator);
+            pending = null;
+        } else if (opt.equals("-classpath")
                 || opt.equals("-sourcepath")) {
             pending = opt;
             pendingSeparator = File.pathSeparatorChar;
-            return;
         } else if (opt.equals("-cp")) {
             pending = "-classpath";
             pendingSeparator = File.pathSeparatorChar;
-            return;
         } else if (opt.equals("-addmods")
                 || opt.equals("-limitmods")) {
             pending = opt;
             pendingSeparator = ',';
-            return;
-        }
-
-        if (opt.startsWith("-Xpatch:")) {
+        } else if (opt.startsWith("-Xpatch:")) {
             if (useNewXpatch) {
                 updateNewXpatch(opt);
             } else {
                 updateOldXpatch(opt);
             }
+        } else if (opt.startsWith("-XaddReads:")) {
+            updateAddReads(opt);
         } else if (opt.startsWith("-XaddExports:")) {
             updateAddExports(opt);
         } else if (opt.startsWith("-")) {
             opts.add(opt);
-        } else if (pending != null) {
-            updateOpt(pending, opt, pendingSeparator);
         } else {
             opts.add(opt);
         }
-
-        pending = null;
     }
 
     /**
@@ -148,6 +145,31 @@ public class JDKOpts {
         String optValues = opt.substring(i + 1);
         if (optValues.matches(".*=.*,.*=.*")) {
              // temp allow for old usage with multiple mod/pkg=target values
+            for (String optValue: optValues.split(",")) {
+                int eq = optValue.indexOf("=");
+                if (eq > 0) {
+                    updateOpt(opt, '=', ',');
+                } else {
+                    opts.add(opt); // pass through bad opts
+                }
+            }
+        } else {
+            updateOpt(opt, '=', ',');
+        }
+    }
+
+    /**
+     * Update -XaddReads. -XaddReads:module=module,module
+     * Only one instance per module is allowed.
+     * Old style options are converted to new.
+     * @param opt
+     */
+    private void updateAddReads(String opt) {
+        int i = opt.indexOf(":");
+        String key = opt.substring(0, i + 1);
+        String optValues = opt.substring(i + 1);
+        if (optValues.matches(".*=.*,.*=.*")) {
+             // temp allow for old usage with multiple mod=target values
             for (String optValue: optValues.split(",")) {
                 int eq = optValue.indexOf("=");
                 if (eq > 0) {

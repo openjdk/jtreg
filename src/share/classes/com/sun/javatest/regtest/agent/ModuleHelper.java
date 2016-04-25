@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015, 2016, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,6 +22,7 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
+
 package com.sun.javatest.regtest.agent;
 
 import java.lang.reflect.InvocationTargetException;
@@ -30,13 +31,13 @@ import java.util.Set;
 
 public class ModuleHelper {
     static class Fault extends Exception {
+        private static final long serialVersionUID = 1L;
         Fault(String message, Throwable t) {
             super(message, t);
         }
     }
 
     static void addModuleExports(Set<String> exports, ClassLoader loader) throws Fault {
-//        System.err.println("ModuleHelper.addModuleExports: " + exports);
         for (String e: exports) {
             int sep = e.indexOf("/");
             if (sep > 0) {
@@ -56,37 +57,10 @@ public class ModuleHelper {
      *      Module targetModule = targetLoader.getUnnamedModule();
      *      JTRegModuleHelper.implAddExports(module, packageName, targetModule);
      */
-    static void addModuleExport(String moduleName, String packageName, ClassLoader targetLoader)
+    private static void addModuleExport(String moduleName, String packageName, ClassLoader targetLoader)
             throws Fault {
         try {
-            if (bootLayer == null) {
-                // new in Jave SE 9
-                Class<?> layerClass;
-                try {
-                    layerClass = Class.forName("java.lang.reflect.Layer");
-                } catch (ClassNotFoundException e) {
-                    // temporary fallback
-                    layerClass = Class.forName("java.lang.module.Layer");
-                }
-                findModuleMethod = layerClass.getDeclaredMethod("findModule", new Class[] { String.class });
-                Method bootLayerMethod = layerClass.getDeclaredMethod("boot", new Class[0]);
-
-                /*
-                 *  Layer bootLayer = Layer.boot();
-                 */
-                bootLayer = bootLayerMethod.invoke(null, new Object[0]);
-
-                Class<?> helperClass = Class.forName("java.lang.reflect.JTRegModuleHelper");
-                addExportsMethod = helperClass.getDeclaredMethod("addExports",
-                        new Class[] { Object.class, String.class, Object.class });
-
-                getUnnamedModuleMethod = ClassLoader.class.getDeclaredMethod("getUnnamedModule", new Class[0]);
-
-                // new in Java SE 8
-                Class<?> optionalClass = Class.forName("java.util.Optional");
-                isPresentMethod = optionalClass.getDeclaredMethod("isPresent", new Class[0]);
-                getMethod = optionalClass.getDeclaredMethod("get", new Class[0]);
-            }
+            init();
 
             /*
              *  Optional<Module> opt_module = bootLayer.findModule(moduleName);
@@ -118,6 +92,48 @@ public class ModuleHelper {
                     throw new Fault("package not found: " + packageName + " (" + msg + ")", null);
                 }
             }
+        } catch (SecurityException e) {
+            throw new Fault("unexpected exception: " + e, e);
+        } catch (IllegalAccessException e) {
+            throw new Fault("unexpected exception: " + e, e);
+        } catch (IllegalArgumentException e) {
+            throw new Fault("unexpected exception: " + e, e);
+        } catch (InvocationTargetException e) {
+            throw new Fault("unexpected exception: " + e, e);
+        }
+    }
+
+    private static synchronized void init() throws Fault {
+        if (bootLayer != null)
+            return;
+
+        try {
+            // new in Jave SE 9
+            Class<?> layerClass;
+            try {
+                layerClass = Class.forName("java.lang.reflect.Layer");
+            } catch (ClassNotFoundException e) {
+                // temporary fallback
+                layerClass = Class.forName("java.lang.module.Layer");
+            }
+            findModuleMethod = layerClass.getDeclaredMethod("findModule", new Class<?>[] { String.class });
+            Method bootLayerMethod = layerClass.getDeclaredMethod("boot", new Class<?>[0]);
+
+            /*
+             *  Layer bootLayer = Layer.boot();
+             */
+            bootLayer = bootLayerMethod.invoke(null, new Object[0]);
+
+            Class<?> helperClass = Class.forName("java.lang.reflect.JTRegModuleHelper");
+            addExportsMethod = helperClass.getDeclaredMethod("addExports",
+                    new Class<?>[] { Object.class, String.class, Object.class });
+
+            getUnnamedModuleMethod = ClassLoader.class.getDeclaredMethod("getUnnamedModule", new Class<?>[0]);
+
+            // new in Java SE 8
+            Class<?> optionalClass = Class.forName("java.util.Optional");
+            isPresentMethod = optionalClass.getDeclaredMethod("isPresent", new Class<?>[0]);
+            getMethod = optionalClass.getDeclaredMethod("get", new Class<?>[0]);
         } catch (ClassNotFoundException e) {
             throw new Fault("unexpected exception: " + e, e);
         } catch (NoSuchMethodException e) {
@@ -131,6 +147,7 @@ public class ModuleHelper {
         } catch (InvocationTargetException e) {
             throw new Fault("unexpected exception: " + e, e);
         }
+
     }
 
     // on java.lang.module.Layer

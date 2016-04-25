@@ -65,6 +65,7 @@ import static com.sun.javatest.regtest.agent.RStatus.*;
  *
  * @author Iris A Garcia
  * @see Action
+ * @see com.sun.javatest.regtest.agent.MainActionHelper
  */
 public class CompileAction extends Action {
     public static final String NAME = "compile";
@@ -333,9 +334,11 @@ public class CompileAction extends Action {
                 javacArgs = getJavacCommandArgs(javacArgs);
                 switch (script.getExecMode()) {
                     case AGENTVM:
+                        showMode(ExecMode.AGENTVM);
                         status = runAgentJVM(javacArgs);
                         break;
                     case OTHERVM:
+                        showMode(ExecMode.OTHERVM);
                         status = runOtherJVM(javacArgs);
                         break;
                     default:
@@ -466,15 +469,9 @@ public class CompileAction extends Action {
         javacArgs.addPath("-Xpatch:", pp);
         if (pp != null && !pp.isEmpty() && cp != null && !cp.isEmpty()) {
             // provide addReads from patch modules to unnamed module(s).
-            Set<String> patchModules = getModules(pp);
-            StringBuilder sb = new StringBuilder();
-            String sep = "-XaddReads:";
-            for (String s: patchModules) {
-                sb.append(sep).append(s).append("=ALL-UNNAMED");
-                sep = ",";
+            for (String s: getModules(pp)) {
+                javacArgs.add("-XaddReads:" + s + "=ALL-UNNAMED");
             }
-            // TODO: in time, this should be a merge
-            javacArgs.add(sb.toString());
         }
 
         Set<String> userMods = getModules(compilePaths.get(PathKind.MODULEPATH));

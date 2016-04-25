@@ -108,15 +108,6 @@ public class ModuleConfig {
         return this;
     }
 
-    ModuleConfig setModules(Set<String> modules) {
-        for (String module: modules) {
-            if (module.contains("/")) {
-                setAddExports(module, Collections.singletonList("ALL-UNNAMED"));
-            }
-        }
-        return this;
-    }
-
     ModuleConfig setAddMods(List<String> mods) {
         addMods = mods;
         return this;
@@ -124,6 +115,15 @@ public class ModuleConfig {
 
     ModuleConfig setLimitMods(List<String> mods) {
         limitMods = mods;
+        return this;
+    }
+
+    ModuleConfig setAddExportsToUnnamed(Set<String> modules) {
+        for (String module: modules) {
+            if (module.contains("/")) {
+                setAddExports(module, Collections.singletonList("ALL-UNNAMED"));
+            }
+        }
         return this;
     }
 
