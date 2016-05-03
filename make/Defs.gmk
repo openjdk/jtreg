@@ -195,29 +195,29 @@ ifndef ASMTOOLS_HOME
 endif
 ASMTOOLS_HOME := $(call FullPath,$(ASMTOOLS_HOME))
 
-#----- JUnit 4.5: see http://www.junit.org/
-# http://sourceforge.net/projects/junit/files/junit/4.5/junit-4.5.jar/download
+#----- JUnit 4.10: see http://www.junit.org/
+# https://sourceforge.net/projects/junit/files/junit/4.10/junit-4.10.jar/download
 
 ifndef JUNIT_JAR
   ifdef SLASHJAVA
-    JUNIT_JAR = $(SLASHJAVA)/devtools/share/junit/junit-4.5/junit.jar
+    JUNIT_JAR = $(SLASHJAVA)/devtools/share/junit/junit-4.10/junit-4.10.jar
   endif
 endif
 JUNIT_JAR := $(call FullPath,$(JUNIT_JAR))
 
-#----- TestNG 6.8.5: see http://www.testng.org/
+#----- TestNG 6.9.5: see http://www.testng.org/
 # http://testng.org/doc/download.html
 
 ifndef TESTNG_HOME
   ifdef SLASHJAVA
-    TESTNG_HOME = $(SLASHJAVA)/devtools/share/testng/testng-6.8.5
+    TESTNG_HOME = $(SLASHJAVA)/devtools/share/testng/testng-6.9.5
   endif
 endif
 TESTNG_HOME := $(call FullPath,$(TESTNG_HOME))
 
 ifndef TESTNG_JAR
   ifdef TESTNG_HOME
-    TESTNG_JAR = $(TESTNG_HOME)/testng-6.8.5.jar
+    TESTNG_JAR = $(TESTNG_HOME)/testng-6.9.5.jar
   endif
 endif
 TESTNG_JAR := $(call FullPath,$(TESTNG_JAR))
