@@ -115,15 +115,15 @@ else
     JT_JAVA=java
 fi
 
-# Verify java version (1.)5 or newer used to run jtreg
+# Verify java version (1.)7 or newer used to run jtreg
 version=`"$JT_JAVA" -classpath "${JT_HOME}/lib/jtreg.jar" com.sun.javatest.regtest.agent.GetSystemProperty java.version 2>&1 |
         grep 'java.version=' | sed -e 's/^.*=//' -e 's/^1\.//' -e 's/\([1-9][0-9]*\).*/\1/'`
 
 if [ -z "$version" ]; then
     echo "Cannot determine version of java to run jtreg"
     exit 1;
-elif [ "$version" -lt 5 ]; then
-    echo "java version 5 or later is required to run jtreg"
+elif [ "$version" -lt 7 ]; then
+    echo "java version 7 or later is required to run jtreg"
     exit 1;
 fi
 

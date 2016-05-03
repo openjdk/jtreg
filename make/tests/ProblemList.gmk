@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2015, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2016, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -45,7 +45,7 @@ $(BUILDDIR)/ProblemList.ok: \
 	$(MKDIR) $(@:%.ok=%)/1
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/1/work -r:$(@:%.ok=%)/1/report \
-		-jdk:$(JDK16HOME) \
+		-jdk:$(J2SEHOME) \
 		-agentvm \
 		$(TESTDIR)/javatest/regtest/data/problemList/  \
 			> $(@:%.ok=%/1/jt.log) 2>&1 
@@ -64,7 +64,7 @@ $(BUILDDIR)/ProblemList.ok: \
 		> $(@:%.ok=%)/2/ProblemList.txt
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/2/work -r:$(@:%.ok=%)/2/report \
-		-jdk:$(JDK16HOME) \
+		-jdk:$(J2SEHOME) \
 		-agentvm \
 		-exclude:$(@:%.ok=%)/2/ProblemList.txt \
 		$(TESTDIR)/javatest/regtest/data/problemList/  \

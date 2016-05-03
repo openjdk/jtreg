@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
- Copyright (c) 2007, 2015, Oracle and/or its affiliates. All rights reserved.
+ Copyright (c) 2007, 2016, Oracle and/or its affiliates. All rights reserved.
  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 
  This code is free software; you can redistribute it and/or modify it
@@ -179,16 +179,7 @@
 
     <target name="-compile-jtreg.classes">
         <mkdir dir="${build.classes.dir}"/>
-        <javac encoding="iso-8859-1" source="1.2" target="1.1"
-            debug="true" debuglevel="source,lines"
-            srcdir="${src.classes.dir}"
-            destdir="${build.classes.dir}"
-            classpath="${build.classes.dir}:${javatest.jar}"
-            includeantruntime="false">
-            <patternset refid="jtreg.jdk11.files"/>
-            <compilerarg line="-Xlint:deprecation"/>
-        </javac>
-        <javac encoding="iso-8859-1" source="1.5" target="1.5"
+        <javac encoding="iso-8859-1" source="1.8" target="1.8"
             debug="true" debuglevel="source,lines"
             srcdir="${src.classes.dir}"
             destdir="${build.classes.dir}"

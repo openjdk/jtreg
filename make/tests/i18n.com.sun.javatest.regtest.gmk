@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2012, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2016, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -33,7 +33,7 @@ else
 endif
 
 $(BUILDDIR)/i18n.com.sun.javatest.regtest.ok: \
-		$(JAVAFILES.com.sun.javatest.regtest:%=$(JAVADIR)/com/sun/javatest/regtest/%) \
+		$(JAVAFILES.com.sun.javatest.regtest) \
 		$(JAVADIR)/com/sun/javatest/regtest/i18n.properties \
 		$(BUILDDIR)/classes.com.sun.javatest.regtest.ok \
 		checkI18NProps.sh

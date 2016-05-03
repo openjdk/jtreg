@@ -29,7 +29,8 @@ $(BUILDDIR)/ExtraPropDefnsTest.valid.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
-	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+	JT_JAVA=$(J2SEHOME) \
+	    $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDK16HOME) \
 		$(TESTDIR)/javatest/regtest/data/extra-props/valid \
@@ -46,7 +47,8 @@ $(BUILDDIR)/ExtraPropDefnsTest.valid.libs.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
-	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+	JT_JAVA=$(J2SEHOME) \
+	    $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDK16HOME) \
 		$(TESTDIR)/javatest/regtest/data/extra-props/valid.libs \
@@ -63,7 +65,8 @@ $(BUILDDIR)/ExtraPropDefnsTest.bad-compile.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
-	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+	JT_JAVA=$(J2SEHOME) \
+	    $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDK16HOME) \
 		$(TESTDIR)/javatest/regtest/data/extra-props/bad-compile \
@@ -81,7 +84,8 @@ $(BUILDDIR)/ExtraPropDefnsTest.bad-execute.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
-	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+	JT_JAVA=$(J2SEHOME) \
+	    $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDK16HOME) \
 		$(TESTDIR)/javatest/regtest/data/extra-props/bad-execute \

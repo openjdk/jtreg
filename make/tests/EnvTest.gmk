@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2012, 2013, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2012, 2016, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -43,7 +43,7 @@ $(BUILDDIR)/EnvTest.simple.ok: $(ENV.files) \
 	  echo "compile.jdk=$(JDK16HOME)" ) > $(@:%.ok=%/ref.properties)
 	DISPLAY=`sh display.sh` export DISPLAY ; \
 	trap "sh `pwd`/display.sh -kill" 0 ; \
-	JT_JAVA=$(JDK16HOME) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+	JT_JAVA=$(J2SEHOME) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDK16HOME) \
 		-e:refprops=`cd $(@:%.ok=%); pwd`/ref.properties \
@@ -71,7 +71,7 @@ $(BUILDDIR)/EnvTest.full.ok: $(ENV.files) \
 	  echo "compile.jdk=$(JDK16HOME)" ) > $(@:%.ok=%/ref.properties)
 	DISPLAY=`sh display.sh` export DISPLAY ; \
 	trap "sh `pwd`/display.sh -kill" 0 ; \
-	JT_JAVA=$(JDK16HOME) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+	JT_JAVA=$(J2SEHOME) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-compilejdk:$(JDK16HOME) \
 		-testjdk:$(JDK17HOME) \

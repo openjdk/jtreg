@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2014, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2016, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -33,7 +33,7 @@ $(BUILDDIR)/CompileTest.1.othervm.ok: \
 	    $(BUILDDIR)/not-a-jdk/bin/java
 	$(RM) $(@:%.ok=%)
 	JTREG_SHOWAGENT=true JTREG_SHOWCMD=true \
-	JT_JAVA=$(JDK16HOME) \
+	JT_JAVA=$(J2SEHOME) \
 		$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-compilejdk:$(JDK15HOME) \
@@ -52,13 +52,13 @@ $(BUILDDIR)/CompileTest.2.othervm.ok: \
 	    $(BUILDDIR)/not-a-jdk/bin/java
 	$(RM) $(@:%.ok=%)
 	JTREG_SHOWAGENT=true JTREG_SHOWCMD=true \
-	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+	JT_JAVA=$(J2SEHOME) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDK15HOME) \
 		$(@:$(BUILDDIR)/CompileTest.2.%.ok=-%) \
 		$(TESTDIR)/javatest/regtest/data/compilejdk/ExecuteTest.java
 	JTREG_SHOWAGENT=true JTREG_SHOWCMD=true \
-	JT_JAVA=$(JDK16HOME) \
+	JT_JAVA=$(J2SEHOME) \
 		$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-compilejdk:`pwd`/$(BUILDDIR)/not-a-jdk \
@@ -77,7 +77,7 @@ $(BUILDDIR)/CompileTest.3.othervm.ok: \
 	    $(BUILDDIR)/just-java/bin/java
 	$(RM) $(@:%.ok=%)
 	JTREG_SHOWAGENT=true JTREG_SHOWCMD=true \
-	JT_JAVA=$(JDK16HOME) \
+	JT_JAVA=$(J2SEHOME) \
 		$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-compilejdk:$(JDK15HOME) \
@@ -94,7 +94,7 @@ $(BUILDDIR)/CompileTest.4.othervm.ok: \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%)
 	JTREG_SHOWAGENT=true JTREG_SHOWCMD=true \
-	JT_JAVA=$(JDK16HOME) \
+	JT_JAVA=$(J2SEHOME) \
 		$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-compilejdk:$(JDK15HOME) \
@@ -108,7 +108,7 @@ $(BUILDDIR)/CompileTest.5.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%)
-	JT_JAVA=$(JDK16HOME) \
+	JT_JAVA=$(J2SEHOME) \
 		$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-compilejdk:$(JDK15HOME) \

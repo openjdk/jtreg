@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1999, 2015, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1999, 2016, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -27,30 +27,47 @@
 #
 # compile com.sun.javatest.regtest
 
-REGTEST-JDK11-CLASSES = AppletWrapper GetSystemProperty MainWrapper RStatus StringArray
-JAVAFILES.com.sun.javatest.regtest-jdk11 = \
-	$(REGTEST-JDK11-CLASSES:%=$(JAVADIR)/com/sun/javatest/regtest/agent/%.java)
+### The following files are required to run othervm tests
+
+REGTEST-OTHERVM-CLASSES = AppletWrapper GetSystemProperty MainWrapper RStatus StringArray
+JAVAFILES.com.sun.javatest.regtest-othervm = \
+	$(REGTEST-OTHERVM-CLASSES:%=$(JAVADIR)/com/sun/javatest/regtest/agent/%.java)
 
 # TODO: set -bootclasspath to JDK 1.1 classes?
-$(BUILDDIR)/classes.com.sun.javatest.regtest-jdk11.ok: \
-		$(JAVAFILES.com.sun.javatest.regtest-jdk11) \
+$(BUILDDIR)/classes.com.sun.javatest.regtest-othervm.ok: \
+		$(JAVAFILES.com.sun.javatest.regtest-othervm) \
 		$(call PosixPath,$(JAVATEST_JAR))
 	$(MKDIR) -p $(CLASSDIR)
-	CLASSPATH="$(JAVADIR)$(PS)$(CLASSDIR)$(PS)$(JAVATEST_JAR)$(PS)$(JUNIT_JAR)" \
-	$(J2SEJAVAC)  -source 1.2 -target 1.1 -d $(CLASSDIR) \
-	$(JAVAFILES.com.sun.javatest.regtest-jdk11)
+	CLASSPATH="$(CLASSDIR)$(PS)$(JAVATEST_JAR)" \
+	$(REGTEST_OLD_JAVAC) -source $(REGTEST_OLD_SOURCE) -target $(REGTEST_OLD_TARGET) -d $(CLASSDIR) \
+	$(JAVAFILES.com.sun.javatest.regtest-othervm)
 	echo "classes built at `date`" > $@
 
-JAVAFILES.com.sun.javatest.regtest-j2se := \
-	$(filter-out $(JAVAFILES.com.sun.javatest.regtest-jdk11), $(shell $(FIND) $(JAVADIR)/com/sun/javatest/regtest -name \*.java )) \
+### The following files are required to run agentvm tests, as far back as JDK 1.5
+
+JAVAFILES.com.sun.javatest.regtest-agentvm := \
+	$(filter-out $(JAVAFILES.com.sun.javatest.regtest-othervm), $(shell $(FIND) $(JAVADIR)/com/sun/javatest/regtest/agent -name \*.java ))
+
+$(BUILDDIR)/classes.com.sun.javatest.regtest.agent.ok: \
+		$(JAVAFILES.com.sun.javatest.regtest-agentvm) \
+		$(BUILDDIR)/classes.com.sun.javatest.regtest-othervm.ok
+		CLASSPATH="$(CLASSDIR)$(PS)$(JAVATEST_JAR)" \
+		$(REGTEST_AGENT_JAVAC) -source $(REGTEST_AGENT_SOURCE) -target $(REGTEST_AGENT_TARGET) -encoding ISO8859-1 -d $(CLASSDIR) \
+		$(JAVAFILES.com.sun.javatest.regtest-agentvm)
+	echo "classes built at `date`" > $@
+
+### The following files are for the jtreg and jtdiff tools
+
+JAVAFILES.com.sun.javatest.regtest-tools := \
+	$(shell $(FIND) $(JAVADIR)/com/sun/javatest/regtest -name agent -prune -o -name \*.java -print ) \
 	$(JAVADIR)/java/lang/reflect/JTRegModuleHelper.java
 
 $(BUILDDIR)/classes.com.sun.javatest.regtest.ok: \
-		$(JAVAFILES.com.sun.javatest.regtest-j2se) \
-		$(BUILDDIR)/classes.com.sun.javatest.regtest-jdk11.ok
+		$(JAVAFILES.com.sun.javatest.regtest-tools) \
+		$(BUILDDIR)/classes.com.sun.javatest.regtest.agent.ok
 		CLASSPATH="$(CLASSDIR)$(PS)$(ANTHOME)/lib/ant.jar$(PS)$(JAVATEST_JAR)$(PS)$(JUNIT_JAR)$(PS)$(TESTNG_JAR)$(PS)$(JAVAHELP_JAR)" \
 		$(J2SEJAVAC) -source $(J2SEJAVAC_SOURCE) -target $(J2SEJAVAC_TARGET) -encoding ISO8859-1 -d $(CLASSDIR) \
-		$(JAVAFILES.com.sun.javatest.regtest-j2se)
+		$(JAVAFILES.com.sun.javatest.regtest-tools)
 	echo "classes built at `date`" > $@
 
 TARGETS.com.sun.javatest.regtest += $(BUILDDIR)/classes.com.sun.javatest.regtest.ok

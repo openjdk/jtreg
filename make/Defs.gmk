@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1996, 2015, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1996, 2016, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -119,13 +119,24 @@ JDK19HOME := $(call FullPath,$(JDK19HOME))
 # JIGSAWHOME
 
 # J2SE for most classes
-J2SEHOME = $(JDK15HOME)
+J2SEHOME = $(JDK17HOME)
 J2SEJAVA = $(J2SEHOME)/bin/java
 J2SEJAVAC = $(J2SEHOME)/bin/javac
 JAR = $(J2SEHOME)/bin/jar
 
-J2SEJAVAC_SOURCE = 5
-J2SEJAVAC_TARGET = 5
+# default for source files except com.sun.javatest.regtest.agent
+J2SEJAVAC_SOURCE = 7
+J2SEJAVAC_TARGET = 7
+
+# for files needed to run othervm tests
+REGTEST_OLD_JAVAC = $(JDK15HOME)/bin/javac
+REGTEST_OLD_SOURCE = 1.2
+REGTEST_OLD_TARGET = 1.1
+
+# for files needed to run agentvm tests
+REGTEST_AGENT_JAVAC = $(JDK15HOME)/bin/javac
+REGTEST_AGENT_SOURCE = 5
+REGTEST_AGENT_TARGET = 5
 
 #----- JavaHelp: see https://javahelp.dev.java.net/
 ifndef JAVAHELP_HOME
