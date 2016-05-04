@@ -153,7 +153,7 @@ JHINDEXER =  CLASSPATH=$(JAVAHELP_HOME)/lib/jhall.jar $(J2SEJAVA) com.sun.java.h
 
 ifndef JTHARNESS_HOME
   ifdef SLASHJAVA
-    JTHARNESS_HOME = $(SLASHJAVA)/re/jtharness/4.4/archive/MR1/binaries
+    JTHARNESS_HOME = $(SLASHJAVA)/re/jtharness/4.6/archive/MR1/binaries
   endif
 endif 
 JTHARNESS_HOME := $(call FullPath,$(JTHARNESS_HOME))
@@ -163,7 +163,7 @@ ifndef JAVATEST_HOME
     JAVATEST_HOME = $(JTHARNESS_HOME)
   else
     ifdef SLASHJAVA
-      JAVATEST_HOME = $(SLASHJAVA)/re/javatest/4.4/archive/fcs/binaries/javatest
+      JAVATEST_HOME = $(SLASHJAVA)/re/javatest/4.6/archive/binaries/javatest
     endif
   endif
 endif
