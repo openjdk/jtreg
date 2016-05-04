@@ -45,7 +45,6 @@
     <property name="dist.dir" location="dist" />
     <property name="dist.jtreg.dir" location="${dist.dir}/jtreg" />
     <property name="dist.jtreg.zip" location="${dist.dir}/jtreg.zip" />
-    <property name="dist.open-jtreg.zip" location="${dist.dir}/open-jtreg.zip" />
     <property name="make.checkstyle.dir" value="make/checkstyle"/>
 
     <patternset id="helpset">
@@ -76,6 +75,7 @@
         <available property="jtharness.ok" file="${javatest.home}/legal/copyright.txt"/>
         <available property="junit.ok" file="${junit.jar}"/>
         <available property="testng.ok" file="${testng.jar}"/>
+        <available property="asmtools.ok" file="${asmtools.jar}"/>
         <condition property="jcov.ok">
             <and>
                 <available file="${jcov.home}/lib/jcov.jar"/>
@@ -103,15 +103,10 @@
     </patternset>
 
     <target name="dist-jtreg"
-        depends="import-javatest,import-junit,import-testng,import-jcov,import-jtharness,jar-jtreg,-dist-jtreg.bin,-dist-jtreg.doc,-dist-jtreg.legal"
+        depends="import-javatest,import-junit,import-testng,import-asmtools,import-jcov,import-jtharness,jar-jtreg,-dist-jtreg.bin,-dist-jtreg.doc,-dist-jtreg.legal"
         description="build jtreg for distribution">
         <zip destfile="${dist.jtreg.zip}" filesOnly="true" basedir="${dist.dir}">
             <include name="jtreg/"/>
-        </zip>
-        <zip destfile="${dist.open-jtreg.zip}" filesOnly="true" basedir="${dist.dir}">
-            <include name="jtreg/"/>
-            <exclude name="**/*junit*"/>
-            <exclude name="**/*jcov*"/>
         </zip>
     </target>
 
@@ -124,19 +119,13 @@
         </chmod>
     </target>
 
-    <target name="-dist-jtreg.doc" depends="-compile-jtreg.help,-compile-jtreg.usage">
+    <target name="-dist-jtreg.doc" depends="-compile-jtreg.usage">
         <mkdir dir="${dist.jtreg.dir}/doc/jtreg"/>
         <copy todir="${dist.jtreg.dir}" file="${src.doc.dir}/javatest/regtest/README"/>
         <copy todir="${dist.jtreg.dir}/doc/jtreg">
             <fileset file="${src.doc.dir}/javatest/regtest/tag-spec.html"/>
             <fileset file="${build.dir}/jtreg/usage.txt"/>
         </copy>
-        <xslt
-            style="${src.doc.dir}/javatest/regtest/faqtohtml.xsl"
-            in="${src.doc.dir}/javatest/regtest/faq.xml"
-            out="${dist.jtreg.dir}/doc/jtreg/faq.html">
-            <param name="context" expression="openjdk"/>
-        </xslt>
     </target>
 
     <target name="-dist-jtreg.legal">
@@ -175,7 +164,7 @@
         <available property="jtreg.jar.ok" file="${dist.jtreg.dir}/lib/jtreg.jar"/>
     </target>
 
-    <target name="compile-jtreg" depends="-compile-jtreg.classes,-compile-jtreg.resources,-compile-jtreg.help"/>
+    <target name="compile-jtreg" depends="-compile-jtreg.classes,-compile-jtreg.resources"/>
 
     <target name="-compile-jtreg.classes">
         <mkdir dir="${build.classes.dir}"/>
@@ -188,64 +177,6 @@
             <compilerarg line="-Xlint:all"/>
             <patternset refid="jtreg.packages"/>
         </javac>
-    </target>
-
-    <target name="-compile-jtreg.help"
-        depends="-check-jtreg.help,-ant-jct.utils" unless="jtreg.help.ok"
-        description="prepare JavaHelp files">
-        <!-- copy the basic files -->
-        <copy todir="${build.classes.dir}/com/sun/javatest/regtest/help">
-            <fileset dir="${src.doc.dir}/javatest/regtest/help">
-                <patternset refid="helpset"/>
-                <exclude name="images/topic.gif"/>
-            </fileset>
-        </copy>
-        <!-- copy the main tag spec -->
-        <copy file="${src.doc.dir}/javatest/regtest/tag-spec.html"
-                tofile="${build.classes.dir}/com/sun/javatest/regtest/help/default/tag-spec.html"/>
-        <!-- generate the usage page from the command line help -->
-        <texttohtml
-            textfile="${build.dir}/jtreg/usage.txt"
-            htmlfile="${build.classes.dir}/com/sun/javatest/regtest/help/default/usage.html"
-            title="jtreg: Command Line Usage"
-            style="body: { background-color: white; font-size: 12pt; font-family: SansSerif; margin-left: 3px }">
-        </texttohtml>
-        <!-- generate the faq pages from the master faq file -->
-        <xslt
-            style="${src.doc.dir}/javatest/regtest/faqtohelp-html.xsl"
-            in="${src.doc.dir}/javatest/regtest/faq.xml"
-            out="${build.classes.dir}/com/sun/javatest/regtest/help/default/faq.html">
-            <param name="context" expression="help"/>
-            <param name="basedir" expression="${build.classes.dir}/com/sun/javatest/regtest/help/default"/>
-        </xslt>
-        <xslt
-            style="${src.doc.dir}/javatest/regtest/faqtotoc.xsl"
-            in="${src.doc.dir}/javatest/regtest/faq.xml"
-            out="${build.classes.dir}/com/sun/javatest/regtest/help/default/toc.xml">
-            <param name="context" expression="help"/>
-        </xslt>
-        <xslt
-            style="${src.doc.dir}/javatest/regtest/faqtomap.xsl"
-            in="${src.doc.dir}/javatest/regtest/faq.xml"
-            out="${build.classes.dir}/com/sun/javatest/regtest/help/default/map.xml">
-            <param name="context" expression="help"/>
-        </xslt>
-        <!-- build the search index -->
-        <delete dir="${build.classes.dir}/com/sun/javatest/regtest/help/default/JavaHelpSearch"/>
-        <jhindexer dir="${build.classes.dir}/com/sun/javatest/regtest/help">
-            <arg value="-c"/>
-            <arg file="${src.javatest.help}/jhindexer-config.txt "/>
-            <arg line="-db default/JavaHelpSearch"/>
-            <arg line="default"/>
-        </jhindexer>
-    </target>
-
-    <target name="-check-jtreg.help" depends="-compile-jtreg.usage">
-        <dependset>
-            <srcfileset dir="${src.jtreg.help}" />
-            <targetfileset dir="${build.jtreg.help}" />
-        </dependset>
-        <available property="jtreg.help.ok" file="${build.jtreg.help}/default/map.xml"/>
     </target>
 
     <target name="-compile-jtreg.usage" depends="-compile-jtreg.classes,-ant-jct.utils">
@@ -288,6 +219,10 @@
         <copy file="${testng.jar}" tofile="${dist.jtreg.dir}/lib/testng.jar"/>
     </target>
 
+    <target name="import-asmtools" depends="-init" if="asmtools.ok">
+        <copy file="${asmtools.jar}" tofile="${dist.jtreg.dir}/lib/asmtools.jar"/>
+    </target>
+
     <target name="import-jcov" depends="-init" if="jcov.ok">
         <copy file="${jcov.home}/lib/jcov.jar" tofile="${dist.jtreg.dir}/lib/jcov.jar"/>
         <copy file="${jcov.home}/lib/jcov_network_saver.jar" tofile="${dist.jtreg.dir}/lib/jcov_network_saver.jar"/>
@@ -306,41 +241,17 @@
     <!-- ********** jct-utils ********************************************** -->
 
     <target name="-ant-jct.utils" depends="-compile-jct.utils">
-        <taskdef name="texttohtml" classname="com.sun.jct.utils.texttohtml.Main$$Ant" classpath="${build.classes.dir}" />
-        <presetdef name="jhindexer">
-            <java fork="true" failonerror="true"
-                dir="unset"
-                classpath="${jhall.jar}"
-                classname="com.sun.java.help.search.Indexer">
-            </java>
-        </presetdef>
         <taskdef name="i18ncheck" classname="com.sun.jct.utils.i18ncheck.Main$$Ant" classpath="${build.classes.dir}" />
-<!--
-        <taskdef name="glossarygen" classname="com.sun.jct.utils.glossarygen.Main$$Ant" classpath="${build.classes.dir}" />
-        <taskdef name="indexgen" classname="com.sun.jct.utils.indexgen.Main$$Ant" classpath="${build.classes.dir}" />
-        <taskdef name="mapmerge" classname="com.sun.jct.utils.mapmerge.Main$$Ant" classpath="${build.classes.dir}" />
-        <taskdef name="importcheck" classname="com.sun.jct.utils.importcheck.Main$$Ant" classpath="${build.classes.dir}" />
--->
     </target>
 
     <target name="-compile-jct.utils">
         <mkdir dir="${build.classes.dir}"/>
-        <javac encoding="iso-8859-1" debug="true" source="1.4"
-            srcdir="${src.classes.dir}"
-            destdir="${build.classes.dir}"
-            includeantruntime="false">
-            <compilerarg value="-Xlint"/>
-            <include name="com/sun/jct/utils/glossarygen/**"/>
-            <include name="com/sun/jct/utils/indexgen/**"/>
-            <include name="com/sun/jct/utils/mapmerge/**"/>
-        </javac>
-        <javac encoding="iso-8859-1" debug="true" source="1.5"
+        <javac encoding="iso-8859-1" debug="true"
             srcdir="${src.classes.dir}"
             destdir="${build.classes.dir}"
             includeantruntime="true">
             <compilerarg value="-Xlint"/>
             <include name="com/sun/jct/utils/i18ncheck/**"/>
-            <include name="com/sun/jct/utils/texttohtml/**"/>
         </javac>
 
     </target>
@@ -398,7 +309,7 @@
         </java>
         <exec executable="grep" input="${build.dir}/jtreg/basic/report.out">
             <arg value="-s"/>
-            <arg value="Test results: passed: 80; failed: 32; error: 59"/>
+            <arg value="Test results: passed: 92; failed: 44; error: 87"/>
         </exec>
     </target>
 
