@@ -711,12 +711,6 @@ public class Main {
             }
         },
 
-        new Option(REST, DOC, "help", "onlineHelp") {
-            public void process(String opt, String arg) {
-                help.setOnlineHelpQuery(arg);
-            }
-        },
-
         new Option(NONE, DOC, "help", "version") {
             public void process(String opt, String arg) {
                 help.setVersionFlag(true);
@@ -999,7 +993,11 @@ public class Main {
             err.println(i18n.getString("main.securityException", e.getMessage()));
             e.printStackTrace(System.err);
             exit(EXIT_EXCEPTION);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
+            err.println(i18n.getString("main.unexpectedException", e.toString()));
+            e.printStackTrace(System.err);
+            exit(EXIT_EXCEPTION);
+        } catch (Error e) {
             err.println(i18n.getString("main.unexpectedException", e.toString()));
             e.printStackTrace(System.err);
             exit(EXIT_EXCEPTION);
@@ -1456,9 +1454,7 @@ public class Main {
         try {
             r = new BufferedReader(new FileReader(name));
         } catch (FileNotFoundException e) {
-            throw new Fault(i18n, "main.cantFindFile", name);
-        } catch (IOException e) {
-            throw new Fault(i18n, "main.cantOpenFile", name, e);
+            throw new Fault(i18n, "main.cantOpenFile", name);
         }
         try {
             StreamTokenizer st = new StreamTokenizer(r);
@@ -1487,9 +1483,7 @@ public class Main {
         try {
             r = new BufferedReader(new FileReader(file));
         } catch (FileNotFoundException e) {
-            throw new Fault(i18n, "main.cantFindFile", file);
-        } catch (IOException e) {
-            throw new Fault(i18n, "main.cantOpenFile", file, e);
+            throw new Fault(i18n, "main.cantOpenFile", file);
         }
         try {
             List<File> list = new ArrayList<File>();

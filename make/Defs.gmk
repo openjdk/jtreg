@@ -147,7 +147,6 @@ endif
 JAVAHELP_HOME := $(call FullPath,$(JAVAHELP_HOME))
 
 JAVAHELP_JAR = $(JAVAHELP_HOME)/lib/jh.jar
-JHINDEXER =  CLASSPATH=$(JAVAHELP_HOME)/lib/jhall.jar $(J2SEJAVA) com.sun.java.help.search.Indexer
 
 #----- JavaTest: see https://jtharness.dev.java.net/
 
@@ -252,15 +251,6 @@ endif
 ifndef LINKLINT
     LINKLINT = $(shell which linklint 2>/dev/null)
 endif
-
-#----- Xalan: see http://xml.apache.org/xalan-j/
-
-ifndef XALANHOME
-  ifdef SLASHJAVA
-    XALANHOME = $(SLASHJAVA)/jct-tools/pkgs/xalan-j_2_7_0
-  endif
-endif
-XALANHOME := $(call FullPath,$(XALANHOME))
 
 #----- Unix commands
 

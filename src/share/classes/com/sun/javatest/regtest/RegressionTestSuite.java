@@ -132,15 +132,6 @@ public class RegressionTestSuite extends TestSuite
     }
 
     @Override
-    public String[] getAdditionalDocNames() {
-        return additionalDocNames;
-    }
-
-    private static final String[] additionalDocNames = {
-        "com/sun/javatest/regtest/help/jtreg.hs"
-    };
-
-    @Override
     public URL[] getFilesForTest(TestDescription td) {
         Set<URL> urls = new LinkedHashSet<URL>();
 

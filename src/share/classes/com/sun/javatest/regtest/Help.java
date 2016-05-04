@@ -25,10 +25,6 @@
 
 package com.sun.javatest.regtest;
 
-import com.sun.javatest.regtest.agent.SearchPath;
-import java.awt.Component;
-import java.awt.Container;
-import java.awt.Window;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -55,14 +51,7 @@ import java.util.TreeMap;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 
-import javax.help.DefaultHelpBroker;
-import javax.help.HelpSet;
-import javax.help.HelpSetException;
-import javax.help.JHelpSearchNavigator;
-import javax.swing.JFrame;
-import javax.swing.JTextField;
-
-import com.sun.javatest.util.ExitCount;
+import com.sun.javatest.regtest.agent.SearchPath;
 import com.sun.javatest.util.HelpTree;
 import com.sun.javatest.util.I18NResourceBundle;
 import com.sun.javatest.util.WrapWriter;
@@ -84,8 +73,7 @@ public class Help {
         return versionFlag
                 || releaseNotesFlag
                 || tagSpecFlag
-                || (commandLineHelpQuery != null)
-                || (onlineHelpQuery != null);
+                || (commandLineHelpQuery != null);
     }
 
     void addVersionHelper(VersionHelper h) {
@@ -134,19 +122,6 @@ public class Help {
             commandLineHelpQuery.addAll(Arrays.asList(query.trim().split("\\s+")));
     }
 
-    void setOnlineHelpQuery(String query) {
-
-        if (query == null || query.length() == 0) {
-            if (onlineHelpQuery == null)
-                onlineHelpQuery = "";
-        } else {
-            if (onlineHelpQuery == null)
-                onlineHelpQuery = query;
-            else
-                onlineHelpQuery += " " + query;
-        }
-    }
-
     void show(PrintStream out) {
         PrintWriter w = new PrintWriter(out);
         show(w);
@@ -167,9 +142,6 @@ public class Help {
 
         if (commandLineHelpQuery != null)
             showCommandLineHelp(out);
-
-        if (onlineHelpQuery != null)
-            gui = showOnlineHelp(out);
 
         return gui;
     }
@@ -333,11 +305,11 @@ public class Help {
 
         Integer nodeIndent = Integer.getInteger("javatest.help.nodeIndent");
         if (nodeIndent != null)
-            commandHelpTree.setNodeIndent(nodeIndent.intValue());
+            commandHelpTree.setNodeIndent(nodeIndent);
 
         Integer descIndent = Integer.getInteger("javatest.help.descIndent");
         if (descIndent != null)
-            commandHelpTree.setDescriptionIndent(descIndent.intValue());
+            commandHelpTree.setDescriptionIndent(descIndent);
 
 //        // first, group the options by their group, and sort within group
 //        // by their first name
@@ -384,7 +356,7 @@ public class Help {
             List<HelpTree.Node> nodesForGroup = new ArrayList<HelpTree.Node>();
             for (Option o: optionsForGroup.values())
                 nodesForGroup.add(createOptionHelpNode(o));
-            HelpTree.Node groupNode = new HelpTree.Node(i18n, "help." + g.toString().toLowerCase(),
+            HelpTree.Node groupNode = new HelpTree.Node(i18n, "help." + g.toLowerCase(),
                     nodesForGroup.toArray(new HelpTree.Node[nodesForGroup.size()]));
             commandHelpTree.addNode(groupNode);
         }
@@ -427,10 +399,6 @@ public class Help {
             }
 
             ww.write('\n');
-            ww.write(i18n.getString("help.cmd.tail"));
-            ww.write("\n\n");
-            ww.write(i18n.getString("help.cmd.ant"));
-            ww.write("\n\n");
             ww.write(i18n.getString("help.copyright.txt"));
             ww.write("\n\n");
 
@@ -442,7 +410,7 @@ public class Help {
     }
 
     private HelpTree.Node createOptionHelpNode(Option o) {
-        String prefix = "help." + o.group.toString().toLowerCase() + "." + o.names[0].replaceAll("[^A-Za-z0-9.]+", "_");
+        String prefix = "help." + o.group.toLowerCase() + "." + o.names[0].replaceAll("[^A-Za-z0-9.]+", "_");
         String arg = (o.argType == Option.ArgType.NONE ? null : i18n.getString(prefix + ".arg"));
         StringBuilder sb = new StringBuilder();
         for (String n: o.names) {
@@ -502,103 +470,6 @@ public class Help {
         return "java " + Main.class.getName();
     }
 
-
-    /**
-     * Show the JavaTest online help, and exit when it is closed.
-     * @param out the stream to which to write the help
-     */
-    boolean showOnlineHelp(PrintWriter out) {
-
-        out.println(i18n.getString("help.onlineHelp.pleaseWait"));
-        out.flush();
-
-        // use a customized HelpBroker that will exit the VM when closed
-        URL u = HelpSet.findHelpSet(null, "com/sun/javatest/regtest/help/jtreg.hs");
-        if (u == null)
-            throw new AssertionError("cant find jtreg helpset");
-
-        try {
-            HelpSet helpSet = new HelpSet(null, u);
-            CustomHelpBroker b = new CustomHelpBroker(helpSet);
-            if (onlineHelpQuery != null && onlineHelpQuery.length() > 0)
-                b.search(onlineHelpQuery);
-            else
-                b.setCurrentID("home");
-            b.setDisplayed(true);
-            return true;
-        } catch (HelpSetException e) {
-            // TO DO...
-            return false;
-        }
-    }
-
-    private static class CustomHelpBroker
-            extends DefaultHelpBroker {
-        CustomHelpBroker(HelpSet hs) {
-            super(hs);
-            ExitCount.inc();
-        }
-
-        void search(String s) {
-            initPresentation();
-            JFrame frame = (JFrame) (getHelpWindow());
-            Container root = frame.getContentPane();
-            JHelpSearchNavigator searchNav =
-                    (JHelpSearchNavigator) (findComponent(root, JHelpSearchNavigator.class));
-            if (searchNav == null)
-                return;
-            JTextField searchField =
-                    (JTextField) (findComponent(searchNav, JTextField.class));
-            if (searchField == null)
-                return;
-            searchField.setText(s);
-            searchField.postActionEvent();
-            setCurrentView("Search"); // name defined in jthelp.hs
-        }
-
-        @Override
-        public void setDisplayed(boolean b) {
-            super.setDisplayed(b);
-            // can't use setDefaultActionOnClose because of
-            // JavaTestSecurityManager
-            JFrame frame = (JFrame) (getHelpWindow());
-            frame.addWindowListener(new java.awt.event.WindowAdapter() {
-                @Override
-                public void windowOpened(java.awt.event.WindowEvent e) {
-                    if (first) {
-                        Window w = e.getWindow();
-                        w.setLocationRelativeTo(null); // center on screen
-                        first = false;
-                    }
-                }
-                @Override
-                public void windowClosing(java.awt.event.WindowEvent e) {
-                    ExitCount.dec();
-                }
-            });
-        }
-
-        private Component findComponent(Container cont, Class<?> targetClass) {
-            for (int i = 0; i < cont.getComponentCount(); i++) {
-                Component c = cont.getComponent(i);
-                if (targetClass.isInstance(c))
-                    return c;
-                if (c instanceof Container) {
-                    Component child = findComponent((Container) c, targetClass);
-                    if (child != null)
-                        return child;
-                }
-            }
-            return null;
-        }
-
-        private Window getHelpWindow() {
-            return getWindowPresentation().getHelpWindow();
-        }
-
-        private boolean first = true;
-    }
-
     private static class CaseInsensitiveStringComparator implements Comparator<String> {
         public int compare(String s1, String s2) {
             if (s1 == null && s2 == null)
@@ -612,13 +483,12 @@ public class Help {
 
     }
 
-    private List<Option> options;
-    private List<VersionHelper> versionHelpers = new ArrayList<VersionHelper>();
+    private final List<Option> options;
+    private final List<VersionHelper> versionHelpers = new ArrayList<VersionHelper>();
     private boolean releaseNotesFlag;
     private boolean tagSpecFlag;
     private boolean versionFlag;
     private List<String> commandLineHelpQuery;
-    private String onlineHelpQuery;
 
-    private static I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(Main.class);
+    private static final I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(Main.class);
 }
