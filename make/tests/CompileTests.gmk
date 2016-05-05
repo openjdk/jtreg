@@ -137,6 +137,7 @@ $(BUILDDIR)/just-java/bin/java:
 	chmod +x $@
 
 ifneq ($(OS_NAME), windows)
+ifdef JDK15HOME
 TESTS.jtreg += \
 	$(BUILDDIR)/CompileTest.1.agentvm.ok \
 	$(BUILDDIR)/CompileTest.1.othervm.ok \
@@ -147,4 +148,5 @@ TESTS.jtreg += \
 	$(BUILDDIR)/CompileTest.4.agentvm.ok \
 	$(BUILDDIR)/CompileTest.4.othervm.ok \
 	$(BUILDDIR)/CompileTest.5.ok
+endif
 endif

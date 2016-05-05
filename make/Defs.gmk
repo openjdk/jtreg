@@ -129,12 +129,12 @@ J2SEJAVAC_SOURCE = 7
 J2SEJAVAC_TARGET = 7
 
 # for files needed to run othervm tests
-REGTEST_OLD_JAVAC = $(JDK15HOME)/bin/javac
+REGTEST_OLD_JAVAC = $(JDK17HOME)/bin/javac
 REGTEST_OLD_SOURCE = 1.2
 REGTEST_OLD_TARGET = 1.1
 
 # for files needed to run agentvm tests
-REGTEST_AGENT_JAVAC = $(JDK15HOME)/bin/javac
+REGTEST_AGENT_JAVAC = $(JDK17HOME)/bin/javac
 REGTEST_AGENT_SOURCE = 5
 REGTEST_AGENT_TARGET = 5
 
@@ -232,24 +232,6 @@ ANTHOME := $(call FullPath,$(ANTHOME))
 
 ifdef ANTHOME
   ANT = $(ANTHOME)/bin/ant
-endif
-
-#----- HTML check: 
-# Optional: if set, checks HTML doc files for correctness.
-# Uses nsgmlns http://www.jclark.com/sp/ and w3c DTDs
-# Leave HTMLCHECK unset if not required
-
-ifndef HTMLCHECK
-  ifdef SLASHJAVA
-#  HTMLCHECK = $(SLASHJAVA)/jct-tools/pkgs/htmlcheck_1.2.1/bin/htmlcheck
-  endif
-endif
-
-#----- Linklint: see http://www.linklint.org/
-# Optional: if set, checks HTML doc files for broken links
-
-ifndef LINKLINT
-    LINKLINT = $(shell which linklint 2>/dev/null)
 endif
 
 #----- Unix commands

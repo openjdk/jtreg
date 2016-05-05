@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1999, 2015, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1999, 2016, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -52,9 +52,16 @@ clean:
 .NO_PARALLEL: clean
 
 sanity:
+ifdef JDK15HOME
 	@echo "JDK15HOME      = $(JDK15HOME)"
+endif
+ifdef JDK16HOME
 	@echo "JDK16HOME      = $(JDK16HOME)"
+endif
+ifdef JDK17HOME
 	@echo "JDK17HOME      = $(JDK17HOME)"
+endif
+	@echo "JDK18HOME      = $(JDK18HOME)"
 	@echo "JAVAHELP_HOME  = $(JAVAHELP_HOME)"
 	@echo "JAVATEST_HOME  = $(JAVATEST_HOME)"
 ifneq ($(JTHARNESS_HOME), $(JAVATEST_HOME))
@@ -67,11 +74,9 @@ ifdef ASMTOOLS_HOME
 	@echo "ASMTOOLS_HOME  = $(ASMTOOLS_HOME)"
 endif
 	@echo "ANTHOME        = $(ANTHOME)"
-	@echo "XALANHOME      = $(XALANHOME)"
 	@echo "JUNIT_JAR      = $(JUNIT_JAR)"
 	@echo "TESTNG_HOME    = $(TESTNG_HOME)"
 	@echo "TESTNG_JAR     = $(TESTNG_JAR)"
-	@echo "LINKLINT       = $(LINKLINT)"
 
 #----------------------------------------------------------------------
 

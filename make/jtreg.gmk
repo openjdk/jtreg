@@ -41,7 +41,7 @@ $(BUILDDIR)/classes.com.sun.javatest.regtest-othervm.ok: \
 	CLASSPATH="$(CLASSDIR)$(PS)$(JAVATEST_JAR)" \
 	    $(REGTEST_OLD_JAVAC) -source $(REGTEST_OLD_SOURCE) -target $(REGTEST_OLD_TARGET) \
 		-d $(CLASSDIR) \
-		-Xlint -Werror \
+		-Xlint:all,-options -Werror \
 		-encoding ISO8859-1 \
 		$(JAVAFILES.com.sun.javatest.regtest-othervm)
 	echo "classes built at `date`" > $@
@@ -57,7 +57,7 @@ $(BUILDDIR)/classes.com.sun.javatest.regtest.agent.ok: \
 	CLASSPATH="$(CLASSDIR)$(PS)$(JAVATEST_JAR)" \
 	    $(REGTEST_AGENT_JAVAC) -source $(REGTEST_AGENT_SOURCE) -target $(REGTEST_AGENT_TARGET) \
 		-d $(CLASSDIR) \
-		-Xlint -Werror \
+		-Xlint:all,-options -Werror \
 		$(JAVAFILES.com.sun.javatest.regtest-agentvm)
 	echo "classes built at `date`" > $@
 

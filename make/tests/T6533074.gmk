@@ -35,5 +35,7 @@ $(BUILDDIR)/T6533074.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		-Dtestjdk=$(JDK15HOME)
 	echo "test passed at `date`" > $@
 
+ifdef JDK15HOME
 TESTS.jtreg += $(BUILDDIR)/T6533074.ok
+endif
 
