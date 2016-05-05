@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2016, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -30,8 +30,12 @@ $(BUILDDIR)/OSTest.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(MKDIR) -p $(@:%.ok=%)/classes
-	$(J2SEJAVAC) -cp $(JTREG_IMAGEDIR)/lib/jtreg.jar -source $(J2SEJAVAC_SOURCE) -target $(J2SEJAVAC_TARGET) \
-		-encoding ISO8859-1 -d $(@:%.ok=%)/classes $(TESTDIR)/javatest/regtest/OSTest.java
+	$(J2SEJAVAC) -source $(J2SEJAVAC_SOURCE) -target $(J2SEJAVAC_TARGET) \
+		-d $(@:%.ok=%)/classes \
+		-cp $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+		-Xlint -Werror \
+		-encoding ISO8859-1 \
+		$(TESTDIR)/javatest/regtest/OSTest.java
 	$(J2SEJAVA) -cp "$(@:%.ok=%)/classes$(PS)$(JTREG_IMAGEDIR)/lib/jtreg.jar" OSTest
 	echo "test passed at `date`" > $@
 

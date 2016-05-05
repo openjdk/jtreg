@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2013, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2013, 2016, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -32,6 +32,7 @@ $(BUILDDIR)/RerunTest2.ok: \
 	$(J2SEJAVAC) \
 		-d $(@:%.ok=%)/classes \
 		-cp $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+		-Xlint -Werror \
 		$(TESTDIR)/javatest/regtest/RerunTest2.java
 	cd $(@:%.ok=%) && $(J2SEJAVA) \
 		-classpath classes$(PS)../$(JTREG_IMAGEDIR)/lib/jtreg.jar \

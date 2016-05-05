@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2016, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -77,7 +77,7 @@ public class JUnitAction extends MainAction
 
         init(opts, args, reason, script, JUnitRunner.class.getName());
 
-        if (getClassArgs().size() != 0)
+        if (!getClassArgs().isEmpty())
             throw new ParseException(JUNIT_BAD_MAIN_ARG);
 
     } // init()
@@ -100,10 +100,10 @@ public class JUnitAction extends MainAction
 
             ClassLoader cl;
             if (moduleName != null) {
-                Class layerClass = Class.forName("java.lang.reflect.Layer");
-                Method bootMethod = layerClass.getMethod("boot", new Class[] { });
+                Class<?> layerClass = Class.forName("java.lang.reflect.Layer");
+                Method bootMethod = layerClass.getMethod("boot", new Class<?>[] { });
                 Object bootLayer = bootMethod.invoke(null, new Object[] { });
-                Method findLoaderMth = layerClass.getMethod("findLoader", new Class[] { String.class });
+                Method findLoaderMth = layerClass.getMethod("findLoader", new Class<?>[] { String.class });
                 cl = (ClassLoader) findLoaderMth.invoke(bootLayer, new Object[] { moduleName });
             } else if (loader != null) {
                 cl = loader;
@@ -111,7 +111,7 @@ public class JUnitAction extends MainAction
                 cl = JUnitRunner.class.getClassLoader();
             }
 
-            Class mainClass = Class.forName(className, false, cl);
+            Class<?> mainClass = Class.forName(className, false, cl);
             org.junit.runner.Result result;
             try {
                 result = org.junit.runner.JUnitCore.runClasses(mainClass);

@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2015, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2016, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -79,7 +79,7 @@ $(BUILDDIR)/Basic.agentvm.ok: \
 	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
 	$(MKDIR) -p $(@:%.ok=%/work/scratch) $(@:%.ok=%/report)
 	CLASSPATH="$(CLASSDIR)$(PS)$(JAVADIR)$(PS)$(JAVATEST_JAR)" \
-		$(J2SEJAVAC) -encoding ISO8859-1 -d $(BUILDDIR)/testClasses $(TESTDIR)/javatest/regtest/Basic.java
+		$(J2SEJAVAC) -Xlint -Werror -encoding ISO8859-1 -d $(BUILDDIR)/testClasses $(TESTDIR)/javatest/regtest/Basic.java
 	DISPLAY=`sh display.sh` export DISPLAY ; \
 	trap "sh `pwd`/display.sh -kill" 0 ; \
 	cd $(@:%.ok=%/work/scratch) ; \

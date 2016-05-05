@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014, 2016, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -53,7 +53,7 @@ public class ProcessCommand
      */
     public ProcessCommand setStatusForExit(int exitCode, Status status) {
         if (statusTable == null) {
-            statusTable = new HashMap();
+            statusTable = new HashMap<Integer, Status>();
             if (defaultStatus == null) {
                 defaultStatus = Status.error("unrecognized exit code");
             }
@@ -76,7 +76,7 @@ public class ProcessCommand
      */
     public ProcessCommand setDefaultStatus(Status status) {
         if (statusTable == null) {
-            statusTable = new HashMap();
+            statusTable = new HashMap<Integer, Status>();
         }
         defaultStatus = status;
         return this;
@@ -347,7 +347,7 @@ public class ProcessCommand
         if (logStatus != null) {
             return logStatus;
         } else if (statusTable != null) {
-            Status s = (Status)(statusTable.get(Integer.valueOf(exitCode)));
+            Status s = statusTable.get(exitCode);
             return (s == null ? defaultStatus.augment("exit code: " + exitCode) : s);
         } else if (exitCode == 0) {
             return Status.passed("exit code 0");
@@ -356,7 +356,7 @@ public class ProcessCommand
         }
     }
 
-    private HashMap statusTable;
+    private HashMap<Integer, Status> statusTable;
     private Status defaultStatus = Status.error("unknown reason");
     private File execDir;
     private List<String> cmd;

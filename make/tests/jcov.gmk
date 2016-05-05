@@ -34,7 +34,8 @@ $(BUILDDIR)/jcov.agentvm.ok: \
 		$(JTREG_IMAGEDIR)/lib/jcov_network_saver.jar 
 	$(RM) $(@:%.ok=%/lib) $(@:%.ok=%/work) $(@:%.ok=%/report)
 	$(MKDIR) -p $(@:%.ok=%/lib)
-	$(J2SEJAVAC) -d $(@:%.ok=%/lib) `find $(TESTDIR)/javatest/regtest/jcov/src/ -name \*.java`
+	$(J2SEJAVAC) -d $(@:%.ok=%/lib) -Xlint -Werror \
+		`find $(TESTDIR)/javatest/regtest/jcov/src/ -name \*.java`
 	$(J2SEHOME)/bin/java \
 		-Djavatest.regtest.showCmd=true \
 		-Djavatest.regtest.debugChild=true \

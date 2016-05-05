@@ -39,8 +39,11 @@ $(BUILDDIR)/classes.com.sun.javatest.regtest-othervm.ok: \
 		$(call PosixPath,$(JAVATEST_JAR))
 	$(MKDIR) -p $(CLASSDIR)
 	CLASSPATH="$(CLASSDIR)$(PS)$(JAVATEST_JAR)" \
-	$(REGTEST_OLD_JAVAC) -source $(REGTEST_OLD_SOURCE) -target $(REGTEST_OLD_TARGET) -d $(CLASSDIR) \
-	$(JAVAFILES.com.sun.javatest.regtest-othervm)
+	    $(REGTEST_OLD_JAVAC) -source $(REGTEST_OLD_SOURCE) -target $(REGTEST_OLD_TARGET) \
+		-d $(CLASSDIR) \
+		-Xlint -Werror \
+		-encoding ISO8859-1 \
+		$(JAVAFILES.com.sun.javatest.regtest-othervm)
 	echo "classes built at `date`" > $@
 
 ### The following files are required to run agentvm tests, as far back as JDK 1.5
@@ -51,8 +54,10 @@ JAVAFILES.com.sun.javatest.regtest-agentvm := \
 $(BUILDDIR)/classes.com.sun.javatest.regtest.agent.ok: \
 		$(JAVAFILES.com.sun.javatest.regtest-agentvm) \
 		$(BUILDDIR)/classes.com.sun.javatest.regtest-othervm.ok
-		CLASSPATH="$(CLASSDIR)$(PS)$(JAVATEST_JAR)" \
-		$(REGTEST_AGENT_JAVAC) -source $(REGTEST_AGENT_SOURCE) -target $(REGTEST_AGENT_TARGET) -encoding ISO8859-1 -d $(CLASSDIR) \
+	CLASSPATH="$(CLASSDIR)$(PS)$(JAVATEST_JAR)" \
+	    $(REGTEST_AGENT_JAVAC) -source $(REGTEST_AGENT_SOURCE) -target $(REGTEST_AGENT_TARGET) \
+		-d $(CLASSDIR) \
+		-Xlint -Werror \
 		$(JAVAFILES.com.sun.javatest.regtest-agentvm)
 	echo "classes built at `date`" > $@
 
@@ -65,8 +70,11 @@ JAVAFILES.com.sun.javatest.regtest-tools := \
 $(BUILDDIR)/classes.com.sun.javatest.regtest.ok: \
 		$(JAVAFILES.com.sun.javatest.regtest-tools) \
 		$(BUILDDIR)/classes.com.sun.javatest.regtest.agent.ok
-		CLASSPATH="$(CLASSDIR)$(PS)$(ANTHOME)/lib/ant.jar$(PS)$(JAVATEST_JAR)$(PS)$(JUNIT_JAR)$(PS)$(TESTNG_JAR)" \
-		$(J2SEJAVAC) -source $(J2SEJAVAC_SOURCE) -target $(J2SEJAVAC_TARGET) -encoding ISO8859-1 -d $(CLASSDIR) \
+	CLASSPATH="$(CLASSDIR)$(PS)$(ANTHOME)/lib/ant.jar$(PS)$(JAVATEST_JAR)$(PS)$(JUNIT_JAR)$(PS)$(TESTNG_JAR)" \
+	    $(J2SEJAVAC) -source $(J2SEJAVAC_SOURCE) -target $(J2SEJAVAC_TARGET) \
+		-d $(CLASSDIR) \
+		-Xlint -Werror \
+		-encoding ISO8859-1 \
 		$(JAVAFILES.com.sun.javatest.regtest-tools)
 	echo "classes built at `date`" > $@
 
@@ -278,6 +286,8 @@ $(JTREG_IMAGEDIR)/lib/asmtools.jar: $(call PosixPath,$(ASMTOOLS_HOME)/lib/asmtoo
 
 TARGETS.ZIP.jtreg += \
     $(JTREG_IMAGEDIR)/lib/asmtools.jar \
+
+$(JTREG_IMAGEDIR)/lib/jtreg.jar: $(JTREG_IMAGEDIR)/lib/asmtools.jar
 
 endif #ASMTOOLS_HOME
 

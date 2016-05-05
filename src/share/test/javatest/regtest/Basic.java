@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2016, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -128,8 +128,6 @@ public class Basic
             failed(ERR_BAD_VAL, e);
         } catch (FileNotFoundException e) {
             failed(ERR_BAD_VAL, e);
-        } catch (IOException e) {
-            failed(ERR_IO_ERROR, e);
         } catch (TestSuite.Fault f) {
             failed(ERR_SUITE, f);
         } catch (com.sun.javatest.regtest.BadArgs e) {
@@ -252,10 +250,10 @@ public class Basic
 
             int found = 0;
 
-            Iterator it = createTestQueue(params);
+            Iterator<TestResult> it = createTestQueue(params);
 
             while (it.hasNext()) {
-                TestResult tr = (TestResult) (it.next());
+                TestResult tr = it.next();
                 TestDescription td = tr.getDescription();
                 if (!td.getTitle().startsWith(prefix)) {
                     System.err.println(REP_STATE + state);
@@ -293,13 +291,13 @@ public class Basic
     private void checkAction(String action) {
         int expected = actionTable.get(action);
         try {
-            Iterator it = createTestQueue(setParameters());
+            Iterator<TestResult> it = createTestQueue(setParameters());
 
             int found = 0;
 
             TestDescription td;
             while (it.hasNext()) {
-                td = ((TestResult)it.next()).getDescription();
+                td = it.next().getDescription();
                 String actions = td.getParameter("run");
                 int pos = 0;
                 // a td may have more than one of the target action
@@ -370,7 +368,7 @@ public class Basic
     /**
      * Returns an iterator containing the selected TestResults.
      */
-    private Iterator createTestQueue(InterviewParameters p)
+    private Iterator<TestResult> createTestQueue(InterviewParameters p)
         throws FileNotFoundException, TestSuite.Fault, TestResultTable.Fault
     {
         TestResultTable trt = p.getWorkDirectory().getTestResultTable();
@@ -381,7 +379,9 @@ public class Basic
         TestFilter[] filters = p.getFilters();
 
         trt.waitUntilReady(); // required for samevm mode
-        return trt.getIterator(tests, filters);
+        @SuppressWarnings("unchecked")
+        Iterator<TestResult> iter = trt.getIterator(tests, filters);
+        return iter;
     }
 
     private static File[] stringsToFiles(String[] tests) {

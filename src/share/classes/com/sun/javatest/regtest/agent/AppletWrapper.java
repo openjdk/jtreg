@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2016, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -272,6 +272,8 @@ public class AppletWrapper
      */
     static class AppletFrame extends Frame implements ActionListener
     {
+        private static final long serialVersionUID = 1L;
+
         /**
          * Create the AppletFrame frame which contains the running applet and
          * any instructions, buttons, etc.
@@ -492,6 +494,8 @@ public class AppletWrapper
  */
 class CheckboxPanel extends Panel
 {
+    private static final long serialVersionUID = 1L;
+
     public CheckboxPanel(AppletPanel appletPanel, String [] boxNames) {
         panel = appletPanel;
 
@@ -529,6 +533,8 @@ class CheckboxPanel extends Panel
  */
 class AppletPanel extends Panel
 {
+    private static final long serialVersionUID = 1L;
+
     AppletPanel(Applet applet, int width, int height) {
         layout = new GridBagLayout();
         setLayout(layout);
@@ -615,6 +621,8 @@ class AppletPanel extends Panel
      */
     class NestedAppletPanel extends Panel
     {
+        private static final long serialVersionUID = 1L;
+
         NestedAppletPanel(Applet applet) {
             setLayout(new BorderLayout());
             add(applet, "Center");

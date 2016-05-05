@@ -55,6 +55,7 @@ public class RegressionReporter {
         this.log = log;
     }
 
+    @SuppressWarnings("deprecation")
     public void report(RegressionParameters params, ElapsedTimeHandler elapsedTimeHandler, TestStats testStats, boolean quiet) {
         File rd = params.getReportDir();
         File wd = params.getWorkDirectory().getRoot();

@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2015, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2016, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -28,7 +28,9 @@
 $(BUILDDIR)/CPAppend/classes/p/Lib.class: \
 	$(TESTDIR)/javatest/regtest/cpappend/lib/p/Lib.java
 	$(MKDIR) -p $(BUILDDIR)/CPAppend/classes
-	$(J2SEJAVAC) -d $(BUILDDIR)/CPAppend/classes $(TESTDIR)/javatest/regtest/cpappend/lib/p/Lib.java
+	$(J2SEJAVAC) -d $(BUILDDIR)/CPAppend/classes \
+		-Xlint -Werror \
+		$(TESTDIR)/javatest/regtest/cpappend/lib/p/Lib.java
 
 # Control test for -cpa -- verify test fails if option not provided
 #

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014, 2016, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -72,14 +72,14 @@ public class TimeoutHandlerProvider {
      * Load the class specified by setClassName and setClassPath.
      * @throws ClassNotFoundException
      */
-    private Class<TimeoutHandler> loadClass() throws ClassNotFoundException {
+    private Class<? extends TimeoutHandler> loadClass() throws ClassNotFoundException {
         Class<?> handlerClass;
         if (loader == null) {
             handlerClass = Class.forName(className);
         } else {
             handlerClass = Class.forName(className, true, loader);
         }
-        return (Class<TimeoutHandler>) handlerClass.asSubclass(TimeoutHandler.class);
+        return handlerClass.asSubclass(TimeoutHandler.class);
     }
 
     /**
@@ -92,8 +92,8 @@ public class TimeoutHandlerProvider {
 
         if (className != null) {
             try {
-                Class<TimeoutHandler> clz = loadClass();
-                Constructor ctor = clz.getDeclaredConstructor(PrintWriter.class, File.class, File.class);
+                Class<? extends TimeoutHandler> clz = loadClass();
+                Constructor<? extends TimeoutHandler> ctor = clz.getDeclaredConstructor(PrintWriter.class, File.class, File.class);
                 TimeoutHandler th = (TimeoutHandler) ctor.newInstance(log, outDir, testJDK);
                 th.setTimeout(timeout);
                 return th;

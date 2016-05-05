@@ -40,7 +40,7 @@ public class JTRegModuleHelper {
         if (addExportsMethod == null) {
             Class<?> moduleClass = Class.forName("java.lang.reflect.Module");
             addExportsMethod = moduleClass.getDeclaredMethod("implAddExports",
-                    new Class[] { String.class, moduleClass });
+                    new Class<?>[] { String.class, moduleClass });
         }
 
         addExportsMethod.invoke(module, new Object[] { packageName, targetModule });

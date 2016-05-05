@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013, 2016, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -78,7 +78,9 @@ public class GroupManager {
     private Collection<String> ignoreDirs = Collections.<String>emptySet();
     private Collection<String> allowExtns = Collections.<String>emptySet();
 
-    class InvalidGroup extends Exception { }
+    class InvalidGroup extends Exception {
+        private static final long serialVersionUID = 1L;
+ }
 
     GroupManager(PrintWriter out, File root, List<String> files) throws IOException {
         this.out = out;
