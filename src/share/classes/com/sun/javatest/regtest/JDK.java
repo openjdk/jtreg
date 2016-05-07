@@ -355,6 +355,17 @@ public class JDK {
             jdkOpts.addAll(vmOpts);
             jdkOpts.addAll(epd.getVMOpts());
 
+            // The following assumes we have already got the JDK version
+            // in a preceding invocation of the JVM. This implies we cannot
+            // merge getVersion with getProperties without changing the
+            // mechanism by which we get all appropriate system modules.
+            if (version != null) {
+                JDK_Version v = JDK_Version.forName(version);
+                if (v.compareTo(JDK_Version.V9) >= 0) {
+                    jdkOpts.addAll(Arrays.asList("-addmods", "ALL-SYSTEM"));
+                }
+            }
+
             List<String> cmdArgs = new ArrayList<String>();
             cmdArgs.add(getJavaProg().getPath());
             cmdArgs.addAll(jdkOpts.toList());

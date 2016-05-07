@@ -34,7 +34,7 @@ $(BUILDDIR)/ModulesTest_NoLimitMods.ok: \
 		-jdk:$(JIGSAWHOME) \
 		$(TESTDIR)/javatest/regtest/data/modules \
 			> $(@:%.ok=%/jt.log) 2>&1 
-	$(GREP) -s '^Test results: passed: 4$$' $(@:%.ok=%/jt.log)  > /dev/null
+	$(GREP) -s '^Test results: passed: 5$$' $(@:%.ok=%/jt.log)  > /dev/null
 	echo $@ passed at `date` > $@
 
 $(BUILDDIR)/ModulesTest_LimitMods_java.base.ok \
