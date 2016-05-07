@@ -325,7 +325,7 @@ public class JDK {
      * <li>the system properties
      * <li>additional properties for internal use, such as jtreg.installed.modules
      * </ul>
-     * @param parsm used to help invoke GetJDKProperties
+     * @param params used to help invoke GetJDKProperties
      */
     public synchronized Properties getProperties(RegressionParameters params) throws Fault {
         if (jdkPropsMap == null)
