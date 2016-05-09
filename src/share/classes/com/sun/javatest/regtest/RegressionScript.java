@@ -1057,7 +1057,7 @@ public class RegressionScript extends Script {
         vmOpts.addAll("-classpath", classpath.toString());
         vmOpts.addAll(testVMOpts);
         if (params.getTestJDK().hasModules()) {
-            vmOpts.add("-Xpatch:" + params.getWorkDirectory().getFile("patches"));
+            vmOpts.addAllXPatch(new SearchPath(params.getWorkDirectory().getFile("patches")));
         }
 
         /*
