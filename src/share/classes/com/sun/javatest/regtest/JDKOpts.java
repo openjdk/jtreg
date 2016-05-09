@@ -47,18 +47,12 @@ import com.sun.javatest.regtest.agent.SearchPath;
 public class JDKOpts {
     private final List<String> opts;
     private final Map<String, Integer> index;
-    private final boolean useNewXpatch;
     private String pending;
     private char pendingSeparator;
 
     public JDKOpts() {
-        this(true);
-    }
-
-    public JDKOpts(boolean useNewXpatch) {
         opts = new ArrayList<String>();
         index = new HashMap<String, Integer>();
-        this.useNewXpatch = useNewXpatch;
     }
 
     public boolean isEmpty() {
@@ -89,17 +83,6 @@ public class JDKOpts {
         }
     }
 
-    public void addPath(String opt, SearchPath path) {
-        if (path != null && !path.isEmpty()) {
-            if (opt.endsWith(":")) {
-                add(opt + path);
-            } else {
-                add(opt);
-                add(path.toString());
-            }
-        }
-    }
-
     public void add(String opt) {
         if (pending != null) {
             // this is the "value" to the preceding option
@@ -117,11 +100,7 @@ public class JDKOpts {
             pending = opt;
             pendingSeparator = ',';
         } else if (opt.startsWith("-Xpatch:")) {
-            if (useNewXpatch) {
-                updateNewXpatch(opt);
-            } else {
-                updateOldXpatch(opt);
-            }
+            updateXpatch(opt);
         } else if (opt.startsWith("-XaddReads:")) {
             updateAddReads(opt);
         } else if (opt.startsWith("-XaddExports:")) {
@@ -134,105 +113,72 @@ public class JDKOpts {
     }
 
     /**
-     * Update -XaddExports. -XaddExports:module/package=module,module
-     * Only one instance per module/package is allowed.
-     * Old style options are converted to new.
-     * @param opt
-     */
-    private void updateAddExports(String opt) {
-        int i = opt.indexOf(":");
-        String key = opt.substring(0, i + 1);
-        String optValues = opt.substring(i + 1);
-        if (optValues.matches(".*=.*,.*=.*")) {
-             // temp allow for old usage with multiple mod/pkg=target values
-            for (String optValue: optValues.split(",")) {
-                int eq = optValue.indexOf("=");
-                if (eq > 0) {
-                    updateOpt(opt, '=', ',');
-                } else {
-                    opts.add(opt); // pass through bad opts
-                }
-            }
-        } else {
-            updateOpt(opt, '=', ',');
-        }
-    }
-
-    /**
-     * Update -XaddReads. -XaddReads:module=module,module
-     * Only one instance per module is allowed.
-     * Old style options are converted to new.
-     * @param opt
-     */
-    private void updateAddReads(String opt) {
-        int i = opt.indexOf(":");
-        String key = opt.substring(0, i + 1);
-        String optValues = opt.substring(i + 1);
-        if (optValues.matches(".*=.*,.*=.*")) {
-             // temp allow for old usage with multiple mod=target values
-            for (String optValue: optValues.split(",")) {
-                int eq = optValue.indexOf("=");
-                if (eq > 0) {
-                    updateOpt(opt, '=', ',');
-                } else {
-                    opts.add(opt); // pass through bad opts
-                }
-            }
-        } else {
-            updateOpt(opt, '=', ',');
-        }
-    }
-
-    /**
-     * Update an old style -Xpatch option:  -Xpatch:modulepath.
-     * Only one instance of the option is allowed.
-     * New style options are converted to old, where possible.
+     * Adds a path-valued option.
+     * If opt ends with ":", a single option is added; otherwise opt and path are added
+     * as two distinct items.
      * @param opt the option
+     * @param path the path value
      */
-    private void updateOldXpatch(String opt) {
-        // -Xpatch:path
-        int eq = opt.indexOf("=");
-        if (eq == -1) {
-            updateOpt(opt, ':', File.pathSeparatorChar);
-        } else {
-            String modName = opt.substring(opt.indexOf(":") + 1, eq);
-            SearchPath newStylePath = new SearchPath(opt.substring(eq + 1));
-            for (File f : newStylePath.split()) {
-                if (f.isDirectory() && f.getName().equals(modName)) {
-                    updateOpt("-Xpatch:" + f.getParentFile(), ':', File.pathSeparatorChar);
-                } else {
-                    throw new IllegalArgumentException("Cannot convert path to old Xpatch: form: "
-                            + f);
-                }
+    public void addPath(String opt, SearchPath path) {
+        if (path != null && !path.isEmpty()) {
+            if (opt.equals("-Xpatch:")) {
+            } else if (opt.endsWith(":")) {
+                add(opt + path);
+            } else {
+                add(opt);
+                add(path.toString());
             }
         }
     }
 
     /**
-     * Update a new style -Xpatch option:  -Xpatch:module=classpath.
-     * Only one instance of the option is allowed per module.
-     * Old style options are converted to new.
-     * @param opt the option
+     * Adds a series of -Xpatch options for the directories found on a search path.
+     * The directories are assumed to be named for the modules they contain.
+     * Note: jar files on the search path are not supported by this method.
+     * @param patchPath the search path on which to look for modules to be patched
      */
-    private void updateNewXpatch(String opt) {
-        // -Xpatch:module=path
-        int eq = opt.indexOf("=");
-        if (eq == -1) {
-            SearchPath oldStylePath = new SearchPath(opt.substring(opt.indexOf(":") + 1));
-            for (File dir : oldStylePath.split()) {
+    public void addAllXPatch(SearchPath patchPath) {
+        if (patchPath != null) {
+            for (File dir : patchPath.split()) {
                 File[] subdirs = dir.listFiles();
                 if (subdirs != null) {
                     Arrays.sort(subdirs); // for repeatability; good enough for now
                     for (File subdir: subdirs) {
                         if (subdir.isDirectory()) {
-                            updateOpt("-Xpatch:" + subdir.getName() + "=" + subdir, '=', File.pathSeparatorChar);
+                            updateXpatch("-Xpatch:" + subdir.getName() + "=" + subdir);
                         }
                     }
                 }
             }
-        } else {
-            updateOpt(opt, '=', File.pathSeparatorChar);
         }
+    }
+
+    /**
+     * Update -XaddExports. -XaddExports:module/package=module,module
+     * Only one instance per module/package is allowed.
+     * @param opt
+     */
+    private void updateAddExports(String opt) {
+        updateOpt(opt, '=', ',');
+    }
+
+    /**
+     * Update -XaddReads. -XaddReads:module=module,module
+     * Only one instance per module is allowed.
+     * @param opt
+     */
+    private void updateAddReads(String opt) {
+        updateOpt(opt, '=', ',');
+    }
+
+    /**
+     * Update -Xpatch.  -Xpatch:module=classpath.
+     * Only one instance of the option is allowed per module.
+     * @param opt the option
+     */
+    private void updateXpatch(String opt) {
+        // -Xpatch:module=path
+        updateOpt(opt, '=', File.pathSeparatorChar);
     }
 
     /**

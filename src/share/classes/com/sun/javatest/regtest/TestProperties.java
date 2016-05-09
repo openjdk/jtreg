@@ -84,9 +84,6 @@ public class TestProperties {
                     e.properties.getProperty("requires.extraPropDefns.vmOpts")
             );
         }
-
-        // temporary property, during transition
-        useNewXpatch = Boolean.valueOf(e.properties.getProperty("useNewXpatch"));
     }
 
     Set<String> getValidKeys(File file) throws TestSuite.Fault {
@@ -168,10 +165,6 @@ public class TestProperties {
         return extraPropDefns;
     }
 
-    boolean useNewXpatch() {
-        return useNewXpatch;
-    }
-
     private void error(I18NResourceBundle i18n, String key, Object... args) {
         errHandler.error(i18n.getString(key, args));
     }
@@ -192,9 +185,6 @@ public class TestProperties {
     final List<String> groupFiles;
     final Version requiredVersion;
     final ExtraPropDefns extraPropDefns;
-
-    // temporary property, during transition
-    final boolean useNewXpatch;
 
     class Cache {
         class Entry {

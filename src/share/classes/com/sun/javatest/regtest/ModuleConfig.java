@@ -54,7 +54,6 @@ public class ModuleConfig {
     private SearchPath modulePath;
     private SearchPath classPath;
     private SearchPath bootClassPathAppend;
-    private SearchPath oldPatch;
     private Map<String,SearchPath> patch;
 
     ModuleConfig(String title) {
@@ -96,13 +95,9 @@ public class ModuleConfig {
             } else if (opt.startsWith("-Xpatch:")) {
                 int sep = opt.indexOf(":");
                 int eq = opt.indexOf("=");
-                if (eq == -1) {
-                    setOldPatch(new SearchPath(opt.substring(sep + 1)));
-                } else {
-                    String module = opt.substring(sep + 1, eq);
-                    SearchPath path = new SearchPath(opt.substring(opt.indexOf("=") + 1));
-                    setNewPatch(module, path);
-                }
+                String module = opt.substring(sep + 1, eq);
+                SearchPath path = new SearchPath(opt.substring(eq + 1));
+                setXPatch(module, path);
             }
         }
         return this;
@@ -156,12 +151,7 @@ public class ModuleConfig {
         return this;
     }
 
-    ModuleConfig setOldPatch(SearchPath patchPath) {
-        this.oldPatch = patchPath;
-        return this;
-    }
-
-    ModuleConfig setNewPatch(String module, SearchPath patchPath) {
+    ModuleConfig setXPatch(String module, SearchPath patchPath) {
         if (patch == null)
             patch = new TreeMap<String, SearchPath>();
         patch.put(module, patchPath);
@@ -215,14 +205,6 @@ public class ModuleConfig {
         if (bootClassPathAppend != null) {
             String label = "boot class path (append):";
             for (File file: bootClassPathAppend.split()) {
-                table.addRow(label, file.getPath());
-                label = null;
-            }
-        }
-
-        if (oldPatch != null) {
-            String label = "patch (old style):";
-            for (File file: oldPatch.split()) {
                 table.addRow(label, file.getPath());
                 label = null;
             }

@@ -398,7 +398,7 @@ public class MainAction extends Action
         }
 
         String javaCmd = script.getJavaProg();
-        JDKOpts javaOpts = new JDKOpts(script.useNewXpatch());
+        JDKOpts javaOpts = new JDKOpts();
 
         if (!useCLASSPATH) {
             javaOpts.addPath("-classpath", cp);
@@ -407,7 +407,7 @@ public class MainAction extends Action
         SearchPath bcpa = paths.get(PathKind.BOOTCLASSPATH_APPEND);
         SearchPath pp = paths.get(PathKind.PATCHPATH);
         javaOpts.addPath("-Xbootclasspath/a:", bcpa);
-        javaOpts.addPath("-Xpatch:", pp);
+        javaOpts.addAllXPatch(pp);
         javaOpts.addPath("-modulepath", paths.get(PathKind.MODULEPATH));
 
         Set<String> addMods = new LinkedHashSet<String>();

@@ -66,34 +66,6 @@ public class JDKOptsTest {
     }
 
     @Test
-    void testXpatch_oldXpatch() {
-        String[] opts = { "-Xpatch:a", "-Xpatch:b" };
-        String[] expect = { "-Xpatch:a" + PS + "b" };
-        test(opts, expect, false);
-    }
-
-    @Test
-    void testXpatchDir2_oldXpatch() {
-        String[] opts = { "-Xpatch:a", "-Xpatch:a" };
-        String[] expect = { "-Xpatch:a" };
-        test(opts, expect, false);
-    }
-
-    @Test
-    void testXpatch3_oldXpatch() {
-        String[] opts = { "-Xpatch:a", "-Xpatch:b", "-Xpatch:a" };
-        String[] expect = { "-Xpatch:a" + PS + "b" };
-        test(opts, expect, false);
-    }
-
-    @Test
-    void testXpatch4_oldXpatch() {
-        String[] opts = { "-Xpatch:a" + PS + "b" + PS + "c", "-Xpatch:c" + PS + "b" + PS + "a" };
-        String[] expect = { "-Xpatch:a" + PS + "b" + PS + "c" };
-        test(opts, expect, false);
-    }
-
-    @Test
     void testXpatch_sameModule_differentPatches() {
         String[] opts = { "-Xpatch:a=" + file(patchDir1, "a"), "-Xpatch:a=" + file(patchDir2, "a") };
         String[] expect = { "-Xpatch:a=" + file(patchDir1, "a") + PS + file(patchDir2, "a") };
@@ -108,101 +80,10 @@ public class JDKOptsTest {
     }
 
     @Test
-    void testXpatch_oldToNew_oneDir() {
-        String[] opts = { "-Xpatch:" + patchDir1};
-        String[] expect = {
-                "-Xpatch:a=" + file(patchDir1, "a"),
-                "-Xpatch:b=" + file(patchDir1, "b"),
-                "-Xpatch:c=" + file(patchDir1, "c")
-        };
-        test(opts, expect);
-    }
-
-    @Test
-    void testXpatch_oldToNew_multiDir() {
-        String[] opts = { "-Xpatch:" + patchDir1 + PS + patchDir2};
-        String[] expect = {
-                "-Xpatch:a=" + file(patchDir1, "a") + PS + file(patchDir2, "a"),
-                "-Xpatch:b=" + file(patchDir1, "b") + PS + file(patchDir2, "b"),
-                "-Xpatch:c=" + file(patchDir1, "c") + PS + file(patchDir2, "c")
-        };
-        test(opts, expect);
-    }
-
-    @Test
-    void testXpatch_mixToNew() {
-        String[] opts = {
-                "-Xpatch:a=" + file(patchDir1, "a"),
-                "-Xpatch:" + patchDir2,
-                "-Xpatch:b=" + file(patchDir1, "b")};
-        String[] expect = {
-                "-Xpatch:a=" + file(patchDir1, "a") + PS + file(patchDir2, "a"),
-                "-Xpatch:b=" + file(patchDir2, "b") + PS + file(patchDir1, "b"),
-                "-Xpatch:c=" + file(patchDir2, "c")
-        };
-        test(opts, expect);
-    }
-
-    @Test
-    void testXpatch_mixToOld() {
-        String[] opts = {
-                "-Xpatch:a=" + file(patchDir1, "a"),
-                "-Xpatch:" + patchDir2,
-                "-Xpatch:b=" + file(patchDir1, "b")};
-        String[] expect = {
-                "-Xpatch:" + patchDir1 + PS + patchDir2
-        };
-        test(opts, expect, false);
-    }
-
-    @Test
-    void testXpatch_newToOld_oneDir() {
-        String[] opts = {
-                "-Xpatch:a=" + file(patchDir1, "a"),
-                "-Xpatch:b=" + file(patchDir1, "b"),
-                "-Xpatch:c=" + file(patchDir1, "c")
-        };
-        String[] expect = { "-Xpatch:" + patchDir1};
-        test(opts, expect, false);
-    }
-
-    @Test
-    void testXpatch_newToOld_multiDir() {
-        String[] opts = {
-                "-Xpatch:a=" + file(patchDir1, "a") + PS + file(patchDir2, "a"),
-                "-Xpatch:b=" + file(patchDir1, "b") + PS + file(patchDir2, "b"),
-                "-Xpatch:c=" + file(patchDir1, "c") + PS + file(patchDir2, "c")
-        };
-        String[] expect = { "-Xpatch:" + patchDir1 + PS + patchDir2};
-        test(opts, expect, false);
-    }
-
-    @Test
     void testXaddExports() {
         String[] opts = { "-XaddExports:m1/p1=ALL-UNNAMED", "-XaddExports:m2/p2=ALL-UNNAMED", "-XaddExports:m1/p1=m11" };
         String[] expect = { "-XaddExports:m1/p1=ALL-UNNAMED,m11", "-XaddExports:m2/p2=ALL-UNNAMED" };
         test(opts, expect);
-    }
-
-    @Test
-    void testMix_oldXpatch() {
-        String[] opts = {
-            "-classpath", "cp1", "-sourcepath", "sp1", "-Xpatch:xp1", "-XaddExports:m1/p1=ALL-UNNAMED",
-            "-classpath", "cp2", "-sourcepath", "sp2", "-Xpatch:xp2", "-XaddExports:m2/p2=ALL-UNNAMED",
-            "-classpath", "cp3", "-sourcepath", "sp3", "-Xpatch:xp3", "-XaddExports:m3/p3=ALL-UNNAMED",
-            "-XaddExports:m1/p1=m11",
-            "-XaddExports:m2/p2=m22",
-            "-XaddExports:m3/p3=m33",
-        };
-        String[] expect = {
-            "-classpath", "cp1" + PS + "cp2" + PS + "cp3",
-            "-sourcepath", "sp1" + PS + "sp2" + PS + "sp3",
-            "-Xpatch:xp1" + PS + "xp2" + PS + "xp3",
-            "-XaddExports:m1/p1=ALL-UNNAMED,m11",
-            "-XaddExports:m2/p2=ALL-UNNAMED,m22",
-            "-XaddExports:m3/p3=ALL-UNNAMED,m33",
-        };
-        test(opts, expect, false);
     }
 
     @Test
@@ -290,12 +171,8 @@ public class JDKOptsTest {
     }
 
     void test(String[] opts, String[] expect) {
-        test(opts, expect, true);
-    }
-
-    void test(String[] opts, String[] expect, boolean useNewXpatch) {
         testCount++;
-        JDKOpts jdkOpts = new JDKOpts(useNewXpatch);
+        JDKOpts jdkOpts = new JDKOpts();
         jdkOpts.addAll(opts);
         List<String> result = jdkOpts.toList();
         System.out.println("Options: " + Arrays.toString(opts));

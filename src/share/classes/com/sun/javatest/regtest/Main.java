@@ -605,8 +605,7 @@ public class Main {
                             + arg.substring(0, eq + 1)
                             + filesToAbsolutePath(pathToFiles(arg.substring(eq + 1))));
                 } else {
-                    // old style: -Xpatch:<path>
-                    testVMOpts.add("-Xpatch:" + filesToAbsolutePath(pathToFiles(arg)));
+                    // malformed option
                 }
             }
         },

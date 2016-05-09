@@ -340,7 +340,7 @@ public class JDK {
                 throw new Fault(e.getMessage(), e);
             }
 
-            JDKOpts jdkOpts = new JDKOpts(params.getTestSuite().useNewXpatch());
+            JDKOpts jdkOpts = new JDKOpts();
             jdkOpts.add("-classpath");
             SearchPath cp = new SearchPath(params.getJavaTestClassPath());
             cp.append(epd.getClassDir());

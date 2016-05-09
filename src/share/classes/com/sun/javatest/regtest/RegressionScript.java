@@ -575,13 +575,6 @@ public class RegressionScript extends Script {
         return modules;
     }
 
-    /**
-     * Determine whether to use new form of -Xpatch option
-     */
-    boolean useNewXpatch() {
-        return testSuite.useNewXpatch();
-    }
-
     //----------------------- computing paths ---------------------------------
 
     File absTestWorkFile(String name) {
@@ -1060,7 +1053,7 @@ public class RegressionScript extends Script {
      * Get an agent for a VM with the given VM options.
      */
     Agent getAgent(JDK jdk, SearchPath classpath, List<String> testVMOpts) throws Agent.Fault {
-        JDKOpts vmOpts = new JDKOpts(useNewXpatch());
+        JDKOpts vmOpts = new JDKOpts();
         vmOpts.addAll("-classpath", classpath.toString());
         vmOpts.addAll(testVMOpts);
         if (params.getTestJDK().hasModules()) {

@@ -439,7 +439,7 @@ public class CompileAction extends Action {
     private List<String> getJavacCommandArgs(List<String> args) throws TestRunException {
         Map<PathKind, SearchPath> compilePaths = script.getCompilePaths(libLocn, multiModule, module);
 
-        JDKOpts javacArgs = new JDKOpts(script.useNewXpatch());
+        JDKOpts javacArgs = new JDKOpts();
         javacArgs.addAll(script.getTestCompilerOptions());
         javacArgs.addAll(getAddExports());
 
@@ -466,7 +466,7 @@ public class CompileAction extends Action {
         javacArgs.addPath("-modulepath", compilePaths.get(PathKind.MODULEPATH));
 
         SearchPath pp = compilePaths.get(PathKind.PATCHPATH);
-        javacArgs.addPath("-Xpatch:", pp);
+        javacArgs.addAllXPatch(pp);
         if (pp != null && !pp.isEmpty() && cp != null && !cp.isEmpty()) {
             // provide addReads from patch modules to unnamed module(s).
             for (String s: getModules(pp)) {
