@@ -1967,6 +1967,10 @@ public class Main {
                 OutputStream to = null;
                 try {
                     from = getClass().getClassLoader().getResourceAsStream(c);
+                    if (from == null) {
+                        out.println("Cannot find class " + c + " to init patch directory");
+                        continue;
+                    }
                     f.getParentFile().mkdirs();
                     to = new FileOutputStream(f);
                     byte[] buf = new byte[8192];
