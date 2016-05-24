@@ -302,7 +302,7 @@ public class CompileAction extends Action {
         List<String> javacArgs = new ArrayList<String>();
         List<String> jasmArgs = new ArrayList<String>();
         List<String> jcodArgs = new ArrayList<String>();
-        boolean runJavac = false;
+        boolean runJavac = process;
 
         for (String currArg : args) {
             if (currArg.endsWith(".java")) {
@@ -332,13 +332,17 @@ public class CompileAction extends Action {
                 status = jcod(jcodArgs);
             if (status.isPassed() && runJavac) {
                 javacArgs = getJavacCommandArgs(javacArgs);
-                switch (script.getExecMode()) {
+                if (explicitAnnotationProcessingRequested(javacArgs)
+                        && !getAddExports().isEmpty()) {
+                    othervmOverrideReasons.add("runtime -XaddExports needed for annotation processing");
+                }
+                switch (!othervmOverrideReasons.isEmpty() ? ExecMode.OTHERVM : script.getExecMode()) {
                     case AGENTVM:
                         showMode(ExecMode.AGENTVM);
                         status = runAgentJVM(javacArgs);
                         break;
                     case OTHERVM:
-                        showMode(ExecMode.OTHERVM);
+                        showMode(ExecMode.OTHERVM, othervmOverrideReasons);
                         status = runOtherJVM(javacArgs);
                         break;
                     default:
@@ -502,6 +506,10 @@ public class CompileAction extends Action {
         if (addDebugOpts && script.getCompileJDK().equals(script.getTestJDK()))
             javacVMOpts.addAll(script.getTestDebugOptions());
 
+        if (explicitAnnotationProcessingRequested(javacArgs)) {
+            javacVMOpts.addAll(getAddExports());
+        }
+
         // WRITE ARGUMENT FILE
         List<String> fullJavacArgs = javacArgs;
         if (javacArgs.size() >= 10) {
@@ -535,7 +543,7 @@ public class CompileAction extends Action {
         if (showCmd)
             showCmd("compile", command, section);
 
-        new ModuleConfig("Boot Layer (javac execution environment")
+        new ModuleConfig("Boot Layer (javac runtime environment)")
                 .setFromOpts(javacVMOpts)
                 .write(configWriter);
         new ModuleConfig("javac compilation environment")
@@ -612,7 +620,9 @@ public class CompileAction extends Action {
                     ? join(script.getTestVMOptions(), script.getTestDebugOptions())
                     : script.getTestVMOptions();
             agent = script.getAgent(jdk, agentClasspath, vmOpts);
-            new ModuleConfig("Boot Layer (javac execution environment)").setFromOpts(agent.vmOpts).write(configWriter);
+            new ModuleConfig("Boot Layer (javac runtime environment)")
+                    .setFromOpts(agent.vmOpts)
+                    .write(configWriter);
         } catch (Agent.Fault e) {
             return error(AGENTVM_CANT_GET_VM + ": " + e.getCause());
         }
@@ -663,6 +673,20 @@ public class CompileAction extends Action {
     private String getOutput(OutputHandler.OutputKind kind) {
         String s = section.getOutput(kind.name);
         return (s == null) ? "" : s;
+    }
+
+    // See JavaCompiler.explicitAnnotationProcessingRequested
+    private boolean explicitAnnotationProcessingRequested(List<String> javacArgs) {
+        for (String arg: javacArgs) {
+            if (arg.equals("-processor")
+                    || arg.equals("-processorpath")
+                    || arg.equals("-processormodulepath")
+                    || arg.equals("-proc:only")
+                    || arg.equals("-Xprint")) {
+                return true;
+            }
+        }
+        return false;
     }
 
     //----------internal methods------------------------------------------------
@@ -787,4 +811,5 @@ public class CompileAction extends Action {
     private boolean multiModule = false;
     private Set<String> modules;
     private boolean addDebugOpts = false;
+    protected Set<String> othervmOverrideReasons = new LinkedHashSet<String>();
 }
