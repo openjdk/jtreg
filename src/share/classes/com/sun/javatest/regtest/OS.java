@@ -95,7 +95,7 @@ public class OS {
     //    os.version           10.7.4
     //
     // The JPRT source code also lists the following values for os.arch
-    //    sparc, sparcv9, ia64, ppc64, ppc,  powerpc,
+    //    sparc, sparcv9, ia64, ppc64, ppc, powerpc,
     //    ppcv2, ppcsflt, arm, armsflt, armvfp
 
     public OS(String name, String arch, String version) {
@@ -117,12 +117,16 @@ public class OS {
          if (arch.contains("64")
                  && !arch.equals("ia64")
                  && !arch.equals("ppc64")
+                 && !arch.equals("ppc64le")
+                 && !arch.equals("zArch_64")
                  && !arch.equals("aarch64"))
             simple_arch = "x64";
         else if (arch.contains("86"))
             simple_arch = "i586";
         else if (arch.equals("ppc") || arch.equals("powerpc"))
             simple_arch = "ppc";
+        else if (arch.equals("s390x") || arch.equals("zArch_64"))
+            simple_arch = "s390x";
         else
             simple_arch = arch;
 
