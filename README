@@ -20,9 +20,9 @@ Dependencies
 jtreg has a number of build dependencies. These can be set with values on the 
 make command line or with values in make/Defs.gmk.
 
-JDK 1.5 (or better)
-    Set JDK15HOME to the JDK or equivalent used to build jtreg. It must be 
-    equivalent to JDK 1.5 or later.
+JDK 1.7 (or better)
+    Set JDK17HOME to the JDK or equivalent used to build jtreg. It must be 
+    equivalent to JDK 1.7 or later.
 
 JavaHelp
     See https://javahelp.dev.java.net/. Set JAVAHELP_HOME to an installed copy 
