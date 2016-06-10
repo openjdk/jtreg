@@ -75,6 +75,7 @@
         <available property="jtharness.ok" file="${javatest.home}/legal/copyright.txt"/>
         <available property="junit.ok" file="${junit.jar}"/>
         <available property="testng.ok" file="${testng.jar}"/>
+        <available property="jcommander.ok" file="${jcommander.jar}"/>
         <available property="asmtools.ok" file="${asmtools.jar}"/>
         <condition property="jcov.ok">
             <and>
@@ -215,8 +216,12 @@
         <copy file="${junit.jar}" tofile="${dist.jtreg.dir}/lib/junit.jar"/>
     </target>
 
-    <target name="import-testng" depends="-init" if="testng.ok">
+    <target name="import-testng" depends="-init,import-jcommander" if="testng.ok">
         <copy file="${testng.jar}" tofile="${dist.jtreg.dir}/lib/testng.jar"/>
+    </target>
+
+    <target name="import-jcommander" depends="-init" if="jcommander.ok">
+        <copy file="${jcommander.jar}" tofile="${dist.jtreg.dir}/lib/jcommander.jar"/>
     </target>
 
     <target name="import-asmtools" depends="-init" if="asmtools.ok">
