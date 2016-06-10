@@ -50,14 +50,8 @@ import com.sun.javatest.regtest.agent.SearchPath;
  */
 public class JCovManager {
     public JCovManager(File libDir) {
-        String s = System.getProperty("jcov.jar");
-        File f = (s != null) ? new File(s) : new File(libDir, "jcov.jar");
-        if (f.exists())
-            jcov_jar = f;
-        s = System.getProperty("jcov_network_saver.jar");
-        f = (s != null) ? new File(s) : new File(libDir, "jcov_network_saver.jar");
-        if (f.exists())
-            jcov_network_saver_jar = f;
+        jcov_jar = new JarFinder("jcov.jar").libDir(libDir).getFile();
+        jcov_network_saver_jar = new JarFinder("jcov_network_saver.jar").libDir(libDir).getFile();
 
         if (System.getProperty("jcov.port") != null)
             grabberPort = Integer.getInteger("jcov.port");

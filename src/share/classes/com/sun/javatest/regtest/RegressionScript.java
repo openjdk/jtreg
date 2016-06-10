@@ -684,17 +684,17 @@ public class RegressionScript extends Script {
                 // other jar files which are not valid as automatic modules.
                 File md = workDir.getFile("modules");
                 if (needJUnit)
-                    install(params.getJUnitJar(), md);
+                    install(params.getJUnitPath(), md);
                 if (needTestNG)
-                    install(params.getTestNGJar(), md);
+                    install(params.getTestNGPath(), md);
                 mp.append(md);
             }
         } else {
             if (needJUnit)
-                cp.append(params.getJUnitJar());
+                cp.append(params.getJUnitPath());
 
             if (needTestNG)
-                cp.append(params.getTestNGJar());
+                cp.append(params.getTestNGPath());
         }
 
         // Extras:
@@ -785,18 +785,18 @@ public class RegressionScript extends Script {
                 // other jar files which are not valid as automatic modules.
                 File md = workDir.getFile("modules");
                 if (needJUnit)
-                    install(params.getJUnitJar(), md);
+                    install(params.getJUnitPath(), md);
                 if (needTestNG)
-                    install(params.getTestNGJar(), md);
+                    install(params.getTestNGPath(), md);
                 mp.append(md);
             }
         } else {
             SearchPath fp = (!bcp.isEmpty() || useXpatch()) ? bcp : cp;
             if (needJUnit)
-                fp.append(params.getJUnitJar());
+                fp.append(params.getJUnitPath());
 
             if (needTestNG)
-                fp.append(params.getTestNGJar());
+                fp.append(params.getTestNGPath());
         }
 
         // Extras:
@@ -832,7 +832,7 @@ public class RegressionScript extends Script {
         return map;
     }
 
-    private void install(File jar, File dir) throws TestRunException {
+    private void install(SearchPath path, File dir) throws TestRunException {
         synchronized (params.getWorkDirectory()) { // avoid multiple tests doing simultaneous install
             if (dir.exists()) {
                 if (!dir.isDirectory())
@@ -840,33 +840,36 @@ public class RegressionScript extends Script {
             } else {
                 dir.mkdirs();
             }
-            File target = new File(dir, jar.getName());
-            if (target.exists()
-                    && target.length() == jar.length()
-                    && target.lastModified() == jar.lastModified()) {
-                return;
-            }
 
-            // Eventually replace with java.nio.file.Files::copy
-            try {
-                OutputStream out = new BufferedOutputStream(new FileOutputStream(target));
+            for (File jar: path.split()) {
+                File target = new File(dir, jar.getName());
+                if (target.exists()
+                        && target.length() == jar.length()
+                        && target.lastModified() == jar.lastModified()) {
+                    return;
+                }
+
+                // Eventually replace with java.nio.file.Files::copy
                 try {
-                    InputStream in = new BufferedInputStream(new FileInputStream(jar));
+                    OutputStream out = new BufferedOutputStream(new FileOutputStream(target));
                     try {
-                        byte[] buf = new byte[8192];
-                        int n;
-                        while ((n = in.read(buf)) != -1) {
-                            out.write(buf, 0, n);
+                        InputStream in = new BufferedInputStream(new FileInputStream(jar));
+                        try {
+                            byte[] buf = new byte[8192];
+                            int n;
+                            while ((n = in.read(buf)) != -1) {
+                                out.write(buf, 0, n);
+                            }
+                        } finally {
+                            in.close();
                         }
                     } finally {
-                        in.close();
+                        out.close();
                     }
-                } finally {
-                    out.close();
+                    target.setLastModified(jar.lastModified());
+                } catch (IOException e) {
+                    throw new TestRunException("cannot init modules directory", e);
                 }
-                target.setLastModified(jar.lastModified());
-            } catch (IOException e) {
-                throw new TestRunException("cannot init modules directory", e);
             }
         }
     }
@@ -918,20 +921,20 @@ public class RegressionScript extends Script {
         return needJUnit;
     }
 
-    File getJUnitJar() {
-        return params.getJUnitJar();
+    SearchPath getJUnitPath() {
+        return params.getJUnitPath();
     }
 
     boolean isTestNGRequired() {
         return needTestNG;
     }
 
-    File getTestNGJar() {
-        return params.getTestNGJar();
+    SearchPath getTestNGPath() {
+        return params.getTestNGPath();
     }
 
-    File getAsmToolsJar() {
-        return params.getAsmToolsJar();
+    SearchPath getAsmToolsPath() {
+        return params.getAsmToolsPath();
     }
 
     TestNGReporter getTestNGReporter() {

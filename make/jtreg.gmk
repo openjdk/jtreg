@@ -247,6 +247,15 @@ $(JTREG_IMAGEDIR)/lib/testng.jar: $(call PosixPath,$(TESTNG_JAR))
 
 TARGETS.ZIP.jtreg += $(JTREG_IMAGEJARDIR)/testng.jar
 
+ifdef JCOMMANDER_JAR
+$(JTREG_IMAGEDIR)/lib/jcommander.jar: $(call PosixPath,$(JCOMMANDER_JAR))
+	$(RM) $@
+	$(MKDIR) -p $(@D)
+	$(CP) $(JCOMMANDER_JAR) $@
+
+TARGETS.ZIP.jtreg += $(JTREG_IMAGEJARDIR)/jcommander.jar
+endif
+
 endif
 
 #----------------------------------------------------------------------

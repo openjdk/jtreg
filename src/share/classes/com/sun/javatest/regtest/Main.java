@@ -41,8 +41,6 @@ import java.io.PrintWriter;
 import java.io.Reader;
 import java.io.StreamTokenizer;
 import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.text.DateFormat;
@@ -88,6 +86,7 @@ import com.sun.javatest.util.BackupPolicy;
 import com.sun.javatest.util.I18NResourceBundle;
 
 import static com.sun.javatest.regtest.Option.ArgType.*;
+
 import com.sun.javatest.regtest.agent.JDK_Version;
 import com.sun.javatest.regtest.agent.SearchPath;
 import com.sun.javatest.util.StringArray;
@@ -1012,11 +1011,15 @@ public class Main {
         this.err = err;
 
         // FIXME: work around bug 6466752
-        javatest_jar = findJar("javatest.jar", "lib/javatest.jar", com.sun.javatest.Harness.class);
+        javatest_jar = new JarFinder("javatest.jar")
+                .classes(Harness.class)
+                .getFile();
         if (javatest_jar != null)
             System.setProperty("javatestClassDir", javatest_jar.getPath());
 
-        jtreg_jar = findJar("jtreg.jar", "lib/jtreg.jar", getClass());
+        jtreg_jar = new JarFinder("jtreg.jar")
+                .classes(getClass())
+                .getFile();
         if (jtreg_jar != null) {
             jcovManager = new JCovManager(jtreg_jar.getParentFile());
             if (jcovManager.isJCovInstalled()) {
@@ -1507,32 +1510,33 @@ public class Main {
 
     void findSystemJarFiles() throws Fault {
         if (javatest_jar == null) {
-            javatest_jar = findJar("javatest.jar", "lib/javatest.jar", com.sun.javatest.Harness.class);
-            if (javatest_jar == null)
-                throw new Fault(i18n, "main.cantFind.javatest.jar");
+            // evaluated in constructor
+            throw new Fault(i18n, "main.cantFind.javatest.jar");
         }
 
         if (jtreg_jar == null) {
-            jtreg_jar = findJar("jtreg.jar", "lib/jtreg.jar", getClass());
-            if (jtreg_jar == null)
-                throw new Fault(i18n, "main.cantFind.jtreg.jar");
+            // evaluated in constructor
+            throw new Fault(i18n, "main.cantFind.jtreg.jar");
         }
 
-        junit_jar = findJar("junit.jar", "lib/junit.jar", "org.junit.runner.JUnitCore");
-        if (junit_jar == null) {
-            // Leave a place-holder for the optional jar.
-            junit_jar = new File(jtreg_jar.getParentFile(), "junit.jar");
-        }
+        File libDir = jtreg_jar.getParentFile();
+
+        junitPath = new JarFinder("junit.jar")
+                .classes("org.junit.runner.JUnitCore")
+                .libDir(libDir)
+                .getPath();
         // no convenient version info for junit.jar
 
-        testng_jar = findJar("testng.jar", "lib/testng.jar", "org.testng.annotations.Test");
-        if (testng_jar == null) {
-            // Leave a place-holder for the optional jar.
-            testng_jar = new File(jtreg_jar.getParentFile(), "testng.jar");
-        }
-        help.addJarVersionHelper("TestNG", testng_jar, "META-INF/maven/org.testng/testng/pom.properties");
+        testngPath = new JarFinder("testng.jar", "jcommander.jar")
+                .classes("org.testng.annotations.Test", "com.beust.jcommander.JCommander")
+                .libDir(libDir)
+                .getPath();
+        help.addPathVersionHelper("TestNG", testngPath);
 
-        asmtools_jar = findJar("asmtools.jar", "lib/asmtools.jar", "org.openjdk.asmtools.Main");
+        asmtoolsPath = new JarFinder("asmtools.jar")
+                .classes("org.openjdk.asmtools.Main")
+                .libDir(libDir)
+                .getPath();
     }
 
     void initPolicyFile() throws Fault {
@@ -1759,14 +1763,14 @@ public class Main {
             if (ignoreKind != null)
                 rp.setIgnoreKind(ignoreKind);
 
-            if (junit_jar != null)
-                rp.setJUnitJar(junit_jar);
+            if (junitPath != null)
+                rp.setJUnitPath(junitPath);
 
-            if (testng_jar != null)
-                rp.setTestNGJar(testng_jar);
+            if (testngPath != null)
+                rp.setTestNGPath(testngPath);
 
-            if (asmtools_jar != null)
-                rp.setAsmToolsJar(asmtools_jar);
+            if (asmtoolsPath != null)
+                rp.setAsmToolsPath(asmtoolsPath);
 
             if (timeLimitArg != null) {
                 try {
@@ -2146,46 +2150,6 @@ public class Main {
         return (kw1 == null ? kw2 : kw1 + " & " + kw2);
     }
 
-    private File findJar(String jarProp, String pathFromHome, Class<?> c) {
-        return findJar(jarProp, pathFromHome, c.getName());
-    }
-
-    private File findJar(String jarProp, String pathFromHome, String className) {
-        if (jarProp != null) {
-            String v = System.getProperty(jarProp);
-            if (v != null)
-                return new File(v);
-        }
-
-        if (pathFromHome != null) {
-            String v = System.getProperty("jtreg.home");
-            if (v != null)
-                return new File(v, pathFromHome);
-        }
-
-        if (className != null)  {
-            String resName = className.replace(".", "/") + ".class";
-            try {
-                URL url = getClass().getClassLoader().getResource(resName);
-                if (url != null) {
-                    // use URI to avoid encoding issues, e.g. Program%20Files
-                    URI uri = url.toURI();
-                    if (uri.getScheme().equals("jar")) {
-                        String ssp = uri.getRawSchemeSpecificPart();
-                        int sep = ssp.lastIndexOf("!");
-                        uri = new URI(ssp.substring(0, sep));
-                    }
-                    if (uri.getScheme().equals("file"))
-                        return new File(uri.getPath());
-                }
-            } catch (URISyntaxException ignore) {
-                ignore.printStackTrace(System.err);
-            }
-        }
-
-        return null;
-    }
-
     private void error(String msg) {
         err.println(i18n.getString("main.error", msg));
         errors++;
@@ -2284,13 +2248,12 @@ public class Main {
     private boolean xmlVerifyFlag;
     private File exclusiveLockArg;
 
-    File jtreg_home;
-    File javatest_jar;
-    File jtreg_jar;
-    File junit_jar;
-    File testng_jar;
-    File asmtools_jar;
-    File policyFile;
+    private File javatest_jar;
+    private File jtreg_jar;
+    private SearchPath junitPath;
+    private SearchPath testngPath;
+    private SearchPath asmtoolsPath;
+    private File policyFile;
 
     JCovManager jcovManager;
 

@@ -31,6 +31,7 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * A path, as in an ordered set of file system locations, such as directories,
@@ -119,7 +120,7 @@ public class SearchPath {
      */
     public SearchPath append(String... paths) {
         for (String p: paths) {
-            for (String q: p.split(PATHSEP)) {
+            for (String q: p.split(Pattern.quote(PATHSEP))) {
                 if (q.length() > 0) {
                     File f = new File(q);
                     if (f.exists()) {

@@ -538,8 +538,8 @@ public class MainAction extends Action
         List<File> stdLibs = new SearchPath()
                 .append(script.getJavaTestClassPath())
                 .append(jdk.getJDKClassPath())
-                .append(script.getJUnitJar())
-                .append(script.getTestNGJar())
+                .append(script.getJUnitPath())
+                .append(script.getTestNGPath())
                 .split();
 
         SearchPath classpath = paths.get(PathKind.CLASSPATH);

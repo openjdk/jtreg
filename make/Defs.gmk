@@ -221,6 +221,17 @@ ifndef TESTNG_JAR
 endif
 TESTNG_JAR := $(call FullPath,$(TESTNG_JAR))
 
+# TestNG requires jcommander, which may or may not be bundled with TESTNG_JAR.
+# If it is not, set JCOMMANDER_JAR to an appropriate version
+ifndef JCOMMANDER_JAR
+  ifdef TESTNG_HOME
+    JCOMMANDER_JAR = $(wildcard $(TESTNG_HOME)/jcommander-1.48.jar)
+  endif
+endif
+ifdef JCOMMANDER_JAR
+    JCOMMANDER_JAR := $(call FullPath,$(JCOMMANDER_JAR))
+endif
+
 #----- Ant: see http://ant.apache.org/
 
 ifndef ANTHOME

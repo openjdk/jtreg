@@ -39,6 +39,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.sun.javatest.Status;
 import com.sun.javatest.TestResult;
@@ -452,14 +454,17 @@ public abstract class Action extends ActionHelper
         return results;
     }
 
-    void getModules(File dir, Set<String> results) {
+    private void getModules(File dir, Set<String> results) {
         for (File f: dir.listFiles()) {
-            if (isModule(f))
+            if (isModule(f)) {
                 results.add(f.getName());
+            } else if (f.getName().endsWith(".jar")) {
+                results.add(getAutomaticModuleName(f));
+            }
         }
     }
 
-    boolean isModule(File f) {
+    private boolean isModule(File f) {
         if (f.isDirectory()) {
             if (script.systemModules.contains(f.getName())) {
                 return true;
@@ -470,6 +475,31 @@ public abstract class Action extends ActionHelper
                 return true;
         }
         return false;
+    }
+
+    // see java.lang.module.ModulePath.deriveModuleDescriptor
+    private String getAutomaticModuleName(File f) {
+        String fn = f.getName();
+
+        // drop .jar
+        String mn = fn.substring(0, fn.length()-4);
+        String vs = null;
+
+        // find first occurrence of -${NUMBER}. or -${NUMBER}$
+        Matcher matcher = Pattern.compile("-(\\d+(\\.|$))").matcher(mn);
+        if (matcher.find()) {
+            int start = matcher.start();
+            // drop tail (ignore version info)
+            mn = mn.substring(0, start);
+        }
+
+        // finally clean up the module name
+        mn =  mn.replaceAll("[^A-Za-z0-9]", ".")  // replace non-alphanumeric
+                .replaceAll("(\\.)(\\1)+", ".")   // collapse repeating dots
+                .replaceAll("^\\.", "")           // drop leading dots
+                .replaceAll("\\.$", "");          // drop trailing dots
+
+        return mn;
     }
 
     //----------module exports----------------------------------------------------

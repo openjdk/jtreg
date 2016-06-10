@@ -63,6 +63,7 @@ $(BUILDDIR)/RerunTest.othervm.ok: \
 		    -e 's|$(J2SEHOME)|%JDKHOME%|g' \
 		    -e "s|`cd $(J2SEHOME); pwd -P`|%JDKHOME%|g" \
 		    -e 's|$(ABSTOPDIR)|%WS%|g' \
+		    -e 's|%WS%.build.images.jtreg.lib.jcommander\.jar.||g' \
 		> $(@:%.ok=%)/out/$${i%.*}.out ; \
 	    diff $(TESTDIR)/javatest/regtest/data/rerun/$${i%.*}.$(@:$(BUILDDIR)/RerunTest.%.ok=%).out \
 		$(@:%.ok=%)/out/$${i%.*}.out || exit 1 ; \

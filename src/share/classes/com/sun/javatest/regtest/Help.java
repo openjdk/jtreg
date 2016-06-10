@@ -103,6 +103,27 @@ public class Help {
         });
     }
 
+    void addPathVersionHelper(final String name, final SearchPath path) {
+        addVersionHelper(new Help.VersionHelper() {
+            public void showVersion(PrintWriter out) {
+                try {
+                    for (File jar: path.split()) {
+                        JarFile j = new JarFile(jar);
+                        Attributes attrs = j.getManifest().getMainAttributes();
+                        String v = attrs.getValue(Attributes.Name.IMPLEMENTATION_VERSION);
+                        if (v == null) {
+                            v = attrs.getValue("Bundle-Version");
+                        }
+                        String suffix = (path.split().size() == 1)
+                                ? "" : " (" + jar.getName() + ")";
+                        out.println(name + suffix + ": version " + (v == null ? "unknown" : v)); // need i18n
+                    }
+                } catch (IOException e) {
+                }
+            }
+        });
+    }
+
     void setVersionFlag(boolean yes) {
         versionFlag = yes;
     }

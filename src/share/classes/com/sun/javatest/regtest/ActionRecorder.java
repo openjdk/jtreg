@@ -157,7 +157,7 @@ public class ActionRecorder {
         String indent = "    ";
         pw.println(indent + escape(javaCmd) + CONT);
         // additional JVM options
-        pw.println(indent + "-classpath " + action.script.getAsmToolsJar() + CONT);
+        pw.println(indent + "-classpath " + action.script.getAsmToolsPath() + CONT);
         // class name
         pw.print(indent + escape(toolClassName));
         // class args

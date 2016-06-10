@@ -470,6 +470,7 @@ public class RegressionParameters
     private static final String RETAIN_ARGS = ".retain";
     private static final String JUNIT = ".junit";
     private static final String TESTNG = ".testng";
+    private static final String ASMTOOLS = ".asmtools";
     private static final String TIMELIMIT = ".timeLimit";
     private static final String REPORTDIR = ".reportDir";
     private static final String EXCLUSIVE_LOCK = ".exclLock";
@@ -527,11 +528,15 @@ public class RegressionParameters
 
         v = (String) data.get(prefix + JUNIT);
         if (v != null)
-            setJUnitJar(new File(v));
+            setJUnitPath(new SearchPath(v));
 
         v = (String) data.get(prefix + TESTNG);
         if (v != null)
-            setTestNGJar(new File(v));
+            setTestNGPath(new SearchPath(v));
+
+        v = (String) data.get(prefix + ASMTOOLS);
+        if (v != null)
+            setAsmToolsPath(new SearchPath(v));
 
         v = (String) data.get(prefix + TIMELIMIT);
         if (v != null)
@@ -596,11 +601,14 @@ public class RegressionParameters
         if (testJavaOpts != null && testJavaOpts.size() > 0)
             data.put(prefix + TEST_JAVA_OPTIONS, StringUtils.join(testJavaOpts, "\n"));
 
-        if (junitJar != null)
-            data.put(prefix + JUNIT, junitJar.getPath());
+        if (junitPath != null)
+            data.put(prefix + JUNIT, junitPath.toString());
 
-        if (testngJar != null)
-            data.put(prefix + TESTNG, testngJar.getPath());
+        if (testngPath != null)
+            data.put(prefix + TESTNG, testngPath.toString());
+
+        if (asmToolsPath != null)
+            data.put(prefix + ASMTOOLS, asmToolsPath.toString());
 
         if (timeLimit > 0)
             data.put(prefix + TIMELIMIT, String.valueOf(timeLimit));
@@ -760,70 +768,50 @@ public class RegressionParameters
 
     //---------------------------------------------------------------------
 
-    void setJUnitJar(File junitJar) {
-        junitJar.getClass(); // null check
-        this.junitJar = junitJar;
+    void setJUnitPath(SearchPath junitPath) {
+        junitPath.getClass(); // null check
+        this.junitPath = junitPath;
     }
 
-    File getJUnitJar() {
-        if (junitJar == null) {
-            File jtClsDir = ProductInfo.getJavaTestClassDir();
-            junitJar = new File(jtClsDir.getParentFile(), "junit.jar");
-        }
-        return junitJar;
+    SearchPath getJUnitPath() {
+        return junitPath;
     }
 
-    private File junitJar;
+    private SearchPath junitPath;
 
     boolean isJUnitAvailable() {
-        if (junitJarExists == null)
-            junitJarExists = getJUnitJar().exists();
-        return junitJarExists;
+        return (junitPath != null) && !junitPath.isEmpty();
     }
-
-    private Boolean junitJarExists;
 
     //---------------------------------------------------------------------
 
-    void setTestNGJar(File testngJar) {
-        testngJar.getClass(); // null check
-        this.testngJar = testngJar;
+    void setTestNGPath(SearchPath testngPath) {
+        testngPath.getClass(); // null check
+        this.testngPath = testngPath;
     }
 
-    File getTestNGJar() {
-        if (testngJar == null) {
-            File jtClsDir = ProductInfo.getJavaTestClassDir();
-            testngJar = new File(jtClsDir.getParentFile(), "testng.jar");
-        }
-        return testngJar;
+    SearchPath getTestNGPath() {
+        return testngPath;
     }
 
-    private File testngJar;
+    private SearchPath testngPath;
 
     boolean isTestNGAvailable() {
-        if (testngJarExists == null)
-            testngJarExists = getTestNGJar().exists();
-        return testngJarExists;
+        return (testngPath != null) && !testngPath.isEmpty();
     }
-
-    private Boolean testngJarExists;
 
     //---------------------------------------------------------------------
 
-    void setAsmToolsJar(File asmToolsJar) {
-        asmToolsJar.getClass(); // null check
-        this.asmToolsJar = asmToolsJar;
+    void setAsmToolsPath(SearchPath asmToolsPath) {
+        asmToolsPath.getClass(); // null check
+        this.asmToolsPath = asmToolsPath;
     }
 
-    File getAsmToolsJar() {
-        if (asmToolsJar == null) {
-            File jtClsDir = ProductInfo.getJavaTestClassDir();
-            asmToolsJar = new File(jtClsDir.getParentFile(), "asmtools.jar");
-        }
-        return asmToolsJar;
+    SearchPath getAsmToolsPath() {
+        return asmToolsPath;
     }
 
-    private File asmToolsJar;
+    private SearchPath asmToolsPath;
 
     //---------------------------------------------------------------------
 
