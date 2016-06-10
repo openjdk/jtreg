@@ -188,7 +188,7 @@ public class ModuleConfig {
 
         if (modulePath != null) {
             String label = "module path:";
-            for (File file: modulePath.split()) {
+            for (File file: modulePath.asList()) {
                 table.addRow(label, file.getPath());
                 label = null;
             }
@@ -196,7 +196,7 @@ public class ModuleConfig {
 
         if (classPath != null) {
             String label = "class path:";
-            for (File file: classPath.split()) {
+            for (File file: classPath.asList()) {
                 table.addRow(label, file.getPath());
                 label = null;
             }
@@ -204,7 +204,7 @@ public class ModuleConfig {
 
         if (bootClassPathAppend != null) {
             String label = "boot class path (append):";
-            for (File file: bootClassPathAppend.split()) {
+            for (File file: bootClassPathAppend.asList()) {
                 table.addRow(label, file.getPath());
                 label = null;
             }
@@ -214,7 +214,7 @@ public class ModuleConfig {
             String label = "patch:";
             for (Map.Entry<String, SearchPath> e: patch.entrySet()) {
                 String module = e.getKey();
-                for (File file: e.getValue().split()) {
+                for (File file: e.getValue().asList()) {
                     table.addRow(label, module, file.getPath());
                     label = null;
                     module = null;

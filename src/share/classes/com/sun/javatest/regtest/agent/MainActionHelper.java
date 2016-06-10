@@ -80,7 +80,7 @@ public class MainActionHelper extends ActionHelper {
             ClassLoader loader;
             if (classpath != null) {
                 List<URL> urls = new ArrayList<URL>();
-                for (File f : new SearchPath(classpath).split()) {
+                for (File f : new SearchPath(classpath).asList()) {
                     try {
                         urls.add(f.toURI().toURL());
                     } catch (MalformedURLException e) {

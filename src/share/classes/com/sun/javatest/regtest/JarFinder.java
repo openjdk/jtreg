@@ -125,7 +125,7 @@ public class JarFinder {
     File getFile() {
         SearchPath p = getPath();
         if (p != null) {
-            List<File> files = p.split();
+            List<File> files = p.asList();
             if (files.size() == 1)
                 return files.get(0);
         }

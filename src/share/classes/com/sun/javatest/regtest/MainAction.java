@@ -52,6 +52,7 @@ import static com.sun.javatest.regtest.agent.RStatus.error;
 import static com.sun.javatest.regtest.agent.RStatus.failed;
 import static com.sun.javatest.regtest.agent.RStatus.normalize;
 import static com.sun.javatest.regtest.agent.RStatus.passed;
+import static com.sun.javatest.regtest.agent.RStatus.normalize;
 
 /**
  * This class implements the "main" action as described by the JDK tag
@@ -540,7 +541,7 @@ public class MainAction extends Action
                 .append(jdk.getJDKClassPath())
                 .append(script.getJUnitPath())
                 .append(script.getTestNGPath())
-                .split();
+                .asList();
 
         SearchPath classpath = paths.get(PathKind.CLASSPATH);
         SearchPath agentClasspath = new SearchPath(classpath).retainAll(stdLibs);

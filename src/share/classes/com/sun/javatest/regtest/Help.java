@@ -107,14 +107,14 @@ public class Help {
         addVersionHelper(new Help.VersionHelper() {
             public void showVersion(PrintWriter out) {
                 try {
-                    for (File jar: path.split()) {
+                    for (File jar: path.asList()) {
                         JarFile j = new JarFile(jar);
                         Attributes attrs = j.getManifest().getMainAttributes();
                         String v = attrs.getValue(Attributes.Name.IMPLEMENTATION_VERSION);
                         if (v == null) {
                             v = attrs.getValue("Bundle-Version");
                         }
-                        String suffix = (path.split().size() == 1)
+                        String suffix = (path.asList().size() == 1)
                                 ? "" : " (" + jar.getName() + ")";
                         out.println(name + suffix + ": version " + (v == null ? "unknown" : v)); // need i18n
                     }
@@ -483,7 +483,7 @@ public class Help {
         if (p != null)
             return p;
 
-        List<File> cp = new SearchPath(System.getProperty("java.class.path")).split();
+        List<File> cp = new SearchPath(System.getProperty("java.class.path")).asList();
         if (cp.size() == 1 && cp.get(0).getName().equals("jtreg.jar")) {
             return "java -jar jtreg.jar ";
         }

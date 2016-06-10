@@ -139,7 +139,7 @@ public class JDKOpts {
      */
     public void addAllXPatch(SearchPath patchPath) {
         if (patchPath != null) {
-            for (File dir : patchPath.split()) {
+            for (File dir : patchPath.asList()) {
                 File[] subdirs = dir.listFiles();
                 if (subdirs != null) {
                     Arrays.sort(subdirs); // for repeatability; good enough for now

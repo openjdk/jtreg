@@ -31,10 +31,12 @@ import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 import com.sun.javatest.Status;
+
 import static com.sun.javatest.regtest.agent.RStatus.error;
 import static com.sun.javatest.regtest.agent.RStatus.failed;
 import static com.sun.javatest.regtest.agent.RStatus.normalize;
 import static com.sun.javatest.regtest.agent.RStatus.passed;
+import static com.sun.javatest.regtest.agent.RStatus.normalize;
 
 public class CompileActionHelper extends ActionHelper {
 

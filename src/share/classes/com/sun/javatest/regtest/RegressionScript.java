@@ -841,7 +841,7 @@ public class RegressionScript extends Script {
                 dir.mkdirs();
             }
 
-            for (File jar: path.split()) {
+            for (File jar: path.asList()) {
                 File target = new File(dir, jar.getName());
                 if (target.exists()
                         && target.length() == jar.length()

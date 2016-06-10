@@ -230,7 +230,7 @@ public abstract class Action extends ActionHelper
                         + script.absTestClsTopDir().getPath().replace('\\' + FILESEP, "{/}")
                         + "${/}-\"" + ", \"read\";" + LINESEP);
                 fw.write("};" + LINESEP);
-                for (File f: script.getJavaTestClassPath().split()) {
+                for (File f: script.getJavaTestClassPath().asList()) {
                     fw.write("grant codebase \"" + f.toURI().toURL() + "\" {" + LINESEP);
                     fw.write("    permission java.security.AllPermission;" + LINESEP);
                     fw.write("};" + LINESEP);
@@ -448,7 +448,7 @@ public abstract class Action extends ActionHelper
             return Collections.emptySet();
 
         Set<String> results = new LinkedHashSet<String>();
-        for (File dir: pp.split()) {
+        for (File dir: pp.asList()) {
             getModules(dir, results);
         }
         return results;

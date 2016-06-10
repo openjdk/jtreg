@@ -157,7 +157,7 @@ public class SearchPath {
      * Return the series of files that are currently on the path.
      * @return the files on the path
      */
-    public List<File> split() {
+    public List<File> asList() {
         return new ArrayList<File>(entries);
     }
 

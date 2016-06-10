@@ -236,7 +236,7 @@ public class Locations {
                 if (name.equals("java.home")) {
                     dir = new File(testJDK.getPath());
                 } else if (name.equals("jtreg.home")) {
-                    dir = jtpath.split().get(0).getParentFile().getParentFile();
+                    dir = jtpath.asList().get(0).getParentFile().getParentFile();
                 }
                 if (dir != null) {
                     String libTail = lib.substring(end + 2);
