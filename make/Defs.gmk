@@ -189,7 +189,7 @@ endif
 
 ifndef ASMTOOLS_HOME
   ifdef SLASHJAVA
-    ASMTOOLS_HOME = $(SLASHJAVA)/re/asmtools/6.0/promoted/latest/binaries/
+    ASMTOOLS_HOME = $(SLASHJAVA)/re/asmtools/6.0/promoted/latest/binaries/asmtools-6.0/
   endif
 endif
 ASMTOOLS_HOME := $(call FullPath,$(ASMTOOLS_HOME))
