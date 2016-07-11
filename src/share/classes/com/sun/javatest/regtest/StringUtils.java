@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008, 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2008, 2016, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -24,7 +24,10 @@
  */
 package com.sun.javatest.regtest;
 
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
+
 import com.sun.javatest.regtest.agent.StringArray;
 
 /**
@@ -32,6 +35,41 @@ import com.sun.javatest.regtest.agent.StringArray;
  * (Not restricted to -target 1.1)
  */
 public class StringUtils extends StringArray {
+
+    /**
+     * Returns the part of a string before the first instance of a separator character,
+     * or null if there is no such character.
+     * @param s the string
+     * @param sep the separator character
+     * @return  the part of a string before the first instance of the separator character
+     */
+    public static String beforePart(String s, char sep) {
+        int i = s.indexOf(sep);
+        return (i == -1) ? null : s.substring(0, i);
+    }
+
+    /**
+     * Returns the part of a string after the first instance of a separator character,
+     * or the string itself if there is no such character.
+     * @param s the string
+     * @param sep the separator character
+     * @return  the part of a string after the first instance of the separator character
+     */
+    public static String afterPart(String s, char sep) {
+        int i = s.indexOf(sep);
+        return (i == -1) ? s : s.substring(i + 1);
+    }
+
+    /**
+     * Splits a string around instances of the given character.
+     * @param s
+     * @param sep
+     * @return
+     */
+    public static List<String> split(String s, char sep) {
+        return Arrays.asList(s.split("\\Q" + sep + "\\E"));
+    }
+
     public static String join(Collection<String> list) {
         return join(list, " ");
     }

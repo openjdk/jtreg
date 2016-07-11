@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2007, 2016, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -297,7 +297,8 @@ public class Help {
     }
 
     private HelpTree.Node createOptionHelpNode(Option o) {
-        String prefix = "help." + o.group.toLowerCase() + "." + o.names[0];
+        String prefix = "help." + o.group.toLowerCase() + "."
+                + o.names[0].replaceAll("^-+", "").replaceAll("[^A-Za-z0-9.]+", "_");
         String arg = (o.argType == Option.ArgType.NONE ? null : i18n.getString(prefix + ".arg"));
         StringBuilder sb = new StringBuilder();
         for (String n: o.names) {
@@ -306,13 +307,17 @@ public class Help {
             sb.append("-");
             sb.append(n);
             switch (o.argType) {
-                case NONE:      break;
+                case NONE:
+                    break;
+
                 case OLD:       // old is deprecated, so just show preferred format
                 case STD:
                 case FILE:
                     sb.append(":").append(arg);
                     break;
 
+                case GNU:
+                case SEP:
                 case REST:
                     sb.append(" ").append(arg);
                     break;

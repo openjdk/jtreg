@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012, 2016, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -61,19 +61,19 @@ public class JCovManager {
 
     public static final String JCOV = "jcov";
     final List<? extends Option> options = Arrays.asList(
-        new Option(STD, JCOV, "jcov/classes", "jcov/classes") {
+        new Option(STD, JCOV, "jcov/classes", "-jcov/classes") {
             public void process(String opt, String arg) {
                 classes = new File(arg);
             }
         },
 
-        new Option(STD, JCOV, null, "jcov/include") {
+        new Option(STD, JCOV, null, "-jcov/include") {
             public void process(String opt, String arg) {
                 includeOpts.add(arg);
             }
         },
 
-        new Option(STD, JCOV, null, "jcov/include_list") {
+        new Option(STD, JCOV, null, "-jcov/include_list") {
             public void process(String opt, String arg) throws BadArgs {
                 try {
                     includeOpts.addAll(splitLines(new File(arg)));
@@ -85,37 +85,37 @@ public class JCovManager {
             }
         },
 
-        new Option(STD, JCOV, null, "jcov/exclude") {
+        new Option(STD, JCOV, null, "-jcov/exclude") {
             public void process(String opt, String arg) {
                 excludeOpts.add(arg);
             }
         },
 
-        new Option(STD, JCOV, "jcov/source", "jcov/source", "jcov/sourcepath") {
+        new Option(STD, JCOV, "jcov/source", "-jcov/source", "-jcov/sourcepath") {
             public void process(String opt, String arg) {
                 source = new SearchPath(arg);
             }
         },
 
-        new Option(STD, JCOV, null, "jcov/patch") {
+        new Option(STD, JCOV, null, "-jcov/patch") {
             public void process(String opt, String arg) {
                 patch = new File(arg);
             }
         },
 
-        new Option(NONE, JCOV, "jcov-verbose", "jcov/verbose") {
+        new Option(NONE, JCOV, "jcov-verbose", "-jcov/verbose") {
             public void process(String opt, String arg) {
                 verbose = "-verbose";
             }
         },
 
-        new Option(NONE, JCOV, "jcov-verbose", "jcov/verbosemore") {
+        new Option(NONE, JCOV, "jcov-verbose", "-jcov/verbosemore") {
             public void process(String opt, String arg) {
                 verbose = "-verbosemore";
             }
         },
 
-        new Option(NONE, JCOV, "jcov-print-env", "jcov/print-env") {
+        new Option(NONE, JCOV, "jcov-print-env", "-jcov/print-env") {
             public void process(String opt, String arg) {
                 printEnv = true;
             }

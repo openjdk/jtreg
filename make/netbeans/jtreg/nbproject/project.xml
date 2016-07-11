@@ -110,11 +110,11 @@
             </view>
             <subprojects/>
         </general-data>
-        <java-data xmlns="http://www.netbeans.org/ns/freeform-project-java/1">
+        <java-data xmlns="http://www.netbeans.org/ns/freeform-project-java/4">
             <compilation-unit>
                 <package-root>${root}/src/share/classes</package-root>
                 <classpath mode="compile">${javatest.jar}:${jh.jar}:${ant.jar}:${junit.jar}:${testng.jar}</classpath>
-                <source-level>1.5</source-level>
+                <source-level>1.7</source-level>
             </compilation-unit>
         </java-data>
         <spellchecker-wordlist xmlns="http://www.netbeans.org/ns/spellchecker-wordlist/1">

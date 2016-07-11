@@ -102,28 +102,36 @@ public class AppletAction extends Action
             String optName  = e.getKey();
             String optValue = e.getValue();
 
-            if (optName.equals("fail")) {
-                reverseStatus = parseFail(optValue);
-            } else if (optName.equals("timeout")) {
-                timeout  = parseTimeout(optValue);
-            } else if (optName.equals("manual")) {
-                manual = parseAppletManual(optValue);
-            } else if (optName.equals("othervm")) {
-                othervm = true;
-            } else if (optName.equals("policy")) {
-                overrideSysPolicy = true;
-                policyFN = parsePolicy(optValue);
-            } else if (optName.equals("java.security.policy")) {
-                String name = optValue;
-                if (optValue.startsWith("=")) {
+            switch (optName) {
+                case "fail":
+                    reverseStatus = parseFail(optValue);
+                    break;
+                case "timeout":
+                    timeout  = parseTimeout(optValue);
+                    break;
+                case "manual":
+                    manual = parseAppletManual(optValue);
+                    break;
+                case "othervm":
+                    othervm = true;
+                    break;
+                case "policy":
                     overrideSysPolicy = true;
-                    name = optValue.substring(1, optValue.length());
-                }
-                policyFN = parsePolicy(name);
-            } else if (optName.equals("secure")) {
-                secureFN = parseSecure(optValue);
-            } else {
-                throw new ParseException(APPLET_BAD_OPT + optName);
+                    policyFN = parsePolicy(optValue);
+                    break;
+                case "java.security.policy":
+                    String name = optValue;
+                    if (optValue.startsWith("=")) {
+                        overrideSysPolicy = true;
+                        name = optValue.substring(1, optValue.length());
+                    }
+                    policyFN = parsePolicy(name);
+                    break;
+                case "secure":
+                    secureFN = parseSecure(optValue);
+                    break;
+                default:
+                    throw new ParseException(APPLET_BAD_OPT + optName);
             }
         }
 
@@ -166,6 +174,7 @@ public class AppletAction extends Action
      * @exception  TestRunException If an unexpected error occurs while running
      *             the test.
      */
+    @Override
     public Status run() throws TestRunException {
         Status status;
 
@@ -192,10 +201,7 @@ public class AppletAction extends Action
             // and the test itself.
             status = passed(CHECK_PASS);
         } else {
-//          if (othervm)
-                status = runOtherJVM();
-//          else
-//              status = runSameJVM();
+            status = runOtherJVM();
         }
 
         endAction(status);
@@ -209,8 +215,7 @@ public class AppletAction extends Action
         Map<PathKind, SearchPath> compatExecPaths = script.getExecutionPaths(false, null, false, false);
         // WRITE ARGUMENT FILE
         File argFile = getArgFile();
-        try {
-            Writer w = new BufferedWriter(new FileWriter(argFile));
+        try (Writer w = new BufferedWriter(new FileWriter(argFile))) {
             w.write(clsName + "\0");
             w.write(script.absTestSrcDir() + "\0");                     // not used by AppletWrapper
             w.write(script.absTestClsDir() + "\0");                     // not used by AppletWrapper
@@ -219,7 +224,6 @@ public class AppletAction extends Action
             w.write(htmlFileContents.getBody() + "\0");
             w.write(toString(htmlFileContents.getAppletParams()) + "\0");
             w.write(toString(htmlFileContents.getAppletAttrs()) + "\0");
-            w.close();
         } catch (IOException e) {
             return error(APPLET_CANT_WRITE_ARGS);
         }
@@ -229,13 +233,13 @@ public class AppletAction extends Action
         // TAG-SPEC:  "The source and class directories of a test are made
         // available to main and applet actions via the system properties
         // "test.src" and "test.classes", respectively"
-        List<String> command = new ArrayList<String>(6);
-        Map<String, String> env = new LinkedHashMap<String, String>();
+        List<String> command = new ArrayList<>(6);
+        Map<String, String> env = new LinkedHashMap<>();
         command.add(script.getJavaProg());
         command.add("-classpath");
         command.add(execPaths.get(PathKind.CLASSPATH).toString());
 
-        JDKOpts vmOpts = new JDKOpts();
+        JDKOpts vmOpts = new JDKOpts(script.useLongFormOptions());
         vmOpts.addAll(getAddExports());
         vmOpts.addAll(script.getTestVMJavaOptions());
         vmOpts.addAll(script.getTestDebugOptions());
@@ -251,8 +255,7 @@ public class AppletAction extends Action
 
         // input methods use lots of memory
         boolean mx = false;
-        for (int i = 0; i < vmOpts.size() && !mx; i++) {
-            String opt = vmOpts.get(i);
+        for (String opt: vmOpts.toList()) {
             if (opt.startsWith("-mx") || opt.startsWith("-Xmx"))
                 mx = true;
         }
@@ -400,13 +403,11 @@ public class AppletAction extends Action
             StringBuilder sb = new StringBuilder();
             //String htmlFN = script.relTestSrcDir() + FILESEP + args[0];
             htmlFN = new File(script.absTestSrcDir(), htmlFN).getPath();
-            try {
-                BufferedReader in = new BufferedReader(new FileReader(htmlFN));
+            try (BufferedReader in = new BufferedReader(new FileReader(htmlFN))) {
                 while ((line = in.readLine()) != null) {
                     sb.append(line);
                     sb.append(LINESEP);
                 }
-                in.close();
             } catch (FileNotFoundException e) {
                 throw new TestRunException(APPLET_CANT_FIND_HTML + htmlFN);
             } catch (IOException e) {
@@ -608,7 +609,7 @@ public class AppletAction extends Action
          * @return Map of HTML attributes (name/value pairs).
          */
         private Map<String, String> parseAttrs(String attrs) {
-            Map<String, String> result = new HashMap<String, String>(3);
+            Map<String, String> result = new HashMap<>(3);
 
             int startPos = 0;
             int[] positions;
@@ -629,7 +630,7 @@ public class AppletAction extends Action
         //----------member variables--------------------------------------------
 
         String body;
-        Map<String, String> appletParams = new HashMap<String, String>(1);
+        Map<String, String> appletParams = new HashMap<>(1);
         Map<String, String> appletAttrs;
     } // class HTMLFileContents
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2007, 2016, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -64,39 +64,46 @@ public class Main {
     private static final String FILES = "files";
 
     List<Option> options = Arrays.asList(
-        new Option(NONE, COMPARE, "r", "r", "reason") {
+        new Option(NONE, COMPARE, "r", "-r", "-reason") {
+            @Override
             public void process(String opt, String arg) {
                 includeReason = true;
             }
         },
-        new Option(NONE, COMPARE, "s", "s", "super") {
+        new Option(NONE, COMPARE, "s", "-s", "-super") {
+            @Override
             public void process(String opt, String arg) {
                 superMode = true;
             }
         },
-        new Option(OLD, OUTPUT, "o", "o", "outFile") {
+        new Option(OLD, OUTPUT, "o", "-o", "-outFile") {
+            @Override
             public void process(String opt, String arg) {
                 outFile = new File(arg);
             }
         },
-        new Option(STD, OUTPUT, "format", "format") {
+        new Option(STD, OUTPUT, "format", "-format") {
+            @Override
             public void process(String opt, String arg) {
                 format = arg;
             }
         },
-        new Option(OLD, OUTPUT, "title", "title") {
+        new Option(OLD, OUTPUT, "title", "-title") {
+            @Override
             public void process(String opt, String arg) {
                 title = arg;
             }
         },
-        new Option(REST, DOC, "help", "h", "help", "usage") {
+        new Option(REST, DOC, "help", "-h", "-help", "-usage") {
+            @Override
             public void process(String opt, String arg) {
                 if (help == null)
                     help = new Help(options);
                 help.setCommandLineHelpQuery(arg);
             }
         },
-        new Option(NONE, DOC, "help", "version") {
+        new Option(NONE, DOC, "help", "-version") {
+            @Override
             public void process(String opt, String arg) {
                 if (help == null)
                     help = new Help(options);
@@ -104,6 +111,7 @@ public class Main {
             }
         },
         new Option(FILE, FILES, null) {
+            @Override
             public void process(String opt, String arg) {
                 File f = new File(arg);
                 fileArgs.add(f);
@@ -114,13 +122,13 @@ public class Main {
     //---------- Ant Invovation ------------------------------------------------
 
     public static class Ant extends MatchingTask {
-        private Main m = new Main();
+        private final Main m = new Main();
+        private final List<Commandline.Argument> args = new ArrayList<>();
         private String format;
         private File outFile;
         private String title;
         private boolean failOnError = true;
         private String resultProperty;
-        private List<Commandline.Argument> args = new ArrayList<Commandline.Argument>();
 
         public void setFormat(String format) {
             this.format = format;
@@ -155,7 +163,7 @@ public class Main {
                 decoder.process("title", title);
 
                 if (args.size() > 0) {
-                    List<String> allArgs = new ArrayList<String>();
+                    List<String> allArgs = new ArrayList<>();
                     for (Commandline.Argument a: args)
                         allArgs.addAll(Arrays.asList(a.getParts()));
                     decoder.decodeArgs(allArgs);
@@ -171,9 +179,7 @@ public class Main {
                 if (failOnError && !ok)
                     throw new BuildException(i18n.getString("main.diffsFound"));
 
-            } catch (BadArgs e) {
-                throw new BuildException(e.getMessage(), e);
-            } catch (Fault e) {
+            } catch (BadArgs | Fault e) {
                 throw new BuildException(e.getMessage(), e);
             } catch (InterruptedException e) {
                 throw new BuildException(i18n.getString("main.interrupted"), e);
@@ -222,7 +228,7 @@ public class Main {
             exit(2);
         } catch (Exception e) {
             err.println(i18n.getString("main.unexpectedException"));
-            e.printStackTrace();
+            e.printStackTrace(System.err);
             exit(3);
         }
     } // main()
@@ -259,7 +265,7 @@ public class Main {
     }
 
     private boolean run() throws Fault, InterruptedException {
-        if (fileArgs.size() == 0 && !superMode && help == null) {
+        if (fileArgs.isEmpty() && !superMode && help == null) {
             help = new Help(options);
             help.setCommandLineHelpQuery(null);
         }
@@ -294,7 +300,7 @@ public class Main {
     private String format;
     private String title;
     private File outFile;
-    private List<File> fileArgs = new ArrayList<File>();
+    private List<File> fileArgs = new ArrayList<>();
     private boolean superMode;
     private Help help;
 

@@ -139,24 +139,31 @@ public class CompileAction extends Action {
             String optName  = e.getKey();
             String optValue = e.getValue();
 
-            if (optName.equals("fail")) {
-                reverseStatus = parseFail(optValue);
-            } else if (optName.equals("timeout")) {
-                timeout = parseTimeout(optValue);
-            } else if (optName.equals("ref")) {
-                ref = parseRef(optValue);
-            } else if (optName.equals("process")) {
-                process = true;
-            } else if (optName.equals("module")) {
-                module = parseModule(optValue);
-                modules = Collections.singleton(module);
-            } else if (optName.equals("modules")) {
-                if (optValue != null)
-                    throw new ParseException(COMPILE_MODULES_UEXPECT + optValue);
-                multiModule = true;
-                modules = new LinkedHashSet<String>();
-            } else {
-                throw new ParseException(COMPILE_BAD_OPT + optName);
+            switch (optName) {
+                case "fail":
+                    reverseStatus = parseFail(optValue);
+                    break;
+                case "timeout":
+                    timeout = parseTimeout(optValue);
+                    break;
+                case "ref":
+                    ref = parseRef(optValue);
+                    break;
+                case "process":
+                    process = true;
+                    break;
+                case "module":
+                    module = parseModule(optValue);
+                    modules = Collections.singleton(module);
+                    break;
+                case "modules":
+                    if (optValue != null)
+                        throw new ParseException(COMPILE_MODULES_UEXPECT + optValue);
+                    multiModule = true;
+                    modules = new LinkedHashSet<>();
+                    break;
+                default:
+                    throw new ParseException(COMPILE_BAD_OPT + optName);
             }
         }
 
@@ -219,23 +226,25 @@ public class CompileAction extends Action {
                 }
             }
 
-            if (currArg.equals("-classpath") || currArg.equals("-cp")) {
+            if (currArg.equals("-classpath") || currArg.equals("-cp")
+                    || currArg.equals("--class-path") || currArg.startsWith("--class-path=")) {
                 if (module != null || multiModule) {
                     throw new ParseException(COMPILE_OPT_DISALLOW);
                 }
                 classpathp = true;
-                i++;
-            }
-
-            if (currArg.equals("-sourcepath")) {
+                if (!currArg.startsWith("--class-path=")) {
+                    i++;
+                }
+            } else if (currArg.equals("-sourcepath")
+                    || currArg.equals("--source-path") || currArg.startsWith("--source-path=")) {
                 if (module != null || multiModule) {
                     throw new ParseException(COMPILE_OPT_DISALLOW);
                 }
                 sourcepathp = true;
-                i++;
-            }
-
-            if (currArg.equals("-d")) {
+                if (!currArg.startsWith("--source-path=")) {
+                    i++;
+                }
+            } else if (currArg.equals("-d")) {
                 throw new ParseException(COMPILE_OPT_DISALLOW);
             }
         }
@@ -255,7 +264,7 @@ public class CompileAction extends Action {
 
     @Override
     public Set<File> getSourceFiles() {
-        Set<File> files = new LinkedHashSet<File>();
+        Set<File> files = new LinkedHashSet<>();
 
         for (String currArg : args) {
             if (currArg.endsWith(".java")
@@ -296,12 +305,13 @@ public class CompileAction extends Action {
      * @throws  TestRunException If an unexpected error occurs while executing
      *          the action.
      */
+    @Override
     public Status run() throws TestRunException {
         startAction(true);
 
-        List<String> javacArgs = new ArrayList<String>();
-        List<String> jasmArgs = new ArrayList<String>();
-        List<String> jcodArgs = new ArrayList<String>();
+        List<String> javacArgs = new ArrayList<>();
+        List<String> jasmArgs = new ArrayList<>();
+        List<String> jcodArgs = new ArrayList<>();
         boolean runJavac = process;
 
         for (String currArg : args) {
@@ -334,7 +344,7 @@ public class CompileAction extends Action {
                 javacArgs = getJavacCommandArgs(javacArgs);
                 if (explicitAnnotationProcessingRequested(javacArgs)
                         && !getAddExports().isEmpty()) {
-                    othervmOverrideReasons.add("runtime -XaddExports needed for annotation processing");
+                    othervmOverrideReasons.add("runtime --add-exports needed for annotation processing");
                 }
                 switch (!othervmOverrideReasons.isEmpty() ? ExecMode.OTHERVM : script.getExecMode()) {
                     case AGENTVM:
@@ -369,7 +379,7 @@ public class CompileAction extends Action {
         if (files.isEmpty())
             return Status.passed(toolName + ": no files");
 
-        List<String> toolArgs = new ArrayList<String>();
+        List<String> toolArgs = new ArrayList<>();
         toolArgs.add("-d");
         toolArgs.add(destDir.getPath());
         toolArgs.addAll(files);
@@ -390,15 +400,12 @@ public class CompileAction extends Action {
                 } else
                     return Status.error("unexpected result from " + toolName + ": " + r.toString());
             } finally {
-                PrintWriter out = section.createOutput(toolName);
-                out.write(baos.toString());
-                out.close();
+                try (PrintWriter out = section.createOutput(toolName)) {
+                    out.write(baos.toString());
+                }
             }
         } catch (ClassNotFoundException e) {
             return Status.error("can't find " + toolName);
-//        } catch (ReflectiveOperationException e) {
-//            return Status.error("error invoking " + toolName + ": " + e);
-//        }
         } catch (NoSuchMethodException e) {
             return Status.error("error invoking " + toolName + ": " + e);
         } catch (InstantiationException e) {
@@ -443,7 +450,7 @@ public class CompileAction extends Action {
     private List<String> getJavacCommandArgs(List<String> args) throws TestRunException {
         Map<PathKind, SearchPath> compilePaths = script.getCompilePaths(libLocn, multiModule, module);
 
-        JDKOpts javacArgs = new JDKOpts();
+        JDKOpts javacArgs = new JDKOpts(script.useLongFormOptions());
         javacArgs.addAll(script.getTestCompilerOptions());
         javacArgs.addAll(getAddExports());
 
@@ -458,29 +465,29 @@ public class CompileAction extends Action {
 
         // modulesourcepath and sourcepath are mutually exclusive
         if (multiModule) {
-            javacArgs.addPath("-modulesourcepath", compilePaths.get(PathKind.MODULESOURCEPATH));
+            javacArgs.addPath("--module-source-path", compilePaths.get(PathKind.MODULESOURCEPATH));
         } else {
-            javacArgs.addPath("-sourcepath", compilePaths.get(PathKind.SOURCEPATH));
+            javacArgs.addPath("--source-path", compilePaths.get(PathKind.SOURCEPATH));
         }
 
         // Need to refine what it means to put absTestClsDir unconditionally on the compilePath
         SearchPath cp = compilePaths.get(PathKind.CLASSPATH);
-        javacArgs.addPath("-classpath", cp);
+        javacArgs.addPath("--class-path", cp);
 
-        javacArgs.addPath("-modulepath", compilePaths.get(PathKind.MODULEPATH));
+        javacArgs.addPath("--module-path", compilePaths.get(PathKind.MODULEPATH));
 
         SearchPath pp = compilePaths.get(PathKind.PATCHPATH);
         javacArgs.addAllXPatch(pp);
         if (pp != null && !pp.isEmpty() && cp != null && !cp.isEmpty()) {
             // provide addReads from patch modules to unnamed module(s).
             for (String s: getModules(pp)) {
-                javacArgs.add("-XaddReads:" + s + "=ALL-UNNAMED");
+                javacArgs.add("--add-reads=" + s + "=ALL-UNNAMED");
             }
         }
 
         Set<String> userMods = getModules(compilePaths.get(PathKind.MODULEPATH));
         if (!userMods.isEmpty()) {
-            javacArgs.add("-addmods");
+            javacArgs.add("--add-modules");
             javacArgs.add(StringUtils.join(userMods, ","));
         }
 
@@ -496,12 +503,12 @@ public class CompileAction extends Action {
         Map<String, String> javacProps = script.getTestProperties();
 
         // CONSTRUCT THE COMMAND LINE
-        Map<String, String> env = new LinkedHashMap<String, String>();
+        Map<String, String> env = new LinkedHashMap<>();
         env.putAll(script.getEnvVars());
 
         String javacCmd = script.getJavacProg();
 
-        List<String> javacVMOpts = new ArrayList<String>();
+        List<String> javacVMOpts = new ArrayList<>();
         javacVMOpts.addAll(script.getTestVMOptions());
         if (addDebugOpts && script.getCompileJDK().equals(script.getTestJDK()))
             javacVMOpts.addAll(script.getTestDebugOptions());
@@ -514,13 +521,11 @@ public class CompileAction extends Action {
         List<String> fullJavacArgs = javacArgs;
         if (javacArgs.size() >= 10) {
             File argFile = getArgFile();
-            try {
-                BufferedWriter w = new BufferedWriter(new FileWriter(argFile));
+            try (BufferedWriter w = new BufferedWriter(new FileWriter(argFile))) {
                 for (String arg: javacArgs) {
                     w.write(arg);
                     w.newLine();
                 }
-                w.close();
             } catch (IOException e) {
                 return error(COMPILE_CANT_WRITE_ARGS);
             } catch (SecurityException e) {
@@ -530,7 +535,7 @@ public class CompileAction extends Action {
             javacArgs = Arrays.asList("@" + argFile);
         }
 
-        List<String> command = new ArrayList<String>();
+        List<String> command = new ArrayList<>();
         command.add(javacCmd);
         for (String opt: javacVMOpts)
             command.add("-J" + opt);
@@ -575,13 +580,13 @@ public class CompileAction extends Action {
 
         status = normalize(cmd.exec());
 
-        PrintWriter sysOut = section.createOutput("System.out");
-        sysOut.write(stdOut.getOutput());
-        sysOut.close();
+        try (PrintWriter sysOut = section.createOutput("System.out")) {
+            sysOut.write(stdOut.getOutput());
+        }
 
-        PrintWriter sysErr = section.createOutput("System.err");
-        sysErr.write(stdErr.getOutput());
-        sysErr.close();
+        try (PrintWriter sysErr = section.createOutput("System.err")) {
+            sysErr.write(stdErr.getOutput());
+        }
 
         // EVALUATE THE RESULTS
         status = checkReverse(status, reverseStatus);
@@ -745,9 +750,8 @@ public class CompileAction extends Action {
      */
     private Status checkGoldenFile(String actual, Status status) throws TestRunException {
         File refFile = new File(script.absTestSrcDir(), ref);
-        try {
-            BufferedReader r1 = new BufferedReader(new StringReader(actual));
-            BufferedReader r2 = new BufferedReader(new FileReader(refFile));
+        try (BufferedReader r1 = new BufferedReader(new StringReader(actual));
+            BufferedReader r2 = new BufferedReader(new FileReader(refFile)) ) {
             int lineNum;
             if ((lineNum = compareGoldenFile(r1, r2)) != 0) {
                 return failed(COMPILE_GOLD_FAIL + ref +
@@ -756,6 +760,8 @@ public class CompileAction extends Action {
             return status;
         } catch (FileNotFoundException e) {
             throw new TestRunException(COMPILE_CANT_FIND_REF + refFile);
+        } catch (IOException e) {
+            throw new TestRunException(COMPILE_CANT_READ_REF + refFile);
         }
     }
 
@@ -811,5 +817,5 @@ public class CompileAction extends Action {
     private boolean multiModule = false;
     private Set<String> modules;
     private boolean addDebugOpts = false;
-    protected Set<String> othervmOverrideReasons = new LinkedHashSet<String>();
+    protected Set<String> othervmOverrideReasons = new LinkedHashSet<>();
 }

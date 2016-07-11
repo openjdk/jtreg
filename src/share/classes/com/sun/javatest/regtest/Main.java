@@ -116,7 +116,7 @@ public class Main {
     public static final String TIMEOUT = "timeout";     // timeout-related options
 
     List<Option> options = Arrays.asList(
-        new Option(OPT, VERBOSE, "verbose", "v", "verbose") {
+        new Option(OPT, VERBOSE, "verbose", "-v", "-verbose") {
             @Override
             public String[] getChoices() {
                 String[] values = new String[Verbose.values().length];
@@ -125,6 +125,7 @@ public class Main {
                     values[i++] = s;
                 return values;
             }
+            @Override
             public void process(String opt, String arg) throws BadArgs {
                 if (arg == null)
                     verbose = Verbose.DEFAULT;
@@ -136,65 +137,75 @@ public class Main {
             }
         },
 
-        new Option(NONE, VERBOSE, "verbose", "v1") {
+        new Option(NONE, VERBOSE, "verbose", "-v1") {
+            @Override
             public void process(String opt, String arg) {
                 verbose = Verbose.SUMMARY;
             }
         },
 
-        new Option(NONE, VERBOSE, "verbose", "va") {
+        new Option(NONE, VERBOSE, "verbose", "-va") {
+            @Override
             public void process(String opt, String arg) {
                 verbose = Verbose.ALL;
             }
         },
 
-        new Option(NONE, VERBOSE, "verbose", "vp") {
+        new Option(NONE, VERBOSE, "verbose", "-vp") {
+            @Override
             public void process(String opt, String arg) {
                 verbose = Verbose.PASS;
             }
         },
 
-        new Option(NONE, VERBOSE, "verbose", "vf") {
+        new Option(NONE, VERBOSE, "verbose", "-vf") {
+            @Override
             public void process(String opt, String arg) {
                 verbose = Verbose.FAIL;
             }
         },
 
-        new Option(NONE, VERBOSE, "verbose", "ve") {
+        new Option(NONE, VERBOSE, "verbose", "-ve") {
+            @Override
             public void process(String opt, String arg) {
                 verbose = Verbose.ERROR;
             }
         },
 
-        new Option(NONE, VERBOSE, "verbose", "vt") {
+        new Option(NONE, VERBOSE, "verbose", "-vt") {
+            @Override
             public void process(String opt, String arg) {
                 verbose = Verbose.TIME;
             }
         },
 
-        new Option(NONE, DOC, "", "t", "tagspec") {
+        new Option(NONE, DOC, "", "-t", "-tagspec") {
+            @Override
             public void process(String opt, String arg) {
                 help.setTagSpec(true);
             }
         },
 
-        new Option(NONE, DOC, "", "n", "relnote") {
+        new Option(NONE, DOC, "", "-n", "-relnote") {
+            @Override
             public void process(String opt, String arg) {
                 help.setReleaseNotes(true);
             }
         },
 
-        new Option(OLD, MAIN, "", "w", "workDir") {
+        new Option(OLD, MAIN, "", "-w", "-workDir") {
+            @Override
             public void process(String opt, String arg) {
                 workDirArg = new File(arg);
             }
         },
 
-        new Option(OPT, MAIN, "", "retain") {
+        new Option(OPT, MAIN, "", "-retain") {
             @Override
             public String[] getChoices() {
                 return new String[] { "none", "pass", "fail", "error", "all", "file-pattern" };
             }
+            @Override
             public void process(String opt, String arg) throws BadArgs {
                 if (arg != null)
                     arg = arg.trim();
@@ -208,108 +219,123 @@ public class Main {
             }
         },
 
-        new Option(OLD, MAIN, "", "r", "reportDir") {
+        new Option(OLD, MAIN, "", "-r", "-reportDir") {
+            @Override
             public void process(String opt, String arg) {
                 reportDirArg = new File(arg);
             }
         },
 
-        new Option(NONE, MAIN, "ro-nr", "ro", "reportOnly") {
+        new Option(NONE, MAIN, "ro-nr", "-ro", "-reportOnly") {
+            @Override
             public void process(String opt, String arg) {
                 reportOnlyFlag = true;
             }
         },
 
-        new Option(NONE, MAIN, "ro-nr", "nr", "noreport") {
+        new Option(NONE, MAIN, "ro-nr", "-nr", "-noreport") {
+            @Override
             public void process(String opt, String arg) {
                 noReportFlag = true;
             }
         },
 
-        new Option(STD, MAIN, "ro-nr", "show") {
+        new Option(STD, MAIN, "ro-nr", "-show") {
+            @Override
             public void process(String opt, String arg) {
                 noReportFlag = true;
                 showStream = arg;
             }
         },
 
-        new Option(STD, TIMEOUT, "", "timeout", "timeoutFactor") {
+        new Option(STD, TIMEOUT, "", "-timeout", "-timeoutFactor") {
+            @Override
             public void process(String opt, String arg) {
                 timeoutFactorArg = arg;
             }
         },
 
-        new Option(STD, TIMEOUT, "", "tl", "timelimit") {
+        new Option(STD, TIMEOUT, "", "-tl", "-timelimit") {
+            @Override
             public void process(String opt, String arg) {
                 timeLimitArg = arg;
             }
         },
 
-        new Option(STD, MAIN, "", "conc", "concurrency") {
+        new Option(STD, MAIN, "", "-conc", "-concurrency") {
+            @Override
             public void process(String opt, String arg) {
                 concurrencyArg = arg;
             }
         },
 
-        new Option(OPT, MAIN, "", "xml") {
+        new Option(OPT, MAIN, "", "-xml") {
+            @Override
             public void process(String opt, String arg) {
                 xmlFlag = true;
                 xmlVerifyFlag = "verify".equals(arg);
             }
         },
 
-        new Option(STD, MAIN, "", "dir") {
+        new Option(STD, MAIN, "", "-dir") {
+            @Override
             public void process(String opt, String arg) {
                 baseDirArg = new File(arg);
             }
         },
 
-        new Option(OPT, MAIN, "", "allowSetSecurityManager") {
+        new Option(OPT, MAIN, "", "-allowSetSecurityManager") {
             @Override
             public String[] getChoices() {
                 return new String[] { "yes", "no", "on", "off", "true", "false" };
             }
+            @Override
             public void process(String opt, String arg) {
                 boolean b = (arg == null || Arrays.asList("yes", "on", "true").contains(arg));
                 allowSetSecurityManagerFlag = b;
             }
         },
 
-        new Option(STD, SELECT, "", "status") {
+        new Option(STD, SELECT, "", "-status") {
             @Override
             public String[] getChoices() {
                 return new String[] { "pass", "fail", "notRun", "error" };
             }
+            @Override
             public void process(String opt, String arg) {
                 priorStatusValuesArg = arg.toLowerCase();
             }
         },
 
-        new Option(STD, SELECT, null, "exclude", "Xexclude") {
+        new Option(STD, SELECT, null, "-exclude", "-Xexclude") {
+            @Override
             public void process(String opt, String arg) {
                 File f = getNormalizedFile(new File(arg));
                 excludeListArgs.add(f);
             }
         },
 
-        new Option(NONE, MAIN, null, "startHttpd") {
+        new Option(NONE, MAIN, null, "-startHttpd") {
+            @Override
             public void process(String opt, String arg) {
                 httpdFlag = true;
             }
         },
 
-        new Option(OLD, MAIN, "", "o", "observer") {
+        new Option(OLD, MAIN, "", "-o", "-observer") {
+            @Override
             public void process(String opt, String arg) {
                 observerClassName = arg;
             }
         },
 
-        new Option(OLD, MAIN, "", "od", "observerDir", "op", "observerPath") {
+        new Option(OLD, MAIN, "", "-od", "-observerDir", "-op", "-observerPath") {
+            @Override
             public void process(String opt, String arg) {
                 arg = arg.trim();
                 if (arg.length() == 0)
                     return;
-                observerPathArg = new ArrayList<File>();
+                observerPathArg = new ArrayList<>();
                 for (String f: arg.split(File.pathSeparator)) {
                     if (f.length() == 0)
                         continue;
@@ -318,18 +344,20 @@ public class Main {
             }
         },
 
-        new Option(STD, TIMEOUT, "", "th", "timeoutHandler") {
+        new Option(STD, TIMEOUT, "", "-th", "-timeoutHandler") {
+            @Override
             public void process(String opt, String arg) {
                 timeoutHandlerClassName = arg;
             }
         },
 
-        new Option(STD, TIMEOUT, "", "thd", "timeoutHandlerDir") {
+        new Option(STD, TIMEOUT, "", "-thd", "-timeoutHandlerDir") {
+            @Override
             public void process(String opt, String arg) throws BadArgs {
                 arg = arg.trim();
                 if (arg.length() == 0)
                     return;
-                timeoutHandlerPathArg = new ArrayList<File>();
+                timeoutHandlerPathArg = new ArrayList<>();
                 for (String f: arg.split(File.pathSeparator)) {
                     if (f.length() == 0)
                         continue;
@@ -338,7 +366,8 @@ public class Main {
             }
         },
 
-        new Option(STD, TIMEOUT, "", "thtimeout", "timeoutHandlerTimeout") {
+        new Option(STD, TIMEOUT, "", "-thtimeout", "-timeoutHandlerTimeout") {
+            @Override
             public void process(String opt, String arg) throws BadArgs {
                 try {
                     timeoutHandlerTimeoutArg = Long.parseLong(arg);
@@ -348,38 +377,43 @@ public class Main {
             }
         },
 
-        new Option(NONE, MAIN, null, "g", "gui") {
+        new Option(NONE, MAIN, null, "-g", "-gui") {
+            @Override
             public void process(String opt, String arg) {
                 guiFlag = true;
             }
         },
 
-        new Option(NONE, MAIN, null, "c", "check") {
+        new Option(NONE, MAIN, null, "-c", "-check") {
+            @Override
             public void process(String opt, String arg) {
                 checkFlag = true;
             }
         },
 
-        new Option(NONE, MAIN, null, "l", "listtests") {
+        new Option(NONE, MAIN, null, "-l", "-listtests") {
+            @Override
             public void process(String opt, String arg) {
                 listTestsFlag = true;
             }
         },
 
-        new Option(NONE, MAIN, null, "showGroups") {
+        new Option(NONE, MAIN, null, "-showGroups") {
+            @Override
             public void process(String opt, String arg) {
                 showGroupsFlag = true;
             }
         },
 
         // deprecated
-        new Option(NONE, MAIN, "ignore", "noignore") {
+        new Option(NONE, MAIN, "ignore", "-noignore") {
+            @Override
             public void process(String opt, String arg) {
                 ignoreKind = IgnoreKind.RUN;
             }
         },
 
-        new Option(STD, MAIN, "ignore", "ignore") {
+        new Option(STD, MAIN, "ignore", "-ignore") {
             @Override
             public String[] getChoices() {
                 String[] values = new String[IgnoreKind.values().length];
@@ -388,6 +422,7 @@ public class Main {
                     values[i++] = k.toString().toLowerCase();
                 return values;
             }
+            @Override
             public void process(String opt, String arg) throws BadArgs {
                 for (IgnoreKind k: IgnoreKind.values()) {
                     if (arg.equalsIgnoreCase(k.toString())) {
@@ -401,7 +436,8 @@ public class Main {
             }
         },
 
-        new Option(OLD, MAIN, null, "e") {
+        new Option(OLD, MAIN, null, "-e") {
+            @Override
             public void process(String opt, String arg) {
                 arg = arg.trim();
                 if (arg.length() == 0)
@@ -410,7 +446,8 @@ public class Main {
             }
         },
 
-        new Option(STD, MAIN, "", "lock") {
+        new Option(STD, MAIN, "", "-lock") {
+            @Override
             public void process(String opt, String arg) throws BadArgs {
                 File f = getNormalizedFile(new File(arg));
                 try {
@@ -423,7 +460,8 @@ public class Main {
             }
         },
 
-        new Option(STD, MAIN, "", "nativepath") {
+        new Option(STD, MAIN, "", "-nativepath") {
+            @Override
             public void process(String opt, String arg) throws BadArgs {
                 if (arg.contains(File.pathSeparator))
                     throw new BadArgs(i18n, "main.nativePathMultiplePath", arg);
@@ -436,73 +474,85 @@ public class Main {
             }
         },
 
-        new Option(NONE, SELECT, "a-m", "a", "automatic", "automagic") {
+        new Option(NONE, SELECT, "a-m", "-a", "-automatic", "-automagic") {
+            @Override
             public void process(String opt, String arg) {
                 extraKeywordExpr = combineKeywords(extraKeywordExpr, AUTOMATIC);
             }
         },
 
-        new Option(NONE, SELECT, "a-m", "m", "manual") {
+        new Option(NONE, SELECT, "a-m", "-m", "-manual") {
+            @Override
             public void process(String opt, String arg) {
                 extraKeywordExpr = combineKeywords(extraKeywordExpr, MANUAL);
             }
         },
 
-        new Option(NONE, SELECT, "shell-noshell", "shell") {
+        new Option(NONE, SELECT, "shell-noshell", "-shell") {
+            @Override
             public void process(String opt, String arg) {
                 extraKeywordExpr = combineKeywords(extraKeywordExpr, "shell");
             }
         },
 
-        new Option(NONE, SELECT, "shell-noshell", "noshell") {
+        new Option(NONE, SELECT, "shell-noshell", "-noshell") {
+            @Override
             public void process(String opt, String arg) {
                 extraKeywordExpr = combineKeywords(extraKeywordExpr, "!shell");
             }
         },
 
-        new Option(STD, SELECT, null, "bug") {
+        new Option(STD, SELECT, null, "-bug") {
+            @Override
             public void process(String opt, String arg) {
                 extraKeywordExpr = combineKeywords(extraKeywordExpr, "bug" + arg);
             }
         },
 
-        new Option(STD, SELECT, null, "k", "keywords") {
+        new Option(STD, SELECT, null, "-k", "-keywords") {
+            @Override
             public void process(String opt, String arg) {
                 userKeywordExpr = arg;
             }
         },
 
-        new Option(NONE, MODE, "svm-ovm", "ovm", "othervm") {
+        new Option(NONE, MODE, "svm-ovm", "-ovm", "-othervm") {
+            @Override
             public void process(String opt, String arg) {
                 execMode = ExecMode.OTHERVM;
             }
         },
 
-        new Option(NONE, MODE, "svm-ovm", "s", "svm", "samevm") {
+        new Option(NONE, MODE, "svm-ovm", "-s", "-svm", "-samevm") {
+            @Override
             public void process(String opt, String arg) {
                 execMode = ExecMode.SAMEVM;
             }
         },
 
-        new Option(NONE, MODE, "svm-ovm", "avm", "agentvm") {
+        new Option(NONE, MODE, "svm-ovm", "-avm", "-agentvm") {
+            @Override
             public void process(String opt, String arg) {
                 execMode = ExecMode.AGENTVM;
             }
         },
 
-        new Option(OLD, JDK, "", "jdk", "testjdk") {
+        new Option(OLD, JDK, "", "-jdk", "-testjdk") {
+            @Override
             public void process(String opt, String arg) {
                 testJDK = com.sun.javatest.regtest.JDK.of(arg);
             }
         },
 
-        new Option(OLD, JDK, "", "compilejdk") {
+        new Option(OLD, JDK, "", "-compilejdk") {
+            @Override
             public void process(String opt, String arg) {
                 compileJDK = com.sun.javatest.regtest.JDK.of(arg);
             }
         },
 
-        new Option(STD, JDK, "", "cpa", "classpathappend") {
+        new Option(STD, JDK, "", "-cpa", "-classpathappend") {
+            @Override
             public void process(String opt, String arg) {
                 arg = arg.trim();
                 if (arg.length() == 0)
@@ -515,90 +565,120 @@ public class Main {
             }
         },
 
-        new Option(NONE, JDK, "jit-nojit", "jit") {
+        new Option(NONE, JDK, "jit-nojit", "-jit") {
+            @Override
             public void process(String opt, String arg) {
                 jitFlag = true;
             }
         },
 
-        new Option(NONE, JDK, "jit-nojit", "nojit") {
+        new Option(NONE, JDK, "jit-nojit", "-nojit") {
+            @Override
             public void process(String opt, String arg) {
                 jitFlag = false;
             }
         },
 
-        new Option(WILDCARD, JDK, null, "Xrunjcov") {
+        new Option(WILDCARD, JDK, null, "-Xrunjcov") {
+            @Override
             public void process(String opt, String arg) {
                 testVMOpts.add(opt);
             }
         },
 
-        new Option(NONE, JDK, null, "classic", "green", "native", "hotspot", "client", "server", "d32", "d64") {
+        new Option(NONE, JDK, null, "-classic", "-green", "-native", "-hotspot", "-client", "-server", "-d32", "-d64") {
+            @Override
             public void process(String opt, String arg) {
                 testVMOpts.add(opt);
             }
         },
 
-        new Option(OPT, JDK, null, "enableassertions", "ea", "disableassertions", "da") {
+        new Option(OPT, JDK, null, "-enableassertions", "-ea", "-disableassertions", "-da") {
+            @Override
             public void process(String opt, String arg) {
                 testVMOpts.add(opt);
             }
         },
 
-        new Option(NONE, JDK, null, "enablesystemassertions", "esa", "disablesystemassertions", "dsa") {
+        new Option(NONE, JDK, null, "-enablesystemassertions", "-esa", "-disablesystemassertions", "-dsa") {
+            @Override
             public void process(String opt, String arg) {
                 testVMOpts.add(opt);
             }
         },
 
-        new Option(SEP, JDK, null, "addmods") {
+        new Option(SEP, JDK, null, "-addmods") {
+            @Override
             public void process(String opt, String arg) {
                 testVMOpts.add(opt);
                 testVMOpts.add(arg);
             }
         },
 
-        new Option(SEP, JDK, null, "limitmods") {
+        new Option(GNU, JDK, null, "--add-modules") {
+            @Override
             public void process(String opt, String arg) {
                 testVMOpts.add(opt);
                 testVMOpts.add(arg);
             }
         },
 
-        new Option(WILDCARD, JDK, null, "XX", "Xms", "Xmx") {
+        new Option(SEP, JDK, null, "-limitmods") {
+            @Override
+            public void process(String opt, String arg) {
+                testVMOpts.add(opt);
+                testVMOpts.add(arg);
+            }
+        },
+
+        new Option(GNU, JDK, null, "--limit-modules") {
+            @Override
+            public void process(String opt, String arg) {
+                testVMOpts.add(opt);
+                testVMOpts.add(arg);
+            }
+        },
+
+        new Option(WILDCARD, JDK, null, "-XX", "-Xms", "-Xmx") {
+            @Override
             public void process(String opt, String arg) {
                 testVMOpts.add(opt);
             }
         },
 
-        new Option(WILDCARD, JDK, null, "Xint", "Xmixed", "Xcomp") {
+        new Option(WILDCARD, JDK, null, "-Xint", "-Xmixed", "-Xcomp") {
+            @Override
             public void process(String opt, String arg) {
                 testVMOpts.add(opt);
             }
         },
 
-        new Option(STD, JDK, null, "Xbootclasspath") {
+        new Option(STD, JDK, null, "-Xbootclasspath") {
+            @Override
             public void process(String opt, String arg) {
                 testVMOpts.add("-Xbootclasspath:" + filesToAbsolutePath(pathToFiles(arg)));
             }
         },
 
-        new Option(STD, JDK, null, "Xbootclasspath/a") {
+        new Option(STD, JDK, null, "-Xbootclasspath/a") {
+            @Override
             public void process(String opt, String arg) {
                 testVMOpts.add("-Xbootclasspath/a:" + filesToAbsolutePath(pathToFiles(arg)));
             }
         },
 
-        new Option(STD, JDK, null, "Xbootclasspath/p") {
+        new Option(STD, JDK, null, "-Xbootclasspath/p") {
+            @Override
             public void process(String opt, String arg) {
                 testVMOpts.add("-Xbootclasspath/p:" + filesToAbsolutePath(pathToFiles(arg)));
             }
         },
 
-        new Option(STD, JDK, null, "Xpatch") {
+        new Option(STD, JDK, null, "-Xpatch") {
+            @Override
             public void process(String opt, String arg) {
                 if (arg.contains("=")) {
-                    // new style:  -Xpatch:<module>=<path>
+                    // (old) new style:  -Xpatch:<module>=<path>
                     int eq = arg.indexOf("=");
                     testVMOpts.add("-Xpatch:"
                             + arg.substring(0, eq + 1)
@@ -609,7 +689,19 @@ public class Main {
             }
         },
 
-        new Option(WILDCARD, JDK, null, "X") {
+        new Option(GNU, JDK, null, "--patch-module") {
+            @Override
+            public void process(String opt, String arg) {
+                // new style:  --patch-module <module>=<path>
+                int eq = arg.indexOf("=");
+                testVMOpts.add("--patch-module");
+                testVMOpts.add(arg.substring(0, eq + 1)
+                        + filesToAbsolutePath(pathToFiles(arg.substring(eq + 1))));
+            }
+        },
+
+        new Option(WILDCARD, JDK, null, "-X") {
+            @Override
             public void process(String opt, String arg) {
                 // This is a change in spec. Previously. -X was used to tunnel
                 // options to jtreg, with the only supported value being -Xexclude.
@@ -618,20 +710,23 @@ public class Main {
             }
         },
 
-        new Option(WILDCARD, JDK, null, "D") {
+        new Option(WILDCARD, JDK, null, "-D") {
+            @Override
             public void process(String opt, String arg) {
                 testVMOpts.add(opt);
             }
         },
 
-        new Option(STD, JDK, null, "vmoption") {
+        new Option(STD, JDK, null, "-vmoption") {
+            @Override
             public void process(String opt, String arg) {
                 if (arg.length() > 0)
                     testVMOpts.add(arg);
             }
         },
 
-        new Option(STD, JDK, null, "vmoptions") {
+        new Option(STD, JDK, null, "-vmoptions") {
+            @Override
             public void process(String opt, String arg) {
                 arg = arg.trim();
                 if (arg.length() == 0)
@@ -640,25 +735,29 @@ public class Main {
             }
         },
 
-        new Option(STD, JDK, null, "agentlib") {
+        new Option(STD, JDK, null, "-agentlib") {
+            @Override
             public void process(String opt, String arg) {
                 testVMOpts.add(opt);
             }
         },
 
-        new Option(STD, JDK, null, "agentpath") {
+        new Option(STD, JDK, null, "-agentpath") {
+            @Override
             public void process(String opt, String arg) {
                 testVMOpts.add(opt);
             }
         },
 
-        new Option(STD, JDK, null, "javaagent") {
+        new Option(STD, JDK, null, "-javaagent") {
+            @Override
             public void process(String opt, String arg) {
                 testVMOpts.add(opt);
             }
         },
 
-        new Option(STD, JDK, null, "javacoption") {
+        new Option(STD, JDK, null, "-javacoption") {
+            @Override
             public void process(String opt, String arg) {
                 arg = arg.trim();
                 if (arg.length() == 0)
@@ -667,7 +766,8 @@ public class Main {
             }
         },
 
-        new Option(STD, JDK, null, "javacoptions") {
+        new Option(STD, JDK, null, "-javacoptions") {
+            @Override
             public void process(String opt, String arg) {
                 arg = arg.trim();
                 if (arg.length() == 0)
@@ -676,7 +776,8 @@ public class Main {
             }
         },
 
-        new Option(STD, JDK, null, "javaoption") {
+        new Option(STD, JDK, null, "-javaoption") {
+            @Override
             public void process(String opt, String arg) {
                 arg = arg.trim();
                 if (arg.length() == 0)
@@ -685,7 +786,8 @@ public class Main {
             }
         },
 
-        new Option(STD, JDK, null, "javaoptions") {
+        new Option(STD, JDK, null, "-javaoptions") {
+            @Override
             public void process(String opt, String arg) {
                 arg = arg.trim();
                 if (arg.length() == 0)
@@ -694,7 +796,8 @@ public class Main {
             }
         },
 
-        new Option(STD, JDK, null, "debug") {
+        new Option(STD, JDK, null, "-debug") {
+            @Override
             public void process(String opt, String arg) {
                 arg = arg.trim();
                 if (arg.length() == 0)
@@ -703,19 +806,22 @@ public class Main {
             }
         },
 
-        new Option(REST, DOC, "help", "h", "help", "usage") {
+        new Option(REST, DOC, "help", "--help", "-h", "-help", "-usage") {
+            @Override
             public void process(String opt, String arg) {
                 help.setCommandLineHelpQuery(arg);
             }
         },
 
-        new Option(NONE, DOC, "help", "version") {
+        new Option(NONE, DOC, "help", "-version") {
+            @Override
             public void process(String opt, String arg) {
                 help.setVersionFlag(true);
             }
         },
 
         new Option(FILE, MAIN, null) {
+            @Override
             public void process(String opt, String arg) {
                 if (groupPtn.matcher(arg).matches())
                     testGroupArgs.add(arg);
@@ -754,7 +860,7 @@ public class Main {
         private String resultProperty;
         private String failureProperty;
         private String errorProperty;
-        private final List<Commandline.Argument> args = new ArrayList<Commandline.Argument>();
+        private final List<Commandline.Argument> args = new ArrayList<>();
 
         public void setDir(File dir) {
             this.dir = dir;
@@ -864,26 +970,26 @@ public class Main {
 
             try {
                 AntOptionDecoder decoder = new AntOptionDecoder(m.options);
-                decoder.process("concurrency", concurrency);
-                decoder.process("dir", dir);
-                decoder.process("reportDir", reportDir);
-                decoder.process("workDir", workDir);
-                decoder.process("nativeDir", nativeDir);
-                decoder.process("jdk", jdk);
-                decoder.process("verbose", verbose);
-                decoder.process("agentVM", agentVM);
-                decoder.process("sameVM", sameVM);
-                decoder.process("otherVM", otherVM);
-                decoder.process("vmoption", vmOption);
-                decoder.process("vmoptions", vmOptions);
-                decoder.process("javaoption", javaOption);
-                decoder.process("javaoptions", javaOptions);
-                decoder.process("javacoption", javacOption);
-                decoder.process("javacoptions", javacOptions);
-                decoder.process("status", status);
+                decoder.process("-concurrency", concurrency);
+                decoder.process("-dir", dir);
+                decoder.process("-reportDir", reportDir);
+                decoder.process("-workDir", workDir);
+                decoder.process("-nativeDir", nativeDir);
+                decoder.process("-jdk", jdk);
+                decoder.process("-verbose", verbose);
+                decoder.process("-agentVM", agentVM);
+                decoder.process("-sameVM", sameVM);
+                decoder.process("-otherVM", otherVM);
+                decoder.process("-vmoption", vmOption);
+                decoder.process("-vmoptions", vmOptions);
+                decoder.process("-javaoption", javaOption);
+                decoder.process("-javaoptions", javaOptions);
+                decoder.process("-javacoption", javacOption);
+                decoder.process("-javacoptions", javacOptions);
+                decoder.process("-status", status);
 
                 if (args.size() > 0) {
-                    List<String> allArgs = new ArrayList<String>();
+                    List<String> allArgs = new ArrayList<>();
                     for (Commandline.Argument a: args)
                         allArgs.addAll(Arrays.asList(a.getParts()));
                     decoder.decodeArgs(allArgs);
@@ -911,11 +1017,7 @@ public class Main {
                 if (failOnError && rc != EXIT_OK)
                     throw new BuildException(i18n.getString("main.testsFailed"));
 
-            } catch (BadArgs e) {
-                throw new BuildException(e.getMessage(), e);
-            } catch (Fault e) {
-                throw new BuildException(e.getMessage(), e);
-            } catch (Harness.Fault e) {
+            } catch (BadArgs | Fault | Harness.Fault e) {
                 throw new BuildException(e.getMessage(), e);
             } catch (InterruptedException e) {
                 throw new BuildException(i18n.getString("main.interrupted"), e);
@@ -971,13 +1073,10 @@ public class Main {
                 // permit the exit
                 exit(rc);
             }
-        } catch (Harness.Fault e) {
-            err.println(i18n.getString("main.error", e.getMessage()));
-            exit(EXIT_FAULT);
         } catch (TestManager.NoTests e) {
             err.println(i18n.getString("main.error", e.getMessage()));
             exit(EXIT_NO_TESTS);
-        } catch (Fault e) {
+        } catch (Harness.Fault | Fault e) {
             err.println(i18n.getString("main.error", e.getMessage()));
             exit(EXIT_FAULT);
         } catch (BadArgs e) {
@@ -991,11 +1090,7 @@ public class Main {
             err.println(i18n.getString("main.securityException", e.getMessage()));
             e.printStackTrace(System.err);
             exit(EXIT_EXCEPTION);
-        } catch (RuntimeException e) {
-            err.println(i18n.getString("main.unexpectedException", e.toString()));
-            e.printStackTrace(System.err);
-            exit(EXIT_EXCEPTION);
-        } catch (Error e) {
+        } catch (RuntimeException | Error e) {
             err.println(i18n.getString("main.unexpectedException", e.toString()));
             e.printStackTrace(System.err);
             exit(EXIT_EXCEPTION);
@@ -1023,7 +1118,7 @@ public class Main {
         if (jtreg_jar != null) {
             jcovManager = new JCovManager(jtreg_jar.getParentFile());
             if (jcovManager.isJCovInstalled()) {
-                options = new ArrayList<Option>(options);
+                options = new ArrayList<>(options);
                 options.addAll(jcovManager.options);
             }
         }
@@ -1031,6 +1126,7 @@ public class Main {
         help = new Help(options);
         if (jcovManager != null && jcovManager.isJCovInstalled()) {
             help.addVersionHelper(new VersionHelper() {
+                @Override
                 public void showVersion(PrintWriter out) {
                     out.println(jcovManager.version());
                 }
@@ -1042,8 +1138,10 @@ public class Main {
      * Decode command line args and perform the requested operations.
      * @param args An array of args, such as might be supplied on the command line.
      * @throws BadArgs if problems are found with any of the supplied args
+     * @throws Main.Fault if a serious error occurred during execution
      * @throws Harness.Fault if exception problems are found while trying to run the tests
      * @throws InterruptedException if the harness is interrupted while running the tests
+     * @return an exit code: 0 for success, greater than 0 for an error
      */
     public final int run(String[] args) throws
             BadArgs, Fault, Harness.Fault, InterruptedException {
@@ -1092,6 +1190,7 @@ public class Main {
             antFileArgs.addAll(readFileList(new File(antFileList)));
 
         TestManager testManager = new TestManager(out, baseDir, new TestFinder.ErrorHandler() {
+            @Override
             public void error(String msg) {
                 Main.this.error(msg);
             }
@@ -1200,13 +1299,11 @@ public class Main {
                 makeDir(reportTextDir, true);
                 File cmdArgsFile = new File(reportTextDir, "cmdArgs.txt");
                 // update to use try-with-resources and lambda
-                try {
-                    BufferedWriter cmdArgsWriter = new BufferedWriter(new FileWriter(cmdArgsFile));
+                try (BufferedWriter cmdArgsWriter = new BufferedWriter(new FileWriter(cmdArgsFile))) {
                     for (String arg: expandedArgs) {
                         cmdArgsWriter.append(arg);
                         cmdArgsWriter.newLine();
                     }
-                    cmdArgsWriter.close();
                 } catch (IOException e) {
                     System.err.println("Error writing " + cmdArgsFile + ": " + e);
                 }
@@ -1365,7 +1462,7 @@ public class Main {
             try {
                 Set<String> selected = testManager.getGroups(ts);
                 GroupManager gm = ts.getGroupManager(out);
-                Set<String> gset = new TreeSet<String>(new NaturalComparator(false));
+                Set<String> gset = new TreeSet<>(new NaturalComparator(false));
                 if (selected.isEmpty())
                     gset.addAll(gm.getGroups());
                 else {
@@ -1382,7 +1479,7 @@ public class Main {
                             Set<File> files = gm.getFiles(g);
                             out.print(g);
                             out.print(":");
-                            Set<String> fset = new TreeSet<String>(new NaturalComparator(false));
+                            Set<String> fset = new TreeSet<>(new NaturalComparator(false));
                             for (File f : files)
                                 fset.add(ts.getRootDir().toURI().relativize(f.toURI()).getPath());
                             for (String f: fset) {
@@ -1435,7 +1532,7 @@ public class Main {
      * the sequence '@@'.
      */
     private static List<String> expandAtFiles(String[] args) throws Fault {
-        List<String> newArgs = new ArrayList<String>();
+        List<String> newArgs = new ArrayList<>();
         for (String arg : args) {
             if (arg.length() > 1 && arg.charAt(0) == '@') {
                 arg = arg.substring(1);
@@ -1488,7 +1585,7 @@ public class Main {
             throw new Fault(i18n, "main.cantOpenFile", file);
         }
         try {
-            List<File> list = new ArrayList<File>();
+            List<File> list = new ArrayList<>();
             String line;
             while ((line = r.readLine()) != null)
                 list.add(new File(line));
@@ -1544,22 +1641,17 @@ public class Main {
         // to jtreg.
         // Note: don't use scratch directory, which is cleared before tests run
         File pfile = new File(workDirArg, "jtreg.policy");
-        try {
-            BufferedWriter pout = new BufferedWriter(new FileWriter(pfile));
-            try {
-                String LINESEP = System.getProperty("line.separator");
-                for (File f: Arrays.asList(jtreg_jar, javatest_jar)) {
-                    pout.write("grant codebase \"" + f.toURI().toURL() + "\" {" + LINESEP);
-                    pout.write("    permission java.security.AllPermission;" + LINESEP);
-                    pout.write("};" + LINESEP);
-                }
-            } finally {
-                pout.close();
+        try (BufferedWriter pout = new BufferedWriter(new FileWriter(pfile))) {
+            String LINESEP = System.getProperty("line.separator");
+            for (File f: Arrays.asList(jtreg_jar, javatest_jar)) {
+                pout.write("grant codebase \"" + f.toURI().toURL() + "\" {" + LINESEP);
+                pout.write("    permission java.security.AllPermission;" + LINESEP);
+                pout.write("};" + LINESEP);
             }
-            policyFile = pfile;
         } catch (IOException e) {
             throw new Fault(i18n, "main.cantWritePolicyFile", e);
         }
+        policyFile = pfile;
     }
 
     /**
@@ -1634,7 +1726,7 @@ public class Main {
     }
 
     private static List<File> pathToFiles(String path) {
-        List<File> files = new ArrayList<File>();
+        List<File> files = new ArrayList<>();
         for (String f: path.split(File.pathSeparator)) {
             if (f.length() > 0)
                 files.add(new File(f));
@@ -1826,9 +1918,7 @@ public class Main {
                     new Object[] {Harness.Observer.class.getName(), observerClassName});
         } catch (ClassNotFoundException e) {
             throw new Fault(i18n, "main.obsvrNotFound", observerClassName);
-        } catch (IllegalAccessException e) {
-            throw new Fault(i18n, "main.obsvrFault", e);
-        } catch (InstantiationException e) {
+        } catch (IllegalAccessException | InstantiationException e) {
             throw new Fault(i18n, "main.obsvrFault", e);
         }
     }
@@ -2016,6 +2106,7 @@ public class Main {
 
         try {
             EventQueue.invokeLater(new Runnable() {
+                @Override
                 public void run() {
                     // build a gui for the tool and run it...
                     Desktop d = new Desktop();
@@ -2033,9 +2124,11 @@ public class Main {
 
     private BackupPolicy createBackupPolicy() {
         return new BackupPolicy() {
+            @Override
             public int getNumBackupsToKeep(File file) {
                 return numBackupsToKeep;
             }
+            @Override
             public boolean isBackupRequired(File file) {
                 if (ignoreExtns != null) {
                     for (String ignoreExtn : ignoreExtns) {
@@ -2077,8 +2170,7 @@ public class Main {
     }
 
     private Map<String, String> getEnvVars() {
-
-        Map<String, String> envVars = new TreeMap<String, String>();
+        Map<String, String> envVars = new TreeMap<>();
         OS os = OS.current();
         if (os.family.equals("windows")) {
             addEnvVars(envVars, DEFAULT_WINDOWS_ENV_VARS);
@@ -2099,12 +2191,16 @@ public class Main {
 
         if (nativeDirArg != null) {
             String libPathName;
-            if (os.family.equals("windows")) {
-                libPathName = "PATH";
-            } else if (os.family.equals("mac")) {
-                libPathName = "DYLD_LIBRARY_PATH";
-            } else {
-                libPathName = "LD_LIBRARY_PATH";
+            switch (os.family) {
+                case "windows":
+                    libPathName = "PATH";
+                    break;
+                case "mac":
+                    libPathName = "DYLD_LIBRARY_PATH";
+                    break;
+                default:
+                    libPathName = "LD_LIBRARY_PATH";
+                    break;
             }
             String libPath = envVars.get(libPathName);
             if (libPath == null) {
@@ -2200,18 +2296,18 @@ public class Main {
     // this first group of args are the "standard" JavaTest args
     private File workDirArg;
     private List<String> retainArgs;
-    private List<File> excludeListArgs = new ArrayList<File>();
+    private List<File> excludeListArgs = new ArrayList<>();
     private String userKeywordExpr;
     private String extraKeywordExpr;
     private String concurrencyArg;
     private String timeoutFactorArg;
     private String priorStatusValuesArg;
     private File reportDirArg;
-    private List<String> testGroupArgs = new ArrayList<String>();
-    private List<File> testFileArgs = new ArrayList<File>();
+    private List<String> testGroupArgs = new ArrayList<>();
+    private List<File> testFileArgs = new ArrayList<>();
     // TODO: consider making this a "pathset" to detect redundant specification
     // of directories and paths within them.
-    private final List<File> antFileArgs = new ArrayList<File>();
+    private final List<File> antFileArgs = new ArrayList<>();
 
     // these args are jtreg extras
     private File baseDirArg;
@@ -2231,16 +2327,16 @@ public class Main {
     private String timeoutHandlerClassName;
     private List<File> timeoutHandlerPathArg;
     private long timeoutHandlerTimeoutArg = -1; // -1: default; 0: no timeout; >0: timeout in seconds
-    private List<String> testCompilerOpts = new ArrayList<String>();
-    private List<String> testJavaOpts = new ArrayList<String>();
-    private List<String> testVMOpts = new ArrayList<String>();
-    private List<String> testDebugOpts = new ArrayList<String>();
+    private List<String> testCompilerOpts = new ArrayList<>();
+    private List<String> testJavaOpts = new ArrayList<>();
+    private List<String> testVMOpts = new ArrayList<>();
+    private List<String> testDebugOpts = new ArrayList<>();
     private boolean checkFlag;
     private boolean listTestsFlag;
     private boolean showGroupsFlag;
-    private List<String> envVarArgs = new ArrayList<String>();
+    private List<String> envVarArgs = new ArrayList<>();
     private IgnoreKind ignoreKind;
-    private List<File> classPathAppendArg = new ArrayList<File>();
+    private List<File> classPathAppendArg = new ArrayList<>();
     private File nativeDirArg;
     private boolean jitFlag = true;
     private Help help;

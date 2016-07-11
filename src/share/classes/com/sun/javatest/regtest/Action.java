@@ -240,16 +240,12 @@ public abstract class Action extends ActionHelper
                 fw.write("// original policy file:" + LINESEP);
                 fw.write("// " + fileName + LINESEP);
 
-                BufferedReader in = new BufferedReader(new FileReader(fileName));
-                try {
+                try (BufferedReader in = new BufferedReader(new FileReader(fileName))) {
                     String line;
                     while ((line = in.readLine()) != null) {
                         fw.write(line + LINESEP);
                     }
-                } finally {
-                    in.close();
                 }
-                in.close();
             } finally {
                 fw.close();
             }
@@ -435,7 +431,7 @@ public abstract class Action extends ActionHelper
     //--------------------------------------------------------------------------
 
     protected static <T> List<T> join(List<T> l1, List<T> l2) {
-        List<T> result = new ArrayList<T>();
+        List<T> result = new ArrayList<>();
         result.addAll(l1);
         result.addAll(l2);
         return result;
@@ -447,7 +443,7 @@ public abstract class Action extends ActionHelper
         if (pp == null)
             return Collections.emptySet();
 
-        Set<String> results = new LinkedHashSet<String>();
+        Set<String> results = new LinkedHashSet<>();
         for (File dir: pp.asList()) {
             getModules(dir, results);
         }
@@ -520,17 +516,19 @@ public abstract class Action extends ActionHelper
         if (!needAddExports)
             return Collections.<String>emptyList();
 
-        List<String> list = new ArrayList<String>();
+        List<String> list = new ArrayList<>();
         for (String m: modules) {
             if (m.contains("/")) {
-                list.add("-XaddExports:" + m + "=ALL-UNNAMED");
+                list.add("--add-exports");
+                list.add(m + "=ALL-UNNAMED");
             }
         }
         return list;
     }
 
     protected boolean includesExport(String opt, String arg) {
-        return opt.matches("-XaddExports:(.*,)?\\Q" + arg + "\\E(,.*)?");
+        return opt.matches("-XaddExports:(.*,)?\\Q" + arg + "\\E(,.*)?") ||
+                opt.matches("--add-exports(=| +)(.*,)?\\Q" + arg + "\\E(,.*)?");
     }
 
     //----------misc statics----------------------------------------------------
@@ -639,6 +637,7 @@ public abstract class Action extends ActionHelper
         COMPILE_OPT_DISALLOW  = "Compile option not allowed: ",
         COMPILE_NO_REF_NAME   = "No reference file name",
         COMPILE_CANT_FIND_REF = "Can't find reference file: ",
+        COMPILE_CANT_READ_REF = "Can't read reference file: ",
         COMPILE_GOLD_FAIL     = "Output does not match reference file: ",
         COMPILE_GOLD_LINE     = ", line ",
         COMPILE_GOLD_READ_PROB= "Problem reading reference file: ",

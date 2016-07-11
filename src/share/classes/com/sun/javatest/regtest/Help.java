@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.lang.reflect.Field;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.DateFormat;
@@ -82,18 +83,16 @@ public class Help {
 
     void addJarVersionHelper(final String name, final File jar, final String pomProperties) {
         addVersionHelper(new Help.VersionHelper() {
+            @Override
             public void showVersion(PrintWriter out) {
                 try {
                     JarFile j = new JarFile(jar);
                     String v = (String) j.getManifest().getMainAttributes().get(Attributes.Name.IMPLEMENTATION_VERSION);
                     if (v == null && pomProperties != null) {
                         Properties p = new Properties();
-                        InputStream in = j.getInputStream(j.getEntry(pomProperties));
-                        try {
+                        try (InputStream in = j.getInputStream(j.getEntry(pomProperties))) {
                             p.load(in);
                             v = p.getProperty("version");
-                        } finally {
-                            in.close();
                         }
                     }
                     out.println(name + ": version " + (v == null ? "unknown" : v)); // need i18n
@@ -105,6 +104,7 @@ public class Help {
 
     void addPathVersionHelper(final String name, final SearchPath path) {
         addVersionHelper(new Help.VersionHelper() {
+            @Override
             public void showVersion(PrintWriter out) {
                 try {
                     for (File jar: path.asList()) {
@@ -138,7 +138,7 @@ public class Help {
 
     void setCommandLineHelpQuery(String query) {
         if (commandLineHelpQuery == null)
-            commandLineHelpQuery = new ArrayList<String>();
+            commandLineHelpQuery = new ArrayList<>();
         if (query != null && query.trim().length() > 0)
             commandLineHelpQuery.addAll(Arrays.asList(query.trim().split("\\s+")));
     }
@@ -179,12 +179,10 @@ public class Help {
     void showTagSpec(PrintWriter out) {
         File docDir = getDocDir();
         File tagSpec = new File(docDir, "tag-spec.txt");
-        try {
-            BufferedReader in = new BufferedReader(new FileReader(tagSpec));
+        try (BufferedReader in = new BufferedReader(new FileReader(tagSpec))) {
             String line;
             while ((line = in.readLine()) != null)
                 out.println(line);
-            in.close();
         } catch (FileNotFoundException e) {
             out.println(i18n.getString("help.cantFindSpec"));
         } catch (IOException e) {
@@ -304,9 +302,9 @@ public class Help {
                     URL u = new URL(path.substring(0, sep));
                     if (u.equals(classPathEntry )) {
                         Properties p = new Properties();
-                        InputStream in = url.openStream();
-                        p.load(in);
-                        in.close();
+                        try (InputStream in = url.openStream()) {
+                            p.load(in);
+                        }
                         return p;
                     }
                 }
@@ -324,6 +322,14 @@ public class Help {
     void showCommandLineHelp(PrintWriter out) {
         HelpTree commandHelpTree = new HelpTree();
 
+        // Try to override the default comparator
+        try{
+            Field f = HelpTree.class.getDeclaredField("nodeComparator");
+            f.setAccessible(true);
+            f.set(null, new NodeComparator());
+        } catch (IllegalAccessException | IllegalArgumentException | NoSuchFieldException | SecurityException ignore) {
+        }
+
         Integer nodeIndent = Integer.getInteger("javatest.help.nodeIndent");
         if (nodeIndent != null)
             commandHelpTree.setNodeIndent(nodeIndent);
@@ -332,36 +338,12 @@ public class Help {
         if (descIndent != null)
             commandHelpTree.setDescriptionIndent(descIndent);
 
-//        // first, group the options by their group, and sort within group
-//        // by their first name
-//        Map<String, SortedMap<String,Option>> map =
-//                new LinkedHashMap<String, SortedMap<String,Option>>();
-//        for (String g: EnumSet.allOf(String.class))
-//            map.put(g, new TreeMap<String,Option>(new CaseInsensitiveStringComparator()));
-//        for (Option o: options) {
-//            if (o.names.length > 0)
-//                map.get(o.group).put(o.names[0], o);
-//        }
-//
-//        // now build the help tree nodes and add then into the primary help node
-//        for (String g: EnumSet.allOf(String.class)) {
-//            SortedMap<String,Option> optionsForGroup = map.get(g);
-//            List<HelpTree.Node> nodesForGroup = new ArrayList<HelpTree.Node>();
-//            for (Option o: optionsForGroup.values())
-//                nodesForGroup.add(createOptionHelpNode(o));
-//            HelpTree.Node groupNode = new HelpTree.Node(i18n, "help." + g.toString().toLowerCase(),
-//                    nodesForGroup.toArray(new HelpTree.Node[nodesForGroup.size()]));
-//            commandHelpTree.addNode(groupNode);
-//        }
-
-
         // first, group the options by their group, and sort within group
         // by their first name
-        Set<String> groups = new LinkedHashSet<String>();
+        Set<String> groups = new LinkedHashSet<>();
         for (Option o: options)
             groups.add(o.group);
-        Map<String, SortedMap<String, Option>> map =
-                new LinkedHashMap<String, SortedMap<String, Option>>();
+        Map<String, SortedMap<String, Option>> map = new LinkedHashMap<>();
         for (String g: groups)
             map.put(g, new TreeMap<String, Option>(new CaseInsensitiveStringComparator()));
         for (Option o: options) {
@@ -374,7 +356,7 @@ public class Help {
             SortedMap<String, Option> optionsForGroup = map.get(g);
             if (optionsForGroup.isEmpty())
                 continue;
-            List<HelpTree.Node> nodesForGroup = new ArrayList<HelpTree.Node>();
+            List<HelpTree.Node> nodesForGroup = new ArrayList<>();
             for (Option o: optionsForGroup.values())
                 nodesForGroup.add(createOptionHelpNode(o));
             HelpTree.Node groupNode = new HelpTree.Node(i18n, "help." + g.toLowerCase(),
@@ -431,22 +413,25 @@ public class Help {
     }
 
     private HelpTree.Node createOptionHelpNode(Option o) {
-        String prefix = "help." + o.group.toLowerCase() + "." + o.names[0].replaceAll("[^A-Za-z0-9.]+", "_");
+        String prefix = "help." + o.group.toLowerCase() + "." +
+                o.names[0].replaceAll("^-+", "").replaceAll("[^A-Za-z0-9.]+", "_");
         String arg = (o.argType == Option.ArgType.NONE ? null : i18n.getString(prefix + ".arg"));
         StringBuilder sb = new StringBuilder();
         for (String n: o.names) {
             if (sb.length() > 0)
                 sb.append("  |  ");
-            sb.append("-");
             sb.append(n);
             switch (o.argType) {
-                case NONE:      break;
+                case NONE:
+                    break;
+
                 case OLD:       // old is deprecated, so just show preferred format
                 case STD:
                 case FILE:
                     sb.append(":").append(arg);
                     break;
 
+                case GNU:
                 case SEP:
                 case REST:
                     sb.append(" ").append(arg);
@@ -491,7 +476,17 @@ public class Help {
         return "java " + Main.class.getName();
     }
 
+    private static class NodeComparator implements Comparator<HelpTree.Node> {
+        @Override
+        public int compare(HelpTree.Node n1, HelpTree.Node n2) {
+            int v = n1.getName().replaceAll("^-+", "")
+                    .compareToIgnoreCase(n2.getName().replaceAll("^-+", ""));
+            return (v != 0 ? v : n1.getDescription().compareToIgnoreCase(n2.getDescription()));
+        }
+    }
+
     private static class CaseInsensitiveStringComparator implements Comparator<String> {
+        @Override
         public int compare(String s1, String s2) {
             if (s1 == null && s2 == null)
                 return 0;
@@ -499,13 +494,14 @@ public class Help {
             if (s1 == null || s2 == null)
                 return (s1 == null ? -1 : +1);
 
-            return s1.compareToIgnoreCase(s2);
+            return s1.replaceAll("^-*", "")
+                    .compareToIgnoreCase(s2.replaceAll("^-*", ""));
         }
 
     }
 
     private final List<Option> options;
-    private final List<VersionHelper> versionHelpers = new ArrayList<VersionHelper>();
+    private final List<VersionHelper> versionHelpers = new ArrayList<>();
     private boolean releaseNotesFlag;
     private boolean tagSpecFlag;
     private boolean versionFlag;

@@ -78,7 +78,7 @@ public class JDK {
         return jdk;
     }
 
-    private static final Map<File, JDK> cache = new HashMap<File, JDK>();
+    private static final Map<File, JDK> cache = new HashMap<>();
 
     private JDK(File jdk) {
         this.jdk = jdk;
@@ -212,13 +212,13 @@ public class JDK {
      */
     public synchronized String getFullVersion(Collection<String> vmOpts) {
         if (fullVersions == null)
-            fullVersions = new HashMap<Set<String>, String>();
+            fullVersions = new HashMap<>();
 
-        Set<String> vmOptsSet = new LinkedHashSet<String>(vmOpts);
+        Set<String> vmOptsSet = new LinkedHashSet<>(vmOpts);
         String fullVersion = fullVersions.get(vmOptsSet);
         if (fullVersion == null) {
             fullVersion = "";  // default
-            List<String> cmdArgs = new ArrayList<String>();
+            List<String> cmdArgs = new ArrayList<>();
             cmdArgs.add(getJavaProg().getPath());
             cmdArgs.addAll(vmOpts);
             cmdArgs.add("-version");
@@ -255,15 +255,9 @@ public class JDK {
             }
             File ctSym = new File(new File(absJDK, "lib"), "ct.sym");
             if (ctSym.exists()) {
-                try {
-                    // convert to try-with-resources when possible
-                    JarFile jar = new JarFile(ctSym);
-                    try {
-                        JarEntry e = jar.getJarEntry("META-INF/sym/rt.jar/java/lang/Object.class");
-                        hasOldSymbolFile = (e != null);
-                    } finally {
-                        jar.close();
-                    }
+                try (JarFile jar = new JarFile(ctSym)) {
+                    JarEntry e = jar.getJarEntry("META-INF/sym/rt.jar/java/lang/Object.class");
+                    hasOldSymbolFile = (e != null);
                 } catch (IOException e) {
                     hasOldSymbolFile = false;
                 }
@@ -295,7 +289,7 @@ public class JDK {
      */
     public synchronized Set<String> getModules(RegressionParameters params) {
         if (modulesMap == null)
-            modulesMap = new HashMap<RegressionParameters, Set<String>>();
+            modulesMap = new HashMap<>();
 
         Set<String> modules = modulesMap.get(params);
         if (modules == null) {
@@ -305,7 +299,7 @@ public class JDK {
             if (m == null)
                 modules = Collections.emptySet();
             else {
-                modules = new LinkedHashSet<String>(Arrays.asList(m.split(" +")));
+                modules = new LinkedHashSet<>(Arrays.asList(m.split(" +")));
             }
             modulesMap.put(params, modules);
             } catch (Fault f) {
@@ -329,7 +323,7 @@ public class JDK {
      */
     public synchronized Properties getProperties(RegressionParameters params) throws Fault {
         if (jdkPropsMap == null)
-            jdkPropsMap = new HashMap<RegressionParameters, Properties>();
+            jdkPropsMap = new HashMap<>();
 
         Properties jdkProps = jdkPropsMap.get(params);
         if (jdkProps == null) {
@@ -340,8 +334,8 @@ public class JDK {
                 throw new Fault(e.getMessage(), e);
             }
 
-            JDKOpts jdkOpts = new JDKOpts();
-            jdkOpts.add("-classpath");
+            JDKOpts jdkOpts = new JDKOpts(params.getTestSuite().useNewOptions());
+            jdkOpts.add("--class-path");
             SearchPath cp = new SearchPath(params.getJavaTestClassPath());
             cp.append(epd.getClassDir());
             jdkOpts.add(cp.toString());
@@ -362,11 +356,11 @@ public class JDK {
             if (version != null) {
                 JDK_Version v = JDK_Version.forName(version);
                 if (v.compareTo(JDK_Version.V9) >= 0) {
-                    jdkOpts.addAll(Arrays.asList("-addmods", "ALL-SYSTEM"));
+                    jdkOpts.addAll(Arrays.asList("--add-modules", "ALL-SYSTEM"));
                 }
             }
 
-            List<String> cmdArgs = new ArrayList<String>();
+            List<String> cmdArgs = new ArrayList<>();
             cmdArgs.add(getJavaProg().getPath());
             cmdArgs.addAll(jdkOpts.toList());
             cmdArgs.add(GetJDKProperties.class.getName());
@@ -410,13 +404,6 @@ public class JDK {
             sb.append(item);
         }
         return sb.toString();
-    }
-
-    private <T> List<T> concat(List<T> l1, List<T> l2) {
-        List<T> result = new ArrayList<T>();
-        result.addAll(l1);
-        result.addAll(l2);
-        return result;
     }
 
     private void asyncCopy(final InputStream in, final PrintStream out) {

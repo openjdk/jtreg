@@ -31,12 +31,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
 import com.sun.javatest.regtest.agent.SearchPath;
+
+import static com.sun.javatest.regtest.StringUtils.*;
 
 
 /**
@@ -66,49 +67,56 @@ public class ModuleConfig {
     }
 
     ModuleConfig setFromOpts(List<String> opts) {
-        ListIterator<String> iter = opts.listIterator();
-        while (iter.hasNext()) {
-            String opt = iter.next();
-            if (opt.equals("-addmods")) {
-                setAddMods(Arrays.asList(iter.next().split(",")));
-            } else if (opt.equals("-limitmods")) {
-                setLimitMods(Arrays.asList(iter.next().split(",")));
-            } else if (opt.startsWith("-XaddExports:")) {
-                int sep = opt.indexOf(":");
-                int eq = opt.indexOf("=");
-                String modulePackage = opt.substring(sep + 1, eq);
-                List<String> targetModules = Arrays.asList(opt.substring(eq + 1).split(","));
-                setAddExports(modulePackage, targetModules);
-            } else if (opt.startsWith("-XaddReads:")) {
-                int sep = opt.indexOf(":");
-                int eq = opt.indexOf("=");
-                String module = opt.substring(sep + 1, eq);
-                List<String> targetModules = Arrays.asList(opt.substring(eq + 1).split(","));
-                setAddReads(module, targetModules);
-            } else if (opt.startsWith("-Xbootclasspath/a:")) {
-                int sep = opt.indexOf(":");
-                setBootClassPathAppend(new SearchPath(opt.substring(sep + 1)));
-            } else if (opt.equals("-classpath") || opt.equals("-cp")) {
-                setClassPath(new SearchPath(iter.next()));
-            } else if (opt.equals("-modulepath") || opt.equals("-mp")) {
-                setModulePath(new SearchPath(iter.next()));
-            } else if (opt.startsWith("-Xpatch:")) {
-                int sep = opt.indexOf(":");
-                int eq = opt.indexOf("=");
-                String module = opt.substring(sep + 1, eq);
-                SearchPath path = new SearchPath(opt.substring(eq + 1));
-                setXPatch(module, path);
+        JDKOpts.OptionHandler h = new JDKOpts.OptionHandler() {
+            @Override
+            void handleOption(JDKOpts.Option option, String opt, String arg) {
+                switch (option) {
+                    case ADD_EXPORTS:
+                        setAddExports(beforePart(arg, '='), split(afterPart(arg, '='), ','));
+                        break;
+
+                    case ADD_MODULES:
+                        setAddModules(split(arg, ','));
+                        break;
+
+                    case ADD_READS:
+                        setAddExports(beforePart(arg, '='), split(afterPart(arg, '='), ','));
+                        break;
+
+                    case CLASS_PATH:
+                        setClassPath(new SearchPath(arg));
+                        break;
+
+                    case LIMIT_MODULES:
+                        setLimitModules(split(arg, ','));
+                        break;
+
+                    case MODULE_PATH:
+                        setModulePath(new SearchPath(arg));
+                        break;
+
+                    case PATCH_MODULE:
+                        setPatchPath(beforePart(arg, '='), new SearchPath(afterPart(arg, '=')));
+                         break;
+
+                }
             }
-        }
+
+            @Override
+            void handleUnknown(String opt) {
+            }
+
+        };
+        h.handleOptions(opts);
         return this;
     }
 
-    ModuleConfig setAddMods(List<String> mods) {
+    ModuleConfig setAddModules(List<String> mods) {
         addMods = mods;
         return this;
     }
 
-    ModuleConfig setLimitMods(List<String> mods) {
+    ModuleConfig setLimitModules(List<String> mods) {
         limitMods = mods;
         return this;
     }
@@ -124,14 +132,14 @@ public class ModuleConfig {
 
     ModuleConfig setAddExports(String modulePackage, List<String> targetModules) {
         if (addExports == null)
-            addExports = new TreeMap<String, List<String>>();
+            addExports = new TreeMap<>();
         addExports.put(modulePackage, targetModules);
         return this;
     }
 
     ModuleConfig setAddReads(String module, List<String> targetModules) {
         if (addReads == null)
-            addReads = new TreeMap<String, List<String>>();
+            addReads = new TreeMap<>();
         addReads.put(module, targetModules);
         return this;
     }
@@ -151,29 +159,27 @@ public class ModuleConfig {
         return this;
     }
 
-    ModuleConfig setXPatch(String module, SearchPath patchPath) {
+    ModuleConfig setPatchPath(String module, SearchPath patchPath) {
         if (patch == null)
-            patch = new TreeMap<String, SearchPath>();
+            patch = new TreeMap<>();
         patch.put(module, patchPath);
         return this;
     }
 
     void write(PrintWriter pw) {
-
-
         Table table = new Table();
         if (addMods != null && !addMods.isEmpty()) {
-            table.addRow("add modules:", StringUtils.join(addMods, " "));
+            table.addRow("add modules:", join(addMods, " "));
         }
 
         if (limitMods != null && !limitMods.isEmpty()) {
-            table.addRow("limit modules:", StringUtils.join(limitMods, " "));
+            table.addRow("limit modules:", join(limitMods, " "));
         }
 
         if (addExports != null && !addExports.isEmpty()) {
             String label = "add exports:";
             for (Map.Entry<String, List<String>> e: addExports.entrySet()) {
-                table.addRow(label, e.getKey(), StringUtils.join(e.getValue(), " "));
+                table.addRow(label, e.getKey(), join(e.getValue(), " "));
                 label = null;
             }
         }
@@ -181,7 +187,7 @@ public class ModuleConfig {
         if (addReads != null && !addReads.isEmpty()) {
             String label = "add reads:";
             for (Map.Entry<String, List<String>> e: addReads.entrySet()) {
-                table.addRow(label, e.getKey(), StringUtils.join(e.getValue(), " "));
+                table.addRow(label, e.getKey(), join(e.getValue(), " "));
                 label = null;
             }
         }
@@ -231,7 +237,7 @@ public class ModuleConfig {
     }
 
     private static class Table {
-        List<List<String>> rows = new ArrayList<List<String>>();
+        List<List<String>> rows = new ArrayList<>();
 
         void addRow(String... items) {
             rows.add(Arrays.asList(items));

@@ -52,7 +52,6 @@ import static com.sun.javatest.regtest.agent.RStatus.error;
 import static com.sun.javatest.regtest.agent.RStatus.failed;
 import static com.sun.javatest.regtest.agent.RStatus.normalize;
 import static com.sun.javatest.regtest.agent.RStatus.passed;
-import static com.sun.javatest.regtest.agent.RStatus.normalize;
 
 /**
  * This class implements the "main" action as described by the JDK tag
@@ -121,34 +120,43 @@ public class MainAction extends Action
             String optName  = e.getKey();
             String optValue = e.getValue();
 
-            if (optName.equals("fail")) {
-                reverseStatus = parseFail(optValue);
-            } else if (optName.equals("manual")) {
-                manual = parseMainManual(optValue);
-            } else if (optName.equals("timeout")) {
-                timeout  = parseTimeout(optValue);
-            } else if (optName.equals("othervm")) {
-                othervm = true;
-                othervmOverrideReasons.add("/othervm specified");
-            } else if (optName.equals("native")) {
-                nativeCode = true;
-            } else if (optName.equals("bootclasspath")) {
-                useBootClassPath = true;
-                othervmOverrideReasons.add("/bootclasspath specified");
-            } else if (optName.equals("policy")) {
-                overrideSysPolicy = true;
-                policyFN = parsePolicy(optValue);
-            } else if (optName.equals("java.security.policy")) {
-                String name = optValue;
-                if (optValue.startsWith("=")) {
+            switch (optName) {
+                case "fail":
+                    reverseStatus = parseFail(optValue);
+                    break;
+                case "manual":
+                    manual = parseMainManual(optValue);
+                    break;
+                case "timeout":
+                    timeout  = parseTimeout(optValue);
+                    break;
+                case "othervm":
+                    othervm = true;
+                    othervmOverrideReasons.add("/othervm specified");
+                    break;
+                case "native":
+                    nativeCode = true;
+                    break;
+                case "bootclasspath":
+                    useBootClassPath = true;
+                    othervmOverrideReasons.add("/bootclasspath specified");
+                    break;
+                case "policy":
                     overrideSysPolicy = true;
-                    name = optValue.substring(1, optValue.length());
-                }
-                policyFN = parsePolicy(name);
-            } else if (optName.equals("secure")) {
-                secureCN = parseSecure(optValue);
-            } else {
-                throw new ParseException(MAIN_BAD_OPT + optName);
+                    policyFN = parsePolicy(optValue);
+                    break;
+                case "java.security.policy":
+                    String name = optValue;
+                    if (optValue.startsWith("=")) {
+                        overrideSysPolicy = true;
+                        name = optValue.substring(1, optValue.length());
+                    }   policyFN = parsePolicy(name);
+                    break;
+                case "secure":
+                    secureCN = parseSecure(optValue);
+                    break;
+                default:
+                    throw new ParseException(MAIN_BAD_OPT + optName);
             }
         }
 
@@ -178,13 +186,7 @@ public class MainAction extends Action
             if (testClassName == null) {
                 if (arg.startsWith("-")) {
                     testJavaArgs.add(arg);
-                    if ((arg.equals("-addmods") || arg.equals("-limitmods"))
-                            && (i + 1 < args.size())) {
-                        testJavaArgs.add(args.get(++i));
-                    } else if ((arg.equals("-cp") || arg.equals("-classpath"))
-                            && (i + 1 < args.size())) {
-                        // Note that this value will be merged by JDKOpts with
-                        // any values required to take @library paths into account
+                    if (JDKOpts.hasFollowingArg(arg)) {
                         testJavaArgs.add(args.get(++i));
                     }
                 } else {
@@ -218,7 +220,7 @@ public class MainAction extends Action
 
         if (!othervm && !useModuleExportAPI) {
             for (String m: script.getModules()) {
-                if (m.contains("/")) { // possible need for -XaddExports
+                if (m.contains("/")) { // possible need for --add-exports
                     boolean found = false;
                     for (String vmOpt: script.getTestVMJavaOptions()) {
                         if (includesExport(vmOpt, m)) {
@@ -227,7 +229,7 @@ public class MainAction extends Action
                         }
                     }
                     if (!found) {
-                        othervmOverrideReasons.add("test needs -XaddExports");
+                        othervmOverrideReasons.add("test needs --add-exports");
                         break;
                     }
                 }
@@ -254,7 +256,7 @@ public class MainAction extends Action
 
     @Override
     public Set<File> getSourceFiles() {
-        Set<File> files = new LinkedHashSet<File>();
+        Set<File> files = new LinkedHashSet<>();
         if (testClassName != null) {
             Map<String,String> buildOpts = Collections.emptyMap();
             List<String> buildArgs = Arrays.asList(join(testModuleName, testClassName));
@@ -293,6 +295,7 @@ public class MainAction extends Action
      * @exception  TestRunException If an unexpected error occurs while running
      *             the test.
      */
+    @Override
     public Status run() throws TestRunException {
         if (script.useXpatch())
             othervmOverrideReasons.add("test or library overrides a system module");
@@ -358,7 +361,7 @@ public class MainAction extends Action
         } else {
             runModuleName = null;
             runModuleClassName = driverClass;
-            runClassArgs = new ArrayList<String>();
+            runClassArgs = new ArrayList<>();
             runClassArgs.add(script.getTestResult().getTestName());
             runClassArgs.add(join(testModuleName, testClassName));
             runClassArgs.addAll(testClassArgs);
@@ -366,11 +369,9 @@ public class MainAction extends Action
 
         // WRITE ARGUMENT FILE
         File argFile = getArgFile();
-        try {
-            BufferedWriter w = new BufferedWriter(new FileWriter(argFile));
+        try (BufferedWriter w = new BufferedWriter(new FileWriter(argFile))) {
             w.write(runModuleClassName + "\0");
             w.write(StringUtils.join(runClassArgs) + "\0");
-            w.close();
         } catch (IOException e) {
             return error(MAIN_CANT_WRITE_ARGS);
         }
@@ -380,7 +381,7 @@ public class MainAction extends Action
         // TAG-SPEC:  "The source and class directories of a test are made
         // available to main and applet actions via the system properties
         // "test.src" and "test.classes", respectively"
-        Map<String, String> env = new LinkedHashMap<String, String>();
+        Map<String, String> env = new LinkedHashMap<>();
         env.putAll(script.getEnvVars());
 
         // some tests are inappropriately relying on the CLASSPATH environment
@@ -399,31 +400,31 @@ public class MainAction extends Action
         }
 
         String javaCmd = script.getJavaProg();
-        JDKOpts javaOpts = new JDKOpts();
+        JDKOpts javaOpts = new JDKOpts(script.useLongFormOptions());
 
         if (!useCLASSPATH) {
-            javaOpts.addPath("-classpath", cp);
+            javaOpts.addPath("--class-path", cp);
         }
 
         SearchPath bcpa = paths.get(PathKind.BOOTCLASSPATH_APPEND);
         SearchPath pp = paths.get(PathKind.PATCHPATH);
         javaOpts.addPath("-Xbootclasspath/a:", bcpa);
         javaOpts.addAllXPatch(pp);
-        javaOpts.addPath("-modulepath", paths.get(PathKind.MODULEPATH));
+        javaOpts.addPath("--module-path", paths.get(PathKind.MODULEPATH));
 
-        Set<String> addMods = new LinkedHashSet<String>();
+        Set<String> addMods = new LinkedHashSet<>();
         if (testModuleName != null)
             addMods.add(testModuleName);
         addMods.addAll(getModules(paths.get(PathKind.MODULEPATH)));
         if (!addMods.isEmpty()) {
-            javaOpts.add("-addmods");
+            javaOpts.add("--add-modules");
             javaOpts.add(StringUtils.join(addMods, ","));
         }
 
         if (pp != null && !pp.isEmpty() && bcpa != null && !bcpa.isEmpty()) {
-            // provide addReads from patch modules to unnamed module(s).
+            // provide --add-reads from patch modules to unnamed module(s).
             for (String s: getModules(pp)) {
-                javaOpts.add("-XaddReads:" + s + "=ALL-UNNAMED");
+                javaOpts.add("--add-reads=" + s + "=ALL-UNNAMED");
             }
         }
 
@@ -431,7 +432,7 @@ public class MainAction extends Action
         javaOpts.addAll(script.getTestVMJavaOptions());
         javaOpts.addAll(script.getTestDebugOptions());
 
-        Map<String, String> javaProps = new LinkedHashMap<String, String>();
+        Map<String, String> javaProps = new LinkedHashMap<>();
         javaProps.putAll(script.getTestProperties());
 
         String newPolicyFN;
@@ -453,12 +454,12 @@ public class MainAction extends Action
         javaOpts.addAll(testJavaArgs);
 
         String className = MainWrapper.class.getName();
-        List<String> classArgs = new ArrayList<String>();
+        List<String> classArgs = new ArrayList<>();
         classArgs.add(argFile.getPath());
 
         classArgs.addAll(runClassArgs);
 
-        List<String> command = new ArrayList<String>();
+        List<String> command = new ArrayList<>();
         command.add(javaCmd);
         for (Map.Entry<String,String> e: javaProps.entrySet())
             command.add("-D" + e.getKey() + "=" + e.getValue());
@@ -523,7 +524,7 @@ public class MainAction extends Action
         } else {
             runModuleName = null;
             runMainClass = driverClass;
-            runMainArgs = new ArrayList<String>();
+            runMainArgs = new ArrayList<>();
             runMainArgs.add(script.getTestResult().getTestName());
             runMainArgs.add(testClassName);
             runMainArgs.addAll(testClassArgs);
@@ -656,8 +657,8 @@ public class MainAction extends Action
 
     //----------member variables------------------------------------------------
 
-    private final List<String>  testJavaArgs = new ArrayList<String>();
-    private final List<String>  testClassArgs = new ArrayList<String>();
+    private final List<String>  testJavaArgs = new ArrayList<>();
+    private final List<String>  testClassArgs = new ArrayList<>();
     private String  driverClass = null;
     private String  testModuleName  = null;
     private String  testClassName  = null;
@@ -667,7 +668,7 @@ public class MainAction extends Action
 
     protected boolean reverseStatus = false;
     protected boolean useBootClassPath = false;
-    protected Set<String> othervmOverrideReasons = new LinkedHashSet<String>();
+    protected Set<String> othervmOverrideReasons = new LinkedHashSet<>();
     protected boolean nativeCode = false;
     private int     timeout = -1;
     private String  manual  = "unset";

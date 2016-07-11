@@ -28,8 +28,10 @@ package com.sun.javatest.regtest;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -37,78 +39,111 @@ import java.util.Set;
 
 import com.sun.javatest.regtest.agent.SearchPath;
 
+import static com.sun.javatest.regtest.StringUtils.*;
+
 /**
  * A class to manage lists of options for java and javac, merging them as necessary.
  * The options that can be merged are those that might reasonably be specified by
  * the user and by jtreg itself, and for which a repeated value is invalid in some way.
- *
- * @author jjg
  */
 public class JDKOpts {
-    private final List<String> opts;
-    private final Map<String, Integer> index;
+    /**
+     * The JDK options supported by this class.
+     * All options in this set take a value.
+     * Repeated use of any of these options will be merged.
+     * Options names will be converted their canonical form.
+     */
+    enum Option {
+        ADD_EXPORTS("--add-exports", "-XaddExports:"),
+        ADD_MODULES("--add-modules", "-addmods"),
+        ADD_READS("--add-reads", "-XaddReads:"),
+        CLASS_PATH("--class-path", "-classpath", "-cp"),
+        LIMIT_MODULES("--limit-modules", "-limitmods"),
+        MODULE_PATH("--module-path", "-modulepath", "-mp"),
+        MODULE_SOURCE_PATH("--module-source-path", "-modulesourcepath"),
+        PATCH_MODULE("--patch-module", "-Xpatch:"),
+        SOURCE_PATH("--source-path", "-sourcepath");
+
+        Option(String... names) {
+            this.names = names;
+        }
+
+        final String[] names;
+    }
+
+    private final MergeHandler mergeHandler;
     private String pending;
-    private char pendingSeparator;
 
-    public JDKOpts() {
-        opts = new ArrayList<String>();
-        index = new HashMap<String, Integer>();
+    private static final char COMMA = ',';
+    private static final char EQUALS = '=';
+    private static final char NUL = '\0';
+    private static final char PATHSEP = File.pathSeparatorChar;
+
+    /**
+     * Returns true if the option should be followed by an argument in the following position.
+     * @param opt
+     * @return true if a following argument is to be expected
+     */
+    static boolean hasFollowingArg(String opt) {
+        for (Option option: Option.values()) {
+            for (String name: option.names) {
+                if (opt.equals(name) && !name.endsWith(":") && !name.endsWith("="))
+                    return true;
+            }
+        }
+        return false;
     }
 
-    public boolean isEmpty() {
-        return opts.isEmpty();
+    /**
+     * Creates an object to normalize a series of JDK options.
+     * @param useLongFormOpts use GNU-style long form names
+     */
+    public JDKOpts(boolean useLongFormOpts) {
+        mergeHandler = new MergeHandler(useLongFormOpts);
     }
 
-    public int size() {
-        return opts.size();
-    }
-
-    public String get(int i) {
-        return opts.get(i);
-    }
-
+    /**
+     * Returns the series of normalized options as a list.
+     * @return a list
+     */
     public List<String> toList() {
-        return Collections.unmodifiableList(opts);
+        return Collections.unmodifiableList(mergeHandler.opts);
     }
 
+    /**
+     * Adds a series of options.
+     * @param opts the options.
+     */
     public void addAll(List<String> opts) {
         for (String opt: opts) {
             add(opt);
         }
     }
 
+    /**
+     * Adds a series of options.
+     * @param opts the options.
+     */
     public void addAll(String... opts) {
         for (String opt: opts) {
             add(opt);
         }
     }
 
+    /**
+     * Adds a single option.
+     * If the option needs an argument, it will be deferred until the following call,
+     * which will be used as the value.
+     * @param opt the option
+     */
     public void add(String opt) {
         if (pending != null) {
-            // this is the "value" to the preceding option
-            updateOpt(pending, opt, pendingSeparator);
+            mergeHandler.handleOption(pending, opt);
             pending = null;
-        } else if (opt.equals("-classpath")
-                || opt.equals("-sourcepath")) {
+        } else if (hasFollowingArg(opt)) {
             pending = opt;
-            pendingSeparator = File.pathSeparatorChar;
-        } else if (opt.equals("-cp")) {
-            pending = "-classpath";
-            pendingSeparator = File.pathSeparatorChar;
-        } else if (opt.equals("-addmods")
-                || opt.equals("-limitmods")) {
-            pending = opt;
-            pendingSeparator = ',';
-        } else if (opt.startsWith("-Xpatch:")) {
-            updateXpatch(opt);
-        } else if (opt.startsWith("-XaddReads:")) {
-            updateAddReads(opt);
-        } else if (opt.startsWith("-XaddExports:")) {
-            updateAddExports(opt);
-        } else if (opt.startsWith("-")) {
-            opts.add(opt);
         } else {
-            opts.add(opt);
+            mergeHandler.handleOption(opt);
         }
     }
 
@@ -121,8 +156,7 @@ public class JDKOpts {
      */
     public void addPath(String opt, SearchPath path) {
         if (path != null && !path.isEmpty()) {
-            if (opt.equals("-Xpatch:")) {
-            } else if (opt.endsWith(":")) {
+            if (opt.endsWith(":")) {
                 add(opt + path);
             } else {
                 add(opt);
@@ -132,7 +166,8 @@ public class JDKOpts {
     }
 
     /**
-     * Adds a series of -Xpatch options for the directories found on a search path.
+     * Adds a series of {@code --patch-module} options for the directories
+     * found on a search path.
      * The directories are assumed to be named for the modules they contain.
      * Note: jar files on the search path are not supported by this method.
      * @param patchPath the search path on which to look for modules to be patched
@@ -145,7 +180,7 @@ public class JDKOpts {
                     Arrays.sort(subdirs); // for repeatability; good enough for now
                     for (File subdir: subdirs) {
                         if (subdir.isDirectory()) {
-                            updateXpatch("-Xpatch:" + subdir.getName() + "=" + subdir);
+                            mergeHandler.handleOption(Option.PATCH_MODULE, "--patch-module", subdir.getName() + "=" + subdir);
                         }
                     }
                 }
@@ -153,92 +188,222 @@ public class JDKOpts {
         }
     }
 
-    /**
-     * Update -XaddExports. -XaddExports:module/package=module,module
-     * Only one instance per module/package is allowed.
-     * @param opt
-     */
-    private void updateAddExports(String opt) {
-        updateOpt(opt, '=', ',');
-    }
 
     /**
-     * Update -XaddReads. -XaddReads:module=module,module
-     * Only one instance per module is allowed.
-     * @param opt
+     * An option handler to merge multiple instances of the same option.
      */
-    private void updateAddReads(String opt) {
-        updateOpt(opt, '=', ',');
-    }
+    private static class MergeHandler extends OptionHandler {
+        private final List<String> opts;
+        private final Map<String, Integer> index;
+        private final boolean useLongFormOpts;
 
-    /**
-     * Update -Xpatch.  -Xpatch:module=classpath.
-     * Only one instance of the option is allowed per module.
-     * @param opt the option
-     */
-    private void updateXpatch(String opt) {
-        // -Xpatch:module=path
-        updateOpt(opt, '=', File.pathSeparatorChar);
-    }
-
-    /**
-     * Update the list of options with a single-word multi-valued option.
-     * @param opt the option name and values to add or merge into the list
-     * @param keySep the separator between the key and the values
-     * @param valSep the separator between values
-     */
-    private void updateOpt(String opt, char keySep, char valSep) {
-        int i = opt.indexOf(keySep);
-        String key = opt.substring(0, i + 1);
-        String optValues = opt.substring(i + 1);
-        Integer pos = index.get(key);
-        if (pos == null) {
-            pos = opts.size();
-            opts.add(opt);
-            index.put(key, pos);
-        } else {
-            Set<String> allValues = new LinkedHashSet<String>();
-            String[] oldValues = opts.get(pos).substring(i + 1).split(String.valueOf(valSep));
-            allValues.addAll(Arrays.asList(oldValues));
-            allValues.addAll(Arrays.asList(optValues.split(String.valueOf(valSep))));
-            StringBuilder sb = new StringBuilder(key); // includes keySep
-            for (String v: allValues) {
-                if (sb.length() > key.length()) {
-                    sb.append(valSep);
-                }
-                sb.append(v);
-            }
-            opts.set(pos, sb.toString());
+        MergeHandler(boolean useLongFormOpts) {
+            this.useLongFormOpts = useLongFormOpts;
+            opts = new ArrayList<>();
+            index = new HashMap<>();
         }
-    }
 
-    /**
-     * Update the list of options with a space-separated multi-valued option.
-     * @param opt the name of the option to update
-     * @param values the values for the option to update
-     * @param valSep the separator between values
-     */
-    private void updateOpt(String opt, String values, char valSep) {
-        Integer pos = index.get(opt);
-        if (pos == null) {
-            pos = opts.size();
+        @Override
+        void handleOption(Option option, String opt, String arg) {
+            switch (option) {
+                case ADD_EXPORTS:
+                    if (useLongFormOpts) {
+                        updateOptWhitespaceArg("--add-exports", arg, EQUALS, COMMA);
+                    } else {
+                        updateOptAdjacentArg("-XaddExports:" + arg, EQUALS, COMMA);
+                    }
+                    break;
+
+                case ADD_MODULES:
+                    updateOptWhitespaceArg((useLongFormOpts ? "--add-modules" : "-addmods"), arg, NUL, COMMA);
+                    break;
+
+                case ADD_READS:
+                    if (useLongFormOpts) {
+                        updateOptWhitespaceArg("--add-reads", arg, EQUALS, COMMA);
+                    } else {
+                        updateOptAdjacentArg("-XaddReads:" + arg, EQUALS, COMMA);
+                    }
+                    break;
+
+                case CLASS_PATH:
+                    updateOptWhitespaceArg((useLongFormOpts ? "--class-path" : "-classpath"), arg, NUL, PATHSEP);
+                    break;
+
+                case LIMIT_MODULES:
+                    updateOptWhitespaceArg((useLongFormOpts ? "--limit-modules" : "-limitmods"), arg, NUL, COMMA);
+                    break;
+
+                case MODULE_PATH:
+                    updateOptWhitespaceArg((useLongFormOpts ? "--module-path" : "-modulepath"), arg, NUL, PATHSEP);
+                    break;
+
+                case MODULE_SOURCE_PATH:
+                    updateOptWhitespaceArg((useLongFormOpts ? "--module-source-path" : "-modulesourcepath"), arg, NUL, PATHSEP);
+                    break;
+
+                case PATCH_MODULE:
+                    if (useLongFormOpts) {
+                        updateOptWhitespaceArg("--patch-module", arg, EQUALS, PATHSEP);
+                    } else {
+                        updateOptAdjacentArg("-Xpatch:" + arg, EQUALS, PATHSEP);
+                    }
+                    break;
+
+                case SOURCE_PATH:
+                    updateOptWhitespaceArg((useLongFormOpts ? "--source-path" : "-sourcepath"), arg, NUL, PATHSEP);
+                    break;
+
+            }
+        }
+
+        @Override
+        void handleUnknown(String opt) {
             opts.add(opt);
-            opts.add(values);
-            index.put(opt, pos);
-        } else {
-            Set<String> allValues = new LinkedHashSet<String>();
-            String[] oldValues = opts.get(pos + 1).split(String.valueOf(valSep));
-            allValues.addAll(Arrays.asList(oldValues));
-            allValues.addAll(Arrays.asList(values.split(String.valueOf(valSep))));
+        }
+
+        /**
+         * Update the list of options with a single-word multi-valued option.
+         * This is for options of the form
+         * {@code -option:key <keysep> value <valsep> value <valsep> value }
+         * implying we assume that {@code keysep} is the first character
+         * of its kind in {@code opt}.
+         * @param opt the option name and values to add or merge into the list
+         * @param keySep the separator between the key and the values
+         * @param valSep the separator between values
+         */
+        private void updateOptAdjacentArg(String opt, char keySep, char valSep) {
+            int i = opt.indexOf(keySep);
+            String key = opt.substring(0, i + 1);
+            String optValues = opt.substring(i + 1);
+            Integer pos = index.get(key);
+            if (pos == null) {
+                pos = opts.size();
+                opts.add(opt);
+                index.put(key, pos);
+            } else {
+                Set<String> allValues = new LinkedHashSet<>();
+                String[] oldValues = opts.get(pos).substring(i + 1).split(String.valueOf(valSep));
+                allValues.addAll(Arrays.asList(oldValues));
+                allValues.addAll(Arrays.asList(optValues.split(String.valueOf(valSep))));
+                StringBuilder sb = new StringBuilder(key); // includes keySep
+                for (String v: allValues) {
+                    if (sb.length() > key.length()) {
+                        sb.append(valSep);
+                    }
+                    sb.append(v);
+                }
+                opts.set(pos, sb.toString());
+            }
+        }
+
+        private void updateOptWhitespaceArg(String opt, String arg, char keySep, char valueSep) {
+            String argKey;
+            List<String> argValues;
+            if (keySep != 0 && arg.indexOf(keySep) != -1) {
+                argKey = beforePart(arg, keySep);
+                argValues = split(afterPart(arg, keySep), valueSep);
+            } else {
+                argKey = null;
+                argValues = split(arg, valueSep);
+            }
+
+            String indexKey = (argKey == null) ? opt : opt + "=" + argKey;
+            Integer pos = index.get(indexKey);
+            if (pos == null) {
+                pos = opts.size();
+                opts.add(opt);
+                opts.add(join(argKey, keySep, argValues, valueSep));
+                index.put(indexKey, pos);
+            } else {
+                Set<String> allValues = new LinkedHashSet<>();
+                String old = opts.get(pos + 1);
+                List<String> oldValues = split((argKey == null) ? old : afterPart(old, keySep), valueSep);
+                allValues.addAll(oldValues);
+                allValues.addAll(argValues);
+                opts.set(pos + 1, join(argKey, keySep, allValues, valueSep));
+            }
+        }
+
+        /**
+         * Returns a string composed of given constituent parts.
+         * The parts may be an optional initial key, and a series of values with a
+         * specified separator. If a key is provided, it will be followed by the
+         * key separator character in the result.
+         * @param key the key, or null if none
+         * @param keySet the separator to follow the key if one is specified
+         * @param values the values
+         * @param valSep the separator to use if more than one key
+         * @return the composite string
+         */
+        static String join(String key, char keySep, Collection<String> values, char valSep) {
             StringBuilder sb = new StringBuilder();
-            for (String v: allValues) {
-                if (sb.length() > 0) {
+            if (key != null) {
+                sb.append(key).append(keySep);
+            }
+            boolean needSep = false;
+            for (String v : values) {
+                if (needSep) {
                     sb.append(valSep);
                 }
                 sb.append(v);
+                needSep = true;
             }
-            opts.set(pos + 1, sb.toString());
+            return sb.toString();
+        }
+    };
+
+
+
+    static abstract class OptionHandler {
+        void handleOptions(String... opts) {
+            handleOptions(Arrays.asList(opts));
         }
 
+        void handleOptions(List<String> opts) {
+            Iterator<String> iter = opts.iterator();
+            while (iter.hasNext()) {
+                String opt = iter.next();
+                handleOption(opt, iter);
+            }
+        }
+
+        void handleOption(String opt) {
+            handleOption(opt, Collections.<String>emptyIterator());
+        }
+
+        void handleOption(String opt, String arg) {
+            handleOption(opt, Collections.singleton(arg).iterator());
+        }
+
+        void handleOption(String opt, Iterator<String> rest) {
+            for (Option o: Option.values()) {
+                for (String name: o.names) {
+                    if (name.startsWith("--")) {
+                        if (opt.equals(name)) {
+                            handleOption(o, opt, rest.next());
+                            return;
+                        } else if (opt.startsWith(name + "=")) {
+                            handleOption(o, opt, opt.substring(name.length() + 1));
+                            return;
+                        }
+                    } else {
+                        if (name.endsWith(":")) {
+                            if (opt.startsWith(name)) {
+                                handleOption(o, opt, opt.substring(name.length()));
+                                return;
+                            }
+                        } else if (opt.equals(name)) {
+                            handleOption(o, opt, rest.next());
+                            return;
+                        }
+                    }
+                }
+            }
+            handleUnknown(opt);
+        }
+
+        abstract void handleOption(Option option, String opt, String arg);
+        abstract void handleUnknown(String opt);
     }
 }

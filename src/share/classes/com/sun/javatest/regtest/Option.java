@@ -30,7 +30,8 @@ import java.util.Arrays;
 public abstract class Option {
 
     public enum ArgType {
-        NONE,       // -opt
+        NONE,       // -opt (includes --opt -o)
+        GNU,        // --opt arg, --opt=arg, -o arg, -oarg
         SEP,        // -opt arg
         STD,        // -opt:arg
         OLD,        // -opt:arg or -opt arg
@@ -55,12 +56,23 @@ public abstract class Option {
         switch (argType) {
             case FILE:
                 return false;
+
+            case GNU:
+                for (String n : names) {
+                    if (name.equals(n)
+                            || (n.matches("-[A-Za-z]") && name.startsWith(n))) {
+                        return true;
+                    }
+                }
+                break;
+
             case WILDCARD:
                 for (String n: names) {
                     if (name.startsWith(n))
                         return true;
                 }
                 break;
+
             default:
                 for (String n: names) {
                     if (name.equals(n))
@@ -73,6 +85,21 @@ public abstract class Option {
 
     public String getValue(String arg) {
         switch (argType) {
+            case GNU:
+                for (String n: names) {
+                    if (arg.startsWith(n)) {
+                        if (arg.startsWith("--")) {
+                            int eq = arg.indexOf("=");
+                            if (eq > 0)
+                                return arg.substring(eq + 1);
+                        } else if (n.length() == 2) {
+                            return arg.substring(2);
+                        }
+                        break;
+                    }
+                }
+                break;
+
             case WILDCARD:
                 for (String n: names) {
                     if (arg.startsWith(n))

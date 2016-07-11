@@ -33,6 +33,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.sun.javatest.util.I18NResourceBundle;
 
@@ -44,12 +46,24 @@ public class OptionDecoder {
                 case WILDCARD:
                     matchOptions.add(o);
                     break;
+
                 case FILE:
                     fileOption = o;
                     break;
-                default:
-                    for (String n: o.names)
+
+                case GNU:
+                    for (String n: o.names) {
                         simpleOptions.put(n.toLowerCase(Locale.US), o);
+                        if (n.matches("-[^-]")) {
+                            matchOptions.add(o);
+                        }
+                    }
+                    break;
+
+                default:
+                    for (String n: o.names) {
+                        simpleOptions.put(n.toLowerCase(Locale.US), o);
+                    }
             }
         }
     }
@@ -67,62 +81,102 @@ public class OptionDecoder {
             if (!arg.startsWith("-"))
                 inFiles = true;
             if (inFiles) {
-//                if (debugOptions)
-//                    System.err.println("OptionDecoder.decodeArgs: " + arg);
                 fileOption.process(null, arg);
             } else
                 decodeArg(arg, iter);
         }
     }
 
+    /**
+     *  opt ( [:=] value )
+     *  0: all
+     *  1: option name (before any separator)
+     *  2: null or separator character
+     *  3: null or value
+     */
+    Pattern optPattern = Pattern.compile("(-[-A-Za-z0-9/]+)(?:([:=])(.*))?");
+
     private void decodeArg(String arg, Iterator<String> iter) throws BadArgs {
-        int sep = arg.indexOf(":");
-        String name;
-        String value;
-        if (sep == -1) {
-            name = arg;
-            value = null;
+        String name, sep, value;
+        Matcher m = optPattern.matcher(arg);
+        if (m.matches()) {
+            name = m.group(1);
+            sep = m.group(2);
+            value = m.group(3);
         } else {
-            name = arg.substring(0, sep);
-            value = arg.substring(sep + 1);
+            name = arg;
+            sep = null;
+            value = null;
         }
 
+
         Option o = getOption(name);
-        if (o == null)
+        if (o == null) {
             throw new BadArgs(i18n, "opt.unknown", name);
+        }
 
         switch (o.argType) {
-            case NONE:       // -opt
+            case NONE:      // -opt  (includes --opt -o)
                 if (value != null)
                     throw new BadArgs(i18n, "opt.unexpected.value", arg);
                 break;
-            case STD:        // -opt:arg
+
+            case GNU:       // --opt arg, --opt=arg, -o arg, -oarg
+                if (sep == null) {
+                    if (name.startsWith("--") || name.length() == 2) {
+                        if (iter.hasNext()) {
+                            value = iter.next();
+                        } else {
+                            throw new BadArgs(i18n, "opt.missing.value", arg);
+                        }
+                    } else {
+                        value = arg.substring(2);
+                    }
+                } else if (!(name.startsWith("--") && sep.equals("="))) {
+                        throw new BadArgs(i18n, "opt.bad.format", arg);
+                }
+                break;
+
+            case STD:       // -opt:arg
                 if (value == null)
                     throw new BadArgs(i18n, "opt.missing.value", arg);
+                if (sep != null && !sep.equals(":"))
+                    throw new BadArgs(i18n, "opt.bad.format", arg);
                 break;
-            case SEP:        // -opt arg
+
+            case SEP:       // -opt arg
                 if (value != null)
-                    throw new BadArgs(i18n, "opt.unexpected.value", arg);
+                    throw new BadArgs(i18n, "opt.bad.format", arg);
                 if (iter.hasNext())
                     value = iter.next();
                 else
                     throw new BadArgs(i18n, "opt.missing.value", arg);
                 break;
-            case OLD:        // -opt:arg or -opt arg
+
+            case OLD:       // -opt:arg or -opt arg
                 if (value == null && iter.hasNext()) {
                     // warn against old style usage, or just accept it?
                     value = iter.next();
                 }
                 if (value == null)
                     throw new BadArgs(i18n, "opt.missing.value", arg);
+                if (sep != null && !sep.equals(":"))
+                    throw new BadArgs(i18n, "opt.bad.format", arg);
                 break;
-            case OPT:        // -opt or -opt:arg
+
+            case OPT:       // -opt or -opt:arg
+                if (sep != null && !sep.equals(":"))
+                    throw new BadArgs(i18n, "opt.bad.format", arg);
                 break;
-            case WILDCARD:    // -optarg
+
+            case WILDCARD:  // -optarg
+                // ignore sep and value
                 value = o.getValue(arg);
                 break;
-            case REST:      // -opt rest
-                value = join(iter, " ");
+
+            case REST:      // -opt rest,    allow opt:value rest
+                value = (value == null ? "" : value + " ")
+                        + join(iter, " ");
         }
 
         checkConflicts(o, name);
@@ -142,8 +196,6 @@ public class OptionDecoder {
     }
 
     protected Option getOption(String name) {
-        if (name.startsWith("-"))
-            name = name.substring(1);
 
         Option s = simpleOptions.get(name.toLowerCase());
         if (s != null)

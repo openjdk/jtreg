@@ -32,9 +32,18 @@ import java.util.List;
 
 import com.sun.javatest.regtest.JDKOpts;
 
+/**
+ * Unit test for com.sun.javatest.regtest.JDKOpts,
+ * which is used to create command lines for java and javac,
+ * combining/merging options which should otherwise only appear
+ * once, taking alternative forms into account.
+ *
+ * When run with no args, it executes the built-in test cases.
+ * When run with args, it just runs a single test case based on those args.
+ */
 public class JDKOptsTest {
     public static void main(String... args) throws Exception {
-        new JDKOptsTest().run();
+        new JDKOptsTest().run(args);
     }
 
     @Test
@@ -118,6 +127,68 @@ public class JDKOptsTest {
         test(opts, expect);
     }
 
+    @Test
+    void testClassPathVariants() {
+        String[] opts = { "-cp", "a", "-classpath", "b", "--class-path", "c", "--class-path=d" };
+        String[] expectOld = { "-classpath", "a" + PS + "b" + PS + "c" + PS + "d" };
+        String[] expectNew = { "--class-path", "a" + PS + "b" + PS + "c" + PS + "d" };
+        test(opts, expectOld, expectNew);
+    }
+
+    @Test
+    void testSourcePathVariants() {
+        String[] opts = { "-sourcepath", "a", "--source-path", "b", "--source-path=c" };
+        String[] expectOld = { "-sourcepath", "a" + PS + "b" + PS + "c" };
+        String[] expectNew = { "--source-path", "a" + PS + "b" + PS + "c" };
+        test(opts, expectOld, expectNew);
+    }
+
+    @Test
+    void testAddModulesVariants() {
+        String[] opts = { "-addmods", "a", "--add-modules", "b", "--add-modules=c" };
+        String[] expectOld = { "-addmods", "a,b,c" };
+        String[] expectNew = { "--add-modules", "a,b,c" };
+        test(opts, expectOld, expectNew);
+    }
+
+    @Test
+    void testLimitModulesVariants() {
+        String[] opts = { "-limitmods", "a", "--limit-modules", "b", "--limit-modules=c" };
+        String[] expectOld = { "-limitmods", "a,b,c" };
+        String[] expectNew = { "--limit-modules", "a,b,c" };
+        test(opts, expectOld, expectNew);
+    }
+
+    @Test
+    void testAddExportsVariants() {
+        String[] opts = {
+                "-XaddExports:m1/p1=a", "--add-exports", "m1/p1=b", "--add-exports=m1/p1=c",
+                "-XaddExports:m2/p2=d", "--add-exports", "m2/p2=e", "--add-exports=m2/p2=f"};
+        String[] expectOld = { "-XaddExports:m1/p1=a,b,c", "-XaddExports:m2/p2=d,e,f" };
+        String[] expectNew = { "--add-exports", "m1/p1=a,b,c", "--add-exports", "m2/p2=d,e,f" };
+        test(opts, expectOld, expectNew);
+    }
+
+    @Test
+    void testAddReadsVariants() {
+        String[] opts = {
+                "-XaddReads:m1=a", "--add-reads", "m1=b", "--add-reads=m1=c",
+                "-XaddReads:m2=d", "--add-reads", "m2=e", "--add-reads=m2=f"};
+        String[] expectOld = { "-XaddReads:m1=a,b,c", "-XaddReads:m2=d,e,f" };
+        String[] expectNew = { "--add-reads", "m1=a,b,c", "--add-reads", "m2=d,e,f" };
+        test(opts, expectOld, expectNew);
+    }
+
+    @Test
+    void testPatchModulesVariants() {
+        String[] opts = {
+                "-Xpatch:m1=a", "--patch-module", "m1=b", "--patch-module=m1=c",
+                "-Xpatch:m2=d", "--patch-module", "m2=e", "--patch-module=m2=f"};
+        String[] expectOld = { "-Xpatch:m1=a" + PS + "b" + PS + "c", "-Xpatch:m2=d" + PS + "e" + PS + "f" };
+        String[] expectNew = { "--patch-module", "m1=a" + PS + "b" + PS + "c", "--patch-module", "m2=d" + PS + "e" + PS + "f" };
+        test(opts, expectOld, expectNew);
+    }
+
     static final String PS = File.pathSeparator;
 
     /** Marker annotation for test cases. */
@@ -147,10 +218,23 @@ public class JDKOptsTest {
         return new File(dir, name);
     }
 
+    void run(String... args) throws Exception {
+        if (args.length == 0) {
+            runTests();
+        } else {
+            JDKOpts oldOpts = new JDKOpts(false);
+            oldOpts.addAll(args);
+            System.out.println("Old: " + oldOpts.toList());
+            JDKOpts newOpts = new JDKOpts(true);
+            newOpts.addAll(args);
+            System.out.println("New: " + newOpts.toList());
+        }
+    }
+
     /**
      * Combo test to run all test cases in all modes.
      */
-    void run() throws Exception {
+    void runTests() throws Exception {
         for (Method m : getClass().getDeclaredMethods()) {
             Annotation a = m.getAnnotation(Test.class);
             if (a != null) {
@@ -172,13 +256,36 @@ public class JDKOptsTest {
 
     void test(String[] opts, String[] expect) {
         testCount++;
-        JDKOpts jdkOpts = new JDKOpts();
+        JDKOpts jdkOpts = new JDKOpts(false);
         jdkOpts.addAll(opts);
         List<String> result = jdkOpts.toList();
         System.out.println("Options: " + Arrays.toString(opts));
         System.out.println("Expect:  " + Arrays.toString(expect));
         System.out.println("Found:   " + result);
         if (!result.equals(Arrays.asList(expect))) {
+            System.out.println("ERROR");
+            errorCount++;
+        }
+    }
+
+    void test(String[] opts, String[] expectOld, String[] expectNew) {
+        testCount++;
+
+        JDKOpts oldOpts = new JDKOpts(false);
+        oldOpts.addAll(opts);
+        List<String> resultOld = oldOpts.toList();
+
+        JDKOpts newOpts = new JDKOpts(true);
+        newOpts.addAll(opts);
+        List<String> resultNew = newOpts.toList();
+
+        System.out.println("Options:    " + Arrays.toString(opts));
+        System.out.println("Expect old: " + Arrays.toString(expectOld));
+        System.out.println("Found old : " + resultOld);
+        System.out.println("Expect new: " + Arrays.toString(expectNew));
+        System.out.println("Found new : " + resultNew);
+        if (!resultOld.equals(Arrays.asList(expectOld))
+                || !resultNew.equals(Arrays.asList(expectNew))) {
             System.out.println("ERROR");
             errorCount++;
         }

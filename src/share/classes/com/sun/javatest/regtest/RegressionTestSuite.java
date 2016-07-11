@@ -203,6 +203,11 @@ public class RegressionTestSuite extends TestSuite
         return properties.getExtraPropDefns();
     }
 
+    // Temporary, during transition
+    boolean useNewOptions() {
+        return properties.useNewOptions();
+    }
+
     private final TestFinder.ErrorHandler errHandler;
     private final TestProperties properties;
     private static final I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(RegressionTestSuite.class);
