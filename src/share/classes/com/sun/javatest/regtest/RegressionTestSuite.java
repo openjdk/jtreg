@@ -55,12 +55,12 @@ public class RegressionTestSuite extends TestSuite
     public static RegressionTestSuite open(File testSuiteRoot,
             TestFinder.ErrorHandler errHandler) throws Fault {
         if (cache == null)
-            cache = new HashMap<File, SoftReference<RegressionTestSuite>>();
+            cache = new HashMap<>();
         SoftReference<RegressionTestSuite> ref = cache.get(testSuiteRoot);
         RegressionTestSuite ts = (ref == null) ? null : ref.get();
         if (ts == null) {
             ts = new RegressionTestSuite(testSuiteRoot, errHandler);
-            cache.put(testSuiteRoot, new SoftReference<RegressionTestSuite>(ts));
+            cache.put(testSuiteRoot, new SoftReference<>(ts));
         }
         return ts;
     }
@@ -133,7 +133,7 @@ public class RegressionTestSuite extends TestSuite
 
     @Override
     public URL[] getFilesForTest(TestDescription td) {
-        Set<URL> urls = new LinkedHashSet<URL>();
+        Set<URL> urls = new LinkedHashSet<>();
 
         // always start with the file containing the test description
         try {

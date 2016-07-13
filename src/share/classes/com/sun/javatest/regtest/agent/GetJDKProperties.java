@@ -25,7 +25,6 @@
 
 package com.sun.javatest.regtest.agent;
 
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -34,38 +33,77 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 
 /**
-  * Get properties for the JDK under test
+  * Get properties for the JDK under test.
+  * Usage: {@code
+  *   java GetJDKProperties [--system-properties] [--modules] <class-name>*
+  * }
   */
 public class GetJDKProperties {
-    public static final String JTREG_INSTALLED_MODULES = "jtreg.installed.modules";
+    public static final String JTREG_MODULES = "jtreg.modules";
 
     public static void main(String... args) {
-        Properties p = new Properties();
-        for (String arg: args) {
-            try {
-                Class<?> c = Class.forName(arg);
-                @SuppressWarnings("unchecked")
-                Callable<Map<String, String>> o = (Callable<Map<String, String>>) c.newInstance();
-                p.putAll(o.call());
-            } catch (Exception e) {
-                System.err.println(e);
-                System.exit(1);
-            }
-        }
-        String modules = getModules();
-        if (modules != null)
-            p.put(JTREG_INSTALLED_MODULES, modules);
-        p.putAll(System.getProperties());
         try {
-            p.store(System.out, "jdk properties");
-        } catch (IOException e) {
+            run(args);
+        } catch (Exception e) {
             System.err.println(e);
             System.exit(1);
         }
     }
 
+    public static void run(String... args) throws Exception {
+        boolean needSystemProperties = false;
+        boolean needModules = false;
+        Properties p = new Properties();
+        for (String arg: args) {
+            if (arg.equals("--system-properties")) {
+                needSystemProperties = true;
+            } else if (arg.equals("--modules")) {
+                needModules = true;
+            } else {
+                Class<?> c = Class.forName(arg);
+                @SuppressWarnings("unchecked")
+                Callable<Map<String, String>> o = (Callable<Map<String, String>>) c.newInstance();
+                p.putAll(o.call());
+            }
+        }
+
+        if (needModules && getJDKVersion() >= 9) {
+            String modules = getModules();
+            if (modules != null)
+                p.put(JTREG_MODULES, modules);
+        }
+
+        if (needSystemProperties) {
+            p.putAll(System.getProperties());
+        }
+
+        p.store(System.out, "jdk properties");
+    }
+
+    private static int getJDKVersion() {
+        String specVersion = System.getProperty("java.specification.version");
+        if (specVersion == null)
+            return -1;
+        if (specVersion.startsWith("1."))
+            specVersion = specVersion.substring(2);
+        if (specVersion.contains("."))
+            specVersion = specVersion.substring(0, specVersion.indexOf("."));
+        try {
+            return Integer.parseInt(specVersion);
+        } catch (NumberFormatException e) {
+            return -1;
+        }
+    }
+
     private static String getModules() {
         try {
+            /*
+             * Layer bootLayer = Layer.boot();
+             * for (Module m : bootLayer.modules()) {
+             *     if (sb.length() > ) sb.append(" ");
+             *     sb.append(m.getName());
+             * }
+             */
             Class<?> layerClass = Class.forName("java.lang.reflect.Layer");
             Method bootMethod = layerClass.getDeclaredMethod("boot");
             Method modulesMethod = layerClass.getDeclaredMethod("modules");

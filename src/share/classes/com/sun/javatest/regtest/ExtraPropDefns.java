@@ -164,8 +164,8 @@ public class ExtraPropDefns {
         if (files.isEmpty())
             return Collections.emptyList();
 
-        List<String> classNames = new ArrayList<String>();
-        List<String> javacArgs = new ArrayList<String>();
+        List<String> classNames = new ArrayList<>();
+        List<String> javacArgs = new ArrayList<>();
         javacArgs.add("-d");
         javacArgs.add(classDir.getPath());
         classDir.mkdirs();
@@ -213,7 +213,7 @@ public class ExtraPropDefns {
         }
 
         if (needCompilation) {
-            List<String> pArgs = new ArrayList<String>();
+            List<String> pArgs = new ArrayList<>();
             pArgs.add(jdk.getJavacProg().getPath());
             pArgs.addAll(javacArgs);
             try {
@@ -253,7 +253,7 @@ public class ExtraPropDefns {
      * @throws Fault if a bad file is found
      */
     private List<File> expandJavaFiles(File file, boolean allowDirs) throws Fault {
-        List<File> results = new ArrayList<File>();
+        List<File> results = new ArrayList<>();
         expandJavaFiles(file, allowDirs, true, results);
         return results;
     }
@@ -294,20 +294,15 @@ public class ExtraPropDefns {
 
     private String getClassNameFromFile(File file) throws Fault {
         StringBuilder sb = new StringBuilder();
-        try {
-            BufferedReader in = new BufferedReader(new FileReader(file));
-            try {
-                String line;
-                while ((line = in.readLine()) != null) {
-                    sb.append(line).append("\n");
-                }
-            } finally {
-                in.close();
+        try (BufferedReader in = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = in.readLine()) != null) {
+                sb.append(line).append("\n");
             }
-            return getClassNameFromSource(sb.toString());
         } catch (IOException e) {
             throw new Fault("Problem reading " + file, e);
         }
+        return getClassNameFromSource(sb.toString());
     }
 
     private static Pattern packagePattern =

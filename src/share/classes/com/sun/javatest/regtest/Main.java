@@ -1442,7 +1442,7 @@ public class Main {
     void checkJDK(JDK jdk) throws Fault {
         if (!jdk.exists())
             throw new Fault(i18n, "main.jdk.not.found", jdk);
-        JDK_Version v = jdk.getVersion(new SearchPath(jtreg_jar, javatest_jar));
+        JDK_Version v = jdk.getJDKVersion(new SearchPath(jtreg_jar, javatest_jar));
         if (v == null)
             throw new Fault(i18n, "main.jdk.unknown.version", jdk);
         if (v.compareTo(JDK_Version.V1_1) <= 0)

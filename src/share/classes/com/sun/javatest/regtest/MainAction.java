@@ -235,6 +235,17 @@ public class MainAction extends Action
                 }
             }
         }
+
+        if (!othervm) {
+            for (String s: script.getModules()) {
+                int sep = s.indexOf('/');
+                String m = (sep == -1) ? s : s.substring(0, sep);
+                if (!script.defaultModules.contains(m)) {
+                    othervmOverrideReasons.add("test needs --add-modules");
+                    break;
+                }
+            }
+        }
     } // init()
 
     public List<String> getJavaArgs() {
@@ -428,7 +439,7 @@ public class MainAction extends Action
             }
         }
 
-        javaOpts.addAll(getAddExports());
+        javaOpts.addAll(getExtraModuleConfigOptions());
         javaOpts.addAll(script.getTestVMJavaOptions());
         javaOpts.addAll(script.getTestDebugOptions());
 
@@ -576,10 +587,30 @@ public class MainAction extends Action
         try {
             Set<String> runAddExports =
                     jdk.hasModules() ? script.getModules() : Collections.<String>emptySet();
+
+            if (!runAddExports.isEmpty()) {
+                StringBuilder sb = null;
+                for (String s : runAddExports) {
+                    if (s.contains("/")) {
+                        if (sb == null) {
+                            sb = new StringBuilder();
+                            sb.append("Additional exports to unnamed modules from @modules: ");
+                        } else {
+                            sb.append(" ");
+                        }
+                        sb.append(s);
+                    }
+                }
+                if (sb != null) {
+                    section.getMessageWriter().println(sb);
+                }
+            }
+
             new ModuleConfig("Test Layer")
                     .setAddExportsToUnnamed(runAddExports)
                     .setClassPath(runClasspath)
                     .write(configWriter);
+
             // This calls through to MainActionHelper.runClass
             status = agent.doMainAction(
                     script.getTestResult().getTestName(),

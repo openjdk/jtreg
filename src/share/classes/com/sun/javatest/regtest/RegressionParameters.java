@@ -126,10 +126,12 @@ public class RegressionParameters
         }
     }
 
+    @Override
     public Parameters.EnvParameters getEnvParameters() {
         return this;
     }
 
+    @Override
     protected Question getEnvFirstQuestion() {
         return getEnvSuccessorQuestion();
     }
@@ -141,7 +143,7 @@ public class RegressionParameters
      * The following map provides a way of recording whether a problem
      * was encountered by a filter.
      */
-    Map<TestDescription, String> filterFaults = new HashMap<TestDescription, String>();
+    Map<TestDescription, String> filterFaults = new HashMap<>();
 
     /* A RegressionContext is used by various filters, but initializing it may throw an
      * exception. Therefore, it should be initialized explicitly, and the exception
@@ -156,7 +158,7 @@ public class RegressionParameters
     @Override
     public TestFilter getRelevantTestFilter() {
         if (relevantTestFilter == UNSET) {
-            List<TestFilter> filters = new ArrayList<TestFilter>();
+            List<TestFilter> filters = new ArrayList<>();
             TestFilter mf = getModulesFilter();
             if (mf != null)
                 filters.add(mf);
@@ -182,7 +184,7 @@ public class RegressionParameters
         if (jdk == null || jdk.getVersion(this).compareTo(JDK_Version.V9) == -1)
             return null;
 
-        final Set<String> availModules = jdk.getModules(this);
+        final Set<String> availModules = jdk.getSystemModules(this);
         if (availModules.isEmpty())
             return null;
 
@@ -347,7 +349,7 @@ public class RegressionParameters
         //    OSNAME-ARCH   Specific on to one OSNAME and ARCH, e.g. solaris-x64
         //    OSNAME-REV    Specific on to one OSNAME and REV, e.g. solaris-5.8
 
-        final Set<String> excludedPlatforms = new HashSet<String>();
+        final Set<String> excludedPlatforms = new HashSet<>();
         for (String p: Arrays.asList(os.name, os.name.replaceAll("\\s", ""), os.family, "generic")) {
             for (String q: Arrays.asList(null, os.arch, os.simple_arch, os.version, os.simple_version, "all")) {
                 String ep = (q == null) ? p : p + "-" + q;
@@ -645,7 +647,7 @@ public class RegressionParameters
     private Map<String, String> deserializeEnv(String envString, String sep) {
         Map<String, String> env;
         if ((envString != null) && (envString.length() != 0)) {
-            env = new LinkedHashMap<String, String>();
+            env = new LinkedHashMap<>();
             String[] envArr = StringUtils.splitSeparator(sep, envString);
             for (String e : envArr) {
                 String[] split = StringUtils.splitSeparator("=", e);
@@ -685,7 +687,7 @@ public class RegressionParameters
         if (envVars == null) {
             this.envVars = Collections.emptyMap();
         } else {
-            this.envVars = Collections.unmodifiableMap(new LinkedHashMap<String, String>(envVars));
+            this.envVars = Collections.unmodifiableMap(new LinkedHashMap<>(envVars));
         }
     }
 
@@ -833,14 +835,14 @@ public class RegressionParameters
 
     //---------------------------------------------------------------------
 
-    List<String> getTestVMOptions() {
+    public List<String> getTestVMOptions() {
         if (testVMOpts == null)
             testVMOpts = Collections.emptyList();
         return testVMOpts;
     }
 
-    void setTestVMOptions(List<String> testVMOpts) {
-        this.testVMOpts = Collections.unmodifiableList(new ArrayList<String>(testVMOpts));
+    public void setTestVMOptions(List<String> testVMOpts) {
+        this.testVMOpts = Collections.unmodifiableList(new ArrayList<>(testVMOpts));
     }
 
     private List<String> testVMOpts;
@@ -849,7 +851,7 @@ public class RegressionParameters
      * Return the set of VM options each prefixed by -J, as required by JDK tools.
      */
     List<String> getTestToolVMOptions() {
-        List<String> testToolVMOpts = new ArrayList<String>();
+        List<String> testToolVMOpts = new ArrayList<>();
         for (String s: getTestVMOptions())
             testToolVMOpts.add("-J" + s);
         return Collections.unmodifiableList(testToolVMOpts);
@@ -863,7 +865,7 @@ public class RegressionParameters
             return getTestJavaOptions();
         if ((testJavaOpts == null || testJavaOpts.isEmpty()) && nativeDir == null)
             return getTestVMOptions();
-        List<String> opts = new ArrayList<String>();
+        List<String> opts = new ArrayList<>();
         opts.addAll(getTestVMOptions());
         opts.addAll(getTestJavaOptions());
         if (nativeDir != null)
@@ -881,7 +883,7 @@ public class RegressionParameters
     }
 
     void setTestCompilerOptions(List<String> testCompilerOpts) {
-        this.testCompilerOpts = Collections.unmodifiableList(new ArrayList<String>(testCompilerOpts));
+        this.testCompilerOpts = Collections.unmodifiableList(new ArrayList<>(testCompilerOpts));
     }
 
     private List<String> testCompilerOpts;
@@ -895,7 +897,7 @@ public class RegressionParameters
     }
 
     void setTestJavaOptions(List<String> testJavaOpts) {
-        this.testJavaOpts = Collections.unmodifiableList(new ArrayList<String>(testJavaOpts));
+        this.testJavaOpts = Collections.unmodifiableList(new ArrayList<>(testJavaOpts));
     }
 
     private List<String> testJavaOpts;
@@ -909,7 +911,7 @@ public class RegressionParameters
     }
 
     void setTestDebugOptions(List<String> testJavaOpts) {
-        this.testDebugOpts = Collections.unmodifiableList(new ArrayList<String>(testJavaOpts));
+        this.testDebugOpts = Collections.unmodifiableList(new ArrayList<>(testJavaOpts));
     }
 
     private List<String> testDebugOpts;
@@ -928,7 +930,7 @@ public class RegressionParameters
             retainFilesPattern = null;
             return;
         } else {
-            this.retainArgs = Collections.unmodifiableList(new ArrayList<String>(retainArgs));
+            this.retainArgs = Collections.unmodifiableList(new ArrayList<>(retainArgs));
         }
 
         StringBuilder sb = new StringBuilder();
@@ -1043,7 +1045,7 @@ public class RegressionParameters
 
     void setTimeoutHandlerPath(String timeoutHandlerPath) {
         timeoutHandlerPath.getClass(); // null check
-        this.timeoutHandlerPath = new ArrayList<File>();
+        this.timeoutHandlerPath = new ArrayList<>();
         for (String f: timeoutHandlerPath.split(File.pathSeparator)) {
             if (f.length() > 0) {
                 this.timeoutHandlerPath.add(new File(f));
@@ -1095,7 +1097,7 @@ public class RegressionParameters
     //---------------------------------------------------------------------
 
     private List<String> retainArgs;
-    private final Set<Integer> retainStatusSet = new HashSet<Integer>(4);
+    private final Set<Integer> retainStatusSet = new HashSet<>(4);
     private Pattern retainFilesPattern;
 
 }

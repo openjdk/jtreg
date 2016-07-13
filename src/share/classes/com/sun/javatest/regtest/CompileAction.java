@@ -343,7 +343,7 @@ public class CompileAction extends Action {
             if (status.isPassed() && runJavac) {
                 javacArgs = getJavacCommandArgs(javacArgs);
                 if (explicitAnnotationProcessingRequested(javacArgs)
-                        && !getAddExports().isEmpty()) {
+                        && !getExtraModuleConfigOptions().isEmpty()) {
                     othervmOverrideReasons.add("runtime --add-exports needed for annotation processing");
                 }
                 switch (!othervmOverrideReasons.isEmpty() ? ExecMode.OTHERVM : script.getExecMode()) {
@@ -452,7 +452,7 @@ public class CompileAction extends Action {
 
         JDKOpts javacArgs = new JDKOpts(script.useLongFormOptions());
         javacArgs.addAll(script.getTestCompilerOptions());
-        javacArgs.addAll(getAddExports());
+        javacArgs.addAll(getExtraModuleConfigOptions());
 
         if (destDir != null) {
             javacArgs.add("-d");
@@ -514,7 +514,7 @@ public class CompileAction extends Action {
             javacVMOpts.addAll(script.getTestDebugOptions());
 
         if (explicitAnnotationProcessingRequested(javacArgs)) {
-            javacVMOpts.addAll(getAddExports());
+            javacVMOpts.addAll(getExtraModuleConfigOptions());
         }
 
         // WRITE ARGUMENT FILE

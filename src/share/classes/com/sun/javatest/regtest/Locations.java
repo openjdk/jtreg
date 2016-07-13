@@ -153,7 +153,7 @@ public class Locations {
     Locations(RegressionParameters params, TestDescription td)
             throws Fault {
         testSuite = params.getTestSuite();
-        systemModules = params.getTestJDK().getModules(params);
+        systemModules = params.getTestJDK().getSystemModules(params);
         jtpath = params.getJavaTestClassPath();
         testJDK = params.getTestJDK();
 
@@ -234,7 +234,7 @@ public class Locations {
                 String name = lib.substring(2, end);
                 File dir = null;
                 if (name.equals("java.home")) {
-                    dir = new File(testJDK.getPath());
+                    dir = testJDK.getFile();
                 } else if (name.equals("jtreg.home")) {
                     dir = jtpath.asList().get(0).getParentFile().getParentFile();
                 }

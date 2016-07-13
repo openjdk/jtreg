@@ -40,7 +40,6 @@ import java.util.regex.Pattern;
 import com.sun.javatest.Status;
 import com.sun.javatest.regtest.Locations.ClassLocn;
 import com.sun.javatest.regtest.Locations.LibLocn;
-import com.sun.javatest.regtest.agent.JDK_Version;
 
 import static com.sun.javatest.regtest.agent.RStatus.passed;
 
@@ -133,7 +132,7 @@ public class BuildAction extends Action
 
     @Override
     public Set<File> getSourceFiles() {
-        Set<File> files = new LinkedHashSet<File>();
+        Set<File> files = new LinkedHashSet<>();
         for (String arg: args) {
             // the arguments to build are classnames or package names with wildcards
             try {
@@ -148,7 +147,7 @@ public class BuildAction extends Action
 
     @Override
     public Set<String> getModules() {
-        Set<String> modules = new LinkedHashSet<String>();
+        Set<String> modules = new LinkedHashSet<>();
         for (String arg: args) {
             int sep = arg.indexOf("/");
             if (sep > 0)
@@ -176,6 +175,7 @@ public class BuildAction extends Action
      * @throws  TestRunException If an unexpected error occurs while running
      *          the test.
      */
+    @Override
     public Status run() throws TestRunException {
         startAction(false);
 
@@ -184,7 +184,7 @@ public class BuildAction extends Action
         // -d flag that will be required
         PrintWriter pw = section.getMessageWriter();
         long now = System.currentTimeMillis();
-        Map<LibLocn, List<ClassLocn>> classLocnsToCompile = new LinkedHashMap<LibLocn, List<ClassLocn>>();
+        Map<LibLocn, List<ClassLocn>> classLocnsToCompile = new LinkedHashMap<>();
         for (String arg: args) {
             try {
                 for (ClassLocn cl: script.locations.locateClasses(arg)) {
@@ -196,7 +196,7 @@ public class BuildAction extends Action
                     if (!cl.isUpToDate()) {
                         List<ClassLocn> classLocnsForLib = classLocnsToCompile.get(cl.lib);
                         if (classLocnsForLib == null) {
-                            classLocnsForLib = new ArrayList<ClassLocn>();
+                            classLocnsForLib = new ArrayList<>();
                             classLocnsToCompile.put(cl.lib, classLocnsForLib);
                         }
                         classLocnsForLib.add(cl);
@@ -261,11 +261,11 @@ public class BuildAction extends Action
                 return compileFiles(libLocn, true, null, getSrcFiles(classLocns));
 
             case SYS_MODULE:
-                Map<String, List<File>> filesForModule = new LinkedHashMap<String, List<File>>();
+                Map<String, List<File>> filesForModule = new LinkedHashMap<>();
                 for (ClassLocn cl: classLocns) {
                     List<File> files = filesForModule.get(cl.optModule);
                     if (files == null) {
-                        filesForModule.put(cl.optModule, files = new ArrayList<File>());
+                        filesForModule.put(cl.optModule, files = new ArrayList<>());
                     }
                     files.add(cl.absSrcFile);
                 }
@@ -283,7 +283,7 @@ public class BuildAction extends Action
     }
 
     private Status compileFiles(LibLocn libLocn, boolean isMulti, String moduleName, List<File> files) throws TestRunException {
-        Map<String,String> compOpts = new LinkedHashMap<String,String>();
+        Map<String,String> compOpts = new LinkedHashMap<>();
         if (isMulti) {
             compOpts.put("modules", null);
         }
@@ -291,7 +291,7 @@ public class BuildAction extends Action
             compOpts.put("module", moduleName);
         }
 
-        List<String> compArgs = new ArrayList<String>();
+        List<String> compArgs = new ArrayList<>();
         if (script.getCompileJDK().hasOldSymbolFile())
             compArgs.add("-XDignore.symbol.file=true");
         if (implicitOpt != null)
@@ -305,7 +305,7 @@ public class BuildAction extends Action
     }
 
     private List<File> getSrcFiles(List<ClassLocn> classLocns) {
-        List<File> files = new ArrayList<File>();
+        List<File> files = new ArrayList<>();
         for (ClassLocn cl: classLocns) {
             files.add(cl.absSrcFile);
         }

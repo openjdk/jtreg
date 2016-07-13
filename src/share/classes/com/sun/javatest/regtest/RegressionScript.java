@@ -83,6 +83,7 @@ public class RegressionScript extends Script {
      * @return     The result of running the script on the given test
      *             description.
      */
+    @Override
     public Status run(String[] argv, TestDescription td, TestEnvironment env) {
         if (!(env instanceof RegressionEnvironment))
             throw new AssertionError();
@@ -92,7 +93,8 @@ public class RegressionScript extends Script {
         regEnv = (RegressionEnvironment) env;
         params = regEnv.params;
         testSuite = params.getTestSuite();
-        systemModules = params.getTestJDK().getModules(params);
+        defaultModules = params.getTestJDK().getDefaultModules(params);
+        systemModules = params.getTestJDK().getSystemModules(params);
 
         String filterFault = params.filterFaults.get(td);
         if (filterFault != null)
@@ -135,7 +137,7 @@ public class RegressionScript extends Script {
             String mods = td.getParameter("modules");
             modules = (mods == null)
                     ? testSuite.getModules(td)
-                    : new LinkedHashSet<String>(Arrays.asList(mods.split("\\s+")));
+                    : new LinkedHashSet<>(Arrays.asList(mods.split("\\s+")));
             if (!modules.isEmpty()) {
                 testResult.putProperty("modules", StringUtils.join(modules));
             }
@@ -282,7 +284,7 @@ public class RegressionScript extends Script {
         pw.print(label);
         pw.print(": ");
         pw.println(jdk.getAbsoluteFile());
-        String v = jdk.getFullVersion(opts);
+        String v = jdk.getVersionText(opts);
         if (v.length() > 0) {
             pw.println(v);
         }
@@ -304,7 +306,7 @@ public class RegressionScript extends Script {
             }
             String actions = td.getParameter("run");
             LinkedList<Action> actionList = parseActions(actions, false);
-            Set<File> files = new TreeSet<File>();
+            Set<File> files = new TreeSet<>();
             while (! actionList.isEmpty()) {
                 Action action = actionList.remove();
                 Set<File> a = action.getSourceFiles();
@@ -337,7 +339,7 @@ public class RegressionScript extends Script {
      * @return a Fifo of Action objects
      */
     LinkedList<Action> parseActions(String actions, boolean stopOnError) throws ParseActionsException, ParseException {
-        LinkedList<Action> actionList = new LinkedList<Action>();
+        LinkedList<Action> actionList = new LinkedList<>();
         String[] runCmds = StringUtils.splitTerminator(LINESEP, actions);
         populateActionTable();
 
@@ -349,13 +351,13 @@ public class RegressionScript extends Script {
             String[] verbopts = StringUtils.splitSeparator("/", tokens[1]);
             // [compile, fail, ref=Foo.ref]
             String verb = verbopts[0];
-            Map<String,String> opts = new LinkedHashMap<String,String>();
+            Map<String,String> opts = new LinkedHashMap<>();
             for (int i = 1; i < verbopts.length; i++) {
                 String[] keyValue = StringUtils.splitEqual(verbopts[i]);
                 opts.put(keyValue[0], keyValue[1]);
                 // [[fail,], [ref, Foo.ref]]
             }
-            List<String> args = new ArrayList<String>();
+            List<String> args = new ArrayList<>();
             for (int i = 2; i < tokens.length; i++)
                 args.add(tokens[i]);
             // [-debug, Foo.java] (everything after the big options token)
@@ -478,16 +480,20 @@ public class RegressionScript extends Script {
         String retVal;
         StringBuffer sb = new StringBuffer();
         String reason = cmd[0];
-        if (reason.equals(Action.REASON_ASSUMED_ACTION)) {
-            for (int i = 1; i < cmd.length; i++)
-                sb.append(cmd[i]).append(" ");
-            retVal = Action.SREASON_ASSUMED_ACTION + sb;
-        } else if (reason.equals(Action.REASON_USER_SPECIFIED)) {
-            for (int i = 1; i < cmd.length; i++)
-                sb.append(cmd[i]).append(" ");
-            retVal = Action.SREASON_USER_SPECIFIED + sb;
-        } else {
-            retVal = "Unknown";
+        switch (reason) {
+            case Action.REASON_ASSUMED_ACTION:
+                for (int i = 1; i < cmd.length; i++)
+                    sb.append(cmd[i]).append(" ");
+                retVal = Action.SREASON_ASSUMED_ACTION + sb;
+                break;
+            case Action.REASON_USER_SPECIFIED:
+                for (int i = 1; i < cmd.length; i++)
+                    sb.append(cmd[i]).append(" ");
+                retVal = Action.SREASON_USER_SPECIFIED + sb;
+                break;
+            default:
+                retVal = "Unknown";
+                break;
         }
         return retVal;
     } // getReason()
@@ -723,7 +729,7 @@ public class RegressionScript extends Script {
         }
 
         // Results:
-        Map<PathKind, SearchPath> map = new EnumMap<PathKind, SearchPath>(PathKind.class);
+        Map<PathKind, SearchPath> map = new EnumMap<>(PathKind.class);
         if (!bcp.isEmpty())
             map.put(PathKind.BOOTCLASSPATH_APPEND, bcp);
         if (!cp.isEmpty())
@@ -829,7 +835,7 @@ public class RegressionScript extends Script {
             (testOnBootClassPath ? bcp : cp).append(getJavaTestClassPath());
         }
 
-        Map<PathKind, SearchPath> map = new EnumMap<PathKind, SearchPath>(PathKind.class);
+        Map<PathKind, SearchPath> map = new EnumMap<>(PathKind.class);
         if (!bcp.isEmpty())
             map.put(PathKind.BOOTCLASSPATH_APPEND, bcp);
         if (!cp.isEmpty())
@@ -859,26 +865,17 @@ public class RegressionScript extends Script {
                 }
 
                 // Eventually replace with java.nio.file.Files::copy
-                try {
-                    OutputStream out = new BufferedOutputStream(new FileOutputStream(target));
-                    try {
-                        InputStream in = new BufferedInputStream(new FileInputStream(jar));
-                        try {
-                            byte[] buf = new byte[8192];
-                            int n;
-                            while ((n = in.read(buf)) != -1) {
-                                out.write(buf, 0, n);
-                            }
-                        } finally {
-                            in.close();
-                        }
-                    } finally {
-                        out.close();
+                try (OutputStream out = new BufferedOutputStream(new FileOutputStream(target));
+                        InputStream in = new BufferedInputStream(new FileInputStream(jar))) {
+                    byte[] buf = new byte[8192];
+                    int n;
+                    while ((n = in.read(buf)) != -1) {
+                        out.write(buf, 0, n);
                     }
-                    target.setLastModified(jar.lastModified());
                 } catch (IOException e) {
                     throw new TestRunException("cannot init modules directory", e);
                 }
+                target.setLastModified(jar.lastModified());
             }
         }
     }
@@ -1010,7 +1007,7 @@ public class RegressionScript extends Script {
     // Get the standard properties to be set for tests
 
     Map<String, String> getTestProperties() throws TestClassException {
-        Map<String, String> p = new LinkedHashMap<String, String>();
+        Map<String, String> p = new LinkedHashMap<>();
         // The following will be added to javac.class.path on the test JVM
         switch (getExecMode()) {
             case AGENTVM:
@@ -1083,13 +1080,13 @@ public class RegressionScript extends Script {
                 return agent;
         }
 
-        Map<String, String> envVars = new HashMap<String, String>();
+        Map<String, String> envVars = new HashMap<>();
         envVars.putAll(getEnvVars());
         // some tests are inappropriately relying on the CLASSPATH environment
         // variable being set, so ensure it is set. See equivalent code in MainAction
         // and Main.execChild. Note we cannot set exactly the same classpath as
         // for othervm, because we should not include test-specific info
-        SearchPath cp = new SearchPath(jdk.getToolsJar()).append(getJavaTestClassPath());
+        SearchPath cp = new SearchPath().append(jdk.getJDKClassPath()).append(getJavaTestClassPath());
         envVars.put("CLASSPATH", cp.toString());
 
         Agent.Pool p = Agent.Pool.instance();
@@ -1128,7 +1125,7 @@ public class RegressionScript extends Script {
         }
     }
 
-    List<Agent> agents = new ArrayList<Agent>();
+    List<Agent> agents = new ArrayList<>();
 
     //----------internal classes-----------------------------------------------
 
@@ -1179,12 +1176,13 @@ public class RegressionScript extends Script {
 
     //----------member variables-----------------------------------------------
 
-    private final Map<String, Class<?>> actionTable = new HashMap<String, Class<?>>();
+    private final Map<String, Class<?>> actionTable = new HashMap<>();
     private TestResult testResult;
 
     private RegressionEnvironment regEnv;
     private RegressionParameters params;
     private RegressionTestSuite testSuite;
+    Set<String> defaultModules;
     Set<String> systemModules;
     private boolean useBootClassPath;
     private boolean useXpatch;

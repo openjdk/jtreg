@@ -50,7 +50,10 @@ import com.sun.javatest.regtest.agent.JDK_Version;
 import com.sun.javatest.regtest.agent.SearchPath;
 
 /**
- * Info about a JDK
+ * Info about a JDK.
+ * Some information can be statically determined given its $JAVA_HOME.
+ * Additional information requires code to be executed in a running instance
+ * of the JDK.
  */
 public class JDK {
     /**
@@ -67,10 +70,20 @@ public class JDK {
         }
     }
 
+    /**
+     * Creates a JDK object, given its "$JAVA_HOME" path.
+     * @param javaHome the "home" directory for the JDK
+     * @return the JDK object
+     */
     public static JDK of(String javaHome) {
         return of(new File(javaHome));
     }
 
+    /**
+     * Creates a JDK object, given its "$JAVA_HOME" path.
+     * @param javaHome the "home" directory for the JDK
+     * @return the JDK object
+     */
     public static synchronized JDK of(File javaHome) {
         JDK jdk = cache.get(javaHome);
         if (jdk == null)
@@ -80,11 +93,20 @@ public class JDK {
 
     private static final Map<File, JDK> cache = new HashMap<>();
 
+    /**
+     * Creates a JDK object, given its "$JAVA_HOME" path.
+     * @param javaHome the "home" directory for the JDK
+     * @return the JDK object
+     */
     private JDK(File jdk) {
         this.jdk = jdk;
         absJDK = jdk.getAbsoluteFile();
     }
 
+    /**
+     * Equality is defined in terms of equality of the absolute path for the JDK.
+     * {@inheritDoc}
+     */
     @Override
     public boolean equals(Object o) {
         if (o == null || !(o instanceof JDK))
@@ -103,114 +125,156 @@ public class JDK {
         return getPath();
     }
 
-
+    /**
+     * Returns the home directory for the JDK, as specified when the object was created.
+     * @return  the home directory for the JDK
+     */
     public File getFile() {
         return jdk;
     }
 
+    /**
+     * Returns the absolute path of the home directory for the JDK.
+     * @return  the absolute path of the home directory for the JDK
+     */
     public File getAbsoluteFile() {
         return absJDK;
     }
 
-    public File getCanonicalFile() {
-        try {
-            return jdk.getCanonicalFile();
-        } catch (IOException e) {
-            return absJDK;
-        }
-    }
-
+    /**
+     * Returns a path for the Java launcher for this JDK.
+     * @return a path for the Java launcher for this JDK
+     */
     public File getJavaProg() {
         return new File(new File(absJDK, "bin"), "java");
     }
 
+    /**
+     * Returns a path for the Java compiler for this JDK.
+     * @return a path for the Java compiler for this JDK
+     */
     public File getJavacProg() {
         return new File(new File(absJDK, "bin"), "javac");
     }
 
-    public File getToolsJar() {
-        // for now, we always return the file, even if if does not exist;
-        // it will automatically get filtered out if it is added to a SearchPath
-        // and does not exist for this JDK.
-        return new File(new File(absJDK, "lib"), "tools.jar");
-    }
-
+    /**
+     * Checks whether or not the home directory for this JDK exists.
+     * @return whether or not the home directory for this JDK exists
+     */
     public boolean exists() {
         return jdk.exists();
     }
 
+    /**
+     * Returns the home directory for the JDK as a string, as specified when the object was created.
+     * @return  the home directory for the JDK
+     */
     public String getPath() {
         return jdk.getPath();
     }
 
+    /**
+     * Returns the absolute path of the home directory for the JDK, as a String.
+     * @return  the absolute path of the home directory for the JDK
+     */
     public String getAbsolutePath() {
         return absJDK.getPath();
     }
 
-    // only used for JDK 1.1
-    public SearchPath getJavaClassPath() {
-        File jh = absJDK;
-        File jh_lib = new File(jh, "lib");
-
-        return new SearchPath(
-            new File(jh, "classes"),
-            new File(jh_lib, "classes"),
-            new File(jh_lib, "classes.zip"));
-    }
-
+    /**
+     * Returns a search path to access JDK classes.
+     * {@implNote The result contains tools.jar if it exists, and is empty otherwise.}
+     * @return a search path used to access JDK classes.
+     */
     public SearchPath getJDKClassPath() {
         // will return an empty path if tools.jar does not exist
-        return new SearchPath(getToolsJar());
-    }
-
-    // params just used for javatestClassPath
-    // could use values from getProperties if available
-    JDK_Version getVersion(RegressionParameters params) {
-        return getVersion(params.getJavaTestClassPath());
-    }
-
-    // could use values from getProperties if available
-    JDK_Version getVersion(SearchPath getSysPropClassPath) {
-        return JDK_Version.forName(getVersionAsString(getSysPropClassPath));
-    }
-
-    // could use values from getProperties if available
-    private synchronized String getVersionAsString(SearchPath getSysPropClassPath) {
-        if (version == null) {
-            final String VERSION_PROPERTY = "java.specification.version";
-            version = "unknown"; // default
-            ProcessBuilder pb = new ProcessBuilder();
-            // since we are trying to determine the Java version, we have to assume
-            // the worst, and use CLASSPATH.
-            pb.environment().put("CLASSPATH", getSysPropClassPath.toString());
-            pb.command(getJavaProg().getPath(), GetSystemProperty.class.getName(), VERSION_PROPERTY);
-            pb.redirectErrorStream(true);
-            try {
-                Process p = pb.start();
-                String out = getOutput(p);
-                int rc = p.waitFor();
-                if (rc == 0) {
-                    String[] v = StringUtils.splitEqual(out.trim());
-                    if (v.length == 2 && v[0].equals(VERSION_PROPERTY))
-                        version = v[1];
-                }
-            } catch (InterruptedException e) {
-                // ignore, leave version as default
-            } catch (IOException e) {
-                // ignore, leave version as default
-            }
-
-            // java.specification.version is not defined in JDK1.1.*
-            if (version == null || version.length() == 0)
-                version = "1.1";
-        }
-        return version;
+        return new SearchPath(new File(new File(absJDK, "lib"), "tools.jar"));
     }
 
     /**
-     * Return the JDK -version output
+     * Returns the version of this JDK, as determined from the
+     * {@code java.specification.version} found when the JDK is run.
+     * @param params parameters used to locate the class to determine the value of the
+     *  system property.
+     * @return the version of this JDK
      */
-    public synchronized String getFullVersion(Collection<String> vmOpts) {
+    // params just used for javatestClassPath
+    // could use values from getProperties if available
+    public JDK_Version getVersion(RegressionParameters params) {
+        return getJDKVersion(params.getJavaTestClassPath());
+    }
+
+    /**
+     * Returns the version of this JDK, as determined from the
+     * {@code java.specification.version}found when the JDK is run.
+     * @param classpath used to locate the class to determine the value of the
+     *  system property.
+     * @return the version of this JDK
+     */
+    public synchronized JDK_Version getJDKVersion(SearchPath classpath) {
+        if (jdkVersion == null) {
+            jdkVersion = JDK_Version.forName(getJavaSpecificationVersion(classpath));
+        }
+
+        return jdkVersion;
+    }
+
+    /**
+     * Returns the value of the {@code java.specification.version} property
+     * found when this JDK is run.
+     * {@implNote The value is cached. }
+     * @param classpath used to locate the class to determine the value of the
+     *  system property.
+     * @return the value of the {@code java.specification.version} property
+     */
+    private synchronized String getJavaSpecificationVersion(SearchPath getSysPropClassPath) {
+        if (javaSpecificationVersion != null)
+            return javaSpecificationVersion;
+
+        final String VERSION_PROPERTY = "java.specification.version";
+
+        for (Info info : infoMap.values()) {
+            if (info.jdkProperties != null) {
+                javaSpecificationVersion = info.jdkProperties.getProperty(VERSION_PROPERTY);
+                if (javaSpecificationVersion != null)
+                    return javaSpecificationVersion;
+            }
+        }
+
+        javaSpecificationVersion = "unknown"; // default
+        ProcessBuilder pb = new ProcessBuilder();
+        // since we are trying to determine the Java version, we have to assume
+        // the worst, and use CLASSPATH.
+        pb.environment().put("CLASSPATH", getSysPropClassPath.toString());
+        pb.command(getJavaProg().getPath(), GetSystemProperty.class.getName(), VERSION_PROPERTY);
+        pb.redirectErrorStream(true);
+        try {
+            Process p = pb.start();
+            String out = getOutput(p);
+            int rc = p.waitFor();
+            if (rc == 0) {
+                String[] v = StringUtils.splitEqual(out.trim());
+                if (v.length == 2 && v[0].equals(VERSION_PROPERTY))
+                    javaSpecificationVersion = v[1];
+            }
+        } catch (InterruptedException e) {
+            // ignore, leave version as default
+        } catch (IOException e) {
+            // ignore, leave version as default
+        }
+
+        // java.specification.version is not defined in JDK1.1.*
+        if (javaSpecificationVersion == null || javaSpecificationVersion.length() == 0)
+            javaSpecificationVersion = "1.1";
+
+        return javaSpecificationVersion;
+    }
+
+    /**
+     * Returns the output from running {@code java -version} with a given set of VM options.
+     * @param vmOpts the VM options to be used when {@code java -version} is run
+     */
+    public synchronized String getVersionText(Collection<String> vmOpts) {
         if (fullVersions == null)
             fullVersions = new HashMap<>();
 
@@ -244,10 +308,122 @@ public class JDK {
         return fullVersion;
     }
 
+    /**
+     * Get properties of the JDK under test.
+     * The properties include:
+     * <ul>
+     * <li>any properties set up by any classes declared in the extraPropDefns entry in the
+     *     TEST.ROOT file
+     * <li>the system properties
+     * <li>additional properties for internal use, such as jtreg.installed.modules
+     * </ul>
+     * @param params used to help invoke GetJDKProperties
+     * @return the properties
+     * @throws Fault if an error occurred while getting the properties
+     */
+    public synchronized Properties getProperties(RegressionParameters params) throws Fault {
+        Info info = getInfo(params);
+
+        if (info.jdkProperties == null) {
+            info.jdkProperties = execGetProperties(params,
+                    Collections.<String>emptyList(),
+                    Arrays.asList("--system-properties", "--modules"),
+                    true);
+        }
+
+        return info.jdkProperties;
+    }
+
+    /**
+     * Checks whether or not the JDK has modules.
+     * {@implNote Eventually, this should be a simple property of the version.}
+     * @return whether or not the JDK has modules
+     */
+    public boolean hasModules() {
+        // whether or not a JDK has modules is independent of the params used,
+        // so arbitrarily use the first (and typically only) one.
+        for (RegressionParameters p: infoMap.keySet()) {
+            return !getDefaultModules(p).isEmpty();
+        }
+        // jdk.getProperties should be called early on, to avoid this happening
+        throw new IllegalStateException();
+    }
+
+    /**
+     * Get the set of default modules for this JDK, taking into account any VM options
+     * like --add-modules or --limit-modules.
+     * This is determined by running {@link GetJDKProperties}, which will include
+     * a property giving the set of installed modules, if any.
+     * @param params to help run GetJDKProperties
+     * @return the set of installed modules
+     */
+    public synchronized Set<String> getDefaultModules(RegressionParameters params) {
+        Info info = getInfo(params);
+
+        if (info.defaultModules == null) {
+            try {
+                Properties props = getProperties(params);
+                String m = props.getProperty(GetJDKProperties.JTREG_MODULES);
+                if (m == null) {
+                    info.defaultModules = Collections.emptySet();
+                } else {
+                    info.defaultModules = Collections.unmodifiableSet(
+                                new LinkedHashSet<>(Arrays.asList(m.split(" +"))));
+                }
+            } catch (Fault f) {
+                throw new IllegalStateException(f);
+            }
+        }
+
+        return info.defaultModules;
+    }
+
+    /**
+     * Get the set of system modules for this JDK, taking into account any VM options
+     * like --add-modules or --limit-modules.
+     * This is determined by running {@link GetJDKProperties}, using --add-modules=ALL-SYSTEM
+     * which will include a property giving the set of installed modules, if any.
+     * @param params to help run GetJDKProperties
+     * @return the set of installed modules
+     */
+    public synchronized Set<String> getSystemModules(RegressionParameters params) {
+        Info info = getInfo(params);
+
+        if (info.systemModules == null) {
+            if (getVersion(params).compareTo(JDK_Version.V9) >= 0) {
+                try {
+                    Properties props = execGetProperties(params,
+                            Arrays.asList("--add-modules", "ALL-SYSTEM"), // vm options
+                            Arrays.asList("--modules"), false);  // requested info from probe
+                    String m = props.getProperty(GetJDKProperties.JTREG_MODULES);
+                    if (m == null) {
+                        info.systemModules = Collections.emptySet();
+                    } else {
+                        info.systemModules = Collections.unmodifiableSet(
+                                new LinkedHashSet<>(Arrays.asList(m.split(" +"))));
+                    }
+                } catch (Fault f) {
+                    throw new IllegalStateException(f);
+                }
+            } else {
+                info.systemModules = Collections.emptySet();
+            }
+        }
+
+        return info.systemModules;
+    }
+
+    /**
+     * Checks whether or not the JDK has an "old-style" ct.sym file,
+     * such that you might need to use {@code -XDignore.symbol.file=true} to
+     * access hidden internal API.
+     * {@implNote Eventually, this should be a simple property of the version.}
+     * @return whether or not the JDK has an "old-style" ct.sym file.
+     */
     public boolean hasOldSymbolFile() {
         if (hasOldSymbolFile == null) {
-            if (version != null) {
-                JDK_Version v = JDK_Version.forName(version);
+            if (javaSpecificationVersion != null) {
+                JDK_Version v = JDK_Version.forName(javaSpecificationVersion);
                 if (v.compareTo(JDK_Version.V1_5) <= 0 || v.compareTo(JDK_Version.V10) >= 0) {
                     hasOldSymbolFile = false;
                     return hasOldSymbolFile;
@@ -268,142 +444,76 @@ public class JDK {
         return hasOldSymbolFile;
     }
 
-    private Boolean hasOldSymbolFile = null;
-
-    public boolean hasModules() {
-        // whether or not a JDK has modules is independent of the params used,
-        // so arbitrarily use the first (and typically only) one.
-        for (RegressionParameters p: jdkPropsMap.keySet()) {
-            return !getModules(p).isEmpty();
-        }
-        // jdk.getProperties should be called early on, to avoid this happening
-        throw new IllegalStateException();
-    }
-
     /**
-     * Get the set of installed modules for this JDK.
-     * This is determined by running {@link GetJDKProperties}, which will include
-     * a property giving the set of installed modules, if any.
-     * @param params to help run GetJDKProperties
-     * @return the set of installed modules
+     * Executes the {@link GetJDKProperties} utility class in the target JDK.
+     * @param params parameters used to determine additional classes to run, a
+     *  and how to compile them
+     * @param extraVMOpts additional VM options to be specified when the class is run
+     * @param opts options to be passed to the utility class
+     * @param includeExtraPropDefns whether or not to compile and run the "extraPropDefn"
+     *  classes specified in the test-suite TEST.ROOT file.
+     * @return the properties returns from the utility class.
+     * @throws Fault if any error occurs while getting the properties.
      */
-    public synchronized Set<String> getModules(RegressionParameters params) {
-        if (modulesMap == null)
-            modulesMap = new HashMap<>();
+    private Properties execGetProperties(RegressionParameters params,
+            List<String> extraVMOpts, List<String> opts, boolean includeExtraPropDefns)
+            throws Fault {
 
-        Set<String> modules = modulesMap.get(params);
-        if (modules == null) {
-            try {
-            Properties props = getProperties(params);
-            String m = props.getProperty(GetJDKProperties.JTREG_INSTALLED_MODULES);
-            if (m == null)
-                modules = Collections.emptySet();
-            else {
-                modules = new LinkedHashSet<>(Arrays.asList(m.split(" +")));
-            }
-            modulesMap.put(params, modules);
-            } catch (Fault f) {
-                throw new IllegalStateException(f);
-            }
+        ExtraPropDefns epd = includeExtraPropDefns ? params.getTestSuite().getExtraPropDefns() : new ExtraPropDefns();
+        try {
+            epd.compile(params, params.getCompileJDK(), params.getWorkDirectory().getFile("extraPropDefns"));
+        } catch (ExtraPropDefns.Fault e) {
+            throw new Fault(e.getMessage(), e);
         }
 
-        return modules;
-    }
+        JDKOpts jdkOpts = new JDKOpts(params.getTestSuite().useNewOptions());
+        jdkOpts.add("--class-path");
+        SearchPath cp = new SearchPath(params.getJavaTestClassPath());
+        cp.append(epd.getClassDir());
+        jdkOpts.add(cp.toString());
 
-    /**
-     * Get properties of the JDK under test.
-     * The properties include:
-     * <ul>
-     * <li>any properties set up by any classes declared in the extraPropDefns entry in the
-     *     TEST.ROOT file
-     * <li>the system properties
-     * <li>additional properties for internal use, such as jtreg.installed.modules
-     * </ul>
-     * @param params used to help invoke GetJDKProperties
-     */
-    public synchronized Properties getProperties(RegressionParameters params) throws Fault {
-        if (jdkPropsMap == null)
-            jdkPropsMap = new HashMap<>();
-
-        Properties jdkProps = jdkPropsMap.get(params);
-        if (jdkProps == null) {
-            ExtraPropDefns epd = params.getTestSuite().getExtraPropDefns();
-            try {
-                epd.compile(params, params.getCompileJDK(), params.getWorkDirectory().getFile("extraPropDefns"));
-            } catch (ExtraPropDefns.Fault e) {
-                throw new Fault(e.getMessage(), e);
-            }
-
-            JDKOpts jdkOpts = new JDKOpts(params.getTestSuite().useNewOptions());
-            jdkOpts.add("--class-path");
-            SearchPath cp = new SearchPath(params.getJavaTestClassPath());
-            cp.append(epd.getClassDir());
-            jdkOpts.add(cp.toString());
-
-            SearchPath bcp = new SearchPath(epd.getBootClassDir());
-            if (!bcp.isEmpty()) {
-                jdkOpts.add("-Xbootclasspath/a:" + bcp);
-            }
-
-            List<String> vmOpts = params.getTestVMJavaOptions();
-            jdkOpts.addAll(vmOpts);
-            jdkOpts.addAll(epd.getVMOpts());
-
-            // The following assumes we have already got the JDK version
-            // in a preceding invocation of the JVM. This implies we cannot
-            // merge getVersion with getProperties without changing the
-            // mechanism by which we get all appropriate system modules.
-            if (version != null) {
-                JDK_Version v = JDK_Version.forName(version);
-                if (v.compareTo(JDK_Version.V9) >= 0) {
-                    jdkOpts.addAll(Arrays.asList("--add-modules", "ALL-SYSTEM"));
-                }
-            }
-
-            List<String> cmdArgs = new ArrayList<>();
-            cmdArgs.add(getJavaProg().getPath());
-            cmdArgs.addAll(jdkOpts.toList());
-            cmdArgs.add(GetJDKProperties.class.getName());
-
-            cmdArgs.addAll(epd.getClasses());
-
-            jdkProps = new Properties();
-            try {
-                File scratchDir = params.getWorkDirectory().getFile("scratch");
-                // The scratch directory probably already exists, but just in case,
-                // we ensure that it does.
-                scratchDir.mkdirs();
-                final Process p = new ProcessBuilder(cmdArgs)
-                        .directory(scratchDir)
-                        .start();
-                asyncCopy(p.getErrorStream(), System.err);
-                jdkProps.load(p.getInputStream());
-                int rc = p.waitFor();
-                if (rc != 0) {
-                    throw new Fault("failed to get JDK properties for "
-                            + getJavaProg() + " " + join(" ", vmOpts) + "; exit code " + rc);
-                }
-            } catch (InterruptedException e) {
-                throw new Fault("Error accessing extra property definitions: " + e, e);
-            } catch (IOException e) {
-                throw new Fault("Error accessing extra property definitions: " + e, e);
-            }
-
-            jdkPropsMap.put(params, jdkProps);
+        SearchPath bcp = new SearchPath(epd.getBootClassDir());
+        if (!bcp.isEmpty()) {
+            jdkOpts.add("-Xbootclasspath/a:" + bcp);
         }
 
-        return jdkProps;
-    }
+        List<String> vmOpts = params.getTestVMJavaOptions();
+        jdkOpts.addAll(vmOpts);
+        jdkOpts.addAll(extraVMOpts);
+        jdkOpts.addAll(epd.getVMOpts());
 
-    // replace with String.join when jtreg uses JDK 1.8
-    private String join(String sep, List<?> list) {
-        StringBuilder sb = new StringBuilder();
-        for (Object item: list) {
-            if (sb.length() > 0)
-                sb.append(sep);
-            sb.append(item);
+        List<String> cmdArgs = new ArrayList<>();
+        cmdArgs.add(getJavaProg().getPath());
+        cmdArgs.addAll(jdkOpts.toList());
+        cmdArgs.add(GetJDKProperties.class.getName());
+
+        cmdArgs.addAll(opts);
+        cmdArgs.addAll(epd.getClasses());
+
+        Properties props = new Properties();
+        try {
+            File scratchDir = params.getWorkDirectory().getFile("scratch");
+            // The scratch directory probably already exists, but just in case,
+            // we ensure that it does.
+            scratchDir.mkdirs();
+            final Process p = new ProcessBuilder(cmdArgs)
+                    .directory(scratchDir)
+                    .start();
+            asyncCopy(p.getErrorStream(), System.err);
+            props.load(p.getInputStream());
+            int rc = p.waitFor();
+            if (rc != 0) {
+                throw new Fault("failed to get JDK properties for "
+                        + getJavaProg() + " " + StringUtils.join(vmOpts) + "; exit code " + rc);
+            }
+        } catch (InterruptedException e) {
+            throw new Fault("Error accessing extra property definitions: " + e, e);
+        } catch (IOException e) {
+            throw new Fault("Error accessing extra property definitions: " + e, e);
         }
-        return sb.toString();
+
+        return props;
+
     }
 
     private void asyncCopy(final InputStream in, final PrintStream out) {
@@ -437,17 +547,33 @@ public class JDK {
         }
     }
 
+    private Info getInfo(RegressionParameters params) {
+        Info info = infoMap.get(params);
+        if (info == null) {
+            infoMap.put(params, info = new Info());
+        }
+        return info;
+    }
+
     private final File jdk;
     private final File absJDK;
 
     /** Value of java.specification.version for this JDK. Lazily evaluated as needed. */
-    private String version;
+    private String javaSpecificationVersion;
+
+    /** Interpreted value of javaSpecificationVersion. Lazily evaluated as needed. */
+    private JDK_Version jdkVersion;
+
     /** Value of java VMOPTS -version for this JDK. Lazily evaluated as needed. */
     private Map<Set<String>, String> fullVersions;
-    /** JDK properties for this JDK. Lazily evaluated as needed. */
-    private Map<RegressionParameters, Properties> jdkPropsMap;
-    /** Modules for this JDK. Lazily evaluated as needed. */
-    private Map<RegressionParameters, Set<String>> modulesMap;
 
-    private static final String LINESEP  = System.getProperty("line.separator");
+    private Boolean hasOldSymbolFile = null;
+
+    private final Map<RegressionParameters, Info> infoMap = new HashMap<>();
+
+    static class Info {
+        Properties jdkProperties;
+        Set<String> defaultModules;
+        Set<String> systemModules;
+    }
 }

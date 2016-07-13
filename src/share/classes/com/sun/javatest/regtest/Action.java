@@ -500,29 +500,52 @@ public abstract class Action extends ActionHelper
 
     //----------module exports----------------------------------------------------
 
-    protected List<String> getAddExports() {
+    protected List<String> getExtraModuleConfigOptions() {
         if (!script.getTestJDK().hasModules())
             return Collections.<String>emptyList();
 
         Set<String> modules = script.getModules();
 
         boolean needAddExports = false;
+        StringBuilder addModules = null;
         for (String s: modules) {
-            if (s.contains("/")) {
+            String m;
+            int sep = s.indexOf('/');
+            if (sep == -1) {
+                m = s;
+            } else {
+                m = s.substring(0, sep);
                 needAddExports = true;
-                break;
             }
+            if (!script.defaultModules.contains(m)) {
+                if (addModules == null) {
+                    addModules = new StringBuilder();
+                } else {
+                    addModules.append(",");
+                }
+                addModules.append(m);
+            }
+
         }
-        if (!needAddExports)
+        if (!needAddExports && addModules == null) {
             return Collections.<String>emptyList();
+        }
 
         List<String> list = new ArrayList<>();
+        if (addModules != null) {
+            list.add("--add-modules");
+            list.add(addModules.toString());
+        }
         for (String m: modules) {
             if (m.contains("/")) {
                 list.add("--add-exports");
                 list.add(m + "=ALL-UNNAMED");
             }
         }
+
+        PrintWriter pw = section.getMessageWriter();
+        pw.println("Additional options from @modules: " + StringUtils.join(list));
+
         return list;
     }
 
