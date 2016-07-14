@@ -508,7 +508,7 @@ public class CompileAction extends Action {
 
         String javacCmd = script.getJavacProg();
 
-        List<String> javacVMOpts = new ArrayList<>();
+        JDKOpts javacVMOpts = new JDKOpts(script.useLongFormOptions());
         javacVMOpts.addAll(script.getTestVMOptions());
         if (addDebugOpts && script.getCompileJDK().equals(script.getTestJDK()))
             javacVMOpts.addAll(script.getTestDebugOptions());
@@ -537,7 +537,7 @@ public class CompileAction extends Action {
 
         List<String> command = new ArrayList<>();
         command.add(javacCmd);
-        for (String opt: javacVMOpts)
+        for (String opt: javacVMOpts.toList())
             command.add("-J" + opt);
         for (Map.Entry<String,String> e: javacProps.entrySet())
             command.add("-J-D" + e.getKey() + "=" + e.getValue());
@@ -554,7 +554,7 @@ public class CompileAction extends Action {
         new ModuleConfig("javac compilation environment")
                 .setFromOpts(fullJavacArgs)
                 .write(configWriter);
-        recorder.javac(env, javacCmd, javacVMOpts, javacProps, javacArgs);
+        recorder.javac(env, javacCmd, javacVMOpts.toList(), javacProps, javacArgs);
 
         // PASS TO PROCESSCOMMAND
         PrintStringWriter stdOut = new PrintStringWriter();
