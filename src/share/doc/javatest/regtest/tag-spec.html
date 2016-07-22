@@ -248,6 +248,8 @@ appropriate.
 <p>
 <p>The <code>@library</code> tag may be used more than once.  It may only be used before the
 first <code>@run</code> tag (either explicit or implicit.)
+Specifically, it must appear before any use of <code>@run</code>, <code>@build</code>,
+<code>@compile</code>, and <code>@ignore</code>.
 
 <p>The <code>@library</code> tag and the library path list have nothing to do with the search path
 (i.e., the PATH environment variable) defined in shell actions.

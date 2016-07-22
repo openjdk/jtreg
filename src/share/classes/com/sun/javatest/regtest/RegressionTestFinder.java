@@ -772,7 +772,7 @@ public class RegressionTestFinder extends TagTestFinder
         PARSE_KEY_EMPTY       = "No value provided for `@key'",
         PARSE_KEY_BAD         = "Invalid key: ",
         PARSE_LIB_EMPTY       = "No value provided for `@library'",
-        PARSE_LIB_AFTER_RUN   = "`@library' must appear before first `@run'",
+        PARSE_LIB_AFTER_RUN   = "`@library' must appear before first action tag",
         PARSE_MODULES_EMPTY   = "No values provided for @modules",
         PARSE_BAD_MODULE      = "Invalid module name in @modules: ",
         PARSE_BAD_PACKAGE     = "Invalid package name in @modules: ",
