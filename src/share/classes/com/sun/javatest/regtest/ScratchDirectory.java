@@ -36,6 +36,7 @@ import java.util.regex.Pattern;
 import com.sun.javatest.Status;
 import com.sun.javatest.TestDescription;
 import com.sun.javatest.TestResult;
+import com.sun.javatest.regtest.agent.Flags;
 
 /**
  * Utilities for handling the scratch directory in which tests are executed.
@@ -61,7 +62,7 @@ abstract class ScratchDirectory {
             return new ThreadSafeScratchDir(params, td);
     }
 
-    private static final boolean verboseScratchDir = Action.config("verboseScratchDir");
+    private static final boolean verboseScratchDir = Flags.get("verboseScratchDir");
 
     /** The execution parameters for the current test. */
     protected final RegressionParameters params;

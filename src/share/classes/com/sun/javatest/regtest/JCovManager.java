@@ -41,8 +41,11 @@ import java.util.jar.JarFile;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.sun.javatest.regtest.agent.Flags;
 import com.sun.javatest.util.I18NResourceBundle;
+
 import static com.sun.javatest.regtest.Option.ArgType.*;
+
 import com.sun.javatest.regtest.agent.SearchPath;
 
 /**
@@ -492,7 +495,7 @@ public class JCovManager {
     String version;
 
     private Thread grabber;
-    static final boolean showJCov = Action.config("showJCov");
+    static final boolean showJCov = Flags.get("showJCov");
 
     private static I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(Main.class);
 }

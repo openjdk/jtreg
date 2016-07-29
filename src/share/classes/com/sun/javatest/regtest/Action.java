@@ -45,6 +45,7 @@ import java.util.regex.Pattern;
 import com.sun.javatest.Status;
 import com.sun.javatest.TestResult;
 import com.sun.javatest.regtest.agent.ActionHelper;
+import com.sun.javatest.regtest.agent.Flags;
 import com.sun.javatest.regtest.agent.SearchPath;
 
 
@@ -60,8 +61,7 @@ import com.sun.javatest.regtest.agent.SearchPath;
  *
  * @author Iris A Garcia
  */
-public abstract class Action extends ActionHelper
-{
+public abstract class Action extends ActionHelper {
     /**
      * The null constructor.
      */
@@ -733,9 +733,9 @@ public abstract class Action extends ActionHelper
     protected /*final*/ PrintWriter configWriter;
     private long startTime;
 
-    protected static final boolean showCmd = config("showCmd");
-    protected static final boolean showMode = config("showMode");
-    protected static final boolean showJDK = config("showJDK");
+    protected static final boolean showCmd = Flags.get("showCmd");
+    protected static final boolean showMode = Flags.get("showMode");
+    protected static final boolean showJDK = Flags.get("showJDK");
 }
 
 

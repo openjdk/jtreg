@@ -55,6 +55,7 @@ import com.sun.javatest.regtest.agent.ActionHelper;
 import com.sun.javatest.regtest.agent.AgentServer;
 import com.sun.javatest.regtest.agent.AgentServer.KeepAlive;
 import com.sun.javatest.regtest.agent.Alarm;
+import com.sun.javatest.regtest.agent.Flags;
 import com.sun.javatest.regtest.agent.SearchPath;
 
 import static com.sun.javatest.regtest.agent.AgentServer.*;
@@ -68,8 +69,8 @@ public class Agent {
         }
     }
 
-    static final boolean showAgent = Action.config("showAgent");
-    static final boolean traceAgent = Action.config("traceAgent");
+    static final boolean showAgent = Flags.get("showAgent");
+    static final boolean traceAgent = Flags.get("traceAgent");
 
     /**
      * Start a JDK with given JVM options.

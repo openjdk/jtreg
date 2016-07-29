@@ -300,9 +300,4 @@ public class ActionHelper {
         SAMEVM_CANT_RESET_SECMGR   = "Cannot reset security manager",
         SAMEVM_CANT_RESET_SECPROVS = "Cannot reset security providers",
         SAMEVM_CANT_RESET_PROPS    = "Cannot reset system properties";
-
-    public static boolean config(String name) {
-        return Boolean.getBoolean("javatest.regtest." + name)
-                || (System.getenv("JTREG_" + name.toUpperCase()) != null);
-    }
 }

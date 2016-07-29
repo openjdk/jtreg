@@ -41,9 +41,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
+import com.sun.javatest.regtest.agent.Flags;
 import com.sun.javatest.regtest.agent.GetJDKProperties;
 import com.sun.javatest.regtest.agent.GetSystemProperty;
 import com.sun.javatest.regtest.agent.JDK_Version;
@@ -373,6 +375,9 @@ public class JDK {
             } catch (Fault f) {
                 throw new IllegalStateException(f);
             }
+            if (showModules) {
+                System.err.println("default modules: " + new TreeSet<>(info.defaultModules));
+            }
         }
 
         return info.defaultModules;
@@ -407,6 +412,9 @@ public class JDK {
                 }
             } else {
                 info.systemModules = Collections.emptySet();
+            }
+            if (showModules) {
+                System.err.println("system modules: " + new TreeSet<>(info.systemModules));
             }
         }
 
@@ -576,4 +584,6 @@ public class JDK {
         Set<String> defaultModules;
         Set<String> systemModules;
     }
+
+    private static boolean showModules = Flags.get("showModules");
 }
