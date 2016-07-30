@@ -330,21 +330,12 @@ TARGETS.ZIP.jtreg += \
 #  create jtreg.zip bundles
 
 JTREG_ZIP = $(IMAGES_DIR)/jtreg.zip
-OPEN_JTREG_ZIP = $(IMAGES_DIR)/open-jtreg.zip
 
 $(JTREG_ZIP): $(TARGETS.ZIP.jtreg)
 	$(RM) $@
 	dir=`pwd`; cd $(IMAGES_DIR); $(ZIP) -rq $$dir/$@ $(@F:%.zip=%)
 
-$(OPEN_JTREG_ZIP): $(JTREG_ZIP)
-	$(RM) $@ $@-tmp.zip
-	$(CP) $(JTREG_ZIP) $@-tmp.zip
-	$(ZIP) -d $@-tmp.zip `(cd $(IMAGES_DIR); find jtreg -type f | egrep -i 'junit|jcov' )`
-	$(CP) $@-tmp.zip $@
-	$(RM) $@-tmp.zip
-
 JTREG_ZIPFILES = $(JTREG_ZIP)
-JTREG_ZIPFILES += $(OPEN_JTREG_ZIP)
 
 #----------------------------------------------------------------------
 
