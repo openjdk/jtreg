@@ -252,12 +252,16 @@ public class JDK {
         pb.redirectErrorStream(true);
         try {
             Process p = pb.start();
-            String out = getOutput(p);
+            List<String> lines = getOutput(p);
             int rc = p.waitFor();
             if (rc == 0) {
-                String[] v = StringUtils.splitEqual(out.trim());
-                if (v.length == 2 && v[0].equals(VERSION_PROPERTY))
-                    javaSpecificationVersion = v[1];
+                for (String line : lines) {
+                    String[] v = StringUtils.splitEqual(line.trim());
+                    if (v.length == 2 && v[0].equals(VERSION_PROPERTY)) {
+                        javaSpecificationVersion = v[1];
+                        break;
+                    }
+                }
             }
         } catch (InterruptedException e) {
             // ignore, leave version as default
@@ -293,10 +297,10 @@ public class JDK {
                 Process p = new ProcessBuilder(cmdArgs)
                         .redirectErrorStream(true)
                         .start();
-                String out = getOutput(p);
+                List<String> lines = getOutput(p);
                 int rc = p.waitFor();
                 if (rc == 0) {
-                    fullVersion = out;
+                    fullVersion = StringUtils.join(lines, "\n");
                 }
             } catch (InterruptedException e) {
                 // ignore, leave version as default
@@ -541,17 +545,18 @@ public class JDK {
         }.start();
     }
 
-    private String getOutput(Process p) {
+    private List<String> getOutput(Process p) {
+        List<String> lines = new ArrayList<>();
         try {
             StringBuilder sb = new StringBuilder();
             BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()));
             String line;
             while ((line = r.readLine()) != null) {
-                sb.append(line).append("\n");
+                lines.add(line);
             }
-            return sb.toString();
+            return lines;
         } catch (IOException e) {
-            return e.toString();
+            return Collections.singletonList(e.getMessage());
         }
     }
 
