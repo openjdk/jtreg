@@ -51,6 +51,7 @@ import com.sun.javatest.regtest.agent.MainActionHelper;
 
 import org.testng.IConfigurationListener;
 import org.testng.ITestNGListener;
+import org.testng.SkipException;
 
 /**
  * This class implements the implicit "testng" action for TestNG tests.
@@ -252,8 +253,8 @@ public class TestNGAction extends MainAction {
 
         @Override
         public void onTestSkipped(ITestResult itr) {
-            if (itr.getThrowable() != null) {
-                // Report a skipped test, due to an exception, as a failure
+            Throwable t = itr.getThrowable();
+            if (t != null && !(t instanceof SkipException)) {
                 onTestFailure(itr);
                 return;
             }
