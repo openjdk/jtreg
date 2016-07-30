@@ -150,7 +150,7 @@ public class RegressionTestFinder extends TagTestFinder
                 in = new BufferedReader(new FileReader(file));
                 tagValues = readTestNGComments(file, in);
                 if (tagValues == null) {
-                    tagValues = new HashMap<String,String>();
+                    tagValues = new HashMap<>();
                     // could read more of file looking for annotations like @Test, @Factory
                     // to guess whether this is really a test file or not
                 }
@@ -268,7 +268,7 @@ public class RegressionTestFinder extends TagTestFinder
     }
 
     private Map<String, String> normalize0(Map<String, String> tagValues) {
-        Map<String, String> newTagValues = new HashMap<String, String>();
+        Map<String, String> newTagValues = new HashMap<>();
         String fileName = getCurrentFile().getName();
         String baseName = fileName.substring(0, fileName.lastIndexOf("."));
         boolean testNG = tagValues.containsKey("testngClass");
@@ -300,46 +300,57 @@ public class RegressionTestFinder extends TagTestFinder
         for (Map.Entry<? extends String, ? extends String> e: tagValues.entrySet()) {
             String name  = e.getKey();
             String value = e.getValue();
-            if (name.equals("summary")) {
-                // the title is the first sentence of the provided summary
-                name = "title";
-                int pos = 0;
-            loop:
-                while (true) {
-                    pos = value.indexOf(".", pos);
-                    if (pos == -1 || pos + 1 == value.length())
-                        break;
-                    switch (value.charAt(pos + 1)) {
-                    case ' ':
-                    case '\n':
-                    case '\r':
-                    case '\t':
-                    case '\f':
-                    case '\b':
-                        value = value.substring(0, pos + 1);
-                        break loop;
+            switch (name) {
+                case "summary":
+                    // the title is the first sentence of the provided summary
+                    name = "title";
+                    int pos = 0;
+                    loop:
+                    while (true) {
+                        pos = value.indexOf(".", pos);
+                        if (pos == -1 || pos + 1 == value.length())
+                            break;
+                        switch (value.charAt(pos + 1)) {
+                            case ' ':
+                            case '\n':
+                            case '\r':
+                            case '\t':
+                            case '\f':
+                            case '\b':
+                                value = value.substring(0, pos + 1);
+                                break loop;
+                        }
+                        pos++;
                     }
-                    pos++;
-                }
-            } else if (name.equals("bug") || name.equals("key"))  {
-                // force some keywords
-                name = "keywords";
-                String oldValue = newTagValues.get("keywords");
-                if (oldValue != null)
-                    value = oldValue + " " + value;
-            } else if (name.equals("test")) {
-                // TagTestFinder.scanFile() removes the "test" name/value pair,
-                // so I don't think that we'll ever get here.  3/13
+                    break;
+                case "bug":
+                case "key":
+                    {
+                        // force some keywords
+                        name = "keywords";
+                        String oldValue = newTagValues.get("keywords");
+                        if (oldValue != null)
+                            value = oldValue + " " + value;
+                        break;
+                    }
+                case "test":
+                    {
+                        // TagTestFinder.scanFile() removes the "test" name/value pair,
+                        // so I don't think that we'll ever get here.  3/13
 
-                // If we run into an @test, we have a regression test.
-                // Add "regtest" to the list of keywords.  The script
-                // will be triggered off this keyword.
-                name = "keywords";
-                String oldValue = newTagValues.get("keywords");
-                if (oldValue != null)
-                    value = oldValue + " regtest";
-                else
-                    value = "regtest";
+                        // If we run into an @test, we have a regression test.
+                        // Add "regtest" to the list of keywords.  The script
+                        // will be triggered off this keyword.
+                        name = "keywords";
+                        String oldValue = newTagValues.get("keywords");
+                        if (oldValue != null)
+                            value = oldValue + " regtest";
+                        else
+                            value = "regtest";
+                        break;
+                    }
+                default:
+                    break;
             }
 //          System.out.println("--- NAME: " + name + " VALUE: " + value);
             newTagValues.put(name, value);
@@ -487,7 +498,7 @@ public class RegressionTestFinder extends TagTestFinder
         paths.put(wrp, td);
 
     }
-    Map<String, TestDescription> paths = new HashMap<String, TestDescription>();
+    Map<String, TestDescription> paths = new HashMap<>();
 
     //-----internal routines----------------------------------------------------
 
@@ -715,7 +726,7 @@ public class RegressionTestFinder extends TagTestFinder
     }
 
     private Set<String> getValidTagNames(boolean allowKey) {
-        Set<String> tags = new HashSet<String>();
+        Set<String> tags = new HashSet<>();
         // JDK specific tags
         tags.add(TEST);
         tags.add(BUG);

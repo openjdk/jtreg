@@ -109,14 +109,17 @@ public class TestNGAction extends MainAction {
             return super.build();
         } else {
             JDK_Version v = script.getCompileJDKVersion();
-            Map<String,String> buildOpts = new HashMap<String,String>();
-            if (v.compareTo(JDK_Version.V1_6) >= 0)
+            Map<String,String> buildOpts = new HashMap<>();
+            if (v.compareTo(JDK_Version.V1_6) >= 0) {
                 buildOpts.put("implicit", "none");
-            Set<String> buildArgs = new LinkedHashSet<String>();
+            }
             Locations locations = script.locations;
-            buildArgs.addAll(listModules(locations.absLibSrcList(LibLocn.Kind.SYS_MODULE)));
-            buildArgs.addAll(listModules(locations.absLibSrcList(LibLocn.Kind.USER_MODULE)));
-            buildArgs.addAll(listClasses(locations.absLibSrcList(LibLocn.Kind.PACKAGE)));
+            Set<String> buildArgs = new LinkedHashSet<>(script.getLibBuildArgs());
+            if (buildArgs.isEmpty()) {
+                buildArgs.addAll(listModules(locations.absLibSrcList(LibLocn.Kind.SYS_MODULE)));
+                buildArgs.addAll(listModules(locations.absLibSrcList(LibLocn.Kind.USER_MODULE)));
+                buildArgs.addAll(listClasses(locations.absLibSrcList(LibLocn.Kind.PACKAGE)));
+            }
             try {
                 File testSrcDir = locations.absTestSrcDir();
                 switch (locations.getDirKind(testSrcDir)) {
@@ -132,12 +135,12 @@ public class TestNGAction extends MainAction {
                 return Status.error(e.getMessage());
             }
             BuildAction ba = new BuildAction();
-            return ba.build(buildOpts, new ArrayList<String>(buildArgs), SREASON_ASSUMED_BUILD, script);
+            return ba.build(buildOpts, new ArrayList<>(buildArgs), SREASON_ASSUMED_BUILD, script);
         }
     }
 
     private List<String> listClasses(List<File> roots) {
-        List<String> classes = new ArrayList<String>();
+        List<String> classes = new ArrayList<>();
         for (File root: roots)
             listClasses(root, null, classes);
         return classes;
@@ -156,7 +159,7 @@ public class TestNGAction extends MainAction {
     }
 
     private Set<String> listModules(List<File> roots) {
-        Set<String> modules = new LinkedHashSet<String>();
+        Set<String> modules = new LinkedHashSet<>();
         for (File root: roots) {
             for (File f: root.listFiles()) {
                 if (f.isDirectory())
@@ -229,21 +232,25 @@ public class TestNGAction extends MainAction {
             implements ITestListener, IConfigurationListener {
         enum InfoKind { CONFIG, TEST };
 
+        @Override
         public void onTestStart(ITestResult itr) {
             count++;
 //            report(itr);
         }
 
+        @Override
         public void onTestSuccess(ITestResult itr) {
             successCount++;
             report(InfoKind.TEST, itr);
         }
 
+        @Override
         public void onTestFailure(ITestResult itr) {
             failureCount++;
             report(InfoKind.TEST, itr);
         }
 
+        @Override
         public void onTestSkipped(ITestResult itr) {
             if (itr.getThrowable() != null) {
                 // Report a skipped test, due to an exception, as a failure
@@ -254,27 +261,33 @@ public class TestNGAction extends MainAction {
             report(InfoKind.TEST, itr);
         }
 
+        @Override
         public void onTestFailedButWithinSuccessPercentage(ITestResult itr) {
             failedButWithinSuccessPercentageCount++;
             report(InfoKind.TEST, itr);
         }
 
+        @Override
         public void onStart(ITestContext itc) {
         }
 
+        @Override
         public void onFinish(ITestContext itc) {
         }
 
+        @Override
         public void onConfigurationSuccess(ITestResult itr) {
             configSuccessCount++;
             report(InfoKind.CONFIG, itr);
         }
 
+        @Override
         public void onConfigurationFailure(ITestResult itr) {
             configFailureCount++;
             report(InfoKind.CONFIG, itr);
         }
 
+        @Override
         public void onConfigurationSkip(ITestResult itr) {
             configSkippedCount++;
             report(InfoKind.CONFIG, itr);
@@ -287,10 +300,9 @@ public class TestNGAction extends MainAction {
                 // combine in stack trace so we can issue single println
                 // threading may otherwise result in interleaved output
                 StringWriter trace = new StringWriter();
-                PrintWriter pw = new PrintWriter(trace);
-
-                t.printStackTrace(pw);
-                pw.close();
+                try (PrintWriter pw = new PrintWriter(trace)) {
+                    t.printStackTrace(pw);
+                }
 
                 suffix = "\n" + trace;
             } else {

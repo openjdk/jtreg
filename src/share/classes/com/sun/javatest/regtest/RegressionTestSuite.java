@@ -191,6 +191,14 @@ public class RegressionTestSuite extends TestSuite
         return properties.getRequiredVersion();
     }
 
+    Set<String> getLibDirs(TestDescription td) throws TestSuite.Fault {
+        return properties.getLibDirs(td.getFile());
+    }
+
+    Set<String> getLibBuildArgs(TestDescription td) throws TestSuite.Fault {
+        return properties.getLibBuildArgs(td.getFile());
+    }
+
     Set<File> getExternalLibRoots(TestDescription td) throws TestSuite.Fault {
         return properties.getExternalLibs(td.getFile());
     }

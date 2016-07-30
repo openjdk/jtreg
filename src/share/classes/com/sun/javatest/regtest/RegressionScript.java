@@ -581,6 +581,14 @@ public class RegressionScript extends Script {
         return modules;
     }
 
+    Set<String> getLibBuildArgs() throws TestRunException {
+        try {
+            return testSuite.getLibBuildArgs(td);
+        } catch (TestSuite.Fault e) {
+            throw new TestRunException(e.getMessage(), e);
+        }
+    }
+
     /**
      * Determine whether to use new long-form options.
      * Eventually, this should be a simple function of the JDK version.

@@ -191,7 +191,7 @@ public class Locations {
             absTestModulesDir = new File(absTestClsDir, "modules");
         }
 
-        libList = new ArrayList<LibLocn>();
+        libList = new ArrayList<>();
         String libs = td.getParameter("library");
         for (String lib: StringUtils.splitWS(libs)) {
             libList.add(getLibLocn(td, lib));
@@ -374,7 +374,7 @@ public class Locations {
      */
     // (just) used to set test.src.path or TESTSRCPATH
     List<File> absTestSrcPath() {
-        List<File> list = new ArrayList<File>();
+        List<File> list = new ArrayList<>();
         list.add(absTestSrcDir);
         for (LibLocn l: libList) {
             if (l.kind == LibLocn.Kind.PACKAGE) {
@@ -388,7 +388,7 @@ public class Locations {
      * Get a list of the source directories of all libraries of a given kind.
      */
     List<File> absLibSrcList(LibLocn.Kind kind) {
-        List<File> list = new ArrayList<File>();
+        List<File> list = new ArrayList<>();
         for (LibLocn l: libList) {
             if (l.kind == kind) {
                 list.add(l.absSrcDir);
@@ -401,7 +401,7 @@ public class Locations {
      * Get a list of all jar-file libraries in the test suite.
      */
     List<File> absLibSrcJarList() {
-        List<File> list = new ArrayList<File>();
+        List<File> list = new ArrayList<>();
         for (LibLocn l: libList) {
             if (l.kind == LibLocn.Kind.PRECOMPILED_JAR) {
                 File f = l.absClsDir;
@@ -449,7 +449,7 @@ public class Locations {
      */
     // (just) used to set test.class.path or TESTCLASSPATH
     List<File> absTestClsPath() {
-        List<File> list = new ArrayList<File>();
+        List<File> list = new ArrayList<>();
         list.add(absTestClsDir);
         for (LibLocn l: libList) {
             switch (l.kind) {
@@ -465,7 +465,7 @@ public class Locations {
      * Get a list of the class directories of all libraries of a given kind.
      */
     List<File> absLibClsList(LibLocn.Kind kind) {
-        List<File> list = new ArrayList<File>();
+        List<File> list = new ArrayList<>();
         for (LibLocn l: libList) {
             if (l.kind == kind) {
                 list.add(l.absClsDir);
@@ -529,7 +529,7 @@ public class Locations {
             optModule = null;
             className = name;
 
-            searchLocns = new ArrayList<LibLocn>();
+            searchLocns = new ArrayList<>();
             searchLocns.add(new LibLocn(null, absTestSrcDir, absTestClsDir, LibLocn.Kind.PACKAGE));
             for (LibLocn l: libList) {
                 if (l.kind == LibLocn.Kind.PACKAGE) {
@@ -567,7 +567,7 @@ public class Locations {
         if (moduleName == null) {
             throw new NullPointerException();
         } else if (isSystemModule(moduleName)) {
-            List<LibLocn> list = new ArrayList<LibLocn>();
+            List<LibLocn> list = new ArrayList<>();
             if (getFile(absTestSrcDir, moduleName).exists()) {
                 list.add(new LibLocn(null, absTestSrcDir, absTestPatchDir(), LibLocn.Kind.SYS_MODULE));
             }
@@ -640,7 +640,7 @@ public class Locations {
      * Locate the classes for a package in a series of locations.
      */
     private List<ClassLocn> locateClassesInPackage(List<LibLocn> locns, String optModule, String optPackage) throws Fault {
-        List<ClassLocn> results = new ArrayList<ClassLocn>();
+        List<ClassLocn> results = new ArrayList<>();
         boolean recursive = (optModule != null) && (optPackage == null);
         for (LibLocn l: locns) {
             locateClassesInPackage(l, optModule, optPackage, recursive, results);

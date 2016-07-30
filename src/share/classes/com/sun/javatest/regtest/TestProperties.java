@@ -148,6 +148,12 @@ public class TestProperties {
         return e.libDirs;
     }
 
+    Set<String> getLibBuildArgs(File file) throws TestSuite.Fault {
+        File dir = file.isDirectory() ? file : file.getParentFile();
+        Cache.Entry e = cache.getEntry(dir);
+        return e.libBuildArgs;
+    }
+
     Set<String> getModules(File file) throws TestSuite.Fault {
         File dir = file.isDirectory() ? file : file.getParentFile();
         Cache.Entry e = cache.getEntry(dir);
@@ -212,6 +218,7 @@ public class TestProperties {
             final File testNGRoot;
             private final Set<File> testNGDirs;
             final Set<String> libDirs;
+            final Set<String> libBuildArgs;
             final Set<File> extLibRoots;
             final Set<String> modules;
 
@@ -222,10 +229,8 @@ public class TestProperties {
                 File file = new File(dir, (parent == null) ? "TEST.ROOT" : "TEST.properties");
                 if (file.canRead()) {
                     properties = (parent == null) ? new Properties() : new Properties(parent.properties);
-                    try {
-                        BufferedInputStream in = new BufferedInputStream(new FileInputStream(file));
+                    try (BufferedInputStream in = new BufferedInputStream(new FileInputStream(file))) {
                         properties.load(in);
-                        in.close();
                     } catch (IOException e) {
                         error(i18n, "props.cantRead", file);
                     }
@@ -251,6 +256,9 @@ public class TestProperties {
                     // add the list of library dirs for TestNG tests
                     libDirs = initLibDirSet(parent == null ? null : parent.libDirs, "lib.dirs", dir);
 
+                    // add the list of library dirs for TestNG tests
+                    libBuildArgs = initSimpleSet(parent == null ? null : parent.libBuildArgs, "lib.build");
+
                     // add the list of external library roots
                     extLibRoots = initFileSet(parent == null ? null : parent.extLibRoots, "external.lib.roots", dir);
 
@@ -267,6 +275,7 @@ public class TestProperties {
                     exclusiveAccessDirs = parent.exclusiveAccessDirs;
                     testNGDirs = parent.testNGDirs;
                     libDirs = parent.libDirs;
+                    libBuildArgs = parent.libBuildArgs;
                     extLibRoots = parent.extLibRoots;
                     modules = parent.modules;
                 }
@@ -280,7 +289,7 @@ public class TestProperties {
             private Set<File> initFileSet(Set<File> parent, String propertyName, File baseDir) {
                 String[] values = StringUtils.splitWS(properties.getProperty(propertyName));
                 if (parent == null || values.length > 0) {
-                    Set<File> set = (parent == null) ? new LinkedHashSet<File>() : new LinkedHashSet<File>(parent);
+                    Set<File> set = (parent == null) ? new LinkedHashSet<File>() : new LinkedHashSet<>(parent);
                     //set.addAll(Arrays.asList(values));
                     for (String v: values) {
                         File f = toFile(baseDir, v);
@@ -296,7 +305,7 @@ public class TestProperties {
             private Set<String> initLibDirSet(Set<String> parent, String propertyName, File baseDir) {
                 String[] values = StringUtils.splitWS(properties.getProperty(propertyName));
                 if (parent == null || values.length > 0) {
-                    Set<String> set = (parent == null) ? new LinkedHashSet<String>() : new LinkedHashSet<String>(parent);
+                    Set<String> set = (parent == null) ? new LinkedHashSet<String>() : new LinkedHashSet<>(parent);
                     for (String v: values) {
                         File f = toFile(baseDir, v);
                         if (f != null) {
@@ -312,7 +321,7 @@ public class TestProperties {
             private Set<String> initKeywordSet(Set<String> parent, String propertyName) {
                 String[] values = StringUtils.splitWS(properties.getProperty(propertyName));
                 if (parent == null || values.length > 0) {
-                    Set<String> set = (parent == null) ? new LinkedHashSet<String>() : new LinkedHashSet<String>(parent);
+                    Set<String> set = (parent == null) ? new LinkedHashSet<String>() : new LinkedHashSet<>(parent);
                     for (String v: values) {
                         try {
                             RegressionKeywords.validateKey(v);
@@ -331,7 +340,7 @@ public class TestProperties {
             private Set<String> initSimpleSet(Set<String> parent, String propertyName) {
                 String[] values = StringUtils.splitWS(properties.getProperty(propertyName));
                 if (parent == null || values.length > 0) {
-                    Set<String> set = (parent == null) ? new LinkedHashSet<String>() : new LinkedHashSet<String>(parent);
+                    Set<String> set = (parent == null) ? new LinkedHashSet<String>() : new LinkedHashSet<>(parent);
                     set.addAll(Arrays.asList(values));
                     return Collections.unmodifiableSet(set);
                 } else {
@@ -432,7 +441,7 @@ public class TestProperties {
 
         Cache(File rootDir) {
             this.rootDir = rootDir;
-            map = new HashMap<File, SoftReference<Entry>>();
+            map = new HashMap<>();
         }
 
         synchronized Entry getEntry(File dir) {
@@ -446,7 +455,7 @@ public class TestProperties {
             Entry e = (ref == null) ? null : ref.get();
             if (e == null) {
                 Entry parent = dir.equals(rootDir) ? null : getEntryInternal(dir.getParentFile());
-                map.put(dir, new SoftReference<Entry>(e = new Entry(parent, dir)));
+                map.put(dir, new SoftReference<>(e = new Entry(parent, dir)));
             }
             return e;
         }

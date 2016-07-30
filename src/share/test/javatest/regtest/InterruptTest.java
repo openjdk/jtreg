@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2007, 2016, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -24,7 +24,6 @@
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
-import java.util.*;
 import javax.swing.*;
 import javax.swing.text.*;
 
@@ -76,6 +75,7 @@ public class InterruptTest
         final String START = "Start";
         final String INTERRUPT = "Interrupt";
         ActionListener listener = new ActionListener() {
+                @Override
                 public void actionPerformed(ActionEvent e) {
                     String cmd = e.getActionCommand();
                     if (cmd.equals(START))
@@ -101,12 +101,13 @@ public class InterruptTest
             log("already started and still running\n");
         else {
             worker = new Thread() {
+                    @Override
                     public void run() {
                         log("jtreg starting\n");
                         try {
                             new Main(log, log).run(args);
                         } catch (Throwable t) {
-                            t.printStackTrace();
+                            t.printStackTrace(System.err);
                         } finally {
                             done();
                         }
@@ -133,6 +134,7 @@ public class InterruptTest
     void log(final String text) {
         if (!EventQueue.isDispatchThread()) {
             SwingUtilities.invokeLater(new Runnable() {
+                    @Override
                     public void run() {
                         log(text);
                     }
@@ -144,12 +146,12 @@ public class InterruptTest
         try {
             d.insertString(d.getLength(), text, null);
         } catch (BadLocationException e) {
-            e.printStackTrace();
+            e.printStackTrace(System.err);
         }
     }
 
     private String join(String... args) {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         for (String a: args) {
             if (sb.length() > 0)
                 sb.append(" ");
@@ -163,12 +165,15 @@ public class InterruptTest
     private JTextArea textArea;
     private Thread worker;
 
-    private PrintWriter log = new PrintWriter(new Writer() {
+    private final PrintWriter log = new PrintWriter(new Writer() {
+            @Override
             public void write(char[] buf, int offset, int length) {
                 String s = new String(buf, offset, length);
                 log(s);
             }
+            @Override
             public void flush() { }
+            @Override
             public void close() { }
         });
 }

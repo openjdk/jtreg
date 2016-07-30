@@ -915,6 +915,13 @@ tests in the same directory is being run.</p>
 <dd><p>Default library directories used by all tests in or under the directory
 containing this property declaration.</p>
 
+<dt><code>lib.build <var>&lt;build-arguments&gt;</var></code>
+<dd><p>Default library components that will be built by tests in TestNG directories
+in or under the directory containing this property declaration.
+The values should be of a form that can be accepted by an <code>@build</code> tag.
+If not specified, the entire contents of any currently specified libraries will
+be built.</p>
+
 <dt><code>external.lib.roots <var>&lt;directories&gt;</var></code>
 <dd><p>A search path for libraries specified in an <code>@library</code> tag.
 Relative paths will be evaluated relative to the directory containing the
