@@ -93,6 +93,8 @@
     <patternset id="jtreg.packages">
         <include name="com/sun/javatest/regtest/**"/>
         <include name="com/sun/javatest/diff/**"/>
+        <include name="com/sun/javatest/diff/**"/>
+        <include name="java/lang/reflect/JTRegModuleHelper.java"/>
     </patternset>
 
     <patternset id="jtreg.jdk11.files">
