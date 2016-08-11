@@ -171,7 +171,7 @@
 
     <target name="-compile-jtreg.classes">
         <mkdir dir="${build.classes.dir}"/>
-        <javac encoding="iso-8859-1" source="1.8" target="1.8"
+        <javac encoding="iso-8859-1" source="1.7" target="1.7"
             debug="true" debuglevel="source,lines"
             srcdir="${src.classes.dir}"
             destdir="${build.classes.dir}"
