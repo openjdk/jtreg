@@ -30,8 +30,11 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -161,7 +164,20 @@ public class RegressionTestFinder extends TagTestFinder
                 } else {
                     tagValues.put("testngClass", className);
                 }
-                tagValues.put("library", StringUtils.join(properties.getLibDirs(file), " "));
+
+                Set<String> libDirs = properties.getLibDirs(file);
+                if (libDirs != null && !libDirs.isEmpty()) {
+                    tagValues.put("library", StringUtils.join(libDirs, " "));
+                }
+
+                String m = tagValues.get("modules");
+                if (m == null || m.isEmpty()) {
+                    Set<String> modules = properties.getModules(file);
+                    if (modules != null && !modules.isEmpty()) {
+                        processModules(tagValues, modules);
+                    }
+                }
+
                 foundTestDescription(tagValues, file, /*line*/0);
             } catch (IOException e) {
                 error(i18n, "finder.ioError", file);
@@ -359,39 +375,33 @@ public class RegressionTestFinder extends TagTestFinder
         String value = newTagValues.get("run");
 
         // force more key words based on actions
-        String origKeywords = newTagValues.get("keywords");
-        String addKeywords  = "";
+        Set<String> keywords = split(newTagValues.get("keywords"), "\\s+");
 
         if (match(value, OTHERVM_OPTION) || match(value, BOOTCLASSPATH_OPTION))
-            addKeywords += " othervm";
+            keywords.add("othervm");
 
         if (match(value, MANUAL_OPTION))
-            addKeywords += " manual";
+            keywords.add("manual");
 
         if (match(value, NATIVE_OPTION))
-            addKeywords += " native";
+            keywords.add("native");
 
         if (match(value, SHELL_ACTION))
-            addKeywords += " shell";
+            keywords.add("shell");
 
         if (match(value, JUNIT_ACTION))
-            addKeywords += " junit";
+            keywords.add("junit");
 
         if (match(value, DRIVER_ACTION))
-            addKeywords += " driver";
+            keywords.add("driver");
 
         if (match(value, IGNORE_ACTION))
-            addKeywords += " ignore";
+            keywords.add("ignore");
 
         if (testNG)
-            addKeywords += " testng";
+            keywords.add("testng");
 
-        if (!addKeywords.equals("")) {
-            if (origKeywords == null)
-                newTagValues.put("keywords", addKeywords.trim());
-            else
-                newTagValues.put("keywords", origKeywords + addKeywords);
-        }
+        newTagValues.put("keywords", StringUtils.join(keywords, " "));
 
         if (rejectTrailingBuild) {
             int sep = value.lastIndexOf(LINESEP, value.length() - 1 - LINESEP.length()); // ignore final LINESEP
@@ -433,6 +443,14 @@ public class RegressionTestFinder extends TagTestFinder
 
     private static boolean match(CharSequence cs, Pattern p) {
         return p.matcher(cs).matches();
+    }
+
+    private Set<String> split(String s, String regex) {
+        Set<String> result = new LinkedHashSet<>();
+        if (s != null) {
+            result.addAll(Arrays.asList(s.split(regex)));
+        }
+        return result;
     }
 
     /**
@@ -649,7 +667,11 @@ public class RegressionTestFinder extends TagTestFinder
             return;
         }
 
-        for (String word: value.trim().split("\\s+")) {
+        processModules(tagValues, Arrays.asList(value.trim().split("\\s+")));
+    }
+
+    private void processModules(Map<String, String> tagValues, Collection<String> modules) {
+        for (String word: modules) {
             String m, p;
             int sep = word.indexOf("/");
             if (sep == -1) {
@@ -670,6 +692,7 @@ public class RegressionTestFinder extends TagTestFinder
         }
 
         String oldValue = tagValues.get(MODULES);
+        String value = StringUtils.join(modules, " ");
         if (oldValue == null)
             tagValues.put(MODULES, value);
         else

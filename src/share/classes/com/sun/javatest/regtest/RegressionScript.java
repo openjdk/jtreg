@@ -136,7 +136,7 @@ public class RegressionScript extends Script {
 
             String mods = td.getParameter("modules");
             modules = (mods == null)
-                    ? testSuite.getModules(td)
+                    ? Collections.<String>emptySet()
                     : new LinkedHashSet<>(Arrays.asList(mods.split("\\s+")));
             if (!modules.isEmpty()) {
                 testResult.putProperty("modules", StringUtils.join(modules));
