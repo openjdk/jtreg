@@ -170,14 +170,6 @@ public class RegressionTestFinder extends TagTestFinder
                     tagValues.put("library", StringUtils.join(libDirs, " "));
                 }
 
-                String m = tagValues.get("modules");
-                if (m == null || m.isEmpty()) {
-                    Set<String> modules = properties.getModules(file);
-                    if (modules != null && !modules.isEmpty()) {
-                        processModules(tagValues, modules);
-                    }
-                }
-
                 foundTestDescription(tagValues, file, /*line*/0);
             } catch (IOException e) {
                 error(i18n, "finder.ioError", file);
@@ -429,6 +421,18 @@ public class RegressionTestFinder extends TagTestFinder
         }
         if (maxTimeout > 0)
             newTagValues.put("maxTimeout", String.valueOf(maxTimeout));
+
+        try {
+            String modules = newTagValues.get("modules");
+            if (modules == null || modules.isEmpty()) {
+                Set<String> defaultModules = properties.getModules(getCurrentFile());
+                if (defaultModules != null && !defaultModules.isEmpty()) {
+                    processModules(newTagValues, defaultModules);
+                }
+            }
+        } catch (TestSuite.Fault e) {
+            error(i18n, "finder.cant.read.test.properties", new Object[] { e.getMessage() });
+        }
 
         /*
         for (Map.Entry<String,String> e: newTagValues.entrySet()) {
