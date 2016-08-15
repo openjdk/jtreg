@@ -124,19 +124,17 @@ J2SEJAVA = $(J2SEHOME)/bin/java
 J2SEJAVAC = $(J2SEHOME)/bin/javac
 JAR = $(J2SEHOME)/bin/jar
 
-# default for source files except com.sun.javatest.regtest.agent
-J2SEJAVAC_SOURCE = 7
-J2SEJAVAC_TARGET = 7
-
-# for files needed to run othervm tests
+# for files needed to run othervm tests on oldest supported platforms
 REGTEST_OLD_JAVAC = $(JDK17HOME)/bin/javac
-REGTEST_OLD_SOURCE = 1.2
-REGTEST_OLD_TARGET = 1.1
+REGTEST_OLD_JAVAC_OPTIONS = -source 1.2 -target 1.1 -Xlint:all,-options -Werror
 
-# for files needed to run agentvm tests
+# for files needed to run agentvm tests (on platforms back to JDK 1.5)
 REGTEST_AGENT_JAVAC = $(JDK17HOME)/bin/javac
-REGTEST_AGENT_SOURCE = 5
-REGTEST_AGENT_TARGET = 5
+REGTEST_AGENT_JAVAC_OPTIONS = -source 5 -target 5 -Xlint:all,-options -Werror
+
+# for files needed for jtreg tool
+REGTEST_TOOL_JAVAC = $(J2SEHOME)/bin/javac
+REGTEST_TOOL_JAVAC_OPTIONS = -source 7 -target 7 -Xlint:all,-options -Werror
 
 #----- JavaHelp: see https://javahelp.dev.java.net/
 ifndef JAVAHELP_HOME

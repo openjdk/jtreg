@@ -32,10 +32,10 @@ $(BUILDDIR)/JDKModulesTest.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(MKDIR) -p $(@:%.ok=%)/classes
-	$(J2SEJAVAC) -source $(J2SEJAVAC_SOURCE) -target $(J2SEJAVAC_TARGET) \
+	$(J2SEJAVAC) \
 		-d $(@:%.ok=%)/classes \
 		-cp $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-		-Xlint:-options -Werror \
+		-Xlint -Werror \
 		-encoding ISO8859-1 $(TESTDIR)/javatest/regtest/JDKModulesTest.java
 	$(JIGSAWHOME)/bin/java -cp "$(@:%.ok=%)/classes$(PS)$(JTREG_IMAGEDIR)/lib/jtreg.jar" \
 		-Djava.io.tmpdir=$(@:%.ok=%) \

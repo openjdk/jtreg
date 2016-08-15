@@ -32,7 +32,7 @@ $(BUILDDIR)/BootClassPathTest.ok: \
 	$(MKDIR) -p $(@:%.ok=%)
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(J2SEHOME) \
+		-jdk:$(JDK18HOME) \
 		$(TESTDIR)/javatest/regtest/data/bootclasspath \
 			> $(@:%.ok=%/jt.log) 2>&1 
 	echo "test passed at `date`" > $@

@@ -34,9 +34,8 @@ $(BUILDDIR)/classes.com.sun.javatest.diff.ok: \
 		$(JAVAFILES.com.sun.javatest.diff) \
 		$(BUILDDIR)/classes.com.sun.javatest.regtest.ok 
 	CLASSPATH="$(CLASSDIR)$(PS)$(JAVATEST_JAR)$(PS)$(JAVAHELP_JAR)$(PS)$(ANTHOME)/lib/ant.jar" \
-	    $(J2SEJAVAC) -source $(J2SEJAVAC_SOURCE) -target $(J2SEJAVAC_TARGET) \
+	    $(REGTEST_TOOL_JAVAC) $(REGTEST_TOOL_JAVAC_OPTIONS) \
 		-d $(CLASSDIR) \
-		-Xlint -Werror \
 		-encoding ISO8859-1 \
 		$(JAVAFILES.com.sun.javatest.diff)
 	echo "classes built at `date`" > $@

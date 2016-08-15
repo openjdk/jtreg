@@ -30,7 +30,7 @@ $(BUILDDIR)/OptionDecoderTest.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(MKDIR) -p $(@:%.ok=%)/classes
-	$(J2SEJAVAC) -source $(J2SEJAVAC_SOURCE) -target $(J2SEJAVAC_TARGET) \
+	$(J2SEJAVAC) \
 		-d $(@:%.ok=%)/classes \
 		-cp $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		-Xlint -Werror \

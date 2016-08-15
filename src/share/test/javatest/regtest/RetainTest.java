@@ -48,6 +48,7 @@ public class RetainTest
         ignoreSet.add(new File(workDir, "logfile.log.log.index"));
         ignoreSet.add(new File(workDir, "logfile.log.rec.index"));
         ignoreSet.add(new File(workDir, "jtreg.policy"));
+        ignoreSet.add(new File(workDir, "patches/java.base/java/lang/reflect/JTRegModuleHelper.class"));
     }
 
     void run() {

@@ -42,7 +42,7 @@ $(BUILDDIR)/RerunTest.othervm.ok: \
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-J-Djavatest.regtest.allowTrailingBuild=true \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(J2SEHOME) \
+		-jdk:$(JDK18HOME) \
 		-verbose:summary \
 		-e:MY_ENV_VAR=x -vmoption:-Dmy.vm.option=x $(JAVAOPTION) $(JAVACOPTION) \
                 -ignore:run \
@@ -54,14 +54,14 @@ $(BUILDDIR)/RerunTest.othervm.ok: \
 	    echo Checking $(@:$(BUILDDIR)/RerunTest.%.ok=%) $$i ; \
 	    mkdir -p `dirname $(@:%.ok=%)/out/$$i` ; \
 	    $(JTREG_IMAGEDIR)/bin/jtreg \
-		-jdk:$(J2SEHOME) \
+		-jdk:$(JDK18HOME) \
 		-w:$(@:%.ok=%)/work \
 		-dir:$(TESTDIR)/javatest/regtest/data/rerun \
 		-show:rerun $$i | \
 		sed -e 's|^HOME=.*|HOME=%HOME%|' \
 		    -e 's|^DISPLAY=.*|DISPLAY=%DISPLAY%|' \
-		    -e 's|$(J2SEHOME)|%JDKHOME%|g' \
-		    -e "s|`cd $(J2SEHOME); pwd -P`|%JDKHOME%|g" \
+		    -e 's|$(JDK18HOME)|%JDKHOME%|g' \
+		    -e "s|`cd $(JDK18HOME); pwd -P`|%JDKHOME%|g" \
 		    -e 's|$(ABSTOPDIR)|%WS%|g' \
 		    -e 's|%WS%.build.images.jtreg.lib.jcommander\.jar.||g' \
 		> $(@:%.ok=%)/out/$${i%.*}.out ; \
