@@ -36,6 +36,7 @@
  */
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InaccessibleObjectException;
 import com.sun.tools.javac.main.Main;
 
 public class ExportsPrivate {
@@ -49,12 +50,13 @@ public class ExportsPrivate {
         try {
             Main m = new Main("jtreg test");
             Field f = Main.class.getDeclaredField("fileManager");
+            f.setAccessible(true);
             System.err.println(f.get(m));
             if (expectFail) {
                 throw new Exception("expected exception not thrown");
             }
         } catch (Throwable e) {
-            if (expectFail && e instanceof IllegalAccessException) {
+            if (expectFail && e instanceof InaccessibleObjectException) {
                 System.err.println("caught expected exception: " + e);
             } else {
                 throw new Exception("unexpected exception: " + e, e);

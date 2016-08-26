@@ -37,6 +37,7 @@
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InaccessibleObjectException;
 
 public class ExportsDynamicPrivate {
     public static void main(String... args) throws Exception {
@@ -53,12 +54,13 @@ public class ExportsDynamicPrivate {
             System.err.println("Created main class: " + javacMain);
 
             Field f = mainClass.getDeclaredField("fileManager");
-            System.err.println(f.get(mainClass));
+            f.setAccessible(true);
+            System.err.println(f.get(javacMain));
             if (expectFail) {
                 throw new Exception("expected exception not thrown");
             }
         } catch (Throwable e) {
-            if (expectFail && e instanceof IllegalAccessException) {
+            if (expectFail && e instanceof InaccessibleObjectException) {
                 System.err.println("caught expected exception: " + e);
             } else {
                 throw new Exception("unexpected exception: " + e, e);

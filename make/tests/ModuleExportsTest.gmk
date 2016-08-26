@@ -34,6 +34,7 @@ $(BUILDDIR)/ModuleExportsTest.othervm.ok: \
 	    $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JIGSAWHOME) \
+		-vmoption:-Dsun.reflect.enableStrictMode=true \
 		$(@:$(BUILDDIR)/ModuleExportsTest.%.ok=-%) \
 		$(TESTDIR)/javatest/regtest/data/moduleExports \
 			> $(@:%.ok=%/jt.log) 2>&1 || \
@@ -42,7 +43,6 @@ $(BUILDDIR)/ModuleExportsTest.othervm.ok: \
 	$(CHMOD) -R +w $(@:%.ok=%)
 	echo "test passed at `date`" > $@
 
-# Temporarily disabled
-# TESTS.jtreg += \
-#	$(BUILDDIR)/ModuleExportsTest.agentvm.ok \
-#	$(BUILDDIR)/ModuleExportsTest.othervm.ok \
+TESTS.jtreg += \
+	$(BUILDDIR)/ModuleExportsTest.agentvm.ok \
+	$(BUILDDIR)/ModuleExportsTest.othervm.ok
