@@ -83,8 +83,9 @@ public class ModuleHelper {
              *      throw new Fault();
              */
             Object opt_module = findModuleMethod.invoke(bootLayer, new Object[] { moduleName });
-            if (!((Boolean) isPresentMethod.invoke(opt_module, new Object[0])))
+            if (!((Boolean) isPresentMethod.invoke(opt_module, new Object[0]))) {
                 throw new Fault("module not found: " + moduleName, null);
+            }
 
             /*
              *  Module module = opt_module.get();
@@ -105,6 +106,8 @@ public class ModuleHelper {
                 if (e.getCause() instanceof IllegalArgumentException) {
                     String msg = e.getCause().getMessage();
                     throw new Fault("package not found: " + packageName + " (" + msg + ")", null);
+                } else {
+                    throw new Fault("unexpected exception: " + e, e);
                 }
             }
         } catch (SecurityException e) {

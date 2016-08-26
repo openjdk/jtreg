@@ -32,21 +32,28 @@ package java.lang.reflect;
  */
 public class JTRegModuleHelper {
     /*
-     * Use reflection to simulate:
+     * Use reflection to simulate one of:
      *      module.implAddExports(packageName, targetModule);
+     *      module.implAddExportsPrivate(packageName, targetModule);
      */
     public static void addExports(Object module, String packageName, boolean isPrivate, Object targetModule)
             throws ReflectiveOperationException {
-        if (addExportsMethod == null) {
-            Class<?> moduleClass = Class.forName("java.lang.reflect.Module");
-            addExportsMethod = moduleClass.getDeclaredMethod("implAddExports",
-                    new Class<?>[] { String.class, moduleClass });
-            addExportsPrivateMethod = moduleClass.getDeclaredMethod("implAddExportsPrivate",
-                    new Class<?>[] { String.class, moduleClass });
+        if (isPrivate) {
+            if (addExportsPrivateMethod == null) {
+                addExportsPrivateMethod = getModuleMethod("implAddExportsPrivate");
+            }
+            addExportsPrivateMethod.invoke(module, packageName, targetModule);
+        } else {
+            if (addExportsMethod == null) {
+                addExportsMethod = getModuleMethod("implAddExports");
+            }
+            addExportsMethod.invoke(module, packageName, targetModule);
         }
+    }
 
-        Method m = isPrivate ? addExportsPrivateMethod : addExportsMethod;
-        m.invoke(module, new Object[] { packageName, targetModule });
+    private static Method getModuleMethod(String name) throws ReflectiveOperationException {
+        Class<?> moduleClass = Class.forName("java.lang.reflect.Module");
+            return moduleClass.getDeclaredMethod(name, String.class, moduleClass);
     }
 
     // on java.lang.reflect.Module
