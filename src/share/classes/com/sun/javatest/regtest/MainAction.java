@@ -219,11 +219,11 @@ public class MainAction extends Action
         }
 
         if (!othervm && !useModuleExportAPI) {
-            for (String m: script.getModules()) {
-                if (m.contains("/")) { // possible need for --add-exports
+            for (Modules.Entry e: script.getModules()) {
+                if (e.needsAddExports(Modules.Phase.DYNAMIC)) {
                     boolean found = false;
                     for (String vmOpt: script.getTestVMJavaOptions()) {
-                        if (includesExport(vmOpt, m)) {
+                        if (includesExport(vmOpt, e, true)) {
                             found = true;
                             break;
                         }
@@ -237,10 +237,8 @@ public class MainAction extends Action
         }
 
         if (!othervm) {
-            for (String s: script.getModules()) {
-                int sep = s.indexOf('/');
-                String m = (sep == -1) ? s : s.substring(0, sep);
-                if (!script.defaultModules.contains(m)) {
+            for (Modules.Entry e: script.getModules()) {
+                if (!script.defaultModules.contains(e.moduleName)) {
                     othervmOverrideReasons.add("test needs --add-modules");
                     break;
                 }
@@ -439,7 +437,7 @@ public class MainAction extends Action
             }
         }
 
-        javaOpts.addAll(getExtraModuleConfigOptions());
+        javaOpts.addAll(getExtraModuleConfigOptions(Modules.Phase.DYNAMIC));
         javaOpts.addAll(script.getTestVMJavaOptions());
         javaOpts.addAll(script.getTestDebugOptions());
 
@@ -585,8 +583,14 @@ public class MainAction extends Action
 
         Status status;
         try {
-            Set<String> runAddExports =
-                    jdk.hasModules() ? script.getModules() : Collections.<String>emptySet();
+            Set<String> runAddExports = new LinkedHashSet<>();
+            if (jdk.hasModules()) {
+                for (Modules.Entry e : script.getModules()) {
+                    if (e.needsAddExports(Modules.Phase.DYNAMIC)) {
+                        runAddExports.add(e.toString());
+                    }
+                }
+            }
 
             if (!runAddExports.isEmpty()) {
                 StringBuilder sb = null;

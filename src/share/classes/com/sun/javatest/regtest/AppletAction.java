@@ -164,8 +164,8 @@ public class AppletAction extends Action
      * The method that does the work of the action.  The necessary work for the
      * given action is defined by the tag specification.
      *
-     * Run the applet described by the first "<applet>" html tag in the given
-     * html file.  Equivalent to "appletviewer <html-file>".
+     * Run the applet described by the first "{@code <applet>}" html tag in the given
+     * html file.  Equivalent to "appletviewer {@code <html-file>}".
      *
      * Note that currently, this action assumes that the JVM supports multiple
      * processes.
@@ -240,7 +240,7 @@ public class AppletAction extends Action
         command.add(execPaths.get(PathKind.CLASSPATH).toString());
 
         JDKOpts vmOpts = new JDKOpts(script.useLongFormOptions());
-        vmOpts.addAll(getExtraModuleConfigOptions());
+        vmOpts.addAll(getExtraModuleConfigOptions(Modules.Phase.DYNAMIC));
         vmOpts.addAll(script.getTestVMJavaOptions());
         vmOpts.addAll(script.getTestDebugOptions());
         command.addAll(vmOpts.toList());

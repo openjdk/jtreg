@@ -70,13 +70,13 @@ public class StringUtils extends StringArray {
         return Arrays.asList(s.split("\\Q" + sep + "\\E"));
     }
 
-    public static String join(Collection<String> list) {
+    public static String join(Collection<?> list) {
         return join(list, " ");
     }
 
-    public static String join(Collection<String> list, String sep) {
+    public static String join(Collection<?> list, String sep) {
         StringBuilder sb = new StringBuilder();
-        for (String s: list) {
+        for (Object s: list) {
             if (sb.length() > 0)
                 sb.append(sep);
             sb.append(s);

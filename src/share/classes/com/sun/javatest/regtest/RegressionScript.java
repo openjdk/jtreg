@@ -38,12 +38,10 @@ import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -129,18 +127,14 @@ public class RegressionScript extends Script {
 
         try {
             locations = new Locations(params, td);
+            modules = new Modules(params, td);
+            if (!modules.isEmpty())
+                testResult.putProperty("modules", modules.toString());
+
 
             // defaultExecMode may still be overridden in individual actions with /othervm
             defaultExecMode = testSuite.useOtherVM(td) ? ExecMode.OTHERVM : params.getExecMode();
             useBootClassPath = testSuite.useBootClassPath(td.getRootRelativePath());
-
-            String mods = td.getParameter("modules");
-            modules = (mods == null)
-                    ? Collections.<String>emptySet()
-                    : new LinkedHashSet<>(Arrays.asList(mods.split("\\s+")));
-            if (!modules.isEmpty()) {
-                testResult.putProperty("modules", StringUtils.join(modules));
-            }
 
             LinkedList<Action> actionList = parseActions(actions, true);
 
@@ -243,6 +237,8 @@ public class RegressionScript extends Script {
         } catch (TestSuite.Fault e) {
             status = error(e.getMessage());
         } catch (Locations.Fault e) {
+            status = error(e.getMessage());
+        } catch (Modules.Fault e) {
             status = error(e.getMessage());
         } catch (ParseActionsException e) {
             status = error(e.getMessage());
@@ -577,7 +573,7 @@ public class RegressionScript extends Script {
     /**
      * Get content of @modules.
      */
-    Set<String> getModules() {
+    Modules getModules() {
         return modules;
     }
 
@@ -1037,8 +1033,8 @@ public class RegressionScript extends Script {
         p.put("test.jdk", getTestJDK().getAbsolutePath());
         p.put("compile.jdk", getCompileJDK().getAbsolutePath());
         p.put("test.timeout.factor", String.valueOf(getTimeoutFactor()));
-        if (modules != null && !modules.isEmpty())
-            p.put("test.modules", StringUtils.join(modules, " "));
+        if (!modules.isEmpty())
+            p.put("test.modules", modules.toString());
         File nativeDir = getNativeDir();
         if (nativeDir != null)
             p.put("test.nativepath", nativeDir.getAbsolutePath());
@@ -1198,7 +1194,7 @@ public class RegressionScript extends Script {
     private ExecMode defaultExecMode;
     private boolean needJUnit;
     private boolean needTestNG;
-    private Set<String> modules;
+    private Modules modules;
     private ScratchDirectory scratchDirectory;
     Locations locations;
 

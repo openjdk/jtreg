@@ -304,6 +304,7 @@ public abstract class Action extends ActionHelper {
      * command: action [command_args]
      * reason: [reason_string]
      * </pre>
+     * @param initConfig whether or not to initialize a configuration section
      */
     protected void startAction(boolean initConfig) {
         String name = getName();
@@ -500,24 +501,22 @@ public abstract class Action extends ActionHelper {
 
     //----------module exports----------------------------------------------------
 
-    protected List<String> getExtraModuleConfigOptions() {
+    protected List<String> getExtraModuleConfigOptions(Modules.Phase phase) {
         if (!script.getTestJDK().hasModules())
             return Collections.<String>emptyList();
 
-        Set<String> modules = script.getModules();
+        Modules modules = script.getModules();
 
+        boolean isDynamicPhase = (phase == Modules.Phase.DYNAMIC);
         boolean needAddExports = false;
         StringBuilder addModules = null;
-        for (String s: modules) {
-            String m;
-            int sep = s.indexOf('/');
-            if (sep == -1) {
-                m = s;
-            } else {
-                m = s.substring(0, sep);
+        for (Modules.Entry e: modules) {
+            String m = e.moduleName;
+            if (e.needsAddExports(phase)) {
                 needAddExports = true;
             }
-            if (!script.defaultModules.contains(m)) {
+            if ((isDynamicPhase || !e.isDynamic)
+                    && !script.defaultModules.contains(m)) {
                 if (addModules == null) {
                     addModules = new StringBuilder();
                 } else {
@@ -536,10 +535,11 @@ public abstract class Action extends ActionHelper {
             list.add("--add-modules");
             list.add(addModules.toString());
         }
-        for (String m: modules) {
-            if (m.contains("/")) {
-                list.add("--add-exports");
-                list.add(m + "=ALL-UNNAMED");
+
+        for (Modules.Entry e: modules) {
+            if (e.packageName != null && (isDynamicPhase || !e.isDynamic)) {
+                list.add(e.isPrivate && phase == Modules.Phase.DYNAMIC ? "--add-exports-private" : "--add-exports");
+                list.add(e.moduleName + "/" + e.packageName + "=ALL-UNNAMED");
             }
         }
 
@@ -549,9 +549,12 @@ public abstract class Action extends ActionHelper {
         return list;
     }
 
-    protected boolean includesExport(String opt, String arg) {
+    protected boolean includesExport(String opt, Modules.Entry m, boolean runtime) {
+        // TODO: this will not work with space-separated args
+        String addExportsOpt = m.isPrivate && runtime ? "--add-exports-private" : "--add-exports";
+        String arg = m.moduleName + "/" + m.packageName + "=ALL-UNNAMED";
         return opt.matches("-XaddExports:(.*,)?\\Q" + arg + "\\E(,.*)?") ||
-                opt.matches("--add-exports(=| +)(.*,)?\\Q" + arg + "\\E(,.*)?");
+                opt.matches(addExportsOpt + "(=| +)\\Q" + arg + "\\E");
     }
 
     //----------misc statics----------------------------------------------------

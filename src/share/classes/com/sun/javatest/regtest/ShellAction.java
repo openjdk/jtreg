@@ -89,14 +89,18 @@ public class ShellAction extends Action
             String optName  = e.getKey();
             String optValue = e.getValue();
 
-            if (optName.equals("fail")) {
-                reverseStatus = parseFail(optValue);
-            } else if (optName.equals("timeout")) {
-                timeout  = parseTimeout(optValue);
-            } else if (optName.equals("manual")) {
-                manual = parseShellManual(optValue);
-            } else {
-                throw new ParseException(SHELL_BAD_OPTION + optName);
+            switch (optName) {
+                case "fail":
+                    reverseStatus = parseFail(optValue);
+                    break;
+                case "timeout":
+                    timeout  = parseTimeout(optValue);
+                    break;
+                case "manual":
+                    manual = parseShellManual(optValue);
+                    break;
+                default:
+                    throw new ParseException(SHELL_BAD_OPTION + optName);
             }
         }
 
@@ -121,7 +125,7 @@ public class ShellAction extends Action
 //      }
         // support simple unescaped ' characters,
         // as in: @run shell test.sh abc 'def ghi jkl' mno
-        shellArgs = new ArrayList<String>();
+        shellArgs = new ArrayList<>();
         StringBuilder curr = null;
         for (int i = 1; i < args.size(); i++) {
             if (curr == null)
@@ -169,6 +173,7 @@ public class ShellAction extends Action
      * @exception  TestRunException If an unexpected error occurs while running
      *             the test.
      */
+    @Override
     public Status run() throws TestRunException {
         Status status;
 
@@ -191,7 +196,7 @@ public class ShellAction extends Action
             // TAG-SPEC:  "The source, class, and Java home directories are made
             // available to shell-action scripts via the environment variables
             // TESTSRC, TESTCLASSES, and TESTJAVA."
-            Map<String, String> env = new LinkedHashMap<String, String>();
+            Map<String, String> env = new LinkedHashMap<>();
             env.putAll(script.getEnvVars());
             Locations locations = script.locations;
             env.put("TESTSRC", fixupSep(locations.absTestSrcDir()));
@@ -209,15 +214,15 @@ public class ShellAction extends Action
             List<String> javaOpts = script.getTestJavaOptions();
             env.put("TESTJAVAOPTS", fixupSep(StringUtils.join(javaOpts, " ")));
             env.put("TESTTIMEOUTFACTOR", script.getTimeoutFactor() + "");
-            Set<String> modules = script.getModules();
-            if (modules != null && !modules.isEmpty())
-                env.put("TESTMODULES", StringUtils.join(modules, " "));
+            Modules modules = script.getModules();
+            if (!modules.isEmpty())
+                env.put("TESTMODULES", modules.toString());
             File nativeDir = script.getNativeDir();
             if (nativeDir != null) {
                 env.put("TESTNATIVEPATH", nativeDir.getAbsolutePath());
             }
 
-            List<String> command = new ArrayList<String>();
+            List<String> command = new ArrayList<>();
             command.add("sh");
             command.add(shellFile.getPath());
             command.addAll(shellArgs);

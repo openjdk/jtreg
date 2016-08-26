@@ -343,8 +343,8 @@ public class CompileAction extends Action {
             if (status.isPassed() && runJavac) {
                 javacArgs = getJavacCommandArgs(javacArgs);
                 if (explicitAnnotationProcessingRequested(javacArgs)
-                        && !getExtraModuleConfigOptions().isEmpty()) {
-                    othervmOverrideReasons.add("runtime --add-exports needed for annotation processing");
+                        && !getExtraModuleConfigOptions(Modules.Phase.DYNAMIC).isEmpty()) {
+                    othervmOverrideReasons.add("additional runtime exports needed for annotation processing");
                 }
                 switch (!othervmOverrideReasons.isEmpty() ? ExecMode.OTHERVM : script.getExecMode()) {
                     case AGENTVM:
@@ -452,7 +452,7 @@ public class CompileAction extends Action {
 
         JDKOpts javacArgs = new JDKOpts(script.useLongFormOptions());
         javacArgs.addAll(script.getTestCompilerOptions());
-        javacArgs.addAll(getExtraModuleConfigOptions());
+        javacArgs.addAll(getExtraModuleConfigOptions(Modules.Phase.STATIC));
 
         if (destDir != null) {
             javacArgs.add("-d");
@@ -514,7 +514,7 @@ public class CompileAction extends Action {
             javacVMOpts.addAll(script.getTestDebugOptions());
 
         if (explicitAnnotationProcessingRequested(javacArgs)) {
-            javacVMOpts.addAll(getExtraModuleConfigOptions());
+            javacVMOpts.addAll(getExtraModuleConfigOptions(Modules.Phase.STATIC));
         }
 
         // WRITE ARGUMENT FILE

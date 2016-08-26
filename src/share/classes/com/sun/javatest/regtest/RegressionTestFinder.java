@@ -65,11 +65,13 @@ import com.sun.javatest.util.I18NResourceBundle;
 public class RegressionTestFinder extends TagTestFinder
 {
     /**
-      * Constructs the list of file names to exclude for pruning in the search
-      * for files to examine for test descriptions.  This constructor also sets
-      * the allowable comment formats.
-      * @param properties the test suite properties manager
-      */
+     * Constructs the list of file names to exclude for pruning in the search
+     * for files to examine for test descriptions.  This constructor also sets
+     * the allowable comment formats.
+     *
+     * @param properties the test suite properties manager
+     * @param errHandler a handler for error messages
+     */
     public RegressionTestFinder(TestProperties properties, ErrorHandler errHandler) {
         setErrorHandler(errHandler);
         this.properties = properties;
@@ -675,22 +677,11 @@ public class RegressionTestFinder extends TagTestFinder
     }
 
     private void processModules(Map<String, String> tagValues, Collection<String> modules) {
-        for (String word: modules) {
-            String m, p;
-            int sep = word.indexOf("/");
-            if (sep == -1) {
-                m = word;
-                p = null;
-            } else {
-                m = word.substring(0, sep);
-                p = word.substring(sep + 1);
-            }
-            if (!isDottedName(m)) {
-                parseError(tagValues, PARSE_BAD_MODULE + m);
-                return;
-            }
-            if (p != null && !isDottedName(p)) {
-                parseError(tagValues, PARSE_BAD_PACKAGE + p);
+        for (String word : modules) {
+            try {
+                Modules.Entry m = Modules.parse(word);
+            } catch (com.sun.javatest.regtest.Modules.Fault f) {
+                parseError(tagValues, PARSE_BAD_MODULE + f.getMessage());
                 return;
             }
         }
@@ -701,25 +692,6 @@ public class RegressionTestFinder extends TagTestFinder
             tagValues.put(MODULES, value);
         else
             tagValues.put(MODULES, oldValue + " " + value);
-    }
-
-    private boolean isDottedName(String qualId) {
-        for (String id: qualId.split("\\.")) {
-            if (!isValidIdentifier(id))
-                return false;
-        }
-        return true;
-    }
-    private boolean isValidIdentifier(String id) {
-        if (id.length() == 0)
-            return false;
-        if (!Character.isJavaIdentifierStart(id.charAt(0)))
-            return false;
-        for (int i = 1; i < id.length(); i++) {
-            if (!Character.isJavaIdentifierPart(id.charAt(i)))
-                return false;
-        }
-        return true;
     }
 
     /**
@@ -812,8 +784,7 @@ public class RegressionTestFinder extends TagTestFinder
         PARSE_LIB_EMPTY       = "No value provided for `@library'",
         PARSE_LIB_AFTER_RUN   = "`@library' must appear before first action tag",
         PARSE_MODULES_EMPTY   = "No values provided for @modules",
-        PARSE_BAD_MODULE      = "Invalid module name in @modules: ",
-        PARSE_BAD_PACKAGE     = "Invalid package name in @modules: ",
+        PARSE_BAD_MODULE      = "Invalid item in @modules: ",
         PARSE_BAD_RUN         = "Explicit action tag not allowed",
         PARSE_REQUIRES_EMPTY  = "No expression for @requires",
         PARSE_REQUIRES_SYNTAX = "Syntax error in @requires expression: ",

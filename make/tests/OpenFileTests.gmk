@@ -86,6 +86,5 @@ TESTS.jtreg += \
 	$(BUILDDIR)/OpenFileTests.agentvm.ok \
 	$(BUILDDIR)/OpenFileTests.agentvm.retain.ok \
 	$(BUILDDIR)/OpenFileTests.othervm.ok \
-	$(BUILDDIR)/OpenFileTests.othervm.retain.ok \
 	$(BUILDDIR)/OpenFileTests.othervm.retain.ok
 endif

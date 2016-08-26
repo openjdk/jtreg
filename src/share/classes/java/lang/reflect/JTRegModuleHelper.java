@@ -35,17 +35,21 @@ public class JTRegModuleHelper {
      * Use reflection to simulate:
      *      module.implAddExports(packageName, targetModule);
      */
-    public static void addExports(Object module, String packageName, Object targetModule)
-            throws ClassNotFoundException, NoSuchMethodException, IllegalArgumentException, InvocationTargetException, IllegalAccessException {
+    public static void addExports(Object module, String packageName, boolean isPrivate, Object targetModule)
+            throws ReflectiveOperationException {
         if (addExportsMethod == null) {
             Class<?> moduleClass = Class.forName("java.lang.reflect.Module");
             addExportsMethod = moduleClass.getDeclaredMethod("implAddExports",
                     new Class<?>[] { String.class, moduleClass });
+            addExportsPrivateMethod = moduleClass.getDeclaredMethod("implAddExportsPrivate",
+                    new Class<?>[] { String.class, moduleClass });
         }
 
-        addExportsMethod.invoke(module, new Object[] { packageName, targetModule });
+        Method m = isPrivate ? addExportsPrivateMethod : addExportsMethod;
+        m.invoke(module, new Object[] { packageName, targetModule });
     }
 
     // on java.lang.reflect.Module
     private static Method addExportsMethod;
+    private static Method addExportsPrivateMethod;
 }

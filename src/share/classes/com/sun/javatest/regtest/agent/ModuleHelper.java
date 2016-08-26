@@ -41,9 +41,23 @@ public class ModuleHelper {
         for (String e: exports) {
             int sep = e.indexOf("/");
             if (sep > 0) {
+                int colon = e.indexOf(":", sep + 1);
                 String moduleName = e.substring(0, sep);
-                String packageName = e.substring(sep + 1);
-                addModuleExport(moduleName, packageName, loader);
+                String packageName;
+                boolean isPrivate = false;
+                if (colon == -1) {
+                    packageName = e.substring(sep + 1);
+                } else {
+                    packageName = e.substring(sep + 1, colon);
+                    String[] modifiers = StringArray.splitSeparator(",", e.substring(colon + 1));
+                    for (String m : modifiers) {
+                        if (m.equals("private")) {
+                            isPrivate = true;
+                            break;
+                        }
+                    }
+                }
+                addModuleExport(moduleName, packageName, isPrivate, loader);
             }
         }
     }
@@ -57,7 +71,8 @@ public class ModuleHelper {
      *      Module targetModule = targetLoader.getUnnamedModule();
      *      JTRegModuleHelper.implAddExports(module, packageName, targetModule);
      */
-    private static void addModuleExport(String moduleName, String packageName, ClassLoader targetLoader)
+    private static void addModuleExport(String moduleName, String packageName,
+            boolean isPrivate, ClassLoader targetLoader)
             throws Fault {
         try {
             init();
@@ -82,10 +97,10 @@ public class ModuleHelper {
             Object targetModule = getUnnamedModuleMethod.invoke(targetLoader, new Object[0]);
 
             /*
-             *  module.addExports(packageName, targetModule);
+             *  JTRegModuleHelper.addExports(module, packageName, isPrivate, targetModule);
              */
             try {
-                addExportsMethod.invoke(null, new Object[] { module, packageName, targetModule });
+                addExportsMethod.invoke(null, new Object[] { module, packageName, isPrivate, targetModule });
             } catch (InvocationTargetException e) {
                 if (e.getCause() instanceof IllegalArgumentException) {
                     String msg = e.getCause().getMessage();
@@ -126,7 +141,7 @@ public class ModuleHelper {
 
             Class<?> helperClass = Class.forName("java.lang.reflect.JTRegModuleHelper");
             addExportsMethod = helperClass.getDeclaredMethod("addExports",
-                    new Class<?>[] { Object.class, String.class, Object.class });
+                    new Class<?>[] { Object.class, String.class, boolean.class, Object.class });
 
             getUnnamedModuleMethod = ClassLoader.class.getDeclaredMethod("getUnnamedModule", new Class<?>[0]);
 
