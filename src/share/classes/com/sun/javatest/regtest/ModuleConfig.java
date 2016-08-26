@@ -75,12 +75,16 @@ public class ModuleConfig {
                         setAddExports(beforePart(arg, '='), split(afterPart(arg, '='), ','));
                         break;
 
+                    case ADD_EXPORTS_PRIVATE:
+                        setAddExports(beforePart(arg, '=') + ":private", split(afterPart(arg, '='), ','));
+                        break;
+
                     case ADD_MODULES:
                         setAddModules(split(arg, ','));
                         break;
 
                     case ADD_READS:
-                        setAddExports(beforePart(arg, '='), split(afterPart(arg, '='), ','));
+                        setAddReads(beforePart(arg, '='), split(afterPart(arg, '='), ','));
                         break;
 
                     case CLASS_PATH:
@@ -179,7 +183,10 @@ public class ModuleConfig {
         if (addExports != null && !addExports.isEmpty()) {
             String label = "add exports:";
             for (Map.Entry<String, List<String>> e: addExports.entrySet()) {
-                table.addRow(label, e.getKey(), join(e.getValue(), " "));
+                int colon = e.getKey().indexOf(":");
+                String modulePackage = (colon == -1) ? e.getKey() : e.getKey().substring(0, colon);
+                String modifiers = (colon == -1) ? "" : e.getKey().substring(colon + 1);
+                table.addRow(label, modifiers, modulePackage, join(e.getValue(), " "));
                 label = null;
             }
         }
@@ -274,7 +281,9 @@ public class ModuleConfig {
                         pw.write(item);
                         space(pw, widths[col] - item.length());
                     }
-                    pw.write(" ");
+                    if (widths[col] > 0) {
+                        pw.write(" ");
+                    }
                     col++;
                 }
                 pw.println();

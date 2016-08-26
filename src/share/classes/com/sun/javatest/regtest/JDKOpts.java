@@ -55,6 +55,7 @@ public class JDKOpts {
      */
     enum Option {
         ADD_EXPORTS("--add-exports", "-XaddExports:"),
+        ADD_EXPORTS_PRIVATE("--add-exports-private"),
         ADD_MODULES("--add-modules", "-addmods"),
         ADD_READS("--add-reads", "-XaddReads:"),
         CLASS_PATH("--class-path", "-classpath", "-cp"),
@@ -212,6 +213,10 @@ public class JDKOpts {
                     } else {
                         updateOptAdjacentArg("-XaddExports:" + arg, EQUALS, COMMA);
                     }
+                    break;
+
+                case ADD_EXPORTS_PRIVATE:
+                    updateOptWhitespaceArg("--add-exports-private", arg, EQUALS, COMMA);
                     break;
 
                 case ADD_MODULES:

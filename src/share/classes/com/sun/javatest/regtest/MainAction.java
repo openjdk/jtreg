@@ -587,7 +587,8 @@ public class MainAction extends Action
             if (jdk.hasModules()) {
                 for (Modules.Entry e : script.getModules()) {
                     if (e.needsAddExports(Modules.Phase.DYNAMIC)) {
-                        runAddExports.add(e.toString());
+                        runAddExports.add(
+                                e.moduleName + "/" + e.packageName + (e.isPrivate ? ":private" : ""));
                     }
                 }
             }
