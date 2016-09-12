@@ -46,5 +46,5 @@ PATH=/bin:/usr/bin \
         -Dcompile.jdk=%JDKHOME% \
         -Dtest.timeout.factor=1.0 \
         -classpath %WS%/build/RerunTest.agentvm/work/classes/testng:%WS%/src/share/test/javatest/regtest/data/rerun/testng:%WS%/build/images/jtreg/lib/testng.jar:%JDKHOME%/lib/tools.jar:%WS%/build/images/jtreg/lib/javatest.jar:%WS%/build/images/jtreg/lib/jtreg.jar \
-        'com.sun.javatest.regtest.TestNGAction$TestNGRunner' testng/TestNGTest.java TestNGTest
+        com.sun.javatest.regtest.agent.TestNGRunner testng/TestNGTest.java TestNGTest
 

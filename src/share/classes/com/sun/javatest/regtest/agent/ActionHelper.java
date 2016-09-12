@@ -88,6 +88,7 @@ public class ActionHelper {
             try {
                 if (System.getSecurityManager() != secMgr) {
                     AccessController.doPrivileged(new PrivilegedAction<Object>() {
+                        @Override
                         public Object run() {
                             System.setSecurityManager(secMgr);
                             return null;
@@ -113,6 +114,7 @@ public class ActionHelper {
                 final Provider[] sp = Security.getProviders();
                 if (!equal(securityProviders, sp)) {
                     AccessController.doPrivileged(new PrivilegedAction<Object>() {
+                        @Override
                         public Object run() {
                             for (Provider p : sp) {
                                 Security.removeProvider(p.getName());
@@ -231,6 +233,7 @@ public class ActionHelper {
 
     protected static OutputHandler getOutputHandler(final TestResult.Section section) {
         return new OutputHandler() {
+            @Override
             public PrintWriter createOutput(OutputKind kind) {
                 if (kind == OutputKind.LOG)
                     return section.getMessageWriter();
@@ -238,10 +241,14 @@ public class ActionHelper {
                     return section.createOutput(kind.name);
             }
 
+            @Override
             public void createOutput(OutputKind kind, String output) {
                 PrintWriter pw = createOutput(kind);
-                pw.write(output);
-                pw.close();
+                try {
+                    pw.write(output);
+                } finally {
+                    pw.close();
+                }
             }
         };
     }

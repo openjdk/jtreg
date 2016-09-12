@@ -688,7 +688,6 @@ public abstract class Action extends ActionHelper {
         IGNORE_TEST_SUPPRESSED_C = "@ignore suppressed by command line option: ",
 
         // junit
-        JUNIT_NO_DRIVER        = "No JUnit 4 driver (install junit.jar next to jtreg.jar)",
         JUNIT_NO_CLASSNAME     = "No class provided for `junit'",
         JUNIT_BAD_MAIN_ARG     = "Bad argument provided for class in `junit'",
 

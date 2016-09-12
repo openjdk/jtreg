@@ -25,14 +25,10 @@
 
 package com.sun.javatest.regtest;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.lang.reflect.Method;
-import java.util.Iterator;
+import com.sun.javatest.regtest.agent.JUnitRunner;
+
 import java.util.List;
 import java.util.Map;
-
-import com.sun.javatest.regtest.agent.MainActionHelper;
 
 /**
  * This class implements the "junit" action, which is a variation of "main".
@@ -83,55 +79,5 @@ public class JUnitAction extends MainAction
             throw new ParseException(JUNIT_BAD_MAIN_ARG);
 
     } // init()
-
-    public static class JUnitRunner implements MainActionHelper.TestRunner {
-        public static void main(String... args) throws Exception {
-            main(null, args);
-        }
-
-        public static void main(ClassLoader loader, String... args) throws Exception {
-            if (args.length != 2)
-                throw new Error("wrong number of arguments");
-            // String testName = args[0];  // not used
-            String moduleClassName = args[1];
-            int sep = moduleClassName.indexOf('/');
-            String moduleName = (sep == -1) ? null : moduleClassName.substring(0, sep);
-            String className  = (sep == -1) ? moduleClassName : moduleClassName.substring(sep + 1);
-
-//            Class<?> mainClass = (loader == null) ? Class.forName(className) : loader.loadClass(className);
-
-            ClassLoader cl;
-            if (moduleName != null) {
-                Class<?> layerClass = Class.forName("java.lang.reflect.Layer");
-                Method bootMethod = layerClass.getMethod("boot", new Class<?>[] { });
-                Object bootLayer = bootMethod.invoke(null, new Object[] { });
-                Method findLoaderMth = layerClass.getMethod("findLoader", new Class<?>[] { String.class });
-                cl = (ClassLoader) findLoaderMth.invoke(bootLayer, new Object[] { moduleName });
-            } else if (loader != null) {
-                cl = loader;
-            } else {
-                cl = JUnitRunner.class.getClassLoader();
-            }
-
-            Class<?> mainClass = Class.forName(className, false, cl);
-            org.junit.runner.Result result;
-            try {
-                result = org.junit.runner.JUnitCore.runClasses(mainClass);
-            } catch (NoClassDefFoundError ex) {
-                throw new Exception(JUNIT_NO_DRIVER, ex);
-            }
-            if (!result.wasSuccessful()) {
-                for (org.junit.runner.notification.Failure failure : result.getFailures()) {
-                    StringWriter sw = new StringWriter();
-                    try (PrintWriter pw = new PrintWriter(sw)) {
-                        pw.println("JavaTest Message: JUnit Failure: " + failure);
-                        failure.getException().printStackTrace(pw);
-                    }
-                    System.err.println(sw.toString());
-                }
-                throw new Exception("JUnit test failure");
-            }
-        }
-    }
 
 }
