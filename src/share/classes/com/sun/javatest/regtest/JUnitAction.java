@@ -25,6 +25,8 @@
 
 package com.sun.javatest.regtest;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.reflect.Method;
 import java.util.Iterator;
 import java.util.List;
@@ -119,11 +121,13 @@ public class JUnitAction extends MainAction
                 throw new Exception(JUNIT_NO_DRIVER, ex);
             }
             if (!result.wasSuccessful()) {
-                List<org.junit.runner.notification.Failure> failures = result.getFailures();
-                for (Iterator<org.junit.runner.notification.Failure>
-                                it = failures.iterator(); it.hasNext(); ) {
-                    org.junit.runner.notification.Failure failure = it.next();
-                    System.err.println("JavaTest Message: JUnit Failure: "+failure);
+                for (org.junit.runner.notification.Failure failure : result.getFailures()) {
+                    StringWriter sw = new StringWriter();
+                    try (PrintWriter pw = new PrintWriter(sw)) {
+                        pw.println("JavaTest Message: JUnit Failure: " + failure);
+                        failure.getException().printStackTrace(pw);
+                    }
+                    System.err.println(sw.toString());
                 }
                 throw new Exception("JUnit test failure");
             }
