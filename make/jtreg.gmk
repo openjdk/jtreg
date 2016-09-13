@@ -84,7 +84,10 @@ TARGETS.com.sun.javatest.regtest += $(BUILDDIR)/classes.com.sun.javatest.regtest
 # resources required for com.sun.javatest.regtest
 
 RESOURCES.com.sun.javatest.regtest = \
-	$(CLASSDIR)/com/sun/javatest/regtest/i18n.properties
+	$(CLASSDIR)/com/sun/javatest/regtest/i18n.properties \
+	$(CLASSDIR)/com/sun/javatest/regtest/config/i18n.properties \
+	$(CLASSDIR)/com/sun/javatest/regtest/report/i18n.properties \
+	$(CLASSDIR)/com/sun/javatest/regtest/tool/i18n.properties
 
 TARGETS.com.sun.javatest.regtest += $(RESOURCES.com.sun.javatest.regtest)
 
@@ -134,7 +137,7 @@ $(JTREG_LICENSE): $(TOPDIR)/LICENSE
 
 $(BUILDDIR)/jtreg-usage.txt: \
 		$(BUILDDIR)/classes.com.sun.javatest.regtest.ok \
-		$(BUILDDIR)/classes/com/sun/javatest/regtest/i18n.properties
+		$(BUILDDIR)/classes/com/sun/javatest/regtest/tool/i18n.properties
 	$(J2SEJAVA) -cp "$(CLASSDIR)$(PS)$(JAVATEST_JAR)" \
 	    -Dprogram=jtreg com.sun.javatest.regtest.Main -help all > $@
 
@@ -147,6 +150,11 @@ TARGETS.ZIP.jtreg += $(JTREG_DOCS)
 PKGS.JAR.jtreg += \
 	com.sun.javatest.regtest \
 	com.sun.javatest.regtest.agent \
+	com.sun.javatest.regtest.config \
+	com.sun.javatest.regtest.exec \
+	com.sun.javatest.regtest.report \
+	com.sun.javatest.regtest.tool \
+	com.sun.javatest.regtest.util \
 	java.lang.reflect
 TARGETS.JAR.jtreg += $(TARGETS.com.sun.javatest.regtest)
 

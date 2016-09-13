@@ -43,13 +43,13 @@ import org.apache.tools.ant.Project;
 import org.apache.tools.ant.taskdefs.MatchingTask;
 import org.apache.tools.ant.types.Commandline;
 
-import com.sun.javatest.regtest.AntOptionDecoder;
+import com.sun.javatest.regtest.tool.AntOptionDecoder;
 import com.sun.javatest.regtest.BadArgs;
-import com.sun.javatest.regtest.Option;
-import com.sun.javatest.regtest.OptionDecoder;
+import com.sun.javatest.regtest.tool.Option;
+import com.sun.javatest.regtest.tool.OptionDecoder;
 import com.sun.javatest.util.I18NResourceBundle;
 
-import static com.sun.javatest.regtest.Option.ArgType.*;
+import static com.sun.javatest.regtest.tool.Option.ArgType.*;
 
 
 /**

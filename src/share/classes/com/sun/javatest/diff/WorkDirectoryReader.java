@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2007, 2016, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -39,7 +39,7 @@ import com.sun.javatest.TestResult;
 import com.sun.javatest.TestResultTable;
 import com.sun.javatest.TestSuite;
 import com.sun.javatest.WorkDirectory;
-import com.sun.javatest.regtest.RegressionTestSuite;
+import com.sun.javatest.regtest.config.RegressionTestSuite;
 import com.sun.javatest.util.I18NResourceBundle;
 
 /**

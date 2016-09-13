@@ -22,6 +22,7 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
+
 package com.sun.javatest.regtest.agent;
 
 import java.io.PrintWriter;
@@ -36,7 +37,6 @@ import static com.sun.javatest.regtest.agent.RStatus.error;
 import static com.sun.javatest.regtest.agent.RStatus.failed;
 import static com.sun.javatest.regtest.agent.RStatus.normalize;
 import static com.sun.javatest.regtest.agent.RStatus.passed;
-import static com.sun.javatest.regtest.agent.RStatus.normalize;
 
 public class CompileActionHelper extends ActionHelper {
 

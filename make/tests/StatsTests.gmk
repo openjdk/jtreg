@@ -34,7 +34,7 @@ $(BUILDDIR)/StatsTest.ok: $(TESTDIR)/javatest/regtest/StatsTest.java \
 		-Xlint -Werror \
 		$(TESTDIR)/javatest/regtest/StatsTest.java
 	$(J2SEJAVA) -cp $(@:%.ok=%)/classes:$(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	    com.sun.javatest.regtest.StatsTest
+	    com.sun.javatest.regtest.report.StatsTest
 	echo "test passed at `date`" > $@
 
 ifneq ($(OS_NAME), windows)

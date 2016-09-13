@@ -38,10 +38,10 @@ import com.sun.javatest.TestResult;
 import com.sun.javatest.TestResultTable;
 import com.sun.javatest.TestSuite;
 import com.sun.javatest.WorkDirectory;
-import com.sun.javatest.regtest.RegressionScript;
-import com.sun.javatest.regtest.RegressionTestFinder;
-import com.sun.javatest.regtest.RegressionTestSuite;
-import com.sun.javatest.regtest.RegressionParameters;
+import com.sun.javatest.regtest.config.RegressionTestFinder;
+import com.sun.javatest.regtest.config.RegressionTestSuite;
+import com.sun.javatest.regtest.config.RegressionParameters;
+import com.sun.javatest.regtest.exec.RegressionScript;
 
 public class Basic
 {

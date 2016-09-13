@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2007, 2016, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -32,7 +32,7 @@ import com.sun.javatest.util.I18NResourceBundle;
  */
 public class BadArgs extends Exception {
     static final long serialVersionUID = -5835655326361668148L;
-    BadArgs(I18NResourceBundle i18n, String s, Object... args) {
+    public BadArgs(I18NResourceBundle i18n, String s, Object... args) {
         super(i18n.getString(s, args));
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014, 2016, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -25,13 +25,14 @@
 
 package com.sun.javatest.regtest;
 
-import com.sun.javatest.regtest.agent.Alarm;
 import java.io.File;
 import java.io.PrintWriter;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
+
+import com.sun.javatest.regtest.agent.Alarm;
 
 /**
  * Abstract super-class for timeout handlers.
@@ -86,7 +87,7 @@ public abstract class TimeoutHandler {
      * Perform actions on the Process to gather data that can be used to
      * analyze the time out.
      * @param process Process that has timed out.
-     * @param proc pid of the process.
+     * @param pid pid of the process.
      */
     protected abstract void runActions(Process process, long pid) throws InterruptedException;
 

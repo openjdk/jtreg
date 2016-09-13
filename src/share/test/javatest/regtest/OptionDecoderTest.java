@@ -31,11 +31,11 @@ import java.util.*;
 import static java.util.Arrays.asList;
 
 import com.sun.javatest.regtest.BadArgs;
-import com.sun.javatest.regtest.Option;
-import com.sun.javatest.regtest.Option.ArgType;
-import com.sun.javatest.regtest.OptionDecoder;
+import com.sun.javatest.regtest.tool.Option;
+import com.sun.javatest.regtest.tool.Option.ArgType;
+import com.sun.javatest.regtest.tool.OptionDecoder;
 
-import static com.sun.javatest.regtest.Option.ArgType.*;
+import static com.sun.javatest.regtest.tool.Option.ArgType.*;
 
 /**
  * Unit test for jtreg command-line option decoding,

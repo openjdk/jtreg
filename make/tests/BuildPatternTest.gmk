@@ -33,7 +33,7 @@ $(BUILDDIR)/BuildPatternTest.ok: \
 		$(TESTDIR)/javatest/regtest/BuildPatternTest.java
 	$(J2SEJAVA) \
 		-cp $(@:%.ok=%/classes):$(JTREG_IMAGEDIR)/lib/jtreg.jar \
-		com.sun.javatest.regtest.BuildPatternTest
+		com.sun.javatest.regtest.exec.BuildPatternTest
 	echo $@ passed at `date` > $@
 
 TESTS.jtreg += \

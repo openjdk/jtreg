@@ -46,7 +46,7 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import com.sun.javatest.regtest.Option;
+import com.sun.javatest.regtest.tool.Option;
 import com.sun.javatest.util.HelpTree;
 import com.sun.javatest.util.I18NResourceBundle;
 import com.sun.javatest.util.WrapWriter;

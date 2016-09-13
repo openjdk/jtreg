@@ -41,9 +41,9 @@ import java.util.TreeSet;
 
 import com.sun.javatest.TestSuite;
 import com.sun.javatest.WorkDirectory;
-import com.sun.javatest.regtest.JDK;
-import com.sun.javatest.regtest.RegressionParameters;
-import com.sun.javatest.regtest.RegressionTestSuite;
+import com.sun.javatest.regtest.config.JDK;
+import com.sun.javatest.regtest.config.RegressionParameters;
+import com.sun.javatest.regtest.config.RegressionTestSuite;
 
 public class JDKModulesTest {
     public static void main(String... args) throws Exception {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2016, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -35,24 +35,7 @@ import java.util.Vector;
  *
  * @author Iris A Garcia
  */
-public class StringArray extends com.sun.javatest.util.StringArray
-{
-
-    /**
-     * Given two arrays of strings, return a single array which is the
-     * concatenation of the two arrays.
-     *
-     * @param s1   The first string array.
-     * @param s2   The second string array.
-     * @return     A single array which contains the elements of s1 followed by
-     *             the elements of s2.
-     */
-    public static String[] join(String[] s1, String[] s2) {
-        String[] retVal = new String[s1.length + s2.length];
-        System.arraycopy(s1, 0, retVal, 0, s1.length);
-        System.arraycopy(s2, 0, retVal, s1.length, s2.length);
-        return retVal;
-    } // append()
+public class StringArray {
 
     /**
      * Splits a string based on location of "=". Always returns an array of size

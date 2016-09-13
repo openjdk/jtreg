@@ -30,10 +30,10 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
 
-import com.sun.javatest.regtest.JDKOpts;
+import com.sun.javatest.regtest.config.JDKOpts;
 
 /**
- * Unit test for com.sun.javatest.regtest.JDKOpts,
+ * Unit test for com.sun.javatest.regtest.config.JDKOpts,
  * which is used to create command lines for java and javac,
  * combining/merging options which should otherwise only appear
  * once, taking alternative forms into account.
