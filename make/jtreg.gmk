@@ -144,6 +144,30 @@ $(BUILDDIR)/jtreg-usage.txt: \
 TARGETS.ZIP.jtreg += $(JTREG_DOCS)
 
 #----------------------------------------------------------------------
+
+ifdef JAVATEST_SRCDIR
+JAVATEST_SRCFILES= \
+	$(JAVATEST_SRCDIR)/com/sun/javatest/InterviewParameters.java \
+	$(JAVATEST_SRCDIR)/com/sun/javatest/Parameters.java \
+	$(JAVATEST_SRCDIR)/com/sun/javatest/Status.java \
+	$(JAVATEST_SRCDIR)/com/sun/javatest/TestDescription.java \
+	$(JAVATEST_SRCDIR)/com/sun/javatest/TestResult.java \
+	$(JAVATEST_SRCDIR)/com/sun/javatest/TestResultTable.java \
+	$(JAVATEST_SRCDIR)/com/sun/javatest/WorkDirectory.java
+endif
+
+$(JTREG_IMAGEDIR)/doc/api/index.html: \
+            $(JAVAFILES.com.sun.javatest.regtest-tools) \
+            $(JAVATEST_SRCFILES)
+	$(J2SEHOME)/bin/javadoc -d $(JTREG_IMAGEDIR)/doc/api \
+                -encoding iso-8859-1 \
+		-sourcepath "$(JAVADIR)$(PS)$(JAVATEST_SRCDIR)" \
+		-classpath "$(ANTHOME)/lib/ant.jar$(PS)$(JAVATEST_JAR)$(PS)$(JUNIT_JAR)$(PS)$(TESTNG_JAR)" \
+		com.sun.javatest.regtest \
+                $(JAVATEST_SRCFILES)
+		
+
+#----------------------------------------------------------------------
 #
 # create jtreg.jar
 
