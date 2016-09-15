@@ -210,9 +210,9 @@ public abstract class Action extends ActionHelper {
     //--------------------------------------------------------------------------
 
     /**
-     * Add a grant entry to the policy file so that JavaTest can read
-     * JTwork/classes.  The remaining entries in the policy file should remain
-     * the same.
+     * Add a grant entry to the policy file so that jtreg and other libraries can read
+     * JTwork/classes.
+     * The remaining entries in the policy file should remain the same.
      *
      * @param fileName The absolute name of the original policy file.
      * @return     A string indicating the absolute name of the modified policy
@@ -223,19 +223,24 @@ public abstract class Action extends ActionHelper {
         File newPolicy = new File(script.absTestScratchDir(),
                                   (new File(fileName).getName()) + "_new");
 
-        FileWriter fw;
-
         try {
-            fw = new FileWriter(newPolicy);
-            try {
-                fw.write("// The following grant entries were added by JavaTest.  Do not edit." + LINESEP);
+            try (FileWriter fw = new FileWriter(newPolicy)) {
+                fw.write("// The following grant entries were added by jtreg.  Do not edit." + LINESEP);
                 fw.write("grant {" + LINESEP);
                 fw.write("    permission java.io.FilePermission \""
                         + script.absTestClsTopDir().getPath().replace('\\' + FILESEP, "{/}")
                         + "${/}-\"" + ", \"read\";" + LINESEP);
                 fw.write("};" + LINESEP);
-                for (File f: script.getJavaTestClassPath().asList()) {
-                    fw.write("grant codebase \"" + f.toURI().toURL() + "\" {" + LINESEP);
+                List<File> libs = new ArrayList<>();
+                libs.addAll(script.getJavaTestClassPath().asList());
+                if (script.isJUnitRequired()) {
+                    libs.addAll(script.getJUnitPath().asList());
+                }
+                if (script.isTestNGRequired()) {
+                    libs.addAll(script.getTestNGPath().asList());
+                }
+                for (File lib : libs) {
+                    fw.write("grant codebase \"" + lib.toURI() + "\" {" + LINESEP);
                     fw.write("    permission java.security.AllPermission;" + LINESEP);
                     fw.write("};" + LINESEP);
                 }
@@ -250,8 +255,6 @@ public abstract class Action extends ActionHelper {
                         fw.write(line + LINESEP);
                     }
                 }
-            } finally {
-                fw.close();
             }
         } catch (IOException e) {
             throw new TestRunException(POLICY_WRITE_PROB + newPolicy.toString());
