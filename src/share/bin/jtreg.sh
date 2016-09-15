@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright (c) 1998, 2015, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1998, 2016, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -34,13 +34,13 @@
 #           (cf JDK.)
 #       -   Otherwise, "java" is used
 #
-# jtreg requires a version of Java equivalent to JDK 1.5.0 or higher.
+# jtreg requires a version of Java equivalent to JDK 1.7.0 or higher.
 
 # $JT_HOME can be used to specify the jtreg installation directory
 #   (e.g. /usr/local/java/jct-tools/3.2.2)
 #
 # $JT_JAVA is used to specify the version of java to use when running JavaTest
-#   (e.g. /usr/local/java/jdk1.5.0/solaris-sparc/bin/java)
+#   (e.g. /usr/local/java/jdk1.7.0/solaris-sparc/bin/java)
 #
 # You can also run the jar file directly, as in
 #   java -jar <path>/lib/jtreg.jar ...args...
