@@ -44,7 +44,7 @@ import com.sun.javatest.regtest.tool.Tool;
 import com.sun.javatest.util.I18NResourceBundle;
 
 /**
- * Main entry point to be used to access JDK Regression Test Harness, jtreg.
+ * Main entry point to be used to access the Regression Test Harness for JDK: jtreg.
  */
 public class Main {
 
@@ -59,7 +59,7 @@ public class Main {
     } // main()
 
     /**
-     * Exception to report a problem while executing in Main.
+     * Exception to report a problem while running the test harness.
      */
     public static class Fault extends Exception {
         static final long serialVersionUID = -6780999176737139046L;
@@ -110,6 +110,9 @@ public class Main {
 
     //---------- Ant Invocation ------------------------------------------------
 
+    /**
+     * Ant task to invoke jtreg.
+     */
     public static class Ant extends MatchingTask {
         private final Tool tool = new Tool();
         private File jdk;

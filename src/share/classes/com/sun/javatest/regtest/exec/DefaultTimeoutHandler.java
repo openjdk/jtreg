@@ -63,20 +63,16 @@ public class DefaultTimeoutHandler extends TimeoutHandler {
                 return;
             }
 
-            ProcessBuilder pb = new ProcessBuilder(jstack.getAbsolutePath(),
-                pid + "");
+            ProcessBuilder pb = new ProcessBuilder(jstack.getAbsolutePath(), pid + "");
             pb.redirectErrorStream(true);
 
             Process p = pb.start();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
-            try {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     log.println(line);
                 }
                 p.waitFor();
-            } finally {
-                reader.close();
             }
         } catch (IOException ex) {
             ex.printStackTrace(log);

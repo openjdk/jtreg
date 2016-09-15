@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005, 2007, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2005, 2016, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -37,12 +37,43 @@ import com.sun.javatest.finder.HTMLCommentStream;
 import com.sun.javatest.finder.JavaCommentStream;
 import com.sun.javatest.finder.ShScriptCommentStream;
 
-public class CheckFiles
-{
+/**
+ * Simple utility to check for files containing comments which may contain action tags,
+ * (such as {@code @run}, {@code @compile}, etc.) but which do not contain {@code @test}.
+ *
+ * <pre>
+ * Usage:
+ *     java -cp jtreg.jar:javatest.jar com.sun.javatest.regtest.CheckFiles options... files-or-directories...
+ * </pre>
+ *
+ * One option is supported:
+ * <dl>
+ * <dt><code>-l</code>line-length
+ * <dd>the amount of each suspect comment to display
+ * </dl>
+ *
+ * <p>
+ * After the option, a series of directories and/or files to check can be specified.
+ * Directories will be recursively expanded looking for files to check.
+ * Source-code management directories are ignored.
+ * Files with the following extensions will be checked: {@code .java}, {@code .html}, {@code .sh}.
+ * Other files will be ignored.
+ */
+public class CheckFiles {
+    /**
+     * Main entry point.
+     * @param args options, followed by a series of directories or files to check for
+     *      possibly-malformed test descriptions.
+     */
     public static void main(String[] args) {
         new CheckFiles().run(args);
     }
 
+    /**
+     * Run the utility.
+     * @param args options, followed by a series of directories or files to check for
+     *      possibly-malformed test descriptions
+     */
     public void run(String[] args) {
         int i;
         for (i = 0; i < args.length; i++) {
@@ -64,12 +95,17 @@ public class CheckFiles
         System.err.println(count + " suspect comments found");
     }
 
-    public void scan(File[] files) {
-        for (int i = 0; i < files.length; i++)
-            scan(files[i]);
+    /**
+     * Scan a series of directories and files to check for possibly-malformed test descriptions.
+     * @param files the files to check
+     */
+    public void scan(File... files) {
+        for (File file : files) {
+            scan(file);
+        }
     }
 
-    public void scan(File file) {
+    private void scan(File file) {
         if (file.isDirectory()) {
             if (!excludes.contains(file.getName()))
                 scan(file.listFiles());
@@ -90,13 +126,11 @@ public class CheckFiles
     }
 
     private void check(File f, CommentStream cs) {
-        try {
-            BufferedReader r = new BufferedReader(new FileReader(f));
+        try (BufferedReader r = new BufferedReader(new FileReader(f))) {
             cs.init(r);
             String comment;
             while ((comment = cs.readComment()) != null)
                 check(f, comment);
-            r.close();
         }
         catch (IOException e) {
             System.err.println("error for " + f + ": " + e);
@@ -106,7 +140,7 @@ public class CheckFiles
     private void check(File f, String comment) {
         comment = comment.replace('\r', ' ');
         comment = comment.replace('\n', ' ');
-        if (comment.indexOf("@test") != -1)
+        if (comment.contains("@test"))
             return;
         if (comment.matches(".*@(run|main|compile|summary|bug).*")) {
             System.out.println(f + ": " + comment.substring(0, Math.min(lineLength, comment.length())));
@@ -128,19 +162,21 @@ public class CheckFiles
         if (dot == -1)
             return OTHER;
         String e = name.toLowerCase().substring(dot + 1);
-        if (e.equals("java"))
-            return JAVA;
-        else if (e.equals("html"))
-            return HTML;
-        else if (e.equals("sh"))
-            return SH;
-        else
-            return OTHER;
+        switch (e) {
+            case "java":
+                return JAVA;
+            case "html":
+                return HTML;
+            case "sh":
+                return SH;
+            default:
+                return OTHER;
+        }
     }
 
     private static final Set<String> excludes;
     static {
-        excludes = new HashSet<String>();
+        excludes = new HashSet<>();
         excludes.add("SCCS");
         excludes.add("Codemgr_wsdata");
         excludes.add(".hg");

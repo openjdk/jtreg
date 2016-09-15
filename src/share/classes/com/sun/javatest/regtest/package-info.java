@@ -24,6 +24,6 @@
  */
 
 /**
- * Provides public API for the JDK Regression Test Harness, jtreg.
+ * Provides public API for the Regression Test Harness for JDK: jtreg.
  */
 package com.sun.javatest.regtest;
