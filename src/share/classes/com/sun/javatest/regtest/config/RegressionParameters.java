@@ -56,6 +56,8 @@ import com.sun.javatest.regtest.agent.SearchPath;
 import com.sun.javatest.regtest.exec.TimeoutHandlerProvider;
 import com.sun.javatest.regtest.util.StringUtils;
 
+import static com.sun.javatest.regtest.util.StringUtils.join;
+
 
 public class RegressionParameters
     extends BasicInterviewParameters
@@ -1102,9 +1104,4 @@ public class RegressionParameters
     private List<String> retainArgs;
     private final Set<Integer> retainStatusSet = new HashSet<>(4);
     private Pattern retainFilesPattern;
-
-    private String join(List<String> testVMOpts, String string) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
 }
