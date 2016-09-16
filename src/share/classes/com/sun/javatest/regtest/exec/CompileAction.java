@@ -462,7 +462,7 @@ public class CompileAction extends Action {
     private List<String> getJavacCommandArgs(List<String> args) throws TestRunException {
         Map<PathKind, SearchPath> compilePaths = script.getCompilePaths(libLocn, multiModule, module);
 
-        JDKOpts javacArgs = new JDKOpts(script.useLongFormOptions());
+        JDKOpts javacArgs = new JDKOpts();
         javacArgs.addAll(script.getTestCompilerOptions());
         javacArgs.addAll(getExtraModuleConfigOptions(Modules.Phase.STATIC));
 
@@ -520,7 +520,7 @@ public class CompileAction extends Action {
 
         String javacCmd = script.getJavacProg();
 
-        JDKOpts javacVMOpts = new JDKOpts(script.useLongFormOptions());
+        JDKOpts javacVMOpts = new JDKOpts();
         javacVMOpts.addAll(script.getTestVMOptions());
         if (addDebugOpts && script.getCompileJDK().equals(script.getTestJDK()))
             javacVMOpts.addAll(script.getTestDebugOptions());

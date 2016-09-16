@@ -280,6 +280,7 @@ public class JDK {
     /**
      * Returns the output from running {@code java -version} with a given set of VM options.
      * @param vmOpts the VM options to be used when {@code java -version} is run
+     * @return  the output from "{@code java -version}"
      */
     public synchronized String getVersionText(Collection<String> vmOpts) {
         if (fullVersions == null)
@@ -479,7 +480,7 @@ public class JDK {
             throw new Fault(e.getMessage(), e);
         }
 
-        JDKOpts jdkOpts = new JDKOpts(params.getTestSuite().useNewOptions());
+        JDKOpts jdkOpts = new JDKOpts();
         jdkOpts.add("--class-path");
         SearchPath cp = new SearchPath(params.getJavaTestClassPath());
         cp.append(epd.getClassDir());

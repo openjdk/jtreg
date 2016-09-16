@@ -58,9 +58,7 @@ public class JDKModulesTest {
         Path tmpDir = Paths.get(System.getProperty("java.io.tmpdir"));
         Path testSuiteDir = tmpDir.resolve("dummyTestSuite");
         Files.createDirectories(testSuiteDir);
-        try (Writer out = new FileWriter(testSuiteDir.resolve("TEST.ROOT").toFile())) {
-            out.write("useNewOptions=true"); // temporary, during transition
-        }
+        Files.createFile(testSuiteDir.resolve("TEST.ROOT"));
         dummyTestSuite = RegressionTestSuite.open(testSuiteDir.toFile(), null);
 
         Path dwd = tmpDir.resolve("dummyWorkDir");

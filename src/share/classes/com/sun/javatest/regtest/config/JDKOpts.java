@@ -96,10 +96,9 @@ public class JDKOpts {
 
     /**
      * Creates an object to normalize a series of JDK options.
-     * @param useLongFormOpts use GNU-style long form names
      */
-    public JDKOpts(boolean useLongFormOpts) {
-        mergeHandler = new MergeHandler(useLongFormOpts);
+    public JDKOpts() {
+        mergeHandler = new MergeHandler();
     }
 
     /**
@@ -195,10 +194,8 @@ public class JDKOpts {
     private static class MergeHandler extends OptionHandler {
         private final List<String> opts;
         private final Map<String, Integer> index;
-        private final boolean useLongFormOpts;
 
-        MergeHandler(boolean useLongFormOpts) {
-            this.useLongFormOpts = useLongFormOpts;
+        MergeHandler() {
             opts = new ArrayList<>();
             index = new HashMap<>();
         }
@@ -207,11 +204,7 @@ public class JDKOpts {
         protected void handleOption(Option option, String opt, String arg) {
             switch (option) {
                 case ADD_EXPORTS:
-                    if (useLongFormOpts) {
-                        updateOptWhitespaceArg("--add-exports", arg, EQUALS, COMMA);
-                    } else {
-                        updateOptAdjacentArg("-XaddExports:" + arg, EQUALS, COMMA);
-                    }
+                    updateOptWhitespaceArg("--add-exports", arg, EQUALS, COMMA);
                     break;
 
                 case ADD_EXPORTS_PRIVATE:
@@ -219,43 +212,35 @@ public class JDKOpts {
                     break;
 
                 case ADD_MODULES:
-                    updateOptWhitespaceArg((useLongFormOpts ? "--add-modules" : "-addmods"), arg, NUL, COMMA);
+                    updateOptWhitespaceArg("--add-modules", arg, NUL, COMMA);
                     break;
 
                 case ADD_READS:
-                    if (useLongFormOpts) {
-                        updateOptWhitespaceArg("--add-reads", arg, EQUALS, COMMA);
-                    } else {
-                        updateOptAdjacentArg("-XaddReads:" + arg, EQUALS, COMMA);
-                    }
+                    updateOptWhitespaceArg("--add-reads", arg, EQUALS, COMMA);
                     break;
 
                 case CLASS_PATH:
-                    updateOptWhitespaceArg((useLongFormOpts ? "--class-path" : "-classpath"), arg, NUL, PATHSEP);
+                    updateOptWhitespaceArg("-classpath", arg, NUL, PATHSEP);
                     break;
 
                 case LIMIT_MODULES:
-                    updateOptWhitespaceArg((useLongFormOpts ? "--limit-modules" : "-limitmods"), arg, NUL, COMMA);
+                    updateOptWhitespaceArg("--limit-modules", arg, NUL, COMMA);
                     break;
 
                 case MODULE_PATH:
-                    updateOptWhitespaceArg((useLongFormOpts ? "--module-path" : "-modulepath"), arg, NUL, PATHSEP);
+                    updateOptWhitespaceArg("--module-path", arg, NUL, PATHSEP);
                     break;
 
                 case MODULE_SOURCE_PATH:
-                    updateOptWhitespaceArg((useLongFormOpts ? "--module-source-path" : "-modulesourcepath"), arg, NUL, PATHSEP);
+                    updateOptWhitespaceArg("--module-source-path", arg, NUL, PATHSEP);
                     break;
 
                 case PATCH_MODULE:
-                    if (useLongFormOpts) {
-                        updateOptWhitespaceArg("--patch-module", arg, EQUALS, PATHSEP);
-                    } else {
-                        updateOptAdjacentArg("-Xpatch:" + arg, EQUALS, PATHSEP);
-                    }
+                    updateOptWhitespaceArg("--patch-module", arg, EQUALS, PATHSEP);
                     break;
 
                 case SOURCE_PATH:
-                    updateOptWhitespaceArg((useLongFormOpts ? "--source-path" : "-sourcepath"), arg, NUL, PATHSEP);
+                    updateOptWhitespaceArg("-sourcepath", arg, NUL, PATHSEP);
                     break;
 
             }

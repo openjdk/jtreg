@@ -63,35 +63,35 @@ public class JDKOptsTest {
     @Test
     void testAddMods() {
         String[] opts = { "-addmods", "m1,m2", "-addmods", "m2,m3" };
-        String[] expect = { "-addmods", "m1,m2,m3" };
+        String[] expect = { "--add-modules", "m1,m2,m3" };
         test(opts, expect);
     }
 
     @Test
     void testLimitMods() {
         String[] opts = { "-limitmods", "m2,m1", "-limitmods", "m3,m2" };
-        String[] expect = { "-limitmods", "m2,m1,m3" };
+        String[] expect = { "--limit-modules", "m2,m1,m3" };
         test(opts, expect);
     }
 
     @Test
     void testXpatch_sameModule_differentPatches() {
         String[] opts = { "-Xpatch:a=" + file(patchDir1, "a"), "-Xpatch:a=" + file(patchDir2, "a") };
-        String[] expect = { "-Xpatch:a=" + file(patchDir1, "a") + PS + file(patchDir2, "a") };
+        String[] expect = { "--patch-module", "a=" + file(patchDir1, "a") + PS + file(patchDir2, "a") };
         test(opts, expect);
     }
 
     @Test
     void testXpatch_differentModules() {
         String[] opts = { "-Xpatch:a=" + file(patchDir1, "a"), "-Xpatch:b=" + file(patchDir2, "b") };
-        String[] expect = { "-Xpatch:a=" + file(patchDir1, "a"), "-Xpatch:b=" + file(patchDir2, "b") };
+        String[] expect = { "--patch-module", "a=" + file(patchDir1, "a"), "--patch-module", "b=" + file(patchDir2, "b") };
         test(opts, expect);
     }
 
     @Test
     void testXaddExports() {
         String[] opts = { "-XaddExports:m1/p1=ALL-UNNAMED", "-XaddExports:m2/p2=ALL-UNNAMED", "-XaddExports:m1/p1=m11" };
-        String[] expect = { "-XaddExports:m1/p1=ALL-UNNAMED,m11", "-XaddExports:m2/p2=ALL-UNNAMED" };
+        String[] expect = { "--add-exports", "m1/p1=ALL-UNNAMED,m11", "--add-exports", "m2/p2=ALL-UNNAMED" };
         test(opts, expect);
     }
 
@@ -115,14 +115,14 @@ public class JDKOptsTest {
         String[] expect = {
             "-classpath", "cp1" + PS + "cp2" + PS + "cp3",
             "-sourcepath", "sp1" + PS + "sp2" + PS + "sp3",
-            "-Xpatch:xp1=xp1" + PS + "xp1a",
-            "-XaddExports:m1/p1=ALL-UNNAMED,m11",
-            "-Xpatch:xp2=xp2" + PS + "xp2a",
-            "-XaddExports:m2/p2=ALL-UNNAMED,m22",
-            "-Xpatch:xp3=xp3" + PS + "xp3a",
-            "-XaddExports:m3/p3=ALL-UNNAMED,m33",
-            "-addmods", "m1,m2,m3,m4",
-            "-limitmods", "m1,m2,m3,m4"
+            "--patch-module", "xp1=xp1" + PS + "xp1a",
+            "--add-exports", "m1/p1=ALL-UNNAMED,m11",
+            "--patch-module", "xp2=xp2" + PS + "xp2a",
+            "--add-exports", "m2/p2=ALL-UNNAMED,m22",
+            "--patch-module", "xp3=xp3" + PS + "xp3a",
+            "--add-exports", "m3/p3=ALL-UNNAMED,m33",
+            "--add-modules", "m1,m2,m3,m4",
+            "--limit-modules", "m1,m2,m3,m4"
         };
         test(opts, expect);
     }
@@ -130,33 +130,29 @@ public class JDKOptsTest {
     @Test
     void testClassPathVariants() {
         String[] opts = { "-cp", "a", "-classpath", "b", "--class-path", "c", "--class-path=d" };
-        String[] expectOld = { "-classpath", "a" + PS + "b" + PS + "c" + PS + "d" };
-        String[] expectNew = { "--class-path", "a" + PS + "b" + PS + "c" + PS + "d" };
-        test(opts, expectOld, expectNew);
+        String[] expect = { "-classpath", "a" + PS + "b" + PS + "c" + PS + "d" };
+        test(opts, expect);
     }
 
     @Test
     void testSourcePathVariants() {
         String[] opts = { "-sourcepath", "a", "--source-path", "b", "--source-path=c" };
-        String[] expectOld = { "-sourcepath", "a" + PS + "b" + PS + "c" };
-        String[] expectNew = { "--source-path", "a" + PS + "b" + PS + "c" };
-        test(opts, expectOld, expectNew);
+        String[] expect = { "-sourcepath", "a" + PS + "b" + PS + "c" };
+        test(opts, expect);
     }
 
     @Test
     void testAddModulesVariants() {
         String[] opts = { "-addmods", "a", "--add-modules", "b", "--add-modules=c" };
-        String[] expectOld = { "-addmods", "a,b,c" };
-        String[] expectNew = { "--add-modules", "a,b,c" };
-        test(opts, expectOld, expectNew);
+        String[] expect = { "--add-modules", "a,b,c" };
+        test(opts, expect);
     }
 
     @Test
     void testLimitModulesVariants() {
         String[] opts = { "-limitmods", "a", "--limit-modules", "b", "--limit-modules=c" };
-        String[] expectOld = { "-limitmods", "a,b,c" };
-        String[] expectNew = { "--limit-modules", "a,b,c" };
-        test(opts, expectOld, expectNew);
+        String[] expect = { "--limit-modules", "a,b,c" };
+        test(opts, expect);
     }
 
     @Test
@@ -164,9 +160,8 @@ public class JDKOptsTest {
         String[] opts = {
                 "-XaddExports:m1/p1=a", "--add-exports", "m1/p1=b", "--add-exports=m1/p1=c",
                 "-XaddExports:m2/p2=d", "--add-exports", "m2/p2=e", "--add-exports=m2/p2=f"};
-        String[] expectOld = { "-XaddExports:m1/p1=a,b,c", "-XaddExports:m2/p2=d,e,f" };
-        String[] expectNew = { "--add-exports", "m1/p1=a,b,c", "--add-exports", "m2/p2=d,e,f" };
-        test(opts, expectOld, expectNew);
+        String[] expect = { "--add-exports", "m1/p1=a,b,c", "--add-exports", "m2/p2=d,e,f" };
+        test(opts, expect);
     }
 
     @Test
@@ -174,9 +169,8 @@ public class JDKOptsTest {
         String[] opts = {
                 "-XaddReads:m1=a", "--add-reads", "m1=b", "--add-reads=m1=c",
                 "-XaddReads:m2=d", "--add-reads", "m2=e", "--add-reads=m2=f"};
-        String[] expectOld = { "-XaddReads:m1=a,b,c", "-XaddReads:m2=d,e,f" };
-        String[] expectNew = { "--add-reads", "m1=a,b,c", "--add-reads", "m2=d,e,f" };
-        test(opts, expectOld, expectNew);
+        String[] expect = { "--add-reads", "m1=a,b,c", "--add-reads", "m2=d,e,f" };
+        test(opts, expect);
     }
 
     @Test
@@ -184,9 +178,8 @@ public class JDKOptsTest {
         String[] opts = {
                 "-Xpatch:m1=a", "--patch-module", "m1=b", "--patch-module=m1=c",
                 "-Xpatch:m2=d", "--patch-module", "m2=e", "--patch-module=m2=f"};
-        String[] expectOld = { "-Xpatch:m1=a" + PS + "b" + PS + "c", "-Xpatch:m2=d" + PS + "e" + PS + "f" };
-        String[] expectNew = { "--patch-module", "m1=a" + PS + "b" + PS + "c", "--patch-module", "m2=d" + PS + "e" + PS + "f" };
-        test(opts, expectOld, expectNew);
+        String[] expect = { "--patch-module", "m1=a" + PS + "b" + PS + "c", "--patch-module", "m2=d" + PS + "e" + PS + "f" };
+        test(opts, expect);
     }
 
     static final String PS = File.pathSeparator;
@@ -222,12 +215,9 @@ public class JDKOptsTest {
         if (args.length == 0) {
             runTests();
         } else {
-            JDKOpts oldOpts = new JDKOpts(false);
-            oldOpts.addAll(args);
-            System.out.println("Old: " + oldOpts.toList());
-            JDKOpts newOpts = new JDKOpts(true);
-            newOpts.addAll(args);
-            System.out.println("New: " + newOpts.toList());
+            JDKOpts opts = new JDKOpts();
+            opts.addAll(args);
+            System.out.println(opts.toList());
         }
     }
 
@@ -256,36 +246,13 @@ public class JDKOptsTest {
 
     void test(String[] opts, String[] expect) {
         testCount++;
-        JDKOpts jdkOpts = new JDKOpts(false);
+        JDKOpts jdkOpts = new JDKOpts();
         jdkOpts.addAll(opts);
         List<String> result = jdkOpts.toList();
         System.out.println("Options: " + Arrays.toString(opts));
         System.out.println("Expect:  " + Arrays.toString(expect));
         System.out.println("Found:   " + result);
         if (!result.equals(Arrays.asList(expect))) {
-            System.out.println("ERROR");
-            errorCount++;
-        }
-    }
-
-    void test(String[] opts, String[] expectOld, String[] expectNew) {
-        testCount++;
-
-        JDKOpts oldOpts = new JDKOpts(false);
-        oldOpts.addAll(opts);
-        List<String> resultOld = oldOpts.toList();
-
-        JDKOpts newOpts = new JDKOpts(true);
-        newOpts.addAll(opts);
-        List<String> resultNew = newOpts.toList();
-
-        System.out.println("Options:    " + Arrays.toString(opts));
-        System.out.println("Expect old: " + Arrays.toString(expectOld));
-        System.out.println("Found old : " + resultOld);
-        System.out.println("Expect new: " + Arrays.toString(expectNew));
-        System.out.println("Found new : " + resultNew);
-        if (!resultOld.equals(Arrays.asList(expectOld))
-                || !resultNew.equals(Arrays.asList(expectNew))) {
             System.out.println("ERROR");
             errorCount++;
         }
