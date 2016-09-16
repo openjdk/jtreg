@@ -53,15 +53,15 @@ public class JDKOpts {
      * Options names will be converted their canonical form.
      */
     public enum Option {
-        ADD_EXPORTS("--add-exports", "-XaddExports:"),
+        ADD_EXPORTS("--add-exports"),
         ADD_EXPORTS_PRIVATE("--add-exports-private"),
-        ADD_MODULES("--add-modules", "-addmods"),
-        ADD_READS("--add-reads", "-XaddReads:"),
+        ADD_MODULES("--add-modules"),
+        ADD_READS("--add-reads"),
         CLASS_PATH("--class-path", "-classpath", "-cp"),
-        LIMIT_MODULES("--limit-modules", "-limitmods"),
-        MODULE_PATH("--module-path", "-modulepath", "-mp"),
-        MODULE_SOURCE_PATH("--module-source-path", "-modulesourcepath"),
-        PATCH_MODULE("--patch-module", "-Xpatch:"),
+        LIMIT_MODULES("--limit-modules"),
+        MODULE_PATH("--module-path", "-p"),
+        MODULE_SOURCE_PATH("--module-source-path"),
+        PATCH_MODULE("--patch-module"),
         SOURCE_PATH("--source-path", "-sourcepath");
 
         Option(String... names) {

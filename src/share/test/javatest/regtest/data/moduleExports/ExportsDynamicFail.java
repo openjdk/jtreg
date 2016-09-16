@@ -28,7 +28,7 @@
  * @compile/fail/ref=ExportsDynamicFail.out -XDrawDiagnostics ExportsDynamicFail.java
  */
 
-import com.sun.tools.javac.main.Main;
+import com.sun.tools.javac.main.Main; // static reference, should cause error
 import java.lang.reflect.Constructor;
 
 public class ExportsDynamicFail {
@@ -38,7 +38,7 @@ public class ExportsDynamicFail {
 
     void run() throws Exception {
         Class<?> mainClass = Class.forName("com.sun.tools.javac.main.Main");
-        Constructor constr = mainClass.getDeclaredConstructor(String.class);
+        Constructor<?> constr = mainClass.getDeclaredConstructor(String.class);
         Object javacMain = constr.newInstance("jtreg test");
         System.err.println("Created main class: " + javacMain);
     }

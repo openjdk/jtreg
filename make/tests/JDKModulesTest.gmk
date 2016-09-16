@@ -31,6 +31,7 @@ $(BUILDDIR)/JDKModulesTest.ok: \
 	    $(TESTDIR)/javatest/regtest/JDKModulesTest.java \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
+	$(RM) $(@:%.ok=%)
 	$(MKDIR) -p $(@:%.ok=%)/classes
 	$(J2SEJAVAC) \
 		-d $(@:%.ok=%)/classes \

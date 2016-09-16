@@ -688,23 +688,7 @@ public class Tool {
             }
         },
 
-        new Option(SEP, JDK, null, "-addmods") {
-            @Override
-            public void process(String opt, String arg) {
-                testVMOpts.add(opt);
-                testVMOpts.add(arg);
-            }
-        },
-
         new Option(GNU, JDK, null, "--add-modules") {
-            @Override
-            public void process(String opt, String arg) {
-                testVMOpts.add(opt);
-                testVMOpts.add(arg);
-            }
-        },
-
-        new Option(SEP, JDK, null, "-limitmods") {
             @Override
             public void process(String opt, String arg) {
                 testVMOpts.add(opt);
@@ -752,21 +736,6 @@ public class Tool {
             @Override
             public void process(String opt, String arg) {
                 testVMOpts.add("-Xbootclasspath/p:" + filesToAbsolutePath(pathToFiles(arg)));
-            }
-        },
-
-        new Option(STD, JDK, null, "-Xpatch") {
-            @Override
-            public void process(String opt, String arg) {
-                if (arg.contains("=")) {
-                    // (old) new style:  -Xpatch:<module>=<path>
-                    int eq = arg.indexOf("=");
-                    testVMOpts.add("-Xpatch:"
-                            + arg.substring(0, eq + 1)
-                            + filesToAbsolutePath(pathToFiles(arg.substring(eq + 1))));
-                } else {
-                    // malformed option
-                }
             }
         },
 

@@ -560,8 +560,7 @@ public abstract class Action extends ActionHelper {
         // TODO: this will not work with space-separated args
         String addExportsOpt = m.isPrivate && runtime ? "--add-exports-private" : "--add-exports";
         String arg = m.moduleName + "/" + m.packageName + "=ALL-UNNAMED";
-        return opt.matches("-XaddExports:(.*,)?\\Q" + arg + "\\E(,.*)?") ||
-                opt.matches(addExportsOpt + "(=| +)\\Q" + arg + "\\E");
+        return opt.matches(addExportsOpt + "(=| +)\\Q" + arg + "\\E");
     }
 
     //----------misc statics----------------------------------------------------

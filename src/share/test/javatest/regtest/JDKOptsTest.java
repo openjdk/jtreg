@@ -62,35 +62,35 @@ public class JDKOptsTest {
 
     @Test
     void testAddMods() {
-        String[] opts = { "-addmods", "m1,m2", "-addmods", "m2,m3" };
+        String[] opts = { "--add-modules", "m1,m2", "--add-modules", "m2,m3" };
         String[] expect = { "--add-modules", "m1,m2,m3" };
         test(opts, expect);
     }
 
     @Test
     void testLimitMods() {
-        String[] opts = { "-limitmods", "m2,m1", "-limitmods", "m3,m2" };
+        String[] opts = { "--limit-modules", "m2,m1", "--limit-modules", "m3,m2" };
         String[] expect = { "--limit-modules", "m2,m1,m3" };
         test(opts, expect);
     }
 
     @Test
     void testXpatch_sameModule_differentPatches() {
-        String[] opts = { "-Xpatch:a=" + file(patchDir1, "a"), "-Xpatch:a=" + file(patchDir2, "a") };
+        String[] opts = { "--patch-module", "a=" + file(patchDir1, "a"), "--patch-module", "a=" + file(patchDir2, "a") };
         String[] expect = { "--patch-module", "a=" + file(patchDir1, "a") + PS + file(patchDir2, "a") };
         test(opts, expect);
     }
 
     @Test
     void testXpatch_differentModules() {
-        String[] opts = { "-Xpatch:a=" + file(patchDir1, "a"), "-Xpatch:b=" + file(patchDir2, "b") };
+        String[] opts = { "--patch-module", "a=" + file(patchDir1, "a"), "--patch-module", "b=" + file(patchDir2, "b") };
         String[] expect = { "--patch-module", "a=" + file(patchDir1, "a"), "--patch-module", "b=" + file(patchDir2, "b") };
         test(opts, expect);
     }
 
     @Test
     void testXaddExports() {
-        String[] opts = { "-XaddExports:m1/p1=ALL-UNNAMED", "-XaddExports:m2/p2=ALL-UNNAMED", "-XaddExports:m1/p1=m11" };
+        String[] opts = { "--add-exports", "m1/p1=ALL-UNNAMED", "--add-exports", "m2/p2=ALL-UNNAMED", "--add-exports", "m1/p1=m11" };
         String[] expect = { "--add-exports", "m1/p1=ALL-UNNAMED,m11", "--add-exports", "m2/p2=ALL-UNNAMED" };
         test(opts, expect);
     }
@@ -98,19 +98,19 @@ public class JDKOptsTest {
     @Test
     void testMix() {
         String[] opts = {
-            "-classpath", "cp1", "-sourcepath", "sp1", "-Xpatch:xp1=xp1", "-XaddExports:m1/p1=ALL-UNNAMED",
-            "-classpath", "cp2", "-sourcepath", "sp2", "-Xpatch:xp2=xp2", "-XaddExports:m2/p2=ALL-UNNAMED",
-            "-classpath", "cp3", "-sourcepath", "sp3", "-Xpatch:xp3=xp3", "-XaddExports:m3/p3=ALL-UNNAMED",
-            "-addmods", "m1,m2,m3",
-            "-limitmods", "m1,m2,m3",
-            "-Xpatch:xp1=xp1a",
-            "-Xpatch:xp2=xp2a",
-            "-Xpatch:xp3=xp3a",
-            "-XaddExports:m1/p1=m11",
-            "-XaddExports:m2/p2=m22",
-            "-XaddExports:m3/p3=m33",
-            "-addmods", "m2,m3,m4",
-            "-limitmods", "m2,m3,m4",
+            "-classpath", "cp1", "-sourcepath", "sp1", "--patch-module", "xp1=xp1", "--add-exports", "m1/p1=ALL-UNNAMED",
+            "-classpath", "cp2", "-sourcepath", "sp2", "--patch-module", "xp2=xp2", "--add-exports", "m2/p2=ALL-UNNAMED",
+            "-classpath", "cp3", "-sourcepath", "sp3", "--patch-module", "xp3=xp3", "--add-exports", "m3/p3=ALL-UNNAMED",
+            "--add-modules", "m1,m2,m3",
+            "--limit-modules", "m1,m2,m3",
+            "--patch-module", "xp1=xp1a",
+            "--patch-module", "xp2=xp2a",
+            "--patch-module", "xp3=xp3a",
+            "--add-exports", "m1/p1=m11",
+            "--add-exports", "m2/p2=m22",
+            "--add-exports", "m3/p3=m33",
+            "--add-modules", "m2,m3,m4",
+            "--limit-modules", "m2,m3,m4",
         };
         String[] expect = {
             "-classpath", "cp1" + PS + "cp2" + PS + "cp3",
@@ -143,14 +143,14 @@ public class JDKOptsTest {
 
     @Test
     void testAddModulesVariants() {
-        String[] opts = { "-addmods", "a", "--add-modules", "b", "--add-modules=c" };
+        String[] opts = { "--add-modules", "a", "--add-modules", "b", "--add-modules=c" };
         String[] expect = { "--add-modules", "a,b,c" };
         test(opts, expect);
     }
 
     @Test
     void testLimitModulesVariants() {
-        String[] opts = { "-limitmods", "a", "--limit-modules", "b", "--limit-modules=c" };
+        String[] opts = { "--limit-modules", "a", "--limit-modules", "b", "--limit-modules=c" };
         String[] expect = { "--limit-modules", "a,b,c" };
         test(opts, expect);
     }
@@ -158,8 +158,8 @@ public class JDKOptsTest {
     @Test
     void testAddExportsVariants() {
         String[] opts = {
-                "-XaddExports:m1/p1=a", "--add-exports", "m1/p1=b", "--add-exports=m1/p1=c",
-                "-XaddExports:m2/p2=d", "--add-exports", "m2/p2=e", "--add-exports=m2/p2=f"};
+                "--add-exports", "m1/p1=a", "--add-exports", "m1/p1=b", "--add-exports=m1/p1=c",
+                "--add-exports", "m2/p2=d", "--add-exports", "m2/p2=e", "--add-exports=m2/p2=f"};
         String[] expect = { "--add-exports", "m1/p1=a,b,c", "--add-exports", "m2/p2=d,e,f" };
         test(opts, expect);
     }
@@ -167,8 +167,8 @@ public class JDKOptsTest {
     @Test
     void testAddReadsVariants() {
         String[] opts = {
-                "-XaddReads:m1=a", "--add-reads", "m1=b", "--add-reads=m1=c",
-                "-XaddReads:m2=d", "--add-reads", "m2=e", "--add-reads=m2=f"};
+                "--add-reads", "m1=a", "--add-reads", "m1=b", "--add-reads=m1=c",
+                "--add-reads", "m2=d", "--add-reads", "m2=e", "--add-reads=m2=f"};
         String[] expect = { "--add-reads", "m1=a,b,c", "--add-reads", "m2=d,e,f" };
         test(opts, expect);
     }
@@ -176,8 +176,8 @@ public class JDKOptsTest {
     @Test
     void testPatchModulesVariants() {
         String[] opts = {
-                "-Xpatch:m1=a", "--patch-module", "m1=b", "--patch-module=m1=c",
-                "-Xpatch:m2=d", "--patch-module", "m2=e", "--patch-module=m2=f"};
+                "--patch-module", "m1=a", "--patch-module", "m1=b", "--patch-module=m1=c",
+                "--patch-module", "m2=d", "--patch-module", "m2=e", "--patch-module=m2=f"};
         String[] expect = { "--patch-module", "m1=a" + PS + "b" + PS + "c", "--patch-module", "m2=d" + PS + "e" + PS + "f" };
         test(opts, expect);
     }
