@@ -522,8 +522,7 @@ public abstract class Action extends ActionHelper {
             if (e.needsAddExports(phase)) {
                 needAddExports = true;
             }
-            if ((isDynamicPhase || !e.isDynamic)
-                    && !script.defaultModules.contains(m)) {
+            if (!script.defaultModules.contains(m)) {
                 if (addModules == null) {
                     addModules = new StringBuilder();
                 } else {
@@ -544,7 +543,7 @@ public abstract class Action extends ActionHelper {
         }
 
         for (Modules.Entry e: modules) {
-            if (e.packageName != null && (isDynamicPhase || !e.isDynamic)) {
+            if (e.packageName != null) {
                 list.add(e.isPrivate && phase == Modules.Phase.DYNAMIC ? "--add-exports-private" : "--add-exports");
                 list.add(e.moduleName + "/" + e.packageName + "=ALL-UNNAMED");
             }

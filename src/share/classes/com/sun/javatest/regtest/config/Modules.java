@@ -59,13 +59,11 @@ public class Modules implements Iterable<Modules.Entry> {
     public static class Entry {
         public final String moduleName;
         public final String packageName;
-        public final boolean isDynamic;
         public final boolean isPrivate;
 
-        Entry(String moduleName, String packageName, boolean isDynamic, boolean isPrivate) {
+        Entry(String moduleName, String packageName, boolean isPrivate) {
             this.moduleName = moduleName;
             this.packageName = packageName;
-            this.isDynamic = isDynamic;
             this.isPrivate = isPrivate;
         }
 
@@ -75,7 +73,7 @@ public class Modules implements Iterable<Modules.Entry> {
          * @return  true if an export should be added in the specified phase
          */
         public boolean needsAddExports(Phase phase) {
-            return (packageName != null) && (!isDynamic || phase == Phase.DYNAMIC);
+            return (packageName != null);
         }
 
         @Override
@@ -85,10 +83,6 @@ public class Modules implements Iterable<Modules.Entry> {
             if (packageName != null) {
                 sb.append("/").append(packageName);
                 String sep = ":";
-                if (isDynamic) {
-                    sb.append(sep).append("dynamic");
-                    sep = ",";
-                }
                 if (isPrivate) {
                     sb.append(sep).append("private");
                 }
@@ -106,7 +100,6 @@ public class Modules implements Iterable<Modules.Entry> {
     public static Entry parse(String s) throws Fault {
         String moduleName;
         String packageName = null;
-        boolean isDynamic = false;
         boolean isPrivate = false;
 
         int slash = s.indexOf("/");
@@ -122,9 +115,6 @@ public class Modules implements Iterable<Modules.Entry> {
                 String[] modifiers = s.substring(colon + 1).split(",");
                 for (String m : modifiers) {
                     switch (m) {
-                        case "dynamic":
-                            isDynamic = true;
-                            break;
                         case "private":
                             isPrivate = true;
                             break;
@@ -141,7 +131,7 @@ public class Modules implements Iterable<Modules.Entry> {
             throw new Fault("invalid package name: " + packageName);
         }
 
-        return new Entry(moduleName, packageName, isDynamic, isPrivate);
+        return new Entry(moduleName, packageName, isPrivate);
     }
 
     private static boolean isDottedName(String qualId) {
