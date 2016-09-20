@@ -204,7 +204,7 @@ public class Locations {
     }
 
     /**
-     * Get the library location for a library specified in a test description.
+     * Gets the library location for a library specified in a test description.
      * @param td the test description
      * @param lib the name (path) of the library as specified in the test description
      * @return the resolved library location
@@ -265,7 +265,7 @@ public class Locations {
     }
 
     /**
-     * Create a library location.
+     * Creates a library location.
      * The library kind is inferred by looking at its contents.
      * @param lib  the name (path) of the library as specified in the test description
      * @param absSrcDir the directory containing the source files for the library
@@ -289,7 +289,7 @@ public class Locations {
     }
 
     /**
-     * Get the set of kinds of contents of a source directory.
+     * Gets the set of kinds of contents of a source directory.
      * The set will include:
      * <ul>
      * <li>USER_MODULE, if the source directory contains one or more directories
@@ -299,6 +299,8 @@ public class Locations {
      * <li>PACKAGE, if the source directory contains a directory which is neither
      *      of the above
      * </ul>
+     * @param absSrcDir the source directory to examine
+     * @return the kinds of libraries found in the given source directory
      */
     public Set<LibLocn.Kind> getDirKinds(File absSrcDir) {
         Set<LibLocn.Kind> kinds = EnumSet.noneOf(LibLocn.Kind.class);
@@ -319,7 +321,7 @@ public class Locations {
     }
 
     /**
-     * Get the kind of a source directory.
+     * Gets the kind of a source directory.
      * The kind is one of:
      * <ul>
      * <li>USER_MODULE, if the source directory contains directories which in turn contain
@@ -329,6 +331,9 @@ public class Locations {
      * <li>PACKAGE, if none of the above
      * </ul>
      * It is an error if the source directory contains both user modules and system modules.
+     * @param absSrcDir the source directory
+     * @return the kind of the source directory
+     * @throws Locations.Fault if the directory contains more than one kind of content
      */
     public LibLocn.Kind getDirKind(File absSrcDir) throws Fault {
         Set<LibLocn.Kind> kinds = getDirKinds(absSrcDir);
@@ -347,21 +352,28 @@ public class Locations {
     }
 
     /**
-     * Get the path of the test source directory.
+     * Gets the path of the test source directory.
+     * @return the path
      */
     public File absTestSrcDir() {
         return absTestSrcDir;
     }
 
     /**
-     * Get the path of the test source directory, or to a module within it.
+     * Gets the path of the test source directory, or to a module within it.
+     * @param optModule the name of the module, or null for "no module"
+     * @return the path
      */
     public File absTestSrcDir(String optModule) {
         return getFile(absTestSrcDir, optModule);
     }
 
     /**
-     * Get the path of a source file in the test source directory or a module within it.
+     * Gets the path of a source file in the test source directory or a module within it.
+     * @param optModule the name of the module, or null for "no module"
+     * @param srcFile the file
+     * @return the path
+     * @throws IllegalArgumentException if the path is not a relative path
      */
     public File absTestSrcFile(String optModule, File srcFile) {
         if (srcFile.isAbsolute())
@@ -370,8 +382,9 @@ public class Locations {
     }
 
     /**
-     * Get a source path for a test, consisting of the test source directory,
+     * Gets a search path for the source of a test, consisting of the test source directory,
      * and the source directories of all libraries of PACKAGE kind.
+     * @return the search path
      */
     // (just) used to set test.src.path or TESTSRCPATH
     public List<File> absTestSrcPath() {
@@ -386,7 +399,9 @@ public class Locations {
     }
 
     /**
-     * Get a list of the source directories of all libraries of a given kind.
+     * Gets a list of the source directories of all libraries of a given kind.
+     * @param kind the kind
+     * @return the directories of the specified kind
      */
     public List<File> absLibSrcList(LibLocn.Kind kind) {
         List<File> list = new ArrayList<>();
@@ -399,7 +414,8 @@ public class Locations {
     }
 
     /**
-     * Get a list of all jar-file libraries in the test suite.
+     * Gets a list of all jar-file libraries for the test in the test suite.
+     * @return the list of jar-file libraries
      */
     public List<File> absLibSrcJarList() {
         List<File> list = new ArrayList<>();
@@ -414,25 +430,29 @@ public class Locations {
     }
 
     /**
-     * Get the base directory for all compiled classes.
+     * Gets the base directory for all compiled classes.
      * This is different from the directory for the classes for any specific library
      * or test. It is used when setting up permissions for tests that use the security
      * manager, to ensure that a test can read all necessary compiled classes.
+     * @return the base directory
      */
     public File absBaseClsDir() {
         return absBaseClsDir;
     }
 
     /**
-     * Get the directory for the compiled classes of a test in the unnamed module.
+     * Gets the directory for the compiled classes of a test in the unnamed module.
+     * @return the directory
      */
     public File absTestClsDir() {
         return absTestClsDir;
     }
 
     /**
-     * Get the directory for the compiled classes in either the unnamed module or
+     * Gets the directory for the compiled classes in either the unnamed module or
      * a named module.
+     * @param optModule the name of the module, or null for the unnamed module
+     * @return the directory
      */
     public File absTestClsDir(String optModule) {
         if (optModule == null) {
@@ -445,8 +465,9 @@ public class Locations {
     }
 
     /**
-     * Get a class path for a test, consisting of the test class directory,
+     * Gets the search path for the classes for a test, consisting of the test class directory,
      * and the class directories of all libraries of PACKAGE kind.
+     * @return the search path
      */
     // (just) used to set test.class.path or TESTCLASSPATH
     public List<File> absTestClsPath() {
@@ -463,7 +484,9 @@ public class Locations {
     }
 
     /**
-     * Get a list of the class directories of all libraries of a given kind.
+     * Gets a list of the class directories of all libraries of a given kind.
+     * @param kind the kind
+     * @return the list
      */
     public List<File> absLibClsList(LibLocn.Kind kind) {
         List<File> list = new ArrayList<>();
@@ -476,30 +499,34 @@ public class Locations {
     }
 
     /**
-     * Get a file within the test-specific subdirectory of the work directory.
+     * Gets a file within the test-specific subdirectory of the work directory.
+     * @param name the name of the subdirectory
+     * @return the file
      */
     public File absTestWorkFile(String name) {
         return new File(absTestWorkDir, name);
     }
 
     /**
-     * Get the directory in which to store the compiled classes of any user-defined
+     * Gets the directory in which to store the compiled classes of any user-defined
      * modules for a test.
+     * @return the directory
      */
     public File absTestModulesDir() {
         return absTestModulesDir;
     }
 
     /**
-     * Get the directory in which to store the compiled classes to patch system
+     * Gets the directory in which to store the compiled classes to patch system
      * modules for a test.
+     * @return the patch directory
      */
     public File absTestPatchDir() {
         return absTestPatchDir;
     }
 
     /**
-     * Locate a set of classes.
+     * Locates a set of classes.
      * The name is as defined for the @build tag.
      * The following forms are allowed:
      * <ul>
@@ -511,6 +538,10 @@ public class Locations {
      * All forms can be prefixed with "m/" to specify module m instead of the
      * unnamed package.
      * The test source directory is searched first, followed by any library directories.
+     *
+     * @param name the name of the classes to be built
+     * @return the locations of the classes identified by {@code name}
+     * @throws Locations.Fault if there is a problem locating any of the classes
      */
     public List<ClassLocn> locateClasses(String name) throws Fault {
         List<LibLocn> searchLocns;
@@ -562,7 +593,7 @@ public class Locations {
     }
 
     /**
-     * Locate a module in either the test source directory or in module libraries.
+     * Locates a module in either the test source directory or in module libraries.
      */
     List<LibLocn> getModuleLocn(String moduleName) {
         if (moduleName == null) {
@@ -593,7 +624,7 @@ public class Locations {
     }
 
     /**
-     * Locate the first instance of a class in a series of locations.
+     * Locates the first instance of a class in a series of locations.
      * @return a singleton list if the file is found; or an empty list otherwise.
      */
     private List<ClassLocn> locateClass(List<LibLocn> locns, String optModule, String className) {
@@ -607,7 +638,7 @@ public class Locations {
     }
 
     /**
-     * Locate an instance of a class in a given location.
+     * Locates an instance of a class in a given location.
      * @return the instance, or null if not found.
      */
     private ClassLocn locateClass(LibLocn locn, String optModule, String className) {
@@ -638,7 +669,7 @@ public class Locations {
     }
 
     /**
-     * Locate the classes for a package in a series of locations.
+     * Locates the classes for a package in a series of locations.
      */
     private List<ClassLocn> locateClassesInPackage(List<LibLocn> locns, String optModule, String optPackage) throws Fault {
         List<ClassLocn> results = new ArrayList<>();
@@ -650,7 +681,7 @@ public class Locations {
     }
 
     /**
-     * Locate the classes for a package in a given location.
+     * Locates the classes for a package in a given location.
      */
     private void locateClassesInPackage(LibLocn l, String optModule, String optPackage,
             boolean recursive, List<ClassLocn> results) throws Fault {

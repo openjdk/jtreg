@@ -83,7 +83,7 @@ public class CompileAction extends Action {
     public static final String NAME = "compile";
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      * @return "compile"
      */
     @Override

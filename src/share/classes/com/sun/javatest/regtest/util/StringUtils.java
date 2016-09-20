@@ -62,10 +62,11 @@ public class StringUtils extends StringArray {
     }
 
     /**
-     * Splits a string around instances of the given character.
-     * @param s
-     * @param sep
-     * @return
+     * Splits a string around instances of the given character separator.
+     * @param s the string
+     * @param sep the separator
+     * @return the list of strings computed by splitting this string around
+     *  matches of the given separator character
      */
     public static List<String> split(String s, char sep) {
         return Arrays.asList(s.split("\\Q" + sep + "\\E"));

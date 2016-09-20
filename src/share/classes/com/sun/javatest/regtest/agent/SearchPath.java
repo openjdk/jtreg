@@ -47,7 +47,7 @@ public class SearchPath {
     /**
      * Create a path containing the concatenation of a series of files.
      * Equivalent to {@code new Path().append(files)}.
-     * @param files
+     * @param files the files to be included in the search path
      */
     public SearchPath(File... files) {
         append(files);
@@ -56,7 +56,7 @@ public class SearchPath {
     /**
      * Create a path containing the concatenation of a series of paths.
      * Equivalent to {@code new Path().append(paths)}.
-     * @param paths
+     * @param paths the paths to be included in the search path
      */
     public SearchPath(SearchPath... paths) {
         append(paths);
@@ -65,7 +65,7 @@ public class SearchPath {
     /**
      * Create a path containing the concatenation of a series of paths.
      * Equivalent to {@code new Path().append(paths)}.
-     * @param paths
+     * @param paths the paths to be included in the search path
      */
     public SearchPath(String... paths) {
         append(paths);

@@ -33,31 +33,31 @@ import com.sun.javatest.TestResult;
  * Empty impl for convenience of subtypes
  */
 public class BasicObserver implements Harness.Observer {
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     @Override
     public void startingTestRun(Parameters params) { }
 
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     @Override
     public void startingTest(TestResult tr) { }
 
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     @Override
     public void finishedTest(TestResult tr) { }
 
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     @Override
     public void stoppingTestRun() { }
 
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     @Override
     public void finishedTesting() { }
 
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     @Override
     public void finishedTestRun(boolean ok) { }
 
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     @Override
     public void error(String string) { }
 

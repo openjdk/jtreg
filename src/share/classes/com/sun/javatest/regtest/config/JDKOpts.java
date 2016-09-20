@@ -80,8 +80,8 @@ public class JDKOpts {
     private static final char PATHSEP = File.pathSeparatorChar;
 
     /**
-     * Returns true if the option should be followed by an argument in the following position.
-     * @param opt
+     * Returns true if an option should be followed by an argument in the following position.
+     * @param opt the option
      * @return true if a following argument is to be expected
      */
     public static boolean hasFollowingArg(String opt) {

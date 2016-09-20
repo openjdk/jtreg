@@ -26,5 +26,18 @@
 /**
  * Provides support classes for the JDK Regression Test Harness, jtreg,
  * for executing individual tests.
+ *
+ * <p>
+ * The primary class in this package is {@link RegressionScript}.
+ * An instance of {@code RegressionScript} is created for each test
+ * to be run. It analyzes the <em>action tags</em> in the test description
+ * and creates a series of {@link Action} objects, using appropriate
+ * subtypes, {@link BuildAction}, {@link CompileAction}, {@link MainAction},
+ * and so forth.
+ *
+ * <p><b>This is NOT part of any supported API.
+ * If you write code that depends on this, you do so at your own risk.
+ * This code and its internal interfaces are subject to change or
+ * deletion without notice.</b>
  */
 package com.sun.javatest.regtest.exec;

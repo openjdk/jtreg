@@ -67,7 +67,7 @@ public class AppletAction extends Action
     public static final String NAME = "applet";
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      * @return "applet"
      */
     @Override

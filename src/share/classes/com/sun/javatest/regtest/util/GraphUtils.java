@@ -39,6 +39,7 @@ public class GraphUtils {
     /**
      * This class is a basic abstract class for representing a node.
      * A node is associated with a given data.
+     * @param <D> the type of a data object included in each node
      */
     public static abstract class Node<D> {
         public final D data;
@@ -60,6 +61,7 @@ public class GraphUtils {
     /**
      * This class specialized Node, by adding elements that are required in order
      * to perform Tarjan computation of strongly connected components.
+     * @param <D> the type of a data object included in each node
      */
     public static abstract class TarjanNode<D> extends Node<D> implements Comparable<TarjanNode<D>> {
         int index = -1;
@@ -70,8 +72,10 @@ public class GraphUtils {
             super(data);
         }
 
+        @Override
         public abstract Iterable<? extends TarjanNode<D>> getDependencies();
 
+        @Override
         public int compareTo(TarjanNode<D> o) {
             return (index < o.index) ? -1 : (index == o.index) ? 0 : 1;
         }
@@ -80,10 +84,14 @@ public class GraphUtils {
     /**
      * Tarjan's algorithm to determine strongly connected components of a
      * directed graph in linear time. Works on TarjanNode.
+     * @param <D> the type of a data object included in each node
+     * @param <N> the subtype of {@code TarjanNode<D>}
+     * @param nodes the nodes of the graph
+     * @return the set of strongly connected components, each represented by a set of {@coed TarjanNode} objects
      */
     public static <D, N extends TarjanNode<D>> Set<? extends Set<? extends N>> tarjan(Iterable<? extends N> nodes) {
-        Set<Set<N>> cycles = new LinkedHashSet<Set<N>>();
-        LinkedList<N> stack = new LinkedList<N>();
+        Set<Set<N>> cycles = new LinkedHashSet<>();
+        LinkedList<N> stack = new LinkedList<>();
         int index = 0;
         for (N node: nodes) {
             if (node.index == -1) {
@@ -111,7 +119,7 @@ public class GraphUtils {
         }
         if (v.lowlink == v.index) {
             N n;
-            Set<N> cycle = new LinkedHashSet<N>();
+            Set<N> cycle = new LinkedHashSet<>();
             do {
                 n = stack.removeFirst();
                 n.active = false;
@@ -127,6 +135,11 @@ public class GraphUtils {
      * dot representation will use {@code Node.toString} to display node labels
      * and {@code Node.printDependency} to display edge labels. The resulting
      * representation is also customizable with a graph name and a header.
+     * @param <D> the type of a data object included in each node
+     * @param nodes the nodes of the graph
+     * @param name the name of the graph
+     * @param header the header for the graph
+     * @return a "dot file" representation of the graph
      */
     public static <D> String toDot(Iterable<? extends TarjanNode<D>> nodes, String name, String header) {
         StringBuilder buf = new StringBuilder();

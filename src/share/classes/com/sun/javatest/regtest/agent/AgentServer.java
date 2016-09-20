@@ -50,6 +50,7 @@ public class AgentServer implements ActionHelper.OutputHandler {
 
     /**
      * Main program used to invoke and run the server in child JVMs
+     * @param args command-line arguments, used to configure the server
      */
     public static void main(String... args) {
         if (traceServer)
@@ -108,6 +109,7 @@ public class AgentServer implements ActionHelper.OutputHandler {
         final DataOutputStream out;
 
         final Runnable ping = new Runnable() {
+            @Override
             public void run() {
                 try {
                     synchronized (out) {
@@ -290,6 +292,11 @@ public class AgentServer implements ActionHelper.OutputHandler {
     private final PrintStream traceOut = System.err;
     private final Map<OutputKind, PrintWriter> writers = new EnumMap<OutputKind, PrintWriter>(OutputKind.class);
 
+    /**
+     * Create an output stream for output to be sent back to the client via the server connection.
+     * @param kind the kind of stream
+     * @return the output stream
+     */
     public PrintWriter createOutput(final OutputKind kind) {
         PrintWriter pw = writers.get(kind);
         if (pw == null) {
@@ -330,6 +337,12 @@ public class AgentServer implements ActionHelper.OutputHandler {
         return pw;
     }
 
+    /**
+     * Create an output stream for output to be sent back to the client via the server connection,
+     * and use it to write the given content.
+     * @param kind the kind of stream
+     * @param output the content to be written to the output stream
+     */
     public void createOutput(OutputKind kind, String output) {
         PrintWriter pw = createOutput(kind);
         pw.write(output);

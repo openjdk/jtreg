@@ -57,7 +57,7 @@ public class BuildAction extends Action
     public static final String NAME = "build";
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      * @return "build"
      */
     @Override

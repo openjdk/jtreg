@@ -41,7 +41,7 @@ public class DriverAction extends MainAction
     public static final String NAME = "driver";
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      * @return "driver"
      */
     @Override

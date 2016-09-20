@@ -42,7 +42,7 @@ public class JUnitAction extends MainAction
     public static final String NAME = "junit";
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      * @return "junit"
      */
     @Override

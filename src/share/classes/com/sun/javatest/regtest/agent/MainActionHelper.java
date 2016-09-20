@@ -206,7 +206,7 @@ public class MainActionHelper extends ActionHelper {
      * Marker interface for test driver classes, which need to be passed a class
      * loader to load the classes for the test.
      *
-     * @see JUnitAction.JUnitRunner
+     * @see JUnitRunner
      */
     public interface TestRunner {
     }

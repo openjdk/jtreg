@@ -73,7 +73,7 @@ public class MainAction extends Action
     public static final String NAME = "main";
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      * @return "main"
      */
     @Override

@@ -65,7 +65,10 @@ public class Help {
         void showVersion(PrintWriter out);
     }
 
-    /** Creates a new instance of Help */
+    /**
+     * Creates a new instance of Help
+     * @param options the options to be documented in the help output
+     */
     public Help(List<Option> options) {
         this.options = options;
     }

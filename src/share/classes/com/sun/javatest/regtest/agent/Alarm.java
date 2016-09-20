@@ -110,6 +110,9 @@ public class Alarm  {
 
     /**
      * Internal constructor.
+     * @param delay run the interrupt after this time
+     * @param delayUnit TimeUnit for {@code delay}
+     * @param msgOut PrintWriter for logging
      */
     protected Alarm(long delay, TimeUnit delayUnit, PrintWriter msgOut) {
         this.delay = delay;

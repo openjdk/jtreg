@@ -50,7 +50,7 @@ public class TestNGAction extends MainAction {
     public static final String NAME = "testng";
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      * @return "testng"
      */
     @Override

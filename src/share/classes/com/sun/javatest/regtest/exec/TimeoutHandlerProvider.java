@@ -49,7 +49,7 @@ public class TimeoutHandlerProvider {
 
     /**
      * Set the class name of the TimeoutHandler sub-class.
-     * @param name
+     * @param name the class name
      */
     public void setClassName(String name) {
         className = name;
@@ -57,8 +57,9 @@ public class TimeoutHandlerProvider {
 
     /**
      * Set the class path for loading the timeout handler.
-     * @param path
-     * @throws java.net.MalformedURLException
+     * @param path the class path
+     * @throws java.net.MalformedURLException if any of the files on the path cannot be converted
+     *      to a URL
      */
     public void setClassPath(List<File> path) throws MalformedURLException {
         URL[] urls = new URL[path.size()];
@@ -71,7 +72,8 @@ public class TimeoutHandlerProvider {
 
     /**
      * Load the class specified by setClassName and setClassPath.
-     * @throws ClassNotFoundException
+     * @return the class
+     * @throws ClassNotFoundException if the class cannot be found
      */
     private Class<? extends TimeoutHandler> loadClass() throws ClassNotFoundException {
         Class<?> handlerClass;
@@ -84,7 +86,10 @@ public class TimeoutHandlerProvider {
     }
 
     /**
-     * Create an instance of the TimeoutHandler that has been configured.
+     * Create an instance of the {@code TimeoutHandler} that has been configured.
+     * @param script the script with which the timeout handler will be associated
+     * @param section the section in the scripts test rult object in which to write messages
+     * @return the object
      */
     public TimeoutHandler createHandler(RegressionScript script, Section section) {
         PrintWriter log = section.getMessageWriter();
@@ -109,7 +114,7 @@ public class TimeoutHandlerProvider {
 
     /**
      * Set the timeout for the timeout handler.
-     * -1: default timeout; 0: no timeout; >0: timeout in seconds
+     * -1: default timeout; 0: no timeout; &gt;0: timeout in seconds
      * @param timeout a timeout in seconds
      */
     public void setTimeout(long timeout) {

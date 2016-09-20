@@ -55,7 +55,7 @@ public class ShellAction extends Action
     public static final String NAME = "shell";
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      * @return "shell"
      */
     @Override

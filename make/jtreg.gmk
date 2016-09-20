@@ -159,11 +159,22 @@ endif
 $(JTREG_IMAGEDIR)/doc/api/index.html: \
             $(JAVAFILES.com.sun.javatest.regtest-tools) \
             $(JAVATEST_SRCFILES)
-	$(J2SEHOME)/bin/javadoc -d $(JTREG_IMAGEDIR)/doc/api \
+	$(J2SEHOME)/bin/javadoc -d $(@D) \
                 -encoding iso-8859-1 \
 		-sourcepath "$(JAVADIR)$(PS)$(JAVATEST_SRCDIR)" \
 		-classpath "$(ANTHOME)/lib/ant.jar$(PS)$(JAVATEST_JAR)$(PS)$(JUNIT_JAR)$(PS)$(TESTNG_JAR)" \
 		com.sun.javatest.regtest \
+                $(JAVATEST_SRCFILES)
+
+$(JTREG_IMAGEDIR)/doc/devapi/index.html: \
+            $(JAVAFILES.com.sun.javatest.regtest-tools) \
+            $(JAVATEST_SRCFILES)
+	$(J2SEHOME)/bin/javadoc -d $(@D) \
+                -encoding iso-8859-1 \
+		-sourcepath "$(JAVADIR)$(PS)$(JAVATEST_SRCDIR)" \
+		-classpath "$(ANTHOME)/lib/ant.jar$(PS)$(JAVATEST_JAR)$(PS)$(JUNIT_JAR)$(PS)$(TESTNG_JAR)" \
+		-subpackages com.sun.javatest.regtest \
+                -tag "implNote:a:Implementation Note:" \
                 $(JAVATEST_SRCFILES)
 		
 

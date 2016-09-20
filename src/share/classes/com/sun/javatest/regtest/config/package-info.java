@@ -26,5 +26,16 @@
 /**
  * Provides support classes for the JDK Regression Test Harness, jtreg,
  * for configuring a test run.
+ *
+ * <p>
+ * The primary class in this package is {@link RegressionTestSuite},
+ * which provides access to {@link RegressionTestFinder}, used to locate
+ * tests in the test suite; and {@link RegressionParameters}, used to
+ * provide the configuration details for a test run.
+ *
+ * <p><b>This is NOT part of any supported API.
+ * If you write code that depends on this, you do so at your own risk.
+ * This code and its internal interfaces are subject to change or
+ * deletion without notice.</b>
  */
 package com.sun.javatest.regtest.config;

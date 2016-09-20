@@ -853,7 +853,8 @@ public class RegressionParameters
     private List<String> testVMOpts;
 
     /**
-     * Return the set of VM options each prefixed by -J, as required by JDK tools.
+     * Returns the set of VM options each prefixed by -J, as required by JDK tools.
+     * @return the set of VM options
      */
     public List<String> getTestToolVMOptions() {
         List<String> testToolVMOpts = new ArrayList<>();
@@ -863,7 +864,8 @@ public class RegressionParameters
     }
 
     /**
-     * Return the set of VM options and Java options, for use by the java command.
+     * Returns the set of VM options and Java options, for use by the java command.
+     * @return the set of VM and Java options
      */
     public List<String> getTestVMJavaOptions() {
         if ((testVMOpts == null || testVMOpts.isEmpty()) && nativeDir == null)

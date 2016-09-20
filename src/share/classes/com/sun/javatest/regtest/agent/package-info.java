@@ -26,5 +26,22 @@
 /**
  * Provides support classes for the JDK Regression Test Harness, jtreg,
  * that run in the test VM.
+ *
+ * <p><b>Note:</b>
+ * All classes in this package should be compiled such that they can
+ * be executed on the oldest supported release. This implies that
+ * may not use language features that are only available on releases
+ * that are newer than the oldest supported release.
+ * <p>Currently, {@code jtreg} supports running tests as far back as
+ * JDK 1.2 using "othervm" mode, which means that certain classes
+ * are restricted to be compiled with "{@code javac -target 1.2}".
+ * It also supports running tests in "agentvm" mode as far back as
+ * JDK 1,5, which means that the majority of classes in this package
+ * are restricted to be compiled with "{@code javac -target 1.5}".
+ *
+ * <p><b>This is NOT part of any supported API.
+ * If you write code that depends on this, you do so at your own risk.
+ * This code and its internal interfaces are subject to change or
+ * deletion without notice.</b>
  */
 package com.sun.javatest.regtest.agent;

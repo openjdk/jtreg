@@ -68,8 +68,11 @@ public class RegressionTestSuite extends TestSuite
     }
 
     /**
+     * Creates a {@code RegressionTestSuite} object for the test suite identified by a given path.
      * @param testSuiteRoot the root directory of the test suite
-     * @throws Fault Thrown if there are problems reading TEST.ROOT.
+     * @param errHandler a handler that can be used to report any problems encountered by
+     *      the test suite's test handler
+     * @throws Fault if there are problems reading the {@code TEST.ROOT} file.
      */
     public RegressionTestSuite(File testSuiteRoot, TestFinder.ErrorHandler errHandler) throws Fault {
         super(testSuiteRoot);

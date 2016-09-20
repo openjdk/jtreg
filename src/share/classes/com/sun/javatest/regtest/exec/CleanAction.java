@@ -51,7 +51,7 @@ public class CleanAction extends Action
     public static final String NAME = "clean";
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      * @return "clean"
      */
     @Override

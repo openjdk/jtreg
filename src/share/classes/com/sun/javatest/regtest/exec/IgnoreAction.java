@@ -47,7 +47,7 @@ public class IgnoreAction extends Action
     public static final String NAME = "ignore";
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      * @return "ignore"
      */
     @Override
@@ -85,7 +85,7 @@ public class IgnoreAction extends Action
      *
      * An automatic error which causes all subsquent actions to be ingored. All
      * arguments are joined as part of the returned error message.  Equivalent
-     * to "echo <word>*".
+     * to "{@code echo <word>*}".
      *
      * @return     The result of the action.
      * @exception  TestRunException If an unexpected error occurs while running
