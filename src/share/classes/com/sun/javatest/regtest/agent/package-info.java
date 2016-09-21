@@ -29,9 +29,9 @@
  *
  * <p><b>Note:</b>
  * All classes in this package should be compiled such that they can
- * be executed on the oldest supported release. This implies that
- * may not use language features that are only available on releases
- * that are newer than the oldest supported release.
+ * be executed on the oldest supported release. This implies that the
+ * classes may not use language features that are only available on
+ * releases that are newer than the oldest supported release.
  * <p>Currently, {@code jtreg} supports running tests as far back as
  * JDK 1.2 using "othervm" mode, which means that certain classes
  * are restricted to be compiled with "{@code javac -target 1.2}".
