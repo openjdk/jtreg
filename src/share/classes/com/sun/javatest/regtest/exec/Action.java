@@ -228,7 +228,7 @@ public abstract class Action extends ActionHelper {
                 fw.write("// The following grant entries were added by jtreg.  Do not edit." + LINESEP);
                 fw.write("grant {" + LINESEP);
                 fw.write("    permission java.io.FilePermission \""
-                        + script.absTestClsTopDir().getPath().replace('\\' + FILESEP, "{/}")
+                        + script.absTestClsTopDir().getPath().replace(FILESEP, "{/}")
                         + "${/}-\"" + ", \"read\";" + LINESEP);
                 fw.write("};" + LINESEP);
                 List<File> libs = new ArrayList<>();
