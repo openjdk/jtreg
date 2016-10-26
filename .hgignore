@@ -1,2 +1,5 @@
 ^(build|dist)/
 nbproject/private/
+plugins/idea/.idea/
+plugins/idea/build/
+
