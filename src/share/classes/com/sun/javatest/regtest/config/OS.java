@@ -103,10 +103,14 @@ public class OS {
         this.arch = arch;
         this.version = version;
 
-        if (name.startsWith("Linux"))
+        if (name.startsWith("AIX"))
+            family = "aix";
+        else if (name.startsWith("Linux"))
             family = "linux";
         else if (name.startsWith("Mac") || name.startsWith("Darwin"))
             family = "mac";
+        else if (name.startsWith("OS400") || name.startsWith("OS/400") )
+            family = "os400";
         else if (name.startsWith("SunOS") || name.startsWith("Solaris"))
             family = "solaris";
         else if (name.startsWith("Windows"))

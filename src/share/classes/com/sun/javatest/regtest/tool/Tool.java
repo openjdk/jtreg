@@ -1923,11 +1923,15 @@ public class Tool {
         if (nativeDirArg != null) {
             String libPathName;
             switch (os.family) {
-                case "windows":
-                    libPathName = "PATH";
+                case "aix":
+                case "os400":
+                    libPathName = "LIBPATH";
                     break;
                 case "mac":
                     libPathName = "DYLD_LIBRARY_PATH";
+                    break;
+                case "windows":
+                    libPathName = "PATH";
                     break;
                 default:
                     libPathName = "LD_LIBRARY_PATH";
