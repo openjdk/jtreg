@@ -44,20 +44,20 @@ public class ModuleHelper {
                 int colon = e.indexOf(":", sep + 1);
                 String moduleName = e.substring(0, sep);
                 String packageName;
-                boolean isPrivate = false;
+                boolean isOpen = false;
                 if (colon == -1) {
                     packageName = e.substring(sep + 1);
                 } else {
                     packageName = e.substring(sep + 1, colon);
                     String[] modifiers = StringArray.splitSeparator(",", e.substring(colon + 1));
                     for (String m : modifiers) {
-                        if (m.equals("private")) {
-                            isPrivate = true;
+                        if (m.equals("open") || m.equals("private")) {
+                            isOpen = true;
                             break;
                         }
                     }
                 }
-                addModuleExport(moduleName, packageName, isPrivate, loader);
+                addModuleExport(moduleName, packageName, isOpen, loader);
             }
         }
     }
@@ -72,7 +72,7 @@ public class ModuleHelper {
      *      JTRegModuleHelper.implAddExports(module, packageName, targetModule);
      */
     private static void addModuleExport(String moduleName, String packageName,
-            boolean isPrivate, ClassLoader targetLoader)
+            boolean isOpen, ClassLoader targetLoader)
             throws Fault {
         try {
             init();
@@ -101,7 +101,7 @@ public class ModuleHelper {
              *  JTRegModuleHelper.addExports(module, packageName, isPrivate, targetModule);
              */
             try {
-                addExportsMethod.invoke(null, new Object[] { module, packageName, isPrivate, targetModule });
+                addExportsMethod.invoke(null, new Object[] { module, packageName, isOpen, targetModule });
             } catch (InvocationTargetException e) {
                 if (e.getCause() instanceof IllegalArgumentException) {
                     String msg = e.getCause().getMessage();

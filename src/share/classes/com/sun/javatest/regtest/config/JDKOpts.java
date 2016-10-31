@@ -56,6 +56,7 @@ public class JDKOpts {
         ADD_EXPORTS("--add-exports"),
         ADD_EXPORTS_PRIVATE("--add-exports-private"),
         ADD_MODULES("--add-modules"),
+        ADD_OPENS("--add-opens"),
         ADD_READS("--add-reads"),
         CLASS_PATH("--class-path", "-classpath", "-cp"),
         LIMIT_MODULES("--limit-modules"),
@@ -94,11 +95,28 @@ public class JDKOpts {
         return false;
     }
 
+    enum Kind {
+        EXPORTS_PRIVATE("--add-exports-private"),
+        OPENS("--add-opens");
+        final String addOption;
+        Kind(String addOption) {
+            this.addOption = addOption;
+        }
+    };
+
     /**
      * Creates an object to normalize a series of JDK options.
      */
     public JDKOpts() {
-        mergeHandler = new MergeHandler();
+        mergeHandler = new MergeHandler(Kind.EXPORTS_PRIVATE);
+    }
+
+    /**
+     * Creates an object to normalize a series of JDK options.
+     * @param useAddOpens whether to use new --add-opens option
+     */
+    public JDKOpts(boolean useAddOpens) {
+        mergeHandler = new MergeHandler(useAddOpens ? Kind.OPENS : Kind.EXPORTS_PRIVATE);
     }
 
     /**
@@ -194,10 +212,12 @@ public class JDKOpts {
     private static class MergeHandler extends OptionHandler {
         private final List<String> opts;
         private final Map<String, Integer> index;
+        private final Kind kind;
 
-        MergeHandler() {
+        MergeHandler(Kind kind) {
             opts = new ArrayList<>();
             index = new HashMap<>();
+            this.kind = kind;
         }
 
         @Override
@@ -208,7 +228,8 @@ public class JDKOpts {
                     break;
 
                 case ADD_EXPORTS_PRIVATE:
-                    updateOptWhitespaceArg("--add-exports-private", arg, EQUALS, COMMA);
+                case ADD_OPENS:
+                    updateOptWhitespaceArg(kind.addOption, arg, EQUALS, COMMA);
                     break;
 
                 case ADD_MODULES:

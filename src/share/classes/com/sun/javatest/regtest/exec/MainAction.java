@@ -227,16 +227,11 @@ public class MainAction extends Action
 
         if (!othervm && !useModuleExportAPI) {
             for (Modules.Entry e: script.getModules()) {
-                if (e.needsAddExports(Modules.Phase.DYNAMIC)) {
-                    boolean found = false;
-                    for (String vmOpt: script.getTestVMJavaOptions()) {
-                        if (includesExport(vmOpt, e, true)) {
-                            found = true;
-                            break;
-                        }
-                    }
-                    if (!found) {
-                        othervmOverrideReasons.add("test needs --add-exports");
+                if (e.packageName != null) {
+                    String opt = e.isOpen ? (script.useAddOpens() ? "--add-opens" : "--add-exports-private") : "--add-exports";
+                    String arg = e.moduleName + "/" + e.packageName + "=ALL-UNNAMED";
+                    if (!includesOption(opt, arg, script.getTestVMJavaOptions())) {
+                        othervmOverrideReasons.add("test needs " + opt);
                         break;
                     }
                 }
@@ -416,7 +411,7 @@ public class MainAction extends Action
         }
 
         String javaCmd = script.getJavaProg();
-        JDKOpts javaOpts = new JDKOpts();
+        JDKOpts javaOpts = new JDKOpts(script.useAddOpens());
 
         if (!useCLASSPATH) {
             javaOpts.addPath("--class-path", cp);
@@ -593,9 +588,9 @@ public class MainAction extends Action
             Set<String> runAddExports = new LinkedHashSet<>();
             if (jdk.hasModules()) {
                 for (Modules.Entry e : script.getModules()) {
-                    if (e.needsAddExports(Modules.Phase.DYNAMIC)) {
-                        runAddExports.add(
-                                e.moduleName + "/" + e.packageName + (e.isPrivate ? ":private" : ""));
+                    if (e.needAddExports(Modules.Phase.DYNAMIC)) {
+                        runAddExports.add(e.moduleName + "/" + e.packageName +
+                                (e.isOpen ? (script.useAddOpens() ? ":open" : ":private") : ""));
                     }
                 }
             }

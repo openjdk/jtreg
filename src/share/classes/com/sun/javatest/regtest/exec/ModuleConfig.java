@@ -88,6 +88,10 @@ public class ModuleConfig {
                         setAddModules(split(arg, ','));
                         break;
 
+                    case ADD_OPENS:
+                        setAddExports(beforePart(arg, '=') + ":open", split(afterPart(arg, '='), ','));
+                        break;
+
                     case ADD_READS:
                         setAddReads(beforePart(arg, '='), split(afterPart(arg, '='), ','));
                         break;

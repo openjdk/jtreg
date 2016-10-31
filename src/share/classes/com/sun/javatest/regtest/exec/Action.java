@@ -519,7 +519,7 @@ public abstract class Action extends ActionHelper {
         StringBuilder addModules = null;
         for (Modules.Entry e: modules) {
             String m = e.moduleName;
-            if (e.needsAddExports(phase)) {
+            if (e.needAddExports(phase)) {
                 needAddExports = true;
             }
             if (!script.defaultModules.contains(m)) {
@@ -544,8 +544,15 @@ public abstract class Action extends ActionHelper {
 
         for (Modules.Entry e: modules) {
             if (e.packageName != null) {
-                list.add(e.isPrivate && phase == Modules.Phase.DYNAMIC ? "--add-exports-private" : "--add-exports");
-                list.add(e.moduleName + "/" + e.packageName + "=ALL-UNNAMED");
+                if (script.useAddOpens()) {
+                    if (e.isOpen && (phase == Modules.Phase.DYNAMIC) || !e.isOpen) {
+                        list.add(e.isOpen ? "--add-open" : "--add-exports");
+                        list.add(e.moduleName + "/" + e.packageName + "=ALL-UNNAMED");
+                    }
+                } else {
+                    list.add(e.isOpen && phase == Modules.Phase.DYNAMIC ? "--add-exports-private" : "--add-exports");
+                    list.add(e.moduleName + "/" + e.packageName + "=ALL-UNNAMED");
+                }
             }
         }
 
@@ -555,11 +562,20 @@ public abstract class Action extends ActionHelper {
         return list;
     }
 
-    protected boolean includesExport(String opt, Modules.Entry m, boolean runtime) {
-        // TODO: this will not work with space-separated args
-        String addExportsOpt = m.isPrivate && runtime ? "--add-exports-private" : "--add-exports";
-        String arg = m.moduleName + "/" + m.packageName + "=ALL-UNNAMED";
-        return opt.matches(addExportsOpt + "(=| +)\\Q" + arg + "\\E");
+    protected boolean includesOption(String option, String arg, List<String> options) {
+        boolean seenOption = false;
+        for (String opt: options) {
+            if (opt.equals(option + "=" + arg)) {
+                return true;
+            } else if (opt.equals(option)) {
+                seenOption = true;
+            } else if (seenOption && opt.equals(arg)) {
+                return true;
+            } else {
+                seenOption = false;
+            }
+        }
+        return false;
     }
 
     //----------misc statics----------------------------------------------------

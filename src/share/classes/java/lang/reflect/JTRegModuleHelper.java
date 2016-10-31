@@ -36,14 +36,19 @@ public class JTRegModuleHelper {
      * Use reflection to simulate one of:
      *      module.implAddExports(packageName, targetModule);
      *      module.implAddExportsPrivate(packageName, targetModule);
+     *      module.implAddOpen(packageName, targetModule);
      */
-    public static void addExports(Object module, String packageName, boolean isPrivate, Object targetModule)
+    public static void addExports(Object module, String packageName, boolean isOpen, Object targetModule)
             throws ReflectiveOperationException {
-        if (isPrivate) {
-            if (addExportsPrivateMethod == null) {
-                addExportsPrivateMethod = getModuleMethod("implAddExportsPrivate");
+        if (isOpen) {
+            if (addOpensMethod == null) {
+                try {
+                    addOpensMethod = getModuleMethod("implAddOpens");
+                } catch (NoSuchMethodException e) {
+                    addOpensMethod = getModuleMethod("implAddExportsPrivate");
+                }
             }
-            addExportsPrivateMethod.invoke(module, packageName, targetModule);
+            addOpensMethod.invoke(module, packageName, targetModule);
         } else {
             if (addExportsMethod == null) {
                 addExportsMethod = getModuleMethod("implAddExports");
@@ -59,5 +64,5 @@ public class JTRegModuleHelper {
 
     // on java.lang.reflect.Module
     private static Method addExportsMethod;
-    private static Method addExportsPrivateMethod;
+    private static Method addOpensMethod;
 }

@@ -59,12 +59,12 @@ public class Modules implements Iterable<Modules.Entry> {
     public static class Entry {
         public final String moduleName;
         public final String packageName;
-        public final boolean isPrivate;
+        public final boolean isOpen;
 
-        Entry(String moduleName, String packageName, boolean isPrivate) {
+        Entry(String moduleName, String packageName, boolean isOpen) {
             this.moduleName = moduleName;
             this.packageName = packageName;
-            this.isPrivate = isPrivate;
+            this.isOpen = isOpen;
         }
 
         /**
@@ -72,7 +72,7 @@ public class Modules implements Iterable<Modules.Entry> {
          * @param phase the phase
          * @return  true if an export should be added in the specified phase
          */
-        public boolean needsAddExports(Phase phase) {
+        public boolean needAddExports(Phase phase) {
             return (packageName != null);
         }
 
@@ -83,8 +83,8 @@ public class Modules implements Iterable<Modules.Entry> {
             if (packageName != null) {
                 sb.append("/").append(packageName);
                 String sep = ":";
-                if (isPrivate) {
-                    sb.append(sep).append("private");
+                if (isOpen) {
+                    sb.append(sep).append("open");
                 }
             }
             return sb.toString();
@@ -100,7 +100,7 @@ public class Modules implements Iterable<Modules.Entry> {
     public static Entry parse(String s) throws Fault {
         String moduleName;
         String packageName = null;
-        boolean isPrivate = false;
+        boolean isOpen = false;
 
         int slash = s.indexOf("/");
         if (slash == -1) {
@@ -115,8 +115,9 @@ public class Modules implements Iterable<Modules.Entry> {
                 String[] modifiers = s.substring(colon + 1).split(",");
                 for (String m : modifiers) {
                     switch (m) {
+                        case "open":
                         case "private":
-                            isPrivate = true;
+                            isOpen = true;
                             break;
                         default:
                             throw new Fault("bad modifier: " + m);
@@ -131,7 +132,7 @@ public class Modules implements Iterable<Modules.Entry> {
             throw new Fault("invalid package name: " + packageName);
         }
 
-        return new Entry(moduleName, packageName, isPrivate);
+        return new Entry(moduleName, packageName, isOpen);
     }
 
     private static boolean isDottedName(String qualId) {

@@ -86,6 +86,9 @@ public class TestProperties {
                     e.properties.getProperty("requires.extraPropDefns.vmOpts")
             );
         }
+
+        // temporary property, during transition
+        useAddOpens = Boolean.valueOf(e.properties.getProperty("useAddOpens"));
     }
 
     Set<String> getValidKeys(File file) throws TestSuite.Fault {
@@ -173,6 +176,10 @@ public class TestProperties {
         return extraPropDefns;
     }
 
+    boolean useAddOpens() {
+        return useAddOpens;
+    }
+
     private void error(I18NResourceBundle i18n, String key, Object... args) {
         errHandler.error(i18n.getString(key, args));
     }
@@ -193,6 +200,9 @@ public class TestProperties {
     final List<String> groupFiles;
     final Version requiredVersion;
     final ExtraPropDefns extraPropDefns;
+
+    // temporary property, during transition
+    final boolean useAddOpens;
 
     class Cache {
         class Entry {
