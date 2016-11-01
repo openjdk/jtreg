@@ -30,7 +30,7 @@ import com.intellij.openapi.util.IconLoader;
 import javax.swing.*;
 
 public interface JTRegPluginIcons {
-    Icon JTREG_ICON_32 = IconLoader.findIcon("/com/oracle/plugin/jtreg/resources/JavaCup32.png");
+    Icon JTREG_ICON_32 = IconLoader.findIcon("/com/oracle/plugin/jtreg/icons/JavaCup32.png");
 
-    Icon JTREG_ICON_16 = IconLoader.findIcon("/com/oracle/plugin/jtreg/resources/JavaCup16.png");
+    Icon JTREG_ICON_16 = IconLoader.findIcon("/com/oracle/plugin/jtreg/icons/JavaCup16.png");
 }
