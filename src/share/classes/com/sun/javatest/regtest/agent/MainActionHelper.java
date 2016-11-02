@@ -52,6 +52,7 @@ public class MainActionHelper extends ActionHelper {
             String testName,
             Map<String, String> props,
             Set<String> addExports,
+            Set<String> addOpens,
             SearchPath classpath,
             String classname,
             String[] classArgs,
@@ -88,7 +89,8 @@ public class MainActionHelper extends ActionHelper {
                     }
                 }
                 loader = new URLClassLoader(urls.toArray(new URL[urls.size()]));
-                ModuleHelper.addModuleExports(addExports, loader);
+                ModuleHelper.addExports(addExports, loader);
+                ModuleHelper.addOpens(addOpens, loader);
                 c = loader.loadClass(classname);
             } else {
                 loader = null;

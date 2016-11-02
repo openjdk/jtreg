@@ -480,7 +480,7 @@ public class JDK {
             throw new Fault(e.getMessage(), e);
         }
 
-        JDKOpts jdkOpts = new JDKOpts(params.getTestSuite().useAddOpens());
+        JDKOpts jdkOpts = new JDKOpts();
         jdkOpts.add("--class-path");
         SearchPath cp = new SearchPath(params.getJavaTestClassPath());
         cp.append(epd.getClassDir());

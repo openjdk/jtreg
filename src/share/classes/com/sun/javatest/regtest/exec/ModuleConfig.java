@@ -56,6 +56,7 @@ public class ModuleConfig {
     private List<String> addMods;
     private List<String> limitMods;
     private Map<String,List<String>> addExports;
+    private Map<String,List<String>> addOpens;
     private Map<String,List<String>> addReads;
     private SearchPath modulePath;
     private SearchPath classPath;
@@ -80,16 +81,13 @@ public class ModuleConfig {
                         setAddExports(beforePart(arg, '='), split(afterPart(arg, '='), ','));
                         break;
 
-                    case ADD_EXPORTS_PRIVATE:
-                        setAddExports(beforePart(arg, '=') + ":private", split(afterPart(arg, '='), ','));
-                        break;
-
                     case ADD_MODULES:
                         setAddModules(split(arg, ','));
                         break;
 
+                    case ADD_EXPORTS_PRIVATE:
                     case ADD_OPENS:
-                        setAddExports(beforePart(arg, '=') + ":open", split(afterPart(arg, '='), ','));
+                        setAddOpens(beforePart(arg, '='), split(afterPart(arg, '='), ','));
                         break;
 
                     case ADD_READS:
@@ -142,10 +140,26 @@ public class ModuleConfig {
         return this;
     }
 
+    ModuleConfig setAddOpensToUnnamed(Set<String> modules) {
+        for (String module: modules) {
+            if (module.contains("/")) {
+                setAddExports(module, Collections.singletonList("ALL-UNNAMED"));
+            }
+        }
+        return this;
+    }
+
     ModuleConfig setAddExports(String modulePackage, List<String> targetModules) {
         if (addExports == null)
             addExports = new TreeMap<>();
         addExports.put(modulePackage, targetModules);
+        return this;
+    }
+
+    ModuleConfig setAddOpens(String modulePackage, List<String> targetModules) {
+        if (addOpens == null)
+            addOpens = new TreeMap<>();
+        addOpens.put(modulePackage, targetModules);
         return this;
     }
 
@@ -191,10 +205,15 @@ public class ModuleConfig {
         if (addExports != null && !addExports.isEmpty()) {
             String label = "add exports:";
             for (Map.Entry<String, List<String>> e: addExports.entrySet()) {
-                int colon = e.getKey().indexOf(":");
-                String modulePackage = (colon == -1) ? e.getKey() : e.getKey().substring(0, colon);
-                String modifiers = (colon == -1) ? "" : e.getKey().substring(colon + 1);
-                table.addRow(label, modifiers, modulePackage, join(e.getValue(), " "));
+                table.addRow(label, e.getKey(), join(e.getValue(), " "));
+                label = null;
+            }
+        }
+
+        if (addOpens != null && !addOpens.isEmpty()) {
+            String label = "add opens:";
+            for (Map.Entry<String, List<String>> e: addOpens.entrySet()) {
+                table.addRow(label, e.getKey(), join(e.getValue(), " "));
                 label = null;
             }
         }

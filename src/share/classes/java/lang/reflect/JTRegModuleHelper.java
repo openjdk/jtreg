@@ -33,28 +33,27 @@ package java.lang.reflect;
  */
 public class JTRegModuleHelper {
     /*
-     * Use reflection to simulate one of:
+     * Use reflection to simulate:
      *      module.implAddExports(packageName, targetModule);
-     *      module.implAddExportsPrivate(packageName, targetModule);
-     *      module.implAddOpen(packageName, targetModule);
      */
-    public static void addExports(Object module, String packageName, boolean isOpen, Object targetModule)
+    public static void addExports(Object module, String packageName, Object targetModule)
             throws ReflectiveOperationException {
-        if (isOpen) {
-            if (addOpensMethod == null) {
-                try {
-                    addOpensMethod = getModuleMethod("implAddOpens");
-                } catch (NoSuchMethodException e) {
-                    addOpensMethod = getModuleMethod("implAddExportsPrivate");
-                }
-            }
-            addOpensMethod.invoke(module, packageName, targetModule);
-        } else {
-            if (addExportsMethod == null) {
-                addExportsMethod = getModuleMethod("implAddExports");
-            }
-            addExportsMethod.invoke(module, packageName, targetModule);
+        if (addExportsMethod == null) {
+            addExportsMethod = getModuleMethod("implAddExports");
         }
+        addExportsMethod.invoke(module, packageName, targetModule);
+    }
+
+    /*
+     * Use reflection to simulate:
+     *      module.implAddOpens(packageName, targetModule);
+     */
+    public static void addOpens(Object module, String packageName, Object targetModule)
+            throws ReflectiveOperationException {
+        if (addOpensMethod == null) {
+            addOpensMethod = getModuleMethod("implAddOpens");
+        }
+        addOpensMethod.invoke(module, packageName, targetModule);
     }
 
     private static Method getModuleMethod(String name) throws ReflectiveOperationException {

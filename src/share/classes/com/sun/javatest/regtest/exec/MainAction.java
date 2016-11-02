@@ -228,7 +228,7 @@ public class MainAction extends Action
         if (!othervm && !useModuleExportAPI) {
             for (Modules.Entry e: script.getModules()) {
                 if (e.packageName != null) {
-                    String opt = e.isOpen ? (script.useAddOpens() ? "--add-opens" : "--add-exports-private") : "--add-exports";
+                    String opt = e.isOpen ? "--add-opens" : "--add-exports";
                     String arg = e.moduleName + "/" + e.packageName + "=ALL-UNNAMED";
                     if (!includesOption(opt, arg, script.getTestVMJavaOptions())) {
                         othervmOverrideReasons.add("test needs " + opt);
@@ -411,7 +411,7 @@ public class MainAction extends Action
         }
 
         String javaCmd = script.getJavaProg();
-        JDKOpts javaOpts = new JDKOpts(script.useAddOpens());
+        JDKOpts javaOpts = new JDKOpts();
 
         if (!useCLASSPATH) {
             javaOpts.addPath("--class-path", cp);
@@ -586,11 +586,12 @@ public class MainAction extends Action
         Status status;
         try {
             Set<String> runAddExports = new LinkedHashSet<>();
+            Set<String> runAddOpens = new LinkedHashSet<>();
             if (jdk.hasModules()) {
                 for (Modules.Entry e : script.getModules()) {
-                    if (e.needAddExports(Modules.Phase.DYNAMIC)) {
-                        runAddExports.add(e.moduleName + "/" + e.packageName +
-                                (e.isOpen ? (script.useAddOpens() ? ":open" : ":private") : ""));
+                    if (e.packageName != null) {
+                        Set<String> set = e.isOpen ? runAddOpens : runAddExports;
+                        set.add(e.moduleName + "/" + e.packageName);
                     }
                 }
             }
@@ -613,8 +614,27 @@ public class MainAction extends Action
                 }
             }
 
+            if (!runAddOpens.isEmpty()) {
+                StringBuilder sb = null;
+                for (String s : runAddOpens) {
+                    if (s.contains("/")) {
+                        if (sb == null) {
+                            sb = new StringBuilder();
+                            sb.append("Additional opens to unnamed modules from @modules: ");
+                        } else {
+                            sb.append(" ");
+                        }
+                        sb.append(s);
+                    }
+                }
+                if (sb != null) {
+                    section.getMessageWriter().println(sb);
+                }
+            }
+
             new ModuleConfig("Test Layer")
                     .setAddExportsToUnnamed(runAddExports)
+                    .setAddOpensToUnnamed(runAddOpens)
                     .setClassPath(runClasspath)
                     .write(configWriter);
 
@@ -623,6 +643,7 @@ public class MainAction extends Action
                     script.getTestResult().getTestName(),
                     javaProps,
                     runAddExports,
+                    runAddOpens,
                     runClasspath,
                     runMainClass,
                     runMainArgs,

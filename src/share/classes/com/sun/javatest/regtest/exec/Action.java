@@ -544,13 +544,8 @@ public abstract class Action extends ActionHelper {
 
         for (Modules.Entry e: modules) {
             if (e.packageName != null) {
-                if (script.useAddOpens()) {
-                    if (e.isOpen && (phase == Modules.Phase.DYNAMIC) || !e.isOpen) {
-                        list.add(e.isOpen ? "--add-open" : "--add-exports");
-                        list.add(e.moduleName + "/" + e.packageName + "=ALL-UNNAMED");
-                    }
-                } else {
-                    list.add(e.isOpen && phase == Modules.Phase.DYNAMIC ? "--add-exports-private" : "--add-exports");
+                if (e.isOpen && (phase == Modules.Phase.DYNAMIC) || !e.isOpen) {
+                    list.add(e.isOpen ? "--add-opens" : "--add-exports");
                     list.add(e.moduleName + "/" + e.packageName + "=ALL-UNNAMED");
                 }
             }

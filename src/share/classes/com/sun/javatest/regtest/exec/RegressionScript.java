@@ -598,15 +598,6 @@ public class RegressionScript extends Script {
         }
     }
 
-    /**
-     * Determine whether to use new long-form options.
-     * Eventually, this should be a simple function of the JDK version.
-     * For now, it's a property of the test suite.
-     */
-    boolean useAddOpens() {
-        return testSuite.useAddOpens();
-    }
-
     //----------------------- computing paths ---------------------------------
 
     File absTestWorkFile(String name) {
@@ -1079,7 +1070,7 @@ public class RegressionScript extends Script {
      * Get an agent for a VM with the given VM options.
      */
     Agent getAgent(JDK jdk, SearchPath classpath, List<String> testVMOpts) throws Agent.Fault {
-        JDKOpts vmOpts = new JDKOpts(useAddOpens());
+        JDKOpts vmOpts = new JDKOpts();
         vmOpts.addAll("-classpath", classpath.toString());
         vmOpts.addAll(testVMOpts);
         if (params.getTestJDK().hasModules()) {

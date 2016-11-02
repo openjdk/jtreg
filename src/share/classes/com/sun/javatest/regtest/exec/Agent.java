@@ -192,6 +192,7 @@ public class Agent {
         try {
             if (traceAgent)
                 System.err.println("Agent.doCompileAction " + testName + " " + cmdArgs);
+            // See corresponding list in AgentServer.doCompile
             synchronized (out) {
                 out.writeByte(DO_COMPILE);
                 out.writeUTF(testName);
@@ -220,6 +221,7 @@ public class Agent {
             String testName,
             Map<String, String> testProps,
             Set<String> addExports,
+            Set<String> addOpens,
             SearchPath testClassPath,
             String testClass,
             List<String> testArgs,
@@ -261,11 +263,13 @@ public class Agent {
                         + " " + testClass
                         + " " + testArgs);
             }
+            // See corresponding list in AgentServer.doMain
             synchronized (out) {
                 out.writeByte(DO_MAIN);
                 out.writeUTF(testName);
                 writeMap(testProps);
                 writeCollection(addExports);
+                writeCollection(addOpens);
                 out.writeUTF(testClassPath.toString());
                 out.writeUTF(testClass);
                 writeCollection(testArgs);

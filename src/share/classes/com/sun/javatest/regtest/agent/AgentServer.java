@@ -188,7 +188,7 @@ public class AgentServer implements ActionHelper.OutputHandler {
                     case CLOSE:
                         return;
                     default:
-                        //                        Thread.dumpStack();
+                        // Thread.dumpStack();
                         throw new Error("Agent.Server: unexpected op: " + op);
                 }
                 out.flush();
@@ -202,6 +202,7 @@ public class AgentServer implements ActionHelper.OutputHandler {
         if (traceServer) {
             traceOut.println("Agent.Server.doCompile");
         }
+        // See corresponding list in Agent.doCompile
         String testName = in.readUTF();
         Map<String, String> testProps = readMap(in);
         List<String> cmdArgs = readList(in);
@@ -221,9 +222,11 @@ public class AgentServer implements ActionHelper.OutputHandler {
         if (traceServer) {
             traceOut.println("Agent.Server.doMain");
         }
+        // See corresponding list in Agent.doMainAction
         String testName = in.readUTF();
         Map<String, String> testProps = readMap(in);
         Set<String> addExports = readSet(in);
+        Set<String> addOpens = readSet(in);
         SearchPath classPath = new SearchPath(in.readUTF());
         String className = in.readUTF();
         List<String> classArgs = readList(in);
@@ -236,6 +239,7 @@ public class AgentServer implements ActionHelper.OutputHandler {
                     testName,
                     testProps,
                     addExports,
+                    addOpens,
                     classPath,
                     className,
                     classArgs.toArray(new String[classArgs.size()]), 0, this);

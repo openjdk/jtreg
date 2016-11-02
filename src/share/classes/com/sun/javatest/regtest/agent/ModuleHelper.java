@@ -37,28 +37,15 @@ public class ModuleHelper {
         }
     }
 
-    static void addModuleExports(Set<String> exports, ClassLoader loader) throws Fault {
-        for (String e: exports) {
-            int sep = e.indexOf("/");
-            if (sep > 0) {
-                int colon = e.indexOf(":", sep + 1);
-                String moduleName = e.substring(0, sep);
-                String packageName;
-                boolean isOpen = false;
-                if (colon == -1) {
-                    packageName = e.substring(sep + 1);
-                } else {
-                    packageName = e.substring(sep + 1, colon);
-                    String[] modifiers = StringArray.splitSeparator(",", e.substring(colon + 1));
-                    for (String m : modifiers) {
-                        if (m.equals("open") || m.equals("private")) {
-                            isOpen = true;
-                            break;
-                        }
-                    }
-                }
-                addModuleExport(moduleName, packageName, isOpen, loader);
-            }
+    static void addExports(Set<String> exports, ClassLoader loader) throws Fault {
+        for (String e : exports) {
+            addExportsOrOpens(e, false, loader);
+        }
+    }
+
+    static void addOpens(Set<String> opens, ClassLoader loader) throws Fault {
+        for (String o : opens) {
+            addExportsOrOpens(o, true, loader);
         }
     }
 
@@ -69,11 +56,16 @@ public class ModuleHelper {
      *          throw new Fault();
      *      Module module = opt_module.get();
      *      Module targetModule = targetLoader.getUnnamedModule();
+     * then one of:
      *      JTRegModuleHelper.implAddExports(module, packageName, targetModule);
+     *      JTRegModuleHelper.implAddpens(module, packageName, targetModule);
      */
-    private static void addModuleExport(String moduleName, String packageName,
+    private static void addExportsOrOpens(String modulePackageName,
             boolean isOpen, ClassLoader targetLoader)
             throws Fault {
+        int sep = modulePackageName.indexOf("/");
+        String moduleName = modulePackageName.substring(0, sep);
+        String packageName = modulePackageName.substring(sep + 1);
         try {
             init();
 
@@ -98,10 +90,13 @@ public class ModuleHelper {
             Object targetModule = getUnnamedModuleMethod.invoke(targetLoader, new Object[0]);
 
             /*
-             *  JTRegModuleHelper.addExports(module, packageName, isPrivate, targetModule);
+             *  Call one of:
+             *      JTRegModuleHelper.addExports(module, packageName, isPrivate, targetModule);
+             *      JTRegModuleHelper.addOpens(module, packageName, isPrivate, targetModule);
              */
             try {
-                addExportsMethod.invoke(null, new Object[] { module, packageName, isOpen, targetModule });
+                Method m = isOpen ? addOpensMethod : addExportsMethod;
+                m.invoke(null, new Object[] { module, packageName, targetModule });
             } catch (InvocationTargetException e) {
                 if (e.getCause() instanceof IllegalArgumentException) {
                     String msg = e.getCause().getMessage();
@@ -144,7 +139,9 @@ public class ModuleHelper {
 
             Class<?> helperClass = Class.forName("java.lang.reflect.JTRegModuleHelper");
             addExportsMethod = helperClass.getDeclaredMethod("addExports",
-                    new Class<?>[] { Object.class, String.class, boolean.class, Object.class });
+                    new Class<?>[] { Object.class, String.class, Object.class });
+            addOpensMethod = helperClass.getDeclaredMethod("addOpens",
+                    new Class<?>[] { Object.class, String.class, Object.class });
 
             getUnnamedModuleMethod = ClassLoader.class.getDeclaredMethod("getUnnamedModule", new Class<?>[0]);
 
@@ -181,4 +178,5 @@ public class ModuleHelper {
 
     // on java.lang.reflect.JTRegModuleHelper
     private static Method addExportsMethod;
+    private static Method addOpensMethod;
 }

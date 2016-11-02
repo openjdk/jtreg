@@ -212,10 +212,6 @@ public class RegressionTestSuite extends TestSuite
         return properties.getExtraPropDefns();
     }
 
-    public boolean useAddOpens() {
-        return properties.useAddOpens();
-    }
-
     private final TestFinder.ErrorHandler errHandler;
     private final TestProperties properties;
     private static final I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(RegressionTestSuite.class);
