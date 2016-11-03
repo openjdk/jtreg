@@ -514,7 +514,6 @@ public abstract class Action extends ActionHelper {
 
         Modules modules = script.getModules();
 
-        boolean isDynamicPhase = (phase == Modules.Phase.DYNAMIC);
         boolean needAddExports = false;
         StringBuilder addModules = null;
         for (Modules.Entry e: modules) {
@@ -544,8 +543,12 @@ public abstract class Action extends ActionHelper {
 
         for (Modules.Entry e: modules) {
             if (e.packageName != null) {
-                if (e.isOpen && (phase == Modules.Phase.DYNAMIC) || !e.isOpen) {
-                    list.add(e.isOpen ? "--add-opens" : "--add-exports");
+                if (e.addExports) {
+                    list.add("--add-exports");
+                    list.add(e.moduleName + "/" + e.packageName + "=ALL-UNNAMED");
+                }
+                if (e.addOpens && (phase == Modules.Phase.DYNAMIC)) {
+                    list.add("--add-opens");
                     list.add(e.moduleName + "/" + e.packageName + "=ALL-UNNAMED");
                 }
             }

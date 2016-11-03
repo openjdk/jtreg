@@ -228,10 +228,13 @@ public class MainAction extends Action
         if (!othervm && !useModuleExportAPI) {
             for (Modules.Entry e: script.getModules()) {
                 if (e.packageName != null) {
-                    String opt = e.isOpen ? "--add-opens" : "--add-exports";
                     String arg = e.moduleName + "/" + e.packageName + "=ALL-UNNAMED";
-                    if (!includesOption(opt, arg, script.getTestVMJavaOptions())) {
-                        othervmOverrideReasons.add("test needs " + opt);
+                    if (e.addExports && !includesOption("--add-exports", arg, script.getTestVMJavaOptions())) {
+                        othervmOverrideReasons.add("test needs --add-exports");
+                        break;
+                    }
+                    if (e.addOpens && !includesOption("--add-opens", arg, script.getTestVMJavaOptions())) {
+                        othervmOverrideReasons.add("test needs --add-opens");
                         break;
                     }
                 }
@@ -590,8 +593,12 @@ public class MainAction extends Action
             if (jdk.hasModules()) {
                 for (Modules.Entry e : script.getModules()) {
                     if (e.packageName != null) {
-                        Set<String> set = e.isOpen ? runAddOpens : runAddExports;
-                        set.add(e.moduleName + "/" + e.packageName);
+                        if (e.addExports) {
+                            runAddExports.add(e.moduleName + "/" + e.packageName);
+                        }
+                        if (e.addOpens) {
+                            runAddOpens.add(e.moduleName + "/" + e.packageName);
+                        }
                     }
                 }
             }

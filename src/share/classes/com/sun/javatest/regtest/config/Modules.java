@@ -59,12 +59,14 @@ public class Modules implements Iterable<Modules.Entry> {
     public static class Entry {
         public final String moduleName;
         public final String packageName;
-        public final boolean isOpen;
+        public final boolean addExports;
+        public final boolean addOpens;
 
-        Entry(String moduleName, String packageName, boolean isOpen) {
+        Entry(String moduleName, String packageName, boolean addExports, boolean addOpens) {
             this.moduleName = moduleName;
             this.packageName = packageName;
-            this.isOpen = isOpen;
+            this.addExports = addExports;
+            this.addOpens = addOpens;
         }
 
         /**
@@ -83,8 +85,12 @@ public class Modules implements Iterable<Modules.Entry> {
             if (packageName != null) {
                 sb.append("/").append(packageName);
                 String sep = ":";
-                if (isOpen) {
-                    sb.append(sep).append("open");
+                if (addOpens) {
+                    if (addExports) {
+                        sb.append(sep).append("+open");
+                    } else {
+                        sb.append(sep).append("open");
+                    }
                 }
             }
             return sb.toString();
@@ -100,7 +106,8 @@ public class Modules implements Iterable<Modules.Entry> {
     public static Entry parse(String s) throws Fault {
         String moduleName;
         String packageName = null;
-        boolean isOpen = false;
+        boolean addExports = false;
+        boolean addOpens = false;
 
         int slash = s.indexOf("/");
         if (slash == -1) {
@@ -110,6 +117,7 @@ public class Modules implements Iterable<Modules.Entry> {
             int colon = s.indexOf(":", slash + 1);
             if (colon == -1) {
                 packageName = s.substring(slash + 1);
+                addExports = true;
             } else {
                 packageName = s.substring(slash + 1, colon);
                 String[] modifiers = s.substring(colon + 1).split(",");
@@ -117,7 +125,11 @@ public class Modules implements Iterable<Modules.Entry> {
                     switch (m) {
                         case "open":
                         case "private":
-                            isOpen = true;
+                            addOpens = true;
+                            break;
+                        case "+open":
+                            addExports = true;
+                            addOpens = true;
                             break;
                         default:
                             throw new Fault("bad modifier: " + m);
@@ -132,7 +144,7 @@ public class Modules implements Iterable<Modules.Entry> {
             throw new Fault("invalid package name: " + packageName);
         }
 
-        return new Entry(moduleName, packageName, isOpen);
+        return new Entry(moduleName, packageName, addExports, addOpens);
     }
 
     private static boolean isDottedName(String qualId) {
