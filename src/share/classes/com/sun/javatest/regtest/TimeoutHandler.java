@@ -105,7 +105,7 @@ public abstract class TimeoutHandler {
 
         Alarm a = (timeout <= 0)
                 ? Alarm.NONE
-                : Alarm.schedule(timeout, TimeUnit.SECONDS, log, Thread.currentThread());
+                : Alarm.scheduleInterrupt(timeout, TimeUnit.SECONDS, log, Thread.currentThread());
         try {
             runActions(proc, pid);
         } catch (InterruptedException ex) {
