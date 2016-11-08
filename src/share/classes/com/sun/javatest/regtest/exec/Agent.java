@@ -48,6 +48,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import com.sun.javatest.Status;
@@ -166,6 +167,7 @@ public class Agent {
         // Handle the timeout here (instead of in the agent) to make it possible
         // to see the unchanged state of the Agent JVM when the timeout happens.
         Alarm alarm = Alarm.NONE;
+        final CountDownLatch timeoutHandlerDone = new CountDownLatch(1);
         if (timeout > 0) {
             if (timeoutHandler == null) {
                 throw new NullPointerException("TimeoutHandler is required");
@@ -185,6 +187,7 @@ public class Agent {
                     } catch (IOException ex) {
                         ex.printStackTrace(messageWriter);
                     }
+                    timeoutHandlerDone.countDown();
                 }
             });
         }
@@ -207,6 +210,20 @@ public class Agent {
             if (traceAgent)
                 System.err.println("Agent.doCompileAction: error " + e);
             if (alarm.didFire()) {
+                if (traceAgent)
+                    System.err.println("Agent.doCompileAction: waiting for timeout handler to complete.");
+                try {
+                    if (timeoutHandler.getTimeout() <= 0) {
+                        timeoutHandlerDone.await();
+                    } else {
+                        boolean done = timeoutHandlerDone.await(timeoutHandler.getTimeout() + 10, TimeUnit.SECONDS);
+                        if (!done && traceAgent)
+                            System.err.println("Agent.doCompileAction: timeout handler did not complete within its own timeout.");
+                    }
+                } catch (InterruptedException e1) {
+                    if (traceAgent)
+                        System.err.println("Agent.doCompileAction: interrupted while waiting for timeout handler to complete: " + e1);
+                }
                 throw new Fault(new Exception("Agent timed out after a timeout of "
                     + timeout + " seconds"));
             }
@@ -233,6 +250,7 @@ public class Agent {
         // Handle the timeout here (instead of in the agent) to make it possible
         // to see the unchanged state of the Agent JVM when the timeout happens.
         Alarm alarm = Alarm.NONE;
+        final CountDownLatch timeoutHandlerDone = new CountDownLatch(1);
         if (timeout > 0) {
             if (timeoutHandler == null) {
                 throw new NullPointerException("TimeoutHandler is required");
@@ -252,6 +270,7 @@ public class Agent {
                     } catch (IOException ex) {
                         ex.printStackTrace(messageWriter);
                     }
+                    timeoutHandlerDone.countDown();
                 }
             });
         }
@@ -282,6 +301,20 @@ public class Agent {
             if (traceAgent)
                 System.err.println("Agent.doMainAction: error " + e);
             if (alarm.didFire()) {
+                if (traceAgent)
+                    System.err.println("Agent.doMainAction: waiting for timeout handler to complete.");
+                try {
+                    if (timeoutHandler.getTimeout() <= 0) {
+                        timeoutHandlerDone.await();
+                    } else {
+                        boolean done = timeoutHandlerDone.await(timeoutHandler.getTimeout() + 10, TimeUnit.SECONDS);
+                        if (!done && traceAgent)
+                            System.err.println("Agent.doMainAction: timeout handler did not complete within its own timeout.");
+                    }
+                } catch (InterruptedException e1) {
+                    if (traceAgent)
+                        System.err.println("Agent.doMainAction: interrupted while waiting for timeout handler to complete: " + e1);
+                }
                 throw new Fault(new Exception("Agent timed out with a timeout of "
                     + timeout + " seconds"));
             }

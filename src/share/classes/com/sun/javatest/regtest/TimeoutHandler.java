@@ -83,6 +83,16 @@ public abstract class TimeoutHandler {
     }
 
     /**
+     * Gets the timeout, in seconds, after which the handler itself will be interrupted.
+     * A negative or zero value disables the timeout.
+     *
+     * @return the timeout
+     */
+    public long getTimeout() {
+        return timeout;
+    }
+
+    /**
      * Initiates the timeout handler, to analyze a specified process, by calling {@link #runActions}.
      * The handler itself is subject to a secondary timeout, which can be specified with
      * {@link #setTimeout}.
