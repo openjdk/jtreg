@@ -156,96 +156,86 @@ public class Agent {
         return scratchDir.getName().equals(this.scratchDir.getName()) && this.jdk.equals(jdk) && this.vmOpts.equals(vmOpts);
     }
 
-    public Status doCompileAction(String testName,
-            Map<String, String> testProps,
-            List<String> cmdArgs,
+    public Status doCompileAction(
+            final String testName,
+            final Map<String, String> testProps,
+            final List<String> cmdArgs,
             int timeout,
             final TimeoutHandler timeoutHandler,
             TestResult.Section trs)
-            throws Fault {
-        final PrintWriter messageWriter = trs.getMessageWriter();
-        // Handle the timeout here (instead of in the agent) to make it possible
-        // to see the unchanged state of the Agent JVM when the timeout happens.
-        Alarm alarm = Alarm.NONE;
-        final CountDownLatch timeoutHandlerDone = new CountDownLatch(1);
-        if (timeout > 0) {
-            if (timeoutHandler == null) {
-                throw new NullPointerException("TimeoutHandler is required");
-            }
-            alarm = Alarm.schedule(timeout, TimeUnit.SECONDS, messageWriter, new Runnable() {
-                @Override
-                public void run() {
-                    timeoutHandler.handleTimeout(process);
-                    // close the streams to release us from readResults()
-                    try {
-                        out.close();
-                    } catch (IOException ex) {
-                        ex.printStackTrace(messageWriter);
-                    }
-                    try {
-                        in.close();
-                    } catch (IOException ex) {
-                        ex.printStackTrace(messageWriter);
-                    }
-                    timeoutHandlerDone.countDown();
-                }
-            });
+                throws Fault {
+        if (traceAgent) {
+            System.err.println("Agent.doCompileAction " + testName + " " + cmdArgs);
         }
-        keepAlive.setEnabled(false);
-        try {
-            if (traceAgent)
-                System.err.println("Agent.doCompileAction " + testName + " " + cmdArgs);
-            // See corresponding list in AgentServer.doCompile
-            synchronized (out) {
-                out.writeByte(DO_COMPILE);
-                out.writeUTF(testName);
-                writeMap(testProps);
-                writeCollection(cmdArgs);
-                out.flush();
-            }
-            if (traceAgent)
-                System.err.println("Agent.doCompileAction: request sent");
-            return readResults(trs);
-        } catch (IOException e) {
-            if (traceAgent)
-                System.err.println("Agent.doCompileAction: error " + e);
-            if (alarm.didFire()) {
-                if (traceAgent)
-                    System.err.println("Agent.doCompileAction: waiting for timeout handler to complete.");
-                try {
-                    if (timeoutHandler.getTimeout() <= 0) {
-                        timeoutHandlerDone.await();
-                    } else {
-                        boolean done = timeoutHandlerDone.await(timeoutHandler.getTimeout() + 10, TimeUnit.SECONDS);
-                        if (!done && traceAgent)
-                            System.err.println("Agent.doCompileAction: timeout handler did not complete within its own timeout.");
-                    }
-                } catch (InterruptedException e1) {
-                    if (traceAgent)
-                        System.err.println("Agent.doCompileAction: interrupted while waiting for timeout handler to complete: " + e1);
-                }
-                throw new Fault(new Exception("Agent timed out after a timeout of "
-                    + timeout + " seconds"));
-            }
-            throw new Fault(e);
-        } finally {
-            alarm.cancel();
-            keepAlive.setEnabled(true);
-        }
+
+        return doAction("doCompileAction",
+                new AgentAction() {
+                    @Override
+                    public void send() throws IOException {
+                            // See corresponding list in AgentServer.doCompile
+                            out.writeByte(DO_COMPILE);
+                            out.writeUTF(testName);
+                            writeMap(testProps);
+                            writeCollection(cmdArgs);
+                            out.flush();
+                        }
+                },
+                timeout,
+                timeoutHandler,
+                trs);
     }
 
     public Status doMainAction(
-            String testName,
-            Map<String, String> testProps,
-            Set<String> addExports,
-            Set<String> addOpens,
-            SearchPath testClassPath,
-            String testClass,
-            List<String> testArgs,
+            final String testName,
+            final Map<String, String> testProps,
+            final Set<String> addExports,
+            final Set<String> addOpens,
+            final SearchPath testClassPath,
+            final String testClass,
+            final List<String> testArgs,
             int timeout,
             final TimeoutHandler timeoutHandler,
             TestResult.Section trs)
-            throws Fault {
+                throws Fault {
+        if (traceAgent) {
+            System.err.println("Agent.doMainAction: " + testName
+                    + " " + testClassPath
+                    + " " + testClass
+                    + " " + testArgs);
+        }
+
+        return doAction("doMainAction",
+                new AgentAction() {
+                    @Override
+                    public void send() throws IOException {
+                        // See corresponding list in AgentServer.doMain
+                        out.writeByte(DO_MAIN);
+                        out.writeUTF(testName);
+                        writeMap(testProps);
+                        writeCollection(addExports);
+                        writeCollection(addOpens);
+                        out.writeUTF(testClassPath.toString());
+                        out.writeUTF(testClass);
+                        writeCollection(testArgs);
+                        out.flush();
+                    }
+                },
+                timeout,
+                timeoutHandler,
+                trs);
+    }
+
+    interface AgentAction {
+        void send() throws IOException;
+    }
+
+    private Status doAction(
+            String actionName,
+            AgentAction agentAction,
+            int timeout,
+            final TimeoutHandler timeoutHandler,
+            TestResult.Section trs)
+                throws Fault {
         final PrintWriter messageWriter = trs.getMessageWriter();
         // Handle the timeout here (instead of in the agent) to make it possible
         // to see the unchanged state of the Agent JVM when the timeout happens.
@@ -276,47 +266,34 @@ public class Agent {
         }
         keepAlive.setEnabled(false);
         try {
-            if (traceAgent) {
-                System.err.println("Agent.doMainAction " + testName
-                        + " " + testClassPath
-                        + " " + testClass
-                        + " " + testArgs);
-            }
-            // See corresponding list in AgentServer.doMain
             synchronized (out) {
-                out.writeByte(DO_MAIN);
-                out.writeUTF(testName);
-                writeMap(testProps);
-                writeCollection(addExports);
-                writeCollection(addOpens);
-                out.writeUTF(testClassPath.toString());
-                out.writeUTF(testClass);
-                writeCollection(testArgs);
-                out.flush();
+                agentAction.send();
             }
             if (traceAgent)
-                System.err.println("Agent.doMainAction: request sent");
+                System.err.println("Agent." + actionName + ": request sent");
             return readResults(trs);
         } catch (IOException e) {
             if (traceAgent)
-                System.err.println("Agent.doMainAction: error " + e);
+                System.err.println("Agent." + actionName + ":  error " + e);
             if (alarm.didFire()) {
                 if (traceAgent)
-                    System.err.println("Agent.doMainAction: waiting for timeout handler to complete.");
+                    System.err.println("Agent." + actionName + ":  waiting for timeout handler to complete.");
                 try {
                     if (timeoutHandler.getTimeout() <= 0) {
                         timeoutHandlerDone.await();
                     } else {
                         boolean done = timeoutHandlerDone.await(timeoutHandler.getTimeout() + 10, TimeUnit.SECONDS);
                         if (!done && traceAgent)
-                            System.err.println("Agent.doMainAction: timeout handler did not complete within its own timeout.");
+                            System.err.println("Agent." + actionName
+                                    + ":  timeout handler did not complete within its own timeout.");
                     }
                 } catch (InterruptedException e1) {
                     if (traceAgent)
-                        System.err.println("Agent.doMainAction: interrupted while waiting for timeout handler to complete: " + e1);
+                        System.err.println("Agent." + actionName
+                                + ":  interrupted while waiting for timeout handler to complete: " + e1);
                 }
                 throw new Fault(new Exception("Agent timed out with a timeout of "
-                    + timeout + " seconds"));
+                        + timeout + " seconds"));
             }
             throw new Fault(e);
         } finally {
