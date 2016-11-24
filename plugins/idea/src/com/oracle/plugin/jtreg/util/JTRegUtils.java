@@ -25,12 +25,15 @@
 
 package com.oracle.plugin.jtreg.util;
 
+import com.intellij.lang.ant.config.AntBuildFile;
+import com.intellij.lang.ant.config.AntConfiguration;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.psi.util.PsiUtil;
 
+import java.lang.reflect.Method;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -217,5 +220,17 @@ public class JTRegUtils {
             e = PsiTreeUtil.skipSiblingsForward(e, PsiWhiteSpace.class);
         }
         return null;
+    }
+
+    /**
+     * Workaround incompatible signature change from 2016.2 to 2016.3
+     */
+    public static AntBuildFile[] getAntBuildFiles(AntConfiguration antConfiguration) {
+        try {
+            Method m = antConfiguration.getClass().getDeclaredMethod("getBuildFiles");
+            return (AntBuildFile[])m.invoke(antConfiguration);
+        } catch (ReflectiveOperationException ex) {
+            throw new IllegalStateException(ex);
+        }
     }
 }

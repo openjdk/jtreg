@@ -33,6 +33,7 @@ import com.intellij.openapi.components.*;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.oracle.plugin.jtreg.util.JTRegUtils;
 import org.jdom.Element;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.java.generate.element.ElementUtils;
@@ -183,7 +184,7 @@ public class JTRegService implements PersistentStateComponent<Element> {
     }
     //where
         private AntBuildTarget findTargetByFileAndName(AntConfiguration antConfiguration, String url, String name) {
-            for (AntBuildFile file : antConfiguration.getBuildFiles()) {
+            for (AntBuildFile file : JTRegUtils.getAntBuildFiles(antConfiguration)) {
                 if (file.getVirtualFile().getUrl().equals(url)) {
                     AntBuildTarget foundTarget = file.getModel().findTarget(name);
                     if (foundTarget != null) {

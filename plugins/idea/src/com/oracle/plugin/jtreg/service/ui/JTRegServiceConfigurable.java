@@ -50,6 +50,7 @@ import com.intellij.ui.CollectionListModel;
 import com.intellij.ui.ToolbarDecorator;
 import com.intellij.ui.components.JBList;
 import com.oracle.plugin.jtreg.service.JTRegService;
+import com.oracle.plugin.jtreg.util.JTRegUtils;
 import icons.AntIcons;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
@@ -168,7 +169,7 @@ public class JTRegServiceConfigurable implements SearchableConfigurable {
 
 
         antConfiguration.ensureInitialized();
-        boolean antConfigEnabled = antConfiguration.getBuildFiles().length != 0;
+        boolean antConfigEnabled = JTRegUtils.getAntBuildFiles(antConfiguration).length != 0;
 
         myDecorator.setEditAction(new AnActionButtonRunnable() {
             @Override

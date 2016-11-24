@@ -182,7 +182,9 @@ class JTRegConfigurationRunnableState extends JavaTestFrameworkRunnableState<JTR
         return startSMRunner(executor);
     }
 
-    @Override
+    /**
+     * We need this for compatibility with 2016.2
+     */
     protected boolean isSmRunnerUsed() {
         return true;
     }

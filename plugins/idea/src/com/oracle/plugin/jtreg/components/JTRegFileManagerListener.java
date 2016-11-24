@@ -26,6 +26,7 @@
 package com.oracle.plugin.jtreg.components;
 
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.event.DocumentAdapter;
@@ -106,12 +107,12 @@ public class JTRegFileManagerListener extends FileEditorManagerAdapter {
     public void fileOpened(@NotNull FileEditorManager source, @NotNull VirtualFile file) {
         if (JTRegUtils.isInJTRegRoot(file)) {
             LOG.info("test file opened: " + file + " @ " + project.getName());
-            DumbService.getInstance(project).runWhenSmart(() -> {
+            DumbService.getInstance(project).smartInvokeLater(() -> {
                 LOG.info("test file opened [smart]: " + file + " @ " + project.getName());
                 TestInfo testInfo = new TestInfo(file);
                 testInfos.put(file, testInfo);
                 processFileOpened(testInfo);
-            });
+            }, ModalityState.NON_MODAL);
         }
     }
 
@@ -151,10 +152,10 @@ public class JTRegFileManagerListener extends FileEditorManagerAdapter {
         TestInfo testInfo = testInfos.get(file); //did we open the file?
         if (testInfo != null) {
             LOG.info("test file closed: " + file + " @ " + project.getName());
-            DumbService.getInstance(project).runWhenSmart(() -> {
+            DumbService.getInstance(project).smartInvokeLater(() -> {
                 LOG.info("test file closed [smart]: " + file + " @ " + project.getName());
                 processFileClosed(testInfo);
-            });
+            }, ModalityState.NON_MODAL);
         }
     }
 
