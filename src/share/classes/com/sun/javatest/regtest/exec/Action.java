@@ -515,21 +515,16 @@ public abstract class Action extends ActionHelper {
         Modules modules = script.getModules();
 
         boolean needAddExports = false;
-        StringBuilder addModules = null;
+        Set<String> addModules = null;
         for (Modules.Entry e: modules) {
             String m = e.moduleName;
             if (e.needAddExports(phase)) {
                 needAddExports = true;
             }
-            if (!script.defaultModules.contains(m)) {
-                if (addModules == null) {
-                    addModules = new StringBuilder();
-                } else {
-                    addModules.append(",");
-                }
-                addModules.append(m);
+            if (addModules == null) {
+                addModules = new LinkedHashSet<>();
             }
-
+            addModules.add(m);
         }
         if (!needAddExports && addModules == null) {
             return Collections.<String>emptyList();
@@ -538,7 +533,7 @@ public abstract class Action extends ActionHelper {
         List<String> list = new ArrayList<>();
         if (addModules != null) {
             list.add("--add-modules");
-            list.add(addModules.toString());
+            list.add(StringUtils.join(addModules, ","));
         }
 
         for (Modules.Entry e: modules) {
