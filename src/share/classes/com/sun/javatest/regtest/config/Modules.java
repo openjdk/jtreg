@@ -70,11 +70,10 @@ public class Modules implements Iterable<Modules.Entry> {
         }
 
         /**
-         * Returns true if an export should be added in the specified phase
-         * @param phase the phase
-         * @return  true if an export should be added in the specified phase
+         * Returns true if an export should be added
+         * @return  true if an export should be added
          */
-        public boolean needAddExports(Phase phase) {
+        public boolean needAddExports() {
             return (packageName != null);
         }
 

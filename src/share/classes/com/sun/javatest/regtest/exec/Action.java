@@ -518,7 +518,7 @@ public abstract class Action extends ActionHelper {
         Set<String> addModules = null;
         for (Modules.Entry e: modules) {
             String m = e.moduleName;
-            if (e.needAddExports(phase)) {
+            if (e.needAddExports()) {
                 needAddExports = true;
             }
             if (addModules == null) {

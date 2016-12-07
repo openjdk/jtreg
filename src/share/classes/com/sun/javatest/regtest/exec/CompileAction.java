@@ -42,6 +42,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -464,7 +465,10 @@ public class CompileAction extends Action {
 
         JDKOpts javacArgs = new JDKOpts();
         javacArgs.addAll(script.getTestCompilerOptions());
-        javacArgs.addAll(getExtraModuleConfigOptions(Modules.Phase.STATIC));
+
+        if (isModuleOptionsAllowed(args)) {
+            javacArgs.addAll(getExtraModuleConfigOptions(Modules.Phase.STATIC));
+        }
 
         if (destDir != null) {
             javacArgs.add("-d");
@@ -508,6 +512,32 @@ public class CompileAction extends Action {
         return javacArgs.toList();
     }
 
+    private boolean isModuleOptionsAllowed(List<String> args) {
+        Iterator<String> iter = args.iterator();
+        while (iter.hasNext()) {
+            String option = iter.next();
+            switch (option) {
+                case "-source":
+                case "-target":
+                case "--release":
+                    if (iter.hasNext()) {
+                        JDK_Version v = JDK_Version.forName(iter.next());
+                        return v.compareTo(JDK_Version.V9) >= 0;
+                    }
+                    break;
+
+                default:
+                    if (option.startsWith("--release=")) {
+                        JDK_Version v = JDK_Version.forName(
+                                option.substring(option.indexOf("=") + 1));
+                        return v.compareTo(JDK_Version.V9) >= 0;
+                    }
+                    break;
+            }
+        }
+        return true;
+    }
+
     private Status runOtherJVM(List<String> javacArgs) throws TestRunException {
         Status status;
 
@@ -526,7 +556,7 @@ public class CompileAction extends Action {
             javacVMOpts.addAll(script.getTestDebugOptions());
 
         if (explicitAnnotationProcessingRequested(javacArgs)) {
-            javacVMOpts.addAll(getExtraModuleConfigOptions(Modules.Phase.STATIC));
+            javacVMOpts.addAll(getExtraModuleConfigOptions(Modules.Phase.DYNAMIC));
         }
 
         // WRITE ARGUMENT FILE
