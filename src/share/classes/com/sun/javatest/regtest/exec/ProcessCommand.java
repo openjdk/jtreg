@@ -33,6 +33,7 @@ import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import com.sun.javatest.Status;
@@ -243,17 +244,13 @@ public class ProcessCommand
 
             long start = System.currentTimeMillis();
             Alarm alarm = Alarm.NONE;
+            final CountDownLatch timeoutHandlerDone = new CountDownLatch(1);
+
             if (timeout > 0) {
                 final Thread victim = Thread.currentThread();
                 alarm = Alarm.schedule(timeout, TimeUnit.MILLISECONDS, out, new Runnable() {
                     public void run() {
-                        if (timeoutHandler != null) {
-                            timeoutHandler.handleTimeout(process);
-                        }
-                        ProcessUtils.destroyForcibly(process);
-                        // JDK 1.8 introduces a Process.waitFor(timeout) method which could
-                        // be used here. We need run on 1.5 so using interrupt() instead.
-                        victim.interrupt();
+                        invokeTimeoutHandler(timeoutHandler, timeoutHandlerDone, process, victim);
                     }
                 });
             }
@@ -281,27 +278,72 @@ public class ProcessCommand
 
             } catch (InterruptedException e) {
                 alarm.cancel();
-
-                String msg;
-                if (alarm.didFire()) {
-                    msg = "Program `" + cmd.get(0) + "' timed out";
-                } else {
-                    msg = "Program `" + cmd.get(0) + "' interrupted";
-                }
-                long end = System.currentTimeMillis();
-                msg += " (timeout set to " + timeout + "ms, elapsed time was " + (end - start) + "ms).";
-
-                return Status.error(msg);
+                return Status.error("Program `" + cmd.get(0) + "' interrupted");
             } finally {
                 processIn.close();
                 processErr.close();
                 alarm.cancel();
+
+                // if the timeout has fired - wait for the timeout handler to finish
+                if (alarm.didFire()) {
+                    boolean done = waitForTimeoutHandler(timeoutHandlerDone, timeoutHandler);
+                    String msg = "Program `" + cmd.get(0) + "' timed out";
+                    if (!done) {
+                        msg += ": timeout handler did not complete within its own timeout.";
+                    }
+                    long end = System.currentTimeMillis();
+                    msg += " (timeout set to " + timeout + "ms, elapsed time including timeout handling was " + (end - start) + "ms).";
+                    return Status.error(msg);
+                }
             }
         }
         catch (IOException e) {
             String msg = "Error invoking program `" + cmd.get(0) + "': " + e;
             return Status.error(msg);
         }
+    }
+
+    private void invokeTimeoutHandler(final TimeoutHandler timeoutHandler,
+                                      final CountDownLatch timeoutHandlerDone,
+                                      final Process process,
+                                      final Thread victim) {
+        // Invocations from an Alarm call should be quick so that the Alarm thread pool
+        // is not consumed. Because of that, we launch the timeout handling in a
+        // separate Thread here. Timeout handling can take a very long time.
+        Thread timeoutHandlerThread = new Thread() {
+            @Override
+            public void run() {
+                if (timeoutHandler != null) {
+                    timeoutHandler.handleTimeout(process);
+                }
+                ProcessUtils.destroyForcibly(process);
+
+                timeoutHandlerDone.countDown();
+
+                // JDK 1.8 introduces a Process.waitFor(timeout) method which could
+                // be used here. We need run on 1.5 so using interrupt() instead.
+                victim.interrupt();
+            }
+        };
+        timeoutHandlerThread.setName("Timeout Handler for " + cmd.get(0));
+        timeoutHandlerThread.start();
+    }
+
+
+    private boolean waitForTimeoutHandler(CountDownLatch timeoutHandlerDone, TimeoutHandler timeoutHandler) {
+         boolean done = true;
+         while(timeoutHandlerDone.getCount() != 0) {
+             try {
+                 if (timeoutHandler.getTimeout() <= 0) {
+                     timeoutHandlerDone.await();
+                 } else {
+                     done = timeoutHandlerDone.await(timeoutHandler.getTimeout() + 10, TimeUnit.SECONDS);
+                 }
+             } catch (InterruptedException ex) {
+                 // ignore
+             }
+         }
+         return done;
     }
 
     private static class StatusScanner implements StreamCopier.LineScanner {

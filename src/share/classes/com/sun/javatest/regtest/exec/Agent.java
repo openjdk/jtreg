@@ -244,23 +244,11 @@ public class Agent {
             }
             trace(actionName + ": scheduling timeout handler in " + timeout + " seconds");
             alarm = Alarm.schedule(timeout, TimeUnit.SECONDS, messageWriter, new Runnable() {
-                @Override
-                public void run() {
-                    timeoutHandler.handleTimeout(process);
-                    // close the streams to release us from readResults()
-                    try {
-                        out.close();
-                    } catch (IOException ex) {
-                        ex.printStackTrace(messageWriter);
-                    }
-                    try {
-                        in.close();
-                    } catch (IOException ex) {
-                        ex.printStackTrace(messageWriter);
-                    }
-                    timeoutHandlerDone.countDown();
-                }
-            });
+                        @Override
+                        public void run() {
+                            invokeTimeoutHandler(timeoutHandler, timeoutHandlerDone, messageWriter);
+                        }
+                    });
         }
         keepAlive.setEnabled(false);
         try {
@@ -271,27 +259,63 @@ public class Agent {
             return readResults(trs);
         } catch (IOException e) {
             trace(actionName + ":  error " + e);
-            if (alarm.didFire()) {
-                trace(actionName + ":  waiting for timeout handler to complete.");
-                try {
-                    if (timeoutHandler.getTimeout() <= 0) {
-                        timeoutHandlerDone.await();
-                    } else {
-                        boolean done = timeoutHandlerDone.await(timeoutHandler.getTimeout() + 10, TimeUnit.SECONDS);
-                        if (!done)
-                            trace(actionName + ":  timeout handler did not complete within its own timeout.");
-                    }
-                } catch (InterruptedException e1) {
-                    if (traceAgent)
-                        trace(actionName + ":  interrupted while waiting for timeout handler to complete: " + e1);
-                }
-                throw new Fault(new Exception("Agent timed out with a timeout of "
-                        + timeout + " seconds"));
-            }
             throw new Fault(e);
         } finally {
             alarm.cancel();
             keepAlive.setEnabled(true);
+            if (alarm.didFire()) {
+                waitForTimeoutHandler(actionName, timeoutHandler, timeoutHandlerDone);
+                throw new Fault(new Exception("Agent " + id + " timed out with a timeout of "
+                        + timeout + " seconds"));
+            }
+        }
+    }
+
+    private void invokeTimeoutHandler(final TimeoutHandler timeoutHandler,
+                                      final CountDownLatch timeoutHandlerDone,
+                                      final PrintWriter messageWriter) {
+        // Invocations from an Alarm call should be quick so that the Alarm thread pool
+        // is not consumed. Because of that, we launch the timeout handling in a
+        // separate Thread here. Timeout handling can take a very long time.
+        Thread timeoutHandlerThread = new Thread() {
+            @Override
+            public void run() {
+                trace("timeout handler triggered");
+
+                timeoutHandler.handleTimeout(process);
+
+                // close the streams to release us from readResults()
+                try {
+                    out.close();
+                } catch (IOException ex) {
+                    ex.printStackTrace(messageWriter);
+                }
+                try {
+                    in.close();
+                } catch (IOException ex) {
+                    ex.printStackTrace(messageWriter);
+                }
+                trace("timeout handler finished");
+                timeoutHandlerDone.countDown();
+            }
+        };
+        timeoutHandlerThread.setName("Timeout Handler for Agent " + getId());
+        timeoutHandlerThread.start();
+    }
+
+    private void waitForTimeoutHandler(String actionName, TimeoutHandler timeoutHandler, CountDownLatch timeoutHandlerDone) {
+        trace(actionName + ":  waiting for timeout handler to complete.");
+        try {
+            if (timeoutHandler.getTimeout() <= 0) {
+                timeoutHandlerDone.await();
+            } else {
+                boolean done = timeoutHandlerDone.await(timeoutHandler.getTimeout() + 10, TimeUnit.SECONDS);
+                if (!done) {
+                    trace(actionName + ": timeout handler did not complete within its own timeout.");
+                }
+            }
+        } catch (InterruptedException e1) {
+            trace(actionName + ":  interrupted while waiting for timeout handler to complete: " + e1);
         }
     }
 

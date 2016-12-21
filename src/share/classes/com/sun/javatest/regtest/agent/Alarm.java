@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010, 2016, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -86,6 +86,10 @@ public class Alarm  {
      * Schedule an Alarm to run the specified Runnable.
      * The Runnable will be run after the time specified by {@code delay}
      * and {@code delayUnit}.
+     *
+     * Note: Because Alarms are serviced by just a single thread, Alarm actions must
+     * be quick so that other Alarms are not blocked from running as scheduled.
+     *
      * @param delay run after this time
      * @param unit TimeUnit for {@code delay}
      * @param msgOut PrintWriter for logging
