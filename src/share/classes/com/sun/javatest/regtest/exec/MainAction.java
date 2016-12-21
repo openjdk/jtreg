@@ -578,6 +578,7 @@ public class MainAction extends Action
         try {
             agent = script.getAgent(jdk, agentClasspath,
                     filterJavaOpts(join(script.getTestVMJavaOptions(), script.getTestDebugOptions())));
+            section.getMessageWriter().println("Agent id: " + agent.getId());
             new ModuleConfig("Boot Layer").setFromOpts(agent.vmOpts).write(configWriter);
         } catch (Agent.Fault e) {
             return error(AGENTVM_CANT_GET_VM + ": " + e.getCause());

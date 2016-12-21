@@ -667,6 +667,7 @@ public class CompileAction extends Action {
                     ? join(script.getTestVMOptions(), script.getTestDebugOptions())
                     : script.getTestVMOptions();
             agent = script.getAgent(jdk, agentClasspath, vmOpts);
+            section.getMessageWriter().println("Agent id: " + agent.getId());
             new ModuleConfig("Boot Layer (javac runtime environment)")
                     .setFromOpts(agent.vmOpts)
                     .write(configWriter);

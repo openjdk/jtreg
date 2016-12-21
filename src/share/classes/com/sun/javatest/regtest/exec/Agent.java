@@ -39,8 +39,10 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -101,8 +103,7 @@ public class Agent {
             cmd.add(AgentServer.PORT);
             cmd.add(String.valueOf(ss.getLocalPort()));
 
-            if (showAgent || traceAgent)
-                System.err.println("Agent[" + id + "]: Started " + cmd);
+            show("Started " + cmd);
 
             ProcessBuilder pb = new ProcessBuilder(cmd);
             pb.directory(dir);
@@ -142,7 +143,7 @@ public class Agent {
                 try (BufferedReader inReader = new BufferedReader(new InputStreamReader(in))) {
                     String line;
                     while ((line = inReader.readLine()) != null)
-                        out.println("Agent[" + id + "]." + name + ": " + line);
+                        log(name + ": " + line, out);
                 } catch (IOException e) {
                     // ignore
                 }
@@ -164,9 +165,7 @@ public class Agent {
             final TimeoutHandler timeoutHandler,
             TestResult.Section trs)
                 throws Fault {
-        if (traceAgent) {
-            System.err.println("Agent.doCompileAction " + testName + " " + cmdArgs);
-        }
+        trace("doCompileAction " + testName + " " + cmdArgs);
 
         return doAction("doCompileAction",
                 new AgentAction() {
@@ -197,12 +196,10 @@ public class Agent {
             final TimeoutHandler timeoutHandler,
             TestResult.Section trs)
                 throws Fault {
-        if (traceAgent) {
-            System.err.println("Agent.doMainAction: " + testName
+        trace("doMainAction: " + testName
                     + " " + testClassPath
                     + " " + testClass
                     + " " + testArgs);
-        }
 
         return doAction("doMainAction",
                 new AgentAction() {
@@ -245,6 +242,7 @@ public class Agent {
             if (timeoutHandler == null) {
                 throw new NullPointerException("TimeoutHandler is required");
             }
+            trace(actionName + ": scheduling timeout handler in " + timeout + " seconds");
             alarm = Alarm.schedule(timeout, TimeUnit.SECONDS, messageWriter, new Runnable() {
                 @Override
                 public void run() {
@@ -269,28 +267,23 @@ public class Agent {
             synchronized (out) {
                 agentAction.send();
             }
-            if (traceAgent)
-                System.err.println("Agent." + actionName + ": request sent");
+            trace(actionName + ": request sent");
             return readResults(trs);
         } catch (IOException e) {
-            if (traceAgent)
-                System.err.println("Agent." + actionName + ":  error " + e);
+            trace(actionName + ":  error " + e);
             if (alarm.didFire()) {
-                if (traceAgent)
-                    System.err.println("Agent." + actionName + ":  waiting for timeout handler to complete.");
+                trace(actionName + ":  waiting for timeout handler to complete.");
                 try {
                     if (timeoutHandler.getTimeout() <= 0) {
                         timeoutHandlerDone.await();
                     } else {
                         boolean done = timeoutHandlerDone.await(timeoutHandler.getTimeout() + 10, TimeUnit.SECONDS);
-                        if (!done && traceAgent)
-                            System.err.println("Agent." + actionName
-                                    + ":  timeout handler did not complete within its own timeout.");
+                        if (!done)
+                            trace(actionName + ":  timeout handler did not complete within its own timeout.");
                     }
                 } catch (InterruptedException e1) {
                     if (traceAgent)
-                        System.err.println("Agent." + actionName
-                                + ":  interrupted while waiting for timeout handler to complete: " + e1);
+                        trace(actionName + ":  interrupted while waiting for timeout handler to complete: " + e1);
                 }
                 throw new Fault(new Exception("Agent timed out with a timeout of "
                         + timeout + " seconds"));
@@ -303,8 +296,7 @@ public class Agent {
     }
 
     public void close() {
-        if (showAgent || traceAgent)
-            System.err.println("Agent[" + id + "]: Closing...");
+        show("Closing...");
 
         keepAlive.finished();
 
@@ -312,8 +304,7 @@ public class Agent {
             out.write(CLOSE); // attempt clean shutdown
             out.close();
         } catch (IOException e) {
-            if (traceAgent)
-                System.err.println("Agent[" + id + "]: Killing process (" + e + ")");
+            trace("Killing process (" + e + ")");
             ProcessUtils.destroyForcibly(process); // force shutdown if necessary
         }
 
@@ -321,21 +312,18 @@ public class Agent {
         Alarm alarm = Alarm.schedulePeriodicInterrupt(60, TimeUnit.SECONDS, pw, Thread.currentThread());
         try {
             int rc = process.waitFor();
-            if (rc != 0 || traceAgent)
-                System.err.println("Agent[" + id + "]: Exited, process exit code: " + rc);
+            if (rc != 0)
+                trace("Exited, process exit code: " + rc);
         } catch (InterruptedException e) {
-            if (traceAgent)
-                System.err.println("Agent[" + id + "]: Interrupted while closing");
-            System.err.println("Agent[" + id + "]: Killing process");
+            trace("Interrupted while closing");
+            log("Killing process");
             ProcessUtils.destroyForcibly(process);
         } finally {
             alarm.cancel();
             Thread.interrupted(); // clear any interrupted status
         }
 
-
-        if (showAgent || traceAgent)
-            System.err.println("Agent[" + id + "]: Closed");
+        show("Closed");
     }
 
     void writeCollection(Collection<String> c) throws IOException {
@@ -374,8 +362,7 @@ public class Agent {
                 case OUTPUT: {
                     String name = in.readUTF();
                     String data = in.readUTF();
-                    if (traceAgent)
-                        System.err.println("Agent.readResults: OUTPUT \'" + name + "\' \'" + data + "\"");
+                    trace("readResults: OUTPUT \'" + name + "\' \'" + data + "\"");
                     PrintWriter pw = streams.get(name);
                     if (pw == null) {
                         if (name.equals(ActionHelper.OutputHandler.OutputKind.LOG.name))
@@ -390,8 +377,7 @@ public class Agent {
                 case STATUS: {
                     int type = in.readByte();
                     String reason = in.readUTF();
-                    if (traceAgent)
-                        System.err.println("Agent.readResults: STATUS \'" + type + "\' \'" + reason + "\"");
+                    trace("readResults: STATUS \'" + type + "\' \'" + reason + "\"");
                     for (PrintWriter pw: streams.values()) {
                         if (pw != trs.getMessageWriter())
                             pw.close();
@@ -413,6 +399,33 @@ public class Agent {
         }
         // mark owner bad??
         throw new EOFException("unexpected EOF");
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    // 2016-12-21 13:19:46,998
+    private static SimpleDateFormat logDateFormat = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss,SSS");
+
+    private void log(String s, PrintStream out) {
+        out.println("[" + logDateFormat.format(new Date()) + "] Agent[" + getId() + "]: " + s);
+    }
+
+    private void log(String s) {
+        log(s, System.err);
+    }
+
+    private void show(String s) {
+        if (showAgent || traceAgent) {
+            log(s);
+        }
+    }
+
+    private void trace(String s) {
+        if (traceAgent) {
+            log(s);
+        }
     }
 
     final JDK jdk;
