@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -43,6 +43,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.sun.javatest.Status;
 import com.sun.javatest.regtest.TimeoutHandler;
+import com.sun.javatest.regtest.agent.MainActionHelper.TestRunner;
 import com.sun.javatest.regtest.agent.MainWrapper;
 import com.sun.javatest.regtest.agent.SearchPath;
 import com.sun.javatest.regtest.config.ExecMode;
@@ -103,7 +104,7 @@ public class MainAction extends Action
                      RegressionScript script)
         throws ParseException
     {
-        init(opts, args, reason, script, null);
+        init(opts, args, reason, script, null, (String[]) null);
     }
 
     /**
@@ -113,7 +114,7 @@ public class MainAction extends Action
      */
     void init(Map<String,String> opts, List<String> args, String reason,
                      RegressionScript script,
-                     String driverClass)
+                     Class<? extends TestRunner> driverClass, String... driverArgs)
         throws ParseException
     {
         super.init(opts, args, reason, script);
@@ -179,6 +180,7 @@ public class MainAction extends Action
 
         if (driverClass != null) {
             this.driverClass = driverClass;
+            this.driverArgs = Arrays.asList(driverArgs);
         }
 
         if (script.useBootClassPath()) {
@@ -374,9 +376,9 @@ public class MainAction extends Action
             runClassArgs = testClassArgs;
         } else {
             runModuleName = null;
-            runModuleClassName = driverClass;
+            runModuleClassName = driverClass.getName();
             runClassArgs = new ArrayList<>();
-            runClassArgs.add(script.getTestResult().getTestName());
+            runClassArgs.addAll(driverArgs);
             runClassArgs.add(join(testModuleName, testClassName));
             runClassArgs.addAll(testClassArgs);
         }
@@ -537,9 +539,9 @@ public class MainAction extends Action
             runMainArgs = testClassArgs;
         } else {
             runModuleName = null;
-            runMainClass = driverClass;
+            runMainClass = driverClass.getName();
             runMainArgs = new ArrayList<>();
-            runMainArgs.add(script.getTestResult().getTestName());
+            runMainArgs.addAll(driverArgs);
             runMainArgs.add(testClassName);
             runMainArgs.addAll(testClassArgs);
         }
@@ -726,7 +728,8 @@ public class MainAction extends Action
 
     private final List<String>  testJavaArgs = new ArrayList<>();
     private final List<String>  testClassArgs = new ArrayList<>();
-    private String  driverClass = null;
+    private Class<? extends TestRunner>  driverClass = null;
+    private List<String> driverArgs = null;
     private String  testModuleName  = null;
     private String  testClassName  = null;
     private String  policyFN = null;

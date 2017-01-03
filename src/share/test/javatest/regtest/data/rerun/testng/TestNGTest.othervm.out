@@ -40,5 +40,5 @@ CLASSPATH=%WS%/build/RerunTest.othervm/work/classes/testng:%WS%/src/share/test/j
         -Dtest.timeout.factor=1.0 \
         -Dmy.vm.option=x \
         -Dmy.java.option=x \
-        com.sun.javatest.regtest.agent.MainWrapper %WS%/build/RerunTest.othervm/work/testng/TestNGTest.d/testng.1.jta testng/TestNGTest.java TestNGTest
+        com.sun.javatest.regtest.agent.MainWrapper %WS%/build/RerunTest.othervm/work/testng/TestNGTest.d/testng.1.jta testng/TestNGTest.java false TestNGTest
 

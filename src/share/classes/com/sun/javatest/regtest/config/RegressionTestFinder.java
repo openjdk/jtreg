@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -29,6 +29,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.StreamTokenizer;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Collection;
@@ -151,10 +152,10 @@ public class RegressionTestFinder extends TagTestFinder
     protected void scanTestNGFile(File tngRoot, File file) throws TestSuite.Fault {
         Map<String,String> tagValues;
         if (isTestNGTest(file)) {
-            String className = inferClass(tngRoot, file);
-            BufferedReader in = null;
-            try {
-                in = new BufferedReader(new FileReader(file));
+            PackageImportParser p = new PackageImportParser(tngRoot, file);
+            p.parse();
+            String className = p.inferClassName();
+            try (BufferedReader in = new BufferedReader(new FileReader(file))) {
                 tagValues = readTestNGComments(file, in);
                 if (tagValues == null) {
                     tagValues = new HashMap<>();
@@ -168,6 +169,8 @@ public class RegressionTestFinder extends TagTestFinder
                 } else {
                     tagValues.put("testngClass", className);
                 }
+                if (p.importsJUnit)
+                    tagValues.put("importsJUnit", "true");
 
                 Set<String> libDirs = properties.getLibDirs(file);
                 if (libDirs != null && !libDirs.isEmpty()) {
@@ -177,51 +180,86 @@ public class RegressionTestFinder extends TagTestFinder
                 foundTestDescription(tagValues, file, /*line*/0);
             } catch (IOException e) {
                 error(i18n, "finder.ioError", file);
-            } finally {
-                try {
-                    if (in != null) in.close();
-                } catch (IOException e) {
+            }
+        }
+    }
+
+    private class PackageImportParser {
+        private final File tngRoot;
+        private final File file;
+        String packageName;
+        boolean importsJUnit;
+
+        PackageImportParser(File tngRoot, File file) {
+            this.tngRoot = tngRoot;
+            this.file = file;
+        }
+
+        void parse() {
+            try (BufferedReader in = new BufferedReader(new FileReader(file))) {
+                StreamTokenizer st = new StreamTokenizer(in);
+                st.resetSyntax();
+                st.slashSlashComments(true);
+                st.slashStarComments(true);
+                st.wordChars('a', 'z');
+                st.wordChars('A', 'Z');
+                st.wordChars('$', '$');
+                st.wordChars('_', '_');
+                // the following are treated as word characters to simplify parsing
+                // package names and imports as a single token
+                st.wordChars('0', '9');
+                st.wordChars('.', '.');
+                st.wordChars('*', '*');
+                st.whitespaceChars(0, ' ');
+                st.eolIsSignificant(false);
+
+                // parse package and import statements
+                int t;
+                while ((t = st.nextToken()) != StreamTokenizer.TT_EOF) {
+                    if (t != StreamTokenizer.TT_WORD)
+                        return;
+
+                    switch (st.sval) {
+                        case "package":
+                            if (st.nextToken() != StreamTokenizer.TT_WORD)
+                                return;
+                            packageName = st.sval;
+                            if (st.nextToken() != ';')
+                                return;
+                            break;
+
+                        case "import":
+                            t = st.nextToken();
+                            if (t == StreamTokenizer.TT_WORD && st.sval.equals("static")) {
+                                t = st.nextToken();
+                            }
+                            if (t == StreamTokenizer.TT_WORD && st.sval.startsWith("org.junit")) {
+                                importsJUnit = true;
+                                return; // no need to read further
+                            }
+                            if (st.nextToken() != ';')
+                                return;
+                    }
                 }
-            }
-        }
-    }
-
-    private String inferClass(File tngRoot, File file) {
-        String path = tngRoot.toURI().relativize(file.toURI()).getPath();
-        String pkg = readPackageDeclaration(file);
-        String fn = file.getName();
-        String cn = fn.replace(".java", "");
-        String pkg_fn = (pkg == null) ? file.getName() : pkg.replace('.', '/') + "/" + fn;
-        if (path.equalsIgnoreCase(pkg_fn)) {
-            return (pkg == null) ? cn : pkg + "." + cn;
-        } else if (path.toLowerCase().endsWith("/" + pkg_fn.toLowerCase())) {
-            String mn = path.substring(0, path.length() - pkg_fn.length());
-            return mn + ((pkg == null) ? cn : pkg + "." + cn);
-        } else {
-            return null;
-        }
-    }
-
-    private String readPackageDeclaration(File file) {
-        Pattern pkg = Pattern.compile("(?i)^\\s*package\\s+([a-z$_][a-z$_0-9.]*)\\s*;\\s*$");
-        BufferedReader in = null;
-        try {
-            in = new BufferedReader(new FileReader(file));
-            String line;
-            while ((line = in.readLine()) != null) {
-                Matcher m = pkg.matcher(line);
-                if (m.matches())
-                    return m.group(1);
-            }
-        } catch (IOException e) {
-            error(i18n, "finder.ioError", file);
-        } finally {
-            try {
-                if (in != null) in.close();
             } catch (IOException e) {
+                error(i18n, "finder.ioError", file);
             }
         }
-        return null;
+
+        String inferClassName() {
+            String path = tngRoot.toURI().relativize(file.toURI()).getPath();
+            String fn = file.getName();
+            String cn = fn.replace(".java", "");
+            String pkg_fn = (packageName == null) ? file.getName() : packageName.replace('.', '/') + "/" + fn;
+            if (path.equalsIgnoreCase(pkg_fn)) {
+                return (packageName == null) ? cn : packageName + "." + cn;
+            } else if (path.toLowerCase().endsWith("/" + pkg_fn.toLowerCase())) {
+                String mn = path.substring(0, path.length() - pkg_fn.length());
+                return  mn + ((packageName == null) ? cn : packageName + "." + cn);
+            } else {
+                return null;
+            }
+        }
     }
 
     private Map<String,String> readTestNGComments(File file, BufferedReader in) throws IOException {

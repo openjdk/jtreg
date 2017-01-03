@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -79,14 +79,17 @@ public class TestNGAction extends MainAction {
                      RegressionScript script)
         throws ParseException
     {
-//        if (args.length == 0)
-//            throw new ParseException(TESTNG_NO_CLASSNAME);
         userSpecified = reason.startsWith(SREASON_USER_SPECIFIED);
-        init(opts, args, reason, script, TestNGRunner.class.getName());
 
-//        if (getMainArgs().size() != 0)
-//            throw new ParseException(TESTNG_BAD_MAIN_ARG);
+        boolean importsJUnit = (script.getTestDescription().getParameter("importsJUnit") != null);
+        init(opts, args, reason, script,
+                TestNGRunner.class,
+                script.getTestResult().getTestName(),
+                Boolean.toString(importsJUnit));
 
+        if (importsJUnit) {
+            othervmOverrideReasons.add("test uses TestNG/JUnit mixed mode");
+        }
     } // init()
 
     boolean userSpecified = false;

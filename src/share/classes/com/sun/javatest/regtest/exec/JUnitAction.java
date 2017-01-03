@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -74,7 +74,9 @@ public class JUnitAction extends MainAction
         if (args.isEmpty())
             throw new ParseException(JUNIT_NO_CLASSNAME);
 
-        init(opts, args, reason, script, JUnitRunner.class.getName());
+        init(opts, args, reason, script,
+                JUnitRunner.class,
+                script.getTestResult().getTestName());
 
         if (!getClassArgs().isEmpty())
             throw new ParseException(JUNIT_BAD_MAIN_ARG);

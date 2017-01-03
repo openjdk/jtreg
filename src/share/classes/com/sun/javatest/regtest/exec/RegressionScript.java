@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -152,18 +152,23 @@ public class RegressionScript extends Script {
             LinkedList<Action> actionList = parseActions(actions, true);
 
             needJUnit = false;
-            for (Action a: actionList) {
-                if (a instanceof JUnitAction)
-                    needJUnit = true;
-            }
-            if (needJUnit && !params.isJUnitAvailable()) {
-                throw new TestRunException("JUnit not available: see the FAQ or online help for details");
+            needTestNG = false;
+
+            if (td.getParameter("importsJUnit") != null) {
+                needJUnit = true;
+                needTestNG = true;
+            } else {
+                for (Action a: actionList) {
+                    if (a instanceof JUnitAction) {
+                        needJUnit = true;
+                    } else if (a instanceof TestNGAction) {
+                        needTestNG = true;
+                    }
+                }
             }
 
-            needTestNG = false;
-            for (Action a: actionList) {
-                if (a instanceof TestNGAction)
-                    needTestNG = true;
+            if (needJUnit && !params.isJUnitAvailable()) {
+                throw new TestRunException("JUnit not available: see the FAQ or online help for details");
             }
             if (needTestNG && !params.isTestNGAvailable()) {
                 throw new TestRunException("TestNG not available: see the FAQ or online help for details");

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -55,11 +55,12 @@ public class TestNGRunner implements MainActionHelper.TestRunner {
     }
 
     public static void main(ClassLoader loader, String... args) throws Exception {
-        if (args.length != 2) {
+        if (args.length != 3) {
             throw new Error("wrong number of arguments");
         }
         String testName = args[0];
-        String moduleClassName = args[1];
+        boolean mixedMode = Boolean.valueOf(args[1]);
+        String moduleClassName = args[2];
         int sep = moduleClassName.indexOf('/');
         String moduleName = (sep == -1) ? null : moduleClassName.substring(0, sep);
         String className = (sep == -1) ? moduleClassName : moduleClassName.substring(sep + 1);
@@ -79,6 +80,7 @@ public class TestNGRunner implements MainActionHelper.TestRunner {
         Class<?> mainClass = Class.forName(className, false, cl);
         RegressionListener listener = new RegressionListener();
         TestNG testng = new TestNG(false);
+        testng.setMixed(mixedMode);
         testng.setDefaultSuiteName(testName);
         testng.setTestClasses(new Class<?>[]{mainClass});
         testng.addListener((ITestNGListener) listener); // recognizes both ITestListener and IConfigurationListener
