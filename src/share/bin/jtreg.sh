@@ -37,7 +37,7 @@
 # jtreg requires a version of Java equivalent to JDK 1.7.0 or higher.
 
 # $JT_HOME can be used to specify the jtreg installation directory
-#   (e.g. /usr/local/java/jct-tools/3.2.2)
+#   (e.g. /usr/local/jtreg/4.2)
 #
 # $JT_JAVA is used to specify the version of java to use when running JavaTest
 #   (e.g. /usr/local/java/jdk1.7.0/solaris-sparc/bin/java)
@@ -45,8 +45,7 @@
 # You can also run the jar file directly, as in
 #   java -jar <path>/lib/jtreg.jar ...args...
 #
-# jtreg also provides Ant tasks; see the online help for details.
-# E.g.  jtreg -onlineHelp ant
+# jtreg also provides Ant tasks; see the documentation for details.
 
 # Determine jtreg/JavaTest installation directory
 if [ -n "$JT_HOME" ]; then

@@ -168,10 +168,10 @@ public class RegressionScript extends Script {
             }
 
             if (needJUnit && !params.isJUnitAvailable()) {
-                throw new TestRunException("JUnit not available: see the FAQ or online help for details");
+                throw new TestRunException("JUnit not available: see the FAQ for details");
             }
             if (needTestNG && !params.isTestNGAvailable()) {
-                throw new TestRunException("TestNG not available: see the FAQ or online help for details");
+                throw new TestRunException("TestNG not available: see the FAQ for details");
             }
 
             if (!locations.absLibClsList(LibLocn.Kind.SYS_MODULE).isEmpty()) {
