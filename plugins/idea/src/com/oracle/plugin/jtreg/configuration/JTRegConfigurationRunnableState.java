@@ -49,6 +49,7 @@ import com.oracle.plugin.jtreg.runtime.JTRegTestListener;
 import com.oracle.plugin.jtreg.service.JTRegService;
 
 import java.io.File;
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -57,6 +58,7 @@ import java.util.stream.Stream;
  * This class tells the IDE how a given configuration should be translated into an actual command line invocation.
  */
 class JTRegConfigurationRunnableState extends JavaTestFrameworkRunnableState<JTRegConfiguration> {
+
     private final JTRegConfiguration myConfiguration;
 
     public JTRegConfigurationRunnableState(JTRegConfiguration configuration, ExecutionEnvironment executionEnvironment) {
@@ -179,7 +181,16 @@ class JTRegConfigurationRunnableState extends JavaTestFrameworkRunnableState<JTR
     @NotNull
     @Override
     public ExecutionResult execute(@NotNull final Executor executor, @NotNull final ProgramRunner runner) throws ExecutionException {
-        return startSMRunner(executor);
+        try {
+            Method smRunner = JavaTestFrameworkRunnableState.class.getDeclaredMethod("startSMRunner", Executor.class);
+            //compatibility (2016.3 or earlier)
+            return (ExecutionResult)smRunner.invoke(this, executor);
+        } catch (NoSuchMethodException ex) {
+            //newer IDEA (2017.1 or later)
+            return super.execute(executor, runner);
+        } catch (ReflectiveOperationException ex) {
+            throw new IllegalStateException(ex);
+        }
     }
 
     /**

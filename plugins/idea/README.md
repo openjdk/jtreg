@@ -1,8 +1,12 @@
 # jtreg plugin for IntelliJ IDE
-##### *Maurizio Cimadamore and Chris Hegarty, September 2016, version 0.2*
+##### *Maurizio Cimadamore and Chris Hegarty, September 2016, version 0.3*
 
 This is a convenience plugin which adds jtreg capabilities to the IntelliJ IDE. With this plugin, OpenJDK developers
 can write, run, debug jtreg tests without the need of leaving their IDE environment.
+
+### Changes from 0.2
+
+* updated instruction on how to build the plugin
 
 ### Changes from 0.1
 
@@ -39,9 +43,9 @@ Note: by running the plugin here we mean running it in a sandbox environment - f
 
 ### Installing the plugin
 
-To install the plugin in your IDE, first you need to prepare a plugin module file (a `.zip` file). This can be done by selecting `Build -> Prepare Plugin Module for Deployment`. Once that is done, a new zip file should be created in this folder (and a related pop up notification should appear).
+To install the plugin in your IDE, first you need to prepare a plugin module file (a `.jar` file). This can be done by selecting `Build -> Prepare Plugin Module for Deployment`. Once that is done, a new jar file should be created under the hidden `.idea` folder (and a related pop up notification should appear).
 
-Once you have a zip file, you can easily install it in your IDE; go in `File -> Settings`, and select `Plugins` from the right panel. Then click on `Install plugin from disk` and point the IDE to the zip file you have created in the step above. The IDE will ask you to restart - once restart is completed the installation process is completed, and the plugin is ready to be used to run and debug jtreg tests.
+Once you have a jar file, you can easily install it in your IDE; go in `File -> Settings`, and select `Plugins` from the right panel. Then click on `Install plugin from disk` and point the IDE to the zip file you have created in the step above. The IDE will ask you to restart - once restart is completed the installation process is completed, and the plugin is ready to be used to run and debug jtreg tests.
 
 ## Using the plugin
 

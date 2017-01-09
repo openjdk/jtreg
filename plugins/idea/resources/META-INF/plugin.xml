@@ -26,13 +26,13 @@
 <idea-plugin version="2">
     <id>jtreg</id>
     <name>jtreg Test Support</name>
-    <version>1.3</version>
+    <version>1.4</version>
     <description><![CDATA[
       Allows execution of tests developed using the <a href="http://openjdk.java.net/jtreg/">jtreg</a> framework.
     ]]></description>
 
     <change-notes><![CDATA[
-      Add compatibility with 2016.3
+      Fixed compatibility problem with 2017.1
     ]]>
     </change-notes>
 
