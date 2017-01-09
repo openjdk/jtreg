@@ -261,6 +261,7 @@ SED 	:= $(shell if [ -r /bin/sed ]; then echo /bin/sed ; else echo /usr/bin/sed 
 SH 	= /bin/sh
 SORT    = /usr/bin/sort
 TEST 	= /usr/bin/test
+TIDY 	= /usr/bin/tidy
 TOUCH 	= /usr/bin/touch
 UNZIP 	= /usr/bin/unzip
 WC 	= /usr/bin/wc

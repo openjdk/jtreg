@@ -1,5 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
-   "http://www.w3.org/TR/html4/loose.dtd">
+<!DOCTYPE HTML>
 <!--
  Copyright (c) 2006, 2016, Oracle and/or its affiliates. All rights reserved.
  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
@@ -33,14 +32,16 @@
     var { font-style: oblique }
     pre { font-family: monospace }
     pre.example { margin-left: 0.5in }
-    dl.tags dt { font-family: monospace; font-size:smaller }
-    dl.terms dt { font-style: italic }
+    dl.tags > dt { font-family: monospace; font-size:smaller }
+    dl.terms > dt { font-style: italic }
+    dl dd { margin-bottom: 1em } 
     table { border: 1px black solid; border-collapse: collapse }
     td { border-right: 1px black solid }
     th { border-right: 1px black solid; border-bottom: 1px black solid }
     td { padding: 2px 2em 2px 5px }
-    tr.even { background-color: lightgrey }
-    tr.odd { background-color: white }
+    thead tr:first-child { background-color: lightgray }
+    tr:nth-child(even) { background-color: gainsboro }
+    tr:nth-child(odd) { background-color: white }
 </style>
 </head>
 
@@ -51,7 +52,7 @@
 <p>Comments and questions to:
 <a href="mailto:jtreg-use@openjdk.java.net">jtreg-use@openjdk.java.net</a>.
 <br>
-1.41 (draft), 3 March, 2016
+1.42 (draft), 9 January, 2017
 </div>
 
 <p>This is a specification document, not a tutorial.  For more basic information
@@ -245,7 +246,6 @@ When the harness runs a test, the compiled classes for each entry
 will be placed on the class path, application module path or module patch path as
 appropriate.
 
-<p>
 <p>The <code>@library</code> tag may be used more than once.  It may only be used before the
 first <code>@run</code> tag (either explicit or implicit.)
 Specifically, it must appear before any use of <code>@run</code>, <code>@build</code>,
@@ -261,7 +261,7 @@ selected via boolean expressions on keywords.  The list of acceptable keywords
 may be specified in the <a href="#TEST_ROOT">TEST.ROOT</a> file (see below).
 The <code>@key</code> tag may be used at most once in a given test.
 
-<dt>@modules <var>&lt;module&gt;[/&lt;package&gt;]+</var>
+<dt>@modules <var>&lt;module&gt;[/&lt;package&gt;[:&lt;flag&gt;]]+</var>
 <dd>
 <p>Express a dependence on a modules in the system being tested, and optionally,
 on selected internal packages in some or all of those modules.
@@ -270,12 +270,22 @@ on selected internal packages in some or all of those modules.
 from the <code>modules</code> entry in test suite <a href="#config">configuration files</a>.
 
 <p>A test will not be run if the system being tested does not contain all of the
-specified modules.
+specified modules. All of the specified modules will be present in the configuration
+when the test is run.
 
-<p><i>Note:</i> Specifying an entry that includes a dependence on an internal package
-    is essentially equivalent to using
-    <code>-XaddExports:<var>&lt;module&gt;</var>/<var>&lt;package&gt;</var>ALL-UNNAMED</code>
-    when the test is compiled and run.
+<p>A flag may be specified to indicate the desired access to a specified
+package.
+<table>
+<thead><tr class="head"><th>Flag</th><th>Access</th></thead>
+<tbody>
+<tr><td><i>none</i><td>The package should be exported, 
+so that its public types will be available for use by the test at compile time and run time.
+<tr><td><code>open</code><td>The package should be opened, 
+so that its types will be available for use by the test at run time using deep reflection.
+<tr><td><code>+open</code><td>The package should be both exported and opened, 
+so that its public types will be available for use by the test at compile time and run time,
+and other types will be available at run time using deep reflection.
+</table>
 
 <dt>@requires <var>&lt;expression&gt;</var>
 <dd>
@@ -927,7 +937,7 @@ be built.</p>
 Relative paths will be evaluated relative to the directory containing the
 configuration file.</p>
 
-<dt><code>modules <var>&lt;module[/package]&gt;+</var></code>
+<dt><code>modules <var>&lt;module[/package[:flag]]&gt;+</var></code>
 <dd>
 <p>Express a default dependence, for tests in this directory and its subdirectories, 
 on modules in the system being tested, and optionally,
@@ -946,25 +956,30 @@ family of configuration values.
 <p>If no <code>@run</code> tags are present in a defining file, a default is assumed depending
 upon the file's filename extension.
 
-<table summary="defaults">
-    <tr class="even"><th>File type<th>Default<th>Notes
-
-    <tr class="odd"><td>.java<td><code>@run main <var>&lt;name&gt;</var></code>
+<table>
+<caption>Default Actions</caption>
+<thead>
+    <tr><th>File type<th>Default<th>Notes
+<tbody>
+    <tr><td>.java<td><code>@run main <var>&lt;name&gt;</var></code>
         <td><var>&lt;name&gt;</var> is the name of the file without the ".java" suffix
 
-    <tr class="even"><td>.sh<td><code>@run shell <var>&lt;file&gt;</var></code><td>
-    <tr class="odd"><td>.html<td><code>@run applet <var>&lt;file&gt;</var></code><td>
+    <tr><td>.sh<td><code>@run shell <var>&lt;file&gt;</var></code><td>
+    <tr><td>.html<td><code>@run applet <var>&lt;file&gt;</var></code><td>
 </table>
 
 
 <h2><a name="SHORTHANDS">SHORTHANDS</a></h2>
 
-<table summary="shorthands">
-    <tr class="even"><th>Shorthand                       <th>Equivalent
-    <tr class="odd"> <td>@build <var>&lt;classname&gt;+</var>       <td>  @run build <var>&lt;classname&gt;+</var>
-    <tr class="even"><td>@clean <var>&lt;classname&gt;+</var>       <td>  @run clean <var>&lt;classname&gt;+</var>
-    <tr class="odd"><td>@compile<var>&lt;option&gt;*</var> <var>&lt;arg&gt;+</var>  <td>  @run compile<var>&lt;option&gt;*</var> <var>&lt;arg&gt;+</var>
-    <tr class="even"><td>@ignore <var>&lt;word&gt;*</var>           <td>  @run ignore <var>&lt;word&gt;*</var>
+<table>
+<caption>Shorthands</caption>
+<thead>
+    <tr><th>Shorthand                       <th>Equivalent
+<tbody>
+    <tr> <td>@build <var>&lt;classname&gt;+</var>       <td>  @run build <var>&lt;classname&gt;+</var>
+    <tr><td>@clean <var>&lt;classname&gt;+</var>       <td>  @run clean <var>&lt;classname&gt;+</var>
+    <tr><td>@compile<var>&lt;option&gt;*</var> <var>&lt;arg&gt;+</var>  <td>  @run compile<var>&lt;option&gt;*</var> <var>&lt;arg&gt;+</var>
+    <tr><td>@ignore <var>&lt;word&gt;*</var>           <td>  @run ignore <var>&lt;word&gt;*</var>
 </table>
 
 <h2 class="appendix"><a name="EXAMPLES">EXAMPLES</a></h2>
@@ -1040,96 +1055,97 @@ paranoid.sp policy file:
 <p><i>Note:</i> See the details for the test-suite <a href="#config">configuration files</a>
 for information on how to extend the set of supported names for a particular test suite.
 
-<table summary="Supported names for <code>@requires</code>">
+<table>
+<caption>Supported names for <code>@requires</code></caption>
 <thead>
-<tr class="even">
+<tr>
     <th>@requires name
-    <TH>Description
+    <th>Description
     <th>value if set
     <th>default value<br><span style="font-size:smaller">if not null</span>
 </thead>
 
 <tbody>
-<tr class="odd"><td><code>jdk.version</code>
+<tr><td><code>jdk.version</code>
     <td>The JDK version, as given by <code>java.specification.version</code>
         system property of the test JDK.
     <td>
     <td>
 
-<tr class="even"><td><code>jdk.version.major</code>
+<tr><td><code>jdk.version.major</code>
     <td>The major component of the version string, i.e. ignoring any leading "1."
 	for versions prior to JDK 9.
     <td>
     <td>
 
-<tr class="odd"><td><code>os.name</code>
+<tr><td><code>os.name</code>
     <td>The operating system name, as given by the corresponding system property.
     <td>
     <td>
 
-<tr class="even"><td><code>os.family</code>
+<tr><td><code>os.family</code>
     <td>The operation system family, derived from the operating sytsem name.
     <td>One of <code>linux</code> <code>mac</code> <code>solaris</code> <code>windows</code>
     <td>first word of <code>os.name</code>	
 
-<tr class="odd"><td><code>os.arch</code>
+<tr><td><code>os.arch</code>
     <td>The operating system architecture, as given by the corresponding system property.
     <td>
     <td>
 
-<tr class="even"><td><code>os.simpleArch</code>
+<tr><td><code>os.simpleArch</code>
     <td>A simplified representation of the operating system architecture.
     <td>One of <code>x64</code> <code>i586</code> <code>ppc</code>
     <td>same as <code>os.arch</code>
 
-<tr class="odd"><td><code>os.version</code>
+<tr><td><code>os.version</code>
     <td>The operating system version, as given by the corresponding system property.
     <td>
     <td>
 
-<tr class="even"><td><code>os.simpleVersion</code>
+<tr><td><code>os.simpleVersion</code>
     <td>A simplified representation of the operating system version.
     <td><code><i>N</i>.0</code> or <code><i>N</i>.<i>M</i></code>,
         where <code><i>N</i></code> and <code><i>M</i></code>
         are first two numbers in <code>os.version</code>
     <td><code>99.99</code>
 
-<tr class="odd"><td><code>os.processors</code>
+<tr><td><code>os.processors</code>
     <td>The number of processors on this system
     <td>The value as determined by <code>Runtime::availableProcessors</code>
     <td>
 
-<tr class="even"><td><code>os.maxMemory</code>
+<tr><td><code>os.maxMemory</code>
     <td>The maximum amount of memory available on this system.
     <td>The value as determined by <code>OperatingSystemMXBean::getTotalPhysicalMemorySize</code>
     <td>
 
-<tr class="odd"><td><code>os.maxSwap</code>
+<tr><td><code>os.maxSwap</code>
     <td>The maximum amount of swap space available on this system.
     <td>The value as determined by <code>OperatingSystemMXBean::getTotalSwapSpaceSize</code>
     <td>
 
-<tr class="even"><td><code>vm.gc</code>
+<tr><td><code>vm.gc</code>
     <td>The garbage collection strategy, derived from the option <code>-XX:+Use<i>name</i>GC</code>
     <td><code><i>name</i></code>
     <td>
 
-<tr class="even"><td><code>vm.opt.<i>switch</i></code>
+<tr><td><code>vm.opt.<i>switch</i></code>
     <td>A boolean VM option, derived from option <code>-XX:+<i>switch</i></code> or <code>-XX:-<i>switch</i></code>
     <td><code>true</code> <code>false</code>
     <td>
 
-<tr class="odd"><td><code>vm.opt.<i>name</i></code>
+<tr><td><code>vm.opt.<i>name</i></code>
     <td>A VM option, derived from option <code>-XX:<i>name</i>=<i>value</i></code>
     <td><code><i>value</i></code>
     <td>
 	
-<tr class="even" style="color:gray"><td><code>profile</code>
+<tr style="color:gray"><td><code>profile</code>
     <td>The name of the highest profile supported by the test JDK.
     <td>One of <code>compact1</code> <code>compact2</code> <code>compact3</code>
     <td>
 
-<tr class="odd" style="color:gray"><td><code>module:<i>name</i></code>
+<tr style="color:gray"><td><code>module:<i>name</i></code>
     <td>Whether or not a module is available in the test JDK.
     <td>One of <code>true</code> <code>false</code>
     <td>
@@ -1144,77 +1160,77 @@ while executing any class specified in an action tag;
 the environment variables will be set while executing a shell
 action tag.
 
-<table summary="Test-specific system properties and environment variables">
-<thead>
-<tr class="even"><th>System property<th>Environment variable<th>Notes</thead>
+<table>
+<caption>Test-specific system properties and environment variables</caption>
+<thead><tr class="head"><th>System property<th>Environment variable<th>Notes</thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>test.src</code>
 <td><code>TESTSRC</code>
 <td>The directory containing the defining file of the test
 
-<tr class="even">
+<tr>
 <td><code>test.src.path</code>
 <td><code>TESTSRCPATH</code>
 <td>The series of directories, including library directories,
     for the source of the test.
 
-<tr class="odd">
+<tr>
 <td><code>test.classes</code>
 <td><code>TESTCLASSES</code>
 <td>The directory containing the compiled classes for source files in the
     directory containing the defining file of the test.
 
-<tr class="even">
+<tr>
 <td><code>test.class.path</code>
 <td><code>TESTCLASSPATH</code>
 <td>The series of directories for all the classes for the test.
 
-<tr class="odd">
+<tr>
 <td><code>test.vm.opts</code>
 <td><code>TESTVMOPTS</code>
 <td>Additional VM options for all JVMs used in the test.
 
-<tr class="even">
+<tr>
 <td><code>test.tool.vm.opts</code>
 <td><code>TESTTOOLVMOPTS</code>
 <td>Additional VM options for all JVMs used in the test, each preceded by
     '<code>-J</code>', suitable for use in tool commands like "javac".
 
-<tr class="odd">
+<tr>
 <td><code>test.compiler.opts</code>
 <td><code>TESTJAVACOPTS</code>
 <td>Additional Java compiler options.
 
-<tr class="even">
+<tr>
 <td><code>test.java.opts</code>
 <td><code>TESTJAVAOPTS</code>
 <td>Additional VM options for all invocations of the main Java launcher
     used in the test.
     (<i>i.e.</i>excluding JDK tools like "javac".)
 
-<tr class="odd">
+<tr>
 <td><code>test.jdk</code>
 <td><code>TESTJAVA</code>
 <td>The location of the JDK being used to run the tests.
 
-<tr class="even">
+<tr>
 <td><code>compile.jdk</code>
 <td><code>COMPILEJAVA</code>
 <td>The location of the JDK being used to compile the tests.
     By default, this is the same as <code>test.jdk</code> and <code>TESTJAVA</code>.
 
-<tr class="odd">
+<tr>
 <td><code>test.timeout.factor</code>
 <td><code>TESTTIMEOUTFACTOR</code>
 <td>The timeout factor to be applied to the default timeout for the test.
 
-<tr class="even">
+<tr>
 <td><code>test.nativepath</code>
 <td><code>TESTNATIVEPATH</code>
 <td>The location of native executables used in the tests.
 
-<tr class="odd">
+<tr>
 <td><code>test.modules</code>
 <td><code>TESTMODULES</code>
 <td>The module dependencies of the test, if any, defined in the <code>@modules</code> tag.
