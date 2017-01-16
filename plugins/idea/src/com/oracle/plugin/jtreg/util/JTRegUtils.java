@@ -198,7 +198,9 @@ public class JTRegUtils {
      * Is the given file a testng test?
      */
     public static boolean isTestNGImport(PsiImportStatement importStatement) {
-        return importStatement.getQualifiedName().startsWith("org.testng");
+        String qualifiedName = importStatement.getQualifiedName();
+        //qualifiedName can be null if the import statement hasn't been fully written yet
+        return qualifiedName != null && qualifiedName.startsWith("org.testng");
     }
 
     /**
