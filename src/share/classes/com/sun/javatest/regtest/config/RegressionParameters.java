@@ -95,6 +95,16 @@ public class RegressionParameters
         mkp.setKeywords(MutableKeywordsParameters.EXPR, expr);
     }
 
+    /**
+     * This method is to workaround an earlier workaround
+     * (in {@link BasicInterviewParameters#getParameters})
+     * for the max concurrency.
+     */
+    @Override
+    protected int getMaxConcurrency() {
+        return Parameters.ConcurrencyParameters.MAX_CONCURRENCY;
+    }
+
     public void setConcurrency(int conc) {
         MutableConcurrencyParameters mcp =
             (MutableConcurrencyParameters) getConcurrencyParameters();
