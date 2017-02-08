@@ -45,6 +45,7 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
@@ -85,7 +86,7 @@ public class XMLWriter {
     XMLWriter(TestResult tr, boolean mustVerify, PrintWriter out, PrintWriter err)
             throws ParseException, UnsupportedEncodingException, TestResult.Fault {
         String encoding = Charset.defaultCharset().name();
-        defDateFmt = new SimpleDateFormat("EEE MMM dd hh:mm:ss z yyyy");
+        defDateFmt = new SimpleDateFormat("EEE MMM dd hh:mm:ss z yyyy", Locale.US);
         isoDateFmt = new SimpleDateFormat("yyyy-MM-DD'T'HH:mm:ssZ");
         harnessOut = out;
         harnessErr = err;
