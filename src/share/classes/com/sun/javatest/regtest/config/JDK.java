@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2007, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -333,9 +333,10 @@ public class JDK {
         Info info = getInfo(params);
 
         if (info.jdkProperties == null) {
+            // get default modules as well
             info.jdkProperties = execGetProperties(params,
                     Collections.<String>emptyList(),
-                    Arrays.asList("--system-properties", "--modules"),
+                    Arrays.asList("--system-properties", "--modules=boot-layer"),
                     true);
         }
 
@@ -403,9 +404,26 @@ public class JDK {
         if (info.systemModules == null) {
             if (getVersion(params).compareTo(JDK_Version.V9) >= 0) {
                 try {
+                    // Despite the name, --add-modules=ALL-SYSTEM does not
+                    // resolve all system modules: it excludes those marked
+                    // "do not resolve by default". This can cause tests
+                    // to be incorrectly filtered out because of an @modules
+                    // declaration that might refer to one of those modules.
+                    // To work around this, by default we get all system modules
+                    // using ModuleFinder.ofSystem() on the target platform,
+                    // unless the user has explicitly used any --(add|limit)-modules
+                    // options, in which case we get the standard modules that
+                    // are resolved in the boot layer.
+                    String modulesOpt = "--modules=all-system";
+                    for (String vmOpt : params.getTestVMJavaOptions()) {
+                        if (vmOpt.matches("--(add|limit)-modules(=.*)?")) {
+                            modulesOpt = "--modules=boot-layer";
+                            break;
+                        }
+                    }
                     Properties props = execGetProperties(params,
                             Arrays.asList("--add-modules", "ALL-SYSTEM"), // vm options
-                            Arrays.asList("--modules"), false);  // requested info from probe
+                            Arrays.asList(modulesOpt), false);  // requested info from probe
                     String m = props.getProperty(GetJDKProperties.JTREG_MODULES);
                     if (m == null) {
                         info.systemModules = Collections.emptySet();

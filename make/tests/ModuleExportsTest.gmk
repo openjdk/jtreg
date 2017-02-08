@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2011, 2016, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2011, 2017, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -23,7 +23,6 @@
 # questions.
 #
 
-
 $(BUILDDIR)/ModuleExportsTest.agentvm.ok \
 $(BUILDDIR)/ModuleExportsTest.othervm.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
@@ -43,6 +42,11 @@ $(BUILDDIR)/ModuleExportsTest.othervm.ok: \
 	$(CHMOD) -R +w $(@:%.ok=%)
 	echo "test passed at `date`" > $@
 
+ifdef JIGSAWHOME
+
 TESTS.jtreg += \
 	$(BUILDDIR)/ModuleExportsTest.agentvm.ok \
 	$(BUILDDIR)/ModuleExportsTest.othervm.ok
+
+endif #JIGSAWHOME
+

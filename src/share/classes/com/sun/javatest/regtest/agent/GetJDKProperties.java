@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -52,13 +52,13 @@ public class GetJDKProperties {
 
     public static void run(String... args) throws Exception {
         boolean needSystemProperties = false;
-        boolean needModules = false;
+        String needModulesArg = null;
         Properties p = new Properties();
         for (String arg: args) {
             if (arg.equals("--system-properties")) {
                 needSystemProperties = true;
-            } else if (arg.equals("--modules")) {
-                needModules = true;
+            } else if (arg.startsWith("--modules=")) {
+                needModulesArg = arg.substring(arg.indexOf("=") + 1);
             } else {
                 Class<?> c = Class.forName(arg);
                 @SuppressWarnings("unchecked")
@@ -67,8 +67,13 @@ public class GetJDKProperties {
             }
         }
 
-        if (needModules && getJDKVersion() >= 9) {
-            String modules = getModules();
+        if (needModulesArg != null && getJDKVersion() >= 9) {
+            String modules = null;
+            if (needModulesArg.equals("boot-layer")) {
+                modules = getModulesFromBootLayer();
+            } else if (needModulesArg.equals("all-system")) {
+                modules = getAllSystemModules();
+            }
             if (modules != null)
                 p.put(JTREG_MODULES, modules);
         }
@@ -95,7 +100,7 @@ public class GetJDKProperties {
         }
     }
 
-    private static String getModules() {
+    private static String getModulesFromBootLayer() {
         try {
             /*
              * Layer bootLayer = Layer.boot();
@@ -107,6 +112,7 @@ public class GetJDKProperties {
             Class<?> layerClass = Class.forName("java.lang.reflect.Layer");
             Method bootMethod = layerClass.getDeclaredMethod("boot");
             Method modulesMethod = layerClass.getDeclaredMethod("modules");
+
             Class<?> moduleClass = Class.forName("java.lang.reflect.Module");
             Method getNameMethod = moduleClass.getDeclaredMethod("getName");
 
@@ -116,6 +122,51 @@ public class GetJDKProperties {
                 if (sb.length() > 0)
                     sb.append(" ");
                 sb.append(getNameMethod.invoke(module));
+            }
+            return sb.toString();
+        } catch (ClassNotFoundException e) {
+            return null;
+        } catch (IllegalAccessException e) {
+            return null;
+        } catch (IllegalArgumentException e) {
+            return null;
+        } catch (NoSuchMethodException e) {
+            return null;
+        } catch (SecurityException e) {
+            return null;
+        } catch (InvocationTargetException e) {
+            return null;
+        }
+    }
+
+    private static String getAllSystemModules() {
+        try {
+            /* ModuleFinder f = ModuleFinder.ofSystem();
+             * for (ModuleReference mr : f.findAll()) {
+             * ModuleDescriptor md = mr.descriptor();
+             * if (sb.length() > 0 )
+             * sb.append(" ");
+             * sb.append(md.name());
+             * }
+             */
+
+            Class<?> moduleFinderClass = Class.forName("java.lang.module.ModuleFinder");
+            Method ofSystemMethod = moduleFinderClass.getDeclaredMethod("ofSystem");
+            Method findAllMethod = moduleFinderClass.getDeclaredMethod("findAll");
+
+            Class<?> moduleReferenceClass = Class.forName("java.lang.module.ModuleReference");
+            Method descriptorMethod = moduleReferenceClass.getDeclaredMethod("descriptor");
+
+            Class<?> moduleDescriptorClass = Class.forName("java.lang.module.ModuleDescriptor");
+            Method nameMethod = moduleDescriptorClass.getDeclaredMethod("name");
+
+            StringBuilder sb = new StringBuilder();
+            Object systemModuleFinder = ofSystemMethod.invoke(null);
+            for (Object mr : (Set<?>) findAllMethod.invoke(systemModuleFinder)) {
+                Object md = descriptorMethod.invoke(mr);
+                if (sb.length() > 0)
+                    sb.append(" ");
+                sb.append(nameMethod.invoke(md));
             }
             return sb.toString();
         } catch (ClassNotFoundException e) {
