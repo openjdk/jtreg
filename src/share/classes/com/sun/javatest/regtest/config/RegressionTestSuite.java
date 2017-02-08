@@ -212,6 +212,11 @@ public class RegressionTestSuite extends TestSuite
         return properties.getExtraPropDefns();
     }
 
+    // for transition: use new --patch-module instead of -Xmodule
+    public boolean useNewPatchModule() {
+        return properties.useNewPatchModule();
+    }
+
     private final TestFinder.ErrorHandler errHandler;
     private final TestProperties properties;
     private static final I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(RegressionTestSuite.class);

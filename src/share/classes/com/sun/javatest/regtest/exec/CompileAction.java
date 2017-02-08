@@ -475,13 +475,18 @@ public class CompileAction extends Action {
             javacArgs.add(destDir.toString());
         }
 
-        if (module != null && script.systemModules.contains(module)) {
+        if (module != null && script.systemModules.contains(module)
+                && !script.useNewPatchModule()) {
             javacArgs.add("-Xmodule:" + module);
         }
 
         // modulesourcepath and sourcepath are mutually exclusive
         if (multiModule) {
             javacArgs.addPath("--module-source-path", compilePaths.get(PathKind.MODULESOURCEPATH));
+        } else if (module != null && script.useNewPatchModule()) {
+            // Note: any additional patches for this module will be
+            // automatically merged with this one.
+            javacArgs.addAll("--patch-module", module + "=" + compilePaths.get(PathKind.SOURCEPATH));
         } else {
             javacArgs.addPath("--source-path", compilePaths.get(PathKind.SOURCEPATH));
         }
@@ -493,7 +498,7 @@ public class CompileAction extends Action {
         javacArgs.addPath("--module-path", compilePaths.get(PathKind.MODULEPATH));
 
         SearchPath pp = compilePaths.get(PathKind.PATCHPATH);
-        javacArgs.addAllXPatch(pp);
+        javacArgs.addAllPatchModules(pp); // will merge as needed with any similar preceding options
         if (pp != null && !pp.isEmpty() && cp != null && !cp.isEmpty()) {
             // provide addReads from patch modules to unnamed module(s).
             for (String s: getModules(pp)) {

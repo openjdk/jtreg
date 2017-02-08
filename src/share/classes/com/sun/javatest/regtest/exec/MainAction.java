@@ -313,7 +313,7 @@ public class MainAction extends Action
      */
     @Override
     public Status run() throws TestRunException {
-        if (script.useXpatch())
+        if (script.usePatchModules())
             othervmOverrideReasons.add("test or library overrides a system module");
 
         Status status;
@@ -425,7 +425,7 @@ public class MainAction extends Action
         SearchPath bcpa = paths.get(PathKind.BOOTCLASSPATH_APPEND);
         SearchPath pp = paths.get(PathKind.PATCHPATH);
         javaOpts.addPath("-Xbootclasspath/a:", bcpa);
-        javaOpts.addAllXPatch(pp);
+        javaOpts.addAllPatchModules(pp);
         javaOpts.addPath("--module-path", paths.get(PathKind.MODULEPATH));
 
         Set<String> addMods = new LinkedHashSet<>();

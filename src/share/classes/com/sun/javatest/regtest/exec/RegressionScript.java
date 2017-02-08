@@ -175,14 +175,14 @@ public class RegressionScript extends Script {
             }
 
             if (!locations.absLibClsList(LibLocn.Kind.SYS_MODULE).isEmpty()) {
-                useXpatch = true;
+                usePatchModules = true;
             } else {
                 // check actions for test-specific modules
                 actionLoop:
                 for (Action a: actionList) {
                     for (String m: a.getModules()) {
                         if (systemModules.contains(m)) {
-                            useXpatch = true;
+                            usePatchModules = true;
                             break actionLoop;
                         }
                     }
@@ -603,6 +603,13 @@ public class RegressionScript extends Script {
         }
     }
 
+    /**
+     * Determine whether to use new --patch-module option instead of -Xmodule.
+     */
+    boolean useNewPatchModule() {
+        return testSuite.useNewPatchModule();
+    }
+
     //----------------------- computing paths ---------------------------------
 
     File absTestWorkFile(String name) {
@@ -676,7 +683,7 @@ public class RegressionScript extends Script {
             mp.append(locations.absTestModulesDir());
         }
 
-        if (useXpatch()) {
+        if (usePatchModules()) {
             pp.append(locations.absTestPatchDir());
         }
 
@@ -700,7 +707,7 @@ public class RegressionScript extends Script {
             mp.append(locations.absLibClsList(LibLocn.Kind.USER_MODULE));
         }
 
-        if (useXpatch()) {
+        if (usePatchModules()) {
             pp.append(locations.absLibClsList(LibLocn.Kind.SYS_MODULE));
         }
 
@@ -800,7 +807,7 @@ public class RegressionScript extends Script {
             mp.append(locations.absLibClsList(LibLocn.Kind.USER_MODULE));
         }
 
-        if (useXpatch()) {
+        if (usePatchModules()) {
             pp.append(locations.absLibClsList(LibLocn.Kind.SYS_MODULE));
         }
 
@@ -819,7 +826,7 @@ public class RegressionScript extends Script {
                 mp.append(md);
             }
         } else {
-            SearchPath fp = (!bcp.isEmpty() || useXpatch()) ? bcp : cp;
+            SearchPath fp = (!bcp.isEmpty() || usePatchModules()) ? bcp : cp;
             if (needJUnit)
                 fp.append(params.getJUnitPath());
 
@@ -897,8 +904,8 @@ public class RegressionScript extends Script {
         return useBootClassPath;
     }
 
-    boolean useXpatch() {
-        return useXpatch;
+    boolean usePatchModules() {
+        return usePatchModules;
     }
 
     boolean hasTestPatchMods() {
@@ -1047,7 +1054,7 @@ public class RegressionScript extends Script {
         File nativeDir = getNativeDir();
         if (nativeDir != null)
             p.put("test.nativepath", nativeDir.getAbsolutePath());
-        if (useXpatch()) {
+        if (usePatchModules()) {
             SearchPath pp = new SearchPath();
             pp.append(locations.absLibClsList(LibLocn.Kind.SYS_MODULE));
             p.put("test.patch.path", pp.toString());
@@ -1079,7 +1086,7 @@ public class RegressionScript extends Script {
         vmOpts.addAll("-classpath", classpath.toString());
         vmOpts.addAll(testVMOpts);
         if (params.getTestJDK().hasModules()) {
-            vmOpts.addAllXPatch(new SearchPath(params.getWorkDirectory().getFile("patches")));
+            vmOpts.addAllPatchModules(new SearchPath(params.getWorkDirectory().getFile("patches")));
         }
 
         /*
@@ -1198,7 +1205,7 @@ public class RegressionScript extends Script {
     Set<String> defaultModules;
     Set<String> systemModules;
     private boolean useBootClassPath;
-    private boolean useXpatch;
+    private boolean usePatchModules;
     private boolean useModulePath;
     private ExecMode defaultExecMode;
     private boolean needJUnit;

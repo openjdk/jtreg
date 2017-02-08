@@ -172,7 +172,7 @@ public class JDKOpts {
      * Note: jar files on the search path are not supported by this method.
      * @param patchPath the search path on which to look for modules to be patched
      */
-    public void addAllXPatch(SearchPath patchPath) {
+    public void addAllPatchModules(SearchPath patchPath) {
         if (patchPath != null) {
             for (File dir : patchPath.asList()) {
                 File[] subdirs = dir.listFiles();

@@ -86,6 +86,9 @@ public class TestProperties {
                     e.properties.getProperty("requires.extraPropDefns.vmOpts")
             );
         }
+
+        // temporary property, during transition
+        useNewPatchModule = Boolean.valueOf(e.properties.getProperty("useNewPatchModule"));
     }
 
     Set<String> getValidKeys(File file) throws TestSuite.Fault {
@@ -173,6 +176,10 @@ public class TestProperties {
         return extraPropDefns;
     }
 
+    boolean useNewPatchModule() {
+        return useNewPatchModule;
+    }
+
     private void error(I18NResourceBundle i18n, String key, Object... args) {
         errHandler.error(i18n.getString(key, args));
     }
@@ -193,6 +200,9 @@ public class TestProperties {
     final List<String> groupFiles;
     final Version requiredVersion;
     final ExtraPropDefns extraPropDefns;
+
+    // temporary property, during transition
+    final boolean useNewPatchModule;
 
     class Cache {
         class Entry {

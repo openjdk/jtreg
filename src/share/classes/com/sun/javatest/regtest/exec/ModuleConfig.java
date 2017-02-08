@@ -43,6 +43,7 @@ import static com.sun.javatest.regtest.util.StringUtils.afterPart;
 import static com.sun.javatest.regtest.util.StringUtils.beforePart;
 import static com.sun.javatest.regtest.util.StringUtils.join;
 import static com.sun.javatest.regtest.util.StringUtils.split;
+import static com.sun.javatest.regtest.util.StringUtils.join;
 
 
 /**
@@ -60,6 +61,7 @@ public class ModuleConfig {
     private Map<String,List<String>> addReads;
     private SearchPath modulePath;
     private SearchPath classPath;
+    private SearchPath sourcePath;
     private SearchPath bootClassPathAppend;
     private Map<String,SearchPath> patch;
 
@@ -96,6 +98,10 @@ public class ModuleConfig {
 
                     case CLASS_PATH:
                         setClassPath(new SearchPath(arg));
+                        break;
+
+                    case SOURCE_PATH:
+                        setSourcePath(new SearchPath(arg));
                         break;
 
                     case LIMIT_MODULES:
@@ -180,6 +186,11 @@ public class ModuleConfig {
         return this;
     }
 
+    ModuleConfig setSourcePath(SearchPath sourcePath) {
+        this.sourcePath = sourcePath;
+        return this;
+    }
+
     ModuleConfig setModulePath(SearchPath modulePath) {
         this.modulePath = modulePath;
         return this;
@@ -229,6 +240,14 @@ public class ModuleConfig {
         if (modulePath != null) {
             String label = "module path:";
             for (File file: modulePath.asList()) {
+                table.addRow(label, file.getPath());
+                label = null;
+            }
+        }
+
+        if (sourcePath != null) {
+            String label = "source path:";
+            for (File file: sourcePath.asList()) {
                 table.addRow(label, file.getPath());
                 label = null;
             }
