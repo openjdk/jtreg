@@ -426,14 +426,14 @@ public class RegressionTestFinder extends TagTestFinder
         if (match(value, JUNIT_ACTION))
             keywords.add("junit");
 
+        if (match(value, TESTNG_ACTION) || testNG)
+            keywords.add("testng");
+
         if (match(value, DRIVER_ACTION))
             keywords.add("driver");
 
         if (match(value, IGNORE_ACTION))
             keywords.add("ignore");
-
-        if (testNG)
-            keywords.add("testng");
 
         newTagValues.put("keywords", StringUtils.join(keywords, " "));
 
@@ -839,6 +839,7 @@ public class RegressionTestFinder extends TagTestFinder
         NATIVE_OPTION  =       getOptionPattern("native"),
         SHELL_ACTION   =       getActionPattern("shell"),
         JUNIT_ACTION   =       getActionPattern("junit"),
+        TESTNG_ACTION  =       getActionPattern("testng"),
         DRIVER_ACTION  =       getActionPattern("driver"),
         IGNORE_ACTION  =       getActionPattern("ignore");
 
