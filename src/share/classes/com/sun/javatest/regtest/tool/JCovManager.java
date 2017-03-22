@@ -228,13 +228,8 @@ public class JCovManager {
     private boolean containsClass(File file, String name) {
         if (file.isDirectory())
             return new File(file, name.replace('/', File.separatorChar) + ".class").exists();
-        try {
-            JarFile j = new JarFile(file);
-            try {
-                return (j.getEntry(name + ".class") != null);
-            } finally {
-                j.close();
-            }
+        try (JarFile j = new JarFile(file)) {
+            return (j.getEntry(name + ".class") != null);
         } catch (IOException ex) {
             return false;
         }

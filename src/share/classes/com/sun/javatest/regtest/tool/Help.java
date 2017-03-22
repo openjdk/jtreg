@@ -88,8 +88,7 @@ public class Help {
         addVersionHelper(new Help.VersionHelper() {
             @Override
             public void showVersion(PrintWriter out) {
-                try {
-                    JarFile j = new JarFile(jar);
+                try (JarFile j = new JarFile(jar)) {
                     String v = (String) j.getManifest().getMainAttributes().get(Attributes.Name.IMPLEMENTATION_VERSION);
                     if (v == null && pomProperties != null) {
                         Properties p = new Properties();
@@ -111,15 +110,16 @@ public class Help {
             public void showVersion(PrintWriter out) {
                 try {
                     for (File jar: path.asList()) {
-                        JarFile j = new JarFile(jar);
-                        Attributes attrs = j.getManifest().getMainAttributes();
-                        String v = attrs.getValue(Attributes.Name.IMPLEMENTATION_VERSION);
-                        if (v == null) {
-                            v = attrs.getValue("Bundle-Version");
+                        try (JarFile j = new JarFile(jar)) {
+                            Attributes attrs = j.getManifest().getMainAttributes();
+                            String v = attrs.getValue(Attributes.Name.IMPLEMENTATION_VERSION);
+                            if (v == null) {
+                                v = attrs.getValue("Bundle-Version");
+                            }
+                            String suffix = (path.asList().size() == 1)
+                                    ? "" : " (" + jar.getName() + ")";
+                            out.println(name + suffix + ": version " + (v == null ? "unknown" : v)); // need i18n
                         }
-                        String suffix = (path.asList().size() == 1)
-                                ? "" : " (" + jar.getName() + ")";
-                        out.println(name + suffix + ": version " + (v == null ? "unknown" : v)); // need i18n
                     }
                 } catch (IOException e) {
                 }
