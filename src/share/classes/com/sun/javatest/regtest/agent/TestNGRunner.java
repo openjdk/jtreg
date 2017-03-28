@@ -67,7 +67,12 @@ public class TestNGRunner implements MainActionHelper.TestRunner {
         //Class<?> mainClass = (loader == null) ? Class.forName(className) : loader.loadClass(className);
         ClassLoader cl;
         if (moduleName != null) {
-            Class<?> layerClass = Class.forName("java.lang.reflect.Layer");
+            Class<?> layerClass;
+            try {
+                layerClass = Class.forName("java.lang.ModuleLayer");
+            } catch (ClassNotFoundException e) {
+                layerClass = Class.forName("java.lang.reflect.Layer");
+            }
             Method bootMethod = layerClass.getMethod("boot", new Class<?>[]{});
             Object bootLayer = bootMethod.invoke(null, new Object[]{});
             Method findLoaderMth = layerClass.getMethod("findLoader", new Class<?>[]{String.class});

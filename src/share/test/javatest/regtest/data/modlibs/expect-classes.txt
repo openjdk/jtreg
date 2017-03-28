@@ -38,4 +38,5 @@
 ./mainAction/patchmods/RunPatchMod.d/patches/java.base/java/util/TestHelper.class
 ./mainAction/usermods/RunUserMod.d/modules/um1/module-info.class
 ./mainAction/usermods/RunUserMod.d/modules/um1/um1_p1/um1_p1_M1.class
+./patches/java.base/java/lang/JTRegModuleHelper.class
 ./patches/java.base/java/lang/reflect/JTRegModuleHelper.class

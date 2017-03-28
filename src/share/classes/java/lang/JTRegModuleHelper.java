@@ -23,7 +23,9 @@
  * questions.
  */
 
-package java.lang.reflect;
+package java.lang;
+
+import java.lang.reflect.Method;
 
 /**
  * Provide access to internal addExports support.
@@ -57,11 +59,11 @@ public class JTRegModuleHelper {
     }
 
     private static Method getModuleMethod(String name) throws ReflectiveOperationException {
-        Class<?> moduleClass = Class.forName("java.lang.reflect.Module");
+        Class<?> moduleClass = Class.forName("java.lang.Module");
         return moduleClass.getDeclaredMethod(name, String.class, moduleClass);
     }
 
-    // on java.lang.reflect.Module
+    // on java.lang.Module
     private static Method addExportsMethod;
     private static Method addOpensMethod;
 }

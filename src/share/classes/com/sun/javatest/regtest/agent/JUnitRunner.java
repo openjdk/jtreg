@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -55,7 +55,12 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
         //            Class<?> mainClass = (loader == null) ? Class.forName(className) : loader.loadClass(className);
         ClassLoader cl;
         if (moduleName != null) {
-            Class<?> layerClass = Class.forName("java.lang.reflect.Layer");
+            Class<?> layerClass;
+            try {
+                layerClass = Class.forName("java.lang.ModuleLayer");
+            } catch (ClassNotFoundException e) {
+                layerClass = Class.forName("java.lang.reflect.Layer");
+            }
             Method bootMethod = layerClass.getMethod("boot", new Class<?>[]{});
             Object bootLayer = bootMethod.invoke(null, new Object[]{});
             Method findLoaderMth = layerClass.getMethod("findLoader", new Class<?>[]{String.class});

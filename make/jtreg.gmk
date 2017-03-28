@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1999, 2016, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1999, 2017, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -64,6 +64,7 @@ $(BUILDDIR)/classes.com.sun.javatest.regtest.agent.ok: \
 
 JAVAFILES.com.sun.javatest.regtest-tools := \
 	$(shell $(FIND) $(JAVADIR)/com/sun/javatest/regtest -name agent -prune -o -name \*.java -print ) \
+	$(JAVADIR)/java/lang/JTRegModuleHelper.java \
 	$(JAVADIR)/java/lang/reflect/JTRegModuleHelper.java
 
 $(BUILDDIR)/classes.com.sun.javatest.regtest.ok: \
@@ -190,6 +191,7 @@ PKGS.JAR.jtreg += \
 	com.sun.javatest.regtest.report \
 	com.sun.javatest.regtest.tool \
 	com.sun.javatest.regtest.util \
+	java.lang \
 	java.lang.reflect
 TARGETS.JAR.jtreg += $(TARGETS.com.sun.javatest.regtest)
 

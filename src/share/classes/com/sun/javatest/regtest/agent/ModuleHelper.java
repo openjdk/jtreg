@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -123,11 +123,13 @@ public class ModuleHelper {
         try {
             // new in Jave SE 9
             Class<?> layerClass;
+            String jtregModuleHelper;
             try {
-                layerClass = Class.forName("java.lang.reflect.Layer");
+                layerClass = Class.forName("java.lang.ModuleLayer");
+                jtregModuleHelper = "java.lang.JTRegModuleHelper";
             } catch (ClassNotFoundException e) {
-                // temporary fallback
-                layerClass = Class.forName("java.lang.module.Layer");
+                layerClass = Class.forName("java.lang.reflect.Layer");
+                jtregModuleHelper = "java.lang.reflect.JTRegModuleHelper";
             }
             findModuleMethod = layerClass.getDeclaredMethod("findModule", new Class<?>[] { String.class });
             Method bootLayerMethod = layerClass.getDeclaredMethod("boot", new Class<?>[0]);
@@ -137,7 +139,7 @@ public class ModuleHelper {
              */
             bootLayer = bootLayerMethod.invoke(null, new Object[0]);
 
-            Class<?> helperClass = Class.forName("java.lang.reflect.JTRegModuleHelper");
+            Class<?> helperClass = Class.forName(jtregModuleHelper);
             addExportsMethod = helperClass.getDeclaredMethod("addExports",
                     new Class<?>[] { Object.class, String.class, Object.class });
             addOpensMethod = helperClass.getDeclaredMethod("addOpens",
@@ -176,7 +178,7 @@ public class ModuleHelper {
     private static Method isPresentMethod;
     private static Method getMethod;
 
-    // on java.lang.reflect.JTRegModuleHelper
+    // on java.lang.JTRegModuleHelper or java.lang.reflect.JTRegModuleHelper
     private static Method addExportsMethod;
     private static Method addOpensMethod;
 }

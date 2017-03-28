@@ -103,17 +103,27 @@ public class GetJDKProperties {
     private static String getModulesFromBootLayer() {
         try {
             /*
-             * Layer bootLayer = Layer.boot();
+             * ModuleLayer bootLayer = ModuleLayer.boot();
              * for (Module m : bootLayer.modules()) {
              *     if (sb.length() > ) sb.append(" ");
              *     sb.append(m.getName());
              * }
              */
-            Class<?> layerClass = Class.forName("java.lang.reflect.Layer");
+            Class<?> layerClass;
+            try {
+                layerClass = Class.forName("java.lang.ModuleLayer");
+            } catch (ClassNotFoundException e) {
+                layerClass = Class.forName("java.lang.reflect.Layer");
+            }
             Method bootMethod = layerClass.getDeclaredMethod("boot");
             Method modulesMethod = layerClass.getDeclaredMethod("modules");
 
-            Class<?> moduleClass = Class.forName("java.lang.reflect.Module");
+            Class<?> moduleClass;
+            try {
+                moduleClass = Class.forName("java.lang.Module");
+            } catch (ClassNotFoundException e) {
+                moduleClass = Class.forName("java.lang.reflect.Module");
+            }
             Method getNameMethod = moduleClass.getDeclaredMethod("getName");
 
             StringBuilder sb = new StringBuilder();
