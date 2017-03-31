@@ -422,7 +422,7 @@ public class JDK {
                         }
                     }
                     Properties props = execGetProperties(params,
-                            Arrays.asList("--add-modules", "ALL-SYSTEM"), // vm options
+                            Collections.<String>emptyList(),    // vm options
                             Arrays.asList(modulesOpt), false);  // requested info from probe
                     String m = props.getProperty(GetJDKProperties.JTREG_MODULES);
                     if (m == null) {
