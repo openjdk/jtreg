@@ -1,0 +1,201 @@
+#
+# Copyright (c) 2015, 2016, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+# No Args:  
+#   not allowed, exit code 1, Error: No tests selected
+#
+$(BUILDDIR)/EmptyTest_NoArgs.ok: \
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	    $(JTREG_IMAGEDIR)/bin/jtreg
+	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	JT_JAVA=$(J2SEHOME) \
+	    $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(JDK16HOME) \
+			> $(@:%.ok=%/jt.log) 2>&1 ; \
+	rc=$$? ; if [ $$rc != 1 ]; then echo "unexpected exit code: $$rc"; exit 1; fi
+	$(GREP) -s 'Error: No tests selected' $(@:%.ok=%/jt.log)  > /dev/null
+	echo "test passed at `date`" > $@
+
+TESTS.jtreg += \
+	$(BUILDDIR)/EmptyTest_NoArgs.ok
+
+#-------------------------------------------------------------------------------
+
+# Empty Group:  
+#   allowed, exit code 0; Test results: No tests selected
+#
+$(BUILDDIR)/EmptyTest_EmptyGroup.ok: \
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	    $(JTREG_IMAGEDIR)/bin/jtreg
+	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	JT_JAVA=$(J2SEHOME) \
+	    $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(JDK16HOME) \
+			> $(@:%.ok=%/jt.log) 2>&1 \
+		-dir:$(TESTDIR)/empty/ts1 \
+		:empty 
+	$(GREP) -s 'Test results: no tests selected' $(@:%.ok=%/jt.log)  > /dev/null
+	echo "test passed at `date`" > $@
+
+TESTS.jtreg += \
+	$(BUILDDIR)/EmptyTest_EmptyGroup.ok
+
+#-------------------------------------------------------------------------------
+
+# Empty Folder:
+#   not allowed, exit code 1; Test results: No tests selected
+#
+$(BUILDDIR)/EmptyTest_EmptyFolder.ok: \
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	    $(JTREG_IMAGEDIR)/bin/jtreg
+	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	JT_JAVA=$(J2SEHOME) \
+	    $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(JDK16HOME) \
+			> $(@:%.ok=%/jt.log) 2>&1 \
+		-dir:$(TESTDIR)/empty/ts1 \
+		empty  ; \
+	rc=$$? ; if [ $$rc != 1 ]; then echo "unexpected exit code: $$rc"; exit 1; fi
+	$(GREP) -s 'Test results: no tests selected' $(@:%.ok=%/jt.log)  > /dev/null
+	echo "test passed at `date`" > $@
+
+TESTS.jtreg += \
+	$(BUILDDIR)/EmptyTest_EmptyFolder.ok
+
+#-------------------------------------------------------------------------------
+
+# Empty File:
+#   not allowed, exit code 5; Error: Not a test or directory containing tests: empty/Empty.java
+#
+$(BUILDDIR)/EmptyTest_EmptyFile.ok: \
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	    $(JTREG_IMAGEDIR)/bin/jtreg
+	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	JT_JAVA=$(J2SEHOME) \
+	    $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(JDK16HOME) \
+			> $(@:%.ok=%/jt.log) 2>&1 \
+		-dir:$(TESTDIR)/empty/ts1 \
+		empty/Empty.java ; \
+	rc=$$? ; if [ $$rc != 5 ]; then echo "unexpected exit code: $$rc"; exit 1; fi
+	$(GREP) -s 'Error: Not a test or directory containing tests: empty/Empty.java' $(@:%.ok=%/jt.log)  > /dev/null
+	echo "test passed at `date`" > $@
+
+TESTS.jtreg += \
+	$(BUILDDIR)/EmptyTest_EmptyFile.ok
+
+#-------------------------------------------------------------------------------
+
+# Empty Group and a Test:  
+#   allowed, exit code 0; Test results: passed: 1
+#
+$(BUILDDIR)/EmptyTest_EmptyGroup_Test.ok: \
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	    $(JTREG_IMAGEDIR)/bin/jtreg
+	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	JT_JAVA=$(J2SEHOME) \
+	    $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(JDK16HOME) \
+			> $(@:%.ok=%/jt.log) 2>&1 \
+		-dir:$(TESTDIR)/empty/ts1 \
+		:empty Test.java
+	$(GREP) -s 'Test results: passed: 1' $(@:%.ok=%/jt.log)  > /dev/null
+	echo "test passed at `date`" > $@
+
+TESTS.jtreg += \
+	$(BUILDDIR)/EmptyTest_EmptyGroup_Test.ok
+
+#-------------------------------------------------------------------------------
+
+# Empty Group and an empty folder:
+#   not allowed, exit code 1; Test results: No tests selected
+#
+$(BUILDDIR)/EmptyTest_EmptyGroup_EmptyFolder.ok: \
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	    $(JTREG_IMAGEDIR)/bin/jtreg
+	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	JT_JAVA=$(J2SEHOME) \
+	    $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(JDK16HOME) \
+			> $(@:%.ok=%/jt.log) 2>&1 \
+		-dir:$(TESTDIR)/empty/ts1 \
+		:empty empty ; \
+	rc=$$? ; if [ $$rc != 1 ]; then echo "unexpected exit code: $$rc"; exit 1; fi
+	$(GREP) -s 'Test results: no tests selected' $(@:%.ok=%/jt.log)  > /dev/null
+	echo "test passed at `date`" > $@
+
+TESTS.jtreg += \
+	$(BUILDDIR)/EmptyTest_EmptyGroup_EmptyFolder.ok
+
+#-------------------------------------------------------------------------------
+
+# Multiple Empty Group in same test suite:  
+#   allowed, exit code 0; Test results: No tests selected
+#
+$(BUILDDIR)/EmptyTest_MultiEmptyGroup_1.ok: \
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	    $(JTREG_IMAGEDIR)/bin/jtreg
+	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	JT_JAVA=$(J2SEHOME) \
+	    $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(JDK16HOME) \
+			> $(@:%.ok=%/jt.log) 2>&1 \
+		-dir:$(TESTDIR)/empty/ts1 \
+		:empty :empty2 ; \
+	$(GREP) -s 'Test results: no tests selected' $(@:%.ok=%/jt.log)  > /dev/null
+	echo "test passed at `date`" > $@
+
+TESTS.jtreg += \
+	$(BUILDDIR)/EmptyTest_MultiEmptyGroup_1.ok
+
+#-------------------------------------------------------------------------------
+
+# Multiple Empty Group in separate test suites:  
+#   allowed, exit code 0; Test results: No tests selected
+#
+$(BUILDDIR)/EmptyTest_MultiEmptyGroup_2.ok: \
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	    $(JTREG_IMAGEDIR)/bin/jtreg
+	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	JT_JAVA=$(J2SEHOME) \
+	    $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(JDK16HOME) \
+			> $(@:%.ok=%/jt.log) 2>&1 \
+		$(TESTDIR)/empty/ts1:empty \
+		$(TESTDIR)/empty/ts2:empty
+	$(GREP) -s 'Test results: no tests selected' $(@:%.ok=%/jt.log)  > /dev/null
+	echo "test passed at `date`" > $@
+
+TESTS.jtreg += \
+	$(BUILDDIR)/EmptyTest_MultiEmptyGroup_2.ok
+

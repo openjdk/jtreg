@@ -1,0 +1,53 @@
+#
+# Copyright (c) 1997, 2015, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+#----------------------------------------------------------------------
+
+# 6533136: use -dir as a base directory for test files and directories on the command line
+$(BUILDDIR)/T6533136.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
+		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
+		$(TESTDIR)/share/basic/main/Pass.java \
+		$(JTREG_IMAGEDIR)/bin/jtreg
+	$(RM) $(@:%.ok=%)
+	$(MKDIR) $(@:%.ok=%)
+	( b=`pwd`; cd $(TESTDIR)/share/basic/ ; \
+	  JTHOME=$$b/$(JTREG_IMAGEDIR) $$b/$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-avm -w:$$b/$(@:%.ok=%)/work -r:$$b/$(@:%.ok=%)/report \
+		-v:fail -jdk:$(J2SEHOME) main/Pass.java; \
+	  JTHOME=$$b/$(JTREG_IMAGEDIR) $$b/$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-ovm -w:$$b/$(@:%.ok=%)/work -r:$$b/$(@:%.ok=%)/report \
+		-v:fail -jdk:$(J2SEHOME) main/Pass.java )
+	JTHOME=$(JTREG_IMAGEDIR) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-avm -w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-v:fail -jdk:$(J2SEHOME) \
+		-dir:$(TESTDIR)/share/basic/ main/Pass.java
+	JTHOME=$(JTREG_IMAGEDIR) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-ovm -w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-v:fail -jdk:$(J2SEHOME) \
+		-dir:$(TESTDIR)/share/basic/ main/Pass.java
+	echo $@ passed at `date` > $@
+
+TESTS.jtreg += $(BUILDDIR)/T6533136.ok
+

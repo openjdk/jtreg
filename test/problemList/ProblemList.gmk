@@ -1,0 +1,76 @@
+#
+# Copyright (c) 1997, 2016, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+#----------------------------------------------------------------------
+
+# jdk/test/Makefile uses the following platform keys in ProblemList.txt
+#	$(OS_NAME)-all
+#	$(PLATFORM_OS)
+#	$(OS_NAME)-$(OS_ARCH2)
+#	$(OS_NAME)-$(OS_VERSION)
+#	generic-$(OS_ARCH)
+#	generic-$(OS_ARCH2)
+#       generic-all
+# Create a version of ProblemList.txt to test by editing those values
+# into a template.
+
+$(BUILDDIR)/ProblemList.ok: \
+	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
+	    $(JTREG_IMAGEDIR)/lib/jh.jar \
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	    $(JTREG_IMAGEDIR)/bin/jtreg
+	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	$(MKDIR) $(@:%.ok=%)/1
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/1/work -r:$(@:%.ok=%)/1/report \
+		-jdk:$(J2SEHOME) \
+		-agentvm \
+		$(TESTDIR)/problemList/  \
+			> $(@:%.ok=%/1/jt.log) 2>&1 
+	$(GREP) -s 'Test results: passed: 6' $(@:%.ok=%/1/jt.log)  > /dev/null
+	$(MKDIR) $(@:%.ok=%)/2
+	@echo OS_ARCH $(OS_ARCH)
+	@echo OS_ARCH2 $(OS_ARCH2)
+	@echo OS_NAME $(OS_NAME)
+	@echo OS_VERSION $(OS_VERSION)
+	@echo PLATFORM_OS $(PLATFORM_OS)
+	cat $(TESTDIR)/problemList/ProblemList.template | sed \
+		-e 's/OSNAME-\([A-Za-z]*\)$$/$(OS_NAME)-\1/' \
+		-e 's/\([A-Za-z]*\)-ARCH2$$/\1-$(OS_ARCH2)/' \
+		-e 's/\([A-Za-z]*\)-ARCH$$/\1-$(OS_ARCH)/' \
+		-e 's/\([A-Za-z]*\)-REV$$/\1-$(OS_VERSION)/' \
+		> $(@:%.ok=%)/2/ProblemList.txt
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/2/work -r:$(@:%.ok=%)/2/report \
+		-jdk:$(J2SEHOME) \
+		-agentvm \
+		-exclude:$(@:%.ok=%)/2/ProblemList.txt \
+		$(TESTDIR)/problemList/  \
+			> $(@:%.ok=%/2/jt.log) 2>&1 
+	$(GREP) -s 'Test results: passed: 1' $(@:%.ok=%/2/jt.log)  > /dev/null
+	echo $@ passed at `date` > $@
+
+TESTS.jtreg += $(BUILDDIR)/ProblemList.ok
+

@@ -1,0 +1,50 @@
+### Section compile
+DISPLAY=%DISPLAY%
+HOME=%HOME%
+LANG=en_US.UTF-8 \
+MY_ENV_VAR=x \
+PATH=/bin:/usr/bin \
+    %JDKHOME%/bin/javac \
+        -J-Dmy.vm.option=x \
+        -J-Dmy.java.option=x \
+        -J-Dtest.class.path.prefix=%WS%/build/RerunTest.agentvm/work/classes/testng:%WS%/test/rerun/testng \
+        -J-Dtest.src=%WS%/test/rerun/testng \
+        -J-Dtest.src.path=%WS%/test/rerun/testng \
+        -J-Dtest.classes=%WS%/build/RerunTest.agentvm/work/classes/testng \
+        -J-Dtest.class.path=%WS%/build/RerunTest.agentvm/work/classes/testng \
+        -J-Dtest.vm.opts=-Dmy.vm.option=x \
+        -J-Dtest.tool.vm.opts=-J-Dmy.vm.option=x \
+        -J-Dtest.compiler.opts=-XDmy.javac.option=x \
+        -J-Dtest.java.opts=-Dmy.java.option=x \
+        -J-Dtest.jdk=%JDKHOME% \
+        -J-Dcompile.jdk=%JDKHOME% \
+        -J-Dtest.timeout.factor=1.0 \
+        -XDmy.javac.option=x \
+        -d %WS%/build/RerunTest.agentvm/work/classes/testng \
+        -sourcepath %WS%/test/rerun/testng \
+        -classpath %WS%/test/rerun/testng:%WS%/build/RerunTest.agentvm/work/classes/testng:%WS%/build/images/jtreg/lib/testng.jar:%JDKHOME%/lib/tools.jar \
+        -XDignore.symbol.file=true \
+        -implicit:none %WS%/test/rerun/testng/TestNGTest.java
+
+### Section testng
+DISPLAY=%DISPLAY%
+HOME=%HOME%
+LANG=en_US.UTF-8 \
+MY_ENV_VAR=x \
+PATH=/bin:/usr/bin \
+    %JDKHOME%/bin/java \
+        -Dtest.class.path.prefix=%WS%/build/RerunTest.agentvm/work/classes/testng:%WS%/test/rerun/testng \
+        -Dtest.src=%WS%/test/rerun/testng \
+        -Dtest.src.path=%WS%/test/rerun/testng \
+        -Dtest.classes=%WS%/build/RerunTest.agentvm/work/classes/testng \
+        -Dtest.class.path=%WS%/build/RerunTest.agentvm/work/classes/testng \
+        -Dtest.vm.opts=-Dmy.vm.option=x \
+        -Dtest.tool.vm.opts=-J-Dmy.vm.option=x \
+        -Dtest.compiler.opts=-XDmy.javac.option=x \
+        -Dtest.java.opts=-Dmy.java.option=x \
+        -Dtest.jdk=%JDKHOME% \
+        -Dcompile.jdk=%JDKHOME% \
+        -Dtest.timeout.factor=1.0 \
+        -classpath %WS%/build/RerunTest.agentvm/work/classes/testng:%WS%/test/rerun/testng:%WS%/build/images/jtreg/lib/testng.jar:%JDKHOME%/lib/tools.jar:%WS%/build/images/jtreg/lib/javatest.jar:%WS%/build/images/jtreg/lib/jtreg.jar \
+        com.sun.javatest.regtest.agent.TestNGRunner testng/TestNGTest.java false TestNGTest
+

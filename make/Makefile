@@ -37,7 +37,8 @@ all: build test
 
 include jtdiff.gmk
 include jtreg.gmk
-include tests/*.gmk
+include $(TOPDIR)/test/*.gmk
+include $(TOPDIR)/test/*/*.gmk
 include Rules.gmk
 
 build: $(BUILDFILES)

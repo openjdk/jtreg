@@ -1,0 +1,67 @@
+#
+# Copyright (c) 1997, 2015, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+#----------------------------------------------------------------------
+
+# on some platforms the launcher inserts extra environment variables:
+T6517916-ENVIRONMENT-NORMALIZATIONS = \
+	-e 's|^JAVA_MAIN_CLASS[_0-9]*=|JAVA_MAIN_CLASS=|' \
+	-e '/^JAVA_MAIN_CLASS=/s|MainWrapper|Main|'
+
+$(BUILDDIR)/T6517916.ok: \
+		$(TESTDIR)/6517916/T6517916.java \
+		$(JTREG_IMAGEDIR)/lib/javatest.jar \
+		$(JTREG_IMAGEDIR)/lib/jtreg.jar
+	$(RM) $(@:%.ok=%)
+	$(J2SEJAVA) $(JTREG_JAVA_OPTS) \
+		-jar $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+		-w $(@:%.ok=%)/work/ovm \
+		-r $(@:%.ok=%)/report/ovm \
+		-ovm \
+		$(TESTDIR)/6517916
+	$(J2SEJAVA) -Djavatest.debug.child=true \
+		$(JTREG_JAVA_OPTS) \
+		-jar $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+		-w $(@:%.ok=%)/work/svm \
+		-r $(@:%.ok=%)/report/svm \
+		-avm \
+		$(TESTDIR)/6517916
+	$(SED) -e 's|=[^:]*ovm/classes:|=|' -e 's|=[^:]*/6517916:|=|' \
+		$(T6517916-ENVIRONMENT-NORMALIZATIONS) \
+		< $(@:%.ok=%)/work/ovm/scratch/T6517916.out \
+		> $(@:%.ok=%)/work/ovm/scratch/T6517916.out2
+	$(SED) \
+		$(T6517916-ENVIRONMENT-NORMALIZATIONS) \
+		< $(@:%.ok=%)/work/svm/scratch/T6517916.out \
+		> $(@:%.ok=%)/work/svm/scratch/T6517916.out2
+	$(DIFF) \
+		$(@:%.ok=%)/work/ovm/scratch/T6517916.out2 \
+		$(@:%.ok=%)/work/svm/scratch/T6517916.out2
+	echo "test passed at `date`" > $@
+
+ifneq ($(OS_NAME), windows)
+TESTS.jtreg += $(BUILDDIR)/T6517916.ok
+endif
+

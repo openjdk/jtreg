@@ -1683,6 +1683,23 @@ public class Tool {
                     }
                     tr = iter.next();
                 }
+
+//                System.err.println("TEST: " + tr.getFile());
+//                System.err.println("TEST: " + params.getWorkDirectory().getFile(tr.getWorkRelativePath()));
+//                System.err.println("TEST: " + params.getWorkDirectory().getFile(tr.getWorkRelativePath()).exists());
+
+                // The following is a workaround: sometimes the TestResult object
+                // incorrectly appears to be not run, because the resultFile is null.
+                if (tr != null
+                        && tr.getFile() == null
+                        && params.getWorkDirectory().getFile(tr.getWorkRelativePath()).exists()) {
+                    try {
+                        tr = new TestResult(params.getWorkDirectory(), tr.getWorkRelativePath());
+                    } catch (TestResult.Fault f) {
+                        out.println("Cannot reload results for test " + tr.getTestName());
+                    }
+                }
+
                 if (tr == null) {
                     out.println("No test specified");
                     ok = false;

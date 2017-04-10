@@ -1,0 +1,24 @@
+### Section compile
+DISPLAY=%DISPLAY%
+HOME=%HOME%
+LANG=en_US.UTF-8 \
+MY_ENV_VAR=x \
+PATH=/bin:/usr/bin \
+    %JDKHOME%/bin/javac \
+        -J-Dmy.vm.option=x \
+        -J-Dtest.src=%WS%/test/rerun/std \
+        -J-Dtest.src.path=%WS%/test/rerun/std \
+        -J-Dtest.classes=%WS%/build/RerunTest.othervm/work/classes/std \
+        -J-Dtest.class.path=%WS%/build/RerunTest.othervm/work/classes/std \
+        -J-Dtest.vm.opts=-Dmy.vm.option=x \
+        -J-Dtest.tool.vm.opts=-J-Dmy.vm.option=x \
+        -J-Dtest.compiler.opts=-XDmy.javac.option=x \
+        -J-Dtest.java.opts=-Dmy.java.option=x \
+        -J-Dtest.jdk=%JDKHOME% \
+        -J-Dcompile.jdk=%JDKHOME% \
+        -J-Dtest.timeout.factor=1.0 \
+        -XDmy.javac.option=x \
+        -d %WS%/build/RerunTest.othervm/work/classes/std \
+        -sourcepath %WS%/test/rerun/std \
+        -classpath %WS%/test/rerun/std:%WS%/build/RerunTest.othervm/work/classes/std:%JDKHOME%/lib/tools.jar %WS%/test/rerun/std/CompileTest.java
+

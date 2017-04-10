@@ -38,7 +38,7 @@
     <property name="src.bin.dir" location="src/share/bin"/>
     <property name="src.classes.dir" location="src/share/classes"/>
     <property name="src.doc.dir" location="src/share/doc"/>
-    <property name="src.test.dir" location="src/share/test"/>
+    <property name="test.dir" location="test"/>
     <property name="build.dir" location="build"/>
     <property name="build.checkstyle.dir" value="${build.dir}/checkstyle"/>
     <property name="build.classes.dir" location="${build.dir}/classes" />
@@ -284,22 +284,22 @@
     </target>
 
     <target name="-test-jtreg.basic" depends="dist-jtreg">
-        <mkdir dir="${build.dir}/jtreg/testclasses"/>
-        <delete dir="${build.dir}/jtreg/basic"/>
-        <mkdir dir="${build.dir}/jtreg/basic/report"/>
-        <mkdir dir="${build.dir}/jtreg/basic/work/scratch"/>
+        <delete dir="${build.dir}/basic"/>
+        <mkdir dir="${build.dir}/basic/classes"/>
+        <mkdir dir="${build.dir}/basic/report"/>
+        <mkdir dir="${build.dir}/basic/work/scratch"/>
         <javac classpath="${dist.jtreg.dir}/lib/jtreg.jar"
-            srcdir="${src.test.dir}/javatest/regtest"
-            destdir="${build.dir}/jtreg/testclasses"
+            srcdir="${test.dir}/basic"
+            destdir="${build.dir}/basic/classes"
             includes="Basic.java">
             <compilerarg value="-Xlint"/>
         </javac>
-        <java classpath="${dist.jtreg.dir}/lib/jtreg.jar:${build.dir}/jtreg/testclasses" classname="Basic"
-            fork="true" dir="${build.dir}/jtreg/basic/work/scratch" >
+        <java classpath="${dist.jtreg.dir}/lib/jtreg.jar:${build.dir}/basic/classes" classname="Basic"
+            fork="true" dir="${build.dir}/basic/work/scratch" >
             <sysproperty key="javatest.regtest.allowTrailingBuild" value="true"/>
-            <arg file="${src.test.dir}/javatest/regtest/data/basic"></arg>
-            <arg file="${build.dir}/jtreg/basic/report"/>
-            <arg file="${build.dir}/jtreg/basic/work"/>
+            <arg file="${test.dir}/share/basic"></arg>
+            <arg file="${build.dir}/basic/report"/>
+            <arg file="${build.dir}/basic/work"/>
             <arg file="${java.home}/.."/>
             <arg value="TESTJAVAHOME=${java.home},DISPLAY=${env.DISPLAY},HOME=${user.home}"/>
             <arg value="-othervm"/>
@@ -310,10 +310,10 @@
             <arg value="-automatic"/>
             <arg value="-verbose"/>
             <arg value="-reportDir"/>
-            <arg file="${build.dir}/jtreg/basic/report2"/>
+            <arg file="${build.dir}/basic/report2"/>
             <arg value="-workDir"/>
-            <arg file="${build.dir}/jtreg/basic/work"/>
-            <arg file="${src.test.dir}/javatest/regtest/data/basic"></arg>
+            <arg file="${build.dir}/basic/work"/>
+            <arg file="${test.dir}/share/basic"></arg>
         </java>
         <exec executable="grep" input="${build.dir}/jtreg/basic/report.out">
             <arg value="-s"/>

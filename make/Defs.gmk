@@ -277,7 +277,7 @@ SRCDOCDIR = $(SRCDIR)/share/doc
 SRCJTDOCDIR = $(SRCDIR)/share/doc/javatest
 SRCJTREGDOCDIR = $(SRCDIR)/share/doc/javatest/regtest
 SRCSHAREBINDIR = $(SRCDIR)/share/bin
-TESTDIR = $(SRCDIR)/share/test
+TESTDIR = $(TOPDIR)/test
 
 CLASSDIR = $(BUILDDIR)/classes
 ABSCLASSDIR = $(cd $(CLASSDIR); pwd)
