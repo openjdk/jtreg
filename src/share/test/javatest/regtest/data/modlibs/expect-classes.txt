@@ -4,7 +4,7 @@
 ./buildAction/usermods/BuildUserModClasses.d/modules/um2/module-info.class
 ./buildAction/usermods/BuildUserModClasses.d/modules/um2/um2_p1/um2_p1_B.class
 ./buildAction/usermods/BuildUserModClasses.d/modules/um3/module-info.class
-./buildAction/usermods/BuildUserModClasses.d/modules/um3/p/um3_p1_B.class
+./buildAction/usermods/BuildUserModClasses.d/modules/um3/um3_p1/um3_p1_B.class
 ./buildAction/usermods/BuildUserModModule.d/modules/um5/module-info.class
 ./buildAction/usermods/BuildUserModModule.d/modules/um5/um5_p1/um5_q1/um5_r1/um5_p1_q1_r1_B1.class
 ./buildAction/usermods/BuildUserModModule.d/modules/um5/um5_p1/um5_q1/um5_r1/um5_p1_q1_r1_B2.class
@@ -34,7 +34,7 @@
 ./compileAction/usermods/CompileUserMods.d/modules/um2/module-info.class
 ./compileAction/usermods/CompileUserMods.d/modules/um2/um2_p1/um2_p1_C.class
 ./compileAction/usermods/CompileUserMods.d/modules/um3/module-info.class
-./compileAction/usermods/CompileUserMods.d/modules/um3/p/um3_p1_C.class
+./compileAction/usermods/CompileUserMods.d/modules/um3/um3_p1/um3_p1_C.class
 ./mainAction/patchmods/RunPatchMod.d/patches/java.base/java/util/TestHelper.class
 ./mainAction/usermods/RunUserMod.d/modules/um1/module-info.class
 ./mainAction/usermods/RunUserMod.d/modules/um1/um1_p1/um1_p1_M1.class
