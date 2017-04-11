@@ -27,6 +27,7 @@ package com.sun.javatest.regtest.config;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.StreamTokenizer;
@@ -142,10 +143,111 @@ public class RegressionTestFinder extends TagTestFinder
             if (tngRoot != null) {
                 scanTestNGFile(tngRoot, file);
             } else {
-                super.scanFile(file);
+                //super.scanFile(file);
+                modifiedScanFile(file);
             }
         } catch (TestSuite.Fault e) {
             error(i18n, "finder.cant.read.test.properties", new Object[] { e.getMessage() });
+        }
+    }
+
+    /**
+     * Scan a file, looking for comments and in the comments, for test
+     * description data.
+     * @param file The file to scan
+     */
+    // This is a proposed new version for TagTestFinder.scanFile.
+    // The significant change is to look ahead for any additional
+    // comments when deciding whether or not to set an id for the
+    // test description. With this change, if a test file contains
+    // more than one test description, all test descriptions are
+    // given a unique id; previously, the first test description did not.
+    // The externally visible effect is that putting the name of the
+    // file on the command line explicitly will cause *all* the
+    // tests in that file to be run, and not just the first.
+    protected void modifiedScanFile(File file) {
+        I18NResourceBundle super_i18n;
+        boolean super_fastScan;
+        try {
+            Field i18nField = TagTestFinder.class.getDeclaredField("i18n");
+            i18nField.setAccessible(true);
+            super_i18n = (I18NResourceBundle) i18nField.get(this);
+            Field fastScanField = TagTestFinder.class.getDeclaredField("fastScan");
+            fastScanField.setAccessible(true);
+            super_fastScan = (boolean) fastScanField.get(this);
+        } catch (NoSuchFieldException | IllegalAccessException ex) {
+            throw new Error(ex);
+        }
+        int testDescNumber = 0;
+        String name = file.getName();
+        int dot = name.indexOf('.');
+        if (dot == -1)
+            return;
+        String extn = name.substring(dot);
+        Class<?> csc = getClassForExtension(extn);
+        if (csc == null) {
+            error(super_i18n, "tag.noParser", new Object[] {file, extn});
+            return;
+        }
+        CommentStream cs;
+        try {
+            cs = (CommentStream)(csc.newInstance());
+        }
+        catch (InstantiationException e) {
+            error(super_i18n, "tag.cantCreateClass", new Object[] {csc.getName(), extn});
+            return;
+        }
+        catch (IllegalAccessException e) {
+            error(super_i18n, "tag.cantAccessClass", new Object[] {csc.getName(), extn});
+            return;
+        }
+
+        try {
+            cs.init(new BufferedReader(new FileReader(file)));
+            if (super_fastScan)
+                cs.setFastScan(true);
+
+            String comment = cs.readComment();
+            while (comment != null) {
+                @SuppressWarnings("unchecked")
+                Map<String,String> tagValues = (Map<String,String>) parseComment(comment, file);
+
+                // Look ahead to see if there are more comments
+                comment = cs.readComment();
+
+                if (tagValues.isEmpty())
+                    continue;
+
+                if (tagValues.get("id") == null) {
+                    // if there are more comments to come, or if there have already
+                    // been additional comments, set an explicit id for each set of tags
+                    if (comment != null || testDescNumber  != 0)
+                        tagValues.put("id", "id" + (new Integer(testDescNumber)).toString());
+                    testDescNumber++;
+                }
+
+                // The "test" marker can now be removed so that we don't waste
+                // space unnecessarily.  We need to do the remove *after* the
+                // isEmpty() check because of the potential to interfere with
+                // defaults based on file extension. (i.e. The TD /* @test */
+                // still needs to evaluate to a valid test description.)
+                tagValues.remove("test");
+
+                foundTestDescription(tagValues, file, /*line*/0);
+            }
+        }
+        catch (FileNotFoundException e) {
+            error(super_i18n, "tag.cantFindFile", file);
+        }
+        catch (IOException e) {
+            error(super_i18n, "tag.ioError", file);
+        }
+        finally {
+            try {
+                cs.close();
+            }
+            catch (IOException e) {
+            }
         }
     }
 

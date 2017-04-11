@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2011, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -29,17 +29,17 @@
 $(BUILDDIR)/T6783087.ok: \
 	$(JTREG_IMAGEDIR)/lib/javatest.jar \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar
-	$(RM) $(BUILDDIR)/6783097/
-	$(MKDIR) -p $(BUILDDIR)/6783097/work/scratch
-	$(MKDIR) $(BUILDDIR)/6783097/doNotDelete
-	touch $(BUILDDIR)/6783097/doNotDelete.txt $(BUILDDIR)/6783097/doNotDelete/doNotDelete.txt
-	ln -s `pwd`/$(BUILDDIR)/6783097/doNotDelete $(BUILDDIR)/6783097/work/scratch/doNotDelete
-	ln -s `pwd`/$(BUILDDIR)/6783097/doNotDelete.txt $(BUILDDIR)/6783097/work/scratch/doNotDelete.txt
+	$(RM) $(BUILDDIR)/6783087/
+	$(MKDIR) -p $(BUILDDIR)/6783087/work/scratch
+	$(MKDIR) $(BUILDDIR)/6783087/doNotDelete
+	touch $(BUILDDIR)/6783087/doNotDelete.txt $(BUILDDIR)/6783087/doNotDelete/doNotDelete.txt
+	ln -s `pwd`/$(BUILDDIR)/6783087/doNotDelete $(BUILDDIR)/6783087/work/scratch/doNotDelete
+	ln -s `pwd`/$(BUILDDIR)/6783087/doNotDelete.txt $(BUILDDIR)/6783087/work/scratch/doNotDelete.txt
 	$(J2SEJAVA) -jar $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-		-w $(BUILDDIR)/6783097/work/ -r $(BUILDDIR)/6783097/report/ \
-		$(TESTDIR)/share/basic/main/Pass.java
-	find $(BUILDDIR)/6783097/
-	if [ ! -f $(BUILDDIR)/6783097/doNotDelete.txt -o ! -f $(BUILDDIR)/6783097/doNotDelete/doNotDelete.txt ]; then \
+		-w $(BUILDDIR)/6783087/work/ -r $(BUILDDIR)/6783087/report/ \
+		$(TESTDIR)/share/simple/Pass.java
+	find $(BUILDDIR)/6783087/
+	if [ ! -f $(BUILDDIR)/6783087/doNotDelete.txt -o ! -f $(BUILDDIR)/6783087/doNotDelete/doNotDelete.txt ]; then \
 		echo "files deleted incorrectly" ; exit 1 ; \
 	fi
 	echo $@ passed at `date` > $@

@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2012, 2013, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2012, 2017, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -36,7 +36,7 @@ $(BUILDDIR)/BugIdTests.ok: \
 	errs=`$(CAT) $(@:%.ok=%)/report/text/summary.txt | \
 		$(GREP) -v "ValidTest.java.*Passed." | \
 		$(GREP) -v "InvalidTest.java.*Error. Parse Exception: Invalid or unrecognized bugid:" | \
-		$(GREP) -v "MixTest.java *Error. Parse Exception: Invalid or unrecognized bugid: bug" | \
+		$(GREP) -v "MixTest.java#id0 *Error. Parse Exception: Invalid or unrecognized bugid: bug" | \
 		$(GREP) -v "MixTest.java#id1 *Passed. Execution successful"` ; \
 	if [ -n "$$errs" ]; then \
 	    echo "unexpected results" ; $(CAT) $(@:%.ok=%)/report/text/summary.txt ; exit 1 ; \
@@ -60,7 +60,7 @@ $(BUILDDIR)/BugIdTests.1002222.ok: \
 			> $(@:%.ok=%/jt.log) 2>&1 || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
 	errs=`$(CAT) $(@:%.ok=%)/report/text/summary.txt | \
-		$(GREP) -v "MixTest.java *Error. Parse Exception: Invalid or unrecognized bugid: bug"` ; \
+		$(GREP) -v "MixTest.java#id0 *Error. Parse Exception: Invalid or unrecognized bugid: bug"` ; \
 	if [ -n "$$errs" ]; then \
 	    echo "unexpected results" ; $(CAT) $(@:%.ok=%)/report/text/summary.txt ; exit 1 ; \
 	fi

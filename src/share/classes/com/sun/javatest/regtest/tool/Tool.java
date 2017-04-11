@@ -873,15 +873,23 @@ public class Tool {
         new Option(FILE, MAIN, null) {
             @Override
             public void process(String opt, String arg) {
-                if (groupPtn.matcher(arg).matches())
+                if (groupPtn.matcher(arg).matches()) {
                     testGroupArgs.add(arg);
-                else
+                } else if (fileIdPtn.matcher(arg).matches()) {
+                    int sep = arg.lastIndexOf("#");
+                    File file = new File(arg.substring(0, sep));
+                    String id = arg.substring(sep + 1);
+                    testFileIdArgs.add(new TestManager.FileId(file, id));
+                } else {
                     testFileArgs.add(new File(arg));
+                }
             }
 
             Pattern groupPtn = System.getProperty("os.name").matches("(?i)windows.*")
                     ? Pattern.compile("(|[^A-Za-z]|.{2,}):[A-Za-z0-9_,]+")
                     : Pattern.compile(".*:[A-Za-z0-9_,]+");
+
+            Pattern fileIdPtn = Pattern.compile("(?i).*#[a-z0-9]+");
         }
     );
 
@@ -985,8 +993,9 @@ public class Tool {
                 Tool.this.error(msg);
             }
         });
-        testManager.addTests(testFileArgs, false);
-        testManager.addTests(antFileArgs, true);
+        testManager.addTestFiles(testFileArgs, false);
+        testManager.addTestFileIds(testFileIdArgs, false);
+        testManager.addTestFiles(antFileArgs, true);
         testManager.addGroups(testGroupArgs);
 
         if (testManager.isEmpty())
@@ -2039,8 +2048,9 @@ public class Tool {
     private String timeoutFactorArg;
     private String priorStatusValuesArg;
     private File reportDirArg;
-    private List<String> testGroupArgs = new ArrayList<>();
+    public List<String> testGroupArgs = new ArrayList<>();
     public List<File> testFileArgs = new ArrayList<>();
+    public List<TestManager.FileId> testFileIdArgs = new ArrayList<>();
     // TODO: consider making this a "pathset" to detect redundant specification
     // of directories and paths within them.
     public final List<File> antFileArgs = new ArrayList<>();

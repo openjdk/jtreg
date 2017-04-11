@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -87,29 +87,50 @@ public class TestManager {
         }
     }
 
+    public static class FileId {
+        final File file;
+        final String id;
+
+        public FileId(File file, String id) {
+            this.file = file;
+            this.id = id;
+        }
+    }
+
     public TestManager(PrintWriter out, File baseDir, TestFinder.ErrorHandler errHandler) {
         this.out = out;
         this.baseDir = baseDir.getAbsoluteFile();
         this.errHandler = errHandler;
     }
 
-    public void addTests(Collection<File> testFiles, boolean ignoreEmptyFiles) throws Fault {
+    public void addTestFiles(Collection<File> testFiles, boolean ignoreEmptyFiles) throws Fault {
         Map<File, File> rootDirCache = new HashMap<>();
         for (File tf: testFiles) {
-            File f = canon(tf);
-            if (!f.exists())
-                throw new Fault(i18n, "tm.cantFindFile", tf);
-            File rootDir = getRootDir(rootDirCache, f);
-            if (rootDir == null)
-                throw new Fault(i18n, "tm.cantDetermineTestSuite", tf);
+            addTest(rootDirCache, tf, null, ignoreEmptyFiles);
+        }
+    }
 
-            Entry e = getEntry(rootDir);
-            if (tf.equals(rootDir)) {
-                e.all = true;
-                e.files.clear();
-            } else if (!e.all) {
-                e.files.put(getRelativePath(rootDir, f), ignoreEmptyFiles);
-            }
+    public void addTestFileIds(Collection<FileId> testFiles, boolean ignoreEmptyFiles) throws Fault {
+        Map<File, File> rootDirCache = new HashMap<>();
+        for (FileId tf: testFiles) {
+            addTest(rootDirCache, tf.file, tf.id, ignoreEmptyFiles);
+        }
+    }
+
+    private void addTest(Map<File, File> rootDirCache, File tf, String id, boolean ignoreEmptyFiles) throws Fault {
+        File f = canon(tf);
+        if (!f.exists())
+            throw new Fault(i18n, "tm.cantFindFile", tf);
+        File rootDir = getRootDir(rootDirCache, f);
+        if (rootDir == null)
+            throw new Fault(i18n, "tm.cantDetermineTestSuite", tf);
+
+        Entry e = getEntry(rootDir);
+        if (tf.equals(rootDir)) {
+            e.all = true;
+            e.files.clear();
+        } else if (!e.all) {
+            e.files.put(getRelativePath(rootDir, f, id), ignoreEmptyFiles);
         }
     }
 
@@ -249,7 +270,7 @@ public class TestManager {
                 throw new Fault(i18n, "tm.notATest", test);
         }
         for (File f: expandGroups(e)) {
-            String test = getRelativePath(e.rootDir, f);
+            String test = getRelativePath(e.rootDir, f, null);
             if (validatePath(wd, test))
                 tests.add(test);
         }
@@ -270,6 +291,9 @@ public class TestManager {
         try {
             TestResultTable trt = wd.getTestResultTable();
             if (trt.validatePath(path)) {
+                // bypass check when fragment syntax used
+                if (path.matches("(?i).*#[a-z0-9]+"))
+                    return true;
                 File rootDir = wd.getTestSuite().getRootDir();
                 File f = new File(rootDir, path);
                 if (f.isDirectory())
@@ -419,11 +443,14 @@ public class TestManager {
         return new File(f.getAbsoluteFile().toURI().normalize());
     }
 
-    static String getRelativePath(File base, File f) {
+    static String getRelativePath(File base, File f, String id) {
         StringBuilder sb = new StringBuilder();
         for ( ; f != null; f = f.getParentFile()) {
-            if (f.equals(base))
+            if (f.equals(base)) {
+                if (id != null)
+                    sb.append("#").append(id);
                 return sb.toString();
+            }
             if (sb.length() > 0)
                 sb.insert(0, '/');
             sb.insert(0, f.getName());
