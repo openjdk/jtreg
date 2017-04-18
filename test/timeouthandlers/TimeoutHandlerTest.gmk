@@ -93,7 +93,7 @@ $(BUILDDIR)/TimeoutHandlerTestExternal.othervm.ok: \
 	$(GREP) -s 'Test results: error: 1' $(@:%.ok=%/jt.log) > /dev/null
 	echo "test passed at `date`" > $@
 
-$(BUILDDIR)/TimeoutHandlerTestDefault.shell.ok: \
+$(BUILDDIR)/TimeoutHandlerTestExternal.shell.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
