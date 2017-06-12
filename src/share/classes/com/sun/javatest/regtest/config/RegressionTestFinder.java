@@ -221,7 +221,7 @@ public class RegressionTestFinder extends TagTestFinder
                 if (tagValues.get("id") == null) {
                     // if there are more comments to come, or if there have already
                     // been additional comments, set an explicit id for each set of tags
-                    if (comment != null || testDescNumber  != 0)
+                    if ((comment != null && comment.trim().startsWith("@test")) || testDescNumber  != 0)
                         tagValues.put("id", "id" + (new Integer(testDescNumber)).toString());
                     testDescNumber++;
                 }
