@@ -23,8 +23,8 @@
 # questions.
 #
 
-$(BUILDDIR)/ModuleExportsTest.agentvm.ok \
-$(BUILDDIR)/ModuleExportsTest.othervm.ok: \
+$(BUILDDIR)/ModuleOpensTest.agentvm.ok \
+$(BUILDDIR)/ModuleOpensTest.othervm.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	if [ -d $(@:%.ok=%) ]; then $(CHMOD) -R +w $(@:%.ok=%) && $(RM) $(@:%.ok=%) ; fi
@@ -34,19 +34,19 @@ $(BUILDDIR)/ModuleExportsTest.othervm.ok: \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JIGSAWHOME) \
 		-vmoption:-Dsun.reflect.enableStrictMode=true \
-		$(@:$(BUILDDIR)/ModuleExportsTest.%.ok=-%) \
-		$(TESTDIR)/moduleExports \
+		$(@:$(BUILDDIR)/ModuleOpensTest.%.ok=-%) \
+		$(TESTDIR)/moduleOpens \
 			> $(@:%.ok=%/jt.log) 2>&1 || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
-	$(GREP) -s 'Test results: passed: 2' $(@:%.ok=%/jt.log)  > /dev/null
+	$(GREP) -s 'Test results: passed: 4' $(@:%.ok=%/jt.log)  > /dev/null
 	$(CHMOD) -R +w $(@:%.ok=%)
 	echo "test passed at `date`" > $@
 
 ifdef JIGSAWHOME
 
 TESTS.jtreg += \
-	$(BUILDDIR)/ModuleExportsTest.agentvm.ok \
-	$(BUILDDIR)/ModuleExportsTest.othervm.ok
+	$(BUILDDIR)/ModuleOpensTest.agentvm.ok \
+	$(BUILDDIR)/ModuleOpensTest.othervm.ok
 
 endif #JIGSAWHOME
 

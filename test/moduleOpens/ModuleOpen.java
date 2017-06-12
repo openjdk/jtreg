@@ -23,25 +23,39 @@
 
 /*
  * @test
- * @summary test reflective access to private API not permitted without exports private
+ * @summary test reflective access to private API not permitted without :open
  * @modules jdk.compiler/com.sun.tools.javac.main
- * @run main ExportsPrivate -fail
+ * @run main/othervm --illegal-access=deny ModuleOpen -fail
  */
 
 /*
  * @test
- * @summary test reflective access to private API is permitted with exports private
- * @modules jdk.compiler/com.sun.tools.javac.main:private
- * @run main ExportsPrivate
+ * @summary test reflective access to private API is permitted with :open
+ * @modules jdk.compiler/com.sun.tools.javac.main:open
+ * @run main/othervm --illegal-access=deny ModuleOpen
+ */
+
+/*
+ * @test
+ * @summary test reflective access to private API is permitted with :+open
+ * @modules jdk.compiler/com.sun.tools.javac.main:+open
+ * @run main/othervm --illegal-access=deny ModuleOpen
+ */
+
+/*
+ * @test
+ * @summary test reflective access to private API is permitted by default in JDK 9
+ * @modules jdk.compiler/com.sun.tools.javac.main
+ * @run main ModuleOpen
  */
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InaccessibleObjectException;
 import com.sun.tools.javac.main.Main;
 
-public class ExportsPrivate {
+public class ModuleOpen {
     public static void main(String... args) throws Exception {
-        new ExportsPrivate().run(args);
+        new ModuleOpen().run(args);
     }
 
     void run(String... args) throws Exception {
