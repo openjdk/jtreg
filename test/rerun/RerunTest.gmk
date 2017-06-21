@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2013, 2016, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2013, 2017, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -35,8 +35,8 @@ $(BUILDDIR)/RerunTest.othervm.ok: \
 	    $(JTREG_IMAGEDIR)/bin/jtreg \
 	    display.sh
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
-	DISPLAY=`sh display.sh` export DISPLAY ; \
-	trap "sh `pwd`/display.sh -kill" 0 ; \
+	DISPLAY=`BUILDDIR=$(BUILDDIR) sh display.sh` export DISPLAY ; \
+	trap "BUILDDIR=$(BUILDDIR) sh `pwd`/display.sh -kill" 0 ; \
 	unset GNOME_DESKTOP_SESSION_ID ; \
 	unset XMODIFIERS ; \
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
@@ -62,6 +62,7 @@ $(BUILDDIR)/RerunTest.othervm.ok: \
 		    -e 's|^DISPLAY=.*|DISPLAY=%DISPLAY%|' \
 		    -e 's|$(JDK18HOME)|%JDKHOME%|g' \
 		    -e "s|`cd $(JDK18HOME); pwd -P`|%JDKHOME%|g" \
+		    -e 's|$(BUILDDIR)|%BUILD%|g' \
 		    -e 's|$(ABSTOPDIR)|%WS%|g' \
 		    -e 's|%WS%.build.images.jtreg.lib.jcommander\.jar.||g' \
 		> $(@:%.ok=%)/out/$${i%.*}.out ; \

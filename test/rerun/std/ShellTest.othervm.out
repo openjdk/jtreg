@@ -6,8 +6,8 @@ MY_ENV_VAR=x \
 PATH=/bin:/usr/bin \
 TESTSRC=%WS%/test/rerun/std \
 TESTSRCPATH=%WS%/test/rerun/std \
-TESTCLASSES=%WS%/build/RerunTest.othervm/work/classes/std \
-TESTCLASSPATH=%WS%/build/RerunTest.othervm/work/classes/std \
+TESTCLASSES=%BUILD%/RerunTest.othervm/work/classes/std \
+TESTCLASSPATH=%BUILD%/RerunTest.othervm/work/classes/std \
 COMPILEJAVA=%JDKHOME% \
 TESTJAVA=%JDKHOME% \
 TESTVMOPTS=-Dmy.vm.option=x \

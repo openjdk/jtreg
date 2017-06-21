@@ -32,12 +32,12 @@ $(BUILDDIR)/T6533136.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%)
 	$(MKDIR) $(@:%.ok=%)
-	( b=`pwd`; cd $(TESTDIR)/share/simple/ ; \
-	  JTHOME=$$b/$(JTREG_IMAGEDIR) $$b/$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
-		-avm -w:$$b/$(@:%.ok=%)/work -r:$$b/$(@:%.ok=%)/report \
+	( cd $(TESTDIR)/share/simple/ ; \
+	  JTHOME=$(JTREG_IMAGEDIR) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-avm -w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-v:fail -jdk:$(J2SEHOME) Pass.java ; \
-	  JTHOME=$$b/$(JTREG_IMAGEDIR) $$b/$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
-		-ovm -w:$$b/$(@:%.ok=%)/work -r:$$b/$(@:%.ok=%)/report \
+	  JTHOME=$(JTREG_IMAGEDIR) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-ovm -w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-v:fail -jdk:$(J2SEHOME) Pass.java )
 	JTHOME=$(JTREG_IMAGEDIR) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-avm -w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \

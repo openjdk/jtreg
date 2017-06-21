@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2016, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -37,7 +37,7 @@ $(BUILDDIR)/CompileTest.1.othervm.ok: \
 		$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-compilejdk:$(JDK15HOME) \
-		-jdk:`pwd`/$(BUILDDIR)/not-a-jdk \
+		-jdk:$(BUILDDIR)/not-a-jdk \
 		$(@:$(BUILDDIR)/CompileTest.1.%.ok=-%) \
 		$(TESTDIR)/compilejdk/CompileTest.java
 	grep $(JDK15HOME) $(@:%.ok=%)/work/CompileTest.jtr
@@ -61,7 +61,7 @@ $(BUILDDIR)/CompileTest.2.othervm.ok: \
 	JT_JAVA=$(J2SEHOME) \
 		$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-compilejdk:`pwd`/$(BUILDDIR)/not-a-jdk \
+		-compilejdk:$(BUILDDIR)/not-a-jdk \
 		-jdk:$(JDK15HOME) \
 		$(@:$(BUILDDIR)/CompileTest.2.%.ok=-%) \
 		$(TESTDIR)/compilejdk/ExecuteTest.java
@@ -81,7 +81,7 @@ $(BUILDDIR)/CompileTest.3.othervm.ok: \
 		$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-compilejdk:$(JDK15HOME) \
-		-jdk:`pwd`/$(BUILDDIR)/just-java \
+		-jdk:$(BUILDDIR)/just-java \
 		$(@:$(BUILDDIR)/CompileTest.3.%.ok=-%) \
 		$(TESTDIR)/compilejdk/ExecuteTest.java
 	echo "test passed at `date`" > $@

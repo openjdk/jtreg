@@ -376,7 +376,7 @@ JTREG_ZIP = $(IMAGES_DIR)/jtreg.zip
 
 $(JTREG_ZIP): $(TARGETS.ZIP.jtreg)
 	$(RM) $@
-	dir=`pwd`; cd $(IMAGES_DIR); $(ZIP) -rq $$dir/$@ $(@F:%.zip=%)
+	cd $(IMAGES_DIR); $(ZIP) -rq $@ $(@F:%.zip=%)
 
 JTREG_ZIPFILES = $(JTREG_ZIP)
 

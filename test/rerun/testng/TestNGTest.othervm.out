@@ -8,8 +8,8 @@ PATH=/bin:/usr/bin \
         -J-Dmy.vm.option=x \
         -J-Dtest.src=%WS%/test/rerun/testng \
         -J-Dtest.src.path=%WS%/test/rerun/testng \
-        -J-Dtest.classes=%WS%/build/RerunTest.othervm/work/classes/testng \
-        -J-Dtest.class.path=%WS%/build/RerunTest.othervm/work/classes/testng \
+        -J-Dtest.classes=%BUILD%/RerunTest.othervm/work/classes/testng \
+        -J-Dtest.class.path=%BUILD%/RerunTest.othervm/work/classes/testng \
         -J-Dtest.vm.opts=-Dmy.vm.option=x \
         -J-Dtest.tool.vm.opts=-J-Dmy.vm.option=x \
         -J-Dtest.compiler.opts=-XDmy.javac.option=x \
@@ -17,7 +17,7 @@ PATH=/bin:/usr/bin \
         -J-Dtest.jdk=%JDKHOME% \
         -J-Dcompile.jdk=%JDKHOME% \
         -J-Dtest.timeout.factor=1.0 \
-        @%WS%/build/RerunTest.othervm/work/testng/TestNGTest.d/compile.0.jta
+        @%BUILD%/RerunTest.othervm/work/testng/TestNGTest.d/compile.0.jta
 
 ### Section testng
 DISPLAY=%DISPLAY%
@@ -25,12 +25,12 @@ HOME=%HOME%
 LANG=en_US.UTF-8 \
 MY_ENV_VAR=x \
 PATH=/bin:/usr/bin \
-CLASSPATH=%WS%/build/RerunTest.othervm/work/classes/testng:%WS%/test/rerun/testng:%WS%/build/images/jtreg/lib/testng.jar:%JDKHOME%/lib/tools.jar:%WS%/build/images/jtreg/lib/javatest.jar:%WS%/build/images/jtreg/lib/jtreg.jar \
+CLASSPATH=%BUILD%/RerunTest.othervm/work/classes/testng:%WS%/test/rerun/testng:%BUILD%/images/jtreg/lib/testng.jar:%JDKHOME%/lib/tools.jar:%BUILD%/images/jtreg/lib/javatest.jar:%BUILD%/images/jtreg/lib/jtreg.jar \
     %JDKHOME%/bin/java \
         -Dtest.src=%WS%/test/rerun/testng \
         -Dtest.src.path=%WS%/test/rerun/testng \
-        -Dtest.classes=%WS%/build/RerunTest.othervm/work/classes/testng \
-        -Dtest.class.path=%WS%/build/RerunTest.othervm/work/classes/testng \
+        -Dtest.classes=%BUILD%/RerunTest.othervm/work/classes/testng \
+        -Dtest.class.path=%BUILD%/RerunTest.othervm/work/classes/testng \
         -Dtest.vm.opts=-Dmy.vm.option=x \
         -Dtest.tool.vm.opts=-J-Dmy.vm.option=x \
         -Dtest.compiler.opts=-XDmy.javac.option=x \
@@ -40,5 +40,5 @@ CLASSPATH=%WS%/build/RerunTest.othervm/work/classes/testng:%WS%/test/rerun/testn
         -Dtest.timeout.factor=1.0 \
         -Dmy.vm.option=x \
         -Dmy.java.option=x \
-        com.sun.javatest.regtest.agent.MainWrapper %WS%/build/RerunTest.othervm/work/testng/TestNGTest.d/testng.1.jta testng/TestNGTest.java false TestNGTest
+        com.sun.javatest.regtest.agent.MainWrapper %BUILD%/RerunTest.othervm/work/testng/TestNGTest.d/testng.1.jta testng/TestNGTest.java false TestNGTest
 
