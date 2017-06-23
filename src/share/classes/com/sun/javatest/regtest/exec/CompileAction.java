@@ -475,15 +475,10 @@ public class CompileAction extends Action {
             javacArgs.add(destDir.toString());
         }
 
-        if (module != null && script.systemModules.contains(module)
-                && !script.useNewPatchModule()) {
-            javacArgs.add("-Xmodule:" + module);
-        }
-
         // modulesourcepath and sourcepath are mutually exclusive
         if (multiModule) {
             javacArgs.addPath("--module-source-path", compilePaths.get(PathKind.MODULESOURCEPATH));
-        } else if (module != null && script.useNewPatchModule()) {
+        } else if (module != null) {
             // Note: any additional patches for this module will be
             // automatically merged with this one.
             javacArgs.addAll("--patch-module", module + "=" + compilePaths.get(PathKind.SOURCEPATH));

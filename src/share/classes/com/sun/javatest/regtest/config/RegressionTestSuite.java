@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2000, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -210,11 +210,6 @@ public class RegressionTestSuite extends TestSuite
 
     public ExtraPropDefns getExtraPropDefns() {
         return properties.getExtraPropDefns();
-    }
-
-    // for transition: use new --patch-module instead of -Xmodule
-    public boolean useNewPatchModule() {
-        return properties.useNewPatchModule();
     }
 
     private final TestFinder.ErrorHandler errHandler;

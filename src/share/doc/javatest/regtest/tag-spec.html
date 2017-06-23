@@ -1,6 +1,6 @@
 <!DOCTYPE HTML>
 <!--
- Copyright (c) 2006, 2016, Oracle and/or its affiliates. All rights reserved.
+ Copyright (c) 2006, 2017, Oracle and/or its affiliates. All rights reserved.
  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 
  This code is free software; you can redistribute it and/or modify it
@@ -522,7 +522,7 @@ a subdirectory named for the module, relative to the directory containing the de
 file of the test. Neither the module directory nor the list of source files may contain
 a <code>module-info.java</code> file.
 Internally, this option corresponds to using the javac
-<code>-Xmodule:<var>&lt;module-name&gt;</var></code> option.
+<code>--patch-module=<var>&lt;module-name&gt;</var>=<var>&lt;path&gt;</var></code> option.
 
 <p>User modules can be compiled by placing the code for the modules in subdirectories
 named for the modules. Each directory should have a corresponding <code>module-info.java</code>

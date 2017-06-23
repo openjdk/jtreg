@@ -603,13 +603,6 @@ public class RegressionScript extends Script {
         }
     }
 
-    /**
-     * Determine whether to use new --patch-module option instead of -Xmodule.
-     */
-    boolean useNewPatchModule() {
-        return testSuite.useNewPatchModule();
-    }
-
     //----------------------- computing paths ---------------------------------
 
     File absTestWorkFile(String name) {
