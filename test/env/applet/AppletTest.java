@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -60,7 +60,7 @@ public class AppletTest extends Applet {
         check("test.src", testSrc("applet"));
         check("test.src.path", path(testSrc("applet"), testSrc(lib)));
         check("test.classes", testClasses("applet"));
-        check("test.class.path", path(testClasses("applet"), testClasses(lib)));
+        check("test.class.path", path(testClasses("applet"), testLibClasses(lib)));
         check("test.vm.opts");
         check("test.tool.vm.opts");
         check("test.compiler.opts");
@@ -79,23 +79,38 @@ public class AppletTest extends Applet {
     void check(String name, String value) {
         System.err.println("check: " + name + ": " + value);
         String v = System.getProperty(name);
-        if (v == null || !v.equals(value))
-            error(name + ": unexpected value: " + v + "\n  expected: " + value);
+        if (v == null || !v.equals(value)) {
+            error(name + ": unexpected value"
+                + "\n     found: " + v
+                + "\n  expected: " + value);
+        }
     }
 
     String testSrc(String p) {
-        return (p == null) ? null : ref.getProperty("testRoot") + File.separator + p;
+        return (p == null) ? null : file(ref.getProperty("testRoot"), p);
     }
 
     String testClasses(String p) {
-        return (p == null) ? null : ref.getProperty("classRoot") + File.separator + p;
+        return file(ref.getProperty("classRoot"), p, getParameter("name") + ".d");
+    }
+
+    String testLibClasses(String p) {
+        return (p == null) ? null : file(ref.getProperty("classRoot"), p);
+    }
+
+    String file(String... list) {
+       return join(list, File.separator);
     }
 
     String path(String... list) {
+        return join(list, File.pathSeparator);
+    }
+
+    String join(String[] list, String sep) {
         StringBuilder sb = new StringBuilder();
         for (String item: list) {
             if (item != null) {
-                if (sb.length() > 0) sb.append(File.pathSeparator);
+                if (sb.length() > 0) sb.append(sep);
                 sb.append(item);
             }
         }

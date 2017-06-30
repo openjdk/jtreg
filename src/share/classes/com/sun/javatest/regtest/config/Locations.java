@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -37,6 +37,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import com.sun.javatest.TestDescription;
 import com.sun.javatest.regtest.agent.SearchPath;
+import com.sun.javatest.regtest.tool.Version;
 import com.sun.javatest.regtest.util.StringUtils;
 
 /**
@@ -141,7 +142,6 @@ public class Locations {
     private final SearchPath jtpath;
     private final JDK testJDK;
 
-    private final String relTestDir;
     private final File absBaseSrcDir;
     private final File absTestSrcDir;
     private final File absBaseClsDir;
@@ -149,6 +149,7 @@ public class Locations {
     private final File absTestPatchDir;
     private final File absTestModulesDir;
     private final File absTestWorkDir;
+    private final String relLibDir;
     private final List<LibLocn> libList;
 
     public Locations(RegressionParameters params, TestDescription td)
@@ -158,39 +159,44 @@ public class Locations {
         jtpath = params.getJavaTestClassPath();
         testJDK = params.getTestJDK();
 
+        Version v = testSuite.getRequiredVersion();
+        boolean useUniqueClassDir = (v == null)
+                || (v.compareTo(new Version("4.2 b08")) >= 0);
+
+        File relTestFile = td.getRootRelativeFile();
+        String relTestDir = relTestFile.getParent();
+        if (relTestDir == null)
+            relTestDir = "";
+
+        String testName = relTestFile.getName();
+        String testId = td.getId();
+        String uniqueTestSubDir = testName.replaceAll("(?i)\\.[a-z]+$",
+                ((testId == null ? "" : "_" + testId) + ".d"));
+
         String packageRoot = td.getParameter("packageRoot");
-        if (packageRoot != null) {
-            relTestDir = packageRoot;
-        } else {
-            String d = td.getRootRelativeFile().getParent();
-            if (d == null)
-                relTestDir = "";
-            else
-                relTestDir = d;
-        }
+        String relTestSrcDir = relLibDir = (packageRoot != null) ? packageRoot : relTestDir;
 
         absBaseSrcDir = params.getTestSuite().getRootDir();
-        absTestSrcDir = new File(absBaseSrcDir, relTestDir);
+        absTestSrcDir = new File(absBaseSrcDir, relTestSrcDir);
 
-        String testWorkDir = td.getRootRelativeFile().getPath().replaceAll("(?i)\\.[a-z]+$", "");
-        String id = td.getId();
-        if (id != null)
-            testWorkDir += "_" + id;
-        testWorkDir += ".d";
-        absTestWorkDir = params.getWorkDirectory().getFile(testWorkDir);
+        File relTestWorkDir = new File(relTestDir, uniqueTestSubDir);
+        absTestWorkDir = params.getWorkDirectory().getFile(relTestWorkDir.getPath());
 
         absBaseClsDir = getThreadSafeDir(params.getWorkDirectory().getFile("classes"),
                 params.getConcurrency());
-        absTestClsDir = new File(absBaseClsDir, relTestDir);
+        String relTestClsDir = (packageRoot != null) ? packageRoot
+                : useUniqueClassDir ? new File(relTestDir, uniqueTestSubDir).getPath()
+                : relTestDir;
+        absTestClsDir = new File(absBaseClsDir, relTestClsDir);
 
-        if (packageRoot == null) {
-            absTestPatchDir = absTestWorkFile("patches");
-            absTestModulesDir = absTestWorkFile("modules");
-        } else {
-            // the following is not ideal, but neither is the entire $wd/classes directory hierarchy
-            absTestPatchDir = new File(absTestClsDir, "patches");
-            absTestModulesDir = new File(absTestClsDir, "modules");
-        }
+        // The following assumes we will never have test code in a package
+        // or subpackage beginning patches or modules when we also have
+        // test patches or test modules. If that becomes not true, then
+        // we should use another subdir (classes?) for the classes on the
+        // classpath, so that classes, modules and patches are sibling
+        // directories.
+        absTestPatchDir = new File(absTestClsDir, "patches");
+        absTestModulesDir = new File(absTestClsDir, "modules");
 
         libList = new ArrayList<>();
         String libs = td.getParameter("library");
@@ -247,9 +253,9 @@ public class Locations {
                 }
             }
         } else {
-            checkLibPath(relTestDir.replace(File.separatorChar, '/') + "/" + lib);
+            checkLibPath(relLibDir.replace(File.separatorChar, '/') + "/" + lib);
             if (new File(absTestSrcDir, lib).exists())
-                return createLibLocn(lib, absTestSrcDir, absTestClsDir);
+                return createLibLocn(lib, absTestSrcDir, new File(absBaseClsDir, relLibDir));
         }
         throw new Fault(CANT_FIND_LIB + lib);
     }
@@ -268,21 +274,21 @@ public class Locations {
      * Creates a library location.
      * The library kind is inferred by looking at its contents.
      * @param lib  the name (path) of the library as specified in the test description
-     * @param absSrcDir the directory containing the source files for the library
-     * @param absClsDir the directory containing the compiled class files for the library
+     * @param absBaseSrcDir the base directory for the library's source files
+     * @param absBaseClsDir the base directory for the library's class files
      * @return a library location
      * @throws Fault if there is an error resolving the library location
      */
-    private LibLocn createLibLocn(String lib, File absSrcDir, File absClsDir) throws Fault {
+    private LibLocn createLibLocn(String lib, File absBaseSrcDir, File absBaseClsDir) throws Fault {
         String relLib = (lib.startsWith("/") ? lib.substring(1) : lib);
-        File absLib = normalize(new File(absSrcDir, relLib));
+        File absLib = normalize(new File(absBaseSrcDir, relLib));
         if (absLib.isFile() && absLib.getName().endsWith(".jar")) {
             return new LibLocn(lib, null, absLib, LibLocn.Kind.PRECOMPILED_JAR);
         } else {
             if (!absLib.isDirectory())
                 throw new Fault(BAD_LIB + lib);
             File absLibSrcDir = absLib;
-            File absLibClsDir = normalize(new File(absClsDir, lib));
+            File absLibClsDir = normalize(new File(absBaseClsDir, lib));
             LibLocn.Kind kind = getDirKind(absLibSrcDir);
             return new LibLocn(lib, absLibSrcDir, absLibClsDir, kind);
         }

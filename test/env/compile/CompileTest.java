@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -24,28 +24,28 @@
 /*
  * @test
  * @build CompileTest
- * @compile -processor CompileTest -proc:only -ALIB= CompileTest.java
+ * @compile -processor CompileTest -proc:only -Aname=CompileTest_id0 -ALIB= CompileTest.java
  */
 
 /*
  * @test
  * @library lib
  * @build CompileTest
- * @compile -processor CompileTest -proc:only -ALIB=compile/lib CompileTest.java
+ * @compile -processor CompileTest -proc:only -Aname=CompileTest_id1 -ALIB=compile/lib CompileTest.java
  */
 
 /*
  * @test
  * @library ../lib
  * @build CompileTest
- * @compile -processor CompileTest -proc:only -ALIB=lib CompileTest.java
+ * @compile -processor CompileTest -proc:only -Aname=CompileTest_id2 -ALIB=lib CompileTest.java
  */
 
 /*
  * @test
  * @library /lib
  * @build CompileTest
- * @compile -processor CompileTest -proc:only -ALIB=lib CompileTest.java
+ * @compile -processor CompileTest -proc:only -Aname=CompileTest_id3 -ALIB=lib CompileTest.java
  */
 
 import java.io.*;
@@ -54,7 +54,7 @@ import javax.annotation.processing.*;
 import javax.lang.model.*;
 import javax.lang.model.element.*;
 
-@SupportedOptions("LIB")
+@SupportedOptions({"name", "LIB"})
 @SupportedAnnotationTypes("*")
 public class CompileTest extends AbstractProcessor {
     public SourceVersion getSupportedSourceVersion() {
@@ -80,18 +80,18 @@ public class CompileTest extends AbstractProcessor {
     public boolean process(Set<? extends TypeElement> annos, RoundEnvironment roundEnv) {
         if (roundEnv.processingOver()) {
             Map<String,String> options = processingEnv.getOptions();
+            String name = options.get("name");
             String lib = options.get("LIB");
-            run(lib == null ? new String[0] : new String[] { lib });
+            run(name, lib);
         }
         return true;
     }
 
-    void run(String[] args) throws Error {
-        String lib = (args.length == 0) ? null : args[0];
+    void run(String name, String lib) throws Error {
         check("test.src", testSrc("compile"));
         check("test.src.path", path(testSrc("compile"), testSrc(lib)));
-        check("test.classes", testClasses("compile"));
-        check("test.class.path", path(testClasses("compile"), testClasses(lib)));
+        check("test.classes", testClasses("compile", name));
+        check("test.class.path", path(testClasses("compile", name), testLibClasses(lib)));
         check("test.vm.opts");
         check("test.tool.vm.opts");
         check("test.compiler.opts");
@@ -110,23 +110,38 @@ public class CompileTest extends AbstractProcessor {
     void check(String name, String value) {
         System.err.println("check: " + name + ": " + value);
         String v = System.getProperty(name);
-        if (v == null || !v.equals(value))
-            error(name + ": unexpected value: " + v + "\n  expected: " + value);
+        if (v == null || !v.equals(value)) {
+            error(name + ": unexpected value"
+                + "\n     found: " + v
+                + "\n  expected: " + value);
+        }
     }
 
     String testSrc(String p) {
-        return (p == null) ? null : ref.getProperty("testRoot") + File.separator + p;
+        return (p == null) ? null : file(ref.getProperty("testRoot"), p);
     }
 
-    String testClasses(String p) {
-        return (p == null) ? null : ref.getProperty("classRoot") + File.separator + p;
+    String testClasses(String p, String name) {
+        return file(ref.getProperty("classRoot"), p, name + ".d");
+    }
+
+    String testLibClasses(String p) {
+        return (p == null) ? null : file(ref.getProperty("classRoot"), p);
+    }
+
+    String file(String... list) {
+       return join(list, File.separator);
     }
 
     String path(String... list) {
+        return join(list, File.pathSeparator);
+    }
+
+    String join(String[] list, String sep) {
         StringBuilder sb = new StringBuilder();
         for (String item: list) {
             if (item != null) {
-                if (sb.length() > 0) sb.append(File.pathSeparator);
+                if (sb.length() > 0) sb.append(sep);
                 sb.append(item);
             }
         }

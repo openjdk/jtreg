@@ -1,5 +1,5 @@
 ### Section clean
-rm -f %BUILD%/RerunTest.othervm/work/classes/std/BuildTest.class
+rm -f %BUILD%/RerunTest.othervm/work/classes/std/BuildTest.d/BuildTest.class
 
 ### Section compile
 DISPLAY=%DISPLAY%
@@ -11,8 +11,8 @@ PATH=/bin:/usr/bin \
         -J-Dmy.vm.option=x \
         -J-Dtest.src=%WS%/test/rerun/std \
         -J-Dtest.src.path=%WS%/test/rerun/std \
-        -J-Dtest.classes=%BUILD%/RerunTest.othervm/work/classes/std \
-        -J-Dtest.class.path=%BUILD%/RerunTest.othervm/work/classes/std \
+        -J-Dtest.classes=%BUILD%/RerunTest.othervm/work/classes/std/BuildTest.d \
+        -J-Dtest.class.path=%BUILD%/RerunTest.othervm/work/classes/std/BuildTest.d \
         -J-Dtest.vm.opts=-Dmy.vm.option=x \
         -J-Dtest.tool.vm.opts=-J-Dmy.vm.option=x \
         -J-Dtest.compiler.opts=-XDmy.javac.option=x \
@@ -21,8 +21,8 @@ PATH=/bin:/usr/bin \
         -J-Dcompile.jdk=%JDKHOME% \
         -J-Dtest.timeout.factor=1.0 \
         -XDmy.javac.option=x \
-        -d %BUILD%/RerunTest.othervm/work/classes/std \
+        -d %BUILD%/RerunTest.othervm/work/classes/std/BuildTest.d \
         -sourcepath %WS%/test/rerun/std \
-        -classpath %WS%/test/rerun/std:%BUILD%/RerunTest.othervm/work/classes/std:%JDKHOME%/lib/tools.jar \
+        -classpath %WS%/test/rerun/std:%BUILD%/RerunTest.othervm/work/classes/std/BuildTest.d:%JDKHOME%/lib/tools.jar \
         -XDignore.symbol.file=true %WS%/test/rerun/std/BuildTest.java
 

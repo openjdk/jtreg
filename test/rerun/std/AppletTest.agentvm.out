@@ -7,11 +7,11 @@ PATH=/bin:/usr/bin \
     %JDKHOME%/bin/javac \
         -J-Dmy.vm.option=x \
         -J-Dmy.java.option=x \
-        -J-Dtest.class.path.prefix=%BUILD%/RerunTest.agentvm/work/classes/std:%WS%/test/rerun/std \
+        -J-Dtest.class.path.prefix=%BUILD%/RerunTest.agentvm/work/classes/std/AppletTest.d:%WS%/test/rerun/std \
         -J-Dtest.src=%WS%/test/rerun/std \
         -J-Dtest.src.path=%WS%/test/rerun/std \
-        -J-Dtest.classes=%BUILD%/RerunTest.agentvm/work/classes/std \
-        -J-Dtest.class.path=%BUILD%/RerunTest.agentvm/work/classes/std \
+        -J-Dtest.classes=%BUILD%/RerunTest.agentvm/work/classes/std/AppletTest.d \
+        -J-Dtest.class.path=%BUILD%/RerunTest.agentvm/work/classes/std/AppletTest.d \
         -J-Dtest.vm.opts=-Dmy.vm.option=x \
         -J-Dtest.tool.vm.opts=-J-Dmy.vm.option=x \
         -J-Dtest.compiler.opts=-XDmy.javac.option=x \
@@ -20,9 +20,9 @@ PATH=/bin:/usr/bin \
         -J-Dcompile.jdk=%JDKHOME% \
         -J-Dtest.timeout.factor=1.0 \
         -XDmy.javac.option=x \
-        -d %BUILD%/RerunTest.agentvm/work/classes/std \
+        -d %BUILD%/RerunTest.agentvm/work/classes/std/AppletTest.d \
         -sourcepath %WS%/test/rerun/std \
-        -classpath %WS%/test/rerun/std:%BUILD%/RerunTest.agentvm/work/classes/std:%JDKHOME%/lib/tools.jar \
+        -classpath %WS%/test/rerun/std:%BUILD%/RerunTest.agentvm/work/classes/std/AppletTest.d:%JDKHOME%/lib/tools.jar \
         -XDignore.symbol.file=true %WS%/test/rerun/std/AppletTest.java
 
 ### Section applet
@@ -32,14 +32,14 @@ LANG=en_US.UTF-8 \
 MY_ENV_VAR=x \
 PATH=/bin:/usr/bin \
     %JDKHOME%/bin/java \
-        -classpath %BUILD%/RerunTest.agentvm/work/classes/std:%WS%/test/rerun/std:%JDKHOME%/lib/tools.jar:%BUILD%/images/jtreg/lib/javatest.jar:%BUILD%/images/jtreg/lib/jtreg.jar \
+        -classpath %BUILD%/RerunTest.agentvm/work/classes/std/AppletTest.d:%WS%/test/rerun/std:%JDKHOME%/lib/tools.jar:%BUILD%/images/jtreg/lib/javatest.jar:%BUILD%/images/jtreg/lib/jtreg.jar \
         -Dmy.vm.option=x \
         -Dmy.java.option=x \
-        -Dtest.class.path.prefix=%BUILD%/RerunTest.agentvm/work/classes/std:%WS%/test/rerun/std \
+        -Dtest.class.path.prefix=%BUILD%/RerunTest.agentvm/work/classes/std/AppletTest.d:%WS%/test/rerun/std \
         -Dtest.src=%WS%/test/rerun/std \
         -Dtest.src.path=%WS%/test/rerun/std \
-        -Dtest.classes=%BUILD%/RerunTest.agentvm/work/classes/std \
-        -Dtest.class.path=%BUILD%/RerunTest.agentvm/work/classes/std \
+        -Dtest.classes=%BUILD%/RerunTest.agentvm/work/classes/std/AppletTest.d \
+        -Dtest.class.path=%BUILD%/RerunTest.agentvm/work/classes/std/AppletTest.d \
         -Dtest.vm.opts=-Dmy.vm.option=x \
         -Dtest.tool.vm.opts=-J-Dmy.vm.option=x \
         -Dtest.compiler.opts=-XDmy.javac.option=x \

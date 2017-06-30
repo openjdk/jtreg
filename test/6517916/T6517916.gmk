@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2015, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -48,7 +48,7 @@ $(BUILDDIR)/T6517916.ok: \
 		-r $(@:%.ok=%)/report/svm \
 		-avm \
 		$(TESTDIR)/6517916
-	$(SED) -e 's|=[^:]*ovm/classes:|=|' -e 's|=[^:]*/6517916:|=|' \
+	$(SED) -e 's|=[^:]*ovm/classes/T6517916.d:|=|' -e 's|=[^:]*/6517916:|=|' \
 		$(T6517916-ENVIRONMENT-NORMALIZATIONS) \
 		< $(@:%.ok=%)/work/ovm/scratch/T6517916.out \
 		> $(@:%.ok=%)/work/ovm/scratch/T6517916.out2

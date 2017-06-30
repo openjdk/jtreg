@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2012, 2017, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -23,21 +23,20 @@
 # questions.
 #
 
-# @test
-# @run shell ShellTest.sh ShellTest_id0
+$(BUILDDIR)/ClassDirsTest.ok: \
+	    $(TESTDIR)/classDirs/ClassDirsTest.java \
+            $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
+	    $(JTREG_IMAGEDIR)/lib/testng.jar
+	$(RM) $(@:%.ok=%)
+	$(MKDIR) -p $(@:%.ok=%)/classes 
+	$(J2SEJAVAC) -d $(@:%.ok=%)/classes \
+		-Xlint -Werror \
+		$(TESTDIR)/classDirs/ClassDirsTest.java
+	cd $(@:%.ok=%); $(J2SEJAVA) \
+		-classpath $(@:%.ok=%)/classes:$(JTREG_IMAGEDIR)/lib/jtreg.jar \
+		ClassDirsTest
+	echo $@ passed at `date` > $@
 
-# @test
-# @library lib
-# @run shell ShellTest.sh ShellTest_id1 shell/lib
 
-# @test
-# @library ../lib
-# @run shell ShellTest.sh ShellTest_id2 lib
-
-# @test
-# @library /lib
-# @run shell ShellTest.sh ShellTest_id3 lib
-
-${COMPILEJAVA}/bin/javac -d ${TESTCLASSES} ${TESTSRC}/ShellTest.java
-${TESTJAVA}/bin/java -cp ${TESTCLASSES} ShellTest $*
-
+TESTS.jtreg += $(BUILDDIR)/ClassDirsTest.ok

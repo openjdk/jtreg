@@ -38,7 +38,7 @@ $(BUILDDIR)/ModuleOpensTest.othervm.ok: \
 		$(TESTDIR)/moduleOpens \
 			> $(@:%.ok=%/jt.log) 2>&1 || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
-	$(GREP) -s 'Test results: passed: 4' $(@:%.ok=%/jt.log)  > /dev/null
+	$(GREP) -s 'Test results: passed: 3' $(@:%.ok=%/jt.log)  > /dev/null
 	$(CHMOD) -R +w $(@:%.ok=%)
 	echo "test passed at `date`" > $@
 

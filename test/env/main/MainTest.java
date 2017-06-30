@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -23,24 +23,25 @@
 
 /*
  * @test
+ * @run main MainTest MainTest_id0
  */
 
 /*
  * @test
  * @library lib
- * @run main MainTest main/lib
+ * @run main MainTest MainTest_id1 main/lib
  */
 
 /*
  * @test
  * @library ../lib
- * @run main MainTest lib
+ * @run main MainTest MainTest_id2 lib
  */
 
 /*
  * @test
  * @library /lib
- * @run main MainTest lib
+ * @run main MainTest MainTest_id3 lib
  */
 
 import java.io.*;
@@ -62,11 +63,12 @@ public class MainTest {
     }
 
     void run(String[] args) throws Exception {
-        String lib = (args.length == 0) ? null : args[0];
+        String name = args[0];
+        String lib = (args.length == 1) ? null : args[1];
         check("test.src", testSrc("main"));
         check("test.src.path", path(testSrc("main"), testSrc(lib)));
-        check("test.classes", testClasses("main"));
-        check("test.class.path", path(testClasses("main"), testClasses(lib)));
+        check("test.classes", testClasses("main", name));
+        check("test.class.path", path(testClasses("main", name), testLibClasses(lib)));
         check("test.vm.opts");
         check("test.tool.vm.opts");
         check("test.compiler.opts");
@@ -85,23 +87,38 @@ public class MainTest {
     void check(String name, String value) {
         System.err.println("check: " + name + ": " + value);
         String v = System.getProperty(name);
-        if (v == null || !v.equals(value))
-            error(name + ": unexpected value: " + v + "\n  expected: " + value);
+        if (v == null || !v.equals(value)) {
+            error(name + ": unexpected value"
+                + "\n     found: " + v
+                + "\n  expected: " + value);
+        }
     }
 
     String testSrc(String p) {
-        return (p == null) ? null : ref.getProperty("testRoot") + File.separator + p;
+        return (p == null) ? null : file(ref.getProperty("testRoot"), p);
     }
 
-    String testClasses(String p) {
-        return (p == null) ? null : ref.getProperty("classRoot") + File.separator + p;
+    String testClasses(String p, String name) {
+        return file(ref.getProperty("classRoot"), p, name + ".d");
+    }
+
+    String testLibClasses(String p) {
+        return (p == null) ? null : file(ref.getProperty("classRoot"), p);
+    }
+
+    String file(String... list) {
+       return join(list, File.separator);
     }
 
     String path(String... list) {
+        return join(list, File.pathSeparator);
+    }
+
+    String join(String[] list, String sep) {
         StringBuilder sb = new StringBuilder();
         for (String item: list) {
             if (item != null) {
-                if (sb.length() > 0) sb.append(File.pathSeparator);
+                if (sb.length() > 0) sb.append(sep);
                 sb.append(item);
             }
         }
