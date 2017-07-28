@@ -299,9 +299,13 @@ public class TestProperties {
                 if (parent == null || values.length > 0) {
                     Set<String> set = (parent == null) ? new LinkedHashSet<String>() : new LinkedHashSet<>(parent);
                     for (String v: values) {
-                        File f = toFile(baseDir, v);
-                        if (f != null) {
-                            set.add("/" + rootDir.toURI().relativize(f.toURI()));
+                        if (v.startsWith("/")) {
+                            set.add(v);
+                        } else {
+                            File f = toFile(baseDir, v);
+                            if (f != null) {
+                                set.add("/" + rootDir.toPath().relativize(f.toPath()));
+                            }
                         }
                     }
                     return Collections.unmodifiableSet(set);
