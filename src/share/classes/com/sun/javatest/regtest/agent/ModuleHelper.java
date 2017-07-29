@@ -122,15 +122,7 @@ public class ModuleHelper {
 
         try {
             // new in Jave SE 9
-            Class<?> layerClass;
-            String jtregModuleHelper;
-            try {
-                layerClass = Class.forName("java.lang.ModuleLayer");
-                jtregModuleHelper = "java.lang.JTRegModuleHelper";
-            } catch (ClassNotFoundException e) {
-                layerClass = Class.forName("java.lang.reflect.Layer");
-                jtregModuleHelper = "java.lang.reflect.JTRegModuleHelper";
-            }
+            Class<?> layerClass = Class.forName("java.lang.ModuleLayer");
             findModuleMethod = layerClass.getDeclaredMethod("findModule", new Class<?>[] { String.class });
             Method bootLayerMethod = layerClass.getDeclaredMethod("boot", new Class<?>[0]);
 
@@ -139,7 +131,7 @@ public class ModuleHelper {
              */
             bootLayer = bootLayerMethod.invoke(null, new Object[0]);
 
-            Class<?> helperClass = Class.forName(jtregModuleHelper);
+            Class<?> helperClass = Class.forName("java.lang.JTRegModuleHelper");
             addExportsMethod = helperClass.getDeclaredMethod("addExports",
                     new Class<?>[] { Object.class, String.class, Object.class });
             addOpensMethod = helperClass.getDeclaredMethod("addOpens",
