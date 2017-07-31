@@ -39,4 +39,3 @@
 ./classes/testngAction/usermods/modules/um2/module-info.class
 ./classes/testngAction/usermods/modules/um2/um2_p1/um2_p1_T.class
 ./patches/java.base/java/lang/JTRegModuleHelper.class
-./patches/java.base/java/lang/reflect/JTRegModuleHelper.class
