@@ -1947,31 +1947,6 @@ public class Tool {
             }
         }
 
-        if (nativeDirArg != null) {
-            String libPathName;
-            switch (os.family) {
-                case "aix":
-                case "os400":
-                    libPathName = "LIBPATH";
-                    break;
-                case "mac":
-                    libPathName = "DYLD_LIBRARY_PATH";
-                    break;
-                case "windows":
-                    libPathName = "PATH";
-                    break;
-                default:
-                    libPathName = "LD_LIBRARY_PATH";
-                    break;
-            }
-            String libPath = envVars.get(libPathName);
-            if (libPath == null) {
-                envVars.put(libPathName, nativeDirArg.getPath());
-            } else {
-                envVars.put(libPathName, libPath + File.pathSeparator + nativeDirArg.getPath());
-            }
-        }
-
         return envVars;
     }
 

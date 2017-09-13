@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -49,6 +50,7 @@ import com.sun.javatest.regtest.agent.Flags;
 import com.sun.javatest.regtest.agent.SearchPath;
 import com.sun.javatest.regtest.config.ExecMode;
 import com.sun.javatest.regtest.config.Modules;
+import com.sun.javatest.regtest.config.OS;
 import com.sun.javatest.regtest.config.ParseException;
 import com.sun.javatest.regtest.util.StringUtils;
 
@@ -123,6 +125,42 @@ public abstract class Action extends ActionHelper {
      */
     public Set<String> getModules() {
         return Collections.emptySet();
+    }
+
+    protected Map<String, String> getEnvVars(boolean nativeCode) {
+        Map<String, String> envVars = script.getEnvVars();
+        if (nativeCode) {
+            File nativeDir = script.getNativeDir();
+            if (nativeDir != null) {
+                envVars = new LinkedHashMap<>(envVars);
+                String libPathName;
+                OS os = OS.current();
+                switch (os.family) {
+                    case "aix":
+                    case "os400":
+                        libPathName = "LIBPATH";
+                        break;
+                    case "mac":
+                        libPathName = "DYLD_LIBRARY_PATH";
+                        break;
+                    case "windows":
+                        libPathName = "PATH";
+                        break;
+                    default:
+                        libPathName = "LD_LIBRARY_PATH";
+                        break;
+                }
+                String libPath = envVars.get(libPathName);
+                if (libPath == null) {
+                    envVars.put(libPathName, nativeDir.getPath());
+                } else {
+                    envVars.put(libPathName, libPath + File.pathSeparator + nativeDir.getPath());
+                }
+                envVars = Collections.unmodifiableMap(envVars);
+            }
+        }
+
+        return envVars;
     }
 
     static synchronized void mkdirs(File dir) {

@@ -398,7 +398,7 @@ public class MainAction extends Action
         // available to main and applet actions via the system properties
         // "test.src" and "test.classes", respectively"
         Map<String, String> env = new LinkedHashMap<>();
-        env.putAll(script.getEnvVars());
+        env.putAll(getEnvVars(nativeCode));
 
         // some tests are inappropriately relying on the CLASSPATH environment
         // variable being set, so force the use here.

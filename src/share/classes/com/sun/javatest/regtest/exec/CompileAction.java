@@ -43,7 +43,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -545,8 +544,7 @@ public class CompileAction extends Action {
         Map<String, String> javacProps = script.getTestProperties();
 
         // CONSTRUCT THE COMMAND LINE
-        Map<String, String> env = new LinkedHashMap<>();
-        env.putAll(script.getEnvVars());
+        Map<String, String> env = script.getEnvVars();
 
         String javacCmd = script.getJavacProg();
 

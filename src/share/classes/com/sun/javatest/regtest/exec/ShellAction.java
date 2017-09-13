@@ -202,7 +202,7 @@ public class ShellAction extends Action
             // available to shell-action scripts via the environment variables
             // TESTSRC, TESTCLASSES, and TESTJAVA."
             Map<String, String> env = new LinkedHashMap<>();
-            env.putAll(script.getEnvVars());
+            env.putAll(getEnvVars(true));
             Locations locations = script.locations;
             env.put("TESTSRC", fixupSep(locations.absTestSrcDir()));
             env.put("TESTSRCPATH", fixupSep(locations.absTestSrcPath()));

@@ -515,10 +515,9 @@ public class RegressionScript extends Script {
     /**
      * Determine whether environment variables have been tunneled using the
      * following syntax:  -DenvVars="name0=value0,name1=value1". If they
-     * have, return a string array of name=value pairs.  Otherwise, return a
-     * string array with 0 elements.
+     * have, return a map of name=value pairs.  Otherwise, return an empty map.
      *
-     * @return     A string array containing the tunneled environment variables.
+     * @return     A map containing the tunneled environment variables.
      */
     Map<String, String> getEnvVars() {
         return params.getEnvVars();
