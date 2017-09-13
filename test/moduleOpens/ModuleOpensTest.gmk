@@ -32,7 +32,7 @@ $(BUILDDIR)/ModuleOpensTest.othervm.ok: \
 	JT_JAVA=$(J2SEHOME) \
 	    $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(JIGSAWHOME) \
+		-jdk:$(JDK9HOME) \
 		-vmoption:-Dsun.reflect.enableStrictMode=true \
 		$(@:$(BUILDDIR)/ModuleOpensTest.%.ok=-%) \
 		$(TESTDIR)/moduleOpens \
@@ -42,11 +42,11 @@ $(BUILDDIR)/ModuleOpensTest.othervm.ok: \
 	$(CHMOD) -R +w $(@:%.ok=%)
 	echo "test passed at `date`" > $@
 
-ifdef JIGSAWHOME
+ifdef JDK9HOME
 
 TESTS.jtreg += \
 	$(BUILDDIR)/ModuleOpensTest.agentvm.ok \
 	$(BUILDDIR)/ModuleOpensTest.othervm.ok
 
-endif #JIGSAWHOME
+endif #JDK9HOME
 

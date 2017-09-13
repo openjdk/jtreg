@@ -25,7 +25,7 @@
 
 #----------------------------------------------------------------------
 
-ifdef JIGSAWHOME
+ifdef JDK9HOME
 
 $(BUILDDIR)/JDKModulesTest.ok: \
 	    $(TESTDIR)/jdkModulesTest/JDKModulesTest.java \
@@ -38,7 +38,7 @@ $(BUILDDIR)/JDKModulesTest.ok: \
 		-cp $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		-Xlint -Werror \
 		-encoding ISO8859-1 $(TESTDIR)/jdkModulesTest/JDKModulesTest.java
-	$(JIGSAWHOME)/bin/java -cp "$(@:%.ok=%)/classes$(PS)$(JTREG_IMAGEDIR)/lib/jtreg.jar" \
+	$(JDK9HOME)/bin/java -cp "$(@:%.ok=%)/classes$(PS)$(JTREG_IMAGEDIR)/lib/jtreg.jar" \
 		-Djava.io.tmpdir=$(@:%.ok=%) \
 		JDKModulesTest 
 	echo "test passed at `date`" > $@

@@ -31,7 +31,7 @@ $(BUILDDIR)/ModulesTest_NoLimitMods.ok: \
 	$(MKDIR) -p $(@:%.ok=%)/classes
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(JIGSAWHOME) \
+		-jdk:$(JDK9HOME) \
 		$(TESTDIR)/modules \
 			> $(@:%.ok=%/jt.log) 2>&1 
 	$(GREP) -s '^Test results: passed: 5$$' $(@:%.ok=%/jt.log)  > /dev/null
@@ -44,18 +44,18 @@ $(BUILDDIR)/ModulesTest_LimitMods_java.se.ok: \
 	$(MKDIR) -p $(@:%.ok=%)/classes
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(JIGSAWHOME) \
+		-jdk:$(JDK9HOME) \
 		-javaoptions:"--limit-modules $(@:$(BUILDDIR)/ModulesTest_LimitMods_%.ok=%)" \
 		$(TESTDIR)/modules \
 			> $(@:%.ok=%/jt.log) 2>&1 
 	$(GREP) -s '^Test results: passed: 2$$' $(@:%.ok=%/jt.log)  > /dev/null
 	echo $@ passed at `date` > $@
 
-ifdef JIGSAWHOME
+ifdef JDK9HOME
 
 TESTS.jtreg += \
 	$(BUILDDIR)/ModulesTest_NoLimitMods.ok \
 	$(BUILDDIR)/ModulesTest_LimitMods_java.base.ok \
 	$(BUILDDIR)/ModulesTest_LimitMods_java.se.ok \
 
-endif #JIGSAWHOME
+endif #JDK9HOME
