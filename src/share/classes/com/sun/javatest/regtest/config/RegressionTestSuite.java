@@ -208,6 +208,10 @@ public class RegressionTestSuite extends TestSuite
         return properties.getExternalLibs(td.getFile());
     }
 
+    public Set<String> getDefaultModules(TestDescription td) throws TestSuite.Fault {
+        return properties.getModules(td.getFile());
+    }
+
     public ExtraPropDefns getExtraPropDefns() {
         return properties.getExtraPropDefns();
     }
