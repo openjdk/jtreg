@@ -147,8 +147,8 @@ public abstract class TimeoutHandler {
     protected long getProcessId(Process proc) {
         try {
             try {
-                Method getPid = Process.class.getMethod("getPid");
-                return (Long) getPid.invoke(proc);
+                Method pid = Process.class.getMethod("pid");
+                return (Long) pid.invoke(proc);
             } catch (NoSuchMethodException ignore) {
                 // This exception is expected on pre-JDK 9,
                 // try a fallback method that only works on Unix platforms
