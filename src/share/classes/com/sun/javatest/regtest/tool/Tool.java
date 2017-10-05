@@ -903,12 +903,13 @@ public class Tool {
         this.out = out;
         this.err = err;
 
-        // FIXME: work around bug 6466752
+        // FIXME: work around bug CODETOOLS-6466752
         javatest_jar = new JarFinder("javatest.jar")
                 .classes(Harness.class)
                 .getFile();
-        if (javatest_jar != null)
+        if (javatest_jar != null) {
             System.setProperty("javatestClassDir", javatest_jar.getPath());
+        }
 
         jtreg_jar = new JarFinder("jtreg.jar")
                 .classes(getClass())
@@ -922,6 +923,9 @@ public class Tool {
         }
 
         help = new Help(options);
+        if (javatest_jar != null) {
+            help.addJarVersionHelper("JTHarness", javatest_jar, "META-INF/buildInfo.txt");
+        }
         if (jcovManager != null && jcovManager.isJCovInstalled()) {
             help.addVersionHelper(new VersionHelper() {
                 @Override
