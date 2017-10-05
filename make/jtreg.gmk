@@ -190,8 +190,7 @@ PKGS.JAR.jtreg += \
 	com.sun.javatest.regtest.report \
 	com.sun.javatest.regtest.tool \
 	com.sun.javatest.regtest.util \
-	java.lang \
-	java.lang.reflect
+	java.lang
 TARGETS.JAR.jtreg += $(TARGETS.com.sun.javatest.regtest)
 
 $(JTREG_IMAGEDIR)/lib/jtreg.jar: JAR_MAINCLASS = com.sun.javatest.regtest.Main

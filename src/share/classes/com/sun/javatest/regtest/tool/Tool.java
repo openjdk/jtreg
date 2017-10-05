@@ -1807,8 +1807,7 @@ public class Tool {
         File javaBaseDir = new File(patchDir, "java.base");
         // can't use class constants because it's a restricted package
         String[] classes = {
-            "java/lang/JTRegModuleHelper.class",
-            "java/lang/reflect/JTRegModuleHelper.class"
+            "java/lang/JTRegModuleHelper.class"
         };
         for (String c: classes) {
             File f = new File(javaBaseDir, c);
