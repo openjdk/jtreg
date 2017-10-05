@@ -161,7 +161,7 @@ ifndef JAVATEST_HOME
     JAVATEST_HOME = $(JTHARNESS_HOME)
   else
     ifdef SLASHJAVA
-      JAVATEST_HOME = $(SLASHJAVA)/re/javatest/4.6/archive/binaries/javatest
+      JAVATEST_HOME = $(SLASHJAVA)/re/javatest/5.0/archive/binaries/javatest
     endif
   endif
 endif
