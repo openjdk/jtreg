@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -37,6 +37,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.text.SimpleDateFormat;
@@ -99,7 +100,12 @@ public class Agent {
             if (policyFile != null)
                 cmd.add(AgentServer.ALLOW_SET_SECURITY_MANAGER);
 
-            ServerSocket ss = new ServerSocket(/*port:*/ 0, /*backlog:*/ 1);
+            ServerSocket ss = new ServerSocket();
+            // Ensure SO_REUSEADDR is false. (It is only needed if we're
+            // using a fixed port.) The default setting for SO_REUSEADDR
+            // is platform-specific, and Solaris has it on by default.
+            ss.setReuseAddress(false);
+            ss.bind(new InetSocketAddress(/*port:*/ 0), /*backlog:*/ 1);
             cmd.add(AgentServer.PORT);
             cmd.add(String.valueOf(ss.getLocalPort()));
 
