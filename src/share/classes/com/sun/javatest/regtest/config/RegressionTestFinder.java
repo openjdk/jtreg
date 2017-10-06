@@ -643,8 +643,11 @@ public class RegressionTestFinder extends TagTestFinder
                 processModules(tagValues, value);
             } else if (name.equals(LIBRARY)) {
                 processLibrary(tagValues, value);
-            } else
+            } else if (name.equals(COMMENT)) {
+                // no-op
+            } else {
                 tagValues.put(name, value);
+            }
         } catch (TestSuite.Fault e) {
             reportError(tagValues, e.getMessage());
         }
@@ -881,6 +884,7 @@ public class RegressionTestFinder extends TagTestFinder
         tags.add(RUN);
         tags.add(BUILD);
         tags.add(REQUIRES);
+        tags.add(COMMENT);
 
         // @key allowed only if TEST.ROOT contains a non-empty entry for
         // "key".  This is handled by the testsuite object.
@@ -907,6 +911,7 @@ public class RegressionTestFinder extends TagTestFinder
     public static final String REQUIRES = "requires";
     public static final String RUN     = "run";
     public static final String SUMMARY = "summary";
+    public static final String COMMENT = "comment";
 
     private static final String LINESEP = System.getProperty("line.separator");
 

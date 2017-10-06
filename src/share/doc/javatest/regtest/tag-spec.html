@@ -164,9 +164,14 @@ harness, but may be used by the harness in generating reports.
 <dt>@author <var>&lt;token&gt;+</var>
 <dd>
 <p>Original author
+
+<dt>@comment <var>&lt;token&gt;*</var>
+<dd>
+<p>A comment; ignored
 </dl>
 
-<p>Any particular informational tag may occur at most once in a given test.
+<p>Any particular informational tag, except the @comment tag, may occur at most 
+once in a given test. The <code>@comment</code> tag may be used multiple times.
 
 
 <h2><a name="DECLARATIVE_TAGS">DECLARATIVE TAGS</a></h2>
