@@ -1,6 +1,7 @@
 ### Section compile
-DISPLAY=%DISPLAY%
-HOME=%HOME%
+cd %BUILD%/RerunTest.othervm/work/scratch && \
+DISPLAY=%DISPLAY% \
+HOME=%HOME% \
 LANG=en_US.UTF-8 \
 MY_ENV_VAR=x \
 PATH=/bin:/usr/bin \
@@ -20,8 +21,9 @@ PATH=/bin:/usr/bin \
         @%BUILD%/RerunTest.othervm/work/testng/TestNGTest.d/compile.0.jta
 
 ### Section testng
-DISPLAY=%DISPLAY%
-HOME=%HOME%
+cd %BUILD%/RerunTest.othervm/work/scratch && \
+DISPLAY=%DISPLAY% \
+HOME=%HOME% \
 LANG=en_US.UTF-8 \
 MY_ENV_VAR=x \
 PATH=/bin:/usr/bin \

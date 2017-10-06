@@ -1,6 +1,7 @@
 ### Section compile
-DISPLAY=%DISPLAY%
-HOME=%HOME%
+cd %BUILD%/RerunTest.agentvm/work/scratch && \
+DISPLAY=%DISPLAY% \
+HOME=%HOME% \
 LANG=en_US.UTF-8 \
 MY_ENV_VAR=x \
 PATH=/bin:/usr/bin \
@@ -27,8 +28,9 @@ PATH=/bin:/usr/bin \
         -implicit:none %WS%/test/rerun/testng/TestNGTest.java
 
 ### Section testng
-DISPLAY=%DISPLAY%
-HOME=%HOME%
+cd %BUILD%/RerunTest.agentvm/work/scratch && \
+DISPLAY=%DISPLAY% \
+HOME=%HOME% \
 LANG=en_US.UTF-8 \
 MY_ENV_VAR=x \
 PATH=/bin:/usr/bin \

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -41,6 +41,7 @@ public class ActionRecorder {
 
     public void exec(List<String> cmd, Map<String, String> envArgs) {
         initPW();
+        printWorkDir();
         // Env variables
         for (Map.Entry<String, String> var : envArgs.entrySet()) {
             pw.println(var.getKey() + "=" + escape(var.getValue()) + CONT);
@@ -77,12 +78,14 @@ public class ActionRecorder {
 
     public void exec(String cmd) {
         initPW();
+        printWorkDir();
         for (String line: cmd.split("[\r\n]+"))
             pw.println(line);
     }
 
     public void java(Map<String, String> envArgs, String javaCmd, Map<String, String> javaProps, List<String> javaOpts, String className, List<String> classArgs) {
         initPW();
+        printWorkDir();
         // Env variables
         for (Map.Entry<String, String> var : envArgs.entrySet()) {
             pw.println(var.getKey() + "=" + escape(var.getValue()) + CONT);
@@ -121,6 +124,7 @@ public class ActionRecorder {
 
     void javac(Map<String, String> envArgs, String javacCmd, List<String> javacVMOpts, Map<String, String> javacProps, List<String> javacArgs) {
         initPW();
+        printWorkDir();
         // Env variables
         for (Map.Entry<String, String> var : envArgs.entrySet()) {
             pw.println(var.getKey() + "=" + escape(var.getValue()) + CONT);
@@ -152,6 +156,7 @@ public class ActionRecorder {
 
     public void asmtools(String toolClassName, List<String> toolArgs) {
         initPW();
+        printWorkDir();
         String javaHome = System.getProperty("java.home");
         String javaCmd = new File(javaHome, "bin/java").toString();
         // Java executable
@@ -191,8 +196,13 @@ public class ActionRecorder {
         return word;
     }
 
+    private void printWorkDir() {
+        pw.println("cd " + escape(action.script.absTestScratchDir().toString())
+                + " &&" + CONT);
+    }
+
     private static final String CONT = " \\";
 
-    private Action action;
+    private final Action action;
     private PrintWriter pw;
 }

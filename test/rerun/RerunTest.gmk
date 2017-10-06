@@ -58,8 +58,8 @@ $(BUILDDIR)/RerunTest.othervm.ok: \
 		-w:$(@:%.ok=%)/work \
 		-dir:$(TESTDIR)/rerun \
 		-show:rerun $$i | \
-		sed -e 's|^HOME=.*|HOME=%HOME%|' \
-		    -e 's|^DISPLAY=.*|DISPLAY=%DISPLAY%|' \
+		sed -e 's|^HOME=.* \\|HOME=%HOME% \\|' \
+		    -e 's|^DISPLAY=.* \\|DISPLAY=%DISPLAY% \\|' \
 		    -e 's|$(JDK18HOME)|%JDKHOME%|g' \
 		    -e "s|`cd $(JDK18HOME); pwd -P`|%JDKHOME%|g" \
 		    -e 's|$(BUILDDIR)|%BUILD%|g' \

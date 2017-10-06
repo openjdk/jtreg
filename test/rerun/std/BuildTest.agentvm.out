@@ -1,9 +1,11 @@
 ### Section clean
+cd %BUILD%/RerunTest.agentvm/work/scratch && \
 rm -f %BUILD%/RerunTest.agentvm/work/classes/std/BuildTest.d/BuildTest.class
 
 ### Section compile
-DISPLAY=%DISPLAY%
-HOME=%HOME%
+cd %BUILD%/RerunTest.agentvm/work/scratch && \
+DISPLAY=%DISPLAY% \
+HOME=%HOME% \
 LANG=en_US.UTF-8 \
 MY_ENV_VAR=x \
 PATH=/bin:/usr/bin \
