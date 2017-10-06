@@ -245,11 +245,13 @@ TARGETS.ZIP.jtreg += $(JTREG_IMAGEJARDIR)/javatest.jar
 #----------------------------------------------------------------------
 #
 # import JavaHelp (required for JavaTest/JT Harness)
+# remove any (probably out-of-date) signatures
 
 $(IMAGES_DIR)/%/jh.jar: $(call PosixPath,$(JAVAHELP_JAR))
 	$(RM) -f $@
 	$(MKDIR) -p $(@D)
 	$(CP) $(JAVAHELP_JAR) $@
+	$(ZIP) -d $@ 'META-INF/*.SF' 'META-INF/*.RSA' 'META-INF/*.DSA' 
 
 TARGETS.ZIP.jtreg += $(JTREG_IMAGEJARDIR)/jh.jar
 
