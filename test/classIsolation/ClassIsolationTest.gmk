@@ -81,6 +81,27 @@ $(BUILDDIR)/ClassIsolation.default.b08.ok: $(UCD_FILES) \
 	    -w $(@:%.ok=%)/work \
 	    -r $(@:%.ok=%)/report \
 	    $(TESTDIR)/classIsolation/default
+	files=`$(FIND) $(@:%.ok=%)/work -name \*.class | grep 'Test.\.d'` ; \
+	if [ -n "$$files" ]; then \
+		echo "Unexpected files found:" ; \
+		for f in $$files ; do echo $$f ; done ; \
+		exit 1; \
+	fi
+	echo "test passed at `date`" > $@
+
+$(BUILDDIR)/ClassIsolation.enable.b08.ok: $(UCD_FILES) \
+	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	    $(JTREG_IMAGEDIR)/lib/jh.jar 
+	$(RM) $(@:%.ok=%)
+	$(MKDIR) -p  $(@:%.ok=%)/jtreg
+	$(CP) --recursive $(JTREG_IMAGEDIR)/* $(@:%.ok=%)/jtreg
+	$(ECHO) "JTREG_VERSION=4.2 b08" > $(@:%.ok=%)/jtreg/release
+	$(J2SEJAVA) -jar $(@:%.ok=%)/jtreg/lib/jtreg.jar \
+	    -jdk:$(J2SEHOME) \
+	    -w $(@:%.ok=%)/work \
+	    -r $(@:%.ok=%)/report \
+	    $(TESTDIR)/classIsolation/enable
 	files=`$(FIND) $(@:%.ok=%)/work -name \*.class | grep -v 'Test.\.d'` ; \
 	if [ -n "$$files" ]; then \
 		echo "Unexpected files found:" ; \
@@ -91,7 +112,8 @@ $(BUILDDIR)/ClassIsolation.default.b08.ok: $(UCD_FILES) \
 
 TESTS.jtreg += \
 	$(BUILDDIR)/ClassIsolation.disable.b07.ok \
-	$(BUILDDIR)/ClassIsolation.disable.b08.ok  \
-	$(BUILDDIR)/ClassIsolation.default.b08.ok 
+	$(BUILDDIR)/ClassIsolation.disable.b08.ok \
+	$(BUILDDIR)/ClassIsolation.default.b08.ok \
+	$(BUILDDIR)/ClassIsolation.enable.b08.ok 
 
 

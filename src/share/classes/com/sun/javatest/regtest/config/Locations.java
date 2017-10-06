@@ -160,8 +160,8 @@ public class Locations {
         testJDK = params.getTestJDK();
 
         Version v = testSuite.getRequiredVersion();
-        boolean useUniqueClassDir = (v == null)
-                || (v.compareTo(new Version("4.2 b08")) >= 0);
+        boolean useUniqueClassDir = (v.version != null)
+                && (v.compareTo(new Version("4.2 b08")) >= 0);
 
         File relTestFile = td.getRootRelativeFile();
         String relTestDir = relTestFile.getParent();

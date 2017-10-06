@@ -199,7 +199,7 @@ public class ClassDirsTest {
      * @throws Exception if an error occurs
      */
     private TestSuite createTests(Path base, String build) throws Exception {
-        TestSuite ts = new TestSuite(base.resolve("tests"))
+        TestSuite ts = new TestSuite(base.resolve("tests"), "requiredVersion = 4.2 b08")
             .addLibraryFile("lib", "package p; public class Lib1 { void m() { } }")
             .addLibraryFile("lib", "package p; public class Lib2 { void m(Lib1 l1) { } }");
 
