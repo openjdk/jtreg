@@ -137,17 +137,24 @@ REGTEST_AGENT_JAVAC_OPTIONS = -source 5 -target 5 -Xlint:all,-options -Werror
 REGTEST_TOOL_JAVAC = $(J2SEHOME)/bin/javac
 REGTEST_TOOL_JAVAC_OPTIONS = -source 7 -target 7 -Xlint:all,-options -Werror
 
-#----- JavaHelp: see https://javahelp.dev.java.net/
+#----- JavaHelp
+# JavaHelp, previously available at https://javahelp.dev.java.net/,
+# is no longer supported or generally available.
+# If you use JT Harness 5.0 or later, you do not need JavaHelp.
+# If you use JT Harness 4.6 (in order to test on very old versions of JDK),
+# you will need JavaHelp.
 ifndef JAVAHELP_HOME
   ifdef SLASHJAVA
     JAVAHELP_HOME = $(SLASHJAVA)/re/jh/2.0_01/promoted/fcs/latest/binaries/jh2.0/javahelp
   endif
 endif
+
+ifdef JAVAHELP_HOME
 JAVAHELP_HOME := $(call FullPath,$(JAVAHELP_HOME))
-
 JAVAHELP_JAR = $(JAVAHELP_HOME)/lib/jh.jar
+endif
 
-#----- JavaTest: see https://jtharness.dev.java.net/
+#----- JavaTest: see https://wiki.openjdk.java.net/display/CodeTools/JT+Harness
 
 ifndef JTHARNESS_HOME
   ifdef SLASHJAVA
@@ -161,7 +168,7 @@ ifndef JAVATEST_HOME
     JAVATEST_HOME = $(JTHARNESS_HOME)
   else
     ifdef SLASHJAVA
-      JAVATEST_HOME = $(SLASHJAVA)/re/javatest/5.0/archive/binaries/javatest
+      JAVATEST_HOME = $(SLASHJAVA)/re/javatest/4.6/archive/binaries/javatest
     endif
   endif
 endif

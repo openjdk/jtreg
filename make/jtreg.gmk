@@ -194,12 +194,21 @@ PKGS.JAR.jtreg += \
 TARGETS.JAR.jtreg += $(TARGETS.com.sun.javatest.regtest)
 
 $(JTREG_IMAGEDIR)/lib/jtreg.jar: JAR_MAINCLASS = com.sun.javatest.regtest.Main
+
+ifdef JAVAHELP_JAR
 $(JTREG_IMAGEDIR)/lib/jtreg.jar: JAR_CLASSPATH = javatest.jar jh.jar asmtools.jar
+else
+$(JTREG_IMAGEDIR)/lib/jtreg.jar: JAR_CLASSPATH = javatest.jar asmtools.jar
+endif
 
 $(JTREG_IMAGEJARDIR)/jtreg.jar: \
 	$(JTREG_IMAGEDIR)/lib/javatest.jar \
-	$(JTREG_IMAGEJARDIR)/jh.jar \
 	$(TARGETS.JAR.jtreg)
+
+ifdef JAVAHELP_JAR
+$(JTREG_IMAGEJARDIR)/jtreg.jar: \
+	$(JTREG_IMAGEJARDIR)/jh.jar 
+endif
 
 TARGETS.ZIP.jtreg += $(JTREG_IMAGEJARDIR)/jtreg.jar
 
@@ -211,26 +220,11 @@ TARGETS.com.sun.javatest.regtest += $(RESOURCES.com.sun.javatest.regtest)
 ifdef JTHARNESS_HOME
     TARGETS.ZIP.jtreg += $(JTREG_IMAGEDIR)/legal/jtharness/copyright.txt
     TARGETS.ZIP.jtreg += $(JTREG_IMAGEDIR)/legal/jtharness/license.txt
-else
-    TARGETS.ZIP.jtreg += $(JTREG_IMAGEDIR)/legal/javatest/copyright.html
-    TARGETS.ZIP.jtreg += $(JTREG_IMAGEDIR)/doc/javatest/javatestGUI.pdf
 endif
 
 $(JTREG_IMAGEDIR)/legal/jtharness/copyright.txt \
 $(JTREG_IMAGEDIR)/legal/jtharness/license.txt: \
 		$(JTREG_IMAGEDIR)/legal/jtharness/%: $(JTHARNESS_HOME)/legal/%
-	$(RM) -f $@
-	$(MKDIR) -p $(@D)
-	$(CP) $< $@
-
-$(JTREG_IMAGEDIR)/legal/javatest/copyright.html: \
-		$(call PosixPath,$(JAVATEST_HOME)/COPYRIGHT-javatest.html)
-	$(RM) -f $@
-	$(MKDIR) -p $(@D)
-	$(CP) $< $@
-
-$(JTREG_IMAGEDIR)/doc/javatest/javatestGUI.pdf: \
-		$(JTREG_IMAGEDIR)/%: $(call PosixPath,$(JAVATEST_HOME))/%
 	$(RM) -f $@
 	$(MKDIR) -p $(@D)
 	$(CP) $< $@
@@ -244,16 +238,20 @@ TARGETS.ZIP.jtreg += $(JTREG_IMAGEJARDIR)/javatest.jar
 
 #----------------------------------------------------------------------
 #
-# import JavaHelp (required for JavaTest/JT Harness)
+# import JavaHelp (required for JavaTest/JT Harness 4.6), if available;
 # remove any (probably out-of-date) signatures
 
+ifdef JAVAHELP_JAR
 $(IMAGES_DIR)/%/jh.jar: $(call PosixPath,$(JAVAHELP_JAR))
 	$(RM) -f $@
 	$(MKDIR) -p $(@D)
+	$(ECHO) JAVAHELP_HOME $(JAVAHELP_HOME)
+	$(ECHO) JAVAHELP_JAR $(JAVAHELP_JAR)
 	$(CP) $(JAVAHELP_JAR) $@
 	$(ZIP) -d $@ 'META-INF/*.SF' 'META-INF/*.RSA' 'META-INF/*.DSA' 
 
 TARGETS.ZIP.jtreg += $(JTREG_IMAGEJARDIR)/jh.jar
+endif
 
 #----------------------------------------------------------------------
 #

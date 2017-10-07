@@ -61,8 +61,12 @@ endif
 ifdef JDK17HOME
 	@echo "JDK17HOME      = $(JDK17HOME)"
 endif
+ifdef JDK18HOME
 	@echo "JDK18HOME      = $(JDK18HOME)"
+endif
+ifdef JAVAHELP_HOME
 	@echo "JAVAHELP_HOME  = $(JAVAHELP_HOME)"
+endif
 	@echo "JAVATEST_HOME  = $(JAVATEST_HOME)"
 ifneq ($(JTHARNESS_HOME), $(JAVATEST_HOME))
 	@echo "JTHARNESS_HOME = $(JTHARNESS_HOME)"
