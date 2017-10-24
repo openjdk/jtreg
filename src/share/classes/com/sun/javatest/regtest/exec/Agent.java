@@ -84,7 +84,7 @@ public class Agent {
      * Start a JDK with given JVM options.
      */
     private Agent(File dir, JDK jdk, List<String> vmOpts, Map<String, String> envVars,
-            File policyFile) throws Fault {
+            File policyFile, float timeoutFactor) throws Fault {
         try {
             id = count++;
             this.jdk = jdk;
@@ -121,7 +121,8 @@ public class Agent {
             copyStream("stderr", process.getErrorStream(), System.err);
 
             try {
-                final int ACCEPT_TIMEOUT = 60*1000; // 1 minute, for server to start and "phone home"
+                final int ACCEPT_TIMEOUT = (int) (60 * 1000 * timeoutFactor);
+                    // default 60 seconds, for server to start and "phone home"
                 ss.setSoTimeout(ACCEPT_TIMEOUT);
                 Socket s = ss.accept();
                 s.setSoTimeout(KeepAlive.READ_TIMEOUT);
@@ -436,7 +437,7 @@ public class Agent {
     }
 
     // 2016-12-21 13:19:46,998
-    private static SimpleDateFormat logDateFormat = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss,SSS");
+    private static final SimpleDateFormat logDateFormat = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss,SSS");
 
     private void log(String s, PrintStream out) {
         out.println("[" + logDateFormat.format(new Date()) + "] Agent[" + getId() + "]: " + s);
@@ -489,12 +490,16 @@ public class Agent {
             this.policyFile = policyFile;
         }
 
+        public void setTimeoutFactor(float factor) {
+            this.timeoutFactor = factor;
+        }
+
         synchronized Agent getAgent(File dir, JDK jdk, List<String> vmOpts, Map<String, String> envVars)
                 throws Fault {
             Queue<Agent> agents = map.get(getKey(dir, jdk, vmOpts));
             Agent a = (agents == null) ? null : agents.poll();
             if (a == null) {
-                a = new Agent(dir, jdk, vmOpts, envVars, policyFile);
+                a = new Agent(dir, jdk, vmOpts, envVars, policyFile, timeoutFactor);
             }
             return a;
         }
@@ -537,5 +542,6 @@ public class Agent {
 
         private final Map<String, Queue<Agent>> map;
         private File policyFile;
+        private float timeoutFactor = 1.0f;
     }
 }

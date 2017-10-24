@@ -331,8 +331,12 @@ public class Tool {
 
         new Option(STD, TIMEOUT, "", "-timeout", "-timeoutFactor") {
             @Override
-            public void process(String opt, String arg) {
-                timeoutFactorArg = arg;
+            public void process(String opt, String arg) throws BadArgs {
+                try {
+                    timeoutFactorArg = Float.parseFloat(arg);
+                } catch (NumberFormatException e) {
+                    throw new BadArgs(i18n, "main.badTimeoutFactor");
+                }
             }
         },
 
@@ -1117,7 +1121,11 @@ public class Tool {
             switch (execMode) {
                 case AGENTVM:
                     initPolicyFile();
-                    Agent.Pool.instance().setSecurityPolicy(policyFile);
+                    Agent.Pool p = Agent.Pool.instance();
+                    p.setSecurityPolicy(policyFile);
+                    if (timeoutFactorArg != null) {
+                        p.setTimeoutFactor(timeoutFactorArg);
+                    }
                     break;
                 case OTHERVM:
                     break;
@@ -1543,7 +1551,7 @@ public class Tool {
 
             if (timeoutFactorArg != null) {
                 try {
-                    rp.setTimeoutFactor(Float.parseFloat(timeoutFactorArg));
+                    rp.setTimeoutFactor(timeoutFactorArg);
                 } catch (NumberFormatException e) {
                     throw new BadArgs(i18n, "main.badTimeoutFactor");
                 }
@@ -2023,7 +2031,7 @@ public class Tool {
     private String userKeywordExpr;
     private String extraKeywordExpr;
     private String concurrencyArg;
-    private String timeoutFactorArg;
+    private Float timeoutFactorArg;
     private String priorStatusValuesArg;
     private File reportDirArg;
     public List<String> testGroupArgs = new ArrayList<>();
