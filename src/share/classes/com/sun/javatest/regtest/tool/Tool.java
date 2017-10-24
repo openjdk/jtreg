@@ -597,7 +597,7 @@ public class Tool {
         new Option(STD, SELECT, null, "-k", "-keywords") {
             @Override
             public void process(String opt, String arg) {
-                userKeywordExpr = arg;
+                userKeywordExpr = combineKeywords(userKeywordExpr, '(' + arg + ')');
             }
         },
 
