@@ -304,7 +304,10 @@ public class TestProperties {
                         } else {
                             File f = toFile(baseDir, v);
                             if (f != null) {
-                                set.add("/" + rootDir.toPath().relativize(f.toPath()));
+                                set.add("/" + rootDir.toPath()
+                                                .relativize(f.toPath())
+                                                .toString()
+                                                .replace(File.separatorChar, '/'));
                             }
                         }
                     }
