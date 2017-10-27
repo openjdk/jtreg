@@ -71,8 +71,8 @@ endif
 ifneq ($(JTHARNESS_HOME), $(JAVATEST_HOME))
 	@echo "JTHARNESS_HOME = $(JTHARNESS_HOME)"
 endif
-ifdef JCOV_HOME
-	@echo "JCOV_HOME      = $(JCOV_HOME)"
+ifdef JCOV_JAR
+	@echo "JCOV_JAR       = $(JCOV_JAR)"
 endif
 ifdef ASMTOOLS_JAR
 	@echo "ASMTOOLS_JAR   = $(ASMTOOLS_JAR)"

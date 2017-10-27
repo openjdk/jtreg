@@ -303,25 +303,27 @@ endif
 #
 # import JCov
 
-ifdef JCOV_HOME
+ifdef JCOV_JAR
 
-$(JTREG_IMAGEDIR)/lib/jcov.jar: $(call PosixPath,$(JCOV_HOME)/lib/jcov.jar)
+$(JTREG_IMAGEDIR)/lib/jcov.jar: $(call PosixPath,$(JCOV_JAR))
 	$(RM) $@
 	$(MKDIR) -p $(@D)
 	$(CP) $< $@
 
-JCOV_NETWORK_SAVER = jcov_network_saver.jar
+TARGETS.ZIP.jtreg += $(JTREG_IMAGEDIR)/lib/jcov.jar
 
-$(JTREG_IMAGEDIR)/lib/$(JCOV_NETWORK_SAVER): $(call PosixPath,$(JCOV_HOME)/lib/$(JCOV_NETWORK_SAVER))
+endif # JCOV_JAR
+
+ifdef JCOV_NETWORK_SAVER_JAR
+
+$(JTREG_IMAGEDIR)/lib/jcov_network_saver.jar: $(call PosixPath,$(JCOV_NETWORK_SAVER_JAR))
 	$(RM) $@
 	$(MKDIR) -p $(@D)
 	$(CP) $< $@
 
-TARGETS.ZIP.jtreg += \
-    $(JTREG_IMAGEDIR)/lib/jcov.jar \
-    $(JTREG_IMAGEDIR)/lib/$(JCOV_NETWORK_SAVER)
+TARGETS.ZIP.jtreg += $(JTREG_IMAGEDIR)/lib/jcov_network_saver.jar
 
-endif #JCOV_HOME
+endif #JCOV_NETWORK_SAVER_JAR
 
 #----------------------------------------------------------------------
 #

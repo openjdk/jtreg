@@ -187,9 +187,15 @@ ifndef JCOV_HOME
 endif
 JCOV_HOME := $(call FullPath,$(JCOV_HOME))
 
-ifdef JCOV_HOME
-  JCOV = $(JDK16HOME)/bin/java -jar $(JCOV_HOME)/lib/jcov.jar
+ifndef JCOV_JAR
+  JCOV_JAR = $(JCOV_HOME)/lib/jcov.jar
 endif
+
+ifndef JCOV_NETWORK_SAVER_JAR
+  JCOV_NETWORK_SAVER_JAR = $(JCOV_HOME)/lib/jcov_network_saver.jar
+endif
+
+JCOV = $(JDK16HOME)/bin/java -jar $(JCOV_JAR)
 
 #----- AsmTools 6.0
 
