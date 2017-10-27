@@ -74,8 +74,8 @@ endif
 ifdef JCOV_HOME
 	@echo "JCOV_HOME      = $(JCOV_HOME)"
 endif
-ifdef ASMTOOLS_HOME
-	@echo "ASMTOOLS_HOME  = $(ASMTOOLS_HOME)"
+ifdef ASMTOOLS_JAR
+	@echo "ASMTOOLS_JAR   = $(ASMTOOLS_JAR)"
 endif
 	@echo "ANTHOME        = $(ANTHOME)"
 	@echo "JUNIT_JAR      = $(JUNIT_JAR)"

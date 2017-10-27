@@ -327,9 +327,9 @@ endif #JCOV_HOME
 #
 # import AsmTools
 
-ifdef ASMTOOLS_HOME
+ifdef ASMTOOLS_JAR
 
-$(JTREG_IMAGEDIR)/lib/asmtools.jar: $(call PosixPath,$(ASMTOOLS_HOME)/lib/asmtools.jar)
+$(JTREG_IMAGEDIR)/lib/asmtools.jar: $(call PosixPath,$(ASMTOOLS_JAR))
 	$(RM) $@
 	$(MKDIR) -p $(@D)
 	$(CP) $< $@
@@ -339,7 +339,7 @@ TARGETS.ZIP.jtreg += \
 
 $(JTREG_IMAGEDIR)/lib/jtreg.jar: $(JTREG_IMAGEDIR)/lib/asmtools.jar
 
-endif #ASMTOOLS_HOME
+endif #ASMTOOLS_JAR
 
 #----------------------------------------------------------------------
 #

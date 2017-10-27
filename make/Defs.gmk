@@ -193,12 +193,16 @@ endif
 
 #----- AsmTools 6.0
 
-ifndef ASMTOOLS_HOME
-  ifdef SLASHJAVA
-    ASMTOOLS_HOME = $(SLASHJAVA)/re/asmtools/6.0/promoted/latest/binaries/asmtools-6.0/
+ifndef ASMTOOLS_JAR
+  ifdef ASMTOOLS_HOME
+    ASMTOOLS_JAR = $(ASMTOOLS_HOME)/lib/asmtools.jar
+  else
+    ifdef SLASHJAVA
+      ASMTOOLS_JAR = $(SLASHJAVA)/re/asmtools/6.0/promoted/latest/binaries/asmtools-6.0/lib/asmtools.jar
+    endif
   endif
 endif
-ASMTOOLS_HOME := $(call FullPath,$(ASMTOOLS_HOME))
+ASMTOOLS_JAR := $(call FullPath,$(ASMTOOLS_JAR))
 
 #----- JUnit 4.10: see http://www.junit.org/
 # https://sourceforge.net/projects/junit/files/junit/4.10/junit-4.10.jar/download
