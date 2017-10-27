@@ -257,6 +257,10 @@ ifndef ANTHOME
 endif
 ANTHOME := $(call FullPath,$(ANTHOME))
 
+ifndef ANT_JAR
+  ANT_JAR = $(ANTHOME)/lib/ant.jar
+endif
+
 ifdef ANTHOME
   ANT = $(ANTHOME)/bin/ant
 endif

@@ -78,6 +78,7 @@ ifdef ASMTOOLS_JAR
 	@echo "ASMTOOLS_JAR   = $(ASMTOOLS_JAR)"
 endif
 	@echo "ANTHOME        = $(ANTHOME)"
+	@echo "ANT_JAR        = $(ANT_JAR)"
 	@echo "JUNIT_JAR      = $(JUNIT_JAR)"
 	@echo "TESTNG_HOME    = $(TESTNG_HOME)"
 	@echo "TESTNG_JAR     = $(TESTNG_JAR)"

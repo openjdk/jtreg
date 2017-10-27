@@ -69,7 +69,7 @@ JAVAFILES.com.sun.javatest.regtest-tools := \
 $(BUILDDIR)/classes.com.sun.javatest.regtest.ok: \
 		$(JAVAFILES.com.sun.javatest.regtest-tools) \
 		$(BUILDDIR)/classes.com.sun.javatest.regtest.agent.ok
-	CLASSPATH="$(CLASSDIR)$(PS)$(ANTHOME)/lib/ant.jar$(PS)$(JAVATEST_JAR)$(PS)$(JUNIT_JAR)$(PS)$(TESTNG_JAR)" \
+	CLASSPATH="$(CLASSDIR)$(PS)$(ANT_JAR)$(PS)$(JAVATEST_JAR)$(PS)$(JUNIT_JAR)$(PS)$(TESTNG_JAR)" \
 	    $(REGTEST_TOOL_JAVAC) $(REGTEST_TOOL_JAVAC_OPTIONS) \
 		-d $(CLASSDIR) \
 		-encoding ISO8859-1 \
@@ -162,7 +162,7 @@ $(JTREG_IMAGEDIR)/doc/api/index.html: \
 	$(J2SEHOME)/bin/javadoc -d $(@D) \
                 -encoding iso-8859-1 \
 		-sourcepath "$(JAVADIR)$(PS)$(JAVATEST_SRCDIR)" \
-		-classpath "$(ANTHOME)/lib/ant.jar$(PS)$(JAVATEST_JAR)$(PS)$(JUNIT_JAR)$(PS)$(TESTNG_JAR)" \
+		-classpath "$(ANT_JAR)$(PS)$(JAVATEST_JAR)$(PS)$(JUNIT_JAR)$(PS)$(TESTNG_JAR)" \
 		com.sun.javatest.regtest \
                 $(JAVATEST_SRCFILES)
 
@@ -172,7 +172,7 @@ $(JTREG_IMAGEDIR)/doc/devapi/index.html: \
 	$(J2SEHOME)/bin/javadoc -d $(@D) \
                 -encoding iso-8859-1 \
 		-sourcepath "$(JAVADIR)$(PS)$(JAVATEST_SRCDIR)" \
-		-classpath "$(ANTHOME)/lib/ant.jar$(PS)$(JAVATEST_JAR)$(PS)$(JUNIT_JAR)$(PS)$(TESTNG_JAR)" \
+		-classpath "$(ANT_JAR)$(PS)$(JAVATEST_JAR)$(PS)$(JUNIT_JAR)$(PS)$(TESTNG_JAR)" \
 		-subpackages com.sun.javatest.regtest \
                 -tag "implNote:a:Implementation Note:" \
                 $(JAVATEST_SRCFILES)
