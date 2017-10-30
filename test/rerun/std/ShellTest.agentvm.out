@@ -5,6 +5,7 @@ HOME=%HOME% \
 LANG=en_US.UTF-8 \
 MY_ENV_VAR=x \
 PATH=/bin:/usr/bin \
+TZ=GMT+0.00 \
 TESTSRC=%WS%/test/rerun/std \
 TESTSRCPATH=%WS%/test/rerun/std \
 TESTCLASSES=%BUILD%/RerunTest.agentvm/work/classes/std/ShellTest.d \

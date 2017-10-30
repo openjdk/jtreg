@@ -39,6 +39,7 @@ $(BUILDDIR)/RerunTest.othervm.ok: \
 	trap "BUILDDIR=$(BUILDDIR) sh `pwd`/display.sh -kill" 0 ; \
 	unset GNOME_DESKTOP_SESSION_ID ; \
 	unset XMODIFIERS ; \
+	LANG=en_US.UTF-8 TZ=GMT+0.00 \
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-J-Djavatest.regtest.allowTrailingBuild=true \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \

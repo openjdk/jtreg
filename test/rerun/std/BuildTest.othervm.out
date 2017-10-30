@@ -9,6 +9,7 @@ HOME=%HOME% \
 LANG=en_US.UTF-8 \
 MY_ENV_VAR=x \
 PATH=/bin:/usr/bin \
+TZ=GMT+0.00 \
     %JDKHOME%/bin/javac \
         -J-Dmy.vm.option=x \
         -J-Dtest.src=%WS%/test/rerun/std \

@@ -5,6 +5,7 @@ HOME=%HOME% \
 LANG=en_US.UTF-8 \
 MY_ENV_VAR=x \
 PATH=/bin:/usr/bin \
+TZ=GMT+0.00 \
     %JDKHOME%/bin/javac \
         -J-Dmy.vm.option=x \
         -J-Dmy.java.option=x \
@@ -33,6 +34,7 @@ HOME=%HOME% \
 LANG=en_US.UTF-8 \
 MY_ENV_VAR=x \
 PATH=/bin:/usr/bin \
+TZ=GMT+0.00 \
     %JDKHOME%/bin/java \
         -Dtest.class.path.prefix=%BUILD%/RerunTest.agentvm/work/classes/std/JUnitTest.d:%WS%/test/rerun/std \
         -Dtest.src=%WS%/test/rerun/std \
