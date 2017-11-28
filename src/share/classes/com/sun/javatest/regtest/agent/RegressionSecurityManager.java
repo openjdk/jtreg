@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000, 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2000, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -33,7 +33,7 @@ import com.sun.javatest.JavaTestSecurityManager;
 public class RegressionSecurityManager extends JavaTestSecurityManager {
     /**
      * Try to install a copy of this security manager. If another security manager is
-     * already installed, the install will fail;  a warning message wil, be written to
+     * already installed, the install will fail;  a warning message will be written to
      * the console if the previously installed security manager is not a subtype of
      * com.sun.javatest.JavaTestSecurityManager.
      * The install can be suppressed by setting the system property
