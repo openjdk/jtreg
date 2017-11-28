@@ -66,7 +66,7 @@
           </grid>
         </constraints>
         <properties>
-          <text value="Path"/>
+          <text value="JTReg Home"/>
         </properties>
       </component>
       <grid id="8bdf0" binding="myListPane" custom-create="true" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
