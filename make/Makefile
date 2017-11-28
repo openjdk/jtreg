@@ -53,35 +53,38 @@ clean:
 
 sanity:
 ifdef JDK15HOME
-	@echo "JDK15HOME      = $(JDK15HOME)"
+	@echo "JDK15HOME           = $(JDK15HOME)"
 endif
 ifdef JDK16HOME
-	@echo "JDK16HOME      = $(JDK16HOME)"
+	@echo "JDK16HOME           = $(JDK16HOME)"
 endif
 ifdef JDK17HOME
-	@echo "JDK17HOME      = $(JDK17HOME)"
+	@echo "JDK17HOME           = $(JDK17HOME)"
 endif
 ifdef JDK18HOME
-	@echo "JDK18HOME      = $(JDK18HOME)"
+	@echo "JDK18HOME           = $(JDK18HOME)"
 endif
 ifdef JAVAHELP_HOME
-	@echo "JAVAHELP_HOME  = $(JAVAHELP_HOME)"
+	@echo "JAVAHELP_HOME       = $(JAVAHELP_HOME)"
 endif
-	@echo "JAVATEST_HOME  = $(JAVATEST_HOME)"
+	@echo "JAVATEST_HOME       = $(JAVATEST_HOME)"
 ifneq ($(JTHARNESS_HOME), $(JAVATEST_HOME))
-	@echo "JTHARNESS_HOME = $(JTHARNESS_HOME)"
+	@echo "JTHARNESS_HOME      = $(JTHARNESS_HOME)"
 endif
-ifdef JCOV_JAR
-	@echo "JCOV_JAR       = $(JCOV_JAR)"
-endif
-ifdef ASMTOOLS_JAR
-	@echo "ASMTOOLS_JAR   = $(ASMTOOLS_JAR)"
-endif
-	@echo "ANTHOME        = $(ANTHOME)"
-	@echo "ANT_JAR        = $(ANT_JAR)"
-	@echo "JUNIT_JAR      = $(JUNIT_JAR)"
-	@echo "TESTNG_HOME    = $(TESTNG_HOME)"
-	@echo "TESTNG_JAR     = $(TESTNG_JAR)"
+	@echo "JTHARNESS_LICENSE   = $(JTHARNESS_LICENSE)"
+	@echo "JTHARNESS_COPYRIGHT = $(JTHARNESS_COPYRIGHT)"
+	@echo "JCOV_JAR            = $(JCOV_JAR)"
+	@echo "JCOV_LICENSE        = $(JCOV_LICENSE)"
+	@echo "ASMTOOLS_JAR        = $(ASMTOOLS_JAR)"
+	@echo "ASMTOOLS_LICENSE    = $(ASMTOOLS_LICENSE)"
+	@echo "ANTHOME             = $(ANTHOME)"
+	@echo "ANT_JAR             = $(ANT_JAR)"
+	@echo "JUNIT_JAR           = $(JUNIT_JAR)"
+	@echo "JUNIT_LICENSE       = $(JUNIT_LICENSE)"
+	@echo "TESTNG_HOME         = $(TESTNG_HOME)"
+	@echo "TESTNG_JAR          = $(TESTNG_JAR)"
+	@echo "TESTNG_LICENSE      = $(TESTNG_LICENSE)"
+	@echo "JCOMMANDER_JAR      = $(JCOMMANDER_JAR)"
 
 #----------------------------------------------------------------------
 

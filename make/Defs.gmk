@@ -149,10 +149,12 @@ ifndef JAVAHELP_HOME
   endif
 endif
 
-ifdef JAVAHELP_HOME
-JAVAHELP_HOME := $(call FullPath,$(JAVAHELP_HOME))
-JAVAHELP_JAR = $(JAVAHELP_HOME)/lib/jh.jar
+ifndef JAVAHELP_JAR
+  ifdef JAVAHELP_HOME
+    JAVAHELP_JAR = $(JAVAHELP_HOME)/lib/jh.jar
+  endif
 endif
+JAVAHELP_JAR := $(call FullPath,$(JAVAHELP_JAR))
 
 #----- JavaTest: see https://wiki.openjdk.java.net/display/CodeTools/JT+Harness
 
@@ -161,7 +163,6 @@ ifndef JTHARNESS_HOME
     JTHARNESS_HOME = $(SLASHJAVA)/re/jtharness/4.6/archive/MR1/binaries
   endif
 endif 
-JTHARNESS_HOME := $(call FullPath,$(JTHARNESS_HOME))
 
 ifndef JAVATEST_HOME
   ifdef JTHARNESS_HOME
@@ -172,11 +173,23 @@ ifndef JAVATEST_HOME
     endif
   endif
 endif
-JAVATEST_HOME := $(call FullPath,$(JAVATEST_HOME))
 
-ifdef JAVATEST_HOME
-  JAVATEST_JAR = $(JAVATEST_HOME)/lib/javatest.jar
+ifndef JAVATEST_JAR
+  ifdef JAVATEST_HOME
+    JAVATEST_JAR = $(JAVATEST_HOME)/lib/javatest.jar
+  endif
 endif
+JAVATEST_JAR := $(call FullPath,$(JAVATEST_JAR))
+
+ifndef JTHARNESS_LICENSE
+  JTHARNESS_LICENSE = $(wildcard $(JTHARNESS_HOME)/legal/license.txt)
+endif
+JTHARNESS_LICENSE := $(call FullPath,$(JTHARNESS_LICENSE))
+
+ifndef JTHARNESS_COPYRIGHT
+  JTHARNESS_COPYRIGHT = $(wildcard $(JTHARNESS_HOME)/legal/copyright.txt)
+endif
+JTHARNESS_COPYRIGHT := $(call FullPath,$(JTHARNESS_COPYRIGHT))
 
 #----- JCov 2.0
 
@@ -185,40 +198,70 @@ ifndef JCOV_HOME
     JCOV_HOME = $(SLASHJAVA)/re/jcov/2.0/promoted/latest/binaries/jcov_2.0/
   endif
 endif
-JCOV_HOME := $(call FullPath,$(JCOV_HOME))
 
 ifndef JCOV_JAR
-  JCOV_JAR = $(JCOV_HOME)/lib/jcov.jar
+  ifdef JCOV_HOME
+    JCOV_JAR = $(JCOV_HOME)/lib/jcov.jar
+  endif
 endif
+JCOV_JAR := $(call FullPath,$(JCOV_JAR))
 
 ifndef JCOV_NETWORK_SAVER_JAR
-  JCOV_NETWORK_SAVER_JAR = $(JCOV_HOME)/lib/jcov_network_saver.jar
+  ifdef JCOV_HOME
+    JCOV_NETWORK_SAVER_JAR = $(JCOV_HOME)/lib/jcov_network_saver.jar
+  endif
 endif
+JCOV_NETWORK_SAVER_JAR := $(call FullPath,$(JCOV_NETWORK_SAVER_JAR))
+
+ifndef JCOV_LICENSE
+  ifdef JCOV_HOME
+    JCOV_LICENSE = $(wildcard $(JCOV_HOME)/LICENSE)
+  endif
+endif
+JCOV_LICENSE := $(call FullPath,$(JCOV_LICENSE))
 
 JCOV = $(JDK16HOME)/bin/java -jar $(JCOV_JAR)
 
 #----- AsmTools 6.0
 
-ifndef ASMTOOLS_JAR
-  ifdef ASMTOOLS_HOME
-    ASMTOOLS_JAR = $(ASMTOOLS_HOME)/lib/asmtools.jar
-  else
-    ifdef SLASHJAVA
-      ASMTOOLS_JAR = $(SLASHJAVA)/re/asmtools/6.0/promoted/latest/binaries/asmtools-6.0/lib/asmtools.jar
-    endif
+ifndef ASMTOOLS_HOME
+  ifdef SLASHJAVA
+    ASMTOOLS_HOME = $(SLASHJAVA)/re/asmtools/6.0/promoted/latest/binaries/asmtools-6.0
   endif
 endif
+
+ifndef ASMTOOLS_JAR
+  ASMTOOLS_JAR = $(ASMTOOLS_HOME)/lib/asmtools.jar
+endif
 ASMTOOLS_JAR := $(call FullPath,$(ASMTOOLS_JAR))
+
+ifndef ASMTOOLS_LICENSE
+  ASMTOOLS_LICENSE = $(wildcard $(ASMTOOLS_HOME)/LICENSE)
+endif
+ASMTOOLS_LICENSE := $(call FullPath,$(ASMTOOLS_LICENSE))
 
 #----- JUnit 4.10: see http://www.junit.org/
 # https://sourceforge.net/projects/junit/files/junit/4.10/junit-4.10.jar/download
 
-ifndef JUNIT_JAR
+ifndef JUNIT_HOME
   ifdef SLASHJAVA
-    JUNIT_JAR = $(SLASHJAVA)/devtools/share/junit/junit-4.10/junit-4.10.jar
+    JUNIT_HOME = $(SLASHJAVA)/devtools/share/junit/junit-4.10/
+  endif
+endif
+
+ifndef JUNIT_JAR
+  ifdef JUNIT_HOME
+    JUNIT_JAR = $(JUNIT_HOME)/junit-4.10.jar
   endif
 endif
 JUNIT_JAR := $(call FullPath,$(JUNIT_JAR))
+
+ifndef JUNIT_LICENSE
+  ifdef JUNIT_HOME
+    JUNIT_LICENSE = $(wildcard $(JUNIT_HOME)/LICENSE.txt)
+  endif
+endif
+JUNIT_LICENSE := $(call FullPath,$(JUNIT_LICENSE))
 
 #----- TestNG 6.9.5: see http://www.testng.org/
 # http://testng.org/doc/download.html
@@ -236,6 +279,11 @@ ifndef TESTNG_JAR
   endif
 endif
 TESTNG_JAR := $(call FullPath,$(TESTNG_JAR))
+
+ifndef TESTNG_LICENSE
+  TESTNG_LICENSE = $(wildcard $(TESTNG_HOME)/LICENSE.txt)
+endif
+TESTNG_LICENSE := $(call FullPath,$(JUNIT_LICENSE))
 
 # TestNG requires jcommander, which may or may not be bundled with TESTNG_JAR.
 # If it is not, set JCOMMANDER_JAR to an appropriate version
@@ -255,11 +303,13 @@ ifndef ANTHOME
     ANTHOME = $(SLASHJAVA)/devtools/share/ant/1.7.0
   endif
 endif
-ANTHOME := $(call FullPath,$(ANTHOME))
 
 ifndef ANT_JAR
-  ANT_JAR = $(ANTHOME)/lib/ant.jar
+  ifdef ANTHOME
+    ANT_JAR = $(ANTHOME)/lib/ant.jar
+  endif
 endif
+ANT_JAR := $(call FullPath,$(ANT_JAR))
 
 ifdef ANTHOME
   ANT = $(ANTHOME)/bin/ant

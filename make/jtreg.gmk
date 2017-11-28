@@ -217,31 +217,37 @@ TARGETS.ZIP.jtreg += $(JTREG_IMAGEJARDIR)/jtreg.jar
 # import JavaTest or JT Harness
 
 TARGETS.com.sun.javatest.regtest += $(RESOURCES.com.sun.javatest.regtest)
-ifdef JTHARNESS_HOME
-    TARGETS.ZIP.jtreg += $(JTREG_IMAGEDIR)/legal/jtharness/copyright.txt
-    TARGETS.ZIP.jtreg += $(JTREG_IMAGEDIR)/legal/jtharness/license.txt
-endif
-
-$(JTREG_IMAGEDIR)/legal/jtharness/copyright.txt \
-$(JTREG_IMAGEDIR)/legal/jtharness/license.txt: \
-		$(JTREG_IMAGEDIR)/legal/jtharness/%: $(JTHARNESS_HOME)/legal/%
-	$(RM) -f $@
-	$(MKDIR) -p $(@D)
-	$(CP) $< $@
 
 $(JTREG_IMAGEDIR)/lib/javatest.jar: $(call PosixPath,$(JAVATEST_JAR))
 	$(RM) -f $@
 	$(MKDIR) -p $(@D)
-	$(CP) $(JAVATEST_JAR) $@
+	$(CP) $< $@
 
 TARGETS.ZIP.jtreg += $(JTREG_IMAGEJARDIR)/javatest.jar
+
+$(JTREG_IMAGEDIR)/legal/jtharness/license.txt: $(call PosixPath,$(JTHARNESS_LICENSE))
+	$(RM) -f $@
+	$(MKDIR) -p $(@D)
+	$(CP) $< $@
+
+ifdef JTHARNESS_LICENSE
+    TARGETS.ZIP.jtreg += $(JTREG_IMAGEDIR)/legal/jtharness/license.txt
+endif
+
+$(JTREG_IMAGEDIR)/legal/jtharness/copyright.txt: $(call PosixPath,$(JTHARNESS_COPYRIGHT))
+	$(RM) -f $@
+	$(MKDIR) -p $(@D)
+	$(CP) $< $@
+
+ifdef JTHARNESS_COPYRIGHT
+    TARGETS.ZIP.jtreg += $(JTREG_IMAGEDIR)/legal/jtharness/copyright.txt
+endif
 
 #----------------------------------------------------------------------
 #
 # import JavaHelp (required for JavaTest/JT Harness 4.6), if available;
 # remove any (probably out-of-date) signatures
 
-ifdef JAVAHELP_JAR
 $(IMAGES_DIR)/%/jh.jar: $(call PosixPath,$(JAVAHELP_JAR))
 	$(RM) -f $@
 	$(MKDIR) -p $(@D)
@@ -250,7 +256,8 @@ $(IMAGES_DIR)/%/jh.jar: $(call PosixPath,$(JAVAHELP_JAR))
 	$(CP) $(JAVAHELP_JAR) $@
 	$(ZIP) -d $@ 'META-INF/*.SF' 'META-INF/*.RSA' 'META-INF/*.DSA' 
 
-TARGETS.ZIP.jtreg += $(JTREG_IMAGEJARDIR)/jh.jar
+ifdef JAVAHELP_JAR
+    TARGETS.ZIP.jtreg += $(JTREG_IMAGEJARDIR)/jh.jar
 endif
 
 #----------------------------------------------------------------------
@@ -260,21 +267,22 @@ endif
 $(JTREG_IMAGEDIR)/lib/junit.jar: $(call PosixPath,$(JUNIT_JAR))
 	$(RM) -f $@
 	$(MKDIR) -p $(@D)
-	$(CP) $(JUNIT_JAR) $@
+	$(CP) $< $@
 
 TARGETS.ZIP.jtreg += $(JTREG_IMAGEJARDIR)/junit.jar
+
+ifdef JUNIT_LICENSE
+    TARGETS.ZIP.jtreg += $(JTREG_IMAGEDIR)/legal/junit/LICENSE
+endif
+
+$(JTREG_IMAGEDIR)/legal/junit/LICENSE: $(call PosixPath,$(JUNIT_LICENSE))
+	$(RM) -f $@
+	$(MKDIR) -p $(@D)
+	$(CP) $< $@
 
 #----------------------------------------------------------------------
 #
 # import TestNG
-
-ifdef TESTNG_HOME 
-
-$(JTREG_IMAGEDIR)/legal/testng/LICENSE.txt: $(call PosixPath,$(TESTNG_HOME)/LICENSE.txt)
-	$(MKDIR) -p $(@D)
-	$(CAT) $(TESTNG_HOME)/LICENSE.txt >> $@ 
-
-TARGETS.ZIP.jtreg += $(JTREG_IMAGEDIR)/legal/testng/LICENSE.txt
 
 $(JTREG_IMAGEDIR)/lib/testng.jar: $(call PosixPath,$(TESTNG_JAR))
 	$(RM) $@
@@ -288,60 +296,76 @@ $(JTREG_IMAGEDIR)/lib/testng.jar: $(call PosixPath,$(TESTNG_JAR))
 
 TARGETS.ZIP.jtreg += $(JTREG_IMAGEJARDIR)/testng.jar
 
-ifdef JCOMMANDER_JAR
 $(JTREG_IMAGEDIR)/lib/jcommander.jar: $(call PosixPath,$(JCOMMANDER_JAR))
 	$(RM) $@
 	$(MKDIR) -p $(@D)
 	$(CP) $(JCOMMANDER_JAR) $@
 
-TARGETS.ZIP.jtreg += $(JTREG_IMAGEJARDIR)/jcommander.jar
+ifdef JCOMMANDER_JAR
+    TARGETS.ZIP.jtreg += $(JTREG_IMAGEJARDIR)/jcommander.jar
 endif
 
+$(JTREG_IMAGEDIR)/legal/testng/LICENSE: $(call PosixPath,$(TESTNG_LICENSE))
+	$(MKDIR) -p $(@D)
+	$(CP) $< $@ 
+
+ifdef TESTNG_LICENSE
+    TARGETS.ZIP.jtreg += $(JTREG_IMAGEDIR)/legal/testng/LICENSE
 endif
 
 #----------------------------------------------------------------------
 #
 # import JCov
 
-ifdef JCOV_JAR
-
 $(JTREG_IMAGEDIR)/lib/jcov.jar: $(call PosixPath,$(JCOV_JAR))
 	$(RM) $@
 	$(MKDIR) -p $(@D)
 	$(CP) $< $@
 
-TARGETS.ZIP.jtreg += $(JTREG_IMAGEDIR)/lib/jcov.jar
-
-endif # JCOV_JAR
-
-ifdef JCOV_NETWORK_SAVER_JAR
+ifdef JCOV_JAR
+    TARGETS.ZIP.jtreg += $(JTREG_IMAGEDIR)/lib/jcov.jar
+endif
 
 $(JTREG_IMAGEDIR)/lib/jcov_network_saver.jar: $(call PosixPath,$(JCOV_NETWORK_SAVER_JAR))
 	$(RM) $@
 	$(MKDIR) -p $(@D)
 	$(CP) $< $@
 
-TARGETS.ZIP.jtreg += $(JTREG_IMAGEDIR)/lib/jcov_network_saver.jar
+ifdef JCOV_NETWORK_SAVER_JAR
+    TARGETS.ZIP.jtreg += $(JTREG_IMAGEDIR)/lib/jcov_network_saver.jar
+endif
 
-endif #JCOV_NETWORK_SAVER_JAR
+$(JTREG_IMAGEDIR)/legal/jcov/LICENSE: $(call PosixPath,$(JCOV_LICENSE))
+	$(RM) -f $@
+	$(MKDIR) -p $(@D)
+	$(CP) $< $@
+
+ifdef JCOV_LICENSE
+    TARGETS.ZIP.jtreg += $(JTREG_IMAGEDIR)/legal/jcov/LICENSE
+endif
 
 #----------------------------------------------------------------------
 #
 # import AsmTools
-
-ifdef ASMTOOLS_JAR
 
 $(JTREG_IMAGEDIR)/lib/asmtools.jar: $(call PosixPath,$(ASMTOOLS_JAR))
 	$(RM) $@
 	$(MKDIR) -p $(@D)
 	$(CP) $< $@
 
-TARGETS.ZIP.jtreg += \
-    $(JTREG_IMAGEDIR)/lib/asmtools.jar \
+ifdef ASMTOOLS_JAR
+    TARGETS.ZIP.jtreg += $(JTREG_IMAGEDIR)/lib/asmtools.jar
+    $(JTREG_IMAGEDIR)/lib/jtreg.jar: $(JTREG_IMAGEDIR)/lib/asmtools.jar
+endif
 
-$(JTREG_IMAGEDIR)/lib/jtreg.jar: $(JTREG_IMAGEDIR)/lib/asmtools.jar
+$(JTREG_IMAGEDIR)/legal/asmtools/LICENSE: $(call PosixPath,$(ASMTOOLS_LICENSE))
+	$(RM) -f $@
+	$(MKDIR) -p $(@D)
+	$(CP) $< $@
 
-endif #ASMTOOLS_JAR
+ifdef ASMTOOLS_LICENSE
+    TARGETS.ZIP.jtreg += $(JTREG_IMAGEDIR)/legal/asmtools/LICENSE
+endif
 
 #----------------------------------------------------------------------
 #
