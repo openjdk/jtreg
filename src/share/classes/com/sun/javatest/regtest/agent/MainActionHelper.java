@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -40,15 +40,14 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-import com.sun.javatest.Status;
 import static com.sun.javatest.regtest.agent.ActionHelper.EXEC_PASS;
-import static com.sun.javatest.regtest.agent.RStatus.error;
-import static com.sun.javatest.regtest.agent.RStatus.failed;
-import static com.sun.javatest.regtest.agent.RStatus.passed;
+import static com.sun.javatest.regtest.agent.AStatus.error;
+import static com.sun.javatest.regtest.agent.AStatus.failed;
+import static com.sun.javatest.regtest.agent.AStatus.passed;
 
 public class MainActionHelper extends ActionHelper {
 
-    public static Status runClass(
+    public static AStatus runClass(
             String testName,
             Map<String, String> props,
             Set<String> addExports,
@@ -76,7 +75,7 @@ public class MainActionHelper extends ActionHelper {
         PrintByteArrayOutputStream out = new PrintByteArrayOutputStream();
         PrintByteArrayOutputStream err = new PrintByteArrayOutputStream();
 
-        Status status = passed(EXEC_PASS);
+        AStatus status = passed(EXEC_PASS);
         try {
             Class<?> c;
             ClassLoader loader;
@@ -113,7 +112,7 @@ public class MainActionHelper extends ActionHelper {
 
             Method method = c.getMethod("main", argTypes);
 
-            Status stat = redirectOutput(out, err);
+            AStatus stat = redirectOutput(out, err);
             if (!stat.isPassed()) {
                 return stat;
             }

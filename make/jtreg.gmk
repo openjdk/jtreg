@@ -29,7 +29,7 @@
 
 ### The following files are required to run othervm tests
 
-REGTEST-OTHERVM-CLASSES = AppletWrapper GetSystemProperty MainWrapper RStatus StringArray
+REGTEST-OTHERVM-CLASSES = AppletWrapper GetSystemProperty MainWrapper AStatus StringArray
 JAVAFILES.com.sun.javatest.regtest-othervm = \
 	$(REGTEST-OTHERVM-CLASSES:%=$(JAVADIR)/com/sun/javatest/regtest/agent/%.java)
 
@@ -90,11 +90,6 @@ RESOURCES.com.sun.javatest.regtest = \
 	$(CLASSDIR)/com/sun/javatest/regtest/tool/i18n.properties
 
 TARGETS.com.sun.javatest.regtest += $(RESOURCES.com.sun.javatest.regtest)
-
-RESOURCES.com.sun.javatest.regtest.agent = \
-       $(CLASSDIR)/com/sun/javatest/regtest/agent/i18n.properties
-
-TARGETS.com.sun.javatest.regtest += $(RESOURCES.com.sun.javatest.regtest.agent)
 
 #----------------------------------------------------------------------
 # 
@@ -257,7 +252,8 @@ $(IMAGES_DIR)/%/jh.jar: $(call PosixPath,$(JAVAHELP_JAR))
 	$(ZIP) -d $@ 'META-INF/*.SF' 'META-INF/*.RSA' 'META-INF/*.DSA' 
 
 ifdef JAVAHELP_JAR
-    TARGETS.ZIP.jtreg += $(JTREG_IMAGEJARDIR)/jh.jar
+    JTREG_IMAGE_JAVAHELP_JAR = $(JTREG_IMAGEDIR)/lib/jh.jar
+    TARGETS.ZIP.jtreg += $(JTREG_IMAGEDIR)/lib/jh.jar
 endif
 
 #----------------------------------------------------------------------

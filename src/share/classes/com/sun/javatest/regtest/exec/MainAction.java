@@ -55,11 +55,11 @@ import com.sun.javatest.regtest.config.ParseException;
 import com.sun.javatest.regtest.exec.RegressionScript.PathKind;
 import com.sun.javatest.regtest.util.StringUtils;
 
-import static com.sun.javatest.regtest.agent.RStatus.createStatus;
-import static com.sun.javatest.regtest.agent.RStatus.error;
-import static com.sun.javatest.regtest.agent.RStatus.failed;
-import static com.sun.javatest.regtest.agent.RStatus.normalize;
-import static com.sun.javatest.regtest.agent.RStatus.passed;
+import static com.sun.javatest.regtest.RStatus.createStatus;
+import static com.sun.javatest.regtest.RStatus.error;
+import static com.sun.javatest.regtest.RStatus.failed;
+import static com.sun.javatest.regtest.RStatus.normalize;
+import static com.sun.javatest.regtest.RStatus.passed;
 
 /**
  * This class implements the "main" action as described by the JDK tag

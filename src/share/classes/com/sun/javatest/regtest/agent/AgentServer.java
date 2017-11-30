@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -25,7 +25,6 @@
 
 package com.sun.javatest.regtest.agent;
 
-import com.sun.javatest.Status;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
@@ -208,7 +207,7 @@ public class AgentServer implements ActionHelper.OutputHandler {
         List<String> cmdArgs = readList(in);
         keepAlive.setEnabled(true);
         try {
-            Status status = CompileActionHelper.runCompile(testName, testProps, cmdArgs, 0, this);
+            AStatus status = CompileActionHelper.runCompile(testName, testProps, cmdArgs, 0, this);
             writeStatus(status);
         } finally {
             keepAlive.setEnabled(false);
@@ -235,7 +234,7 @@ public class AgentServer implements ActionHelper.OutputHandler {
         }
         keepAlive.setEnabled(true);
         try {
-            Status status = MainActionHelper.runClass(
+            AStatus status = MainActionHelper.runClass(
                     testName,
                     testProps,
                     addExports,
@@ -279,7 +278,7 @@ public class AgentServer implements ActionHelper.OutputHandler {
         return p;
     }
 
-    private void writeStatus(Status s) throws IOException {
+    private void writeStatus(AStatus s) throws IOException {
         if (traceServer) {
             traceOut.println("Agent.Server.writeStatus: " + s);
         }

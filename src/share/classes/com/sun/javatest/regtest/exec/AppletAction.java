@@ -53,7 +53,7 @@ import com.sun.javatest.regtest.config.Modules;
 import com.sun.javatest.regtest.config.ParseException;
 import com.sun.javatest.regtest.exec.RegressionScript.PathKind;
 
-import static com.sun.javatest.regtest.agent.RStatus.*;
+import static com.sun.javatest.regtest.RStatus.*;
 
 /**
  * This class implements the "applet" action as described by the JDK tag

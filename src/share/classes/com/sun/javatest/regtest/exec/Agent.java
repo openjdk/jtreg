@@ -67,7 +67,7 @@ import com.sun.javatest.regtest.config.JDK;
 import com.sun.javatest.regtest.util.StringUtils;
 
 import static com.sun.javatest.regtest.agent.AgentServer.*;
-import static com.sun.javatest.regtest.agent.RStatus.createStatus;
+import static com.sun.javatest.regtest.RStatus.createStatus;
 
 public class Agent {
     public static class Fault extends Exception {

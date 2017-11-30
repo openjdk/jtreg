@@ -62,7 +62,7 @@ public class MainWrapper
             className  = (sep == -1) ? moduleClassName : moduleClassName.substring(sep + 1);
             classArgs = StringArray.splitWS(fileArgs[i++]);
         } catch (IOException e) {
-            RStatus.failed(MAIN_CANT_READ_ARGS).exit();
+            AStatus.failed(MAIN_CANT_READ_ARGS).exit();
             throw new IllegalStateException(); // implies exit() didn't sucees
         }
 
@@ -73,14 +73,14 @@ public class MainWrapper
         try {
             t.join();
         } catch (InterruptedException e) {
-            RStatus.failed(MAIN_THREAD_INTR + Thread.currentThread().getName()).exit();
+            AStatus.failed(MAIN_THREAD_INTR + Thread.currentThread().getName()).exit();
         }
 //      tg.cleanup();
 
         if (tg.uncaughtThrowable != null)
-            RStatus.failed(MAIN_THREW_EXCEPT + tg.uncaughtThrowable.toString()).exit();
+            AStatus.failed(MAIN_THREW_EXCEPT + tg.uncaughtThrowable.toString()).exit();
         else
-            RStatus.passed("").exit();
+            AStatus.passed("").exit();
 
     } // main()
 
@@ -120,28 +120,28 @@ public class MainWrapper
                 System.err.println("JavaTest Message: Test threw exception: " + e.getTargetException());
                 System.err.println("JavaTest Message: shutting down test");
                 System.err.println();
-                RStatus.failed(MAIN_THREW_EXCEPT + e.getTargetException()).exit();
+                AStatus.failed(MAIN_THREW_EXCEPT + e.getTargetException()).exit();
             } catch (ClassNotFoundException e) {
                 e.printStackTrace(System.err);
                 System.err.println();
                 System.err.println("JavaTest Message: main() method must be in a public class named");
                 System.err.println("JavaTest Message: " + className + " in file " + className + ".java");
                 System.err.println();
-                RStatus.error(MAIN_CANT_LOAD_TEST + e).exit();
+                AStatus.error(MAIN_CANT_LOAD_TEST + e).exit();
             } catch (NoSuchMethodException e) {
                 e.printStackTrace(System.err);
                 System.err.println();
                 System.err.println("JavaTest Message: main() method must be in a public class named");
                 System.err.println("JavaTest Message: " + className + " in file " + className + ".java");
                 System.err.println();
-                RStatus.error(MAIN_CANT_FIND_MAIN).exit();
+                AStatus.error(MAIN_CANT_FIND_MAIN).exit();
             } catch (IllegalAccessException e) {
                 e.printStackTrace(System.err);
                 System.err.println();
                 System.err.println("JavaTest Message: Verify that the class defining the test is");
                 System.err.println("JavaTest Message: declared public (test invoked via reflection)");
                 System.err.println();
-                RStatus.error(e.toString()).exit();
+                AStatus.error(e.toString()).exit();
             }
         } // run
 
@@ -165,7 +165,7 @@ public class MainWrapper
                 uncaughtThread    = t;
             }
 //          cleanup();
-            RStatus.failed(MAIN_THREW_EXCEPT + e.toString()).exit();
+            AStatus.failed(MAIN_THREW_EXCEPT + e.toString()).exit();
         } // uncaughtException()
 
 //      public void cleanup() {

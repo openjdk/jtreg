@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -39,11 +39,9 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
-import com.sun.javatest.Status;
-import com.sun.javatest.TestResult;
 
-import static com.sun.javatest.regtest.agent.RStatus.error;
-import static com.sun.javatest.regtest.agent.RStatus.passed;
+import static com.sun.javatest.regtest.agent.AStatus.error;
+import static com.sun.javatest.regtest.agent.AStatus.passed;
 
 public class ActionHelper {
 
@@ -80,8 +78,8 @@ public class ActionHelper {
             securityProviders = Security.getProviders();
         }
 
-        Status restore(String testName, Status status) {
-            Status cleanupStatus = null;
+        AStatus restore(String testName, AStatus status) {
+            AStatus cleanupStatus = null;
 
             // Reset security manager, if necessary
             // Do this first, to ensure we reset permissions
@@ -156,7 +154,7 @@ public class ActionHelper {
             }
 
             // Reset output streams
-            Status stat = redirectOutput(stdOut, stdErr);
+            AStatus stat = redirectOutput(stdOut, stdErr);
             if (cleanupStatus == null && !stat.isPassed()) {
                 cleanupStatus = stat;
             }
@@ -231,27 +229,6 @@ public class ActionHelper {
         void createOutput(OutputKind kind, String output);
     }
 
-    protected static OutputHandler getOutputHandler(final TestResult.Section section) {
-        return new OutputHandler() {
-            @Override
-            public PrintWriter createOutput(OutputKind kind) {
-                if (kind == OutputKind.LOG)
-                    return section.getMessageWriter();
-                else
-                    return section.createOutput(kind.name);
-            }
-
-            @Override
-            public void createOutput(OutputKind kind, String output) {
-                PrintWriter pw = createOutput(kind);
-                try {
-                    pw.write(output);
-                } finally {
-                    pw.close();
-                }
-            }
-        };
-    }
     //----------in memory streams-----------------------------------------------
 
     public static class PrintByteArrayOutputStream extends PrintStream {
@@ -283,7 +260,7 @@ public class ActionHelper {
     //----------redirect streams------------------------------------------------
 
     // if we wanted to allow more concurrency, we could try and acquire a lock here
-    protected static Status redirectOutput(PrintStream out, PrintStream err) {
+    protected static AStatus redirectOutput(PrintStream out, PrintStream err) {
         synchronized (System.class) {
             SecurityManager sc = System.getSecurityManager();
             if (sc instanceof RegressionSecurityManager) {

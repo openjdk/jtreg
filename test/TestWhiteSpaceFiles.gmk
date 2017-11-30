@@ -28,7 +28,7 @@
 $(BUILDDIR)/TestWhiteSpaceFiles.ok: \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	    $(JTREG_IMAGEDIR)/lib/jh.jar \
+	    $(JTREG_IMAGE_JAVAHELP_JAR) \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(BUILDDIR)/tmp/$(@F:%.ok=%)
 	$(MKDIR) -p $(BUILDDIR)/tmp/$(@F:%.ok=%)

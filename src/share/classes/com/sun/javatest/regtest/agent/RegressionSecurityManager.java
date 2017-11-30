@@ -28,8 +28,6 @@ package com.sun.javatest.regtest.agent;
 import java.security.Permission;
 import java.util.PropertyPermission;
 
-import com.sun.javatest.JavaTestSecurityManager;
-
 public class RegressionSecurityManager extends JavaTestSecurityManager {
     /**
      * Try to install a copy of this security manager. If another security manager is

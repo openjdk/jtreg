@@ -51,6 +51,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.sun.javatest.Status;
 import com.sun.javatest.regtest.TimeoutHandler;
+import com.sun.javatest.regtest.agent.AStatus;
 import com.sun.javatest.regtest.agent.CompileActionHelper;
 import com.sun.javatest.regtest.agent.JDK_Version;
 import com.sun.javatest.regtest.agent.SearchPath;
@@ -64,11 +65,11 @@ import com.sun.javatest.regtest.config.ParseException;
 import com.sun.javatest.regtest.exec.RegressionScript.PathKind;
 import com.sun.javatest.regtest.util.StringUtils;
 
-import static com.sun.javatest.regtest.agent.RStatus.createStatus;
-import static com.sun.javatest.regtest.agent.RStatus.error;
-import static com.sun.javatest.regtest.agent.RStatus.failed;
-import static com.sun.javatest.regtest.agent.RStatus.normalize;
-import static com.sun.javatest.regtest.agent.RStatus.passed;
+import static com.sun.javatest.regtest.RStatus.createStatus;
+import static com.sun.javatest.regtest.RStatus.error;
+import static com.sun.javatest.regtest.RStatus.failed;
+import static com.sun.javatest.regtest.RStatus.normalize;
+import static com.sun.javatest.regtest.RStatus.passed;
 
 /**
  * This class implements the "compile" action as described by the JDK tag
@@ -604,7 +605,8 @@ public class CompileAction extends Action {
             protected Status getStatus(int exitCode, Status logStatus) {
                 // logStatus is never used by javac, so ignore it
                 JDK_Version v = script.getCompileJDKVersion();
-                return CompileActionHelper.getStatusForJavacExitCode(v, exitCode);
+                AStatus aStatus = CompileActionHelper.getStatusForJavacExitCode(v, exitCode);
+                return new Status(aStatus.getType(), aStatus.getReason());
             }
         };
 

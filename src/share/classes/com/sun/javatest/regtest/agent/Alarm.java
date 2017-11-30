@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -24,8 +24,6 @@
  */
 
 package com.sun.javatest.regtest.agent;
-
-import com.sun.javatest.util.I18NResourceBundle;
 
 import java.io.PrintWriter;
 import java.util.concurrent.Executors;
@@ -145,9 +143,9 @@ public class Alarm  {
     protected void run() {
         if (msgOut != null) {
             if (count == 0) {
-                msgOut.println(i18n.getString("alarm.fired", TimeUnit.SECONDS.convert(delay, delayUnit)));
+                msgOut.println(String.format("Timeout refired %s times", TimeUnit.SECONDS.convert(delay, delayUnit)));
             } else if (count % 100 == 0) {
-                msgOut.println(i18n.getString("alarm.refired", count));
+                msgOut.println(String.format("Timeout signalled after %d seconds", count));
             }
         }
         count++;
@@ -218,6 +216,7 @@ public class Alarm  {
 
         ThreadFactory defaultFactory = Executors.defaultThreadFactory();
 
+        @Override
         public Thread newThread(Runnable r) {
             Thread thread = defaultFactory.newThread(r);
             thread.setDaemon(true);
@@ -227,6 +226,4 @@ public class Alarm  {
 
     private static final ScheduledThreadPoolExecutor executor =
             new ScheduledThreadPoolExecutor(1, new DaemonThreadFactory());
-    private static final I18NResourceBundle i18n =
-            I18NResourceBundle.getBundleForClass(Alarm.class);
 }

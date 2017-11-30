@@ -30,7 +30,7 @@ AUTOVM_FILES := $(shell find $(TESTDIR)/autovm -type f )
 $(BUILDDIR)/autovm.ok: $(AUTOVM_FILES) \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	    $(JTREG_IMAGEDIR)/lib/jh.jar
+	    $(JTREG_IMAGE_JAVAHELP_JAR)
 	for ts in none agentvm othervm; do \
 	    $(MKDIR) -p $(BUILDDIR)/autovm/tests/default.$$ts ; \
 	    rsync --recursive --delete $(TESTDIR)/autovm/ $(BUILDDIR)/autovm/tests/default.$$ts/ ; \

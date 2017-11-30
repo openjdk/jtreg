@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -26,18 +26,14 @@
 package com.sun.javatest.regtest.agent;
 
 
-import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
-import com.sun.javatest.Command;
-import com.sun.javatest.Status;
-import com.sun.javatest.util.PathClassLoader;
-import com.sun.javatest.util.WriterStream;
+// Derived from com.sun.javatest.lib.JavaCompileCommand,
 
-import static com.sun.javatest.regtest.agent.RStatus.*;
+import static com.sun.javatest.regtest.agent.AStatus.*;
 
 // This is primarily a cut-n-paste copy of com.sun.javatest.lib.JavaCompileCommand,
 // that provides a way to map compiler exit codes to a status.
@@ -46,31 +42,15 @@ import static com.sun.javatest.regtest.agent.RStatus.*;
  * Invoke a Java compiler via reflection.
  * The compiler is assumed to have a constructor and compile method
  * matching the following signature:
- *<pre>
- * public class COMPILER {
- *     public COMPILER(java.io.OutputStream out, String compilerName);
- *     public boolean compile(String[] args);
- * }
- *</pre>
- * or
- *<pre>
- * public class COMPILER {
- *     public COMPILER();
- *     public int compile(String[] args);
- * }
- *</pre>
- * or
  * <pre>
  * public class COMPILER {
  *    public static int compile(String[] args, PrintWriter out);
  * }
  * </pre>
- * This means the command is suitable for (but not limited to) the
- * compiler javac suplied with JDK. (Note that this uses an internal
- * API of javac which is not documented and is not guaranteed to exist
- * in any specific release of JDK.)
+ * The command is primarily intended for (but not limited to) the
+ * compiler javac supplied with JDK.
  */
-public class RegressionCompileCommand extends Command
+public class RegressionCompileCommand
 {
     /**
      * A stand-alone entry point for this command. An instance of this
@@ -83,10 +63,10 @@ public class RegressionCompileCommand extends Command
     public static void main(String[] args) {
         PrintWriter out = new PrintWriter(System.out);
         PrintWriter err = new PrintWriter(System.err);
-        Status s;
+        AStatus s;
         try {
             RegressionCompileCommand c = new RegressionCompileCommand();
-            s = normalize(c.run(args, out, err));
+            s = c.run(args, out, err);
         }
         finally {
             out.flush();
@@ -123,14 +103,13 @@ public class RegressionCompileCommand extends Command
      *          being compiler; or `error' if some more serios problem arose
      *          that prevented the compiler performing its task.
      */
-    public Status run(String[] args, PrintWriter log, PrintWriter ref) {
+    public AStatus run(String[] args, PrintWriter log, PrintWriter ref) {
 
         if (args.length == 0)
             return error("No args supplied");
 
         String compilerClassName = null;
         String compilerName = null;
-        String classpath = null;
         String[] options = null;
 
         // If we find a '-' in the args, what comes before it are
@@ -165,11 +144,6 @@ public class RegressionCompileCommand extends Command
                         compilerName = s.substring(0, colon);
                     }
                 }
-                else if (options[i].equals("-cp") || options[i].equals("-classpath")) {
-                    if (i + 1 == options.length)
-                        return error("No path specified after -cp or -classpath option");
-                    classpath = options[++i];
-                }
                 else if (options[i].equals("-verbose"))
                     verbose = true;
                 else
@@ -181,11 +155,7 @@ public class RegressionCompileCommand extends Command
 
         try {
 
-            ClassLoader loader;
-            if (classpath == null)
-                loader = null;
-            else
-                loader = new PathClassLoader(classpath);
+            ClassLoader loader = null;
 
             Class<?> compilerClass;
             if (compilerClassName != null) {
@@ -196,8 +166,6 @@ public class RegressionCompileCommand extends Command
             else {
                 compilerName = "javac";
                 compilerClass = getClass(loader, "com.sun.tools.javac.Main");  // JDK1.3+
-                if (compilerClass == null)
-                    compilerClass = getClass(loader, "sun.tools.javac.Main");  // JDK1.1-2
                 if (compilerClass == null)
                     return error("Cannot find compiler");
             }
@@ -210,42 +178,16 @@ public class RegressionCompileCommand extends Command
             if (compileMethod != null)
                 compileMethodArgs = new Object[] { args, ref };
             else {
-                compileMethod = getMethod(compilerClass, "compile",   // JDK1.1-3
-                                          new Class<?>[] { String[].class });
-                if (compileMethod != null)
-                    compileMethodArgs = new Object[] { args };
-                else
-                    return error("Cannot find compile method for " + compilerClass.getName());
+                return error("Cannot find compile method for " + compilerClass.getName());
             }
 
-            Object compiler;
-            if (Modifier.isStatic(compileMethod.getModifiers()))
-                compiler =  null;
-            else {
-                Object[] constrArgs;
-                Constructor<?> constr = getConstructor(compilerClass, // JDK1.1-2
-                                                    new Class<?>[] { OutputStream.class, String.class });
-                if (constr != null)
-                    constrArgs = new Object[] { new WriterStream(ref), compilerName };
-                else {
-                    constr = getConstructor(compilerClass, new Class<?>[0]); // JDK1.3
-                    if (constr != null)
-                        constrArgs = new Object[0];
-                    else
-                        return error("Cannot find suitable constructor for " + compilerClass.getName());
-                }
-                try {
-                    compiler = constr.newInstance(constrArgs);
-                }
-                catch (Throwable t) {
-                    t.printStackTrace(log);
-                    return error("Cannot instantiate compiler");
-                }
+            if (!Modifier.isStatic(compileMethod.getModifiers())){
+                return error("compile method is not static");
             }
 
             Object result;
             try {
-                result = compileMethod.invoke(compiler, compileMethodArgs);
+                result = compileMethod.invoke(null, compileMethodArgs);
             }
             catch (Throwable t) {
                 t.printStackTrace(log);
@@ -268,11 +210,11 @@ public class RegressionCompileCommand extends Command
         }
     }
 
-    protected Status getStatus(boolean ok) {
+    protected AStatus getStatus(boolean ok) {
         return (ok ? passed : failed);
     }
 
-    protected Status getStatus(int exitCode) {
+    protected AStatus getStatus(int exitCode) {
         return (exitCode == 0 ? passed : failed);
     }
 
@@ -281,20 +223,6 @@ public class RegressionCompileCommand extends Command
             return (loader == null ? Class.forName(name) : loader.loadClass(name));
         }
         catch (ClassNotFoundException e) {
-            return null;
-        }
-    }
-
-    private Constructor<?> getConstructor(Class<?> c, Class<?>[] argTypes) {
-        try {
-            return c.getConstructor(argTypes);
-        }
-        catch (NoSuchMethodException e) {
-            return null;
-        }
-        catch (Throwable t) {
-            if (verbose)
-                t.printStackTrace(log);
             return null;
         }
     }
@@ -323,6 +251,6 @@ public class RegressionCompileCommand extends Command
     private boolean verbose = defaultVerbose;
     private PrintWriter log;
 
-    private static final Status passed = passed("Compilation successful");
-    private static final Status failed = failed("Compilation failed");
+    private static final AStatus passed = passed("Compilation successful");
+    private static final AStatus failed = failed("Compilation failed");
 }

@@ -28,7 +28,7 @@ UCD_FILES := $(shell find $(TESTDIR)/classIsolation -type f )
 $(BUILDDIR)/ClassIsolation.disable.b07.ok: $(UCD_FILES) \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	    $(JTREG_IMAGEDIR)/lib/jh.jar 
+	    $(JTREG_IMAGE_JAVAHELP_JAR)
 	$(RM) $(@:%.ok=%)
 	$(MKDIR) -p  $(@:%.ok=%)/jtreg
 	$(CP) --recursive $(JTREG_IMAGEDIR)/* $(@:%.ok=%)/jtreg
@@ -50,7 +50,7 @@ $(BUILDDIR)/ClassIsolation.disable.b07.ok: $(UCD_FILES) \
 $(BUILDDIR)/ClassIsolation.disable.b08.ok: $(UCD_FILES) \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	    $(JTREG_IMAGEDIR)/lib/jh.jar 
+	    $(JTREG_IMAGE_JAVAHELP_JAR)
 	$(RM) $(@:%.ok=%)
 	$(MKDIR) -p  $(@:%.ok=%)/jtreg
 	$(CP) --recursive $(JTREG_IMAGEDIR)/* $(@:%.ok=%)/jtreg
@@ -71,7 +71,7 @@ $(BUILDDIR)/ClassIsolation.disable.b08.ok: $(UCD_FILES) \
 $(BUILDDIR)/ClassIsolation.default.b08.ok: $(UCD_FILES) \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	    $(JTREG_IMAGEDIR)/lib/jh.jar 
+	    $(JTREG_IMAGE_JAVAHELP_JAR)
 	$(RM) $(@:%.ok=%)
 	$(MKDIR) -p  $(@:%.ok=%)/jtreg
 	$(CP) --recursive $(JTREG_IMAGEDIR)/* $(@:%.ok=%)/jtreg
@@ -92,7 +92,7 @@ $(BUILDDIR)/ClassIsolation.default.b08.ok: $(UCD_FILES) \
 $(BUILDDIR)/ClassIsolation.enable.b08.ok: $(UCD_FILES) \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	    $(JTREG_IMAGEDIR)/lib/jh.jar 
+	    $(JTREG_IMAGE_JAVAHELP_JAR)
 	$(RM) $(@:%.ok=%)
 	$(MKDIR) -p  $(@:%.ok=%)/jtreg
 	$(CP) --recursive $(JTREG_IMAGEDIR)/* $(@:%.ok=%)/jtreg

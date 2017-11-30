@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2016, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -39,13 +39,6 @@ $(BUILDDIR)/i18n.com.sun.javatest.regtest.ok: \
 	$(SH) $(TESTDIR)/i18n/checkI18NProps.sh $(JAVADIR)/com/sun/javatest/regtest
 	echo $@ passed at `date` > $@
 
-$(BUILDDIR)/i18n.com.sun.javatest.regtest.agent.ok: \
-		$(JAVADIR)/com/sun/javatest/regtest/agent/i18n.properties \
-		$(BUILDDIR)/classes.com.sun.javatest.regtest.ok \
-		$(TESTDIR)/i18n/checkI18NProps.sh
-	$(SH) $(TESTDIR)/i18n/checkI18NProps.sh $(JAVADIR)/com/sun/javatest/regtest/agent
-	echo $@ passed at `date` > $@
-
 $(BUILDDIR)/i18n.com.sun.javatest.regtest.config.ok: \
 		$(JAVADIR)/com/sun/javatest/regtest/config/i18n.properties \
 		$(BUILDDIR)/classes.com.sun.javatest.regtest.ok \
@@ -76,14 +69,12 @@ $(BUILDDIR)/i18n.com.sun.javatest.regtest.tool.ok: \
 # convenience target
 i18n.com.sun.javatest.regtest: \
     $(BUILDDIR)/i18n.com.sun.javatest.regtest.ok \
-    $(BUILDDIR)/i18n.com.sun.javatest.regtest.agent.ok \
     $(BUILDDIR)/i18n.com.sun.javatest.regtest.config.ok \
     $(BUILDDIR)/i18n.com.sun.javatest.regtest.report.ok \
     $(BUILDDIR)/i18n.com.sun.javatest.regtest.tool.ok
 
 INITIAL_TESTS += \
     $(BUILDDIR)/i18n.com.sun.javatest.regtest.ok \
-    $(BUILDDIR)/i18n.com.sun.javatest.regtest.agent.ok \
     $(BUILDDIR)/i18n.com.sun.javatest.regtest.config.ok \
     $(BUILDDIR)/i18n.com.sun.javatest.regtest.report.ok \
     $(BUILDDIR)/i18n.com.sun.javatest.regtest.tool.ok

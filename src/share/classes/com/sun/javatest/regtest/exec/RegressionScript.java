@@ -71,8 +71,8 @@ import com.sun.javatest.regtest.report.TestNGReporter;
 import com.sun.javatest.regtest.tool.Version;
 import com.sun.javatest.regtest.util.StringUtils;
 
-import static com.sun.javatest.regtest.agent.RStatus.error;
-import static com.sun.javatest.regtest.agent.RStatus.passed;
+import static com.sun.javatest.regtest.RStatus.error;
+import static com.sun.javatest.regtest.RStatus.passed;
 
 /**
   * This class interprets the TestDescription as specified by the JDK tag

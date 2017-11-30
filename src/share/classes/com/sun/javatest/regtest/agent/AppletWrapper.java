@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -59,7 +59,6 @@ import java.net.URL;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
-import com.sun.javatest.Status;
 
 /**
   * This class is the wrapper for all applet tests.
@@ -96,7 +95,7 @@ public class AppletWrapper
             appletAtts   = stringToDictionary(appArgs[i++]);
 
         } catch (IOException e) {
-            status = RStatus.failed("JavaTest Error:  Can't read applet args file.");
+            status = AStatus.failed("JavaTest Error:  Can't read applet args file.");
             status.exit();
         }
 
@@ -106,7 +105,7 @@ public class AppletWrapper
         try {
             t.join();
         } catch (InterruptedException e) {
-            status = RStatus.failed("Thread interrupted: " + t.toString());
+            status = AStatus.failed("Thread interrupted: " + t.toString());
             status.exit();
         }
         // never get here because t.run() always calls Status.exit() in the
@@ -166,7 +165,7 @@ public class AppletWrapper
                 try {
                     Thread.sleep(2000);
                 } catch (InterruptedException e) {
-                    status = RStatus.failed("Thread interrupted: " + e.toString());
+                    status = AStatus.failed("Thread interrupted: " + e.toString());
                     status.exit();
                 }
                 // just in case the system is slow, ensure paint is called
@@ -260,7 +259,7 @@ public class AppletWrapper
             if (e instanceof ThreadDeath)
                 return;
             e.printStackTrace();
-            status = RStatus.failed("Applet thread threw exception: " + e.toString());
+            status = AStatus.failed("Applet thread threw exception: " + e.toString());
             status.exit();
         } // uncaughtException()
 
@@ -322,7 +321,7 @@ public class AppletWrapper
             addWindowListener(new WindowAdapter() {
                 public void windowClosing(WindowEvent event) {
                     dispose();
-                    status = RStatus.failed("Test canceled at user request");
+                    status = AStatus.failed("Test canceled at user request");
                     status.exit();
                 }
             });
@@ -390,13 +389,13 @@ public class AppletWrapper
          */
         public void actionPerformed(ActionEvent e) {
             if (e.getActionCommand().equals("Done")) {
-                status = RStatus.passed("");
+                status = AStatus.passed("");
             } else if (e.getActionCommand().equals("Pass")) {
-                status = RStatus.passed("");
+                status = AStatus.passed("");
             } else if (e.getActionCommand().equals("Fail")) {
-                status = RStatus.failed("");
+                status = AStatus.failed("");
             } else {
-                status = RStatus.failed("Unexpected result");
+                status = AStatus.failed("Unexpected result");
             }
             // time to go home
             waiter.done();
@@ -417,18 +416,18 @@ public class AppletWrapper
                 applet = (Applet) cls.newInstance();
             } catch (InstantiationException e) {
                 e.printStackTrace();
-                status = RStatus.error("Unable to instantiate: " + className +
+                status = AStatus.error("Unable to instantiate: " + className +
                                       " does not extend Applet");
                 status.exit();
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
-                status = RStatus.error("Illegal access to test: " + className);
+                status = AStatus.error("Illegal access to test: " + className);
                 status.exit();
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
                 //status = Status.error("JavaTest Error: Class not found: " +
                 //                      className);
-                status = RStatus.error(e.getMessage());
+                status = AStatus.error(e.getMessage());
                 status.exit();
             }
 
@@ -473,7 +472,7 @@ public class AppletWrapper
 
     //----------member variables-----------------------------------------------
 
-    private static Status status = RStatus.passed("");
+    private static AStatus status = AStatus.passed("");
 
     private static AppletWaiter waiter;
     private static AppletPanel appletPanel;
@@ -673,7 +672,7 @@ class AppletWaiter
             try {
                 wait();
             } catch (InterruptedException e) {
-                RStatus.failed("Thread interrupted: " + e.toString()).exit();
+                AStatus.failed("Thread interrupted: " + e.toString()).exit();
             }
         }
     } // waitForDone();

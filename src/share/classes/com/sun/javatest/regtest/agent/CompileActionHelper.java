@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -31,16 +31,13 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
-import com.sun.javatest.Status;
-
-import static com.sun.javatest.regtest.agent.RStatus.error;
-import static com.sun.javatest.regtest.agent.RStatus.failed;
-import static com.sun.javatest.regtest.agent.RStatus.normalize;
-import static com.sun.javatest.regtest.agent.RStatus.passed;
+import static com.sun.javatest.regtest.agent.AStatus.error;
+import static com.sun.javatest.regtest.agent.AStatus.failed;
+import static com.sun.javatest.regtest.agent.AStatus.passed;
 
 public class CompileActionHelper extends ActionHelper {
 
-    public static Status runCompile(String testName,
+    public static AStatus runCompile(String testName,
             Map<String, String> props,
             List<String> cmdArgs,
             int timeout,
@@ -70,9 +67,9 @@ public class CompileActionHelper extends ActionHelper {
         PrintStringWriter out = new PrintStringWriter();
         PrintStringWriter err = new PrintStringWriter();
 
-        Status status = error("");
+        AStatus status = error("");
         try {
-            Status stat = redirectOutput(sysOut, sysErr);
+            AStatus stat = redirectOutput(sysOut, sysErr);
             if (!stat.isPassed()) {
                 return stat;
             }
@@ -85,13 +82,13 @@ public class CompileActionHelper extends ActionHelper {
             try {
                 RegressionCompileCommand jcc = new RegressionCompileCommand() {
                     @Override
-                    protected Status getStatus(int exitCode) {
+                    protected AStatus getStatus(int exitCode) {
                         JDK_Version v = JDK_Version.forThisJVM();
                         return getStatusForJavacExitCode(v, exitCode);
                     }
                 };
                 String[] c = cmdArgs.toArray(new String[cmdArgs.size()]);
-                status = normalize(jcc.run(c, err, out));
+                status = jcc.run(c, err, out);
             } finally {
                 alarm.cancel();
             }
@@ -127,7 +124,7 @@ public class CompileActionHelper extends ActionHelper {
         return status;
     }
 
-    public static Status getStatusForJavacExitCode(JDK_Version v, int exitCode) {
+    public static AStatus getStatusForJavacExitCode(JDK_Version v, int exitCode) {
         if (v == null || v.compareTo(JDK_Version.V1_6) < 0)
             return (exitCode == 0 ? passed : failed);
 
@@ -142,6 +139,6 @@ public class CompileActionHelper extends ActionHelper {
         }
     }
 
-    private static final Status passed = passed("Compilation successful");
-    private static final Status failed = failed("Compilation failed");
+    private static final AStatus passed = passed("Compilation successful");
+    private static final AStatus failed = failed("Compilation failed");
 }
