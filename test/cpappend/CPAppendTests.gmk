@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2016, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -28,7 +28,7 @@
 $(BUILDDIR)/CPAppend/classes/p/Lib.class: \
 	$(TESTDIR)/cpappend/lib/p/Lib.java
 	$(MKDIR) -p $(BUILDDIR)/CPAppend/classes
-	$(J2SEJAVAC) -d $(BUILDDIR)/CPAppend/classes \
+	$(JDKJAVAC) -d $(BUILDDIR)/CPAppend/classes \
 		-Xlint -Werror \
 		$(TESTDIR)/cpappend/lib/p/Lib.java
 
@@ -41,7 +41,7 @@ $(BUILDDIR)/CPAppend/neg.ok: \
 	    $(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(J2SEHOME) \
+		-jdk:$(JDKHOME) \
 		-othervm \
 		$(TESTDIR)/cpappend/test  \
 			> $(@:%.ok=%/jt.log) 2>&1 || \
@@ -57,7 +57,7 @@ $(BUILDDIR)/CPAppend/othervm.ok: \
 	    $(BUILDDIR)/CPAppend/classes/p/Lib.class
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(J2SEHOME) \
+		-jdk:$(JDKHOME) \
 		-othervm \
 		-cpa:$(BUILDDIR)/CPAppend/classes \
 		$(TESTDIR)/cpappend/test
@@ -71,7 +71,7 @@ $(BUILDDIR)/CPAppend/agentvm.ok: \
 	    $(BUILDDIR)/CPAppend/classes/p/Lib.class
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(J2SEHOME) \
+		-jdk:$(JDKHOME) \
 		-agentvm \
 		-cpa:$(BUILDDIR)/CPAppend/classes \
 		$(TESTDIR)/cpappend/test

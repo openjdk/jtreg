@@ -30,10 +30,10 @@ $(BUILDDIR)/ClassDirsTest.ok: \
 	    $(JTREG_IMAGEDIR)/lib/testng.jar
 	$(RM) $(@:%.ok=%)
 	$(MKDIR) -p $(@:%.ok=%)/classes 
-	$(J2SEJAVAC) -d $(@:%.ok=%)/classes \
+	$(JDKJAVAC) -d $(@:%.ok=%)/classes \
 		-Xlint -Werror \
 		$(TESTDIR)/classDirs/ClassDirsTest.java
-	cd $(@:%.ok=%); $(J2SEJAVA) \
+	cd $(@:%.ok=%); $(JDKJAVA) \
 		-classpath $(@:%.ok=%)/classes:$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		ClassDirsTest
 	echo $@ passed at `date` > $@

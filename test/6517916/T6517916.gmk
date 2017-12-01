@@ -35,13 +35,13 @@ $(BUILDDIR)/T6517916.ok: \
 		$(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar
 	$(RM) $(@:%.ok=%)
-	$(J2SEJAVA) $(JTREG_JAVA_OPTS) \
+	$(JDKJAVA) $(JTREG_JAVA_OPTS) \
 		-jar $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		-w $(@:%.ok=%)/work/ovm \
 		-r $(@:%.ok=%)/report/ovm \
 		-ovm \
 		$(TESTDIR)/6517916
-	$(J2SEJAVA) -Djavatest.debug.child=true \
+	$(JDKJAVA) -Djavatest.debug.child=true \
 		$(JTREG_JAVA_OPTS) \
 		-jar $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		-w $(@:%.ok=%)/work/svm \

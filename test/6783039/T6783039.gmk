@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2007, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2007, 2017, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -32,13 +32,13 @@ $(BUILDDIR)/T6783039.ok: \
 	for p in p1 p2 ; do for y in 2007 2008 ; do for d in 1 2 3 ; do \
 	    mkdir -p $(BUILDDIR)/6783039/$$p/$$y/$$d/JTreport/text/ ; touch $(BUILDDIR)/6783039/$$p/$$y/$$d/JTreport/text/summary.txt ; \
 	done ; done ; done
-	$(J2SEJAVA) -cp $(JTREG_IMAGEDIR)/lib/jtreg.jar com.sun.javatest.diff.Main \
+	$(JDKJAVA) -cp $(JTREG_IMAGEDIR)/lib/jtreg.jar com.sun.javatest.diff.Main \
 		$(BUILDDIR)/6783039/*/*/*/JTreport/text/summary.txt > $(BUILDDIR)/6783039/stdout
-	$(J2SEJAVA) -cp $(JTREG_IMAGEDIR)/lib/jtreg.jar com.sun.javatest.diff.Main \
+	$(JDKJAVA) -cp $(JTREG_IMAGEDIR)/lib/jtreg.jar com.sun.javatest.diff.Main \
 		-o $(BUILDDIR)/6783039/out.txt $(BUILDDIR)/6783039/*/*/*/JTreport/text/summary.txt
 	diff $(BUILDDIR)/6783039/stdout $(BUILDDIR)/6783039/out.txt
 	mkdir $(BUILDDIR)/6783039/super
-	$(J2SEJAVA) -cp $(JTREG_IMAGEDIR)/lib/jtreg.jar com.sun.javatest.diff.Main \
+	$(JDKJAVA) -cp $(JTREG_IMAGEDIR)/lib/jtreg.jar com.sun.javatest.diff.Main \
 		-o $(BUILDDIR)/6783039/super -super $(BUILDDIR)/6783039/
 	if [ `find $(BUILDDIR)/6783039/super -name \*.html | wc -l` != 9 ]; then \
 		echo "super output not as expected" ; exit 1 ; \

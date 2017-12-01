@@ -30,8 +30,8 @@ $(BUILDDIR)/T7113596.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGE_JAVAHELP_JAR)
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
-	$(LN) -s $(J2SEHOME) $(@:%.ok=%)/jdk
-	cd $(@:%.ok=%) && $(J2SEJAVA) -jar $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	$(LN) -s $(JDKHOME) $(@:%.ok=%)/jdk
+	cd $(@:%.ok=%) && $(JDKJAVA) -jar $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		-jdk:jdk \
 		../$(TESTDIR)/7113596
 	for i in COMPILEJAVA TESTJAVA ; do \

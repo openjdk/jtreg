@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2011, 2016, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2011, 2017, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -46,10 +46,9 @@ $(BUILDDIR)/OpenFileTests.othervm.ok: \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	if [ -d $(@:%.ok=%) ]; then $(CHMOD) -R +w $(@:%.ok=%) && $(RM) $(@:%.ok=%) ; fi
 	$(MKDIR) $(@:%.ok=%)
-	JT_JAVA=$(J2SEHOME) \
-	    $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(JDK17HOME) \
+		-jdk:$(JDKHOME) \
 		$(@:$(BUILDDIR)/OpenFileTests.%.ok=-%) \
 		$(TESTDIR)/openfiles \
 			> $(@:%.ok=%/jt.log) 2>&1 || \
@@ -68,10 +67,9 @@ $(BUILDDIR)/OpenFileTests.othervm.retain.ok: \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	if [ -d $(@:%.ok=%) ]; then $(CHMOD) -R +w $(@:%.ok=%) && $(RM) $(@:%.ok=%) ; fi
 	$(MKDIR) $(@:%.ok=%)
-	JT_JAVA=$(J2SEHOME) \
-	    $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(JDK17HOME) \
+		-jdk:$(JDKHOME) \
 		$(@:$(BUILDDIR)/OpenFileTests.%.retain.ok=-%) \
 		-retain:none \
 		$(TESTDIR)/openfiles \

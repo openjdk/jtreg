@@ -31,10 +31,10 @@ $(BUILDDIR)/StatsTest.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	$(MKDIR) $(@:%.ok=%)/classes
-	$(J2SEJAVAC) -d $(@:%.ok=%)/classes -cp $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	$(JDKJAVAC) -d $(@:%.ok=%)/classes -cp $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		-Xlint -Werror \
 		$(TESTDIR)/statsTests/StatsTest.java
-	$(J2SEJAVA) -cp $(@:%.ok=%)/classes:$(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	$(JDKJAVA) -cp $(@:%.ok=%)/classes:$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    com.sun.javatest.regtest.report.StatsTest
 	echo "test passed at `date`" > $@
 
@@ -47,10 +47,10 @@ $(BUILDDIR)/StatsTxt.1.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGE_JAVAHELP_JAR)
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
-	$(J2SEJAVA) \
+	$(JDKJAVA) \
 	    -Djtreg.stats.format="TEST-STATS: StatsTxt run=%r failed=%F excluded=%x" \
 	    -jar $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-		-jdk:$(J2SEHOME) \
+		-jdk:$(JDKHOME) \
 		-agentvm \
 		-w $(@:%.ok=%/work) \
 		-r $(@:%.ok=%/report) \
@@ -70,10 +70,10 @@ $(BUILDDIR)/StatsTxt.2.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGE_JAVAHELP_JAR)
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
-	$(J2SEJAVA) \
+	$(JDKJAVA) \
 	    -Djtreg.stats.format="TEST-STATS: StatsTxt passed=%p failed=%F ignored=%i" \
 	    -jar $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-		-jdk:$(J2SEHOME) \
+		-jdk:$(JDKHOME) \
 		-agentvm \
 		-w $(@:%.ok=%/work) \
 		-r $(@:%.ok=%/report) \

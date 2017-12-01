@@ -32,7 +32,7 @@ $(BUILDDIR)/exclude.agentvm.ok: \
 	    	$(JTREG_IMAGE_JAVAHELP_JAR)
 	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
 	$(MKDIR) -p $(@:%.ok=%)
-	$(J2SEHOME)/bin/java \
+	$(JDKHOME)/bin/java \
 		-Djavatest.regtest.showCmd=true \
 		-Djavatest.regtest.debugChild=true \
 		-Djavatest.regtest.traceAgent=true \

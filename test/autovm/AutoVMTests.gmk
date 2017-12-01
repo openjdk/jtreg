@@ -39,8 +39,8 @@ $(BUILDDIR)/autovm.ok: $(AUTOVM_FILES) \
 	    fi \
 	done ; \
 	for mode in none agentvm othervm ; do for ts in none agentvm othervm ; do \
-	    $(J2SEJAVA) -jar $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-		-jdk:$(J2SEHOME) \
+	    $(JDKJAVA) -jar $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+		-jdk:$(JDKHOME) \
 		-w $(BUILDDIR)/autovm/jtreg/mode.$$mode/ts.$$ts/work \
 		-r $(BUILDDIR)/autovm/jtreg/mode.$$mode/ts.$$ts/report \
 		`if [ $$mode != none ]; then echo "-$$mode" ; fi` \

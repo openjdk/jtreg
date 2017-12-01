@@ -79,10 +79,12 @@ override BUILDDIR := $(call FullPath, $(BUILDDIR))
 
 #----------------------------------------------------------------------
 #
-# Parameters to control what to build with
-# explicit JDK versions, for use as needed
+# Parameters to control what to build and test with.
 
-#----- Java: see http://java.sun.com
+#----- Java:  http://openjdk.java.net/  http://jdk.java.net/
+#
+# Explicit JDK versions, for use as needed by tests, all optional for build.
+# At a minimum, JDKHOME must be set, either directly or indirectly. (See below).
 
 ifndef JDK15HOME
   ifdef SLASHJAVA
@@ -119,30 +121,56 @@ ifndef JDK9HOME
 endif
 JDK9HOME := $(call FullPath,$(JDK19HOME))
 
-# J2SE for most classes
-J2SEHOME = $(JDK17HOME)
-J2SEJAVA = $(J2SEHOME)/bin/java
-J2SEJAVAC = $(J2SEHOME)/bin/javac
-JAR = $(J2SEHOME)/bin/jar
+# The JDK used to build jtreg and to run most tests.
+# It should be set to JDK 7 or later.
+# If not set, it defaults to $(JDK18HOME), or to $(J2SEHOME) for backwards
+# compatibility
+
+ifndef JDKHOME
+  ifdef JDK18HOME
+    JDKHOME = $(JDK18HOME)
+  else
+    ifdef J2SEHOME
+      JDKHOME = $(J2SEHOME)
+    endif
+  endif
+endif
+
+# derived values
+JDKJAVA = $(JDKHOME)/bin/java
+JDKJAVAC = $(JDKHOME)/bin/javac
+JAR = $(JDKHOME)/bin/jar
+
+ifdef JDK15HOME
+    JDK15_BOOTCLASSPATH = -bootclasspath $(JDK15HOME)/jre/lib/rt.jar
+endif
+ifdef JDK17HOME
+    JDK17_BOOTCLASSPATH = -bootclasspath $(JDK17HOME)/jre/lib/rt.jar
+endif
 
 # for files needed to run othervm tests on oldest supported platforms
-REGTEST_OLD_JAVAC = $(JDK17HOME)/bin/javac
-REGTEST_OLD_JAVAC_OPTIONS = -source 1.2 -target 1.1 -Xlint:all,-options -Werror
+REGTEST_OLD_JAVAC = $(JDKHOME)/bin/javac
+REGTEST_OLD_JAVAC_OPTIONS = \
+	-source 1.2 -target 1.1 $(JDK15_BOOTCLASSPATH) -Xlint:all,-options -Werror
 
 # for files needed to run agentvm tests (on platforms back to JDK 1.5)
-REGTEST_AGENT_JAVAC = $(JDK17HOME)/bin/javac
-REGTEST_AGENT_JAVAC_OPTIONS = -source 5 -target 5 -Xlint:all,-options -Werror
+REGTEST_AGENT_JAVAC = $(JDKHOME)/bin/javac
+REGTEST_AGENT_JAVAC_OPTIONS = \
+	-source 5 -target 5 $(JDK15_BOOTCLASSPATH) -Xlint:all,-options -Werror
 
 # for files needed for jtreg tool
-REGTEST_TOOL_JAVAC = $(J2SEHOME)/bin/javac
-REGTEST_TOOL_JAVAC_OPTIONS = -source 7 -target 7 -Xlint:all,-options -Werror
+REGTEST_TOOL_JAVAC = $(JDKHOME)/bin/javac
+REGTEST_TOOL_JAVAC_OPTIONS = \
+	-source 7 -target 7 $(JDK17_BOOTCLASSPATH) -Xlint:all,-options -Werror
 
 #----- JavaHelp
+#
 # JavaHelp, previously available at https://javahelp.dev.java.net/,
 # is no longer supported or generally available.
 # If you use JT Harness 5.0 or later, you do not need JavaHelp.
 # If you use JT Harness 4.6 (in order to test on very old versions of JDK),
 # you will need JavaHelp.
+
 ifndef JAVAHELP_HOME
   ifdef SLASHJAVA
     JAVAHELP_HOME = $(SLASHJAVA)/re/jh/2.0_01/promoted/fcs/latest/binaries/jh2.0/javahelp
@@ -156,7 +184,14 @@ ifndef JAVAHELP_JAR
 endif
 JAVAHELP_JAR := $(call FullPath,$(JAVAHELP_JAR))
 
-#----- JavaTest: see https://wiki.openjdk.java.net/display/CodeTools/JT+Harness
+#----- JavaTest: https://wiki.openjdk.java.net/display/CodeTools/JT+Harness
+#
+# At a minimum, JAVATEST_JAR must be set, either directly or indirectly.
+# If not set explicitly, it defaults to values derived from JAVATEST_HOME,
+# JTHARNESS_HOME or SLASH_JAVA.
+# Set JTHARNESS_LICENSE and JTHARNESS_COPYRIGHT to include license and
+# copyright files in the product image. If not set explicitly, these 
+# default to values derived from JAVATEST_HOME, JTHARNESS_HOME or SLASH_JAVA.
 
 ifndef JTHARNESS_HOME
   ifdef SLASHJAVA
@@ -191,7 +226,17 @@ ifndef JTHARNESS_COPYRIGHT
 endif
 JTHARNESS_COPYRIGHT := $(call FullPath,$(JTHARNESS_COPYRIGHT))
 
-#----- JCov 2.0
+#----- JCov 2.0:  https://wiki.openjdk.java.net/display/CodeTools/jcov
+#
+# JCov is optional. 
+# If provided, coverage-collection features in jtreg will be enabled.
+#
+# To include support for JCov, JCOV_JAR and JCOV_NETWORK_SAVER_JAR
+# must be set. If not set explicitly, these default to values derived
+# from JCOV_HOME or SLASH_JAVA.
+# Set JCOV_LICENSE to include the license file in the product image.
+# If not set explicitly, this defaults to a value derived from JCOV_HOME 
+# or SLASH_JAVA.
 
 ifndef JCOV_HOME
   ifdef SLASHJAVA
@@ -222,7 +267,17 @@ JCOV_LICENSE := $(call FullPath,$(JCOV_LICENSE))
 
 JCOV = $(JDK16HOME)/bin/java -jar $(JCOV_JAR)
 
-#----- AsmTools 6.0
+#----- AsmTools 6.0:  https://wiki.openjdk.java.net/display/CodeTools/asmtools
+#
+# AsmTools is required, to support the execution of tests using
+# *.jasm and *.jcod files.
+#
+# ASMTOOLS_JAR must be set, either directly or indirectly.
+# If not set explicitly, it defaults to a value derived from
+# ASMTOOLS_HOME or SLASHJAVA.
+# Set ASMTOOLS_LICENSE to include the license file in the product image.
+# If not set explicitly, this defaults to a value derived from 
+# ASMTOOLS_HOME or SLASH_JAVA.
 
 ifndef ASMTOOLS_HOME
   ifdef SLASHJAVA
@@ -240,8 +295,17 @@ ifndef ASMTOOLS_LICENSE
 endif
 ASMTOOLS_LICENSE := $(call FullPath,$(ASMTOOLS_LICENSE))
 
-#----- JUnit 4.10: see http://www.junit.org/
+#----- JUnit 4.10: http://www.junit.org/
 # https://sourceforge.net/projects/junit/files/junit/4.10/junit-4.10.jar/download
+#
+# JUnit is required, to support the execution of tests using JUnit
+#
+# JUNIT_JAR must be set, either directly or indirectly.
+# If not set explicitly, it defaults to a value derived from
+# JUNIT_HOME or SLASHJAVA.
+# Set JUNIT_LICENSE to include the license file in the product image.
+# If not set explicitly, this defaults to a value derived from 
+# JUNIT_HOME or SLASH_JAVA.
 
 ifndef JUNIT_HOME
   ifdef SLASHJAVA
@@ -265,6 +329,15 @@ JUNIT_LICENSE := $(call FullPath,$(JUNIT_LICENSE))
 
 #----- TestNG 6.9.5: see http://www.testng.org/
 # http://testng.org/doc/download.html
+#
+# TestNG is required, to support the execution of tests using TestNG
+#
+# TESTNG_JAR must be set, either directly or indirectly.
+# If not set explicitly, it defaults to a value derived from
+# TESTNG_HOME or SLASHJAVA.
+# Set TESTNG_LICENSE to include the license file in the product image.
+# If not set explicitly, this defaults to a value derived from 
+# TESTNG_HOME or SLASH_JAVA.
 
 ifndef TESTNG_HOME
   ifdef SLASHJAVA
@@ -296,7 +369,14 @@ ifdef JCOMMANDER_JAR
     JCOMMANDER_JAR := $(call FullPath,$(JCOMMANDER_JAR))
 endif
 
-#----- Ant: see http://ant.apache.org/
+#----- Ant:  http://ant.apache.org/
+#
+# Ant is required, to support the provision of a <jtreg> Ant task
+#
+# ANT_JAR must be set, either directly or indirectly.
+# If not set explicitly, it defaults to a value derived from
+# ANTHOME or SLASHJAVA. The jar file is just used when building
+# jtreg, and is not included in the product image.
 
 ifndef ANTHOME
   ifdef SLASHJAVA

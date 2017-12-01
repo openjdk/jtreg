@@ -29,7 +29,7 @@ $(BUILDDIR)/BugIdTests.ok: \
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(J2SEHOME) \
+		-jdk:$(JDKHOME) \
 		$(TESTDIR)/bugidtests \
 			> $(@:%.ok=%/jt.log) 2>&1 || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
@@ -54,7 +54,7 @@ $(BUILDDIR)/BugIdTests.1002222.ok: \
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(J2SEHOME) \
+		-jdk:$(JDKHOME) \
 		-bug:$(@:$(BUILDDIR)/BugIdTests.%.ok=%) \
 		$(TESTDIR)/bugidtests \
 			> $(@:%.ok=%/jt.log) 2>&1 || \
@@ -77,7 +77,7 @@ $(BUILDDIR)/BugIdTests.1004444.ok: \
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(J2SEHOME) \
+		-jdk:$(JDKHOME) \
 		-bug:$(@:$(BUILDDIR)/BugIdTests.%.ok=%) \
 		$(TESTDIR)/bugidtests \
 			> $(@:%.ok=%/jt.log) 2>&1 || \

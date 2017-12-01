@@ -43,7 +43,7 @@ $(BUILDDIR)/EnvTest.simple.ok: $(ENV.files) \
 	  echo "compile.jdk=$(JDK16HOME)" ) > $(@:%.ok=%/ref.properties)
 	DISPLAY=`BUILDDIR=$(BUILDDIR) sh display.sh` export DISPLAY ; \
 	trap "BUILDDIR=$(BUILDDIR) sh `pwd`/display.sh -kill" 0 ; \
-	JT_JAVA=$(J2SEHOME) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+	JT_JAVA=$(JDKHOME) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDK16HOME) \
 		-e:refprops=`cd $(@:%.ok=%); pwd`/ref.properties \
@@ -71,7 +71,7 @@ $(BUILDDIR)/EnvTest.full.ok: $(ENV.files) \
 	  echo "compile.jdk=$(JDK16HOME)" ) > $(@:%.ok=%/ref.properties)
 	DISPLAY=`BUILDDIR=$(BUILDDIR) sh display.sh` export DISPLAY ; \
 	trap "BUILDDIR=$(BUILDDIR) sh `pwd`/display.sh -kill" 0 ; \
-	JT_JAVA=$(J2SEHOME) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+	JT_JAVA=$(JDKHOME) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-compilejdk:$(JDK16HOME) \
 		-testjdk:$(JDK17HOME) \
@@ -87,7 +87,11 @@ $(BUILDDIR)/EnvTest.full.ok: $(ENV.files) \
 
 
 ifneq ($(OS_NAME), windows)
+ifdef JDK16HOME
+ifdef JDK17HOME
 TESTS.jtreg += \
 	$(BUILDDIR)/EnvTest.simple.ok \
 	$(BUILDDIR)/EnvTest.full.ok
+endif
+endif
 endif

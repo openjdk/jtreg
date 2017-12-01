@@ -45,7 +45,7 @@ $(BUILDDIR)/ProblemList.ok: \
 	$(MKDIR) $(@:%.ok=%)/1
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/1/work -r:$(@:%.ok=%)/1/report \
-		-jdk:$(J2SEHOME) \
+		-jdk:$(JDKHOME) \
 		-agentvm \
 		$(TESTDIR)/problemList/  \
 			> $(@:%.ok=%/1/jt.log) 2>&1 
@@ -64,7 +64,7 @@ $(BUILDDIR)/ProblemList.ok: \
 		> $(@:%.ok=%)/2/ProblemList.txt
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/2/work -r:$(@:%.ok=%)/2/report \
-		-jdk:$(J2SEHOME) \
+		-jdk:$(JDKHOME) \
 		-agentvm \
 		-exclude:$(@:%.ok=%)/2/ProblemList.txt \
 		$(TESTDIR)/problemList/  \

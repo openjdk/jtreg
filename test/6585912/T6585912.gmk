@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -32,24 +32,24 @@ $(BUILDDIR)/T6585912.ok: \
 		$(JTREG_IMAGEDIR)/bin/jtreg
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(J2SEHOME) \
+		-jdk:$(JDKHOME) \
 		$(TESTDIR)/6585912 | \
 		grep "Test results: passed: 1; failed: 1; error: 1" > /dev/null
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(J2SEHOME) \
+		-jdk:$(JDKHOME) \
 		-ignore:quiet \
 		$(TESTDIR)/6585912 | \
 		grep "Test results: passed: 1; failed: 1" > /dev/null
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(J2SEHOME) \
+		-jdk:$(JDKHOME) \
 		-ignore:error \
 		$(TESTDIR)/6585912 | \
 		grep "Test results: passed: 1; failed: 1; error: 1" > /dev/null
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(J2SEHOME) \
+		-jdk:$(JDKHOME) \
 		-ignore:run \
 		$(TESTDIR)/6585912 | \
 		grep "Test results: passed: 2; failed: 1" > /dev/null

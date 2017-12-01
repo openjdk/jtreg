@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2016, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -31,7 +31,7 @@ $(BUILDDIR)/T7900130.ok: \
 		$(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
-	$(J2SEHOME)/bin/java -jar $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	$(JDKHOME)/bin/java -jar $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		-w $(BUILDDIR)/7900130/work/ -r $(BUILDDIR)/7900130/report/ \
 		$(TESTDIR)/7900130 > $(@:%.ok=%/jt.log) 2>&1
 	$(GREP) 'TestArguments.test_data("Thing1", "", 4, true, 2.0)' $(BUILDDIR)/7900130/work/TestArguments.jtr > /dev/null

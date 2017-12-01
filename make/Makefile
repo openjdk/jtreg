@@ -64,6 +64,7 @@ endif
 ifdef JDK18HOME
 	@echo "JDK18HOME           = $(JDK18HOME)"
 endif
+	@echo "JDKHOME             = $(JDKHOME)"
 ifdef JAVAHELP_HOME
 	@echo "JAVAHELP_HOME       = $(JAVAHELP_HOME)"
 endif

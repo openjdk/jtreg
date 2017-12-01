@@ -29,7 +29,7 @@
 $(BUILDDIR)/T6533074.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(JTREG_IMAGEDIR)/bin/jtreg
-	JAVA_HOME=$(J2SEHOME) $(ANT) -f $(TESTDIR)/6533074/build.xml \
+	JAVA_HOME=$(JDKHOME) $(ANT) -f $(TESTDIR)/6533074/build.xml \
 		-Dbuild.jtreg=$(BUILDDIR)/jtreg \
 		-Djtreg.jar=$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		-Dtestjdk=$(JDK15HOME)

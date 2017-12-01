@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -35,7 +35,7 @@ $(BUILDDIR)/T6590657.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 	JTHOME=$(JTREG_IMAGEDIR) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-J-Djavatest.regtest.allowTrailingBuild=true \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-va -jdk:$(J2SEHOME) \
+		-va -jdk:$(JDKHOME) \
 		$(TESTDIR)/6590657/T6590657.java
 	$(GREP) "T6590657.java  Passed. Build successful" < $(@:%.ok=%)/report/text/summary.txt
 	echo $@ passed at `date` > $@

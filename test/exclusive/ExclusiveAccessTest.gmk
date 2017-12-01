@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2011, 2013, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2011, 2017, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -33,7 +33,7 @@ $(BUILDDIR)/ExclusiveAccessTest.single.ok: \
 	$(RM) $(@:%.ok=%) && $(MKDIR) $(@:%.ok=%)
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(J2SEHOME) \
+		-jdk:$(JDKHOME) \
 		-conc:4 \
 		$(TESTDIR)/exclusive \
 			> $(@:%.ok=%/jt.log) 2>&1 || \
@@ -50,7 +50,7 @@ $(BUILDDIR)/ExclusiveAccessTest.multi.ok: \
 	for i in 1 2 3 4 ; do \
 	    $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work.$$i -r:$(@:%.ok=%)/report.$$i \
-		-jdk:$(J2SEHOME) \
+		-jdk:$(JDKHOME) \
 		-lock:$(@:%.ok=%)/Test.lck \
 		$(TESTDIR)/exclusive/dir/Test$$i.sh \
 			> $(@:%.ok=%/jt.$$i.log) 2>&1 & \

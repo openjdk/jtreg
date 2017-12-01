@@ -133,7 +133,7 @@ $(JTREG_LICENSE): $(TOPDIR)/LICENSE
 $(BUILDDIR)/jtreg-usage.txt: \
 		$(BUILDDIR)/classes.com.sun.javatest.regtest.ok \
 		$(BUILDDIR)/classes/com/sun/javatest/regtest/tool/i18n.properties
-	$(J2SEJAVA) -cp "$(CLASSDIR)$(PS)$(JAVATEST_JAR)" \
+	$(JDKJAVA) -cp "$(CLASSDIR)$(PS)$(JAVATEST_JAR)" \
 	    -Dprogram=jtreg com.sun.javatest.regtest.Main -help all > $@
 
 TARGETS.ZIP.jtreg += $(JTREG_DOCS)
@@ -154,7 +154,7 @@ endif
 $(JTREG_IMAGEDIR)/doc/api/index.html: \
             $(JAVAFILES.com.sun.javatest.regtest-tools) \
             $(JAVATEST_SRCFILES)
-	$(J2SEHOME)/bin/javadoc -d $(@D) \
+	$(JDKHOME)/bin/javadoc -d $(@D) \
                 -encoding iso-8859-1 \
 		-sourcepath "$(JAVADIR)$(PS)$(JAVATEST_SRCDIR)" \
 		-classpath "$(ANT_JAR)$(PS)$(JAVATEST_JAR)$(PS)$(JUNIT_JAR)$(PS)$(TESTNG_JAR)" \
@@ -164,7 +164,7 @@ $(JTREG_IMAGEDIR)/doc/api/index.html: \
 $(JTREG_IMAGEDIR)/doc/devapi/index.html: \
             $(JAVAFILES.com.sun.javatest.regtest-tools) \
             $(JAVATEST_SRCFILES)
-	$(J2SEHOME)/bin/javadoc -d $(@D) \
+	$(JDKHOME)/bin/javadoc -d $(@D) \
                 -encoding iso-8859-1 \
 		-sourcepath "$(JAVADIR)$(PS)$(JAVATEST_SRCDIR)" \
 		-classpath "$(ANT_JAR)$(PS)$(JAVATEST_JAR)$(PS)$(JUNIT_JAR)$(PS)$(TESTNG_JAR)" \

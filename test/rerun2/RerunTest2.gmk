@@ -31,12 +31,12 @@ $(BUILDDIR)/RerunTest2.ok: \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	$(MKDIR) $(@:%.ok=%)/classes
-	$(J2SEJAVAC) \
+	$(JDKJAVAC) \
 		-d $(@:%.ok=%)/classes \
 		-cp $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		-Xlint -Werror \
 		$(TESTDIR)/rerun2/RerunTest2.java
-	cd $(@:%.ok=%) && $(J2SEJAVA) \
+	cd $(@:%.ok=%) && $(JDKJAVA) \
 		-classpath classes$(PS)$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		RerunTest2 \
 		../$(TESTDIR)/rerun2/test

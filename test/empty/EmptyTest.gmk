@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2015, 2016, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2015, 2017, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -30,10 +30,9 @@ $(BUILDDIR)/EmptyTest_NoArgs.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
-	JT_JAVA=$(J2SEHOME) \
-	    $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(JDK16HOME) \
+		-jdk:$(JDKHOME) \
 			> $(@:%.ok=%/jt.log) 2>&1 ; \
 	rc=$$? ; if [ $$rc != 1 ]; then echo "unexpected exit code: $$rc"; exit 1; fi
 	$(GREP) -s 'Error: No tests selected' $(@:%.ok=%/jt.log)  > /dev/null
@@ -51,10 +50,9 @@ $(BUILDDIR)/EmptyTest_EmptyGroup.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
-	JT_JAVA=$(J2SEHOME) \
-	    $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(JDK16HOME) \
+		-jdk:$(JDKHOME) \
 			> $(@:%.ok=%/jt.log) 2>&1 \
 		-dir:$(TESTDIR)/empty/ts1 \
 		:empty 
@@ -73,10 +71,9 @@ $(BUILDDIR)/EmptyTest_EmptyFolder.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
-	JT_JAVA=$(J2SEHOME) \
-	    $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(JDK16HOME) \
+		-jdk:$(JDKHOME) \
 			> $(@:%.ok=%/jt.log) 2>&1 \
 		-dir:$(TESTDIR)/empty/ts1 \
 		empty  ; \
@@ -96,10 +93,9 @@ $(BUILDDIR)/EmptyTest_EmptyFile.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
-	JT_JAVA=$(J2SEHOME) \
-	    $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(JDK16HOME) \
+		-jdk:$(JDKHOME) \
 			> $(@:%.ok=%/jt.log) 2>&1 \
 		-dir:$(TESTDIR)/empty/ts1 \
 		empty/Empty.java ; \
@@ -119,10 +115,9 @@ $(BUILDDIR)/EmptyTest_EmptyGroup_Test.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
-	JT_JAVA=$(J2SEHOME) \
-	    $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(JDK16HOME) \
+		-jdk:$(JDKHOME) \
 			> $(@:%.ok=%/jt.log) 2>&1 \
 		-dir:$(TESTDIR)/empty/ts1 \
 		:empty Test.java
@@ -141,10 +136,9 @@ $(BUILDDIR)/EmptyTest_EmptyGroup_EmptyFolder.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
-	JT_JAVA=$(J2SEHOME) \
-	    $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(JDK16HOME) \
+		-jdk:$(JDKHOME) \
 			> $(@:%.ok=%/jt.log) 2>&1 \
 		-dir:$(TESTDIR)/empty/ts1 \
 		:empty empty ; \
@@ -164,10 +158,9 @@ $(BUILDDIR)/EmptyTest_MultiEmptyGroup_1.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
-	JT_JAVA=$(J2SEHOME) \
-	    $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(JDK16HOME) \
+		-jdk:$(JDKHOME) \
 			> $(@:%.ok=%/jt.log) 2>&1 \
 		-dir:$(TESTDIR)/empty/ts1 \
 		:empty :empty2 ; \
@@ -186,10 +179,9 @@ $(BUILDDIR)/EmptyTest_MultiEmptyGroup_2.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
-	JT_JAVA=$(J2SEHOME) \
-	    $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(JDK16HOME) \
+		-jdk:$(JDKHOME) \
 			> $(@:%.ok=%/jt.log) 2>&1 \
 		$(TESTDIR)/empty/ts1:empty \
 		$(TESTDIR)/empty/ts2:empty

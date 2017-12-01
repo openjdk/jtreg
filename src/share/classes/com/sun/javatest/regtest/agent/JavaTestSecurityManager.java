@@ -140,18 +140,22 @@ public class JavaTestSecurityManager extends SecurityManager
     public void checkRead(String file) { }
     public void checkRead(String file, Object context) { }
     public void checkSetFactory() { }
+    @SuppressWarnings("deprecation")
     public boolean checkTopLevelWindow(Object window) { return true; }
     public void checkWrite(FileDescriptor fd) { }
     public void checkWrite(String file) { }
 
     // These methods are added for forward-compatibility with JDK1.1
+    @SuppressWarnings("deprecation")
     public void checkAwtEventQueueAccess() { }
+    @SuppressWarnings("deprecation")
     public void checkMemberAccess(Class<?> clazz, int which) { }
     public void checkMulticast(InetAddress maddr) { }
     @SuppressWarnings("deprecation")
     public void checkMulticast(InetAddress maddr, byte ttl) { }
     public void checkPrintJobAccess() { }
     public void checkSecurityAccess(String provider) { }
+    @SuppressWarnings("deprecation")
     public void checkSystemClipboardAccess() { }
 
     /**

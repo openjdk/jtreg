@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2015, 2016, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2015, 2017, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -44,14 +44,14 @@ $(BUILDDIR)/TimeoutHandlerTimeoutTest.timeout.ok: \
 	    $(JTREG_IMAGEDIR)/bin/jtreg \
 	    $(TESTDIR)/timeoutHandler/TestTimeoutHandler.java
 	$(MKDIR) -p $(@:%.ok=%)/classes 
-	$(J2SEJAVAC) -d $(@:%.ok=%)/classes \
+	$(JDKJAVAC) -d $(@:%.ok=%)/classes \
 		-classpath $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		-Xlint -Werror \
 		$(TESTDIR)/timeoutHandler/TestTimeoutHandler.java
 	EXPECTED_TIMEOUT=$(EXPECT) \
 		$(JTREG_IMAGEDIR)/bin/jtreg \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(J2SEHOME) \
+		-jdk:$(JDKHOME) \
 		-timeoutHandler:TestTimeoutHandler \
 		-timeoutHandlerDir:$(@:%.ok=%)/classes \
 		$(OPTION) \

@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2016, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -27,11 +27,11 @@ $(BUILDDIR)/BuildPatternTest.ok: \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(TESTDIR)/buildPatternTest/BuildPatternTest.java
 	$(MKDIR) -p $(@:%.ok=%/classes)
-	$(J2SEJAVAC) -d $(@:%.ok=%/classes) \
+	$(JDKJAVAC) -d $(@:%.ok=%/classes) \
 		-cp $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		-Xlint -Werror \
 		$(TESTDIR)/buildPatternTest/BuildPatternTest.java
-	$(J2SEJAVA) \
+	$(JDKJAVA) \
 		-cp $(@:%.ok=%/classes):$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		com.sun.javatest.regtest.exec.BuildPatternTest
 	echo $@ passed at `date` > $@

@@ -32,7 +32,7 @@ $(BUILDDIR)/TestWhiteSpaceFiles.ok: \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(BUILDDIR)/tmp/$(@F:%.ok=%)
 	$(MKDIR) -p $(BUILDDIR)/tmp/$(@F:%.ok=%)
-	ln -s $(J2SEHOME) $(BUILDDIR)/tmp/$(@F:%.ok=%)/"j2se home"
+	ln -s $(JDKHOME) $(BUILDDIR)/tmp/$(@F:%.ok=%)/"j2se home"
 	ln -s $(shell cd $(JTREG_IMAGEDIR); pwd) $(BUILDDIR)/tmp/$(@F:%.ok=%)/"jtreg home"
 	$(BUILDDIR)/tmp/$(@F:%.ok=%)/"jtreg home"/bin/jtreg $(JTREG_OPTS) \
 		-w $(@:%.ok=%/ovm/work) \

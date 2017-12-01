@@ -35,17 +35,17 @@ $(BUILDDIR)/T6533136.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 	( cd $(TESTDIR)/share/simple/ ; \
 	  JTHOME=$(JTREG_IMAGEDIR) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-avm -w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-v:fail -jdk:$(J2SEHOME) Pass.java ; \
+		-v:fail -jdk:$(JDKHOME) Pass.java ; \
 	  JTHOME=$(JTREG_IMAGEDIR) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-ovm -w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-v:fail -jdk:$(J2SEHOME) Pass.java )
+		-v:fail -jdk:$(JDKHOME) Pass.java )
 	JTHOME=$(JTREG_IMAGEDIR) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-avm -w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-v:fail -jdk:$(J2SEHOME) \
+		-v:fail -jdk:$(JDKHOME) \
 		-dir:$(TESTDIR)/share/simple/ Pass.java
 	JTHOME=$(JTREG_IMAGEDIR) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-ovm -w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-v:fail -jdk:$(J2SEHOME) \
+		-v:fail -jdk:$(JDKHOME) \
 		-dir:$(TESTDIR)/share/simple/ Pass.java
 	echo $@ passed at `date` > $@
 

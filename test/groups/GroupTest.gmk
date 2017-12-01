@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2013, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2013, 2017, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -38,7 +38,7 @@ $(GroupTest.GROUPS:%=$(BUILDDIR)/GroupTest.%.ok): \
 	$(MKDIR) -p $(@:%.ok=%) 
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(J2SEHOME) \
+		-jdk:$(JDKHOME) \
 		$(TESTDIR)/groups:$(@:$(BUILDDIR)/GroupTest.%.ok=%) ; \
             status=$$? ; echo status=$$status ; \
             case "$(@:$(BUILDDIR)/GroupTest.%.ok=%)" in \
@@ -57,7 +57,7 @@ $(BUILDDIR)/ShowGroupTest.ok: \
 	$(MKDIR) -p $(@:%.ok=%) 
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(J2SEHOME) \
+		-jdk:$(JDKHOME) \
                 -showGroups \
 		$(TESTDIR)/groups \
                 > $(@:%.ok=%)/jt.log 2>&1

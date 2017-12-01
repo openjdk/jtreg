@@ -35,7 +35,7 @@ $(BUILDDIR)/T6783087.ok: \
 	touch $(BUILDDIR)/6783087/doNotDelete.txt $(BUILDDIR)/6783087/doNotDelete/doNotDelete.txt
 	ln -s `pwd`/$(BUILDDIR)/6783087/doNotDelete $(BUILDDIR)/6783087/work/scratch/doNotDelete
 	ln -s `pwd`/$(BUILDDIR)/6783087/doNotDelete.txt $(BUILDDIR)/6783087/work/scratch/doNotDelete.txt
-	$(J2SEJAVA) -jar $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	$(JDKJAVA) -jar $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		-w $(BUILDDIR)/6783087/work/ -r $(BUILDDIR)/6783087/report/ \
 		$(TESTDIR)/share/simple/Pass.java
 	find $(BUILDDIR)/6783087/

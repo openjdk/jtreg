@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2015, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -30,8 +30,8 @@ $(BUILDDIR)/TimeoutTest.ok: \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(MAKE) -C $(TESTDIR)/timeouts/test \
 		TEST_OUTPUT_DIR=`pwd`/$(BUILDDIR)/$(@:%.ok=%) \
-		JT_JAVA=$(J2SEHOME) \
-		TESTJAVA=$(J2SEHOME) \
+		JT_JAVA=$(JDKHOME) \
+		TESTJAVA=$(JDKHOME) \
 		JTREG_HOME=`cd $(JTREG_IMAGEDIR); pwd`
 	echo "test passed at `date`" > $@
 

@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2012, 2013, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2012, 2017, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -29,7 +29,7 @@ $(BUILDDIR)/ExitCodeTest.OK.ok: \
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(J2SEHOME) \
+		-jdk:$(JDKHOME) \
 		$(TESTDIR)/exitCodes/Pass.java \
 			> $(@:%.ok=%/jt.log) 2>&1 ; rc=$$? ; \
         if [ "$$rc" != 0 ]; then echo "unexpected exit code: " $$rc ; exit 1 ; fi
@@ -41,7 +41,7 @@ $(BUILDDIR)/ExitCodeTest.NoTest.ok: \
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(J2SEHOME) \
+		-jdk:$(JDKHOME) \
 		-bug:notFound \
 		$(TESTDIR)/exitCodes/Pass.java \
 			> $(@:%.ok=%/jt.log) 2>&1 ; rc=$$? ; \
@@ -54,7 +54,7 @@ $(BUILDDIR)/ExitCodeTest.Fail.ok: \
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(J2SEHOME) \
+		-jdk:$(JDKHOME) \
 		$(TESTDIR)/exitCodes/Fail.java \
 			> $(@:%.ok=%/jt.log) 2>&1 ; rc=$$? ; \
         if [ "$$rc" != 2 ]; then echo "unexpected exit code: " $$rc ; exit 1 ; fi
@@ -66,7 +66,7 @@ $(BUILDDIR)/ExitCodeTest.Error.ok: \
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(J2SEHOME) \
+		-jdk:$(JDKHOME) \
 		$(TESTDIR)/exitCodes/Error.java \
 			> $(@:%.ok=%/jt.log) 2>&1 ; rc=$$? ; \
         if [ "$$rc" != 3 ]; then echo "unexpected exit code: " $$rc ; exit 1 ; fi
@@ -78,7 +78,7 @@ $(BUILDDIR)/ExitCodeTest.BadArgs.ok: \
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(J2SEHOME) \
+		-jdk:$(JDKHOME) \
 		-splodge \
 		$(TESTDIR)/exitCodes/Pass.java \
 			> $(@:%.ok=%/jt.log) 2>&1 ; rc=$$? ; \
@@ -91,7 +91,7 @@ $(BUILDDIR)/ExitCodeTest.Fault.ok: \
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(J2SEHOME) \
+		-jdk:$(JDKHOME) \
 		$(TESTDIR)/exitCodes/FileNotFound.java \
 			> $(@:%.ok=%/jt.log) 2>&1 ; rc=$$? ; \
         if [ "$$rc" != 5 ]; then echo "unexpected exit code: " $$rc ; exit 1 ; fi

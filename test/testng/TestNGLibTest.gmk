@@ -32,7 +32,7 @@ $(BUILDDIR)/TestNGLibTest.ok: \
 	    	$(JTREG_IMAGE_JAVAHELP_JAR)
 	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
 	$(MKDIR) -p $(@:%.ok=%)
-	$(J2SEHOME)/bin/java \
+	$(JDKHOME)/bin/java \
 		-jar $(ABS_JTREG_IMAGEJARDIR)/jtreg.jar \
 		-w:$(@:%.ok=%/work) \
 		-r:$(@:%.ok=%/report) \

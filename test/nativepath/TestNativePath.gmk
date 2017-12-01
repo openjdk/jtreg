@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2014, 2016, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2014, 2017, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -34,9 +34,8 @@ $(BUILDDIR)/TestNativePath.othervm.ok: \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(JTREG_IMAGEDIR)/bin/jtreg
 
-	JT_JAVA=$(J2SEHOME) \
-	    $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
-		-jdk:$(JDK16HOME) \
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-jdk:$(JDKHOME) \
 		-nativepath:$(NATIVEPATH) \
 		-vmoption:-Dcorrect.nativepath=$(NATIVEPATH) \
 		-w:$(BUILDDIR)/nativepath.othervm/work \
@@ -45,9 +44,8 @@ $(BUILDDIR)/TestNativePath.othervm.ok: \
 		$(@:$(BUILDDIR)/TestNativePath.%.ok=-%) \
 		$(TESTDIR)/nativepath/NativesOK.java
 
-	JT_JAVA=$(J2SEHOME) \
-	    $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
-		-jdk:$(JDK16HOME) \
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-jdk:$(JDKHOME) \
 		-w:$(BUILDDIR)/nativepath.othervm2/work \
 		-r:$(BUILDDIR)/nativepath.othervm2/report \
 		-verbose:fail \
@@ -62,32 +60,28 @@ $(BUILDDIR)/TestNativePath.ok: \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(JTREG_IMAGEDIR)/bin/jtreg
 
-	JT_JAVA=$(J2SEHOME) \
-	    $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
-		-jdk:$(JDK16HOME) \
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-jdk:$(JDKHOME) \
 		-nativepath:/this/path/does/not/exist \
 		$(TESTDIR)/nativepath \
 		2>&1 | grep -q "The -nativepath path does not exist" 
 
-	JT_JAVA=$(J2SEHOME) \
-	    $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
-		-jdk:$(JDK16HOME) \
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-jdk:$(JDKHOME) \
 		-nativepath:$(JTREG_IMAGEDIR)/bin/jtreg \
 		$(TESTDIR)/nativepath \
 		2>&1 | grep -q "The -nativepath path is not a directory" 
 
-	JT_JAVA=$(J2SEHOME) \
-	    $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
-		-jdk:$(JDK16HOME) \
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-jdk:$(JDKHOME) \
 		-nativepath:$(JTREG_IMAGEDIR)/bin/jtreg:$(JDK16HOME) \
 		$(TESTDIR)/nativepath \
 		2>&1 | grep -q "The argument to -nativepath cannot be more than one path." 
 
         # Run a test with native code without the -nativepath option 
         # should yield an error
-	JT_JAVA=$(J2SEHOME) \
-	    $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
-		-jdk:$(JDK16HOME) \
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-jdk:$(JDKHOME) \
 		-w:$(BUILDDIR)/nativepath.othervm2/work \
 		-r:$(BUILDDIR)/nativepath.othervm2/report \
 		-verbose:fail \
@@ -95,9 +89,8 @@ $(BUILDDIR)/TestNativePath.ok: \
 		2>&1 | grep -q "Use -nativepath to specify the location of native code"
 
         # Exclude all tests with native code
-	JT_JAVA=$(J2SEHOME) \
-	    $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
-		-jdk:$(JDK16HOME) \
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-jdk:$(JDKHOME) \
 		-w:$(BUILDDIR)/nativepath.othervm2/work \
 		-r:$(BUILDDIR)/nativepath.othervm2/report \
                 -k:!native \
@@ -106,9 +99,8 @@ $(BUILDDIR)/TestNativePath.ok: \
 		2>&1 | grep -q "no tests selected"
 
 	# Shell tests
-	JT_JAVA=$(J2SEHOME) \
-	    $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
-		-jdk:$(JDK16HOME) \
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-jdk:$(JDKHOME) \
 		-nativepath:$(NATIVEPATH) \
 		-e:CORRECTNATIVEPATH=$(NATIVEPATH) \
 		-w:$(BUILDDIR)/nativepath.shell/work \
@@ -116,9 +108,8 @@ $(BUILDDIR)/TestNativePath.ok: \
 		-verbose:fail \
 		$(TESTDIR)/nativepath/NativesOKShell.sh
 
-	JT_JAVA=$(J2SEHOME) \
-	    $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
-		-jdk:$(JDK16HOME) \
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-jdk:$(JDKHOME) \
 		-w:$(BUILDDIR)/nativepath.shell/work \
 		-r:$(BUILDDIR)/nativepath.shell/report \
 		-verbose:fail \

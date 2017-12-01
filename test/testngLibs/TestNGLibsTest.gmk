@@ -30,10 +30,10 @@ $(BUILDDIR)/TestNGLibsTest.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%)
 	$(MKDIR) $(@:%.ok=%)
-	JT_JAVA=$(J2SEHOME) JTHOME=$(JTREG_IMAGEDIR) \
+	JT_JAVA=$(JDKHOME) JTHOME=$(JTREG_IMAGEDIR) \
 	    $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(J2SEHOME) \
+		-jdk:$(JDKHOME) \
 		$(TESTDIR)/testngLibs/tests
 	echo $@ passed at `date` > $@
 
