@@ -65,7 +65,7 @@ $(BUILDDIR)/RerunTest.othervm.ok: \
 		    -e "s|`cd $(JDK18HOME); pwd -P`|%JDKHOME%|g" \
 		    -e 's|$(BUILDDIR)|%BUILD%|g' \
 		    -e 's|$(ABSTOPDIR)|%WS%|g' \
-		    -e 's|%WS%.build.images.jtreg.lib.jcommander\.jar.||g' \
+		    -e 's|%BUILD%.images.jtreg.lib.jcommander\.jar.||g' \
 		> $(@:%.ok=%)/out/$${i%.*}.out ; \
 	    diff $(TESTDIR)/rerun/$${i%.*}.$(@:$(BUILDDIR)/RerunTest.%.ok=%).out \
 		$(@:%.ok=%)/out/$${i%.*}.out || exit 1 ; \
