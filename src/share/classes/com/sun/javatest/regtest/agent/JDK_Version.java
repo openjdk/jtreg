@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2007, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -40,7 +40,9 @@ public enum JDK_Version {
     V1_8("1.8"),
     V9("9"),
     // proactive ...
-    V10("10");
+    V10("10"),
+    V11("11"),
+    V12("12");
 
     JDK_Version(String name) {
         this.name = name;
