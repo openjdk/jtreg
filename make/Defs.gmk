@@ -195,7 +195,7 @@ JAVAHELP_JAR := $(call FullPath,$(JAVAHELP_JAR))
 
 ifndef JTHARNESS_HOME
   ifdef SLASHJAVA
-    JTHARNESS_HOME = $(SLASHJAVA)/re/jtharness/4.6/archive/MR1/binaries
+    JTHARNESS_HOME = $(SLASHJAVA)/re/jtharness/5.0/promoted/jtharness/5.0/latest/binaries
   endif
 endif 
 
@@ -204,7 +204,7 @@ ifndef JAVATEST_HOME
     JAVATEST_HOME = $(JTHARNESS_HOME)
   else
     ifdef SLASHJAVA
-      JAVATEST_HOME = $(SLASHJAVA)/re/javatest/4.6/archive/binaries/javatest
+      JAVATEST_HOME = $(SLASHJAVA)/re/javatest/5.0/archive/binaries/javatest/
     endif
   endif
 endif
