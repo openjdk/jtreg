@@ -1445,6 +1445,7 @@ public class Tool {
                 .classes("org.openjdk.asmtools.Main")
                 .libDir(libDir)
                 .getPath();
+        help.addPathVersionHelper("AsmTools", asmtoolsPath);
     }
 
     void initPolicyFile() throws Fault {
