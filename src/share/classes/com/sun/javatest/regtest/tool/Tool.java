@@ -97,6 +97,7 @@ import com.sun.javatest.regtest.report.VerboseHandler;
 import com.sun.javatest.regtest.report.XMLWriter;
 import com.sun.javatest.regtest.tool.Help.VersionHelper;
 import com.sun.javatest.regtest.util.NaturalComparator;
+import com.sun.javatest.regtest.util.StringUtils;
 import com.sun.javatest.tool.Desktop;
 import com.sun.javatest.tool.Startup;
 import com.sun.javatest.util.BackupPolicy;
@@ -1138,38 +1139,41 @@ public class Tool {
             jcovManager.setTestJDK(testJDK);
             jcovManager.setWorkDir(getNormalizedFile(workDirArg));
             jcovManager.setReportDir(getNormalizedFile(reportDirArg));
-            boolean isChild = (System.getProperty("javatest.child") != null);
-            if (!isChild) {
-                jcovManager.instrumentClasses();
-                final String XBOOTCLASSPATH_P = "-Xbootclasspath/p:";
-                final String XMS = "-Xms";
-                final String defaultInitialHeap = "20m";
-                String insert = jcovManager.instrClasses + File.pathSeparator
-                                + jcovManager.jcov_network_saver_jar;
-                boolean found_Xbootclasspath_p = false;
-                boolean found_Xms = false;
-                for (int i = 0; i < testVMOpts.size(); i++) {
-                    String opt = testVMOpts.get(i);
-                    if (opt.startsWith(XBOOTCLASSPATH_P)) {
-                        opt = opt.substring(0, XBOOTCLASSPATH_P.length())
-                                + insert + File.pathSeparator
-                                + opt.substring(XBOOTCLASSPATH_P.length());
-                        testVMOpts.set(i, opt);
-                        found_Xbootclasspath_p = true;
-                        break;
-                    } else if (opt.startsWith(XMS))
-                        found_Xms = true;
-                }
-                if (!found_Xbootclasspath_p)
-                    testVMOpts.add(XBOOTCLASSPATH_P + insert);
-                if (!found_Xms)
-                    testVMOpts.add(XMS + defaultInitialHeap);
-                jcovManager.startGrabber();
-                testVMOpts.add("-Djcov.port=" + jcovManager.grabberPort);
-
-                if (JCovManager.showJCov)
-                    System.err.println("Modified VM opts: " + testVMOpts);
+            jcovManager.instrumentClasses();
+            final String XBOOTCLASSPATH_P = "-Xbootclasspath/p:";
+            final String XMS = "-Xms";
+            final String defaultInitialHeap = "64m";
+            String insert = jcovManager.instrClasses + File.pathSeparator
+                    + jcovManager.jcov_network_saver_jar;
+            boolean found_Xbootclasspath_p = false;
+            boolean found_Xms = false;
+            for (int i = 0; i < testVMOpts.size(); i++) {
+                String opt = testVMOpts.get(i);
+                if (opt.startsWith(XBOOTCLASSPATH_P)) {
+                    opt = opt.substring(0, XBOOTCLASSPATH_P.length())
+                            + insert + File.pathSeparator
+                            + opt.substring(XBOOTCLASSPATH_P.length());
+                    testVMOpts.set(i, opt);
+                    found_Xbootclasspath_p = true;
+                    break;
+                } else if (opt.startsWith(XMS))
+                    found_Xms = true;
             }
+            if (!found_Xbootclasspath_p) {
+                if (jcovManager.instrModules.exists()) {
+                    patchModulesInVMOpts(jcovManager.instrModules);
+                } else {
+                    testVMOpts.add(XBOOTCLASSPATH_P + insert);
+                }
+
+            }
+            if (!found_Xms)
+                testVMOpts.add(XMS + defaultInitialHeap);
+            jcovManager.startGrabber();
+            testVMOpts.add("-Djcov.port=" + jcovManager.grabberPort);
+
+            if (JCovManager.showJCov)
+                System.err.println("Modified VM opts: " + testVMOpts);
         }
 
         try {
@@ -1247,6 +1251,37 @@ public class Tool {
                 }
             }
 
+        }
+    }
+
+    private void patchModulesInVMOpts(File modules) {
+        if (modules.exists()) {
+            List<String> instrMods = new ArrayList<String>();
+            for (File module : modules.listFiles()) {
+                if (module.isDirectory() && !module.getName().equals("java.base")) {
+                    instrMods.add(module.getName());
+                }
+            }
+            for (File module : modules.listFiles()) {
+                if (module.isDirectory()) {
+                    String patchOption = module.getName() + "=" + module.getAbsolutePath();
+                    if (module.getName().equals("java.base")) {
+                        patchOption += File.pathSeparator + jcovManager.jcov_network_saver_jar;
+
+                        // export jcov package to instrumented modules
+                        if (!instrMods.isEmpty()) {
+                            testVMOpts.add("--add-exports");
+                            String exportOption = "java.base/"
+                                    + JCovManager.JCOV_EXPORT_PACKAGE
+                                    + "="
+                                    + StringUtils.join(instrMods, ",");
+                            testVMOpts.add(exportOption);
+                        }
+                    }
+                    testVMOpts.add("--patch-module");
+                    testVMOpts.add(patchOption);
+                }
+            }
         }
     }
 

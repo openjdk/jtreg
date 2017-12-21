@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -155,6 +155,7 @@ public class JCovManager {
     void setWorkDir(File workDir) {
         workDir = workDir.getAbsoluteFile();
         instrClasses = new File(workDir, "jcov/classes");
+        instrModules = new File(instrClasses, "modules");
         template = new File(workDir, "jcov/template.xml");
         results = new File(workDir, "jcov/results.xml");
     }
@@ -209,14 +210,15 @@ public class JCovManager {
         opts.add(classes.getPath());
 
         // Uugh, best to run Instr on the test JDK because it may try to read
-        // platform classes from the bootclasspath
+        // platform classes from the bootclasspath or system image
         new Task(testJDK, opts).run();
 
         if (classes.isFile()) {
             File result = new File(instrClasses, classes.getName());
             if (result.exists()) {
                 // work around weird Instr behavior for -output
-                File instrJar = new File(instrClasses.getParent(), "classes.jar");
+                String classesFile = classes.getName().equals("modules") ? "classes" : "classes.jar";
+                File instrJar = new File(instrClasses.getParent(), classesFile);
                 instrJar.delete();
                 result.renameTo(instrJar);
                 instrClasses.delete();
@@ -482,6 +484,7 @@ public class JCovManager {
 
     JDK testJDK;
     File instrClasses;
+    File instrModules;
     File template;
     File results;
     File report;
@@ -492,6 +495,7 @@ public class JCovManager {
 
     private Thread grabber;
     static final boolean showJCov = Flags.get("showJCov");
+    static final String JCOV_EXPORT_PACKAGE = "com.sun.tdk.jcov.runtime";
 
     private static I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(Tool.class);
 }
