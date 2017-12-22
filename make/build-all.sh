@@ -191,6 +191,14 @@ ANT_JAR=${ANT_DEPS_DIR}/ant-1.7.0.jar
 wget ${MAVEN_REPO_URL}/org/apache/ant/ant/1.7.0/ant-1.7.0.jar -O ${ANT_JAR}
 printf "9746af1a485e50cf18dcb232489032a847067066  ${ANT_JAR}" | shasum -a 1 --check -
 
+## Set version and build numbers to the latest tagged version by default
+if [ -z ${BUILD_NUMBER:-} ]; then
+    BUILD_NUMBER=`hg tags | grep jtreg | head -1 | sed 's/jtreg\([0-9]\.[0-9]\)-\(b[0-9]\+\).*/\2/'`
+fi
+if [[ -z ${BUILD_VERSION:-} ]]; then
+    BUILD_VERSION=`hg tags | grep jtreg | head -1 | sed 's/jtreg\([0-9]\.[0-9]\)-\(b[0-9]\+\).*/\1/'`
+fi
+
 # Build jtreg
 cd ${ROOT}/make
 make JUNIT_JAR=${JUNIT_JAR}                           \
@@ -207,4 +215,7 @@ make JUNIT_JAR=${JUNIT_JAR}                           \
      JTHARNESS_COPYRIGHT=${JTHARNESS_COPYRIGHT}       \
      ASMTOOLS_JAR=${ASMTOOLS_JAR}                     \
      ASMTOOLS_LICENSE=${ASMTOOLS_LICENSE}             \
+     BUILD_VERSION=${BUILD_VERSION}                   \
+     BUILD_MILESTONE=${BUILD_MILESTONE:=dev}          \
+     BUILD_NUMBER=${BUILD_NUMBER}                     \
      JDKHOME=$1
