@@ -50,6 +50,9 @@ if case ${JAVA_VERSION} in 1.8*) false ;; *) true; esac; then
     exit 1
 fi
 
+export JAVA_HOME=$1
+export PATH="$JAVA_HOME:$PATH"
+
 ROOT=$(hg root)
 BUILD_DIR=${BUILD_DIR:-${ROOT}/build}
 
@@ -218,4 +221,5 @@ make JUNIT_JAR=${JUNIT_JAR}                           \
      BUILD_VERSION=${BUILD_VERSION}                   \
      BUILD_MILESTONE=${BUILD_MILESTONE:=dev}          \
      BUILD_NUMBER=${BUILD_NUMBER}                     \
-     JDKHOME=$1
+     JDKHOME=$JAVA_HOME
+
