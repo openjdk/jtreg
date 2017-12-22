@@ -195,7 +195,7 @@ printf "9746af1a485e50cf18dcb232489032a847067066  ${ANT_JAR}" | shasum -a 1 --ch
 if [ -z ${BUILD_NUMBER:-} ]; then
     BUILD_NUMBER=`hg tags | grep jtreg | head -1 | sed 's/jtreg\([0-9]\.[0-9]\)-\(b[0-9]\+\).*/\2/'`
 fi
-if [[ -z ${BUILD_VERSION:-} ]]; then
+if [ -z ${BUILD_VERSION:-} ]; then
     BUILD_VERSION=`hg tags | grep jtreg | head -1 | sed 's/jtreg\([0-9]\.[0-9]\)-\(b[0-9]\+\).*/\1/'`
 fi
 
