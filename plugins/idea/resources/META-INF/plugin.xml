@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright (c) 2016, Oracle and/or its affiliates. All rights reserved.
+  ~ Copyright (c) 2016, 2018 Oracle and/or its affiliates. All rights reserved.
   ~ DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
   ~
   ~ This code is free software; you can redistribute it and/or modify it
@@ -23,20 +23,20 @@
   ~ questions.
   -->
 
-<idea-plugin version="2">
+<idea-plugin>
     <id>jtreg</id>
     <name>jtreg Test Support</name>
-    <version>1.5</version>
+    <version>1.6</version>
     <description><![CDATA[
       Allows execution of tests developed using the <a href="http://openjdk.java.net/jtreg/">jtreg</a> framework.
     ]]></description>
 
     <change-notes><![CDATA[
-      Fixed NPE in testng import check
+      Fixed misc issues with plugin build against newer versions of IntelliJ IDE
     ]]>
     </change-notes>
 
-    <idea-version since-build="145.0"/>
+    <idea-version since-build="162.0"/>
 
     <depends>AntSupport</depends>
     <depends>TestNG-J</depends>

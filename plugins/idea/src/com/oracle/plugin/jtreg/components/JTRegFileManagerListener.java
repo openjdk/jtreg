@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -29,11 +29,11 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
-import com.intellij.openapi.editor.event.DocumentAdapter;
 import com.intellij.openapi.editor.event.DocumentEvent;
+import com.intellij.openapi.editor.event.DocumentListener;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.fileEditor.FileEditorManager;
-import com.intellij.openapi.fileEditor.FileEditorManagerAdapter;
+import com.intellij.openapi.fileEditor.FileEditorManagerListener;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.project.DumbService;
@@ -53,7 +53,7 @@ import java.util.stream.Stream;
  * model is updated, so that the test source is displayed without errors. Changes in the headers will be picked up
  * and reflected in the root model.
  */
-public class JTRegFileManagerListener extends FileEditorManagerAdapter {
+public class JTRegFileManagerListener implements FileEditorManagerListener {
 
     public static final Logger LOG = Logger.getInstance(JTRegFileManagerListener.class);
 
@@ -66,7 +66,7 @@ public class JTRegFileManagerListener extends FileEditorManagerAdapter {
         VirtualFile contentRoot;
         List<VirtualFile> roots = new ArrayList<>();
         Document document;
-        DocumentAdapter listener = new DocumentAdapter() {
+        DocumentListener listener = new DocumentListener() {
             @Override
             public void documentChanged(DocumentEvent e) {
                 alarm.cancelAllRequests();

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -157,7 +157,7 @@ public class JTRegServiceConfigurable implements SearchableConfigurable {
         workDir = new TextFieldWithBrowseButton();
         workDir.addBrowseFolderListener("Directory with Strategies", null, project, FileChooserDescriptorFactory.createSingleFolderDescriptor());
         myModel = new CollectionListModel<>();
-        JBList myList = new JBList(myModel);
+        JBList<AntBuildTarget> myList = new JBList<>(myModel);
         myList.getEmptyText().setText(ExecutionBundle.message("before.launch.panel.empty"));
         myList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         myList.setCellRenderer(new MyListCellRenderer());

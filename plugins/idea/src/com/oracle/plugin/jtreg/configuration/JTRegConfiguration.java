@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -29,6 +29,7 @@ import com.intellij.diagnostic.logging.LogConfigurationPanel;
 import com.intellij.execution.*;
 import com.intellij.execution.configurations.*;
 import com.intellij.execution.runners.ExecutionEnvironment;
+import com.intellij.execution.testframework.TestSearchScope;
 import com.intellij.execution.testframework.sm.runner.SMTRunnerConsoleProperties;
 import com.intellij.execution.ui.DefaultJreSelector;
 import com.intellij.openapi.module.Module;
@@ -44,7 +45,9 @@ import com.intellij.openapi.util.InvalidDataException;
 import com.intellij.openapi.util.WriteExternalException;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiMethod;
 import com.intellij.refactoring.listeners.RefactoringElementListener;
 import com.intellij.util.xmlb.XmlSerializer;
 import org.jdom.Element;
@@ -56,6 +59,7 @@ import com.oracle.plugin.jtreg.service.JTRegService;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -273,4 +277,24 @@ public class JTRegConfiguration extends JavaTestConfigurationBase {
 
     @Override
     public void setVMParameters(String s) { }
+
+    public void bePatternConfiguration(List<PsiClass> list, PsiMethod psiMethod) {
+        //do nothing
+    }
+
+    public void beMethodConfiguration(Location<PsiMethod> location) {
+        //do nothing
+    }
+
+    public void beClassConfiguration(PsiClass psiClass) {
+        //do nothing
+    }
+
+    public boolean isConfiguredByElement(PsiElement psiElement) {
+        return false;
+    }
+
+    public TestSearchScope getTestSearchScope() {
+        return null;
+    }
 }
