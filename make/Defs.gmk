@@ -281,7 +281,7 @@ JCOV = $(JDK16HOME)/bin/java -jar $(JCOV_JAR)
 
 ifndef ASMTOOLS_HOME
   ifdef SLASHJAVA
-    ASMTOOLS_HOME = $(SLASHJAVA)/re/asmtools/6.0/promoted/latest/binaries/asmtools-6.0
+    ASMTOOLS_HOME = $(SLASHJAVA)/re/asmtools/7.0/promoted/opensource/ea/b02/binaries/asmtools-7.0
   endif
 endif
 
