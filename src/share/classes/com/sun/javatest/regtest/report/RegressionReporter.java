@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -33,10 +33,13 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.URLEncoder;
 import java.text.DateFormat;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.sun.javatest.CompositeFilter;
@@ -193,22 +196,21 @@ public class RegressionReporter {
                 html.startTag(HTMLWriter.TD);
                 html.startTag(HTMLWriter.A);
                 File ts = testSuite.getRootDir();
-                html.writeAttr(HTMLWriter.HREF, ts.getAbsolutePath());
+                html.writeAttr(HTMLWriter.HREF, getURIPath(ts));
                 html.write(relativize(parent, ts).getPath());
                 html.endTag(HTMLWriter.A);
                 html.endTag(HTMLWriter.TD);
                 html.startTag(HTMLWriter.TD);
                 html.startTag(HTMLWriter.A);
                 File wd = testManager.getWorkDirectory(testSuite).getRoot();
-                html.writeAttr(HTMLWriter.HREF, wd.getPath());
+                html.writeAttr(HTMLWriter.HREF, getURIPath(wd));
                 html.write(wd.getName());
                 html.endTag(HTMLWriter.A);
                 html.endTag(HTMLWriter.TD);
                 html.startTag(HTMLWriter.TD);
                 html.startTag(HTMLWriter.A);
                 File rd = testManager.getReportDirectory(testSuite);
-                File r = new File(rd, "index.html");
-                html.writeAttr(HTMLWriter.HREF, r.getAbsolutePath());
+                html.writeAttr(HTMLWriter.HREF, "../" + encode(rd.getName()) + "/index.html");
                 html.write(rd.getName());
                 html.endTag(HTMLWriter.A);
                 html.endTag(HTMLWriter.TD);
@@ -225,42 +227,76 @@ public class RegressionReporter {
      * file system, rewrite HTML files in the report directory, replacing
      * absolute paths for the work directory with relative paths.
      */
-    private void fixupReports(File report, File work) {
+    private void fixupReports(File report, File work) throws IOException {
         // ensure all files normalized
         work = getCanonicalFile(work);
         report = getCanonicalFile(report);
 
-        String canonWorkPath = getCanonicalURIPath(work);
         File workParent = work.getParentFile();
         File reportParent = report.getParentFile();
         File htmlDir = new File(report, "html");
 
         if (equal(work, report)) {
-            fixupReportFiles(report,  canonWorkPath, ".");
-            fixupReportFiles(htmlDir, canonWorkPath, "..");
+            fixupReportFiles(report,  work, ".");
+            fixupReportFiles(htmlDir, work, "..");
         } else if (equal(report, workParent)) {
-            fixupReportFiles(report,  canonWorkPath, work.getName());
-            fixupReportFiles(htmlDir, canonWorkPath, "../" + work.getName());
+            String relPath = encode(work.getName());
+            fixupReportFiles(report,  work, relPath);
+            fixupReportFiles(htmlDir, work, "../" + relPath);
         } else if (equal(work, reportParent)) {
-            fixupReportFiles(report,  canonWorkPath, "..");
-            fixupReportFiles(htmlDir, canonWorkPath, "../..");
+            fixupReportFiles(report,  work, "..");
+            fixupReportFiles(htmlDir, work, "../..");
         } else if (equal(workParent, reportParent)) {
-            fixupReportFiles(report,  canonWorkPath, "../" + work.getName());
-            fixupReportFiles(htmlDir, canonWorkPath, "../../" + work.getName());
+            String relPath = encode(work.getName());
+            fixupReportFiles(report,  work, "../" + relPath);
+            fixupReportFiles(htmlDir, work, "../../" + relPath);
         } else if (equal(workParent.getParentFile(), reportParent.getParentFile())) {
             // This case is notable for multi-run jobs
-            fixupReportFiles(report,  canonWorkPath, "../../" + workParent.getName() + "/" + work.getName());
-            fixupReportFiles(htmlDir, canonWorkPath, "../../../" + workParent.getName() + "/" + work.getName());
+            String relPath = "../../" + encode(workParent.getName()) + "/" + encode(work.getName());
+            fixupReportFiles(report,  work, relPath);
+            fixupReportFiles(htmlDir, work, "../" + relPath);
         }
+    }
+
+    /**
+     * Returns the URL encoding of a string.
+     */
+    private String encode(String s) throws IOException {
+        return URLEncoder.encode(s, "UTF-8");
     }
 
     /* Rewrite html files in the given directory, replacing hrefs to the old path
      * with references to the new path.
-     * Since all files have been canonicalized, we should not neded to worry
+     * Since all files have been canonicalized, we should not need to worry
      * about inconsistent case on case-equivalent file systems like Mac and Windows.
      */
-    private void fixupReportFiles(File dir, String oldPath, String newPath) {
-        String dirPath = getCanonicalURIPath(dir);
+    private void fixupReportFiles(File dir, File oldFile, String newPath) throws IOException {
+        /*
+         * For compatibility, we detect and replace the form of the URL as
+         * encoded by JT Harness 5.0, and the anticipated form, generated by
+         * using file.toURI().getRawPath().
+         */
+        Map<String, String> replaceMap = new LinkedHashMap<>();
+        replaceMap.put("href=\"" + getURIPath(oldFile) + "/", "href=\"" + newPath + "/");
+        replaceMap.put("href=\"" + getURIPath(oldFile) + "\"", "href=\"" + newPath + "\"");
+        replaceMap.put("href=\"" + getCanonicalURIPath(oldFile) + "/", "href=\"" + newPath + "/");
+        replaceMap.put("href=\"" + getCanonicalURIPath(oldFile) + "\"", "href=\"" + newPath + "\"");
+        replaceMap.put("href=\"" + getURIPath(dir) + "/", "href=\"");
+        replaceMap.put("href=\"" + getURIPath(dir) + "\"", "href=\".\"");
+        replaceMap.put("href=\"" + getCanonicalURIPath(dir) + "/", "href=\"");
+        replaceMap.put("href=\"" + getCanonicalURIPath(dir) + "\"", "href=\".\"");
+
+        // Additional fixup to workaround bugs
+        replaceMap.put("href=\"#Configuration and Other Settings\"",
+                "href=\"#Configuration%20and%20Other%20Settings\"");
+        replaceMap.put("href=\"#Known Failure Analysis\"",
+                "href=\"#Known%20Failure%20Analysis\"");
+
+//        System.err.println("fixUpReportFiles " + dir);
+//        for (Map.Entry<String,String> e : replaceMap.entrySet()) {
+//            System.err.println("  replace: " + e.getKey());
+//            System.err.println("     with: " + e.getValue());
+//        }
 
         File[] children = dir.listFiles();
         if (children == null) {
@@ -269,10 +305,11 @@ public class RegressionReporter {
             for (File f: children) {
                 if (f.getName().endsWith(".html")) {
                     try {
-                        write(f, read(f)
-                                .replace("href=\"" + oldPath + "/", "href=\"" + newPath + "/")
-                                .replace("href=\"" + oldPath + "\"", "href=\"" + newPath + "\"")
-                                .replace("href=\"" + dirPath + "\"", "href=\".\""));
+                        String content = read(f);
+                        for (Map.Entry<String,String> e : replaceMap.entrySet()) {
+                            content = content.replace(e.getKey(), e.getValue());
+                        }
+                        write(f, content);
                     } catch (IOException e) {
                         log.println("Error while updating report: " + e);
                     }
@@ -281,14 +318,30 @@ public class RegressionReporter {
         }
     }
 
+    /**
+     * Returns the URL-encoded form of a file, with any trailing '/' removed.
+     */
+    String getURIPath(File f) {
+        String p = f.toURI().getRawPath();
+        return p.endsWith("/") ? p.substring(0, p.length() - 1) : p;
+    }
+
     // This method mimics the code in JTHarness class com.sun.javatest.util.HtmlWriter,
     // method writeLink, which writes out absolute files as URI paths.
-    String getCanonicalURIPath(File f) {
+    String getCanonicalURIPath(File f) throws IOException {
         File cf = getCanonicalFile(f);
-        String path = cf.getPath().replace(File.separatorChar, '/');
+
+        StringBuilder sb = new StringBuilder();
+        String path = cf.getPath();
         if (cf.isAbsolute() && !path.startsWith("/"))
-            path = "/" + path;
-        return path;
+            sb.append('/');
+        for (int i = 0; i < path.length(); i++) {
+            char ch = path.charAt(i);
+            String encoded = (ch == File.separatorChar) ? "/" :
+                    URLEncoder.encode(String.valueOf(ch), "UTF-8");
+            sb.append(encoded);
+        }
+        return sb.toString();
     }
 
     File getCanonicalFile(File f) {
