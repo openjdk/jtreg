@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -310,16 +310,18 @@ public class RegressionScript extends Script {
      * @param td The test description for which to find the test files
      * @return the set of source files known to the test
      **/
-    // Arguably, this would be better as a static method that internally created
-    // a private temporary RegressionScript.
-    public Set<File> getSourceFiles(RegressionParameters p, TestDescription td) {
-        this.td = td;
+    public static Set<File> getSourceFiles(RegressionParameters p, TestDescription td) {
         try {
-            if (locations == null) {
-                locations = new Locations(p, td);
-            }
+            RegressionScript tmp = new RegressionScript();
+            // init the script enough to parse the actions
+            tmp.params = p;
+            tmp.td= td;
+            tmp.locations = new Locations(p, td);
+            tmp.modules = new Modules(p, td);
+            tmp.defaultModules = p.getTestJDK().getDefaultModules(p);
+            tmp.systemModules = p.getTestJDK().getSystemModules(p);
             String actions = td.getParameter("run");
-            LinkedList<Action> actionList = parseActions(actions, false);
+            LinkedList<Action> actionList = tmp.parseActions(actions, false);
             Set<File> files = new TreeSet<>();
             while (! actionList.isEmpty()) {
                 Action action = actionList.remove();
@@ -329,6 +331,8 @@ public class RegressionScript extends Script {
             }
             return files;
         } catch (Locations.Fault e) {
+            return Collections.<File>emptySet();
+        } catch (Modules.Fault e) {
             return Collections.<File>emptySet();
         } catch (ParseException e) {
             return Collections.<File>emptySet();

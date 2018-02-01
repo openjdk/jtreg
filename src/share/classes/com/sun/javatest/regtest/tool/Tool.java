@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -56,6 +56,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
 
+import com.sun.interview.Interview;
 import com.sun.javatest.Harness;
 import com.sun.javatest.InterviewParameters;
 import com.sun.javatest.JavaTestSecurityManager;
@@ -996,7 +997,7 @@ public class Tool {
         if (antFileList != null)
             antFileArgs.addAll(readFileList(new File(antFileList)));
 
-        TestManager testManager = new TestManager(out, baseDir, new TestFinder.ErrorHandler() {
+        final TestManager testManager = new TestManager(out, baseDir, new TestFinder.ErrorHandler() {
             @Override
             public void error(String msg) {
                 Tool.this.error(msg);
@@ -1085,6 +1086,21 @@ public class Tool {
 
         makeDir(workDirArg, false);
         testManager.setWorkDirectory(workDirArg);
+
+        // register a factory to be used to create the parameters for a test suite,
+        // such that all the appropriate command-line args are taken into account
+        RegressionTestSuite.setParametersFactory(new RegressionTestSuite.ParametersFactory() {
+            @Override
+            public RegressionParameters create(RegressionTestSuite ts) throws TestSuite.Fault {
+                try {
+                    return createParameters(testManager, ts);
+                } catch (BadArgs ex) {
+                    throw new TestSuite.Fault(i18n, "main.cantCreateParameters", ex.getMessage());
+                } catch (Fault ex) {
+                    throw new TestSuite.Fault(i18n, "main.cantCreateParameters", ex.getMessage());
+                }
+            }
+        });
 
         if (showGroupsFlag) {
             showGroups(testManager);
@@ -1532,6 +1548,9 @@ public class Tool {
 
     /**
      * Create a RegressionParameters object based on the values set up by decodeArgs.
+     * This method is the standard way to create the parameters, taking all the
+     * command-line arguments into account. It is used as the body of a factory
+     * callback, used by {@link RegressionTestSuite#createInterview}.
      * @return a RegressionParameters object
      */
     private RegressionParameters createParameters(
@@ -1539,7 +1558,7 @@ public class Tool {
             throws BadArgs, Fault
     {
         try {
-            RegressionParameters rp = testSuite.createInterview();
+            RegressionParameters rp = new RegressionParameters("regtest", testSuite);
 
             WorkDirectory workDir = testManager.getWorkDirectory(testSuite);
             rp.setWorkDirectory(workDir);
@@ -1666,7 +1685,7 @@ public class Tool {
             rp.initExprContext(); // will invoke/init jdk.getProperties(params)
 
             return rp;
-        } catch (TestSuite.Fault f) {
+        } catch (Interview.Fault f) {
             // TODO: fix bad string -- need more helpful resource here
             throw new Fault(i18n, "main.cantOpenTestSuite", testSuite.getRootDir(), f);
         } catch (JDK.Fault f) {

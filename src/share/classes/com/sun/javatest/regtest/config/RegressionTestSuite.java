@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2000, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -36,7 +36,6 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
-import com.sun.interview.Interview;
 import com.sun.javatest.InterviewParameters;
 import com.sun.javatest.Script;
 import com.sun.javatest.TestDescription;
@@ -126,15 +125,27 @@ public class RegressionTestSuite extends TestSuite
         return s;
     }
 
+    public interface ParametersFactory {
+        RegressionParameters create(RegressionTestSuite ts) throws TestSuite.Fault;
+    }
+
+    private static ParametersFactory factory;
+
+    public static void setParametersFactory(ParametersFactory factory) {
+        RegressionTestSuite.factory = factory;
+    }
+
     @Override
     public RegressionParameters createInterview() throws TestSuite.Fault {
         try {
-            return new RegressionParameters("regtest", this);
-        }
-        catch (InterviewParameters.Fault e) {
+            return (factory != null) ? factory.create(this) // expected case
+                    : new RegressionParameters("regtest", this); // fallback
+        } catch (InterviewParameters.Fault e) {
             throw new TestSuite.Fault(i18n, "suite.cantCreateInterview", e.getMessage());
         }
     }
+
+
 
     @Override
     public URL[] getFilesForTest(TestDescription td) {
@@ -148,15 +159,15 @@ public class RegressionTestSuite extends TestSuite
         }
 
         try {
-            RegressionParameters params = new RegressionParameters("regtest", this);
-            Set<File> files = new RegressionScript().getSourceFiles(params, td);
+            RegressionParameters params = createInterview();
+            Set<File> files = RegressionScript.getSourceFiles(params, td);
             for (File file: files) {
                 try {
                     urls.add(file.toURI().toURL());
                 } catch (MalformedURLException e) {
                 }
             }
-        } catch (Interview.Fault ignore) {
+        } catch (Fault ignore) {
         }
         return urls.toArray(new URL[urls.size()]);
     }

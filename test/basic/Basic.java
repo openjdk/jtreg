@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -350,7 +350,7 @@ public class Basic
         RegressionParameters rp = null;
 
         try {
-            rp = (RegressionParameters) (testSuite.createInterview());
+            rp = new RegressionParameters("basic", testSuite);
 
             rp.setWorkDirectory(workDir);
             rp.setTests((String[])null);
@@ -358,7 +358,7 @@ public class Basic
             rp.setKeywordsExpr("!manual");
             rp.setPriorStatusValues(null);
         }
-        catch (TestSuite.Fault e) {
+        catch (RegressionParameters.Fault e) {
             failed(ERR_BAD_PARAMS, e);
         };
 
@@ -448,7 +448,7 @@ public class Basic
 
     //----------member variables------------------------------------------------
 
-    private TestSuite testSuite;
+    private RegressionTestSuite testSuite;
     private WorkDirectory workDir;
 
     private Hashtable<String,Integer> statusTable = new Hashtable<String,Integer>();

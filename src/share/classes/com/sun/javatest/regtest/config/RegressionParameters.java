@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2001, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -99,6 +99,7 @@ public class RegressionParameters
      * This method is to workaround an earlier workaround
      * (in {@link BasicInterviewParameters#getParameters})
      * for the max concurrency.
+     * @return  the maximum permitted concurrency
      */
     @Override
     protected int getMaxConcurrency() {
