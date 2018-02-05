@@ -26,6 +26,9 @@
 package com.sun.javatest.regtest.tool;
 
 import java.awt.EventQueue;
+import java.awt.Frame;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -55,6 +58,8 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
+
+import javax.swing.Timer;
 
 import com.sun.interview.Interview;
 import com.sun.javatest.Harness;
@@ -100,7 +105,6 @@ import com.sun.javatest.regtest.tool.Help.VersionHelper;
 import com.sun.javatest.regtest.util.NaturalComparator;
 import com.sun.javatest.regtest.util.StringUtils;
 import com.sun.javatest.tool.Desktop;
-import com.sun.javatest.tool.Startup;
 import com.sun.javatest.util.BackupPolicy;
 import com.sun.javatest.util.I18NResourceBundle;
 import com.sun.javatest.util.StringArray;
@@ -1272,7 +1276,7 @@ public class Tool {
 
     private void patchModulesInVMOpts(File modules) {
         if (modules.exists()) {
-            List<String> instrMods = new ArrayList<String>();
+            List<String> instrMods = new ArrayList<>();
             for (File module : modules.listFiles()) {
                 if (module.isDirectory() && !module.getName().equals("java.base")) {
                     instrMods.add(module.getName());
@@ -1926,24 +1930,43 @@ public class Tool {
     }
 
     private void showTool(final InterviewParameters params) throws BadArgs {
-        Startup startup = new Startup();
+        EventQueue.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                final Frame startup = showStartup();
+                Timer t = new Timer(1000, new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        showGUI();
+                        startup.dispose();
+                    }
 
-        try {
-            EventQueue.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    // build a gui for the tool and run it...
-                    Desktop d = new Desktop();
-                    ExecToolManager m = (ExecToolManager) (d.getToolManager(ExecToolManager.class));
-                    if (m == null)
-                        throw new AssertionError("Cannot find ExecToolManager");
-                    m.startTool(params);
-                    d.setVisible(true);
+                });
+                t.setRepeats(false);
+                t.start();
+            }
+
+            Frame showStartup() {
+                Version v = Version.getCurrent();
+                String title = String.format("%s %s %s %s",
+                        v.product, v.version, v.milestone, v.build);
+                URL logo = getClass().getResource("jtlogo.gif");
+                String copyright = i18n.getString("help.copyright.txt")
+                        .replace("\n", " ");
+                return new Startup(title, logo, "", title, copyright).show();
+            }
+
+            void showGUI() {
+                // build a gui for the tool and run it...
+                Desktop d = new Desktop();
+                ExecToolManager m = (ExecToolManager) (d.getToolManager(ExecToolManager.class));
+                if (m == null) {
+                    throw new AssertionError("Cannot find ExecToolManager");
                 }
-            });
-        } finally {
-            startup.disposeLater();
-        }
+                m.startTool(params);
+                d.setVisible(true);
+            }
+        });
     } // showTool()
 
     private BackupPolicy createBackupPolicy() {
