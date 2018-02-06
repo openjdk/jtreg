@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -71,8 +71,8 @@ public class RegressionContext implements Expr.Context {
             os = OS.forProps(jdkProps);
         }
 
-        values.put("jdk.version", jdkVersion != null ? jdkVersion.name : "unknown");
-        values.put("jdk.version.major", jdkVersion != null ? jdkVersion.major : "0");
+        values.put("jdk.version", jdkVersion != null ? jdkVersion.name() : "unknown");
+        values.put("jdk.version.major", jdkVersion != null ? String.valueOf(jdkVersion.major) : "0");
 
         // profile... (JDK 8)
         // modules... (JDK 9)

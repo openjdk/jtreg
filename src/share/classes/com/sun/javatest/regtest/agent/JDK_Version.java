@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2007, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -25,51 +25,81 @@
 
 package com.sun.javatest.regtest.agent;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.HashMap;
+import java.util.Map;
 
 
-public enum JDK_Version {
-    V1_1("1.1"),
-    V1_2("1.2"),
-    V1_3("1.3"),
-    V1_4("1.4"),
-    V1_5("1.5"),
-    V1_6("1.6"),
-    V1_7("1.7"),
-    V1_8("1.8"),
-    V9("9"),
-    // proactive ...
-    V10("10"),
-    V11("11"),
-    V12("12");
+public class JDK_Version implements Comparable<JDK_Version> {
+    private static final Map<String, JDK_Version> values
+            = new HashMap<String,JDK_Version>();
 
-    JDK_Version(String name) {
-        this.name = name;
-        this.major = name.startsWith("1.") ? name.substring(2) : name;
-    }
-
-    public final String name;
-    public final String major;
+    public static JDK_Version V1_1 = JDK_Version.forName("1.1");
+    public static JDK_Version V1_5 = JDK_Version.forName("1.5");
+    public static JDK_Version V1_6 = JDK_Version.forName("1.6");
+    public static JDK_Version V9 = JDK_Version.forName("9");
+    public static JDK_Version V10 = JDK_Version.forName("10");
 
     public static JDK_Version forName(String name) {
         if (name == null)
             return null;
 
-        // for now, always allow/ignore optional leading 1.
-        Pattern p = Pattern.compile("(1\\.)?([1-9][0-9]*).*");
-        Matcher m = p.matcher(name);
-        if (m.matches()) {
-            String major = m.group(2);
-            for (JDK_Version v : values()) {
-                if (v.major.equals(major)) {
-                    return v;
+        synchronized (values) {
+            JDK_Version v = values.get(name);
+            if (v == null) {
+                try {
+                    int major;
+                    if (name.startsWith("1.")) {
+                        major = Integer.parseInt(name.substring(2));
+                        if (major >= 9) {
+                            return null;
+                        }
+                    } else {
+                        major = Integer.parseInt(name);
+                        if (major < 5) {
+                            return null;
+                        }
+                    }
+                    values.put(name, v = new JDK_Version(major));
+                } catch (NumberFormatException e) {
+                    return null;
                 }
             }
+            return v;
         }
-        return null;
     }
+
     public static JDK_Version forThisJVM() {
         return forName(System.getProperty("java.specification.version"));
+    }
+
+    private JDK_Version(int major) {
+        this.major = major;
+    }
+
+    public final int major;
+
+    public String name() {
+        return (major < 9 ? "1." : "") + major;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        return (other instanceof JDK_Version
+                && (major == ((JDK_Version) other).major));
+    }
+
+    @Override
+    public int hashCode() {
+        return major;
+    }
+
+    @Override
+    public int compareTo(JDK_Version other) {
+        return major < other.major ? -1 : major == other.major ? 0 : 1;
+    }
+
+    @Override
+    public String toString() {
+        return "JDK " + (major < 9 ? "1." : "") + major;
     }
 }

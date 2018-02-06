@@ -1312,7 +1312,7 @@ public class Tool {
         if (v == null)
             throw new Fault(i18n, "main.jdk.unknown.version", jdk);
         if (v.compareTo(JDK_Version.V1_1) <= 0)
-            throw new Fault(i18n, "main.jdk.unsupported.version", jdk, v.name);
+            throw new Fault(i18n, "main.jdk.unsupported.version", jdk, v.name());
     }
 
     /**
