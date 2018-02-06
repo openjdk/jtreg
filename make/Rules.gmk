@@ -38,6 +38,11 @@ $(CLASSDIR)/%.gif: $(JAVADIR)/%.gif
 	if [ ! -d $(@D) ] ; then $(MKDIR) -p $(@D) ; fi
 	$(CP) $(@:$(CLASSDIR)/%=$(JAVADIR)/%) $@
 
+$(CLASSDIR)/%.png: $(JAVADIR)/%.png
+	$(RM) -f $@
+	if [ ! -d $(@D) ] ; then $(MKDIR) -p $(@D) ; fi
+	$(CP) $(@:$(CLASSDIR)/%=$(JAVADIR)/%) $@
+
 #---------------------------------------------------------------------
 
 $(CLASSDIR) $(BUILDDIR) $(BUILDDIR)/testClasses $(BUILDDIR)/testWork $(BUILDDIR)/testReport:

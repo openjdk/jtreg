@@ -1950,7 +1950,7 @@ public class Tool {
                 Version v = Version.getCurrent();
                 String title = String.format("%s %s %s %s",
                         v.product, v.version, v.milestone, v.build);
-                URL logo = getClass().getResource("jtlogo.gif");
+                URL logo = getClass().getResource("jtlogo.png");
                 String copyright = i18n.getString("help.copyright.txt")
                         .replace("\n", " ");
                 return new Startup(title, logo, "", title, copyright).show();

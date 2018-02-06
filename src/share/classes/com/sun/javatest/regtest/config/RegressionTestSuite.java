@@ -48,6 +48,8 @@ import com.sun.javatest.regtest.tool.Version;
 import com.sun.javatest.util.BackupPolicy;
 import com.sun.javatest.util.I18NResourceBundle;
 
+import com.sun.javatest.regtest.tool.RegressionContextManager;
+
 
 public class RegressionTestSuite extends TestSuite
 {
@@ -74,11 +76,18 @@ public class RegressionTestSuite extends TestSuite
      * @throws Fault if there are problems reading the {@code TEST.ROOT} file.
      */
     public RegressionTestSuite(File testSuiteRoot, TestFinder.ErrorHandler errHandler) throws Fault {
-        super(testSuiteRoot);
+        super(testSuiteRoot, createTSInfo(), RegressionTestSuite.class.getClassLoader());
         properties = new TestProperties(getRootDir(), errHandler);
         this.errHandler = errHandler;
         setTestFinder(createTestFinder());
     }
+
+    private static Map<String,String> createTSInfo() {
+        Map<String, String> map = new HashMap<>();
+        map.put(TestSuite.TM_CONTEXT_NAME, RegressionContextManager.class.getName());
+        return map;
+    }
+
 
     @Override
     public String getName() {

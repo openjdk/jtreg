@@ -88,7 +88,7 @@ RESOURCES.com.sun.javatest.regtest = \
 	$(CLASSDIR)/com/sun/javatest/regtest/config/i18n.properties \
 	$(CLASSDIR)/com/sun/javatest/regtest/report/i18n.properties \
 	$(CLASSDIR)/com/sun/javatest/regtest/tool/i18n.properties \
-	$(CLASSDIR)/com/sun/javatest/regtest/tool/jtlogo.gif
+	$(CLASSDIR)/com/sun/javatest/regtest/tool/jtlogo.png
 
 TARGETS.com.sun.javatest.regtest += $(RESOURCES.com.sun.javatest.regtest)
 
