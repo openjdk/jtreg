@@ -1,6 +1,6 @@
 <!DOCTYPE HTML>
 <!--
- Copyright (c) 2006, 2017, Oracle and/or its affiliates. All rights reserved.
+ Copyright (c) 2006, 2018, Oracle and/or its affiliates. All rights reserved.
  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 
  This code is free software; you can redistribute it and/or modify it
@@ -274,7 +274,9 @@ on selected internal packages in some or all of those modules.
 <p>If no dependencies are specified explicitly, a default set of dependencies will be read
 from the <code>modules</code> entry in test suite <a href="#config">configuration files</a>.
 
-<p>A test will not be run if the system being tested does not contain all of the
+<p>The dependencies will be ignored if the version of JDK used to run the tests
+does not support the use of modules. Otherwise,
+a test will not be run if the system being tested does not contain all of the
 specified modules. All of the specified modules will be present in the configuration
 when the test is run.
 
@@ -1239,6 +1241,9 @@ action tag.
 <td><code>test.modules</code>
 <td><code>TESTMODULES</code>
 <td>The module dependencies of the test, if any, defined in the <code>@modules</code> tag.
+The dependencies will be ignored, and the system property and environment variable
+will be unset or empty, if the version of JDK used to run the tests does not
+support modules.
 
 </tbody>
 </table>

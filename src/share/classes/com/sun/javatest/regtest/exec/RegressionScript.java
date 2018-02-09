@@ -140,9 +140,13 @@ public class RegressionScript extends Script {
 
         try {
             locations = new Locations(params, td);
-            modules = new Modules(params, td);
-            if (!modules.isEmpty())
-                testResult.putProperty("modules", modules.toString());
+            if (params.getTestJDK().hasModules()) {
+                modules = new Modules(params, td);
+                if (!modules.isEmpty())
+                    testResult.putProperty("modules", modules.toString());
+            } else {
+                modules = Modules.noModules;
+            }
 
 
             // defaultExecMode may still be overridden in individual actions with /othervm
