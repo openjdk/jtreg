@@ -119,7 +119,7 @@ ifndef JDK9HOME
     JDK9HOME = $(SLASHJAVA)/re/jdk/9/promoted/latest/binaries/linux-i586
   endif
 endif
-JDK9HOME := $(call FullPath,$(JDK19HOME))
+JDK9HOME := $(call FullPath,$(JDK9HOME))
 
 # The JDK used to build jtreg and to run most tests.
 # It should be set to JDK 7 or later.
