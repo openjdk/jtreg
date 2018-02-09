@@ -1075,10 +1075,16 @@ public class Tool {
             envVarArgs.add("CPAPPEND=" + filesToAbsolutePath(classPathAppendArg));
         }
 
-        if (compileJDK != null)
-            checkJDK(compileJDK);
+        JDK_Version testJDK_version = checkJDK(testJDK);
 
-        checkJDK(testJDK);
+        if (compileJDK != null) {
+            JDK_Version compileJDK_version = checkJDK(compileJDK);
+            if (!compileJDK_version.equals(testJDK_version)) {
+                out.println("Warning: compileJDK has a different version ("
+                        + compileJDK_version + ") from testJDK ("
+                        + testJDK_version + ")");
+            }
+        }
 
         if (workDirArg == null) {
             workDirArg = new File("JTwork");
@@ -1305,7 +1311,7 @@ public class Tool {
         }
     }
 
-    void checkJDK(JDK jdk) throws Fault {
+    JDK_Version checkJDK(JDK jdk) throws Fault {
         if (!jdk.exists())
             throw new Fault(i18n, "main.jdk.not.found", jdk);
         JDK_Version v = jdk.getJDKVersion(new SearchPath(jtreg_jar, javatest_jar));
@@ -1313,6 +1319,7 @@ public class Tool {
             throw new Fault(i18n, "main.jdk.unknown.version", jdk);
         if (v.compareTo(JDK_Version.V1_1) <= 0)
             throw new Fault(i18n, "main.jdk.unsupported.version", jdk, v.name());
+        return v;
     }
 
     /**
