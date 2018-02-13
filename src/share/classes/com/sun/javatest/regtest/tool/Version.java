@@ -106,9 +106,9 @@ public class Version implements Comparable<Version> {
                     URL u = new URL(path.substring(0, sep));
                     if (u.equals(classPathEntry )) {
                         Properties p = new Properties();
-                        InputStream in = url.openStream();
-                        p.load(in);
-                        in.close();
+                        try (InputStream in = url.openStream()) {
+                            p.load(in);
+                        }
                         return p;
                     }
                 }
@@ -144,7 +144,10 @@ public class Version implements Comparable<Version> {
      * Compares this object with the specified object for order. Returns a
      * negative integer, zero, or a positive integer as this object is less
      * than, equal to, or greater than the specified object.
+     *
+     * @param other the version against which to compare
      */
+    @Override
     public int compareTo(Version other) {
         if (this.version == null || other.version == null) {
             return 0;
