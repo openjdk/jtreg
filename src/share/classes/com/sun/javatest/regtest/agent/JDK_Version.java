@@ -50,7 +50,7 @@ public class JDK_Version implements Comparable<JDK_Version> {
                     int major;
                     if (name.startsWith("1.")) {
                         major = Integer.parseInt(name.substring(2));
-                        if (major >= 9) {
+                        if (major > 10) {  // align with javac: allow 1.9, 1.10
                             return null;
                         }
                     } else {

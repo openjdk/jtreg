@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -522,7 +522,7 @@ public class CompileAction extends Action {
                 case "--release":
                     if (iter.hasNext()) {
                         JDK_Version v = JDK_Version.forName(iter.next());
-                        return v.compareTo(JDK_Version.V9) >= 0;
+                        return (v == null) ? false : v.compareTo(JDK_Version.V9) >= 0;
                     }
                     break;
 
@@ -530,7 +530,7 @@ public class CompileAction extends Action {
                     if (option.startsWith("--release=")) {
                         JDK_Version v = JDK_Version.forName(
                                 option.substring(option.indexOf("=") + 1));
-                        return v.compareTo(JDK_Version.V9) >= 0;
+                        return (v == null) ? false : v.compareTo(JDK_Version.V9) >= 0;
                     }
                     break;
             }
