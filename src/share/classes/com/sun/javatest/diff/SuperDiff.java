@@ -172,15 +172,17 @@ class SuperDiff extends Diff {
             out.startTag(TD);
             if (info != null)
                 out.write(monthDayFormat.format(info.date));
-            out.endTag(TH);
+            out.endTag(TD);
         }
 
         void writeMainIndex(String title) throws IOException {
             startReport(title);
 
-            out.startTag(H1);
-            out.write(baseTitle);
-            out.endTag(H1);
+            if (baseTitle != null) {
+                out.startTag(H1);
+                out.write(baseTitle);
+                out.endTag(H1);
+            }
 
             writeMainIndexList(i18n.getString("super.platforms"), platformIndex);
             writeMainIndexList(i18n.getString("super.history"), historyIndex);

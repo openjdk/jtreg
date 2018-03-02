@@ -184,13 +184,13 @@ public class RegressionReporter {
             html.endTag(HTMLWriter.P);
             html.startTag(HTMLWriter.TABLE);
             html.writeAttr(HTMLWriter.BORDER, "1");
-            html.endTag(HTMLWriter.TR);
+            html.startTag(HTMLWriter.TR);
             for (String s: new String[] { "Test Suite", "Results", "Report" }) {
                 html.startTag(HTMLWriter.TH);
                 html.write(s);
                 html.endTag(HTMLWriter.TH);
             }
-            html.startTag(HTMLWriter.TR);
+            html.endTag(HTMLWriter.TR);
             for (RegressionTestSuite testSuite: testManager.getTestSuites()) {
                 html.startTag(HTMLWriter.TR);
                 html.startTag(HTMLWriter.TD);

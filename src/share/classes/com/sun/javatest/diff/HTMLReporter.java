@@ -170,8 +170,8 @@ public class HTMLReporter extends Reporter {
             out.endTag(TD);
             out.startTag(TD);
             out.write(table.getColumnName(i));
-            writeIndexTableInfoValues(table.getColumnName(i));
             out.endTag(TD);
+            writeIndexTableInfoValues(table.getColumnName(i));
 //            out.startTag(TD);
 //            out.write("??");
 //            out.endTag(TD);
@@ -321,8 +321,7 @@ public class HTMLReporter extends Reporter {
     private MultiMap<String, TestResult> table;
     private int size;
 
-    private static final String DOCTYPE =
-            "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3c.org/TR/1999/REC-html401-19991224/loose.dtd\">";
+    private static final String DOCTYPE = "<!DOCTYPE HTML>";
 
     // HTML tags
     private static final String THEAD = "thead";
