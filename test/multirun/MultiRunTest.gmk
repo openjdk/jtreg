@@ -62,5 +62,21 @@ $(BUILDDIR)/multirun.ok: \
 			> $(@:%.ok=%/jt.a_b1_b2.log) 2>&1
 	echo "test passed at `date`" > $@
 
-TESTS.jtreg += $(BUILDDIR)/multirun.ok
+$(BUILDDIR)/multirun.noreport.ok: \
+	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
+	    $(JTREG_IMAGE_JAVAHELP_JAR) \
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	    $(JTREG_IMAGEDIR)/bin/jtreg
+	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/x1/work \
+		-jdk:$(JDKHOME) \
+		-noreport \
+		-agentvm \
+		$(TESTDIR)/multirun/a/test/p/Test.java/  \
+		$(TESTDIR)/multirun/b1/b/test/q/Test.java/  \
+			> $(@:%.ok=%/jt.a_b1.log) 2>&1
+	echo "test passed at `date`" > $@
+
+TESTS.jtreg += $(BUILDDIR)/multirun.ok $(BUILDDIR)/multirun.noreport.ok
 

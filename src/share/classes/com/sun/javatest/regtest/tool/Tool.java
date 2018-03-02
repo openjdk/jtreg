@@ -1253,10 +1253,13 @@ public class Tool {
                     out.println("Overall summary:");
                 }
                 testStats.showResultStats(out);
-                RegressionReporter r = new RegressionReporter(out);
-                r.report(testManager);
-                if (!reportOnlyFlag)
+                if (!noReportFlag) {
+                    RegressionReporter r = new RegressionReporter(out);
+                    r.report(testManager);
+                }
+                if (!reportOnlyFlag) {
                     out.println("Results written to " + canon(workDirArg));
+                }
             }
 
             return (testStats.counts[Status.ERROR] > 0 ? EXIT_TEST_ERROR
