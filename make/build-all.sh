@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 #
 # Copyright (c) 2017, Oracle and/or its affiliates. All rights reserved.
@@ -53,6 +53,20 @@ fi
 export JAVA_HOME=$1
 export PATH="$JAVA_HOME:$PATH"
 
+if [ -n `which sha1sum` ]; then
+    SHASUM=sha1sum;
+elif [ -n `which shasum` ]; then
+    SHASUM="shasum -a 1"
+else
+    echo "Error: can't find shasum or sha1sum" >&2
+    exit 1
+fi
+
+UNZIP=unzip
+UNZIP_OPTS=${UNZIP_OPTS:--q}
+WGET=wget
+WGET_OPTS=${WGET_OPTS:--q}
+
 ROOT=$(hg root)
 BUILD_DIR=${BUILD_DIR:-${ROOT}/build}
 
@@ -63,16 +77,17 @@ fi
 
 mkdir ${BUILD_DIR}
 
-# CONFIGURATION
-###############
+
+# DEPENDENCIES
+##############
 
 CODE_TOOLS_URL=http://hg.openjdk.java.net/code-tools
 MAVEN_REPO_URL=https://repo1.maven.org/maven2
 
 # The following are Mercurial tags for the corresponding OpenJDK Code Tools repo
-ASMTOOLS_VERSION=7.0-b02 # early access for 7.0
-JTHARNESS_VERSION=jt5.0-b01 # jt5.0 + build fixes
-JCOV_VERSION=jcov3.0-rc0 # jcov2.0 + build fixes + more
+ASMTOOLS_VERSION=${ASMTOOLS_VERSION:-7.0-b02} # early access for 7.0
+JTHARNESS_VERSION=${JTHARNESS_VERSION:-jt5.0-b01} # jt5.0 + build fixes
+JCOV_VERSION=${JCOV_VERSION:-jcov3.0-rc0} # jcov2.0 + build fixes + more
 
 # ASMTOOLS
 ##########
@@ -82,8 +97,12 @@ mkdir ${ASMTOOLS_BUILD_DIR}
 
 # Build asmtools
 ASMTOOLS_SRC_ZIP=${ASMTOOLS_BUILD_DIR}/source.zip
-wget ${CODE_TOOLS_URL}/asmtools/archive/${ASMTOOLS_VERSION}.zip -O ${ASMTOOLS_SRC_ZIP}
-unzip -d ${ASMTOOLS_BUILD_DIR} ${ASMTOOLS_SRC_ZIP}
+${WGET} ${WGET_OPTS} ${CODE_TOOLS_URL}/asmtools/archive/${ASMTOOLS_VERSION}.zip -O ${ASMTOOLS_SRC_ZIP}
+${UNZIP} ${UNZIP_OPTS} -d ${ASMTOOLS_BUILD_DIR} ${ASMTOOLS_SRC_ZIP}
+
+if [ "${ASMTOOLS_VERSION}" = "tip" ]; then
+    ASMTOOLS_VERSION=`cd ${ASMTOOLS_BUILD_DIR} ; ls -d asmtools-* | sed -e 's/asmtools-//'`
+fi
 
 ASMTOOLS_SRC=${ASMTOOLS_BUILD_DIR}/asmtools-${ASMTOOLS_VERSION}
 ASMTOOLS_DIST=${ASMTOOLS_BUILD_DIR}/build
@@ -99,8 +118,12 @@ mkdir ${JTHARNESS_BUILD_DIR}
 
 # Build jtharness
 JTHARNESS_SRC_ZIP=${JTHARNESS_BUILD_DIR}/source.zip
-wget ${CODE_TOOLS_URL}/jtharness/archive/${JTHARNESS_VERSION}.zip -O ${JTHARNESS_SRC_ZIP}
-unzip -d ${JTHARNESS_BUILD_DIR} ${JTHARNESS_SRC_ZIP}
+${WGET} ${WGET_OPTS} ${CODE_TOOLS_URL}/jtharness/archive/${JTHARNESS_VERSION}.zip -O ${JTHARNESS_SRC_ZIP}
+${UNZIP} ${UNZIP_OPTS} -d ${JTHARNESS_BUILD_DIR} ${JTHARNESS_SRC_ZIP}
+
+if [ "${JTHARNESS_VERSION}" = "tip" ]; then
+    JTHARNESS_VERSION=`cd ${JTHARNESS_BUILD_DIR} ; ls -d jtharness-* | sed -e 's/jtharness-//'`
+fi
 
 JTHARNESS_SRC=${JTHARNESS_BUILD_DIR}/jtharness-${JTHARNESS_VERSION}
 JTHARNESS_DIST=${JTHARNESS_BUILD_DIR}/build
@@ -121,21 +144,25 @@ JCOV_DEPS_DIR=${JCOV_BUILD_DIR}/deps
 mkdir ${JCOV_DEPS_DIR}
 
 ASM_JAR=${JCOV_DEPS_DIR}/asm-6.0.jar
-wget ${MAVEN_REPO_URL}/org/ow2/asm/asm/6.0/asm-6.0.jar -O ${ASM_JAR}
-printf "bc6fa6b19424bb9592fe43bbc20178f92d403105  ${ASM_JAR}" | shasum -a 1 --check -
+${WGET} ${WGET_OPTS} ${MAVEN_REPO_URL}/org/ow2/asm/asm/6.0/asm-6.0.jar -O ${ASM_JAR}
+printf "bc6fa6b19424bb9592fe43bbc20178f92d403105  ${ASM_JAR}" | ${SHASUM} --check -
 
 ASM_TREE_JAR=${JCOV_DEPS_DIR}/asm-tree-6.0.jar
-wget ${MAVEN_REPO_URL}/org/ow2/asm/asm-tree/6.0/asm-tree-6.0.jar -O ${ASM_TREE_JAR}
-printf "a624f1a6e4e428dcd680a01bab2d4c56b35b18f0  ${ASM_TREE_JAR}" | shasum -a 1 --check -
+${WGET} ${WGET_OPTS} ${MAVEN_REPO_URL}/org/ow2/asm/asm-tree/6.0/asm-tree-6.0.jar -O ${ASM_TREE_JAR}
+printf "a624f1a6e4e428dcd680a01bab2d4c56b35b18f0  ${ASM_TREE_JAR}" | ${SHASUM} --check -
 
 ASM_UTIL_JAR=${JCOV_DEPS_DIR}/asm-utils-6.0.jar
-wget ${MAVEN_REPO_URL}/org/ow2/asm/asm-util/6.0/asm-util-6.0.jar -O ${ASM_UTIL_JAR}
-printf "430b2fc839b5de1f3643b528853d5cf26096c1de  ${ASM_UTIL_JAR}" | shasum -a 1 --check -
+${WGET} ${WGET_OPTS} ${MAVEN_REPO_URL}/org/ow2/asm/asm-util/6.0/asm-util-6.0.jar -O ${ASM_UTIL_JAR}
+printf "430b2fc839b5de1f3643b528853d5cf26096c1de  ${ASM_UTIL_JAR}" | ${SHASUM} --check -
 
 # Build jcov
 JCOV_SRC_ZIP=${JCOV_BUILD_DIR}/source.zip
-wget ${CODE_TOOLS_URL}/jcov/archive/${JCOV_VERSION}.zip -O ${JCOV_SRC_ZIP}
-unzip -d ${JCOV_BUILD_DIR} ${JCOV_SRC_ZIP}
+${WGET} ${WGET_OPTS} ${CODE_TOOLS_URL}/jcov/archive/${JCOV_VERSION}.zip -O ${JCOV_SRC_ZIP}
+${UNZIP} ${UNZIP_OPTS} -d ${JCOV_BUILD_DIR} ${JCOV_SRC_ZIP}
+
+if [ "${JCOV_VERSION}" = "tip" ]; then
+    JCOV_VERSION=`cd ${JCOV_BUILD_DIR} ; ls -d jcov-* | sed -e 's/jcov-//'`
+fi
 
 JCOV_SRC=${JCOV_BUILD_DIR}/jcov-${JCOV_VERSION}
 JCOV_DIST=${JCOV_BUILD_DIR}/build
@@ -165,10 +192,10 @@ JUNIT_DEPS_DIR=${JTREG_DEPS_DIR}/junit
 mkdir ${JUNIT_DEPS_DIR}
 
 JUNIT_JAR=${JUNIT_DEPS_DIR}/junit-4.10.jar
-wget ${MAVEN_REPO_URL}/junit/junit/4.10/junit-4.10.jar -O ${JUNIT_JAR}
-printf "e4f1766ce7404a08f45d859fb9c226fc9e41a861  ${JUNIT_JAR}" | shasum -a 1 --check -
+${WGET} ${WGET_OPTS} ${MAVEN_REPO_URL}/junit/junit/4.10/junit-4.10.jar -O ${JUNIT_JAR}
+printf "e4f1766ce7404a08f45d859fb9c226fc9e41a861  ${JUNIT_JAR}" | ${SHASUM} --check -
 
-unzip ${JUNIT_JAR} LICENSE.txt -d ${JUNIT_DEPS_DIR}
+${UNZIP} ${UNZIP_OPTS} ${JUNIT_JAR} LICENSE.txt -d ${JUNIT_DEPS_DIR}
 JUNIT_LICENSE=${JUNIT_DEPS_DIR}/LICENSE.txt
 
 ## TestNG
@@ -176,23 +203,23 @@ TESTNG_DEPS_DIR=${JTREG_DEPS_DIR}/testng
 mkdir ${TESTNG_DEPS_DIR}
 
 TESTNG_JAR=${TESTNG_DEPS_DIR}/testng-6.9.5.jar
-wget ${MAVEN_REPO_URL}/org/testng/testng/6.9.5/testng-6.9.5.jar -O ${TESTNG_JAR}
-printf "5d12ea207fc47c3f341a3f8ecc88a3eac396a777  ${TESTNG_JAR}" | shasum -a 1 --check -
+${WGET} ${WGET_OPTS} ${MAVEN_REPO_URL}/org/testng/testng/6.9.5/testng-6.9.5.jar -O ${TESTNG_JAR}
+printf "5d12ea207fc47c3f341a3f8ecc88a3eac396a777  ${TESTNG_JAR}" | ${SHASUM} --check -
 
 TESTNG_LICENSE=${TESTNG_DEPS_DIR}/LICENSE.txt
-wget https://raw.githubusercontent.com/cbeust/testng/testng-6.9.5/LICENSE.txt -O ${TESTNG_LICENSE}
+${WGET} ${WGET_OPTS} https://raw.githubusercontent.com/cbeust/testng/testng-6.9.5/LICENSE.txt -O ${TESTNG_LICENSE}
 
 JCOMMANDER_JAR=${TESTNG_DEPS_DIR}/jcommander-1.72.jar
-wget ${MAVEN_REPO_URL}/com/beust/jcommander/1.72/jcommander-1.72.jar -O ${JCOMMANDER_JAR}
-printf "6375e521c1e11d6563d4f25a07ce124ccf8cd171  ${JCOMMANDER_JAR}" | shasum -a 1 --check -
+${WGET} ${WGET_OPTS} ${MAVEN_REPO_URL}/com/beust/jcommander/1.72/jcommander-1.72.jar -O ${JCOMMANDER_JAR}
+printf "6375e521c1e11d6563d4f25a07ce124ccf8cd171  ${JCOMMANDER_JAR}" | ${SHASUM} --check -
 
 ## Ant
 ANT_DEPS_DIR=${JTREG_DEPS_DIR}/ant
 mkdir ${ANT_DEPS_DIR}
 
 ANT_JAR=${ANT_DEPS_DIR}/ant-1.7.0.jar
-wget ${MAVEN_REPO_URL}/org/apache/ant/ant/1.7.0/ant-1.7.0.jar -O ${ANT_JAR}
-printf "9746af1a485e50cf18dcb232489032a847067066  ${ANT_JAR}" | shasum -a 1 --check -
+${WGET} ${WGET_OPTS} ${MAVEN_REPO_URL}/org/apache/ant/ant/1.7.0/ant-1.7.0.jar -O ${ANT_JAR}
+printf "9746af1a485e50cf18dcb232489032a847067066  ${ANT_JAR}" | ${SHASUM} --check -
 
 ## Set version and build numbers to the latest tagged version by default
 if [ -z ${BUILD_NUMBER:-} ]; then
