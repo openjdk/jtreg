@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #
-# Copyright (c) 2017, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2017, 2018, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -81,13 +81,29 @@ mkdir ${BUILD_DIR}
 # DEPENDENCIES
 ##############
 
-CODE_TOOLS_URL=http://hg.openjdk.java.net/code-tools
+APACHE_ANT_URL=https://archive.apache.org/dist/ant/binaries
 MAVEN_REPO_URL=https://repo1.maven.org/maven2
 
+CODE_TOOLS_URL=http://hg.openjdk.java.net/code-tools
 # The following are Mercurial tags for the corresponding OpenJDK Code Tools repo
 ASMTOOLS_VERSION=${ASMTOOLS_VERSION:-7.0-b02} # early access for 7.0
 JTHARNESS_VERSION=${JTHARNESS_VERSION:-jt5.0-b01} # jt5.0 + build fixes
 JCOV_VERSION=${JCOV_VERSION:-jcov3.0-rc0} # jcov2.0 + build fixes + more
+
+# ANT
+#####
+
+ANT_DIR=${BUILD_DIR}/ant
+mkdir ${ANT_DIR}
+
+ANT_VERSION=apache-ant-1.9.4
+ANT_ZIP=${ANT_DIR}/${ANT_VERSION}.zip
+${WGET} ${WGET_OPTS} ${APACHE_ANT_URL}/${ANT_VERSION}-bin.zip -O ${ANT_ZIP}
+printf "ec57a35eb869a307abdfef8712f3688fff70887f  ${ANT_ZIP}" | ${SHASUM} --check -
+${UNZIP} ${UNZIP_OPTS} -d ${ANT_DIR} ${ANT_ZIP}
+
+ANT_JAR=${ANT_DIR}/${ANT_VERSION}/lib/ant.jar
+ANT=${ANT_DIR}/${ANT_VERSION}/bin/ant
 
 # ASMTOOLS
 ##########
@@ -106,7 +122,7 @@ fi
 
 ASMTOOLS_SRC=${ASMTOOLS_BUILD_DIR}/asmtools-${ASMTOOLS_VERSION}
 ASMTOOLS_DIST=${ASMTOOLS_BUILD_DIR}/build
-ant -DBUILD_DIR=${ASMTOOLS_DIST} -f ${ASMTOOLS_SRC}/build/build.xml
+${ANT} -DBUILD_DIR=${ASMTOOLS_DIST} -f ${ASMTOOLS_SRC}/build/build.xml
 ASMTOOLS_JAR=${ASMTOOLS_DIST}/binaries/lib/asmtools.jar
 ASMTOOLS_LICENSE=${ASMTOOLS_SRC}/LICENSE
 
@@ -127,7 +143,7 @@ fi
 
 JTHARNESS_SRC=${JTHARNESS_BUILD_DIR}/jtharness-${JTHARNESS_VERSION}
 JTHARNESS_DIST=${JTHARNESS_BUILD_DIR}/build
-ant -DBUILD_DIR=${JTHARNESS_DIST} -f ${JTHARNESS_SRC}/build/build.xml
+${ANT} -DBUILD_DIR=${JTHARNESS_DIST} -f ${JTHARNESS_SRC}/build/build.xml
 
 JAVATEST_JAR=${JTHARNESS_DIST}/binaries/lib/javatest.jar
 JTHARNESS_LICENSE=${JTHARNESS_SRC}/legal/license.txt
@@ -167,7 +183,7 @@ fi
 JCOV_SRC=${JCOV_BUILD_DIR}/jcov-${JCOV_VERSION}
 JCOV_DIST=${JCOV_BUILD_DIR}/build
 ( cd ${JCOV_SRC}/build
-ant -Dresult.dir=${JCOV_DIST}      \
+${ANT} -Dresult.dir=${JCOV_DIST}      \
     -Dasm.jar=${ASM_JAR}           \
     -Dasm.tree.jar=${ASM_TREE_JAR} \
     -Dasm.util.jar=${ASM_UTIL_JAR} \
@@ -213,13 +229,6 @@ JCOMMANDER_JAR=${TESTNG_DEPS_DIR}/jcommander-1.72.jar
 ${WGET} ${WGET_OPTS} ${MAVEN_REPO_URL}/com/beust/jcommander/1.72/jcommander-1.72.jar -O ${JCOMMANDER_JAR}
 printf "6375e521c1e11d6563d4f25a07ce124ccf8cd171  ${JCOMMANDER_JAR}" | ${SHASUM} --check -
 
-## Ant
-ANT_DEPS_DIR=${JTREG_DEPS_DIR}/ant
-mkdir ${ANT_DEPS_DIR}
-
-ANT_JAR=${ANT_DEPS_DIR}/ant-1.9.4.jar
-${WGET} ${WGET_OPTS} ${MAVEN_REPO_URL}/org/apache/ant/ant/1.9.4/ant-1.9.4.jar -O ${ANT_JAR}
-printf "6d473e8653d952045f550f4ef225a9591b79094a  ${ANT_JAR}" | ${SHASUM} --check -
 
 ## Set version and build numbers to the latest tagged version by default
 if [ -z ${BUILD_NUMBER:-} ]; then
