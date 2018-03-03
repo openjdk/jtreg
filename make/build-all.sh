@@ -217,9 +217,9 @@ printf "6375e521c1e11d6563d4f25a07ce124ccf8cd171  ${JCOMMANDER_JAR}" | ${SHASUM}
 ANT_DEPS_DIR=${JTREG_DEPS_DIR}/ant
 mkdir ${ANT_DEPS_DIR}
 
-ANT_JAR=${ANT_DEPS_DIR}/ant-1.7.0.jar
-${WGET} ${WGET_OPTS} ${MAVEN_REPO_URL}/org/apache/ant/ant/1.7.0/ant-1.7.0.jar -O ${ANT_JAR}
-printf "9746af1a485e50cf18dcb232489032a847067066  ${ANT_JAR}" | ${SHASUM} --check -
+ANT_JAR=${ANT_DEPS_DIR}/ant-1.9.4.jar
+${WGET} ${WGET_OPTS} ${MAVEN_REPO_URL}/org/apache/ant/ant/1.9.4/ant-1.9.4.jar -O ${ANT_JAR}
+printf "6d473e8653d952045f550f4ef225a9591b79094a  ${ANT_JAR}" | ${SHASUM} --check -
 
 ## Set version and build numbers to the latest tagged version by default
 if [ -z ${BUILD_NUMBER:-} ]; then

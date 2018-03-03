@@ -380,7 +380,7 @@ endif
 
 ifndef ANTHOME
   ifdef SLASHJAVA
-    ANTHOME = $(SLASHJAVA)/devtools/share/ant/1.7.0
+    ANTHOME = $(SLASHJAVA)/devtools/share/ant/1.9.4
   endif
 endif
 
