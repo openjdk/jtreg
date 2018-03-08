@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -105,7 +105,7 @@ public class ActionHelper {
                 stdErr.println("*** " + e.getMessage());
                 stdErr.println("***");
                 stdErr.println();
-                cleanupStatus = error(SAMEVM_CANT_RESET_SECMGR + ": " + e);
+                cleanupStatus = error(AGENTVM_CANT_RESET_SECMGR + ": " + e);
             }
 
             try {
@@ -125,7 +125,7 @@ public class ActionHelper {
                     });
                 }
             } catch (SecurityException e) {
-                cleanupStatus = error(SAMEVM_CANT_RESET_SECPROVS + ": " + e);
+                cleanupStatus = error(AGENTVM_CANT_RESET_SECPROVS + ": " + e);
             }
 
             // Reset system properties, if necessary
@@ -149,7 +149,7 @@ public class ActionHelper {
                 }
             } catch (SecurityException e) {
                 if (cleanupStatus == null) {
-                    cleanupStatus = error(SAMEVM_CANT_RESET_PROPS + ": " + e);
+                    cleanupStatus = error(AGENTVM_CANT_RESET_PROPS + ": " + e);
                 }
             }
 
@@ -281,7 +281,7 @@ public class ActionHelper {
 
         UNEXPECT_SYS_EXIT     = "Unexpected exit from test",
 
-        SAMEVM_CANT_RESET_SECMGR   = "Cannot reset security manager",
-        SAMEVM_CANT_RESET_SECPROVS = "Cannot reset security providers",
-        SAMEVM_CANT_RESET_PROPS    = "Cannot reset system properties";
+        AGENTVM_CANT_RESET_SECMGR   = "Cannot reset security manager",
+        AGENTVM_CANT_RESET_SECPROVS = "Cannot reset security providers",
+        AGENTVM_CANT_RESET_PROPS    = "Cannot reset system properties";
 }

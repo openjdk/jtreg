@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2018, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -23,28 +23,22 @@
 # questions.
 #
 
-#----------------------------------------------------------------------
-
-# only run the ...A test case by default, because the ...B test cases
-# checks the default when the test times out
-
-$(BUILDDIR)/T6517728.ok: \
-		$(TESTDIR)/6517728/T6517728A.java \
-		$(TESTDIR)/6517728/T6517728B.java \
-		$(JTREG_IMAGEDIR)/lib/javatest.jar \
-		$(JTREG_IMAGEDIR)/lib/jtreg.jar
-	$(RM) $(@:%.ok=%)
-	$(JDKJAVA) $(JTREG_JAVA_OPTS) -jar $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-		-w $(@:%.ok=%)/work/ovm \
-		-r $(@:%.ok=%)/report/ovm \
-		-ovm \
-		$(TESTDIR)/6517728/T6517728A.java
-	$(JDKJAVA) $(JTREG_JAVA_OPTS) -jar $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-		-w $(@:%.ok=%)/work/avm \
-		-r $(@:%.ok=%)/report/avm \
-		-avm \
-		$(TESTDIR)/6517728/T6517728A.java
+$(BUILDDIR)/threadCleanupTest.ok: \
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	    $(JTREG_IMAGEDIR)/bin/jtreg
+	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	JT_JAVA=$(JDKJAVA) \
+	    $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(JDKHOME) \
+		-agentvm \
+		-conc:2 \
+		$(TESTDIR)/threadCleanup/  \
+			> $(@:%.ok=%/jt.log) 2>&1 || \
+	    true "non-zero exit code from JavaTest intentionally ignored"
+	$(GREP) -s 'Test results: error: 2' $(@:%.ok=%/jt.log)  > /dev/null
+	$(GREP) -s 'Problem cleaning up the following threads:' $(@:%.ok=%)/work/Test_id0.jtr
+	$(GREP) -s 'Problem cleaning up the following threads:' $(@:%.ok=%)/work/Test_id1.jtr
 	echo "test passed at `date`" > $@
 
-TESTS.jtreg += $(BUILDDIR)/T6517728.ok
-
+TESTS.jtreg += $(BUILDDIR)/threadCleanupTest.ok 

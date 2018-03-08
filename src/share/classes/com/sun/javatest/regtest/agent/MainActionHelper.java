@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -112,15 +112,16 @@ public class MainActionHelper extends ActionHelper {
 
             Method method = c.getMethod("main", argTypes);
 
+            PrintStream realStdErr = System.err;
             AStatus stat = redirectOutput(out, err);
             if (!stat.isPassed()) {
                 return stat;
             }
 
             // RUN JAVA IN ANOTHER THREADGROUP
-            SameVMThreadGroup tg = new SameVMThreadGroup();
-            SameVMRunnable svmt = new SameVMRunnable(method, methodArgs, err);
-            Thread t = new Thread(tg, svmt, "SameVMThread");
+            AgentVMThreadGroup tg = new AgentVMThreadGroup(err, MSG_PREFIX);
+            AgentVMRunnable avmr = new AgentVMRunnable(method, methodArgs, err);
+            Thread t = new Thread(tg, avmr, "AgentVMThread");
             Alarm alarm = null;
             if (timeout > 0) {
                 PrintWriter alarmOut = outputHandler.createOutput(OutputHandler.OutputKind.LOG);
@@ -130,28 +131,41 @@ public class MainActionHelper extends ActionHelper {
             t.start();
             try {
                 t.join();
+
+                if (traceCleanup) {
+                    realStdErr.println("main method returned");
+                }
             } catch (InterruptedException e) {
+                realStdErr.println("main method interrupted");
                 if (t.isInterrupted() && (tg.uncaughtThrowable == null)) {
                     error = e;
                     status = error(MAIN_THREAD_INTR + e.getMessage());
                 }
             } finally {
+                if (traceCleanup) {
+                    realStdErr.println("cleaning threads");
+                }
+
                 tg.cleanup();
+                if (traceCleanup) {
+                    realStdErr.println("thread cleanup completed");
+                }
+
                 if (alarm != null) {
                     alarm.cancel();
                     if (alarm.didFire() && error == null) {
-                        err.println("Test timed out. No timeout information is available in samevm mode.");
+                        err.println("Test timed out. No timeout information is available in agentvm mode.");
                         error = new Error("timeout");
                         status = error(MAIN_THREAD_TIMEOUT);
                     }
                 }
             }
 
-            if (((svmt.t != null) || (tg.uncaughtThrowable != null)) && (error == null)) {
-                if (svmt.t == null) {
+            if (((avmr.t != null) || (tg.uncaughtThrowable != null)) && (error == null)) {
+                if (avmr.t == null) {
                     error = tg.uncaughtThrowable;
                 } else {
-                    error = svmt.t;
+                    error = avmr.t;
                 }
                 status = failed(MAIN_THREW_EXCEPT + error.toString());
             }
@@ -164,15 +178,15 @@ public class MainActionHelper extends ActionHelper {
         } catch (ClassNotFoundException e) {
             e.printStackTrace(err);
             err.println();
-            err.println("JavaTest Message: main() method must be in a public class named");
-            err.println("JavaTest Message: " + classname + " in file " + classname + ".java");
+            err.println(MSG_PREFIX + "main() method must be in a public class named");
+            err.println(MSG_PREFIX + classname + " in file " + classname + ".java");
             err.println();
             status = error(MAIN_CANT_LOAD_TEST + e);
         } catch (NoSuchMethodException e) {
             e.printStackTrace(err);
             err.println();
-            err.println("JavaTest Message: main() method must be in a public class named");
-            err.println("JavaTest Message: " + classname + " in file " + classname + ".java");
+            err.println(MSG_PREFIX + "main() method must be in a public class named");
+            err.println(MSG_PREFIX + classname + " in file " + classname + ".java");
             err.println();
             status = error(MAIN_CANT_FIND_MAIN);
         } catch (ModuleHelper.Fault e) {
@@ -180,22 +194,25 @@ public class MainActionHelper extends ActionHelper {
                 e.printStackTrace(err);
             status = error(MAIN_CANT_INIT_MODULE_EXPORTS + e.getMessage());
         } finally {
+            // Write test output
+            out.close();
+            outputHandler.createOutput(OutputHandler.OutputKind.STDOUT, out.getOutput());
+
+            err.close();
+            outputHandler.createOutput(OutputHandler.OutputKind.STDERR, err.getOutput());
+
             status = saved.restore(testName, status);
         }
 
-        // Write test output
-        out.close();
-        outputHandler.createOutput(OutputHandler.OutputKind.STDOUT, out.getOutput());
-
-        err.close();
-        outputHandler.createOutput(OutputHandler.OutputKind.STDERR, err.getOutput());
 
         return status;
     }
 
+    private static final boolean traceCleanup = Flags.get("traceCleanup");
+    private static final String MSG_PREFIX = "JavaTest Message: ";
+
     private static final String
-        //    runSameJVM
-        MAIN_SECMGR_BAD       = "JavaTest not running its own security manager",
+        //    runAgentJVM
         MAIN_THREAD_INTR      = "Thread interrupted: ",
         MAIN_THREAD_TIMEOUT   = "Timeout",
         MAIN_THREW_EXCEPT     = "`main' threw exception: ",
@@ -214,12 +231,12 @@ public class MainActionHelper extends ActionHelper {
 
     //----------internal classes------------------------------------------------
 
-    private static class SameVMRunnable implements Runnable
+    private static class AgentVMRunnable implements Runnable
     {
-        public SameVMRunnable(Method m, Object[] args, PrintStream err) {
+        public AgentVMRunnable(Method m, Object[] args, PrintStream out) {
             method    = m;
             this.args = args;
-            this.err  = err;
+            this.out  = out;
         } // SameVMRunnable()
 
         @Override
@@ -228,24 +245,24 @@ public class MainActionHelper extends ActionHelper {
                 // RUN JAVA PROGRAM
                 result = method.invoke(null, args);
 
-                System.err.println();
-                System.err.println("JavaTest Message:  Test complete.");
-                System.err.println();
+                out.println();
+                out.println(MSG_PREFIX + "Test complete.");
+                out.println();
             } catch (InvocationTargetException e) {
                 // main must have thrown an exception, so the test failed
-                e.getTargetException().printStackTrace(err);
+                e.getTargetException().printStackTrace(out);
                 t = e.getTargetException();
-                System.err.println();
-                System.err.println("JavaTest Message: Test threw exception: " + t.getClass().getName());
-                System.err.println("JavaTest Message: shutting down test");
-                System.err.println();
+                out.println();
+                out.println(MSG_PREFIX + "Test threw exception: " + t.getClass().getName());
+                out.println(MSG_PREFIX + "shutting down test");
+                out.println();
             } catch (IllegalAccessException e) {
-                e.printStackTrace(err);
+                e.printStackTrace(out);
                 t = e;
-                System.err.println();
-                System.err.println("JavaTest Message: Verify that the class defining the test is");
-                System.err.println("JavaTest Message: declared public (test invoked via reflection)");
-                System.err.println();
+                out.println();
+                out.println(MSG_PREFIX + "Verify that the class defining the test is");
+                out.println(MSG_PREFIX + "declared public (test invoked via reflection)");
+                out.println();
             }
         } // run()
 
@@ -254,33 +271,36 @@ public class MainActionHelper extends ActionHelper {
         public  Object result;
         private final Method method;
         private final Object[] args;
-        private final PrintStream err;
+        private final PrintStream out;
 
         Throwable t = null;
     }
 
-    static class SameVMThreadGroup extends ThreadGroup
+    static class AgentVMThreadGroup extends ThreadGroup
     {
-        SameVMThreadGroup() {
-            super("SameVMThreadGroup");
-        } // SameVMThreadGroup()
+        AgentVMThreadGroup(PrintStream out, String messagePrefix) {
+            super("AgentVMThreadGroup");
+            this.out = out;
+            this.messagePrefix = messagePrefix;
+        }
 
         @Override
         public synchronized void uncaughtException(Thread t, Throwable e) {
             if (e instanceof ThreadDeath)
                 return;
-            if ((uncaughtThrowable == null) && (!cleanMode)) {
+            if ((uncaughtThrowable == null) && (!cleaning)) {
                 uncaughtThrowable = e;
                 uncaughtThread    = t;
             }
             cleanup();
-        } // uncaughtException()
+        }
 
         private void cleanup() {
-            cleanMode = true;
+            cleaning = true;
 
             final int CLEANUP_ROUNDS = 4;
-            final long MAX_CLEANUP_TIME_MILLIS = 2 * 60 * 1000;
+//            final long MAX_CLEANUP_TIME_MILLIS = 2 * 60 * 1000;
+            final long MAX_CLEANUP_TIME_MILLIS = 10 * 1000;
             final long CLEANUP_MILLIS_PER_ROUND = MAX_CLEANUP_TIME_MILLIS / CLEANUP_ROUNDS;
             final long NANOS_PER_MILLI = 1000L * 1000L;
 
@@ -312,7 +332,17 @@ public class MainActionHelper extends ActionHelper {
                 }
             }
 
-            cleanupOK = liveThreads().isEmpty();
+            List<Thread> remaining = liveThreads();
+            if (remaining.isEmpty()) {
+                // nothing left to cleanup
+                cleanupOK = true;
+                return;
+            }
+
+            out.println();
+            out.println(messagePrefix + "Problem cleaning up the following threads:");
+            printTraces(remaining);
+            cleanupOK = false;
         } // cleanup()
 
         /**
@@ -327,22 +357,44 @@ public class MainActionHelper extends ActionHelper {
                     ArrayList<Thread> list = new ArrayList<Thread>(num);
                     for (int i = 0; i < num; i++) {
                         Thread t = threads[i];
-                        if (t.isAlive() &&
-                                t != Thread.currentThread() &&
-                                ! t.isDaemon())
+                        if (t.isAlive()
+                                && t != Thread.currentThread()
+                                && !t.isDaemon()) {
                             list.add(t);
+                        }
                     }
                     return list;
                 }
             }
         }
 
+        private void printTraces(List<Thread> threads) {
+            final int MAX_FRAMES = 20;
+
+            for (Thread t : threads) {
+                out.println(t.getName());
+                StackTraceElement[] trace = t.getStackTrace();
+                for (int i = 0; i < trace.length; i++) {
+                    out.println("  at " + trace[i]);
+                    if (i == MAX_FRAMES) {
+                        out.println("  ...");
+                        break;
+                    }
+                }
+                out.println();
+            }
+        }
+
         //----------member variables--------------------------------------------
 
-        private boolean cleanMode   = false;
+        private final PrintStream out;
+        private final String messagePrefix;
+
+        private boolean cleaning   = false;
         Throwable uncaughtThrowable = null;
         Thread    uncaughtThread    = null;
         boolean cleanupOK = false;
+
     }
 
 }
