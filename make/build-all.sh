@@ -99,7 +99,7 @@ mkdir ${ANT_DIR}
 ANT_VERSION=apache-ant-1.9.4
 ANT_ZIP=${ANT_DIR}/${ANT_VERSION}.zip
 ${WGET} ${WGET_OPTS} ${APACHE_ANT_URL}/${ANT_VERSION}-bin.zip -O ${ANT_ZIP}
-printf "ec57a35eb869a307abdfef8712f3688fff70887f  ${ANT_ZIP}" | ${SHASUM} --check -
+echo "ec57a35eb869a307abdfef8712f3688fff70887f  ${ANT_ZIP}" | ${SHASUM} --check -
 ${UNZIP} ${UNZIP_OPTS} -d ${ANT_DIR} ${ANT_ZIP}
 
 ANT_JAR=${ANT_DIR}/${ANT_VERSION}/lib/ant.jar
@@ -161,15 +161,15 @@ mkdir ${JCOV_DEPS_DIR}
 
 ASM_JAR=${JCOV_DEPS_DIR}/asm-6.0.jar
 ${WGET} ${WGET_OPTS} ${MAVEN_REPO_URL}/org/ow2/asm/asm/6.0/asm-6.0.jar -O ${ASM_JAR}
-printf "bc6fa6b19424bb9592fe43bbc20178f92d403105  ${ASM_JAR}" | ${SHASUM} --check -
+echo "bc6fa6b19424bb9592fe43bbc20178f92d403105  ${ASM_JAR}" | ${SHASUM} --check -
 
 ASM_TREE_JAR=${JCOV_DEPS_DIR}/asm-tree-6.0.jar
 ${WGET} ${WGET_OPTS} ${MAVEN_REPO_URL}/org/ow2/asm/asm-tree/6.0/asm-tree-6.0.jar -O ${ASM_TREE_JAR}
-printf "a624f1a6e4e428dcd680a01bab2d4c56b35b18f0  ${ASM_TREE_JAR}" | ${SHASUM} --check -
+echo "a624f1a6e4e428dcd680a01bab2d4c56b35b18f0  ${ASM_TREE_JAR}" | ${SHASUM} --check -
 
 ASM_UTIL_JAR=${JCOV_DEPS_DIR}/asm-utils-6.0.jar
 ${WGET} ${WGET_OPTS} ${MAVEN_REPO_URL}/org/ow2/asm/asm-util/6.0/asm-util-6.0.jar -O ${ASM_UTIL_JAR}
-printf "430b2fc839b5de1f3643b528853d5cf26096c1de  ${ASM_UTIL_JAR}" | ${SHASUM} --check -
+echo "430b2fc839b5de1f3643b528853d5cf26096c1de  ${ASM_UTIL_JAR}" | ${SHASUM} --check -
 
 # Build jcov
 JCOV_SRC_ZIP=${JCOV_BUILD_DIR}/source.zip
@@ -209,7 +209,7 @@ mkdir ${JUNIT_DEPS_DIR}
 
 JUNIT_JAR=${JUNIT_DEPS_DIR}/junit-4.10.jar
 ${WGET} ${WGET_OPTS} ${MAVEN_REPO_URL}/junit/junit/4.10/junit-4.10.jar -O ${JUNIT_JAR}
-printf "e4f1766ce7404a08f45d859fb9c226fc9e41a861  ${JUNIT_JAR}" | ${SHASUM} --check -
+echo "e4f1766ce7404a08f45d859fb9c226fc9e41a861  ${JUNIT_JAR}" | ${SHASUM} --check -
 
 ${UNZIP} ${UNZIP_OPTS} ${JUNIT_JAR} LICENSE.txt -d ${JUNIT_DEPS_DIR}
 JUNIT_LICENSE=${JUNIT_DEPS_DIR}/LICENSE.txt
@@ -220,22 +220,22 @@ mkdir ${TESTNG_DEPS_DIR}
 
 TESTNG_JAR=${TESTNG_DEPS_DIR}/testng-6.9.5.jar
 ${WGET} ${WGET_OPTS} ${MAVEN_REPO_URL}/org/testng/testng/6.9.5/testng-6.9.5.jar -O ${TESTNG_JAR}
-printf "5d12ea207fc47c3f341a3f8ecc88a3eac396a777  ${TESTNG_JAR}" | ${SHASUM} --check -
+echo "5d12ea207fc47c3f341a3f8ecc88a3eac396a777  ${TESTNG_JAR}" | ${SHASUM} --check -
 
 TESTNG_LICENSE=${TESTNG_DEPS_DIR}/LICENSE.txt
 ${WGET} ${WGET_OPTS} https://raw.githubusercontent.com/cbeust/testng/testng-6.9.5/LICENSE.txt -O ${TESTNG_LICENSE}
 
 JCOMMANDER_JAR=${TESTNG_DEPS_DIR}/jcommander-1.72.jar
 ${WGET} ${WGET_OPTS} ${MAVEN_REPO_URL}/com/beust/jcommander/1.72/jcommander-1.72.jar -O ${JCOMMANDER_JAR}
-printf "6375e521c1e11d6563d4f25a07ce124ccf8cd171  ${JCOMMANDER_JAR}" | ${SHASUM} --check -
+echo "6375e521c1e11d6563d4f25a07ce124ccf8cd171  ${JCOMMANDER_JAR}" | ${SHASUM} --check -
 
 
 ## Set version and build numbers to the latest tagged version by default
 if [ -z ${BUILD_NUMBER:-} ]; then
-    BUILD_NUMBER=`hg tags | grep jtreg | head -1 | sed 's/jtreg\([0-9]\.[0-9]\)-\(b[0-9]\+\).*/\2/'`
+    BUILD_NUMBER=`hg tags | grep jtreg | head -1 | sed 's/jtreg\([0-9]\.[0-9]\)-\(b[0-9]*\).*/\2/'`
 fi
 if [ -z ${BUILD_VERSION:-} ]; then
-    BUILD_VERSION=`hg tags | grep jtreg | head -1 | sed 's/jtreg\([0-9]\.[0-9]\)-\(b[0-9]\+\).*/\1/'`
+    BUILD_VERSION=`hg tags | grep jtreg | head -1 | sed 's/jtreg\([0-9]\.[0-9]\)-\(b[0-9]*\).*/\1/'`
 fi
 
 # Build jtreg
