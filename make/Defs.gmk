@@ -267,7 +267,7 @@ JCOV_LICENSE := $(call FullPath,$(JCOV_LICENSE))
 
 JCOV = $(JDK16HOME)/bin/java -jar $(JCOV_JAR)
 
-#----- AsmTools 6.0:  https://wiki.openjdk.java.net/display/CodeTools/asmtools
+#----- AsmTools 7.0:  https://wiki.openjdk.java.net/display/CodeTools/asmtools
 #
 # AsmTools is required, to support the execution of tests using
 # *.jasm and *.jcod files.
@@ -281,7 +281,7 @@ JCOV = $(JDK16HOME)/bin/java -jar $(JCOV_JAR)
 
 ifndef ASMTOOLS_HOME
   ifdef SLASHJAVA
-    ASMTOOLS_HOME = $(SLASHJAVA)/re/asmtools/7.0/promoted/opensource/ea/b02/binaries/asmtools-7.0
+    ASMTOOLS_HOME = $(SLASHJAVA)/re/asmtools/7.0/opensource/promoted/latest/binaries/asmtools-7.0
   endif
 endif
 
