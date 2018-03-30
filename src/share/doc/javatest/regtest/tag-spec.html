@@ -950,11 +950,20 @@ configuration file.</p>
 on modules in the system being tested, and optionally,
 on selected internal packages in some or all of those modules.</p>
 
-<dt><code>requires.properties</code> <var>&lt;property-name]&gt;+</var>
+<dt><code>requires.properties <var>&lt;property-name&gt;+</var></code>
 <dd>Declare property names that may be used in a <code>@requires</code> expression.
 The names may identify either system properties or additional test-suite specific
 properties return by calling the classes defined by the <code>@requires.extraPropDefns</code>
 family of configuration values.
+
+<dt><code>maxOutputSize <var>&lt;int-value&gt;+</var></code>
+<dd>Override the default limit for the amount of output that will be
+saved on any stream being recorded by the test harness. For jtreg, the default
+limit for all tests is 100,000 characters, or can be set on the command line
+by setting the system property <code>javatest.maxOutputSize</code>.
+<p style="font-size:smaller"><i>Note:</i>To set a system property for jtreg
+on the command line, use <code>-J-D<i>&lt;name&gt;</i>=<i>&lt;value&gt;</i></code>.
+
 </dl>
 
 

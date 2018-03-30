@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -92,15 +92,11 @@ public class TestProperties {
         if (!allowLocalKeys)
             return validKeys;
 
-        File dir = file.isDirectory() ? file : file.getParentFile();
-        Cache.Entry e = cache.getEntry(dir);
-        return e.validKeys;
+        return getEntry(file).validKeys;
     }
 
     Set<String> getValidRequiresProperties(File file) throws TestSuite.Fault {
-        File dir = file.isDirectory() ? file : file.getParentFile();
-        Cache.Entry e = cache.getEntry(dir);
-        return e.validRequiresProperties;
+        return getEntry(file).validRequiresProperties;
     }
 
     ExecMode getDefaultExecMode() {
@@ -112,51 +108,35 @@ public class TestProperties {
     }
 
     boolean useBootClassPath(File file) throws TestSuite.Fault {
-        File dir = file.isDirectory() ? file : file.getParentFile();
-        Cache.Entry e = cache.getEntry(dir);
-        return e.useBootClassPath;
+        return getEntry(file).useBootClassPath;
     }
 
     boolean useOtherVM(File file) throws TestSuite.Fault {
-        File dir = file.isDirectory() ? file : file.getParentFile();
-        Cache.Entry e = cache.getEntry(dir);
-        return e.useOtherVM;
+        return getEntry(file).useOtherVM;
     }
 
     boolean isTestNG(File file) throws TestSuite.Fault {
-        File dir = file.isDirectory() ? file : file.getParentFile();
-        Cache.Entry e = cache.getEntry(dir);
-        return e.testNGRoot != null;
+        return getEntry(file).testNGRoot != null;
     }
 
     File getTestNGRoot(File file) throws TestSuite.Fault {
-        File dir = file.isDirectory() ? file : file.getParentFile();
-        Cache.Entry e = cache.getEntry(dir);
-        return e.testNGRoot;
+        return getEntry(file).testNGRoot;
     }
 
     boolean needsExclusiveAccess(File file) throws TestSuite.Fault {
-        File dir = file.isDirectory() ? file : file.getParentFile();
-        Cache.Entry e = cache.getEntry(dir);
-        return e.needsExclusiveAccess;
+        return getEntry(file).needsExclusiveAccess;
     }
 
     Set<String> getLibDirs(File file) throws TestSuite.Fault {
-        File dir = file.isDirectory() ? file : file.getParentFile();
-        Cache.Entry e = cache.getEntry(dir);
-        return e.libDirs;
+        return getEntry(file).libDirs;
     }
 
     Set<String> getLibBuildArgs(File file) throws TestSuite.Fault {
-        File dir = file.isDirectory() ? file : file.getParentFile();
-        Cache.Entry e = cache.getEntry(dir);
-        return e.libBuildArgs;
+        return getEntry(file).libBuildArgs;
     }
 
     Set<String> getModules(File file) throws TestSuite.Fault {
-        File dir = file.isDirectory() ? file : file.getParentFile();
-        Cache.Entry e = cache.getEntry(dir);
-        return e.modules;
+        return getEntry(file).modules;
     }
 
     Version getRequiredVersion() {
@@ -164,13 +144,20 @@ public class TestProperties {
     }
 
     Set<File> getExternalLibs(File file) throws TestSuite.Fault {
-        File dir = file.isDirectory() ? file : file.getParentFile();
-        Cache.Entry e = cache.getEntry(dir);
-        return e.extLibRoots;
+        return getEntry(file).extLibRoots;
     }
 
     ExtraPropDefns getExtraPropDefns() {
         return extraPropDefns;
+    }
+
+    int getMaxOutputSize(File file) {
+        return getEntry(file).maxOutputSize;
+    }
+
+    private Cache.Entry getEntry(File file) {
+        File dir = file.isDirectory() ? file : file.getParentFile();
+        return cache.getEntry(dir);
     }
 
     private void error(I18NResourceBundle i18n, String key, Object... args) {
@@ -213,6 +200,7 @@ public class TestProperties {
             final Set<String> libBuildArgs;
             final Set<File> extLibRoots;
             final Set<String> modules;
+            final int maxOutputSize;
 
             Entry(Entry parent, File dir) {
                 this.parent = parent;
@@ -256,6 +244,9 @@ public class TestProperties {
 
                     // add the list of default modules used by tests
                     modules = initSimpleSet(parent == null ? null : parent.modules, "modules");
+
+                    // add the maxOutputSize for result content
+                    maxOutputSize = getInt("maxOutputSize", -1);
                 } else {
                     if (parent == null)
                         throw new IllegalStateException("TEST.ROOT not found");
@@ -270,12 +261,25 @@ public class TestProperties {
                     libBuildArgs = parent.libBuildArgs;
                     extLibRoots = parent.extLibRoots;
                     modules = parent.modules;
+                    maxOutputSize = parent.maxOutputSize;
                 }
 
                 useBootClassPath= initUseBootClassPath(parent, dir);
                 useOtherVM = initUseOtherVM(parent, dir);
                 needsExclusiveAccess = initNeedsExclusiveAccess(parent, dir);
                 testNGRoot = initTestNGRoot(parent, dir);
+            }
+
+            private int getInt(String propertyName, int defaultValue) {
+                String v = properties.getProperty("maxOutputSize");
+                try {
+                    if (v != null) {
+                        return Integer.parseInt(v.trim());
+                    }
+                } catch (NumberFormatException e) {
+                    error(i18n, "props.bad.value", new Object[] { propertyName, v });
+                }
+                return defaultValue;
             }
 
             private Set<File> initFileSet(Set<File> parent, String propertyName, File baseDir) {

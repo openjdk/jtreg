@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.UnknownHostException;
@@ -119,6 +120,7 @@ public class RegressionScript extends Script {
         // defaults
 
         testResult = getTestResult();
+
         String hostname;
         try {
             hostname = InetAddress.getLocalHost().getCanonicalHostName();
@@ -139,6 +141,16 @@ public class RegressionScript extends Script {
         PrintWriter msgPW = testResult.getTestCommentWriter();
 
         try {
+            int maxOutputSize = testSuite.getMaxOutputSize(td);
+            if (maxOutputSize > 0) {
+                try {
+                    Method m = TestResult.class.getMethod("setMaxOutputSize", int.class);
+                    m.invoke(testResult, maxOutputSize);
+                } catch (ReflectiveOperationException e) {
+                    System.err.println("Cannot set maxOutputSize in this build of jtreg: setting ignored");
+                }
+            }
+
             locations = new Locations(params, td);
             if (params.getTestJDK().hasModules()) {
                 modules = new Modules(params, td);
