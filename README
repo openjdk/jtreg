@@ -27,6 +27,27 @@ The script will create a build sub-directory, download and build dependencies,
 and finally build jtreg itself. The resulting image will be in
 build/images/jtreg.
 
+No environment variables need to be specified to get a standard build of jtreg.
+However, the following environment variables may be set, for a non-standard
+build:
+
+ASMTOOLS_VERSION, JCOV_VERSION, JTHARNESS_VERSION
+   These variables may be set to the name of a tag identifying a specific
+   changeset in the corresponding OpenJDK repository, or to the pseudo-tag "tip".
+
+MAKE_ARGS
+   Arguments for the internal invocation of "make". The default is to just build
+   jtreg, but setting this environment variable allows additional targets, such
+   as test targets, to be run. The explicit target to build jtreg is "build"
+   the target to run some basic sanity tests is "quick-test"; and the target
+   to run all tests is "test". You can also use the make "-j" option to build
+   targets in parallel. For example:
+      MAKE_ARGS="-j 4 build quick-test" sh make/build-all.sh
+
+UNZIP_OPTS, WGET_OPTS
+   These two variables default to "-q", to suppress unnecessary output.
+   You can set these variables to change the default behavior.
+
 Building jtreg with GNU Make
 
 The Makefile is in make/Makefile, and creates deliverables in the build/

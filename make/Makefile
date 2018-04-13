@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1999, 2017, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1999, 2018, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -43,6 +43,12 @@ include Rules.gmk
 build: $(BUILDFILES)
 
 test: $(INITIAL_TESTS) $(TESTS) $(FINAL_TESTS)
+	count=`echo $+ | wc -w` ; \
+	echo "All ($${count}) selected tests completed successfully"
+
+quick-test: $(INITIAL_TESTS)
+	count=`echo $+ | wc -w` ; \
+	echo "All ($${count}) selected tests completed successfully"
 
 images: $(VERBOSEZIPFILES)
 

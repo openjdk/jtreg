@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -28,6 +28,11 @@
 # explicit rules for specific tests
 
 BASIC.files := $(shell find $(TESTDIR)/share/basic -type f)
+
+ifdef JCOMMANDER_JAR
+$(BUILDDIR)/Basic.check.ok: \
+	$(JTREG_IMAGEDIR)/lib/jcommander.jar
+endif
 
 $(BUILDDIR)/Basic.check.ok: \
                 $(JTREG_IMAGEDIR)/lib/jtreg.jar \
@@ -62,6 +67,12 @@ ifeq ($(OS_NAME), windows)
   BASIC_TESTS := $(shell cygpath -m $(abspath $(TESTDIR)/share/basic) )
 else
   BASIC_TESTS := $(abspath $(TESTDIR)/share/basic)
+endif
+
+ifdef JCOMMANDER_JAR
+$(BUILDDIR)/Basic.othervm.ok \
+$(BUILDDIR)/Basic.agentvm.ok: \
+	$(JTREG_IMAGEDIR)/lib/jcommander.jar
 endif
 
 $(BUILDDIR)/Basic.othervm.ok \

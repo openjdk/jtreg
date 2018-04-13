@@ -96,7 +96,7 @@ JCOV_VERSION=${JCOV_VERSION:-jcov3.0-b04} # jcov3.0 + html5 reports
 ANT_DIR=${BUILD_DIR}/ant
 mkdir ${ANT_DIR}
 
-ANT_VERSION=apache-ant-1.9.4
+ANT_VERSION=${ANT_VERSION:-apache-ant-1.9.4}
 ANT_ZIP=${ANT_DIR}/${ANT_VERSION}.zip
 ${WGET} ${WGET_OPTS} ${APACHE_ANT_URL}/${ANT_VERSION}-bin.zip -O ${ANT_ZIP}
 echo "ec57a35eb869a307abdfef8712f3688fff70887f  ${ANT_ZIP}" | ${SHASUM} --check -
@@ -245,6 +245,7 @@ make JUNIT_JAR=${JUNIT_JAR}                           \
      TESTNG_JAR=${TESTNG_JAR}                         \
      TESTNG_LICENSE=${TESTNG_LICENSE}                 \
      JCOMMANDER_JAR=${JCOMMANDER_JAR}                 \
+     ANT=${ANT}                                       \
      ANT_JAR=${ANT_JAR}                               \
      JCOV_JAR=${JCOV_JAR}                             \
      JCOV_LICENSE=${JCOV_LICENSE}                     \
@@ -257,5 +258,6 @@ make JUNIT_JAR=${JUNIT_JAR}                           \
      BUILD_VERSION=${BUILD_VERSION}                   \
      BUILD_MILESTONE=${BUILD_MILESTONE:=dev}          \
      BUILD_NUMBER=${BUILD_NUMBER}                     \
-     JDKHOME=$JAVA_HOME
+     JDKHOME=$JAVA_HOME                               \
+     ${MAKE_ARGS}
 

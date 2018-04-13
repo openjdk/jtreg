@@ -57,5 +57,6 @@ $(BUILDDIR)/MaxOutputSize.ok: \
 	$(call check-found,current value,$(@:%.ok=%)/work/overrideMax/Test_id2.jtr)
 	echo "test passed at `date`" > $@
 
-TESTS.jtreg += $(BUILDDIR)/MaxOutputSize.ok
+# disabled, waiting for JT Harness update
+#TESTS.jtreg += $(BUILDDIR)/MaxOutputSize.ok
 
