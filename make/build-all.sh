@@ -63,20 +63,27 @@ else
 fi
 
 UNZIP=unzip
-UNZIP_OPTS=${UNZIP_OPTS:--q}
+UNZIP_OPTS="${UNZIP_OPTS:--q} -u"
 WGET=wget
 WGET_OPTS=${WGET_OPTS:--q}
 
 ROOT=$(hg root)
 BUILD_DIR=${BUILD_DIR:-${ROOT}/build}
 
-if [ -d ${BUILD_DIR} ]; then
+if [ "${SKIP_WGET:-}" = "" -a -d ${BUILD_DIR} ]; then
     echo "Error: Build directory '${BUILD_DIR}' already exists" >&2
     exit 1
 fi
 
-mkdir ${BUILD_DIR}
+mkdir -p ${BUILD_DIR}
 
+WGet() {
+    if [ "${SKIP_WGET:-}" != "" -a -r $2 ]; then
+        echo "Skipping download of $1..."
+    else
+        ${WGET} ${WGET_OPTS} "$1" -O "$2"
+    fi
+}
 
 # DEPENDENCIES
 ##############
@@ -94,11 +101,11 @@ JCOV_VERSION=${JCOV_VERSION:-jcov3.0-b04} # jcov3.0 + html5 reports
 #####
 
 ANT_DIR=${BUILD_DIR}/ant
-mkdir ${ANT_DIR}
+mkdir -p ${ANT_DIR}
 
 ANT_VERSION=${ANT_VERSION:-apache-ant-1.9.4}
 ANT_ZIP=${ANT_DIR}/${ANT_VERSION}.zip
-${WGET} ${WGET_OPTS} ${APACHE_ANT_URL}/${ANT_VERSION}-bin.zip -O ${ANT_ZIP}
+WGet ${APACHE_ANT_URL}/${ANT_VERSION}-bin.zip ${ANT_ZIP}
 echo "ec57a35eb869a307abdfef8712f3688fff70887f  ${ANT_ZIP}" | ${SHASUM} --check -
 ${UNZIP} ${UNZIP_OPTS} -d ${ANT_DIR} ${ANT_ZIP}
 
@@ -109,11 +116,11 @@ ANT=${ANT_DIR}/${ANT_VERSION}/bin/ant
 ##########
 
 ASMTOOLS_BUILD_DIR=${BUILD_DIR}/asmtools
-mkdir ${ASMTOOLS_BUILD_DIR}
+mkdir -p ${ASMTOOLS_BUILD_DIR}
 
 # Build asmtools
 ASMTOOLS_SRC_ZIP=${ASMTOOLS_BUILD_DIR}/source.zip
-${WGET} ${WGET_OPTS} ${CODE_TOOLS_URL}/asmtools/archive/${ASMTOOLS_VERSION}.zip -O ${ASMTOOLS_SRC_ZIP}
+WGet ${CODE_TOOLS_URL}/asmtools/archive/${ASMTOOLS_VERSION}.zip ${ASMTOOLS_SRC_ZIP}
 ${UNZIP} ${UNZIP_OPTS} -d ${ASMTOOLS_BUILD_DIR} ${ASMTOOLS_SRC_ZIP}
 
 if [ "${ASMTOOLS_VERSION}" = "tip" ]; then
@@ -130,11 +137,11 @@ ASMTOOLS_LICENSE=${ASMTOOLS_SRC}/LICENSE
 ##########
 
 JTHARNESS_BUILD_DIR=${BUILD_DIR}/jtharness
-mkdir ${JTHARNESS_BUILD_DIR}
+mkdir -p ${JTHARNESS_BUILD_DIR}
 
 # Build jtharness
 JTHARNESS_SRC_ZIP=${JTHARNESS_BUILD_DIR}/source.zip
-${WGET} ${WGET_OPTS} ${CODE_TOOLS_URL}/jtharness/archive/${JTHARNESS_VERSION}.zip -O ${JTHARNESS_SRC_ZIP}
+WGet ${CODE_TOOLS_URL}/jtharness/archive/${JTHARNESS_VERSION}.zip ${JTHARNESS_SRC_ZIP}
 ${UNZIP} ${UNZIP_OPTS} -d ${JTHARNESS_BUILD_DIR} ${JTHARNESS_SRC_ZIP}
 
 if [ "${JTHARNESS_VERSION}" = "tip" ]; then
@@ -153,27 +160,27 @@ JTHARNESS_COPYRIGHT=${JTHARNESS_SRC}/legal/copyright.txt
 ######
 
 JCOV_BUILD_DIR=${BUILD_DIR}/jcov
-mkdir ${JCOV_BUILD_DIR}
+mkdir -p ${JCOV_BUILD_DIR}
 
 # Get jcov dependencies
 JCOV_DEPS_DIR=${JCOV_BUILD_DIR}/deps
-mkdir ${JCOV_DEPS_DIR}
+mkdir -p ${JCOV_DEPS_DIR}
 
 ASM_JAR=${JCOV_DEPS_DIR}/asm-6.0.jar
-${WGET} ${WGET_OPTS} ${MAVEN_REPO_URL}/org/ow2/asm/asm/6.0/asm-6.0.jar -O ${ASM_JAR}
+WGet ${MAVEN_REPO_URL}/org/ow2/asm/asm/6.0/asm-6.0.jar ${ASM_JAR}
 echo "bc6fa6b19424bb9592fe43bbc20178f92d403105  ${ASM_JAR}" | ${SHASUM} --check -
 
 ASM_TREE_JAR=${JCOV_DEPS_DIR}/asm-tree-6.0.jar
-${WGET} ${WGET_OPTS} ${MAVEN_REPO_URL}/org/ow2/asm/asm-tree/6.0/asm-tree-6.0.jar -O ${ASM_TREE_JAR}
+WGet ${MAVEN_REPO_URL}/org/ow2/asm/asm-tree/6.0/asm-tree-6.0.jar ${ASM_TREE_JAR}
 echo "a624f1a6e4e428dcd680a01bab2d4c56b35b18f0  ${ASM_TREE_JAR}" | ${SHASUM} --check -
 
 ASM_UTIL_JAR=${JCOV_DEPS_DIR}/asm-utils-6.0.jar
-${WGET} ${WGET_OPTS} ${MAVEN_REPO_URL}/org/ow2/asm/asm-util/6.0/asm-util-6.0.jar -O ${ASM_UTIL_JAR}
+WGet ${MAVEN_REPO_URL}/org/ow2/asm/asm-util/6.0/asm-util-6.0.jar ${ASM_UTIL_JAR}
 echo "430b2fc839b5de1f3643b528853d5cf26096c1de  ${ASM_UTIL_JAR}" | ${SHASUM} --check -
 
 # Build jcov
 JCOV_SRC_ZIP=${JCOV_BUILD_DIR}/source.zip
-${WGET} ${WGET_OPTS} ${CODE_TOOLS_URL}/jcov/archive/${JCOV_VERSION}.zip -O ${JCOV_SRC_ZIP}
+WGet ${CODE_TOOLS_URL}/jcov/archive/${JCOV_VERSION}.zip ${JCOV_SRC_ZIP}
 ${UNZIP} ${UNZIP_OPTS} -d ${JCOV_BUILD_DIR} ${JCOV_SRC_ZIP}
 
 if [ "${JCOV_VERSION}" = "tip" ]; then
@@ -201,14 +208,14 @@ JCOV_LICENSE=${JCOV_SRC}/LICENSE
 
 # Get jtreg dependencies
 JTREG_DEPS_DIR=${BUILD_DIR}/deps
-mkdir ${JTREG_DEPS_DIR}
+mkdir -p ${JTREG_DEPS_DIR}
 
 ## JUnit
 JUNIT_DEPS_DIR=${JTREG_DEPS_DIR}/junit
-mkdir ${JUNIT_DEPS_DIR}
+mkdir -p ${JUNIT_DEPS_DIR}
 
 JUNIT_JAR=${JUNIT_DEPS_DIR}/junit-4.10.jar
-${WGET} ${WGET_OPTS} ${MAVEN_REPO_URL}/junit/junit/4.10/junit-4.10.jar -O ${JUNIT_JAR}
+WGet ${MAVEN_REPO_URL}/junit/junit/4.10/junit-4.10.jar ${JUNIT_JAR}
 echo "e4f1766ce7404a08f45d859fb9c226fc9e41a861  ${JUNIT_JAR}" | ${SHASUM} --check -
 
 ${UNZIP} ${UNZIP_OPTS} ${JUNIT_JAR} LICENSE.txt -d ${JUNIT_DEPS_DIR}
@@ -216,17 +223,17 @@ JUNIT_LICENSE=${JUNIT_DEPS_DIR}/LICENSE.txt
 
 ## TestNG
 TESTNG_DEPS_DIR=${JTREG_DEPS_DIR}/testng
-mkdir ${TESTNG_DEPS_DIR}
+mkdir -p ${TESTNG_DEPS_DIR}
 
 TESTNG_JAR=${TESTNG_DEPS_DIR}/testng-6.9.5.jar
-${WGET} ${WGET_OPTS} ${MAVEN_REPO_URL}/org/testng/testng/6.9.5/testng-6.9.5.jar -O ${TESTNG_JAR}
+WGet ${MAVEN_REPO_URL}/org/testng/testng/6.9.5/testng-6.9.5.jar ${TESTNG_JAR}
 echo "5d12ea207fc47c3f341a3f8ecc88a3eac396a777  ${TESTNG_JAR}" | ${SHASUM} --check -
 
 TESTNG_LICENSE=${TESTNG_DEPS_DIR}/LICENSE.txt
-${WGET} ${WGET_OPTS} https://raw.githubusercontent.com/cbeust/testng/testng-6.9.5/LICENSE.txt -O ${TESTNG_LICENSE}
+WGet https://raw.githubusercontent.com/cbeust/testng/testng-6.9.5/LICENSE.txt ${TESTNG_LICENSE}
 
 JCOMMANDER_JAR=${TESTNG_DEPS_DIR}/jcommander-1.72.jar
-${WGET} ${WGET_OPTS} ${MAVEN_REPO_URL}/com/beust/jcommander/1.72/jcommander-1.72.jar -O ${JCOMMANDER_JAR}
+WGet ${MAVEN_REPO_URL}/com/beust/jcommander/1.72/jcommander-1.72.jar ${JCOMMANDER_JAR}
 echo "6375e521c1e11d6563d4f25a07ce124ccf8cd171  ${JCOMMANDER_JAR}" | ${SHASUM} --check -
 
 
