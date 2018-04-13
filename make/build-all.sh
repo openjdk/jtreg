@@ -259,5 +259,5 @@ make JUNIT_JAR=${JUNIT_JAR}                           \
      BUILD_MILESTONE=${BUILD_MILESTONE:=dev}          \
      BUILD_NUMBER=${BUILD_NUMBER}                     \
      JDKHOME=$JAVA_HOME                               \
-     ${MAKE_ARGS}
+     ${MAKE_ARGS:-}
 
