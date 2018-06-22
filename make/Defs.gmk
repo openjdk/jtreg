@@ -226,7 +226,7 @@ ifndef JTHARNESS_COPYRIGHT
 endif
 JTHARNESS_COPYRIGHT := $(call FullPath,$(JTHARNESS_COPYRIGHT))
 
-#----- JCov 2.0:  https://wiki.openjdk.java.net/display/CodeTools/jcov
+#----- JCov 3.0:  https://wiki.openjdk.java.net/display/CodeTools/jcov
 #
 # JCov is optional. 
 # If provided, coverage-collection features in jtreg will be enabled.
@@ -240,7 +240,7 @@ JTHARNESS_COPYRIGHT := $(call FullPath,$(JTHARNESS_COPYRIGHT))
 
 ifndef JCOV_HOME
   ifdef SLASHJAVA
-    JCOV_HOME = $(SLASHJAVA)/re/jcov/2.0/promoted/latest/binaries/jcov_2.0/
+    JCOV_HOME = $(SLASHJAVA)/re/jcov/3.0/promoted/fcs/latest/binaries/jcov_3.0/
   endif
 endif
 

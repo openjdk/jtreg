@@ -95,7 +95,7 @@ CODE_TOOLS_URL=http://hg.openjdk.java.net/code-tools
 # The following are Mercurial tags for the corresponding OpenJDK Code Tools repo
 ASMTOOLS_VERSION=${ASMTOOLS_VERSION:-7.0-b04} # early access for 7.0
 JTHARNESS_VERSION=${JTHARNESS_VERSION:-jt6.0-b01} # early access for 6.0
-JCOV_VERSION=${JCOV_VERSION:-jcov3.0-b04} # jcov3.0 + html5 reports
+JCOV_VERSION=${JCOV_VERSION:-jcov3.0-b05} # jcov3.0, ASM 6.2
 
 # ANT
 #####
@@ -166,17 +166,20 @@ mkdir -p ${JCOV_BUILD_DIR}
 JCOV_DEPS_DIR=${JCOV_BUILD_DIR}/deps
 mkdir -p ${JCOV_DEPS_DIR}
 
-ASM_JAR=${JCOV_DEPS_DIR}/asm-6.0.jar
-WGet ${MAVEN_REPO_URL}/org/ow2/asm/asm/6.0/asm-6.0.jar ${ASM_JAR}
-echo "bc6fa6b19424bb9592fe43bbc20178f92d403105  ${ASM_JAR}" | ${SHASUM} --check -
+ASM_JAR=${JCOV_DEPS_DIR}/asm-6.2.jar
+ASM_JAR_CHECKSUM='1b6c4ff09ce03f3052429139c2a68e295cae6604'
+WGet ${MAVEN_REPO_URL}/org/ow2/asm/asm/6.2/asm-6.2.jar ${ASM_JAR}
+echo "${ASM_JAR_CHECKSUM} ${ASM_JAR}" | ${SHASUM} --check -
 
-ASM_TREE_JAR=${JCOV_DEPS_DIR}/asm-tree-6.0.jar
-WGet ${MAVEN_REPO_URL}/org/ow2/asm/asm-tree/6.0/asm-tree-6.0.jar ${ASM_TREE_JAR}
-echo "a624f1a6e4e428dcd680a01bab2d4c56b35b18f0  ${ASM_TREE_JAR}" | ${SHASUM} --check -
+ASM_TREE_JAR=${JCOV_DEPS_DIR}/asm-tree-6.2.jar
+ASM_TREE_JAR_CHECKSUM='61570e046111559f38d4e0e580c005f75988c0a6'
+WGet ${MAVEN_REPO_URL}/org/ow2/asm/asm-tree/6.2/asm-tree-6.2.jar ${ASM_TREE_JAR}
+echo "${ASM_TREE_JAR_CHECKSUM} ${ASM_TREE_JAR}" | ${SHASUM} --check -
 
-ASM_UTIL_JAR=${JCOV_DEPS_DIR}/asm-utils-6.0.jar
-WGet ${MAVEN_REPO_URL}/org/ow2/asm/asm-util/6.0/asm-util-6.0.jar ${ASM_UTIL_JAR}
-echo "430b2fc839b5de1f3643b528853d5cf26096c1de  ${ASM_UTIL_JAR}" | ${SHASUM} --check -
+ASM_UTIL_JAR=${JCOV_DEPS_DIR}/asm-utils-6.2.jar
+ASM_UTIL_JAR_CHECKSUM='a9690730f92cc79eeadc20e400ebb41eccce10b1'
+WGet ${MAVEN_REPO_URL}/org/ow2/asm/asm-util/6.2/asm-util-6.2.jar ${ASM_UTIL_JAR}
+echo "${ASM_UTIL_JAR_CHECKSUM} ${ASM_UTIL_JAR}" | ${SHASUM} --check -
 
 # Build jcov
 JCOV_SRC_ZIP=${JCOV_BUILD_DIR}/source.zip
@@ -192,8 +195,11 @@ JCOV_DIST=${JCOV_BUILD_DIR}/build
 ( cd ${JCOV_SRC}/build
 ${ANT} -Dresult.dir=${JCOV_DIST}      \
     -Dasm.jar=${ASM_JAR}           \
+    -Dasm.checksum=${ASM_JAR_CHECKSUM} \
     -Dasm.tree.jar=${ASM_TREE_JAR} \
+    -Dasm.tree.checksum=${ASM_TREE_JAR_CHECKSUM} \
     -Dasm.util.jar=${ASM_UTIL_JAR} \
+    -Dasm.util.checksum=${ASM_UTIL_JAR_CHECKSUM} \
     -Djavatestjar=${JAVATEST_JAR}  \
     -Dverify.strict=               \
     -f ${JCOV_SRC}/build/build.xml
