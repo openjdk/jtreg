@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -68,6 +68,7 @@ public class AgentServer implements ActionHelper.OutputHandler {
     public static final String ALLOW_SET_SECURITY_MANAGER = "-allowSetSecurityManager";
     public static final String HOST = "-host";
     public static final String PORT = "-port";
+    public static final String TIMEOUTFACTOR = "-timeoutFactor";
 
     public static final byte DO_COMPILE = 1;
     public static final byte DO_MAIN = 2;
@@ -137,6 +138,7 @@ public class AgentServer implements ActionHelper.OutputHandler {
         // use explicit localhost to avoid VPN issues
         InetAddress host = InetAddress.getByName("localhost");
         int port = -1;
+        float timeoutFactor = 1.0f;
         for (int i = 0; i < args.length; i++) {
             String arg = args[i];
             if (arg.equals(ALLOW_SET_SECURITY_MANAGER)) {
@@ -145,13 +147,15 @@ public class AgentServer implements ActionHelper.OutputHandler {
                 port = Integer.valueOf(args[++i]);
             } else if (arg.equals(HOST) && i + 1 < args.length) {
                 host = InetAddress.getByName(args[++i]);
+            } else if (arg.equals(TIMEOUTFACTOR) && i + 1 < args.length) {
+                timeoutFactor = Float.valueOf(args[++i]);
             } else {
                 throw new IllegalArgumentException(arg);
             }
         }
         if (port > 0) {
             Socket s = new Socket(host, port);
-            s.setSoTimeout(KeepAlive.READ_TIMEOUT);
+            s.setSoTimeout((int)(KeepAlive.READ_TIMEOUT * timeoutFactor));
             in = new DataInputStream(new BufferedInputStream(s.getInputStream()));
             out = new DataOutputStream(new BufferedOutputStream(s.getOutputStream()));
         } else {
@@ -169,7 +173,7 @@ public class AgentServer implements ActionHelper.OutputHandler {
             }
             rsm.setAllowSetIO(true);
         }
-    } // use explicit localhost to avoid VPN issues
+    }
 
     public void run() throws IOException {
         try {

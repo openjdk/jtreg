@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -109,6 +109,11 @@ public class Agent {
             cmd.add(AgentServer.PORT);
             cmd.add(String.valueOf(ss.getLocalPort()));
 
+            if (timeoutFactor != 1.0f) {
+                cmd.add(AgentServer.TIMEOUTFACTOR);
+                cmd.add(String.valueOf(timeoutFactor));
+            }
+
             show("Started " + cmd);
 
             ProcessBuilder pb = new ProcessBuilder(cmd);
@@ -125,7 +130,7 @@ public class Agent {
                     // default 60 seconds, for server to start and "phone home"
                 ss.setSoTimeout(ACCEPT_TIMEOUT);
                 Socket s = ss.accept();
-                s.setSoTimeout(KeepAlive.READ_TIMEOUT);
+                s.setSoTimeout((int)(KeepAlive.READ_TIMEOUT * timeoutFactor));
                 in = new DataInputStream(s.getInputStream());
                 out = new DataOutputStream(s.getOutputStream());
             } finally {
