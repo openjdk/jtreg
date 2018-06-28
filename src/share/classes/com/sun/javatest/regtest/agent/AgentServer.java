@@ -30,11 +30,17 @@ import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.CoderResult;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -297,21 +303,25 @@ public class AgentServer implements ActionHelper.OutputHandler {
     private final DataInputStream in;
     private final DataOutputStream out;
     private final PrintStream traceOut = System.err;
-    private final Map<OutputKind, PrintWriter> writers = new EnumMap<OutputKind, PrintWriter>(OutputKind.class);
+    private final Map<OutputKind, Writer> writers = new EnumMap<OutputKind, Writer>(OutputKind.class);
 
     /**
      * Create an output stream for output to be sent back to the client via the server connection.
      * @param kind the kind of stream
      * @return the output stream
      */
-    public PrintWriter createOutput(final OutputKind kind) {
-        PrintWriter pw = writers.get(kind);
-        if (pw == null) {
-            pw = new PrintWriter(new Writer() {
+    public PrintWriter getPrintWriter(OutputKind kind, boolean autoFlush) {
+        return new PrintWriter(getWriter(kind), autoFlush);
+    }
+
+    private Writer getWriter(final OutputKind kind) {
+        Writer w = writers.get(kind);
+        if (w == null) {
+            w = new Writer() {
                 @Override
                 public void write(char[] cbuf, int off, int len) throws IOException {
                     if (traceServer) {
-                        traceOut.println("Agent.Server.write[" + kind + "] " + new String(cbuf, off, len));
+                        traceOut.println("Agent.Server.write[" + kind + ",writer] " + new String(cbuf, off, len));
                     }
                     final int BLOCKSIZE = 4096;
                     while (len > 0) {
@@ -325,7 +335,7 @@ public class AgentServer implements ActionHelper.OutputHandler {
                         len -= n;
                     }
                     if (traceServer) {
-                        traceOut.println("Agent.Server.write[" + kind + "]--done");
+                        traceOut.println("Agent.Server.write[" + kind + ",writer]--done");
                     }
                 }
 
@@ -338,22 +348,85 @@ public class AgentServer implements ActionHelper.OutputHandler {
                 public void close() throws IOException {
                     out.flush();
                 }
-            });
-            writers.put(kind, pw);
+            };
+            writers.put(kind, w);
         }
-        return pw;
+        return w;
     }
 
     /**
      * Create an output stream for output to be sent back to the client via the server connection,
      * and use it to write the given content.
      * @param kind the kind of stream
-     * @param output the content to be written to the output stream
+     * @param autoFlush whether or not to flush the stream on '\n'
      */
-    public void createOutput(OutputKind kind, String output) {
-        PrintWriter pw = createOutput(kind);
-        pw.write(output);
-        pw.close();
+    public PrintStream getPrintStream(OutputKind kind, boolean autoFlush) {
+        return new PrintStream(getOutputStream(kind), autoFlush);
     }
 
+    private OutputStream getOutputStream(final OutputKind kind) {
+        final Writer w = getWriter(kind);
+        return new OutputStream() {
+            private static final int BUFSIZE = 1024;
+            private ByteBuffer byteBuffer = ByteBuffer.allocate(BUFSIZE);
+            private CharBuffer charBuffer = CharBuffer.allocate(BUFSIZE);
+            private CharsetDecoder decoder = Charset.defaultCharset().newDecoder();
+
+            @Override
+            public void write(byte[] bytes, int off, int len) throws IOException {
+                if (traceServer) {
+                    traceOut.println("Agent.Server.write[" + kind + ",stream] " + new String(bytes, off, len));
+                }
+                int n;
+                while (len > 0 && len >= (n = byteBuffer.remaining())) {
+                    byteBuffer.put(bytes, off, n);
+                    decode();
+                    off += n;
+                    len -= n;
+                }
+                byteBuffer.put(bytes, off, len);
+                if (traceServer) {
+                    traceOut.println("Agent.Server.write[" + kind + ",stream]--done");
+                }
+            }
+
+            @Override
+            public void write(int b) throws IOException {
+                byteBuffer.put((byte) b);
+                if (!byteBuffer.hasRemaining()) {
+                    decode();
+                }
+            }
+
+            @Override
+            public void flush() throws IOException {
+                decode();
+                w.flush();
+            }
+
+            @Override
+            public void close() throws IOException {
+                decode();
+                byteBuffer.flip();
+                decoder.decode(byteBuffer, charBuffer, true);
+                writeCharBuffer();
+                w.flush();
+            }
+
+            private void decode() throws IOException {
+                byteBuffer.flip();
+                CoderResult cr;
+                while ((cr = decoder.decode(byteBuffer, charBuffer, false)) != CoderResult.UNDERFLOW) {
+                    writeCharBuffer();
+                }
+                byteBuffer.compact();
+            }
+
+            private void writeCharBuffer() throws IOException {
+                charBuffer.flip();
+                w.write(charBuffer.toString());
+                charBuffer.clear();
+            }
+        };
+    }
 }

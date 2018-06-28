@@ -96,7 +96,7 @@ public class CompileAction extends Action {
      * A method used by sibling classes to run both the init() and run()
      * method of CompileAction.
      *
-     * @param destDir Where to place the compiled classes
+     * @param libLocn details for where to place the compiled classes
      * @param opts The options for the action.
      * @param args The arguments for the actions.
      * @param reason Indication of why this action was invoked.

@@ -1,0 +1,100 @@
+#
+# Copyright (c) 2018, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+$(BUILDDIR)/AgentOut.agentvm.ok \
+$(BUILDDIR)/AgentOut.othervm.ok: \
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	    $(JTREG_IMAGEDIR)/bin/jtreg
+	$(RM) $(@:%.ok=%)
+	JTREG_SHOWAGENT=true JTREG_SHOWCMD=true \
+	JT_JAVA=$(JDKHOME) \
+		$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		$(@:$(BUILDDIR)/AgentOut.%.ok=-%) \
+		$(TESTDIR)/agentout
+	$(MKDIR) $(@:%.ok=%)/logs
+	- JT_JAVA=$(JDKHOME) \
+		$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work \
+		$(@:$(BUILDDIR)/AgentOut.%.ok=-%) \
+		-show:System.out \
+		$(TESTDIR)/agentout/CompileTest.java \
+		    > $(@:%.ok=%)/logs/CompileTest-System.out.log
+	- JT_JAVA=$(JDKHOME) \
+		$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work \
+		$(@:$(BUILDDIR)/AgentOut.%.ok=-%) \
+		-show:System.err \
+		$(TESTDIR)/agentout/CompileTest.java \
+		    > $(@:%.ok=%)/logs/CompileTest-System.err.log
+	- JT_JAVA=$(JDKHOME) \
+		$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work \
+		$(@:$(BUILDDIR)/AgentOut.%.ok=-%) \
+		-show:direct \
+		$(TESTDIR)/agentout/CompileTest.java \
+		    > $(@:%.ok=%)/logs/CompileTest-direct.log
+	- JT_JAVA=$(JDKHOME) \
+		$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work \
+		$(@:$(BUILDDIR)/AgentOut.%.ok=-%) \
+		-show:System.out \
+		$(TESTDIR)/agentout/MainTest.java \
+		    > $(@:%.ok=%)/logs/MainTest-System.out.log
+	- JT_JAVA=$(JDKHOME) \
+		$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work \
+		$(@:$(BUILDDIR)/AgentOut.%.ok=-%) \
+		-show:System.err \
+		$(TESTDIR)/agentout/MainTest.java \
+		    > $(@:%.ok=%)/logs/MainTest-System.err.log
+	# remove noise lines
+	for i in $(@:%.ok=%)/logs/*.log ; do \
+	   $(MKDIR) -p `dirname $$i`-filtered ; \
+	   $(SED) -e '/^$$/d' -e '/^STATUS.*/d' -e '/^JavaTest.*/d' \
+			-e '/^###/d' -e '/.*warning.*/d' \
+		< $$i \
+		> `dirname $$i`-filtered/`basename $$i` ; \
+	done
+	# merge direct and stderr from agent CompileTest to match stderr from othervm CompileTest
+	$(CAT) $(BUILDDIR)/AgentOut.agentvm/logs-filtered/CompileTest-direct.log \
+		$(BUILDDIR)/AgentOut.agentvm/logs-filtered/CompileTest-System.err.log \
+		> $(BUILDDIR)/AgentOut.agentvm/logs-filtered/tmp.log
+	$(MV) $(BUILDDIR)/AgentOut.agentvm/logs-filtered/tmp.log \
+		$(BUILDDIR)/AgentOut.agentvm/logs-filtered/CompileTest-System.err.log
+	$(CAT) < $(DEV_NULL) > $(BUILDDIR)/AgentOut.agentvm/logs-filtered/CompileTest-direct.log
+	#
+	echo "run at `date`" > $@
+
+$(BUILDDIR)/AgentOut.ok: \
+	    $(BUILDDIR)/AgentOut.agentvm.ok \
+	    $(BUILDDIR)/AgentOut.othervm.ok
+	$(DIFF) -r \
+		$(BUILDDIR)/AgentOut.agentvm/logs-filtered \
+		$(BUILDDIR)/AgentOut.othervm/logs-filtered
+	echo "passed at `date`" > $@
+
+TESTS.jtreg += \
+	$(BUILDDIR)/AgentOut.ok \

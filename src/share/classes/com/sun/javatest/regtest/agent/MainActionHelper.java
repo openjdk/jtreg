@@ -40,7 +40,6 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-import static com.sun.javatest.regtest.agent.ActionHelper.EXEC_PASS;
 import static com.sun.javatest.regtest.agent.AStatus.error;
 import static com.sun.javatest.regtest.agent.AStatus.failed;
 import static com.sun.javatest.regtest.agent.AStatus.passed;
@@ -72,8 +71,8 @@ public class MainActionHelper extends ActionHelper {
         }
         System.setProperties(p);
 
-        PrintByteArrayOutputStream out = new PrintByteArrayOutputStream();
-        PrintByteArrayOutputStream err = new PrintByteArrayOutputStream();
+        PrintStream out = outputHandler.getPrintStream(OutputHandler.OutputKind.STDOUT, false);
+        PrintStream err = outputHandler.getPrintStream(OutputHandler.OutputKind.STDERR, true);
 
         AStatus status = passed(EXEC_PASS);
         try {
@@ -124,7 +123,7 @@ public class MainActionHelper extends ActionHelper {
             Thread t = new Thread(tg, avmr, "AgentVMThread");
             Alarm alarm = null;
             if (timeout > 0) {
-                PrintWriter alarmOut = outputHandler.createOutput(OutputHandler.OutputKind.LOG);
+                PrintWriter alarmOut = outputHandler.getPrintWriter(OutputHandler.OutputKind.LOG, true);
                 alarm = Alarm.schedulePeriodicInterrupt(timeout, TimeUnit.SECONDS, alarmOut, t);
             }
             Throwable error = null;
@@ -194,13 +193,8 @@ public class MainActionHelper extends ActionHelper {
                 e.printStackTrace(err);
             status = error(MAIN_CANT_INIT_MODULE_EXPORTS + e.getMessage());
         } finally {
-            // Write test output
             out.close();
-            outputHandler.createOutput(OutputHandler.OutputKind.STDOUT, out.getOutput());
-
             err.close();
-            outputHandler.createOutput(OutputHandler.OutputKind.STDERR, err.getOutput());
-
             status = saved.restore(testName, status);
         }
 

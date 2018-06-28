@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -25,6 +25,7 @@
 
 package com.sun.javatest.regtest.agent;
 
+import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.util.List;
 import java.util.Map;
@@ -58,14 +59,14 @@ public class CompileActionHelper extends ActionHelper {
         System.setProperties(p);
 
         // RUN THE COMPILER
-        // Setup streams for the test
-        // to catch sysout and syserr
-        PrintByteArrayOutputStream sysOut = new PrintByteArrayOutputStream();
-        PrintByteArrayOutputStream sysErr = new PrintByteArrayOutputStream();
+        // Setup streams for the test:
+        // ... to catch sysout and syserr
+        PrintStream sysOut = outputHandler.getPrintStream(OutputHandler.OutputKind.STDOUT, false);
+        PrintStream sysErr = outputHandler.getPrintStream(OutputHandler.OutputKind.STDERR, true);
 
-        // for direct use with RegressionCompileCommand
-        PrintStringWriter out = new PrintStringWriter();
-        PrintStringWriter err = new PrintStringWriter();
+        // ... for direct use with RegressionCompileCommand
+        PrintWriter out = outputHandler.getPrintWriter(OutputHandler.OutputKind.DIRECT, false);
+        PrintWriter err = outputHandler.getPrintWriter(OutputHandler.OutputKind.DIRECT_LOG, false);
 
         AStatus status = error("");
         try {
@@ -76,7 +77,7 @@ public class CompileActionHelper extends ActionHelper {
 
             Alarm alarm = Alarm.NONE;
             if (timeout > 0) {
-                PrintWriter alarmOut = outputHandler.createOutput(OutputHandler.OutputKind.LOG);
+                PrintWriter alarmOut = outputHandler.getPrintWriter(OutputHandler.OutputKind.LOG, true);
                 alarm = Alarm.schedulePeriodicInterrupt(timeout, TimeUnit.SECONDS, alarmOut, Thread.currentThread());
             }
             try {
@@ -94,31 +95,11 @@ public class CompileActionHelper extends ActionHelper {
             }
 
         } finally {
+            out.close();
+            err.close();
+            sysOut.close();
+            sysErr.close();
             status = saved.restore(testName, status);
-        }
-
-        out.close();
-        String outOutput = out.getOutput();
-        if (outOutput.length() > 0) {
-            outputHandler.createOutput(OutputHandler.OutputKind.DIRECT, outOutput);
-        }
-
-        err.close();
-        String errOutput = err.getOutput();
-        if (errOutput.length() > 0) {
-            // should never happen -- only if JavaCompilerCommand kicked into verbose mode
-            outputHandler.createOutput(OutputHandler.OutputKind.DIRECT_LOG, errOutput);
-        }
-
-        sysOut.close();
-        String sysOutOutput = sysOut.getOutput();
-        sysErr.close();
-        String sysErrOutput = sysErr.getOutput();
-
-        if (sysOutOutput.length() > 0 || sysErrOutput.length() > 0) {
-            // should never happen -- only if somehow using JDK 1.3 (but JavaTest assumes 1.4.2+)
-            outputHandler.createOutput(OutputHandler.OutputKind.STDOUT, sysOutOutput);
-            outputHandler.createOutput(OutputHandler.OutputKind.STDERR, sysErrOutput);
         }
 
         return status;

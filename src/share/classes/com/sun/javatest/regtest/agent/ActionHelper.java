@@ -26,10 +26,11 @@
 package com.sun.javatest.regtest.agent;
 
 
-import java.io.ByteArrayOutputStream;
+import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.io.Writer;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.security.Provider;
@@ -216,7 +217,7 @@ public class ActionHelper {
      * the output from an action of a test.
      */
     public interface OutputHandler {
-        public enum OutputKind {
+        enum OutputKind {
             LOG(""),
             STDOUT("System.out"),
             STDERR("System.err"),
@@ -224,25 +225,14 @@ public class ActionHelper {
             DIRECT_LOG("direct.log");
             OutputKind(String name) { this.name = name; }
             public final String name;
-        };
-        PrintWriter createOutput(OutputKind kind);
-        void createOutput(OutputKind kind, String output);
+        }
+        PrintStream getPrintStream(OutputKind kind, boolean autoFlush);
+        PrintWriter getPrintWriter(OutputKind kind, boolean autoFlush);
     }
 
     //----------in memory streams-----------------------------------------------
 
-    public static class PrintByteArrayOutputStream extends PrintStream {
-        public PrintByteArrayOutputStream() {
-            super(new ByteArrayOutputStream());
-            s = (ByteArrayOutputStream) out;
-        }
 
-        public String getOutput() {
-            return s.toString();
-        }
-
-        private final ByteArrayOutputStream s;
-    }
 
     public static class PrintStringWriter extends PrintWriter {
         public PrintStringWriter() {
