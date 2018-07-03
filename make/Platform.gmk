@@ -59,7 +59,7 @@ endif
 ifeq ($(UNAME_S), Darwin)
   OS_NAME     = macosx
   OS_ARCH    := $(shell $(UNAME) -m)
-  OS_VERSION := $(shell $(UNAME) -r)
+  OS_VERSION := $(shell defaults read loginwindow SystemVersionStampAsString)
 endif
 ifeq ($(OS_NAME),)
   OS_NAME = windows
@@ -88,13 +88,13 @@ endif
 OS_VERSION := $(shell $(ECHO) "$(OS_VERSION)" | $(CUT) -d'.' -f1,2)
 
 # Name to use for x86_64 arch (historically amd64, but should change someday)
-OS_ARCH_X64_NAME:=amd64
-#OS_ARCH_X64_NAME:=x64
+#OS_ARCH_X64_NAME:=amd64
+OS_ARCH_X64_NAME:=x64
 
 # Alternate arch names (in case this arch is known by a second name)
 #   PROBLEM_LISTS may use either name.
-OS_ARCH2-amd64:=x64
-#OS_ARCH2-x64:=amd64
+#OS_ARCH2-amd64:=x64
+OS_ARCH2-x64:=amd64
 
 # Try and use the arch names consistently
 OS_ARCH:=$(patsubst x64,$(OS_ARCH_X64_NAME),$(OS_ARCH))

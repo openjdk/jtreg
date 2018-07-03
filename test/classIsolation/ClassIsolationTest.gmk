@@ -31,7 +31,7 @@ $(BUILDDIR)/ClassIsolation.disable.b07.ok: $(UCD_FILES) \
 	    $(JTREG_IMAGE_JAVAHELP_JAR)
 	$(RM) $(@:%.ok=%)
 	$(MKDIR) -p  $(@:%.ok=%)/jtreg
-	$(CP) --recursive $(JTREG_IMAGEDIR)/* $(@:%.ok=%)/jtreg
+	$(CP) -R $(JTREG_IMAGEDIR)/* $(@:%.ok=%)/jtreg
 	$(ECHO) "JTREG_VERSION=4.2 b07" > $(@:%.ok=%)/jtreg/release
 	$(JDKJAVA) -jar $(@:%.ok=%)/jtreg/lib/jtreg.jar \
 	    -jdk:$(JDKHOME) \
@@ -53,7 +53,7 @@ $(BUILDDIR)/ClassIsolation.disable.b08.ok: $(UCD_FILES) \
 	    $(JTREG_IMAGE_JAVAHELP_JAR)
 	$(RM) $(@:%.ok=%)
 	$(MKDIR) -p  $(@:%.ok=%)/jtreg
-	$(CP) --recursive $(JTREG_IMAGEDIR)/* $(@:%.ok=%)/jtreg
+	$(CP) -R $(JTREG_IMAGEDIR)/* $(@:%.ok=%)/jtreg
 	$(ECHO) "JTREG_VERSION=4.2 b08" > $(@:%.ok=%)/jtreg/release
 	$(JDKJAVA) -jar $(@:%.ok=%)/jtreg/lib/jtreg.jar \
 	    -jdk:$(JDKHOME) \
@@ -74,7 +74,7 @@ $(BUILDDIR)/ClassIsolation.default.b08.ok: $(UCD_FILES) \
 	    $(JTREG_IMAGE_JAVAHELP_JAR)
 	$(RM) $(@:%.ok=%)
 	$(MKDIR) -p  $(@:%.ok=%)/jtreg
-	$(CP) --recursive $(JTREG_IMAGEDIR)/* $(@:%.ok=%)/jtreg
+	$(CP) -R $(JTREG_IMAGEDIR)/* $(@:%.ok=%)/jtreg
 	$(ECHO) "JTREG_VERSION=4.2 b08" > $(@:%.ok=%)/jtreg/release
 	$(JDKJAVA) -jar $(@:%.ok=%)/jtreg/lib/jtreg.jar \
 	    -jdk:$(JDKHOME) \
@@ -95,7 +95,7 @@ $(BUILDDIR)/ClassIsolation.enable.b08.ok: $(UCD_FILES) \
 	    $(JTREG_IMAGE_JAVAHELP_JAR)
 	$(RM) $(@:%.ok=%)
 	$(MKDIR) -p  $(@:%.ok=%)/jtreg
-	$(CP) --recursive $(JTREG_IMAGEDIR)/* $(@:%.ok=%)/jtreg
+	$(CP) -R $(JTREG_IMAGEDIR)/* $(@:%.ok=%)/jtreg
 	$(ECHO) "JTREG_VERSION=4.2 b08" > $(@:%.ok=%)/jtreg/release
 	$(JDKJAVA) -jar $(@:%.ok=%)/jtreg/lib/jtreg.jar \
 	    -jdk:$(JDKHOME) \

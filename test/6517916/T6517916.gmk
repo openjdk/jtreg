@@ -27,8 +27,9 @@
 
 # on some platforms the launcher inserts extra environment variables:
 T6517916-ENVIRONMENT-NORMALIZATIONS = \
-	-e 's|^JAVA_MAIN_CLASS[_0-9]*=|JAVA_MAIN_CLASS=|' \
-	-e '/^JAVA_MAIN_CLASS=/s|MainWrapper|Main|'
+	-e 's|^JAVA_MAIN_CLASS[_0-9]*=|JAVA_MAIN_CLASS_<pid>=|' \
+	-e '/^JAVA_MAIN_CLASS_<pid>=/s|MainWrapper|<mainclass>|' \
+	-e '/^JAVA_MAIN_CLASS_<pid>=/s|AgentServer|<mainclass>|'
 
 $(BUILDDIR)/T6517916.ok: \
 		$(TESTDIR)/6517916/T6517916.java \
