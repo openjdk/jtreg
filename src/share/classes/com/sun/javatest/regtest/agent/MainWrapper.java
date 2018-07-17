@@ -62,7 +62,7 @@ public class MainWrapper
             className  = (sep == -1) ? moduleClassName : moduleClassName.substring(sep + 1);
             classArgs = StringArray.splitWS(fileArgs[i++]);
         } catch (IOException e) {
-            AStatus.failed(MAIN_CANT_READ_ARGS).exit();
+            AStatus.failed(MAIN_CANT_READ_ARGS + e.toString()).exit();
             throw new IllegalStateException(); // implies exit() didn't sucees
         }
 
@@ -77,12 +77,24 @@ public class MainWrapper
         }
 //      tg.cleanup();
 
-        if (tg.uncaughtThrowable != null)
-            AStatus.failed(MAIN_THREW_EXCEPT + tg.uncaughtThrowable.toString()).exit();
-        else
-            AStatus.passed("").exit();
+        if (tg.uncaughtThrowable != null) {
+            handleTestException(tg.uncaughtThrowable);
+        } else {
+            AStatus.passed("")
+                   .exit();
+        }
 
     } // main()
+
+    private static void handleTestException(Throwable e) {
+        if (SKIP_EXCEPTION.equals(e.getClass().getName())) {
+            AStatus.passed(MAIN_SKIPPED + e.toString())
+                   .exit();
+        } else {
+            AStatus.failed(MAIN_THREW_EXCEPT + e.toString())
+                   .exit();
+        }
+    }
 
     static class MainThread extends Thread {
         MainThread(String moduleName, String className, String[] args) {
@@ -115,12 +127,13 @@ public class MainWrapper
                 mainMethod.invoke(null, new Object[] { args });
 
             } catch (InvocationTargetException e) {
-                e.getTargetException().printStackTrace(System.err);
+                Throwable throwable = e.getTargetException();
+                throwable.printStackTrace(System.err);
                 System.err.println();
-                System.err.println("JavaTest Message: Test threw exception: " + e.getTargetException());
+                System.err.println("JavaTest Message: Test threw exception: " + throwable);
                 System.err.println("JavaTest Message: shutting down test");
                 System.err.println();
-                AStatus.failed(MAIN_THREW_EXCEPT + e.getTargetException()).exit();
+                handleTestException(throwable);
             } catch (ClassNotFoundException e) {
                 e.printStackTrace(System.err);
                 System.err.println();
@@ -195,6 +208,7 @@ public class MainWrapper
         private final boolean cleanMode   = false;
         Throwable uncaughtThrowable = null;
         Thread    uncaughtThread    = null;
+
     }
 
     //----------member variables------------------------------------------------
@@ -204,5 +218,7 @@ public class MainWrapper
         MAIN_THREAD_INTR      = "Thread interrupted: ",
         MAIN_THREW_EXCEPT     = "`main' threw exception: ",
         MAIN_CANT_LOAD_TEST   = "Can't load test: ",
-        MAIN_CANT_FIND_MAIN   = "Can't find `main' method";
+        MAIN_CANT_FIND_MAIN   = "Can't find `main' method",
+        MAIN_SKIPPED          = "Skipped: ";
+    private static final String SKIP_EXCEPTION = "jtreg.SkippedException";
 }

@@ -703,7 +703,11 @@ public class MainAction extends Action
                 sr = EXEC_PASS_UNEXPECT;
                 st = Status.FAILED;
             } else if (ok && !reverseStatus) {
-                sr = EXEC_PASS;
+                if (status.getReason().isEmpty()) {
+                    sr = EXEC_PASS;
+                } else {
+                    sr = status.getReason();
+                }
             } else if (!ok && reverseStatus) {
                 sr = EXEC_FAIL_EXPECT;
                 st = Status.PASSED;

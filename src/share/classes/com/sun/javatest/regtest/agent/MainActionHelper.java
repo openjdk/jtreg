@@ -166,7 +166,11 @@ public class MainActionHelper extends ActionHelper {
                 } else {
                     error = avmr.t;
                 }
-                status = failed(MAIN_THREW_EXCEPT + error.toString());
+                if (SKIP_EXCEPTION.equals(error.getClass().getName())) {
+                    status = passed(MAIN_SKIPPED + error.toString());
+                } else {
+                    status = failed(MAIN_THREW_EXCEPT + error.toString());
+                }
             }
 
             if (status.getReason().contains("java.lang.SecurityException: System.exit() forbidden")) {
@@ -204,6 +208,7 @@ public class MainActionHelper extends ActionHelper {
 
     private static final boolean traceCleanup = Flags.get("traceCleanup");
     private static final String MSG_PREFIX = "JavaTest Message: ";
+    private static final String SKIP_EXCEPTION = "jtreg.SkippedException";
 
     private static final String
         //    runAgentJVM
@@ -212,7 +217,8 @@ public class MainActionHelper extends ActionHelper {
         MAIN_THREW_EXCEPT     = "`main' threw exception: ",
         MAIN_CANT_LOAD_TEST   = "Can't load test: ",
         MAIN_CANT_FIND_MAIN   = "Can't find `main' method",
-        MAIN_CANT_INIT_MODULE_EXPORTS = "Can't init module exports: ";
+        MAIN_CANT_INIT_MODULE_EXPORTS = "Can't init module exports: ",
+        MAIN_SKIPPED = "Skipped: ";
 
     /**
      * Marker interface for test driver classes, which need to be passed a class
