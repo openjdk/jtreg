@@ -38,7 +38,7 @@ ASMTOOLS_VERSION, JCOV_VERSION, JTHARNESS_VERSION
 MAKE_ARGS
    Arguments for the internal invocation of "make". The default is to just build
    jtreg, but setting this environment variable allows additional targets, such
-   as test targets, to be run. The explicit target to build jtreg is "build"
+   as test targets, to be run. The explicit target to build jtreg is "build";
    the target to run some basic sanity tests is "quick-test"; and the target
    to run all tests is "test". You can also use the make "-j" option to build
    targets in parallel. For example:
@@ -79,9 +79,9 @@ Ant
     should be version 1.9.x. or better.
 
 AsmTools
-    See http://openjdk.java.net/code-tools/asmtools. Set ASMTOOLS_HOME to the
-    installed copy of the version of AsmTools to be used. It should be version
-    6.0 or better.
+    See https://wiki.openjdk.java.net/display/CodeTools/asmtools. 
+    Set ASMTOOLS_HOME to the installed copy of the version of AsmTools to be 
+    used. It should be version 6.0 or better.
 
     Note: Do not confuse this component with ASM bytecode engineering library
     available at http://asm.ow2.org/
@@ -95,8 +95,9 @@ TestNG
 The following dependencies are optional.
 
 JCov
-    See http://openjdk.java.net/code-tools/jcov. Set JCOV_HOME to the installed
-    copy of the version of JCov to be used. It should be version 2.0 or better.
+    See https://wiki.openjdk.java.net/display/CodeTools/jcov. 
+    Set JCOV_HOME to the installed copy of the version of JCov to be used. 
+    It should be version 2.0 or better.
 
 JDK 1.5
     This is used when running some of the tests. Set JDK15HOME to run these
