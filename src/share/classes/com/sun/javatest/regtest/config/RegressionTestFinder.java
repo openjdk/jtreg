@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -209,7 +209,7 @@ public class RegressionTestFinder extends TagTestFinder
 
             String comment = cs.readComment();
             while (comment != null) {
-                @SuppressWarnings("unchecked")
+                @SuppressWarnings({"unchecked", "cast"}) // temporary, to cover transition generifying TestFinder
                 Map<String,String> tagValues = (Map<String,String>) parseComment(comment, file);
 
                 // Look ahead to see if there are more comments

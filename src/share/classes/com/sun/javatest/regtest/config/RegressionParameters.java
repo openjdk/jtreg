@@ -497,90 +497,94 @@ public class RegressionParameters
     private static final String TIMEOUT_HANDLER_PATH = ".timeoutHandlerPath";
     private static final String TIMEOUT_HANDLER_TIMEOUT = ".timeoutHandlerTimeout";
 
-    @Override @SuppressWarnings("rawtypes")
+    @Override @SuppressWarnings({"rawtypes", "unchecked"})
     public void load(Map data, boolean checkChecksum) throws Interview.Fault {
         super.load(data, checkChecksum);
+        load0((Map<String,String>) data, checkChecksum);
+    }
+
+    private void load0(Map<String,String> data, boolean checkChecksum) throws Interview.Fault {
         String prefix = getTag();
 
         String v;
 
-        v = (String) data.get(prefix + ENVVARS);
+        v = data.get(prefix + ENVVARS);
         if (v != null)
             setEnvVars(deserializeEnv(v, "\n"));
 
-        v = (String) data.get(prefix + CHECK);
+        v = data.get(prefix + CHECK);
         if (v != null)
             setCheck(v.equals("true"));
 
-        v = (String) data.get(prefix + EXEC_MODE);
+        v = data.get(prefix + EXEC_MODE);
         if (v != null)
             setExecMode(ExecMode.valueOf(v));
 
-        v = (String) data.get(prefix + IGNORE);
+        v = data.get(prefix + IGNORE);
         if (v != null)
             setIgnoreKind(IgnoreKind.valueOf(v));
 
-        v = (String) data.get(prefix + COMPILE_JDK);
+        v = data.get(prefix + COMPILE_JDK);
         if (v != null)
             setCompileJDK(JDK.of(v));
 
-        v = (String) data.get(prefix + TEST_JDK);
+        v = data.get(prefix + TEST_JDK);
         if (v != null)
             setTestJDK(JDK.of(v));
 
-        v = (String) data.get(prefix + TEST_VM_OPTIONS);
+        v = data.get(prefix + TEST_VM_OPTIONS);
         if (v != null && v.length() > 0)
             setTestVMOptions(Arrays.asList(StringUtils.splitSeparator("\n", v)));
 
-        v = (String) data.get(prefix + TEST_COMPILER_OPTIONS);
+        v = data.get(prefix + TEST_COMPILER_OPTIONS);
         if (v != null && v.length() > 0)
             setTestCompilerOptions(Arrays.asList(StringUtils.splitSeparator("\n", v)));
 
-        v = (String) data.get(prefix + TEST_JAVA_OPTIONS);
+        v = data.get(prefix + TEST_JAVA_OPTIONS);
         if (v != null && v.length() > 0)
             setTestJavaOptions(Arrays.asList(StringUtils.splitSeparator("\n", v)));
 
-        v = (String) data.get(prefix + RETAIN_ARGS);
+        v = data.get(prefix + RETAIN_ARGS);
         if (v != null && v.length() > 0)
             setRetainArgs(Arrays.asList(StringUtils.splitSeparator("\n", v)));
 
-        v = (String) data.get(prefix + JUNIT);
+        v = data.get(prefix + JUNIT);
         if (v != null)
             setJUnitPath(new SearchPath(v));
 
-        v = (String) data.get(prefix + TESTNG);
+        v = data.get(prefix + TESTNG);
         if (v != null)
             setTestNGPath(new SearchPath(v));
 
-        v = (String) data.get(prefix + ASMTOOLS);
+        v = data.get(prefix + ASMTOOLS);
         if (v != null)
             setAsmToolsPath(new SearchPath(v));
 
-        v = (String) data.get(prefix + TIMELIMIT);
+        v = data.get(prefix + TIMELIMIT);
         if (v != null)
             setTimeLimit(Integer.parseInt(v));
 
-        v = (String) data.get(prefix + REPORTDIR);
+        v = data.get(prefix + REPORTDIR);
         if (v != null)
             setReportDir(new File(v));
 
-        v = (String) data.get(prefix + EXCLUSIVE_LOCK);
+        v = data.get(prefix + EXCLUSIVE_LOCK);
         if (v != null)
             setExclusiveLock(new File(v));
 
-        v = (String) data.get(prefix + NATIVEDIR);
+        v = data.get(prefix + NATIVEDIR);
         if (v != null)
             setNativeDir(new File(v));
 
-        v = (String) data.get(prefix + TIMEOUT_HANDLER);
+        v = data.get(prefix + TIMEOUT_HANDLER);
         if (v != null)
             setTimeoutHandler(v);
 
-        v = (String) data.get(prefix + TIMEOUT_HANDLER_PATH);
+        v = data.get(prefix + TIMEOUT_HANDLER_PATH);
         if (v != null)
             setTimeoutHandlerPath(v);
 
-        v = (String) data.get(prefix + TIMEOUT_HANDLER_TIMEOUT);
+        v = data.get(prefix + TIMEOUT_HANDLER_TIMEOUT);
         if (v != null)
             setTimeoutHandlerTimeout(v);
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -287,6 +287,7 @@ public class TestManager {
     // The solution is to check the root-relative path in the test description
     // to make sure it is the same as the original path.
     // See JBS CODETOOLS-7900138, CODETOOLS-7900139
+    @SuppressWarnings("cast") // temporary: to cover transition for generifying TreeIterator
     private boolean validatePath(WorkDirectory wd, String path) {
         try {
             TestResultTable trt = wd.getTestResultTable();
