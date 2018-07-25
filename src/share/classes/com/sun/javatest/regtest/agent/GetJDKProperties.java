@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -25,6 +25,7 @@
 
 package com.sun.javatest.regtest.agent;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -39,18 +40,30 @@ import java.util.concurrent.Callable;
   * }
   */
 public class GetJDKProperties {
+    static class ClientCodeException extends Exception {
+        private static final long serialVersionUID = 0;
+        ClientCodeException(String msg, Throwable t) {
+            super(msg, t);
+        }
+    }
+
     public static final String JTREG_MODULES = "jtreg.modules";
 
     public static void main(String... args) {
         try {
             run(args);
+        } catch (ClientCodeException e) {
+            System.err.println(e.getMessage());
+            e.getCause().printStackTrace(System.err);
+            System.exit(1);
         } catch (Exception e) {
-            System.err.println(e);
+            System.err.println("Internal error: please report to jtreg-dev@openjdk.java.net");
+            e.printStackTrace(System.err);
             System.exit(1);
         }
     }
 
-    public static void run(String... args) throws Exception {
+    public static void run(String... args) throws ClientCodeException, IOException {
         boolean needSystemProperties = false;
         String needModulesArg = null;
         Properties p = new Properties();
@@ -60,10 +73,14 @@ public class GetJDKProperties {
             } else if (arg.startsWith("--modules=")) {
                 needModulesArg = arg.substring(arg.indexOf("=") + 1);
             } else {
-                Class<?> c = Class.forName(arg);
-                @SuppressWarnings("unchecked")
-                Callable<Map<String, String>> o = (Callable<Map<String, String>>) c.newInstance();
-                p.putAll(o.call());
+                try {
+                    Class<?> c = Class.forName(arg);
+                    @SuppressWarnings("unchecked")
+                    Callable<Map<String, String>> o = (Callable<Map<String, String>>) c.newInstance();
+                    p.putAll(o.call());
+                } catch (Throwable t) {
+                    throw new ClientCodeException("Exception while calling user-specified class: " + arg, t);
+                }
             }
         }
 
