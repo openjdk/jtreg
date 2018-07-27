@@ -40,7 +40,7 @@ import java.util.concurrent.Callable;
   * }
   */
 public class GetJDKProperties {
-    static class ClientCodeException extends Exception {
+    public static class ClientCodeException extends Exception {
         private static final long serialVersionUID = 0;
         ClientCodeException(String msg, Throwable t) {
             super(msg, t);
