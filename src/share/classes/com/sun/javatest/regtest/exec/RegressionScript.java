@@ -403,15 +403,15 @@ public class RegressionScript extends Script {
                         throw new ParseActionsException(BAD_ACTION + verb);
                     continue;
                 }
-                Action action = (Action) (c.newInstance());
+                Action action = (Action) (c.getDeclaredConstructor().newInstance());
                 action.init(opts, args, getReason(tokens), this);
                 actionList.add(action);
-            } catch (InstantiationException e) {
-                if (stopOnError)
-                    throw new ParseActionsException(CANT_INSTANTIATE + c + NOT_EXT_ACTION);
             } catch (IllegalAccessException e) {
                 if (stopOnError)
                     throw new ParseActionsException(ILLEGAL_ACCESS_INIT + c);
+            } catch (ReflectiveOperationException e) {
+                if (stopOnError)
+                    throw new ParseActionsException(CANT_INSTANTIATE + c + NOT_EXT_ACTION);
             }
         }
 

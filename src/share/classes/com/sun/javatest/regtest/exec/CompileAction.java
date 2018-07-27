@@ -400,12 +400,12 @@ public class CompileAction extends Action {
             String toolClassName = "org.openjdk.asmtools." + toolName + ".Main";
             recorder.asmtools(toolClassName, toolArgs);
             Class<?> toolClass = Class.forName(toolClassName);
-            Constructor<?> c = toolClass.getConstructor(new Class<?>[] { PrintStream.class, String.class });
+            Constructor<?> constr = toolClass.getConstructor(PrintStream.class, String.class);
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             PrintStream ps = new PrintStream(baos);
             try {
-                Object tool = c.newInstance(ps, toolName);
-                Method m = toolClass.getMethod("compile", new Class<?>[] { String[].class });
+                Object tool = constr.newInstance(ps, toolName);
+                Method m = toolClass.getMethod("compile", String[].class);
                 Object r = m.invoke(tool, new Object[] { toolArgs.toArray(new String[0]) });
                 if (r instanceof Boolean) {
                     boolean ok = (Boolean) r;
@@ -419,17 +419,7 @@ public class CompileAction extends Action {
             }
         } catch (ClassNotFoundException e) {
             return Status.error("can't find " + toolName);
-        } catch (NoSuchMethodException e) {
-            return Status.error("error invoking " + toolName + ": " + e);
-        } catch (InstantiationException e) {
-            return Status.error("error invoking " + toolName + ": " + e);
-        } catch (IllegalAccessException e) {
-            return Status.error("error invoking " + toolName + ": " + e);
-        } catch (InvocationTargetException e) {
-            return Status.error("error invoking " + toolName + ": " + e);
-        } catch (IllegalArgumentException t) {
-            return Status.error("error invoking " + toolName + ": " + t);
-        } catch (SecurityException t) {
+        } catch (ReflectiveOperationException t) {
             return Status.error("error invoking " + toolName + ": " + t);
         }
     }

@@ -184,21 +184,18 @@ public class RegressionTestFinder extends TagTestFinder
         if (dot == -1)
             return;
         String extn = name.substring(dot);
-        Class<?> csc = getClassForExtension(extn);
+        @SuppressWarnings("unchecked")
+        Class<? extends CommentStream> csc = (Class<? extends CommentStream>) getClassForExtension(extn);
         if (csc == null) {
             error(super_i18n, "tag.noParser", new Object[] {file, extn});
             return;
         }
         CommentStream cs;
         try {
-            cs = (CommentStream)(csc.newInstance());
+            cs = (CommentStream)(csc.getDeclaredConstructor().newInstance());
         }
-        catch (InstantiationException e) {
+        catch (ReflectiveOperationException e) {
             error(super_i18n, "tag.cantCreateClass", new Object[] {csc.getName(), extn});
-            return;
-        }
-        catch (IllegalAccessException e) {
-            error(super_i18n, "tag.cantAccessClass", new Object[] {csc.getName(), extn});
             return;
         }
 

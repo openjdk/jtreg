@@ -120,7 +120,7 @@ import static com.sun.javatest.regtest.tool.Option.ArgType.*;
 
 
 /**
- * JavaTest entry point to be used to access regression extensions.
+ * Main entry point to be used to access jtreg.
  */
 public class Tool {
 
@@ -1733,13 +1733,13 @@ public class Tool {
                 ClassLoader loader = new URLClassLoader(urls);
                 observerClass = loader.loadClass(observerClassName);
             }
-            return observerClass.asSubclass(Harness.Observer.class).newInstance();
+            return observerClass.asSubclass(Harness.Observer.class).getDeclaredConstructor().newInstance();
         } catch (ClassCastException e) {
             throw new Fault(i18n, "main.obsvrType",
                     new Object[] {Harness.Observer.class.getName(), observerClassName});
         } catch (ClassNotFoundException e) {
             throw new Fault(i18n, "main.obsvrNotFound", observerClassName);
-        } catch (IllegalAccessException | InstantiationException e) {
+        } catch (ReflectiveOperationException e) {
             throw new Fault(i18n, "main.obsvrFault", e);
         }
     }

@@ -74,9 +74,9 @@ public class GetJDKProperties {
                 needModulesArg = arg.substring(arg.indexOf("=") + 1);
             } else {
                 try {
-                    Class<?> c = Class.forName(arg);
                     @SuppressWarnings("unchecked")
-                    Callable<Map<String, String>> o = (Callable<Map<String, String>>) c.newInstance();
+                    Class<Callable<Map<String, String>>> c = (Class<Callable<Map<String, String>>>) Class.forName(arg);
+                    Callable<Map<String, String>> o = c.getDeclaredConstructor().newInstance();
                     p.putAll(o.call());
                 } catch (Throwable t) {
                     throw new ClientCodeException("Exception while calling user-specified class: " + arg, t);
