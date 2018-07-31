@@ -181,3 +181,12 @@ Some of the tests can be invoked with individual targets beginning
 "jtreg-test" rather than "test" is to protect against interactions with JUnit in
 older versions of NetBeans.)
 
+Using the IntelliJ IDE
+
+The jtreg repo also contains a plugin for the IntelliJ IDE.
+This is a convenience plugin which adds jtreg capabilities to the IntelliJ IDE. 
+With this plugin, OpenJDK developers can write, run, and debug jtreg tests 
+without leaving their IDE environment.  For more details, see the file 
+`plugins/idea/README.md` in this repo.
+
+
