@@ -26,13 +26,14 @@
 <idea-plugin>
     <id>jtreg</id>
     <name>jtreg Test Support</name>
-    <version>1.6</version>
+    <version>1.7</version>
     <description><![CDATA[
       Allows execution of tests developed using the <a href="http://openjdk.java.net/jtreg/">jtreg</a> framework.
     ]]></description>
 
     <change-notes><![CDATA[
-      Fixed misc issues with plugin build against newer versions of IntelliJ IDE
+      Fixed misc issues with plugin build against IntelliJ IDE2018.2
+      Improved compatibility with Ant plugin.
     ]]>
     </change-notes>
 

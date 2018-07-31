@@ -78,7 +78,6 @@ public class JTRegConfiguration extends JavaTestConfigurationBase {
     }
 
     @NotNull
-    @Override
     public String getFrameworkPrefix() {
         return "jtreg";
     }
@@ -147,7 +146,7 @@ public class JTRegConfiguration extends JavaTestConfigurationBase {
 
     @Nullable
     @Override
-    public RunProfileState getState(@NotNull Executor executor, @NotNull ExecutionEnvironment executionEnvironment) throws ExecutionException {
+    public JTRegConfigurationRunnableState getState(@NotNull Executor executor, @NotNull ExecutionEnvironment executionEnvironment) throws ExecutionException {
         return new JTRegConfigurationRunnableState(this, executionEnvironment);
     }
 
@@ -296,5 +295,17 @@ public class JTRegConfiguration extends JavaTestConfigurationBase {
 
     public TestSearchScope getTestSearchScope() {
         return null;
+    }
+
+    public void setSearchScope(TestSearchScope testSearchScope) {
+        //do nothing
+    }
+
+    public String getTestType() {
+        return "jtreg";
+    }
+
+    public byte getTestFrameworkId() {
+        return 2; //for now
     }
 }

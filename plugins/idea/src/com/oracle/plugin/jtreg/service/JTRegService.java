@@ -173,6 +173,7 @@ public class JTRegService implements PersistentStateComponent<Element> {
 
     public void setOptTargets(List<AntBuildTarget> targets) {
         optTargets = targets.stream()
+                .filter(target -> target != null)
                 .map(t -> Pair.create(t.getModel().getBuildFile().getVirtualFile().getUrl(), t.getName()))
                 .collect(Collectors.toList());
     }
@@ -180,6 +181,7 @@ public class JTRegService implements PersistentStateComponent<Element> {
     public List<AntBuildTarget> getOptTargets(AntConfiguration antConfiguration) {
         return optTargets.stream()
                 .map(p -> findTargetByFileAndName(antConfiguration, p.first, p.second))
+                .filter(target -> target != null)
                 .collect(Collectors.toList());
     }
     //where
