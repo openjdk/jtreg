@@ -46,16 +46,67 @@ import static com.sun.javatest.regtest.agent.AStatus.passed;
 
 public class MainActionHelper extends ActionHelper {
 
-    public static AStatus runClass(
-            String testName,
-            Map<String, String> props,
-            Set<String> addExports,
-            Set<String> addOpens,
-            SearchPath classpath,
-            String classname,
-            String[] classArgs,
-            int timeout,
-            OutputHandler outputHandler) {
+    private final String testName;
+    private Map<String, String> props;
+    private Set<String> addExports;
+    private Set<String> addOpens;
+    private SearchPath classpath;
+    private String className;
+    private List<String> classArgs;
+    private int timeout;
+    private float timeoutFactor;
+    private OutputHandler outputHandler;
+
+    MainActionHelper(String testName) {
+        this.testName = testName;
+    }
+
+    MainActionHelper properties(Map<String,String> props) {
+        this.props = props;
+        return this;
+    }
+
+    MainActionHelper addExports(Set<String> addExports) {
+        this.addExports = addExports;
+        return this;
+    }
+
+    MainActionHelper addOpens(Set<String> addOpens) {
+        this.addOpens = addOpens;
+        return this;
+    }
+
+    MainActionHelper classpath(SearchPath classpath) {
+        this.classpath = classpath;
+        return this;
+    }
+
+    MainActionHelper className(String className) {
+        this.className = className;
+        return this;
+    }
+
+    MainActionHelper classArgs(List<String> classArgs) {
+        this.classArgs = classArgs;
+        return this;
+    }
+
+    MainActionHelper timeout(int timeout) {
+        this.timeout = timeout;
+        return this;
+    }
+
+    MainActionHelper timeoutFactor(float timeoutFactor) {
+        this.timeoutFactor = timeoutFactor;
+        return this;
+    }
+
+    MainActionHelper outputHandler(OutputHandler outputHandler) {
+        this.outputHandler = outputHandler;
+        return this;
+    }
+
+    public AStatus runClass() {
         SaveState saved = new SaveState();
 
         Properties p = System.getProperties();
@@ -89,24 +140,25 @@ public class MainActionHelper extends ActionHelper {
                 loader = new URLClassLoader(urls.toArray(new URL[urls.size()]));
                 ModuleHelper.addExports(addExports, loader);
                 ModuleHelper.addOpens(addOpens, loader);
-                c = loader.loadClass(classname);
+                c = loader.loadClass(className);
             } else {
                 loader = null;
-                c = Class.forName(classname);
+                c = Class.forName(className);
             }
 
             // Select signature for main method depending on whether the class
             // implements the TestRunner marker interface.
             Class<?>[] argTypes;
+            String[] classArgsArray = classArgs.toArray(new String[classArgs.size()]);
             Object[] methodArgs;
             if (TestRunner.class.isAssignableFrom(c)) {
                 // Marker interface found: use main(ClassLoader, String...)
-                argTypes = new Class<?>[]{ClassLoader.class, String[].class};
-                methodArgs = new Object[]{loader, classArgs};
+                argTypes = new Class<?>[]{ ClassLoader.class, String[].class };
+                methodArgs = new Object[]{ loader, classArgsArray };
             } else {
                 // Normal case: marker interface not found; use standard main method
-                argTypes = new Class<?>[]{String[].class};
-                methodArgs = new Object[]{classArgs};
+                argTypes = new Class<?>[]{ String[].class };
+                methodArgs = new Object[]{ classArgsArray };
             }
 
             Method method = c.getMethod("main", argTypes);
@@ -118,7 +170,7 @@ public class MainActionHelper extends ActionHelper {
             }
 
             // RUN JAVA IN ANOTHER THREADGROUP
-            AgentVMThreadGroup tg = new AgentVMThreadGroup(err, MSG_PREFIX);
+            AgentVMThreadGroup tg = new AgentVMThreadGroup(err, MSG_PREFIX, timeoutFactor);
             AgentVMRunnable avmr = new AgentVMRunnable(method, methodArgs, err);
             Thread t = new Thread(tg, avmr, "AgentVMThread");
             Alarm alarm = null;
@@ -182,14 +234,14 @@ public class MainActionHelper extends ActionHelper {
             e.printStackTrace(err);
             err.println();
             err.println(MSG_PREFIX + "main() method must be in a public class named");
-            err.println(MSG_PREFIX + classname + " in file " + classname + ".java");
+            err.println(MSG_PREFIX + className + " in file " + className + ".java");
             err.println();
             status = error(MAIN_CANT_LOAD_TEST + e);
         } catch (NoSuchMethodException e) {
             e.printStackTrace(err);
             err.println();
             err.println(MSG_PREFIX + "main() method must be in a public class named");
-            err.println(MSG_PREFIX + classname + " in file " + classname + ".java");
+            err.println(MSG_PREFIX + className + " in file " + className + ".java");
             err.println();
             status = error(MAIN_CANT_FIND_MAIN);
         } catch (ModuleHelper.Fault e) {
@@ -278,10 +330,13 @@ public class MainActionHelper extends ActionHelper {
 
     static class AgentVMThreadGroup extends ThreadGroup
     {
-        AgentVMThreadGroup(PrintStream out, String messagePrefix) {
+        private double timeoutFactor;
+
+        AgentVMThreadGroup(PrintStream out, String messagePrefix, double timeoutFactor) {
             super("AgentVMThreadGroup");
             this.out = out;
             this.messagePrefix = messagePrefix;
+            this.timeoutFactor = timeoutFactor;
         }
 
         @Override
@@ -300,7 +355,7 @@ public class MainActionHelper extends ActionHelper {
 
             final int CLEANUP_ROUNDS = 4;
 //            final long MAX_CLEANUP_TIME_MILLIS = 2 * 60 * 1000;
-            final long MAX_CLEANUP_TIME_MILLIS = 10 * 1000;
+            final long MAX_CLEANUP_TIME_MILLIS = (long) (10 * 1000 * timeoutFactor);
             final long CLEANUP_MILLIS_PER_ROUND = MAX_CLEANUP_TIME_MILLIS / CLEANUP_ROUNDS;
             final long NANOS_PER_MILLI = 1000L * 1000L;
 

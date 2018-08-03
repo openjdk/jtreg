@@ -135,6 +135,7 @@ public class AgentServer implements ActionHelper.OutputHandler {
         final boolean trace;
     }
 
+    private float timeoutFactor = 1.0f;
 
     public AgentServer(String... args) throws IOException {
         if (traceServer) {
@@ -144,7 +145,6 @@ public class AgentServer implements ActionHelper.OutputHandler {
         // use explicit localhost to avoid VPN issues
         InetAddress host = InetAddress.getByName("localhost");
         int port = -1;
-        float timeoutFactor = 1.0f;
         for (int i = 0; i < args.length; i++) {
             String arg = args[i];
             if (arg.equals(ALLOW_SET_SECURITY_MANAGER)) {
@@ -244,14 +244,17 @@ public class AgentServer implements ActionHelper.OutputHandler {
         }
         keepAlive.setEnabled(true);
         try {
-            AStatus status = MainActionHelper.runClass(
-                    testName,
-                    testProps,
-                    addExports,
-                    addOpens,
-                    classPath,
-                    className,
-                    classArgs.toArray(new String[classArgs.size()]), 0, this);
+            AStatus status = new MainActionHelper(testName)
+                    .properties(testProps)
+                    .addExports(addExports)
+                    .addOpens(addOpens)
+                    .classpath(classPath)
+                    .className(className)
+                    .classArgs(classArgs)
+                    .timeout(0)
+                    .timeoutFactor(timeoutFactor)
+                    .outputHandler(this)
+                    .runClass();
             writeStatus(status);
         } finally {
             keepAlive.setEnabled(false);
