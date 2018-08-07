@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -73,9 +73,9 @@ public class TestNGRunner implements MainActionHelper.TestRunner {
             } catch (ClassNotFoundException e) {
                 layerClass = Class.forName("java.lang.reflect.Layer");
             }
-            Method bootMethod = layerClass.getMethod("boot", new Class<?>[]{});
-            Object bootLayer = bootMethod.invoke(null, new Object[]{});
-            Method findLoaderMth = layerClass.getMethod("findLoader", new Class<?>[]{String.class});
+            Method bootMethod = layerClass.getMethod("boot");
+            Object bootLayer = bootMethod.invoke(null);
+            Method findLoaderMth = layerClass.getMethod("findLoader", String.class);
             cl = (ClassLoader) findLoaderMth.invoke(bootLayer, new Object[]{moduleName});
         } else if (loader != null) {
             cl = loader;

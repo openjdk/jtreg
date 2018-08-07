@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -76,8 +76,8 @@ public class GroupManager {
     final PrintWriter out;
     final File root;
     final Map<String, Group> groups = new HashMap<>();
-    private Collection<String> ignoreDirs = Collections.<String>emptySet();
-    private Collection<String> allowExtns = Collections.<String>emptySet();
+    private Collection<String> ignoreDirs = Collections.emptySet();
+    private Collection<String> allowExtns = Collections.emptySet();
 
     public class InvalidGroup extends Exception {
         private static final long serialVersionUID = 1L;

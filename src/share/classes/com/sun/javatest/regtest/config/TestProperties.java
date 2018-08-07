@@ -277,7 +277,7 @@ public class TestProperties {
                         return Integer.parseInt(v.trim());
                     }
                 } catch (NumberFormatException e) {
-                    error(i18n, "props.bad.value", new Object[] { propertyName, v });
+                    error(i18n, "props.bad.value", propertyName, v);
                 }
                 return defaultValue;
             }
@@ -331,7 +331,7 @@ public class TestProperties {
                             set.add(v.replace("-", "_"));
                         } catch (RegressionKeywords.Fault e) {
                             File file = new File(dir, (parent == null) ? "TEST.ROOT" : "TEST.properties");
-                            error(i18n, "props.bad.keyword", new Object[] { file, v, e.getMessage() });
+                            error(i18n, "props.bad.keyword", file, v, e.getMessage());
                         }
                     }
                     return Collections.unmodifiableSet(set);

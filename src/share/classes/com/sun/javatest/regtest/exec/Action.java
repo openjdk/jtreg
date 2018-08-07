@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -548,7 +548,7 @@ public abstract class Action extends ActionHelper {
 
     protected List<String> getExtraModuleConfigOptions(Modules.Phase phase) {
         if (!script.getTestJDK().hasModules())
-            return Collections.<String>emptyList();
+            return Collections.emptyList();
 
         Modules modules = script.getModules();
 
@@ -565,7 +565,7 @@ public abstract class Action extends ActionHelper {
             addModules.add(m);
         }
         if (!needAddExports && addModules == null) {
-            return Collections.<String>emptyList();
+            return Collections.emptyList();
         }
 
         List<String> list = new ArrayList<>();

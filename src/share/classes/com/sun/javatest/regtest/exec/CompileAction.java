@@ -185,7 +185,7 @@ public class CompileAction extends Action {
         }
 
         if (module == null && !multiModule)
-            modules = Collections.<String>emptySet();
+            modules = Collections.emptySet();
 
         if (timeout < 0)
             timeout = script.getActionTimeout(-1);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2007, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -82,15 +82,13 @@ public class SimpleReporter extends Reporter {
             writeI18N("simple.set", i, table.getColumnName(i));
             print("  ");
             writeI18N("simple.counts",
-                    new Object[] {
-                new Integer(p),
-                new Integer((p > 0) && (f + e + nr > 0) ? 1 : 0),
-                new Integer(f),
-                new Integer((f > 0) && (e + nr > 0) ? 1 : 0),
-                new Integer(e),
-                new Integer((e > 0) && (nr > 0) ? 1 : 0),
-                new Integer(nr)
-            });
+                    new Integer(p),
+                    new Integer((p > 0) && (f + e + nr > 0) ? 1 : 0),
+                    new Integer(f),
+                    new Integer((f > 0) && (e + nr > 0) ? 1 : 0),
+                    new Integer(e),
+                    new Integer((e > 0) && (nr > 0) ? 1 : 0),
+                    new Integer(nr));
             println();
         }
     }

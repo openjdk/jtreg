@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2006, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -255,11 +255,11 @@ public class VerboseHandler {
     /**
      * Find the reason that the action was run.  This method takes
      * advantage of the fact that the reason string begins with
-     * <code>reason: </code>, ends with a line separator.
+     * {@code reason: }, ends with a line separator.
      *
      * @param section The recorded information for a single action.
      * @return The reason string without the beginning
-     * <code>reason: </code>
+     * {@code reason: }
      * string.
      */
     private String getReason(TestResult.Section section) {
@@ -272,12 +272,12 @@ public class VerboseHandler {
     /**
      * Find the elapsed time for the action.  This method takes advantage
      * of the fact that the string containing the elapsed time begins with
-     * <code>elapsed time (seconds): </code>, and ends with a line
+     * {@code elapsed time (seconds): }, and ends with a line
      * separator.
      *
      * @param section The recorded information for a single action.
-     * @return The elapsed time without the beginning <code> elapsed time
-     * (seconds): </code> as a string.
+     * @return The elapsed time without the beginning {@code elapsed time
+     * (seconds): } as a string.
      */
     private String getElapsedTime(TestResult.Section section) {
         String msg = section.getOutput(TestResult.MESSAGE_OUTPUT_NAME);

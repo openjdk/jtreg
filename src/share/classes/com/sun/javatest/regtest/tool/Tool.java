@@ -1595,7 +1595,7 @@ public class Tool {
             rp.setExcludeLists(excludeListArgs.toArray(new File[excludeListArgs.size()]));
 
             if (priorStatusValuesArg == null || priorStatusValuesArg.length() == 0)
-                rp.setPriorStatusValues((boolean[]) null);
+                rp.setPriorStatusValues(null);
             else {
                 boolean[] b = new boolean[Status.NUM_STATES];
                 b[Status.PASSED]  = priorStatusValuesArg.contains("pass");
@@ -1736,7 +1736,7 @@ public class Tool {
             return observerClass.asSubclass(Harness.Observer.class).getDeclaredConstructor().newInstance();
         } catch (ClassCastException e) {
             throw new Fault(i18n, "main.obsvrType",
-                    new Object[] {Harness.Observer.class.getName(), observerClassName});
+                    Harness.Observer.class.getName(), observerClassName);
         } catch (ClassNotFoundException e) {
             throw new Fault(i18n, "main.obsvrNotFound", observerClassName);
         } catch (ReflectiveOperationException e) {

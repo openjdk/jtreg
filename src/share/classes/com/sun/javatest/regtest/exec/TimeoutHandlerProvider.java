@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -101,7 +101,7 @@ public class TimeoutHandlerProvider {
             try {
                 Class<? extends TimeoutHandler> clz = loadClass();
                 Constructor<? extends TimeoutHandler> ctor = clz.getDeclaredConstructor(PrintWriter.class, File.class, File.class);
-                TimeoutHandler th = (TimeoutHandler) ctor.newInstance(log, outDir, testJDK);
+                TimeoutHandler th = ctor.newInstance(log, outDir, testJDK);
                 th.setTimeout(timeout);
                 return th;
             } catch (Exception ex) {

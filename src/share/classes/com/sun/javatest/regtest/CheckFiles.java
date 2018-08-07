@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2005, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -48,7 +48,7 @@ import com.sun.javatest.finder.ShScriptCommentStream;
  *
  * One option is supported:
  * <dl>
- * <dt><code>-l</code>line-length
+ * <dt>{@code -l}line-length
  * <dd>the amount of each suspect comment to display
  * </dl>
  *

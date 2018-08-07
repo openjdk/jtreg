@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -212,7 +212,7 @@ public class TestStats {
                                         c = text.charAt(text.length() - 1);
                                         int count = getNumber(c);
                                         if (count > 0) {
-                                            sb.append(text.substring(0, text.length() - 1))
+                                            sb.append(text, 0, text.length() - 1)
                                                 .append(String.valueOf(count));
                                         } else if (count < 0)
                                             sb.append("%?{").append(text).append("}");

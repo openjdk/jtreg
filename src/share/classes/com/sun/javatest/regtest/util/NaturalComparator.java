@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -67,7 +67,7 @@ public class NaturalComparator implements Comparator<String> {
                     c1 = Character.toLowerCase(c1);
                     c2 = Character.toLowerCase(c2);
                 }
-                int cmp = ((Character) c1).compareTo((Character) c2);
+                int cmp = ((Character) c1).compareTo(c2);
                 if (cmp != 0) return cmp;
                 i1++; i2++;
             }

@@ -192,7 +192,7 @@ public class RegressionTestFinder extends TagTestFinder
         }
         CommentStream cs;
         try {
-            cs = (CommentStream)(csc.getDeclaredConstructor().newInstance());
+            cs = csc.getDeclaredConstructor().newInstance();
         }
         catch (ReflectiveOperationException e) {
             error(super_i18n, "tag.cantCreateClass", new Object[] {csc.getName(), extn});

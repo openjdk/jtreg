@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -74,7 +74,7 @@ public class ModuleHelper {
              *  if (opt_module.isPresent())
              *      throw new Fault();
              */
-            Object opt_module = findModuleMethod.invoke(bootLayer, new Object[] { moduleName });
+            Object opt_module = findModuleMethod.invoke(bootLayer, moduleName);
             if (!((Boolean) isPresentMethod.invoke(opt_module, new Object[0]))) {
                 throw new Fault("module not found: " + moduleName, null);
             }
@@ -82,12 +82,12 @@ public class ModuleHelper {
             /*
              *  Module module = opt_module.get();
              */
-            Object module = getMethod.invoke(opt_module, new Object[0]);
+            Object module = getMethod.invoke(opt_module);
 
             /*
              *  Module targetModule = targetLoader.getUnnamedModule();
              */
-            Object targetModule = getUnnamedModuleMethod.invoke(targetLoader, new Object[0]);
+            Object targetModule = getUnnamedModuleMethod.invoke(targetLoader);
 
             /*
              *  Call one of:
@@ -96,7 +96,7 @@ public class ModuleHelper {
              */
             try {
                 Method m = isOpen ? addOpensMethod : addExportsMethod;
-                m.invoke(null, new Object[] { module, packageName, targetModule });
+                m.invoke(null, module, packageName, targetModule);
             } catch (InvocationTargetException e) {
                 if (e.getCause() instanceof IllegalArgumentException) {
                     String msg = e.getCause().getMessage();
@@ -123,26 +123,26 @@ public class ModuleHelper {
         try {
             // new in Jave SE 9
             Class<?> layerClass = Class.forName("java.lang.ModuleLayer");
-            findModuleMethod = layerClass.getDeclaredMethod("findModule", new Class<?>[] { String.class });
-            Method bootLayerMethod = layerClass.getDeclaredMethod("boot", new Class<?>[0]);
+            findModuleMethod = layerClass.getDeclaredMethod("findModule", String.class);
+            Method bootLayerMethod = layerClass.getDeclaredMethod("boot");
 
             /*
              *  Layer bootLayer = Layer.boot();
              */
-            bootLayer = bootLayerMethod.invoke(null, new Object[0]);
+            bootLayer = bootLayerMethod.invoke(null);
 
             Class<?> helperClass = Class.forName("java.lang.JTRegModuleHelper");
             addExportsMethod = helperClass.getDeclaredMethod("addExports",
-                    new Class<?>[] { Object.class, String.class, Object.class });
+                    Object.class, String.class, Object.class);
             addOpensMethod = helperClass.getDeclaredMethod("addOpens",
-                    new Class<?>[] { Object.class, String.class, Object.class });
+                    Object.class, String.class, Object.class);
 
-            getUnnamedModuleMethod = ClassLoader.class.getDeclaredMethod("getUnnamedModule", new Class<?>[0]);
+            getUnnamedModuleMethod = ClassLoader.class.getDeclaredMethod("getUnnamedModule");
 
             // new in Java SE 8
             Class<?> optionalClass = Class.forName("java.util.Optional");
-            isPresentMethod = optionalClass.getDeclaredMethod("isPresent", new Class<?>[0]);
-            getMethod = optionalClass.getDeclaredMethod("get", new Class<?>[0]);
+            isPresentMethod = optionalClass.getDeclaredMethod("isPresent");
+            getMethod = optionalClass.getDeclaredMethod("get");
         } catch (ClassNotFoundException e) {
             throw new Fault("unexpected exception: " + e, e);
         } catch (NoSuchMethodException e) {

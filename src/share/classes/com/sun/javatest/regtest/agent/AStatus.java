@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -354,7 +354,7 @@ public class AStatus
                 str.length() - ENC_SUFFFIX.length());
 
         StringBuilder sb = new StringBuilder();
-        sb.append(str.substring(0, ind));
+        sb.append(str, 0, ind);
 
         // emulate StringTokenizer(encoded, ENC_SEPARATOR) to find tokens
         int begin = 0;

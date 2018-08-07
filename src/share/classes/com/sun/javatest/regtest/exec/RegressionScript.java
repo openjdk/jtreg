@@ -347,11 +347,11 @@ public class RegressionScript extends Script {
             }
             return files;
         } catch (Locations.Fault e) {
-            return Collections.<File>emptySet();
+            return Collections.emptySet();
         } catch (Modules.Fault e) {
-            return Collections.<File>emptySet();
+            return Collections.emptySet();
         } catch (ParseException e) {
-            return Collections.<File>emptySet();
+            return Collections.emptySet();
         } catch (ParseActionsException shouldNotHappen) {
             throw new Error(shouldNotHappen);
         }
@@ -397,7 +397,7 @@ public class RegressionScript extends Script {
             // [-debug, Foo.java] (everything after the big options token)
             Class<?> c = null;
             try {
-                c = (Class<?>) (actionTable.get(verb));
+                c = actionTable.get(verb);
                 if (c == null) {
                     if (stopOnError)
                         throw new ParseActionsException(BAD_ACTION + verb);
