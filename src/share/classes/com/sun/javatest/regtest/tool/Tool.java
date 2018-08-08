@@ -607,21 +607,14 @@ public class Tool {
             }
         },
 
-        new Option(NONE, MODE, "svm-ovm", "-ovm", "-othervm") {
+        new Option(NONE, MODE, "avm-ovm", "-ovm", "-othervm") {
             @Override
             public void process(String opt, String arg) {
                 execMode = ExecMode.OTHERVM;
             }
         },
 
-        new Option(NONE, MODE, "svm-ovm", "-s", "-svm", "-samevm") {
-            @Override
-            public void process(String opt, String arg) {
-                execMode = ExecMode.SAMEVM;
-            }
-        },
-
-        new Option(NONE, MODE, "svm-ovm", "-avm", "-agentvm") {
+        new Option(NONE, MODE, "avm-ovm", "-avm", "-agentvm", "-s", "-svm", "-samevm") {
             @Override
             public void process(String opt, String arg) {
                 execMode = ExecMode.AGENTVM;
@@ -973,10 +966,6 @@ public class Tool {
         if (help.isEnabled()) {
             guiFlag = help.show(out);
             return EXIT_OK;
-        }
-
-        if (execMode == ExecMode.SAMEVM) {
-            execMode = ExecMode.AGENTVM;
         }
 
         if (userKeywordExpr != null) {
