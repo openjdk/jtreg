@@ -408,6 +408,13 @@ GREP 	:= $(shell if [ -r /bin/grep ]; then echo /bin/grep ; else echo /usr/bin/g
 LN	= /bin/ln
 MKDIR 	= /bin/mkdir
 MV 	= /bin/mv
+PANDOC  = $(shell if [ -r /usr/bin/pandoc ]; then \
+		echo /usr/bin/pandoc ; \
+	elif [ -r /usr/local/bin/pandoc ]; then \
+		echo /usr/local/bin/pandoc ; \
+	else \
+		echo /bin/echo "pandoc not available" ; \
+	fi )
 PERL	= /usr/bin/perl
 RM 	= /bin/rm -rf
 SED 	:= $(shell if [ -r /bin/sed ]; then echo /bin/sed ; else echo /usr/bin/sed ; fi )

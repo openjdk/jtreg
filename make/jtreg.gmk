@@ -99,11 +99,13 @@ TARGETS.com.sun.javatest.regtest += $(RESOURCES.com.sun.javatest.regtest)
 JTREG_COPYRIGHT 	= $(JTREG_IMAGEDIR)/COPYRIGHT
 JTREG_LICENSE		= $(JTREG_IMAGEDIR)/LICENSE
 JTREG_README		= $(JTREG_IMAGEDIR)/README
+JTREG_FAQ 		= $(JTREG_IMAGEDIR)/doc/jtreg/faq.html
 JTREG_TAGSPEC 		= $(JTREG_IMAGEDIR)/doc/jtreg/tag-spec.html
 JTREG_USAGE 		= $(JTREG_IMAGEDIR)/doc/jtreg/usage.txt
 
 JTREG_DOCS = \
 	$(JTREG_COPYRIGHT) \
+	$(JTREG_FAQ) \
 	$(JTREG_LICENSE) \
 	$(JTREG_README) \
 	$(JTREG_TAGSPEC) \
@@ -113,6 +115,26 @@ $(JTREG_COPYRIGHT): $(TOPDIR)/COPYRIGHT
 	$(MKDIR) -p $(@D)
 	$(RM) $@
 	$(CP) $< $@
+
+$(JTREG_FAQ):   $(SRCJTREGDOCDIR)/faq.md \
+		$(SRCJTREGDOCDIR)/faq-local-style.html \
+		$(SRCJTREGDOCDIR)/faq-intro.html
+	$(MKDIR) -p $(@D)
+	$(PANDOC) \
+	    --standalone \
+	    --include-in-header $(SRCJTREGDOCDIR)/faq-local-style.html \
+	    --include-before $(SRCJTREGDOCDIR)/faq-intro.html \
+	    --toc \
+	    --to html5 \
+	    --title 'jtreg FAQ' \
+	    --number-sections \
+	    $(SRCJTREGDOCDIR)/faq.md | \
+	$(SED) \
+            -e 's/-section-number">0./-section-number">/' \
+	    -e 's/…/\&hellip;/g' \
+	    -e 's/™/\&trade;/g' \
+	    > $(JTREG_FAQ)	
+
 
 $(JTREG_README): $(SRCJTREGDOCDIR)/README
 	$(MKDIR) -p $(@D)
