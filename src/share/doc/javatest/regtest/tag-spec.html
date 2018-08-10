@@ -24,7 +24,6 @@
 <html>
 <head>
 <META http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<LINK REL="stylesheet" TYPE="text/css" HREF="help.css" TITLE="Style">
 <title>The JDK Test Framework: Tag Language Specification</title>
 <style type="text/css">
     h2.appendix { margin-top:.5in }
@@ -80,7 +79,7 @@ please consult the jtreg FAQ at
 <a href="#requires_names">Supported names for @requires</a> &middot;
 <a href="#testvars">Test-specific system properties and environment variables</a>
 
-<h2><a name="LEADING_COMMENTS">LEADING COMMENTS AND DEFINING FILES</a></h2>
+<h2><a id="LEADING_COMMENTS">LEADING COMMENTS AND DEFINING FILES</a></h2>
 
 <p>A particular test may involve several files of various types, but the test is
 specified in just one of them.  Let this be called the <dfn>defining file</dfn> of the
@@ -123,7 +122,7 @@ without comments is not a defining file; a file whose leading comment
 does not start with "<code>@test</code>" is not a defining file.
 
 
-<h2><a name="TAG_SYNTAX">TAG SYNTAX</a></h2>
+<h2><a id="TAG_SYNTAX">TAG SYNTAX</a></h2>
 
 <p>Within a leading comment, a tag consists of a tag token followed by some number
 of arguments.  A tag token is any token whose first character is '@'.  There is
@@ -143,7 +142,7 @@ Argument tokens are separated by whitespace; if commas are used, they will be
 considered to be part of the tokens to which they are adjacent.
 
 
-<h2><a name="INFORMATIONAL_TAGS">INFORMATIONAL TAGS</a></h2>
+<h2><a id="INFORMATIONAL_TAGS">INFORMATIONAL TAGS</a></h2>
 
 <p>Informational tags document the test.  They do not affect the operation of the
 harness, but may be used by the harness in generating reports.
@@ -177,7 +176,7 @@ better left to the source code management system for the test suite.
 once in a given test. The <code>@comment</code> tag may be used multiple times.
 
 
-<h2><a name="DECLARATIVE_TAGS">DECLARATIVE TAGS</a></h2>
+<h2><a id="DECLARATIVE_TAGS">DECLARATIVE TAGS</a></h2>
 
 <p>Declarative tags govern the execution of the tags that follow them.
 
@@ -338,7 +337,7 @@ be enclosed in parentheses and combined with '&amp;'.</p>
 
 </dl>
 
-<h2><a name="ACTION_TAGS">ACTION TAGS</a></h2>
+<h2><a id="ACTION_TAGS">ACTION TAGS</a></h2>
 
 <p>Action tags tell the harness how to perform the test.  They are executed in the
 order in which they are given.  Each action either passes or fails.  If an
@@ -374,7 +373,7 @@ in double quotes to prevent the usual interpretation of '=', '/', and
 whitespace.
 
 
-<h3><a name="ACTION_OPTIONS">ACTION OPTIONS</a></h3>
+<h3><a id="ACTION_OPTIONS">ACTION OPTIONS</a></h3>
 
 <p>Not all action types support all options.
 
@@ -434,7 +433,7 @@ manager will be installed.
 
 <p>Property expansion will be performed in the policy file as usual; in
 particular, the "<code>test.src</code>" and "<code>test.classes</code>" properties will name the source
-and class directories of the test being run (see <a href="DIRECTORY_CONTEXT">DIRECTORY CONTEXT</a> below).
+and class directories of the test being run (see <a href="#DIRECTORY_CONTEXT">DIRECTORY CONTEXT</a> below).
 
 <p>This option may only be used in conjunction with the <code>/othervm</code> option.
 
@@ -449,7 +448,7 @@ assumed.
 <p>This option may only be used in conjunction with the <code>/othervm</code> option.
 </dl>
 
-<h3><a name="CLASS_NAMES">CLASS NAMES AS ACTION ARGUMENTS</a></h3>
+<h3><a id="CLASS_NAMES">CLASS NAMES AS ACTION ARGUMENTS</a></h3>
 
 <p>Some actions take one or more class names as arguments.  Each such argument is
 the name of a class, not the name of a class file, so the ".class" suffix
@@ -467,7 +466,7 @@ the corresponding directory relative to the directory containing the defining
 file of the test.
 
 
-<h3><a name="WILDCARDS">CLASS-NAME WILDCARDS</a></h3>
+<h3><a id="WILDCARDS">CLASS-NAME WILDCARDS</a></h3>
 
 <p>Some actions take either class names or class-name wildcards as arguments.  A
 class-name wildcard can be specified in one of the following ways:
@@ -480,7 +479,7 @@ class-name wildcard can be specified in one of the following ways:
 </ul>
 
 
-<h3><a name="ACTION_TYPES">ACTION TYPES</a></h3>
+<h3><a id="ACTION_TYPES">ACTION TYPES</a></h3>
 
 <dl class="tags">
 
@@ -649,7 +648,7 @@ in that one file will be grouped as a single jtreg test for reporting purposes.
 
 <p>Note: this action allows individual tests to be written as TestNG tests,
 and placed alongside other tests using other combinations of actions.
-See <a href="TESTNG">below</a> for details on how to set up a directory
+See <a href="#TESTNG">below</a> for details on how to set up a directory
 containing only standard TestNG tests.
 
 <dt>applet[/fail][/manual[=(yesno|done)]][/othervm][/policy=<var>&lt;file&gt;</var>]
@@ -747,7 +746,7 @@ describe why the test is being ignored.  These tokens may be displayed by the
 harness in some appropriate fashion.
 </dl>
 
-<h2><a name="ORDER">ORDER OF TAGS</a></h2>
+<h2><a id="ORDER">ORDER OF TAGS</a></h2>
 
 <p>The following is the recommended order for the tags in a test description:</p>
 <ul>
@@ -761,7 +760,7 @@ harness in some appropriate fashion.
     <li><i>action tags, in the order to be executed</i></li>
 </ul>
 
-<h2><a name="TESTNG">TESTNG</a></h2>
+<h2><a id="TESTNG">TESTNG</a></h2>
 
 <p>A directory within the source directory structure may be configured to
 be the root of a set of TestNG tests. When so configured, all Java source
@@ -774,7 +773,7 @@ may not contain any action tags.
 action specifying all the Java source files in the set, followed by an
 implicit action to execute the test as a TestNG test.
 
-<h2><a name="DIRECTORY_CONTEXT">DIRECTORY CONTEXT</a></h2>
+<h2><a id="DIRECTORY_CONTEXT">DIRECTORY CONTEXT</a></h2>
 
 <p>Each test is run in a context that defines the following directories.
 <dl class="terms">
@@ -829,7 +828,7 @@ InputStream in = new FileInputStream(f);
 <p>By defaulting the directory to ".", this technique allows the test to be run
 standalone in its source directory.
 
-<h2><a name="TEST_GROUPS">TEST GROUPS</a></h2>
+<h2><a id="TEST_GROUPS">TEST GROUPS</a></h2>
 
 <p>Groups are defined in a test suite using one or more Java
 properties files. The names of these files must be listed in
@@ -847,8 +846,8 @@ There must be no spaces between the "-" and the name that follows.
 There must be no spaces between the ":" and the name that follows.
 </ul>
 
-<h2><a name="SOURCE_STRUCTURE">SOURCE-DIRECTORY STRUCTURE</a> AND 
-<a name="config">TEST-SUITE CONFIGURATION FILES</a></h2>
+<h2><a id="SOURCE_STRUCTURE">SOURCE-DIRECTORY STRUCTURE</a> AND
+<a id="config">TEST-SUITE CONFIGURATION FILES</a></h2>
 
 <p>This specification places few constraints upon the structure of a tree of source
 directories.  Some test harnesses may be able to provide more robust behavior or
@@ -859,7 +858,7 @@ test-source tree.
 
 
 
-<p>The <a name="TEST_ROOT">TEST.ROOT</a> file contains test-suite configuration 
+<p>The <a id="TEST_ROOT">TEST.ROOT</a> file contains test-suite configuration
 information. It is in the standard Java property-file format as described in the
 specification of the <code>java.util.Properties</code> class.
 Properties defined in this file apply to the entire test suite.
@@ -984,7 +983,7 @@ on the command line, use <code>-J-D<i>&lt;name&gt;</i>=<i>&lt;value&gt;</i></cod
 </dl>
 
 
-<h2><a name="DEFAULTS">DEFAULTS</a></h2>
+<h2><a id="DEFAULTS">DEFAULTS</a></h2>
 
 <p>If no <code>@run</code> tags are present in a defining file, a default is assumed depending
 upon the file's filename extension.
@@ -1002,14 +1001,14 @@ upon the file's filename extension.
 </table>
 
 
-<h2><a name="SHORTHANDS">SHORTHANDS</a></h2>
+<h2><a id="SHORTHANDS">SHORTHANDS</a></h2>
 
 <table>
 <caption>Shorthands</caption>
 <thead>
     <tr><th>Shorthand                       <th>Equivalent
 <tbody>
-    <tr> <td>@build <var>&lt;classname&gt;+</var>       <td>  @run build <var>&lt;classname&gt;+</var>
+    <tr><td>@build <var>&lt;classname&gt;+</var>       <td>  @run build <var>&lt;classname&gt;+</var>
     <tr><td>@clean <var>&lt;classname&gt;+</var>       <td>  @run clean <var>&lt;classname&gt;+</var>
     <tr><td>@compile<var>&lt;option&gt;*</var> <var>&lt;arg&gt;+</var>  <td>  @run compile<var>&lt;option&gt;*</var> <var>&lt;arg&gt;+</var>
     <tr><td>@ignore <var>&lt;word&gt;*</var>           <td>  @run ignore <var>&lt;word&gt;*</var>

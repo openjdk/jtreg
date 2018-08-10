@@ -185,7 +185,7 @@ can provide better diagnostics.
 
 It is _strongly_ recommended that you not catch general exceptions
 such as `Throwable`, `Exception`, or `Error`.
-Doing so can be potentially <a href="#question4.11">problematic</a>.
+Doing so can be potentially [problematic](#write-catch-exceptions).
                     
 ### Should a test call the `System.exit` method?
 
@@ -504,17 +504,17 @@ Yes. Several different options provided with `jtreg`
 influence the output per test.  Here are a few verbose settings in order of
 decreasing average output per test.
 
-* <a href="#V.0">`-verbose:fail`</a> (and related `-verbose:pass`, `-verbose:error`, and `-verbose:all`)
-* <a href="#V.1">`-verbose`</a>
-* <a href="#V.2">`-verbose:summary`</a>
-* <a href="#V.3">no verbose option</a>
+* [`-verbose:fail`](#V.0) (and related `-verbose:pass`, `-verbose:error`, and `-verbose:all`)
+* [`-verbose`](#V.1)
+* [`-verbose:summary`](#V.2)
+* [no verbose option](#V.3)
 
 The following samples of output correspond to each of the above settings.
 Each sample is run with three tests: `Pass.java`, `Fail.java`, and `Error.java` .  
 Note that in some cases, the output varies substantially depending on whether the test
 passed or failed.
 
-<a name="V.0">**`-verbose:fail`**</a> - Full output for failed
+<a id="V.0">**`-verbose:fail`**</a> - Full output for failed
 tests only.  Two lines for tests that passed or produced errors (related
 options: `-verbose:pass`, `-verbose:fail`, and `-verbose:all`).
 
@@ -598,7 +598,7 @@ output per test: final status and name of file.
     Results written to /u/iag/jtw/JTwork
     Error: some tests failed or other problems occurred
 
-<a name="V.3">**No verbose option**</a> provides only general summary
+<a id="V.3">**No verbose option**</a> provides only general summary
 information about all the tests run.
 
     ribbit$ jtreg Pass.java Fail.java Error.java
@@ -625,7 +625,7 @@ options `-verbose:pass`, `-verbose:fail`,
 2. Use the JavaTest harness GUI.
 3. View the test's `.jtr` file.
                     
-### What is a `.jtr` file?
+### What is a `.jtr` file? {#jtr-file}
 
 As each test is run, it produces a JavaTest Results (`.jtr`)
 file which contains information about how the test was run, the name of the
@@ -636,7 +636,7 @@ file called `Hello.jtr`.  These files reside in the
 work directory which contains a directory hierarchy that
 parallels the source structure.
                     
-### What are the report and work directories?
+### What are the report and work directories? {#report-work-dirs}
 
 The report directory contains all final reports in HTML format.  By
 default, the name of the report directory is `JTreport`.  The name
@@ -688,8 +688,7 @@ about any selected item in the graphical user interface.
 
 Yes!  The `-check` option to `jtreg` will find
 test descriptions and will determine whether they are written according to the
-<a href="http://javaweb.sfbay/jdk/test/tag-spec">tag specification</a>. Tests
-will _not_ be executed.
+[tag specification](tag-spec.html). Tests will _not_ be executed.
 
 The following sample output illustrates use of this option.
 
@@ -706,8 +705,8 @@ The following sample output illustrates use of this option.
 
 Yes!  The `-reportOnly` option to `jtreg` will
 generate the standard HTML reports for tests which have been previously
-executed.  Tests will _not_ be executed.  A <a href="#question3.6">work
-directory</a> containing the results of the executed tests must be provided.
+executed.  Tests will _not_ be executed.  A [work directory](#report-work-dirs) 
+containing the results of the executed tests must be provided.
 The default location is `./JTwork`.  An alternate directory may be
 specified using `-workDir`.
                     
@@ -715,9 +714,9 @@ specified using `-workDir`.
 
 `jtreg` is normally invoked by a wrapper script, written
 for the Bourne family of shells. On Windows, you can use
-<a href="http://www.mkssoftware.com/">MKS</a>,
+[MKS](http://www.mkssoftware.com/),
 which uses ksh, or you can use
-<a href="http://www.cygwin.com/">Cygwin</a>, which uses ash or bash,
+[Cygwin](http://www.cygwin.com/), which uses ash or bash,
 depending on which version you are using.
 
 You can also start `jtreg` directly, with a command of
@@ -996,9 +995,8 @@ termination.
                     
 ### My test only applies to one platform and it will fail/not run in others.  How do I prevent the harness from running it on the wrong platform?
 
-The <a href="tag-spec.txt">tag specification</a> provides no way to indicate
-any platform requirements.  If
-the test only applies to a single platform, then the test itself must determine
+The [tag specification](tag-spec.html) provides no way to indicate any platform requirements.  
+If the test only applies to a single platform, then the test itself must determine
 the current platform and decide whether the test should be run there.  If the
 test suite is running on the wrong platform, the test should pass (i.e. just
 return) otherwise, the test should proceed. A significant benefit to this
@@ -1088,7 +1086,7 @@ between individual tests or build each test within its own unique subdirectory.
 This allows us to cache class files across test runs and share code between tests
 in the same directory.
                     
-### Should a test catch `Throwable`, `Exception`, or `Error`?
+### Should a test catch `Throwable`, `Exception`, or `Error`? {#write-catch-exceptions}
 
 Ideally, only specific, anticipated exceptions should be caught by a
 test.  Any other exception which is provoked during testing should be
@@ -1114,8 +1112,7 @@ running.
 
 Note that this question indicates that the test itself can not determine
 whether it passed or failed (i.e. it needs human intervention).  Thus, the test
-uses the `manual` option.  The suggestions provided for the <a
-href="#group6">`applet` action</a> may apply.
+uses the `manual` option.  The suggestions provided for the [`applet` action](#applet-problems) may apply.
                     
 ### My test does tricky things that are not supported by `jtreg`. Can I still write a regression test?
 
@@ -1531,7 +1528,7 @@ Verify that the first tag of each test description is `@test`.
 A single directory contains more than one file with the same basename.
 
 **Answer**: The two files contain descriptions of tests and the harness is
-unable to determine a unique <a href="#question3.5">`.jtr`</a> filename so
+unable to determine a unique [`.jtr`](#jtr-file) filename so
 the harness will overwrite the results of the first test.  It is possible to have
 a single directory with more than one file with the same basename; however,
 only one of those files may have a test description (`@test` is the
@@ -1554,5 +1551,5 @@ available. To do this, you should do one of the following:
 * Install a copy in the *jtreg*`/lib` directory if it is not already present.
 
 If you do not have a copy of junit.jar on your system, you can download
-it from <a href="http://junit.org/">http://junit.org/</a>.
+it from the [JUnit home page](http://junit.org/).
 
