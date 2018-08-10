@@ -55,14 +55,14 @@ It is recommended that you run jtreg using JDK 1.7 or later.
 ### Where can I find a copy of jtreg?
 
 Information on downloading and building the source code, as well as publicly
-available binaries, is given on the [OpenJDK jtreg home page](http://openjdk.java.net/jtreg). 
+available binaries, is given on the [OpenJDK jtreg home page](http://openjdk.java.net/jtreg).
 
 ### Where do I find additional supporting documentation?
 
 Beyond the Java&trade; Platform documentation, the following are
 relevant documentation resources.
 
-*   [JDK Test Framework: Tag Language Specification](tag-spec.html) - 
+*   [JDK Test Framework: Tag Language Specification](tag-spec.html) -
     The definitive document defining the test description tags (syntax and behavior).
 
 *   The `-help` option to jtreg offers brief
@@ -90,314 +90,6 @@ so it would not be practical to convert to JUnit.
 jtreg now includes support for collections of tests written in JUnit and TestNG.
 
 --------
-      
-## Writing a JDK Regression Test
-
-### How do I write a test?
-
-The simplest test is an ordinary Java program with the usual static
-main method.  If the test fails, it should throw an exception; if it succeeds,
-it should return normally.
-
-Here's an example:
-
-~~~~java
-/* @test
-   @bug 1234567
-   @summary Make sure that 1 != 0
-*/
-
-public class OneZero {
-
-    public static void main(String[] args) throws Exception {
-        if (1 == 0) {
-            throw new Exception("1 == 0");
-        }
-    }
-
-}
-~~~~
-
-This test could be run on its own with the command
-
-    $JDK/bin/java OneZero
-    
-where $JDK is the location of the JDK build that you're testing.   
-        
-### What does the `@test` tag mean?
-
-The `@test` tag identifies a source file that defines a test.
-the harness will automatically run any `.java`, `.sh`, and
-`.html` file containing an `@test` tag within the
-appropriate comment; it ignores any file not containing such a tag or not
-utilizing one of the expected extensions.
-
-If necessary the harness will compile the source file, if the class files are
-older than the corresponding source files.  Other files which the test depends
-on must be specified with the `@run build` action.
-
-The arguments to the `@test` tag are ignored by the harness.  For
-identification it may be useful to put information such as SCCS ID keywords after the `@test` tag.
-
-While not part of the tag specification, some tests use the
-string "`/nodynamiccopyright`" after `@test`
-to indicate that that the file should not be subject to automated
-copyright processing that might affect the operation of the test,
-for example, by affecting the line numbers of the test source code.
-                    
-### What do the other tags mean?
-
-The other tags shown above are optional.
-
-The `@bug` tag should be followed by one or more bug numbers,
-separated by spaces.  The bug number is useful in diagnosing test failures.
-It's OK to write tests that don't have bug numbers, but if you're writing a
-test for a specific bug please include its number in an `@bug` tag.
-
-The `@summary` tag describes the condition that is checked by the
-test.  It is especially useful for non-regression tests, which by definition
-don't have bug numbers, but even if there's a bug number it's helpful to
-include a summary.  Note that a test summary is generally not the same thing as
-a Bugtraq synopsis, since the latter describes the bug rather than the
-condition that the bug violates.
-                    
-### How are tag arguments delimited?
-
-The arguments of a tag are the words between that tag and the next tag,
-if there is one, or the end of the comment enclosing the tags.
-                    
-### If a test fails, do I have to throw my own exception?
-
-No.  In cases like the above example in which you must check a condition
-in order to decide whether the test is to pass or fail, you have no choice but
-to construct an exception.  `RuntimeException` is a convenient
-choice since it's unchecked, so you don't have to sprinkle your code with
-throws clauses.
-
-On the other hand, if the test would naturally cause an exception to be
-thrown when it fails, it suffices to let that exception be propagated up
-through the main method.  If the exception you expect to be thrown in the
-failure case is a checked exception, then you'll need to provide the
-appropriate throws clauses in your code.
-
-In general, the advantage of throwing your own exception is that often you
-can provide better diagnostics.
-
-It is _strongly_ recommended that you not catch general exceptions
-such as `Throwable`, `Exception`, or `Error`.
-Doing so can be potentially [problematic](#write-catch-exceptions).
-                    
-### Should a test call the `System.exit` method?
-
-No. Depending on how you run the tests, you may get a security exception
-from the harness.
-                    
-### Can a test write to `System.out` and `System.err`?
-
-Yes. The harness will capture everything sent to both streams.
-                    
-### Can a test check the output of `System.out` and `System.err`?
-
-Yes, compiler tests using the `@compile` tag can use
-the <code>/ref=<i>file</i></code> option.
-Such tests are generally not recommended, since the output can be
-sensitive to the locale in which the are run, and may contain
-other details which may be hard to maintain, such as line numbers.
-
-While not part of the tag specification, some tests use the
-string "`/nodynamiccopyright/`" after the `@test` tag
-to indicate that that the file should not be subject to automated
-copyright processing that might affect the operation of the test.
-                    
-### What should I do with a test once I've written it?
-
-Check it into the test directory in your repository.
-
-Yes, it really is that simple.
-                    
-### Where is the test directory?
-
-Within an OpenJDK forest, the langtools/ and jdk/ repositories
-each have a test/ directory.  The directory and its contents
-will be created automatically when you clone either of those
-repositories.
-
-The jdk/test directory contains tests for the main JRE API
-and related tools. The langtools/test directory contains tests
-for the javac, javadoc, javah and javap tools.
-                    
-### Why not have separate test workspaces that only contain tests?
-
-Checking a test into the workspace against which it's first written
-helps prevent spurious test failures.  In the case of a regression test, this
-process ensures that a regression test will migrate upward in the integration
-hierarchy along with the fix for the corresponding bug.  If tests were managed
-separately from fixes then it would be difficult to distinguish between a true
-test failure and a failure due to version skew because the fix hadn't caught up
-with the test.
-                    
-### How are the test directories organized?
-
-Tests are generally organized following the structure of the Java API.  For
-example, the `test` directory contains a `java` directory
-that has subdirectories `lang`, `io`, `util`,
-etc.
-
-Each package directory contains one subdirectory for each class in the
-package.  Thus tests for `java.io.FileInputStream` can be found in
-`java/io/FileInputStream`.
-
-Each class directory may contain a combination of single-file tests and
-further subdirectories for tests that require more than one source file.
-                    
-### How should I name a test?
-
-In general, try to give tests names that are as specific and descriptive
-as possible.  If a test is checking the behavior of one or a few methods, its
-name should include the names of those methods.  For example, a test written
-for a bug in the skip method of FileInputStream could be placed in
-`test/java/io/FileInputStream/Skip.java`.  A test written for a bug
-that involves both the skip and available methods could be named
-`SkipAvailable.java`.
-
-Tests that involve many methods require a little more creativity in naming,
-since it would be unwieldy to include the names of all the methods.  Just
-choose a descriptive word or short phrase.  For example, a test that checks the
-general behavior of a FileInputStream after end-of-file has been reached could
-be named `AfterEOF.java`.
-
-It can be helpful to add more information to the test name to help further
-describe the test.  For example, a test that checks the skip method's behavior
-when passed a negative count could be named `SkipNegative.java`.
-
-You might find that the name you want to give your test has already been
-taken.  In this case either find a different name or, if you're just not in a
-creative mood, append an underscore and a digit to an existing name.  Thus if
-there were already a `Skip.java` file, a new test for the skip
-method could be named `Skip_1.java`.
-
-Some tests require more than one source file, or may need access to data
-files.  In this case it's best to create a subdirectory in order to keep
-related files together.  The subdirectory should be given a descriptive
-mixed-case name that begins with a lowercase letter.  For example, a
-FileInputStream test that needs an input file as well as its Java source file
-in order to test the interaction of the read and available methods could be
-placed in the subdirectory
-`test/java/io/FileInputStream/readAvailable`.
-
-Some tests involve more than one class in a package, in which case a new
-subdirectory in the relevant package directory should be created.  For example,
-a set of general tests that exercise the character streams in the
-`java.io` package could be placed in the
-`test/java/io/charStreams` directory.
-                    
-### What about tests that don't fit into the API structure?
-
-In addition to a `java` directory for API-related tests, the
-test directory contains a `javax` directory,
-`vm` directory, a `tools`
-directory, and `com` and `sun` directories.
-                    
-### Can tests in different directories have the same name?
-
-Yes.  When a test is run by the harness, a special classloader is used so
-that the classpath is effectively set to include just the directory containing
-the test, plus the standard system classes.  Thus name
-clashes between tests in different directories are not a problem.
-
-An alternative approach would be to associate a different package with each
-test directory.  This is done, for example, in the JCK test suite.  The
-difficulty with this idea is that in order to debug a test (under dbx or
-workshop or jdb or whatever) you must set up your classpath in just the right
-way.  This makes it difficult to diagnose bugs that are reported against
-specific tests.
-                    
-### How do I write a test for an AWT bug or a Swing bug?
-
-Bugs in the graphical facilities of the JDK generally require
-manual interaction with applets.  Applet tests are written in much the
-same way as the simple `main` tests described above.  The
-primary differences are that a second "@" tag is given to indicate
-that the test is an applet test, and an appropriate HTML file is
-needed.  For example, an AWT test named `Foo.java` would
-have the form:
-
-~~~~java
-/* @test
- * @bug 9876543
- * @run applet/manual Foo.html 
- */
-
-public class Foo extends java.awt.Applet { ... }
-~~~~
-
-or
-
-~~~~java
-public class Foo extends javax.swing.JApplet { ... }
-~~~~
-
-The `@run` tag tells the harness how to run the test.  The first
-argument is the run type, `applet`, followed by an option,
-`/manual`, that flags this test as a manual test requiring user
-interaction.  The remaining arguments to the `@run` tag are passed
-to the program in a manner appropriate to the run type.  In this case, the test
-will be run just as if the `appletviewer` had been invoked on
-`Foo.html`.  Thus `Foo.html` must contain, at least, an
-HTML `applet` tag with any necessary parameters.
-                    
-### How does the user know what to do for a manual applet test?
-
-When the harness runs a manual applet test, it will display the contents of
-the HTML file that defines the applet.  Include instructions in the HTML file
-so that the person running the test can figure out what to do if any
-interaction is required.
-                    
-### Exactly what does the`/manual` option mean?
-
-The `/manual` option indicates to the harness that this is a
-manual test.  This allows the harness to distinguish manual from automatic
-tests, which is important since the latter can be run without user interaction.
-
-There are actually three kinds of applet manual tests: Self-contained tests,
-`yesno` tests, and `done` tests.
-
-* A self-contained manual test handles all user interaction itself.  If the
-    test fails, whether this is determined by the user or by the applet, then the
-    applet must throw an exception.  Self-contained tests specify
-    `applet/manual` for the first `@run` argument.
-
-* A `yesno` test requests the harness to ask the user whether the test
-    passes or fails.  To do this, the harness will put up `pass` and
-    `fail` buttons, and it's up to the user to inspect the screen and
-    click one of the buttons.  The harness will take care of shutting down the applet.
-    The test will also fail if the applet throws an exception.  `Yesno`
-    tests specify `applet/manual=yesno` for the first `@run`
-    argument.
-
-* A `done` test requests the harness to put up a `done`
-    button.  After the user has completed whatever actions are required by the
-    test, the user clicks `done` and the harness shuts down the applet.
-    The program must itself determine whether the test is to pass or fail, and
-    throw an exception in the latter case.  `Done` tests specify
-    `applet/manual=done` for the first `@run` argument.
-
-`main` and `shell` may also specify the `manual` option using `main/manual` and
-`shell/manual` respectively.  These tests must be completely self-contained.
-                    
-### How does a manual applet test indicate success or failure?
-
-Just as with `main` tests, an applet may throw an exception
-at any time to indicate test failure.  A `done` test applet, for
-example, can check for failure in the `java.applet.Applet.destroy`
-method.  If an applet doesn't throw an exception, and if, in the case of a
-`yesno` test, the user clicks `pass`, then the test is
-considered to have passed.
-
-Be very careful about where failure is checked.  The AWT event thread does
-not propagate exceptions!
-       
--------
 
 ## Getting Started
 
@@ -476,8 +168,8 @@ Interpretation of this output is as follows:
 * line 2 - The name of the test that was run.
 * line 3 - The JDK under test (should be identical to the value passed via
   the `-testjdk` option).
-* line 4-6 - The product version produced when `java [-JVMOptions]` version" is called 
-  for the JDK under test.  Valid `[-JVMOptions]` include `-client`, `-server`, `-hotspot`, 
+* line 4-6 - The product version produced when `java [-JVMOptions]` version" is called
+  for the JDK under test.  Valid `[-JVMOptions]` include `-client`, `-server`, `-hotspot`,
   `-d64`, and `-d32`, as applicable to the current platform and test JDK.
 * lines 8-10, 12-16, 18-24 - The set of actions that were run according to
   the test description provided. Each action contains five parts.
@@ -497,7 +189,7 @@ Interpretation of this output is as follows:
     * line 30 - Location for auxiliary files generated during the test
       execution. Of particular note are the results files (`.jtr`)
       which contain information about the individual tests that were run.
-                    
+
 ### Bleah! That verbose output is so long!  Can I have something shorter?
 
 Yes. Several different options provided with `jtreg`
@@ -510,7 +202,7 @@ decreasing average output per test.
 * [no verbose option](#V.3)
 
 The following samples of output correspond to each of the above settings.
-Each sample is run with three tests: `Pass.java`, `Fail.java`, and `Error.java` .  
+Each sample is run with three tests: `Pass.java`, `Fail.java`, and `Error.java` .
 Note that in some cases, the output varies substantially depending on whether the test
 passed or failed.
 
@@ -610,11 +302,11 @@ information about all the tests run.
 If there is information that you find lacking in all of these options,
 please contact the developer to determine if it is possible to make it
 available.
-                    
+
 ### Are there abbreviations for these long options?
 
 Yes.  The `-help` option to `jtreg` lists the long and abbreviated forms of all options.
-                    
+
 ### How do I view what a test sends to `System.out/System.err`?
 
 You have several alternatives.
@@ -624,7 +316,7 @@ options `-verbose:pass`, `-verbose:fail`,
 `-verbose:error`) to `jtreg`.
 2. Use the JavaTest harness GUI.
 3. View the test's `.jtr` file.
-                    
+
 ### What is a `.jtr` file? {#jtr-file}
 
 As each test is run, it produces a JavaTest Results (`.jtr`)
@@ -635,7 +327,7 @@ is the basename of the file containing the test description followed by the
 file called `Hello.jtr`.  These files reside in the
 work directory which contains a directory hierarchy that
 parallels the source structure.
-                    
+
 ### What are the report and work directories? {#report-work-dirs}
 
 The report directory contains all final reports in HTML format.  By
@@ -647,7 +339,7 @@ These include `.class` and `.jtr`
 files.  By default, the name of the work directory is `JTwork`.  The
 name may be selected via the `-workDir` option to
 `jtreg`.
-                    
+
 ### What's the difference between the "fail" and "error" return status?
 
 If a test *failed*, then the harness was able to actually run the
@@ -662,7 +354,6 @@ description (typos, missing required arguments, etc.).
 In either case the result contains a short message intended to provide hints
 as to where the problem lies.
 
-                    
 ### If a test fails, I'd like to put all of my debugging information into the final result.  How do I do that?
 
 The final result string is composed by the harness.  For tests that fail
@@ -675,7 +366,7 @@ information.
 
 The harness makes no guarantees as to the availability of any detail message
 longer than 128 characters.
-                    
+
 ### I've heard that the `jtreg` has a GUI. How do I access that?
 
 The complete JavaTest harness GUI is available via the `-gui` option
@@ -683,7 +374,7 @@ to `jtreg`. The Online Help, available on the `Help`
 menu, provides a detailed description of the graphical user interface.
 You can also use the `F1` key to get context sensitive help
 about any selected item in the graphical user interface.
-                    
+
 ### Can I verify the correctness of test descriptions without actually running the tests?
 
 Yes!  The `-check` option to `jtreg` will find
@@ -700,16 +391,16 @@ The following sample output illustrates use of this option.
     Report written to /u/iag/jtw/JTreport/report.html
     Results written to /u/iag/jtw/JTwork
     Error: some tests failed or other problems occurred
-                    
+
 ### Can I generate reports for tests that have already been run?
 
 Yes!  The `-reportOnly` option to `jtreg` will
 generate the standard HTML reports for tests which have been previously
-executed.  Tests will _not_ be executed.  A [work directory](#report-work-dirs) 
+executed.  Tests will _not_ be executed.  A [work directory](#report-work-dirs)
 containing the results of the executed tests must be provided.
 The default location is `./JTwork`.  An alternate directory may be
 specified using `-workDir`.
-                    
+
 ### How do I run `jtreg` under Windows?
 
 `jtreg` is normally invoked by a wrapper script, written
@@ -722,7 +413,7 @@ depending on which version you are using.
 You can also start `jtreg` directly, with a command of
 the form `java -jar jtreg.jar` _options_, but you
 will still need MKS or Cygwin installed to be able to run shell tests.
-                    
+
 ### Which should I use? MKS or Cygwin?
 
 `jtreg` supports both, equally. However, the tests in the
@@ -732,21 +423,21 @@ test at least works with MKS. If you prefer to use Cygwin, and can make
 your test run with both, so much the better.
 
 <strong>Note:</strong> as of JDK 8, the tests assume the use of Cygwin by default.
-                    
+
 ### How do I run only tests which were written for a specific bugid?
 
 The `-bug` option to `jtreg` will run only those tests which define the given bugid using the `@bug` tag.
-                    
+
 ### How do I run only tests NOT requiring manual intervention?
 
 The `-automatic` option to `jtreg` will ignore all tests which contain the `/manual` tag option.
-                    
+
 ### How do I run only tests requiring manual intervention?
 
 The `-manual` option to `jtreg` will run only those tests which contain the `/manual` tag option.
-                    
+
 ### How do I specify VM options to the test's JVM?
-            
+
 Many JVM options are recognized by `jtreg` and passed
 to the test.  Note that these options are sensitive to both the platform and
 the JDK being tested.  For example, Linux does not currently support 64-bit
@@ -758,11 +449,319 @@ option to pass one or a space-separated list of options to the JVM used
 to run the test.
 
 --------
-                        
-## TestNG tests
+
+## Writing a JDK Regression Test
+
+### How do I write a test?
+
+The simplest test is an ordinary Java program with the usual static
+main method.  If the test fails, it should throw an exception; if it succeeds,
+it should return normally.
+
+Here's an example:
+
+~~~~java
+/* @test
+   @bug 1234567
+   @summary Make sure that 1 != 0
+*/
+
+public class OneZero {
+
+    public static void main(String[] args) throws Exception {
+        if (1 == 0) {
+            throw new Exception("1 == 0");
+        }
+    }
+
+}
+~~~~
+
+This test could be run on its own with the command
+
+    $JDK/bin/java OneZero
+
+where $JDK is the location of the JDK build that you're testing.
+
+### What does the `@test` tag mean?
+
+The `@test` tag identifies a source file that defines a test.
+the harness will automatically run any `.java`, `.sh`, and
+`.html` file containing an `@test` tag within the
+appropriate comment; it ignores any file not containing such a tag or not
+utilizing one of the expected extensions.
+
+If necessary the harness will compile the source file, if the class files are
+older than the corresponding source files.  Other files which the test depends
+on must be specified with the `@run build` action.
+
+The arguments to the `@test` tag are ignored by the harness.  For
+identification it may be useful to put information such as SCCS ID keywords after the `@test` tag.
+
+While not part of the tag specification, some tests use the
+string "`/nodynamiccopyright`" after `@test`
+to indicate that that the file should not be subject to automated
+copyright processing that might affect the operation of the test,
+for example, by affecting the line numbers of the test source code.
+
+### What do the other tags mean?
+
+The other tags shown above are optional.
+
+The `@bug` tag should be followed by one or more bug numbers,
+separated by spaces.  The bug number is useful in diagnosing test failures.
+It's OK to write tests that don't have bug numbers, but if you're writing a
+test for a specific bug please include its number in an `@bug` tag.
+
+The `@summary` tag describes the condition that is checked by the
+test.  It is especially useful for non-regression tests, which by definition
+don't have bug numbers, but even if there's a bug number it's helpful to
+include a summary.  Note that a test summary is generally not the same thing as
+a Bugtraq synopsis, since the latter describes the bug rather than the
+condition that the bug violates.
+
+### How are tag arguments delimited?
+
+The arguments of a tag are the words between that tag and the next tag,
+if there is one, or the end of the comment enclosing the tags.
+
+### If a test fails, do I have to throw my own exception?
+
+No.  In cases like the above example in which you must check a condition
+in order to decide whether the test is to pass or fail, you have no choice but
+to construct an exception.  `RuntimeException` is a convenient
+choice since it's unchecked, so you don't have to sprinkle your code with
+throws clauses.
+
+On the other hand, if the test would naturally cause an exception to be
+thrown when it fails, it suffices to let that exception be propagated up
+through the main method.  If the exception you expect to be thrown in the
+failure case is a checked exception, then you'll need to provide the
+appropriate throws clauses in your code.
+
+In general, the advantage of throwing your own exception is that often you
+can provide better diagnostics.
+
+It is _strongly_ recommended that you not catch general exceptions
+such as `Throwable`, `Exception`, or `Error`.
+Doing so can be potentially [problematic](#write-catch-exceptions).
+
+### Should a test call the `System.exit` method?
+
+No. Depending on how you run the tests, you may get a security exception
+from the harness.
+
+### Can a test write to `System.out` and `System.err`?
+
+Yes. The harness will capture everything sent to both streams.
+
+### Can a test check the output of `System.out` and `System.err`?
+
+Yes, compiler tests using the `@compile` tag can use
+the <code>/ref=<i>file</i></code> option.
+Such tests are generally not recommended, since the output can be
+sensitive to the locale in which the are run, and may contain
+other details which may be hard to maintain, such as line numbers.
+
+While not part of the tag specification, some tests use the
+string "`/nodynamiccopyright/`" after the `@test` tag
+to indicate that that the file should not be subject to automated
+copyright processing that might affect the operation of the test.
+
+### What should I do with a test once I've written it?
+
+Check it into the test directory in your repository.
+
+Yes, it really is that simple.
+
+### Where is the test directory?
+
+Within an OpenJDK forest, the langtools/ and jdk/ repositories
+each have a test/ directory.  The directory and its contents
+will be created automatically when you clone either of those
+repositories.
+
+The jdk/test directory contains tests for the main JRE API
+and related tools. The langtools/test directory contains tests
+for the javac, javadoc, javah and javap tools.
+
+### Why not have separate test workspaces that only contain tests?
+
+Checking a test into the workspace against which it's first written
+helps prevent spurious test failures.  In the case of a regression test, this
+process ensures that a regression test will migrate upward in the integration
+hierarchy along with the fix for the corresponding bug.  If tests were managed
+separately from fixes then it would be difficult to distinguish between a true
+test failure and a failure due to version skew because the fix hadn't caught up
+with the test.
+
+### How should I name a test?
+
+In general, try to give tests names that are as specific and descriptive
+as possible.  If a test is checking the behavior of one or a few methods, its
+name should include the names of those methods.  For example, a test written
+for a bug in the skip method of FileInputStream could be placed in
+`test/java/io/FileInputStream/Skip.java`.  A test written for a bug
+that involves both the skip and available methods could be named
+`SkipAvailable.java`.
+
+Tests that involve many methods require a little more creativity in naming,
+since it would be unwieldy to include the names of all the methods.  Just
+choose a descriptive word or short phrase.  For example, a test that checks the
+general behavior of a FileInputStream after end-of-file has been reached could
+be named `AfterEOF.java`.
+
+It can be helpful to add more information to the test name to help further
+describe the test.  For example, a test that checks the skip method's behavior
+when passed a negative count could be named `SkipNegative.java`.
+
+You might find that the name you want to give your test has already been
+taken.  In this case either find a different name or, if you're just not in a
+creative mood, append an underscore and a digit to an existing name.  Thus if
+there were already a `Skip.java` file, a new test for the skip
+method could be named `Skip_1.java`.
+
+Some tests require more than one source file, or may need access to data
+files.  In this case it's best to create a subdirectory in order to keep
+related files together.  The subdirectory should be given a descriptive
+mixed-case name that begins with a lowercase letter.  For example, a
+FileInputStream test that needs an input file as well as its Java source file
+in order to test the interaction of the read and available methods could be
+placed in the subdirectory
+`test/java/io/FileInputStream/readAvailable`.
+
+Some tests involve more than one class in a package, in which case a new
+subdirectory in the relevant package directory should be created.  For example,
+a set of general tests that exercise the character streams in the
+`java.io` package could be placed in the
+`test/java/io/charStreams` directory.
+
+### What about tests that don't fit into the API structure?
+
+In addition to a `java` directory for API-related tests, the
+test directory contains a `javax` directory,
+`vm` directory, a `tools`
+directory, and `com` and `sun` directories.
+
+### Can tests in different directories have the same name?
+
+Yes.  When a test is run by the harness, a special classloader is used so
+that the classpath is effectively set to include just the directory containing
+the test, plus the standard system classes.  Thus name
+clashes between tests in different directories are not a problem.
+
+An alternative approach would be to associate a different package with each
+test directory.  This is done, for example, in the JCK test suite.  The
+difficulty with this idea is that in order to debug a test (under dbx or
+workshop or jdb or whatever) you must set up your classpath in just the right
+way.  This makes it difficult to diagnose bugs that are reported against
+specific tests.
+
+### How do I write a test for an AWT bug or a Swing bug?
+
+Bugs in the graphical facilities of the JDK generally require
+manual interaction with applets.  Applet tests are written in much the
+same way as the simple `main` tests described above.  The
+primary differences are that a second "@" tag is given to indicate
+that the test is an applet test, and an appropriate HTML file is
+needed.  For example, an AWT test named `Foo.java` would
+have the form:
+
+~~~~java
+/* @test
+ * @bug 9876543
+ * @run applet/manual Foo.html
+ */
+
+public class Foo extends java.awt.Applet { ... }
+~~~~
+
+or
+
+~~~~java
+public class Foo extends javax.swing.JApplet { ... }
+~~~~
+
+The `@run` tag tells the harness how to run the test.  The first
+argument is the run type, `applet`, followed by an option,
+`/manual`, that flags this test as a manual test requiring user
+interaction.  The remaining arguments to the `@run` tag are passed
+to the program in a manner appropriate to the run type.  In this case, the test
+will be run just as if the `appletviewer` had been invoked on
+`Foo.html`.  Thus `Foo.html` must contain, at least, an
+HTML `applet` tag with any necessary parameters.
+
+### How does the user know what to do for a manual applet test?
+
+When the harness runs a manual applet test, it will display the contents of
+the HTML file that defines the applet.  Include instructions in the HTML file
+so that the person running the test can figure out what to do if any
+interaction is required.
+
+### Exactly what does the`/manual` option mean?
+
+The `/manual` option indicates to the harness that this is a
+manual test.  This allows the harness to distinguish manual from automatic
+tests, which is important since the latter can be run without user interaction.
+
+There are actually three kinds of applet manual tests: Self-contained tests,
+`yesno` tests, and `done` tests.
+
+* A self-contained manual test handles all user interaction itself.  If the
+    test fails, whether this is determined by the user or by the applet, then the
+    applet must throw an exception.  Self-contained tests specify
+    `applet/manual` for the first `@run` argument.
+
+* A `yesno` test requests the harness to ask the user whether the test
+    passes or fails.  To do this, the harness will put up `pass` and
+    `fail` buttons, and it's up to the user to inspect the screen and
+    click one of the buttons.  The harness will take care of shutting down the applet.
+    The test will also fail if the applet throws an exception.  `Yesno`
+    tests specify `applet/manual=yesno` for the first `@run`
+    argument.
+
+* A `done` test requests the harness to put up a `done`
+    button.  After the user has completed whatever actions are required by the
+    test, the user clicks `done` and the harness shuts down the applet.
+    The program must itself determine whether the test is to pass or fail, and
+    throw an exception in the latter case.  `Done` tests specify
+    `applet/manual=done` for the first `@run` argument.
+
+`main` and `shell` may also specify the `manual` option using `main/manual` and
+`shell/manual` respectively.  These tests must be completely self-contained.
+
+### How does a manual applet test indicate success or failure?
+
+Just as with `main` tests, an applet may throw an exception
+at any time to indicate test failure.  A `done` test applet, for
+example, can check for failure in the `java.applet.Applet.destroy`
+method.  If an applet doesn't throw an exception, and if, in the case of a
+`yesno` test, the user clicks `pass`, then the test is
+considered to have passed.
+
+Be very careful about where failure is checked.  The AWT event thread does
+not propagate exceptions!
+
+--------
+
+## Organizing tests
+
+### How are the test directories organized?
+
+Tests are generally organized following the structure of the Java API.  For
+example, the `test` directory contains a `java` directory
+that has subdirectories `lang`, `io`, `util`,
+etc.
+
+Each package directory contains one subdirectory for each class in the
+package.  Thus tests for `java.io.FileInputStream` can be found in
+`java/io/FileInputStream`.
+
+Each class directory may contain a combination of single-file tests and
+further subdirectories for tests that require more than one source file.
 
 ### What is the test root directory?
-            
+
 The "test root directory", or "test suite root directory" is the
 root directory of the overall test suite.
 In OpenJDK terms, this means either of the "jdk/test/" or
@@ -773,9 +772,9 @@ the smallest enclosing directory containing a marker file called
 TEST.ROOT.
 The TEST.ROOT file can also be used to define some global properties
 for the test suite.
-                    
+
 ### Why is the "test root directory" important?
-            
+
 Within the test suite, tests are uniquely identified by their path
 relative to the test root directory.
 This relative path is used to generate test-specific directories
@@ -786,9 +785,8 @@ However, note that tests can be specified on the command line
 by any valid file system path, either absolute or relative to the
 current directory.
 
-                    
 ### Can I have more than one TEST.ROOT?
-            
+
 In general, no.  Each test is uniquely associated with
 exactly one test root directory, which is the the smallest
 enclosing directory containing a marker file called TEST.ROOT.
@@ -797,14 +795,18 @@ test suite, identified by a single test root directory.
 
 It _is_ possible to run tests from multiple test suites
 (such as jdk/test and langtools/test) but this is not common.
-                    
+
+--------
+
+## TestNG tests
+
 ### What is a "package root"?
-            
+
 "package root" refers the root of the package hierarchy in
  which a Java source is placed. It is the directory you would
  put on the javac source path if you wanted javac to compile
  the file explicitly.
- 
+
 Most jtreg tests are written in the "unnamed package"
  (i.e. without a package statement) and so for most jtreg tests,
  the directory directly containing the test is the package root
@@ -812,17 +814,17 @@ Most jtreg tests are written in the "unnamed package"
  other test harnesses (such as TestNG) in which all the tests
  of a test suite are placed in a single package hierarchy,
  often mirroring the package hierarchy of API being tested.
-                    
+
 ### How does jtreg support TestNG tests?
-            
+
 jtreg supports TestNG tests in two ways.
 
 1. Tests can be written with a full test description
  (the comment beginning /* @test....*/) and can use the following
  action tag to run the test with TestNG:
-        
+
       @run testng classname args"
-        
+
  Such a test would otherwise be similar to a standard test
  using "@run main". You can use other tags such as @library and
  @build, just as you would for "@run main".
@@ -830,7 +832,7 @@ jtreg supports TestNG tests in two ways.
  (i.e. no package statement.)
  These tests can be freely intermixed with other tests using
  "@run main", "@run shell", "@run applet" and so on.
- 
+
 1. If you have a group of TestNG tests written in their own
  package hierarchy, you can include that entire package
  hierarchy as a subdirectory under the main test root directory.
@@ -839,20 +841,20 @@ jtreg supports TestNG tests in two ways.
  files in that package hierarchy specially.
  In such a group of tests, you do not need to provide test
  descriptions in each test.
- 
+
  You may optionally provide a test description if you choose to
  do so, if you wish to specify information tags such as
  `@bug`, `@summary` and `@keyword`.
  You must not specify any action tags, such as `@run`, `@compile`,
  etc, since the actions are implicit for every test in the group
  of tests.
-                    
+
 ### How do I identify a group of TestNG tests in their own directory?
-            
+
 Add a line specifying the directory to TEST.ROOT
 
     TestNG.dirs = dir1 dir2 dir3 ...
-    
+
 Include the package root directory for each group of TestNG
 tests, and specify the package root directory relative to the test
 root directory.
@@ -869,9 +871,9 @@ package root directory for the group of tests, in which case
 the declaration would be simply:
 
     TestNG.dirs = .
-                    
+
 ###  How does jtreg run TestNG tests?
-            
+
 Tests using `@run testng` are compiled in the standard way,
 with TestNG libraries on the classpath.
 The test is run using the class `org.testng.TestNG`.
@@ -883,9 +885,8 @@ Then, the selected test classes are run one at a time using
 Each test that is run will have its results stored in a
 corresponding *.jtr file.
 
-                    
 ### How do I specify any libraries I want to use in TestNG tests?
-            
+
 Tests using `@run testng` can use `@library` and `@build` in the standard way.
 For any test in a group of TestNG tests, you can specify the
 library by adding a line specifying the library in the
@@ -893,7 +894,7 @@ TEST.properties file in the package root directory for the group of
 tests.
 
     lib.dirs = path-to-library ...
-    
+
 As with the `@library` tag, if the path begins with "/",
 it will be evaluated relative to the test root directory;
 otherwise, it will be evaluated relative to the directory
@@ -905,13 +906,12 @@ library for some of the tests and another library for other tests.
 This is because the all the source files in the group are
 compiled together.
 
-                    
 ### What version of TestNG does jtreg support?
 
 Run the command `jtreg -version` to see the version of jtreg and available components.
-    
+
 --------
-                    
+
 ## General Problems
 
 ### My test only passes if I don't use jtreg to run it. Why does it fail in jtreg?
@@ -947,7 +947,7 @@ automatically propagated into the test's JVM are:
 
 If your test needs to provide more environment variables or
 to override any values, use the `-e` option.
-                    
+
 ### How do I set the `CLASSPATH` environment variable for my test?
 
 The harness sets the `CLASSPATH` for the `compile`,
@@ -958,30 +958,30 @@ It is possible to set the classpath for the `main/othervm` action
 via the `-classpath` option to `java`.  Any other
 modification of the `CLASSPATH` must be done using the
 `shell` action.
-                    
+
 ### Why don't you just pass all of my shell environment variables to the JVM running the test?
 
 The approach of passing down a list of pre-defined environment variables
 helps guarantee consistent results across different people running the test(s).
-                    
+
 ### Why is the default to run tests in another JVM?
 
 Insulation from other tests.  Most well-behaved tests do not modify the
 JVM; however, if a test does modify the JVM it is possible that this change
 will interfere with subsequent tests.  Running each test in another JVM allows
 for the possibility of bad test suite citizens.
-                    
+
 ### Why would I ever want to run in the same JVM?
 
 Speed.
-                    
+
 ### What is "agent VM" mode, and why would I want to use it?
 
 It's like "same VM" mode, but better. By default, tests will run in
 the same JVM. In between tests, jtreg will try to reset the JVM to
 a standard state, and if it cannot, it will discard the JVM and
 start another.
-                    
+
 ### Should a test call the `System.exit` method?
 
 _NO!_ The default harness security manager prevents tests from
@@ -992,10 +992,10 @@ call to `System.exit` will cause the harness itself to exit!
 If the test is running in its own separate JVM, a call to
 `System.exit` may not allow the harness to properly handle test
 termination.
-                    
+
 ### My test only applies to one platform and it will fail/not run in others.  How do I prevent the harness from running it on the wrong platform?
 
-The [tag specification](tag-spec.html) provides no way to indicate any platform requirements.  
+The [tag specification](tag-spec.html) provides no way to indicate any platform requirements.
 If the test only applies to a single platform, then the test itself must determine
 the current platform and decide whether the test should be run there.  If the
 test suite is running on the wrong platform, the test should pass (i.e. just
@@ -1044,7 +1044,7 @@ accomplishes the same task as above.
         * )
             echo "unrecognized system: $OS" ; exit 1 ;;
     esac
-                    
+
 ### How can I make `applet` and `main` action tests read from data files?
 
 When jtreg is executed, it `cd`'s into a scratch area to
@@ -1060,7 +1060,7 @@ with the harness, and without (in the source directory).
 
     File f = new File(System.getProperty("test.src", "."), "foo");
     InputStream in = new File(f);
-                    
+
 ### Can I use `package` statements in my tests?
 
 Yes&#8230; but you probably don't want to.  The harness  searches for class
@@ -1072,7 +1072,7 @@ recommended unless the test is intended to test `package` statements.
 Tests which test the package mechanism may use package statements; however,
 it will be the responsibility of the test writer to properly execute the
 compiled class as necessary.
-                    
+
 ### Why can't multiple test source files in the same directory have package-private classes of the same name?
 
 In the Java language, package private classes defined in different files
@@ -1085,7 +1085,7 @@ For performance reasons, the harness does not automatically remove class files
 between individual tests or build each test within its own unique subdirectory.
 This allows us to cache class files across test runs and share code between tests
 in the same directory.
-                    
+
 ### Should a test catch `Throwable`, `Exception`, or `Error`? {#write-catch-exceptions}
 
 Ideally, only specific, anticipated exceptions should be caught by a
@@ -1099,11 +1099,11 @@ interrupt the test.  If that exception is caught by a test and not re-thrown to
 the harness, the stop request will be lost and the tests will not stop!
 
 Here is a list of exceptions that may need to be re-thrown:
-                
+
 * `InterruptedException` (from `Exception`)
 * `InterruptedIOException` (from `IOException`)
 * `ThreadDeath` (from `Error`)
-                    
+
 ### My test requires that I use information printed to `System.out` or `System.err` to determine whether a test passed or failed.  When I run my test in the harness, I can't seem to find these output streams.
 
 Currently, information sent to `System.out` or
@@ -1113,7 +1113,7 @@ running.
 Note that this question indicates that the test itself can not determine
 whether it passed or failed (i.e. it needs human intervention).  Thus, the test
 uses the `manual` option.  The suggestions provided for the [`applet` action](#applet-problems) may apply.
-                    
+
 ### My test does tricky things that are not supported by `jtreg`. Can I still write a regression test?
 
 Yes.  Most tests can be written using a series of `main`,
@@ -1159,7 +1159,7 @@ If the `shell` action still does not provide the flexibility
 needed to write the regression test, then use the `ignore` action.
 It is also advisable to include a comment with sufficient detail to allow a
 person to run the test and verify its behavior.
-                    
+
 ### What happens if my test returns when there are still threads running?
 
 The harness runs the `main` action's `main` method in
@@ -1167,13 +1167,13 @@ its own thread group.  The thread group will be destroyed by the harness when th
 `main` method returns.  It is the responsibility of the test to
 return only after the appropriate tasks have been completed by its subsidiary
 threads.
-                    
+
 ### If my bug hasn't been fixed, and the test is run, the JVM crashes.  How do I make sure that the test doesn't cause the harness to crash?
 
 If the symptom of a bug is a JVM crash, then the test's description
 should include the `othervm` option. This will allow the harness to
 continue running any subsequent tests, write its reports, and exit normally.
-                    
+
 ### The JavaTest harness is running into problems running the test because of issues with the JDK I'm trying to test. What can I do?
 
 When the harness is used to run tests, two possibly different versions of
@@ -1185,7 +1185,7 @@ the `-othervm` option in conjunction with the `-testjdk`
 option.  The `-testjdk` option will specify the version of the JDK
 to run the tests.  The environment variables `JT_JAVA` or
 `JAVA_HOME` will specify the version of the JDK for the harness.
-                    
+
 ### My test requires that I install my own security manager, but it appears that the JavaTest harness has already installed one. What do I do?
 
 The harness normally installs its own rather permissive security manager in
@@ -1197,21 +1197,21 @@ manager a hindrance.
 A test which must install its own security manager will always need to run
 in its own separate JVM. To do this, add the `othervm` option to the
 `main` action in the test description.
-                    
+
 ### Can I automate running regtests or can I run the tests on a regular basis?
 
 Yes.  If you are using a UNIX system, `man crontab` is your
 friend.  Other platforms have similar facilities (often third party) for
 automated command scheduling.
-                    
+
 ### I run all (or a huge part) of the regression test suite as part of a cron job or other nightly process.  I'd like to generate my own reports or I'd like to send myself e-mail whenever a test fails.  Do I have to parse the verbose output or the `.jtr` file?
 
 No. The harness supports an observer interface.  APIs exist to query test
 results at the conclusion of the test's execution.  A user can write their own
 observer to record and act on information as desired.
-   
+
 --------
-                 
+
 ## Tag Problems
 
 ### How do I decide whether my test should use the `compile` action or the `build` action?
@@ -1222,7 +1222,7 @@ the classfile doesn't exist or is older than its source.  The
 the `compile` action is used only to test the compiler, while the
 `build` action is used for tests that make use of multiple sources
 or for API tests.
-                    
+
 ### When do I need to specify the `build` action?
 
 Each `main` and `applet` action contains an
@@ -1230,7 +1230,7 @@ implied `build` action.  The harness will build the class specified by
 the `main` or `applet` actions as needed without any
 prompting.  If the test requires additional class(es), every additional class
 must be associated with an explicit `build` action.
-                    
+
 ### How do I decide whether my applet test should use the `main` action or the `applet` action?
 
 Ultimately, that decision is left to the person writing the test;
@@ -1267,14 +1267,14 @@ synchronization.
 Finally, the `applet` action handles test cleanup.  If a test can
 not or does not dispose top-level windows or any AWT threads, they will be
 eliminated by the harness after the test completes.
-                    
+
 ### I put in an `ignore` tag into my test description but my test wasn't ignored.
  The `ignore` tag should be used for tests that are too
 complex for the currently defined set of tags or for tests that should be
 temporarily ignored.  The `ignore` tag instructs the harness to ignore
 that and any <i>subsequent</i> tags.  Check the location of the
 `ignore` tag.
-                    
+
 ### Can I use the `@author`, `@run`, etc. tags in other files?
 
 Yes. The tags may be used for documentation purposes in any file. Only
@@ -1282,7 +1282,7 @@ those comments whose leading tag is `@test` is considered a test
 description
 
 --------
-                    
+
 ## Applet Problems
 
 ### My `/manual` test sends events to `System.out/System.err` so that the user can determine whether the test behaved properly.  How do I write my test if I can't see these  output streams?
@@ -1381,7 +1381,7 @@ The sample test code.
 
         private ItemEvent myEvent;
     }
-                    
+
 ### I threw an exception, the output was sent to `System.err`, but my test still passed.  What happened?
 
 Verify that the exception was not thrown by the event thread.  The event
@@ -1391,7 +1391,7 @@ It is _strongly_ recommended that all exceptions indicating failure of
 the test be thrown from one of the methods called by the harness.
 (i.e. `init()`, `start()`, `stop()`,
 `destroy()`)
-                    
+
 ### My `applet` action test didn't run my `main` method!
 
 `applet` action tests do not call `main`. A test
@@ -1404,7 +1404,7 @@ the `stop` and `destroy` methods.
 
 The `main` method of an `applet` action will only be
 used if the test was run outside of the harness.
-                    
+
 ### If I have an applet test, do I put the test description in the `.html` file or the `.java` file?
 
 It doesn't matter. When `jtreg` is run on a test suite or
@@ -1412,13 +1412,12 @@ directory, the test description will be found regardless of the file
 particulars.  When running a single test, `jtreg` must be invoked on
 the file which contains the test description.
 
-                    
 ### For my `/manual` tests, how do I provide the user instructions to run the test?
 
 User instructions should be provided in the applet's HTML file.  The
 uninterpreted HTML file will be displayed by the `applet` action in
 a TextArea labelled `html file instructions:`.
-                    
+
 ### For `/manual` tests, how is the initial size of the running applet determined?
 
 The size of the applet is statically determined by the
@@ -1426,9 +1425,9 @@ The size of the applet is statically determined by the
 `applet` tag.  The applet interface provides a way to dynamically
 change the size of the applet by setting the `applet size:` to
 "`variable`".
-         
+
 --------
-       
+
 ## Deciphering Common Harness Errors
 
 ### `Failed. Unexpected exit from test`
@@ -1450,7 +1449,7 @@ to simply throw an exception.  The test must set some variable which
 can be used to throw an exception from one of the methods called by
 the harness. (i.e. `init()`, `start()`,
 `stop()`, or `destroy()`)
-                    
+
 ### `Error. Can't find 'main' method`
 
 **More symptoms**: In `System.err`, you get a stack trace
@@ -1468,7 +1467,7 @@ for an `java.lang.NoSuchMethodException` and some harness messages.
 `public` and the class name must be the basename of the
 `.java` file; otherwise the harness will not be able to use reflection
 to invoke the test.
-        
+
 ### `Error. Parse Exception: No class provided for 'main'`
 
 **Answer**: An `@run main` tag was provided
@@ -1477,19 +1476,19 @@ or remove the line entirely if appropriate.
 
 The line may be removed without impacting the test if all of the following
 criteria are met:
-                
+
 * The file containing the test description has the `.java` extension.
 * This is the only `@run` tag in the test description.
 * No options to `main` are required
 
 In removing the line, we take advantage of the default action for `.java` files.
-                    
+
 ### `Error. Parse Exception: 'applet' requires exactly one file argument`
 
 **Answer**: The applet action requires a single argument which should
 be the name of the `.html` file which contains (at minimum) the HTML
 `applet` tag.
-                    
+
 ### `Error. Parse Exception: 'archive' not supported in file:` &#8230;
 
 **More Symptoms**: The test is an `applet` action test.
@@ -1497,7 +1496,7 @@ The HTML `applet` tag includes the `archive` attribute.
 
 **Answer**: The regression extensions to the harness do not support the
 `archive` attribute.
-                    
+
 ### `test results: no tests selected`
 
 **More Symptoms**: At a terminal window, you get:
@@ -1513,7 +1512,7 @@ then there were no tests which did not include the
 `/manual` tag option.
 
 Verify that the first tag of each test description is `@test`.
-                    
+
 ### `Test does not have unique name within work directory`
 
 **More Symptoms**: At a terminal window, you get:
@@ -1540,7 +1539,7 @@ either removal of the entire comment or simply the `@test` tag.
 
 If the files contain unique test descriptions, one of the basefile names must
 be changed.
-                    
+
 ### `Error. JUnit not available`
 
 To run JUnit tests within jtreg, you must have a copy of junit.jar
