@@ -77,17 +77,18 @@ for a suitable forum or mailing list.
 
 Send email to `jtreg-discuss(at)openjdk.java.net`
 
-### Why not use JUnit?
+### Why not use JUnit or TestNG?
 
-JUnit was not around when we started writing tests for JDK.
+JUnit and TestNG not around when we started writing tests for JDK.
 And, the test tag specification has been specifically designed for testing
 JDK, with support for testing applets, command-line interfaces,
 and so on, as well as simple API tests.
 
 And by now, there are many thousands of tests written for jtreg,
-so it would not be practical to convert to JUnit.
+so it would not be practical to convert them all to some other test framework.
 
-jtreg now includes support for collections of tests written in JUnit and TestNG.
+However, note that jtreg now includes support for collections of tests 
+written in JUnit and TestNG.
 
 --------
 
@@ -157,7 +158,7 @@ Modulo the line numbers, output for the successful invocation of `jtreg` will lo
     26   TEST RESULT: Passed. Execution successful
     27   --------------------------------------------------
     28   test results: passed: 1
-    29   Report written to /u/iag/jtwJTreport/report.html
+    29   Report written to /u/iag/jtw/JTreport/report.html
     30   Results written to /u/iag/jtw/JTwork
 
 The test was compiled and executed. No exception was thrown during
@@ -307,16 +308,6 @@ available.
 
 Yes.  The `-help` option to `jtreg` lists the long and abbreviated forms of all options.
 
-### How do I view what a test sends to `System.out/System.err`?
-
-You have several alternatives.
-
-1. Use the `-verbose:all` option (or its result-sensitive related
-options `-verbose:pass`, `-verbose:fail`,
-`-verbose:error`) to `jtreg`.
-2. Use the JavaTest harness GUI.
-3. View the test's `.jtr` file.
-
 ### What is a `.jtr` file? {#jtr-file}
 
 As each test is run, it produces a JavaTest Results (`.jtr`)
@@ -326,19 +317,12 @@ is the basename of the file containing the test description followed by the
 `.jtr` extension.  For example, `Hello.java` produces a
 file called `Hello.jtr`.  These files reside in the
 work directory which contains a directory hierarchy that
-parallels the source structure.
+parallels the test source structure.
 
-### What are the report and work directories? {#report-work-dirs}
-
-The report directory contains all final reports in HTML format.  By
-default, the name of the report directory is `JTreport`.  The name
-may be selected via the `-reportDir` option to `jtreg`.
-
-The work directory contains any files which are generated during a test run.
-These include `.class` and `.jtr`
-files.  By default, the name of the work directory is `JTwork`.  The
-name may be selected via the `-workDir` option to
-`jtreg`.
+Blocks of text within a .jtr file use `\` to escape certain characters
+(including `\` itself). This needs to be taken into account if you
+view the contents of the file directly. If you use the GUI, or use
+the jtreg `-show` option, the escapes are automatically taken into acocunt.
 
 ### What's the difference between the "fail" and "error" return status?
 
@@ -370,10 +354,452 @@ longer than 128 characters.
 ### I've heard that the `jtreg` has a GUI. How do I access that?
 
 The complete JavaTest harness GUI is available via the `-gui` option
-to `jtreg`. The Online Help, available on the `Help`
-menu, provides a detailed description of the graphical user interface.
-You can also use the `F1` key to get context sensitive help
-about any selected item in the graphical user interface.
+to `jtreg`. 
+
+### How do I run `jtreg` under Windows?
+
+`jtreg` is normally invoked by a wrapper script, written
+for the Bourne family of shells. On Windows, you can use
+[MKS](http://www.mkssoftware.com/),
+which uses ksh, or you can use
+[Cygwin](http://www.cygwin.com/), which uses ash or bash,
+depending on which version you are using.
+
+You can also start `jtreg` directly, with a command of
+the form `java -jar jtreg.jar` _options_, but you
+will still need MKS or Cygwin installed to be able to run shell tests.
+
+### Which should I use? MKS or Cygwin?
+
+`jtreg` supports both, equally. However, the tests in recent versions
+of OpenJDK test suites assume the use of Cygwin. So, when you are writing 
+tests for one of those test suites, you should make sure that your test 
+at least works with Cygwin. 
+
+Older versions of OpenJDK assumed the use of MKS to run shell
+tests, with Cygwin being a secondary option. So, when you
+are writing tests for those test suites, you should make sure that your
+test at least works with MKS. If you prefer to use Cygwin, and can make
+your test run with both, so much the better.
+
+### Does jtreg provide command-line help?
+
+jtreg provides command line help, which lists all the available options
+and any arguments expected by those options.  You can get help on all
+the options by using the `-help` option by itself:
+
+    $ jtreg -help
+    
+You may also get command line help for any option or topic by giving
+arguments to the `-help` option, in which case jtreg will just print
+the sections containing any of the specified terms.
+
+    $ jtreg -help -workDir
+    $ jtreg -help jdk
+
+--------
+
+## Using jtreg
+
+### How do I specify which tests to run?
+
+The most basic way to specify which tests to run is to give one or more paths 
+directly on the command line, for directories and files containing tests. 
+If a file contains multiple tests, you can specify the name of a test within 
+that file by appending `#id`_N_ to the file path, where _N_ is the number of 
+the test within the file, where `0` identifies the first test.
+
+If you wish to specify a long list of files, you can put the list in a file
+and specify that file using the `@`_file_ option.
+
+You may also specify the name of a group of tests. Groups are defined
+in the test suite, and define a collection of tests to be run.
+
+You may also refine the set of tests to be run in various ways:
+
+* You can filter the tests using keywords, using the `-k` option.
+  The option can be given multiple times, and are combined conjunctively.
+  Keywords may be defined explicitly in tests using `@key` or may be
+  be defined implicitly from other properties of the test, such as
+  whether is a "shell" test or a "manual" test.
+  
+* You can filter the tests by their prior execution status, using the `-status`
+  option. For example, you can select the tests which previously failed or
+  had an error using `-status:fail,error`
+  
+* You can filter the tests by providing a list of tests which should _not_
+  be run on some or all platforms, perhaps because it is known they are 
+  likely to fail, using the `-exclude` option.
+  
+Note that in addition to the command-line options just listed, a test
+may contain tags such as `@requires` and `@modules` that determine whether
+or not a test should be run on any particular system.
+
+### How do I specify the JDK to use?
+
+First, it is important to distinguish the JDK you use to run jtreg itself
+from the JDK you use to run the tests. It is generally recommended to use
+a released version of JDK to run jtreg; it must be at least version 1.7.
+
+If you use the standard `bin/jtreg` script to run jtreg, you can specify the version
+using the `JT_JAVA` environment variable.
+
+The JDK that jtreg will use to run the tests is normally specified with the
+jtreg `-jdk` option. This JDK will be used to both compile and run the tests.
+It need not be the same version of JDK that is used to run jtreg; it must be 
+at least JDK 1.5 to run tests in agentVM mode, and can be even older to run tests
+in otherVM mode.
+
+#### Cross-compilation {.unnumbered}
+
+jtreg provides some (limited) support for using different versions of
+JDK to compile tests and to run them. This is useful when testing
+small version of JDK, such as compact profiles, or images built with `jlink`
+that do not contain all the modules of a standard JDK.
+
+To use this feature, use the `-compileJDK` option to specify the JDK used
+to compile the tests (that is, used by the `@build` and `@compile` tags),
+and use the `-testJDK` option to specify the JDK used to execute the 
+compiled classes (for example, as used by `@run main`).
+
+_Note:_ the `@compile` tag has a dual use: it is used in compiler tests
+(that is, to test the JDK compiler, `javac`) and less commonly, it is
+used to compile classes for API tests when the simple `@build` tag is not
+sufficient. It is currently not possible to distinguish these uses
+except by context. It does not make sense to use the cross-compilation
+feature for compiler tests.
+
+### What are the work and report directories? {#report-work-dirs}
+
+The work directory contains any files which are generated during a test run.
+These include compiled (`.class`) files, individual test result (`.jtr`) files, 
+and any files which are saved from the scratch directory, as directed by the
+`-retain` option.
+By default, the name of the work directory is `JTwork`.  
+The name may be selected via the `-workDir` option to jtreg.
+
+The report directory contains all final reports in HTML and/or plain text format.  
+By default, the name of the report directory is `JTreport`.  
+The name may be selected via the `-reportDir` option.
+
+The HTML files in the report directory may contain links to the individual
+test result (`.jtr`) files in the work directory. These links will be relative 
+links if the report and work directories share a nearby common ancestor, 
+such as the same parent or grandparent. A recommended practice is to create
+a single directory, containing subdirectories simply named `report` and `work`. 
+
+The plain text files in the report directory include the following:
+
+* `cmdArgs.txt`: the jtreg command-line args used when the report was written
+* `stats.txt`: summary statistics
+* `summary.txt`: summary of test results: one test per line, suitable for use with `grep`
+* `timeStats.txt`: some statistics regarding test execution times
+
+Reports can be disabled with the `-noreport` option.
+
+### What is a scratch directory? {#scratch-directory}
+
+When jtreg executes a test, the current directory for the test is set to a 
+_scratch directory_ so that the test can easily write any temporary files.
+jtreg will ensure that the directory is always empty when the test begins, 
+so that the test does not have to worry about deleting any pre-existing files. 
+These directories are placed in the work directory.
+
+* If tests are not being run concurrently, the directory will simply be named `scratch`.
+* If tests are being run concurrently, the directories will be numbered subdirectories
+  of `scratch`, such as `scratch/0`, `scratch/1`, and so on.
+* If at any point jtreg cannot clean up files in a scratch directory,
+  jtreg will report an error, and create and use a new directory, named using
+  a numbered suffix, such as `_1`, `_2`, and so on.
+  
+As a special case, if all the tests are being run in otherVM mode,
+and if `-retain` is specified, the scratch directory for each test
+will be the unique test-specific directory in the work directory
+where the test's files will be retained.  In this situation, if
+any file that is not to be retained cannot be deleted, an error will
+be reported and the will simply be left in place.
+
+### What is a ProblemList.txt file?
+
+`ProblemList.txt` is the name given by convention to a list of tests in
+a test suite that should not be run. Use the `-exclude` option to specify
+the file to jtreg.  The file is a simple text file in which
+blank lines and lines beginning `#` are treated as comments and ignored,
+and other lines are of the form:
+
+  _test-name_ _list-of-bug-numbers_ _list-of-platforms_ _description_
+  
+The two list items must each be comma-separated lists with no embedded whitespace.
+
+The list of bug numbers should identify one or more bugs that justify why the
+test is in the list and should not be run. It is not used by jtreg, but may be 
+used by other tools to warn when a test should be removed from the list because
+the underlying issue has been resolved.
+
+The list of platforms should identify one or more platforms on which the test 
+should not be run. Each entry in this list should be in one of the following forms:
+
+* `generic-all`:
+    if the problem is on all platforms
+    
+* `generic-`_ARCH_:
+    if the problem is specific to a platform architecture, 
+    where _ARCH_ is one of: `sparc`, `sparcv9`, `x64`, `i586`,
+    or the value of the `os.arch` system property
+    
+* _OSNAME_`-all`:
+    if the problem is specific to a class of operating systems, 
+    where _OSNAME_ is one of: `linux`, `macosx`, `solaris`, `windows`
+    or the value of the `os.name` system property
+    
+* _OSNAME_`-`_ARCH_:
+    if the problem is specific to an operating system and architecture;
+    for example, `solaris-x64`
+    
+* _OSNAME_`-`_REV_:
+    if the problem is specific to a version of an operating system,
+    where _REV_ is the value of the `os.version` system property;
+    for example, `solaris-5.8`
+            
+### What are the agentVM and otherVM modes?
+
+In _otherVM_ mode, jtreg will start a new JVM to perform each action
+(such as `@compile`, `@run main`, and so on) in a test. When the action has 
+been completed, the JVM will exit, relying on the system to cleanup
+any resources that may have been in use by the action.
+
+In _agentVM_ mode, jtreg will maintain a pool of available JVMs,
+grouped according to the VM options specified when the JVM was created.
+When jtreg needs to execute an action for a test, it will obtain
+a suitable JVM from the pool, or create a new one if necessary. 
+jtreg will use that JVM, and when it has been completed, it will
+attempt to restore some well-known global values to a standard
+state (such as the system properties, standard IO streams, security
+manager, etc). If that cleanup is successful, depending on the
+VM options used to create the JVM, jtreg may put the JVM in the
+pool for later reuse. Otherwise, the JVM is allowed to exit.
+
+#### Which mode should I use?  {.unnumbered}
+
+OtherVM mode provides the maximum isolation between the actions
+of tests, at the cost of performance, since a new JVM is started for
+each action.
+
+In contrast, agentVM mode has higher performance, but it requires
+that any code that runs in an agent VM must ensure that the VM
+can easily be reset to a standard state when the action has completed.
+For any state that cannot be reset by jtreg, such as closing any open
+files, the code must perform its own cleanup, or the action should be
+changed to use otherVM mode.
+
+#### How do I specify which mode to use? {.unnumbered}
+
+The default for all actions is to use the mode specified on the 
+command line, using either the `-agentvm` or `-othervm` options
+or their shorter-form aliases. If no option is specified, 
+`-othervm` is the default.
+
+_Note:_ the JDK `make runtest` feature uses the `-agentvm` option,
+so that agentVM mode is the default when using `make runtest`.
+
+The default action can be overridden for the tests in a
+directory (and its subdirectories) by using the `othervm.dirs`
+property in either the `TEST.ROOT` or a `TEST.properties` file.
+
+The default action can be overridden for any individual action
+by using the `/othervm` option for the action.  For example,
+
+    @compile/othervm MyTest.java
+    @run main/othervm -esa MyTest
+
+#### How do I find which mode was used to run an action? {.unnumbered}
+
+Look for a line beginning "Mode:" in the "messages" section for 
+the action in the test's result (_.jtr_) file. This will specify
+the mode used to execute the action, together with a reason
+if the default mode was not used.  For example,
+
+````
+    ----------messages:(4/152)----------
+    command: main MainOtherVM
+    reason: User specified action: run main/othervm MainOtherVM 
+=>  Mode: othervm [/othervm specified]
+    elapsed time (seconds): 0.141
+````
+
+### How do I specify whether to run tests concurrently?
+
+jtreg provides the ability to run tests in parallel, using multiple
+JVMs running at once. (jtreg never runs multiple tests at the same
+time in any one JVM.) 
+
+Running tests in parallel can significantly speed up the overall time 
+to run the selected tests in the test suite on big server-class machines,
+but it is also important not to overload the machine, because that
+can cause spurious test failures, caused by resource starvation, leading
+to test timeouts.
+
+You can specify the number of tests to run in parallel with the 
+`-concurrency` option.  The default value is 1, meaning that only
+one test is being executed at any one time.
+
+It is difficult to give a hard and fast rule for choosing higher
+values; it depends on the characteristics of the machine being
+used: the number of cores, hyperthreading and the amount of available
+memory. The general rule is to determine a value that is high enough
+to use most of the system resources, without overloading the system
+and pegging the resource utilization meter at 100%. It is also
+advisable to avoid swapping virtual memory as much as possible.
+
+One important consideration is how the specified concurrency
+can affect the number of JVMs that are instantiated:
+
+*   One JVM is created to run jtreg itself.
+
+*   In otherVM mode, there will typically be one JVM for each test
+    that is currently executing.
+  
+*   In agentVM mode, it depends on whether there are different VM
+    options specified for the VMs used to compile tests and to run tests.
+  
+    * If the same VM options are used, there will be one JVM created for
+      each test that can run at once.
+  
+    * If different VM options are used, there will be two JVMs created 
+      for each test that can run at once: one to compile the test code, 
+      and another to execute the test code.
+      
+    In addition, in agentVM mode, any action that overrides the default 
+    set of VM options specified on the command line will cause an 
+    additional JVM to be created, for the duration of that action.
+
+_Note:_ the preceding rules describe the current behavior of jtreg.
+Alternate behaviors have been proposed, such as a fixed-size pool
+with a least-recently-used (LRU) replacement strategy.
+
+Another important consideration when many JVMs are active on a 
+single machine is the amount of memory that may be used by each JVM. 
+Use VM options such as `-Xmx` and `-XX:MaxRAMPercentage` to control the
+amount of memory allocated to each JVM.
+
+If you run JDK tests using `make run-test`, suitable values for 
+`-concurrency`, `-Xmx` and`-XX:MaxRAMPercentage` are determined automatically.
+
+#### Can I run tests on multiple machines? {.unnumbered}
+
+jtreg does not natively support running tests on multiple machines
+at once. However, you can partition the test suite into sections,
+and use different instances of jtreg to each run a section of the
+test suite on a different machine. You can then use jtreg to generate
+a single report based of the results of executing each of the sections.
+
+### How do I specify additional options for compiling and running tests?
+
+You can specify additional VM options for all JVMs started by jtreg,
+using the `-vmoption` and `-vmoptions` options.
+
+*   `-vmoption` can be used multiple times and can be used to set an 
+    option whose value contains whitespace characters.
+*   `-vmoptions` can be used to set a whitespace-separated list of
+    options. There is no support for quoting any values that may contain
+    whitespace; use `-vmoption` instead.
+    
+In addition, for historical reasons, jtreg supports a number of VM
+options which can be specified directly on the command-line.
+Some of the more useful such options include `-enableassertions` and 
+related options, `-D`_name_`=`_value_ to set a system property,
+and `-Xmx`_value_ to limit the memory usage.
+    
+You can specify additional VM options for all JVMs used to execute tests,
+using the `-javaoption` and `-javaoptions` options. These options apply to
+the JVMs used for the `@run main` and `@run applet` actions. (They do _not_
+apply to the JVMs used for the `@build` and `@compile` actions.)
+
+*   `-javaoption` can be used multiple times and can be used to set an 
+    option whose value contains whitespace characters.
+*   `-javaoptions` can be used to set a whitespace-separated list of
+    options. There is no support for quoting any values that may contain
+    whitespace; use `-javaoption` instead.
+
+Although not common to do so, you can specify additional options for
+use whenever javac is invoked. You can do this with the `-javacoption`
+and `-javacoptions` options. 
+
+*   `-javacoption` can be used multiple times and can be used to set an 
+    option whose value contains whitespace characters.
+*   `-javacoptions` can be used to set a whitespace-separated list of
+    options. There is no support for quoting any values that may contain
+    whitespace; use `-javacoption` instead.
+
+It is not possible to set VM options just for the JVMs used to run
+javac. In particular, the javac option `-J`_vm-option_ is not supported.
+
+### What do I need to know about test timeouts?
+
+Because most users do not closely monitor the execution of all the tests 
+in a test run, jtreg will monitor the time take for various events during its
+overall execution, to ensure that those events do not take longer than
+anticipated.  This includes the time taken to execute each of the actions
+in a test. The default time is 120 seconds (2 minutes) but can be changed
+using the `/timeout` option for the action. To allow for reasonable
+variations in the speed of execution, it is recommended that the typical
+execution time for an action should be not more than half of the default or
+specified time when the test is executed on a reasonable modern system 
+such as may be used by developer or in use in a continuous build and test 
+system.
+
+To allow for running tests on slow hardware, or when using VM options that
+might adversely affect system performance, the timeout intervals can be
+scaled by using the `-timeoutFactor` option.
+
+Ideally, any test code that uses timeouts internally should take the
+current timeout factor into account.  Java code can access the current
+timeout value using the `test.timeout.factor` system property. Shell tests
+can access the value using the `TESTTIMEOUUTFACTOR` environment variable. 
+
+It may be convenient to run code in a JVM when an action for a test is 
+about to be timed out: such code may perform a thread dump or some other
+detailed analysis of the JVM involved. jtreg allows such code to be provided
+using the `-timeoutHandler` and `-timeoutHanderDir` options.
+
+For all timeout-related options, use `jtreg -help timeout`.
+
+### How do I run only tests which were written for a specific bugid?
+
+The `-bug` option to `jtreg` will run only those tests which define the given bugid using the `@bug` tag.
+
+### How do I run only tests NOT requiring manual intervention?
+
+The `-automatic` option to `jtreg` will ignore all tests which contain the `/manual` tag option.
+
+### How do I run only tests requiring manual intervention?
+
+The `-manual` option to `jtreg` will run only those tests which contain the `/manual` tag option.
+
+### How do I view what a test sends to `System.out` or `System.err`?
+
+You have several alternatives.
+
+1.  Use the `-verbose:all` option, or the related result-sensitive
+    options `-verbose:pass`, `-verbose:fail`, `-verbose:error`.
+2.  Use the JavaTest harness GUI.
+3.  View the test's `.jtr` file.
+4.  Use the `-show` option. For example,
+    * `jtreg -show:System.out` _test-name_
+
+### How do I see what groups are defined in my test suite?
+
+Use the `showGroups` option. To see all groups, specify the name of the test suite;
+to see the details for a specific group, specify the test suite and group.
+
+    $ jtreg -showGroups test/langtools
+    $ jtreg -showGroups test/langtools:tier2
+    
+### How do I see what tests will be executed, without actually executing them?
+
+Use the `-listtests` option.
+
+    $ jtreg -listtests test/langtools/jdk/javadoc/doclet
 
 ### Can I verify the correctness of test descriptions without actually running the tests?
 
@@ -392,61 +818,108 @@ The following sample output illustrates use of this option.
     Results written to /u/iag/jtw/JTwork
     Error: some tests failed or other problems occurred
 
+### I'd like to run my test standalone, without using jtreg: how do I do that?
+
+All tests are generally designed so that they can be run without using jtreg.
+Tests either have a `main` method, or can be run using a framework like TestNG or JUnit.
+
+If you have already executed the test, jtreg can provide a sample command-line to 
+rerun it; you can find this in the `rerun` section of the test result (`.jtr`) file, 
+or you can use the `-show` option to display the information to the console. 
+For example, 
+
+* `jtreg -show:rerun` _test-name_
+
 ### Can I generate reports for tests that have already been run?
 
-Yes!  The `-reportOnly` option to `jtreg` will
-generate the standard HTML reports for tests which have been previously
-executed.  Tests will _not_ be executed.  A [work directory](#report-work-dirs)
+Yes!  The `-reportOnly` option to `jtreg` will generate the standard HTML 
+and plain text reports for tests which have been previously executed.  
+Tests will _not_ be executed.  A [work directory](#report-work-dirs)
 containing the results of the executed tests must be provided.
 The default location is `./JTwork`.  An alternate directory may be
 specified using `-workDir`.
 
-### How do I run `jtreg` under Windows?
+### What happens when jtreg runs a test?
 
-`jtreg` is normally invoked by a wrapper script, written
-for the Bourne family of shells. On Windows, you can use
-[MKS](http://www.mkssoftware.com/),
-which uses ksh, or you can use
-[Cygwin](http://www.cygwin.com/), which uses ash or bash,
-depending on which version you are using.
+In preparation for running a test, jtreg will ensure that the scratch directory
+to be used for the test is empty. If any files are found, jtreg will attempt to 
+delete them; it it cannot, it will report an error and not run the test.
 
-You can also start `jtreg` directly, with a command of
-the form `java -jar jtreg.jar` _options_, but you
-will still need MKS or Cygwin installed to be able to run shell tests.
+_Note:_ it can be difficult for jtreg to identify the test that created 
+an undeletable file, which may result in less-than-helpful error messages.
+See [below](#cleanup-files) for a way around this problem.
 
-### Which should I use? MKS or Cygwin?
+Once the scratch directory has been prepared, jtreg will execute each
+action (@build, @compile, @run, and so on) in order.  For each action:
 
-`jtreg` supports both, equally. However, the tests in the
-JDK regression test suite assume that MKS is available. So, when you
-are writing tests for that test suite, you should make sure that your
-test at least works with MKS. If you prefer to use Cygwin, and can make
-your test run with both, so much the better.
+*   If the action is to be executed in otherVM mode, jtreg will start a new 
+    JVM to perform the action; if the action is to be executed in agentVM mode, 
+    jtreg will attempt to get a suitable JVM from the pool, or create a new 
+    JVM if necessary.
 
-<strong>Note:</strong> as of JDK 8, the tests assume the use of Cygwin by default.
+*   For Java tests (`@run main`, `@run applet`) jtreg will run the action
+    in a newly-created thread group. The action is over when one of the following
+    occurs:
+    * when the `main` method returns (for `@run main`)
+    * when the user clicks on one if `Pass`, `Fail` or `Done`(for `@run applet`)
+    * when any thread in the thread group throws an exception
 
-### How do I run only tests which were written for a specific bugid?
+*   If the action was executed in agentVM mode, jtreg will try and reset
+    some well-known global values to the state before the action was performed.
+    This includes:
+    
+    *   Wait for all threads started in the test's main thread group to
+        terminate, calling `Thread.interrupt` periodically on any threads
+        that have not yet terminated.
+    
+    *   Reset the security manager, if it was changed during the action.
+    
+    *   Reset the set of security providers, if it was changed during the action.
+    
+    *   Reset the system properties, if any were modified during the action.
+    
+    *   Reset the system streams (`System.out` and `System.err`).
+    
+    *   Reset the default locale, if it was changed during the action.
+    
+    Note that jtreg cannot close any files that may have been left open;
+    that is the responsibility of the test itself. Any other significant 
+    global state that is modified during the course of an action is
+    also the responsibity of the test to clean up.
+    
+*   If any action does not complete successfully, no subsequent actions
+    will be executed.
+    
+<a id="cleanup-files">When jtreg has completed executing the actions for a test</a>, 
+it may try and retain or delete and files that may have been created in the
+scratch directory.
 
-The `-bug` option to `jtreg` will run only those tests which define the given bugid using the `@bug` tag.
+The default behavior is for jtreg to leave any files created by the test
+in the scratch directory after a test completes, but to subsequently 
+delete any such files before the next test begins. 
+This behavior conveniently means that any files are left in the scratch 
+directory for inspection by the user when running a single test, 
+such as when developing and running a new test, but the downside is that 
+if there are subsequently any problems deleting those files, 
+the identity of the test that created them is not easily determined.
 
-### How do I run only tests NOT requiring manual intervention?
+The default behavior can be changed by using the `--retain` option,
+which is used to specify which files, if any, are to be retained
+when a test completes. Any file in the scratch directory that is not 
+one of those specified to be retained will be deleted. 
 
-The `-automatic` option to `jtreg` will ignore all tests which contain the `/manual` tag option.
+If there are any problems deleting any file, it will be reported as an 
+error against the test; if the scratch directory is associated 
+with a JVM in the agent pool, that JVM will be discarded. Another will 
+be created to replace it, using a different scratch directory, if the 
+need arises.
 
-### How do I run only tests requiring manual intervention?
-
-The `-manual` option to `jtreg` will run only those tests which contain the `/manual` tag option.
-
-### How do I specify VM options to the test's JVM?
-
-Many JVM options are recognized by `jtreg` and passed
-to the test.  Note that these options are sensitive to both the platform and
-the JDK being tested.  For example, Linux does not currently support 64-bit
-operation.  Thus, the option `-d64` is not valid on
-Linux and will be rejected.
-
-You can also use the `-vmoption` or `-vmoptions`
-option to pass one or a space-separated list of options to the JVM used
-to run the test.
+On Windows, a file will not be deleted until any open handles on the
+file have been [closed](https://docs.microsoft.com/en-us/windows/desktop/fileio/closing-and-deleting-files). 
+This will mean that files that have accidentally been left open by a test 
+cannot be deleted.
+jtreg will try hard to delete files in the scratch directory, and will wait
+a while in case the files go away in a timely manner.
 
 --------
 
@@ -558,7 +1031,7 @@ Yes. The harness will capture everything sent to both streams.
 ### Can a test check the output of `System.out` and `System.err`?
 
 Yes, compiler tests using the `@compile` tag can use
-the <code>/ref=<i>file</i></code> option.
+the `/ref=`_file_ option.
 Such tests are generally not recommended, since the output can be
 sensitive to the locale in which the are run, and may contain
 other details which may be hard to maintain, such as line numbers.
@@ -574,16 +1047,18 @@ Check it into the test directory in your repository.
 
 Yes, it really is that simple.
 
-### Where is the test directory?
+### Where are the OpenJDK tests?
 
-Within an OpenJDK forest, the langtools/ and jdk/ repositories
-each have a test/ directory.  The directory and its contents
-will be created automatically when you clone either of those
+Within a recent version of an OpenJDK repo, the `test/` directory 
+contains three separate test suites: 
+
+* `test/hotspot/jtreg`: tests for the HotSpot JVM
+* `test/jdk`: tests for the main JDK API and related tools
+* `test/langtools`: tests for the javac, javadoc, javap and jshell tools
+
+In older versions of OpenJDK, these directories were in
+`test` subdirectories of the `hotspot`, `jdk` and `langtools`
 repositories.
-
-The jdk/test directory contains tests for the main JRE API
-and related tools. The langtools/test directory contains tests
-for the javac, javadoc, javah and javap tools.
 
 ### Why not have separate test workspaces that only contain tests?
 
@@ -601,7 +1076,7 @@ In general, try to give tests names that are as specific and descriptive
 as possible.  If a test is checking the behavior of one or a few methods, its
 name should include the names of those methods.  For example, a test written
 for a bug in the skip method of FileInputStream could be placed in
-`test/java/io/FileInputStream/Skip.java`.  A test written for a bug
+`test/jdk/java/io/FileInputStream/Skip.java`.  A test written for a bug
 that involves both the skip and available methods could be named
 `SkipAvailable.java`.
 
@@ -628,13 +1103,13 @@ mixed-case name that begins with a lowercase letter.  For example, a
 FileInputStream test that needs an input file as well as its Java source file
 in order to test the interaction of the read and available methods could be
 placed in the subdirectory
-`test/java/io/FileInputStream/readAvailable`.
+`test/jdk/java/io/FileInputStream/readAvailable`.
 
 Some tests involve more than one class in a package, in which case a new
 subdirectory in the relevant package directory should be created.  For example,
 a set of general tests that exercise the character streams in the
 `java.io` package could be placed in the
-`test/java/io/charStreams` directory.
+`test/jdk/java/io/charStreams` directory.
 
 ### What about tests that don't fit into the API structure?
 
@@ -748,28 +1223,36 @@ not propagate exceptions!
 
 ### How are the test directories organized?
 
-Tests are generally organized following the structure of the Java API.  For
-example, the `test` directory contains a `java` directory
-that has subdirectories `lang`, `io`, `util`,
-etc.
+For mostly historical reasons, the OpenJDK tests are grouped into
+three test suites: `test/hotspot/jtreg`, `test/jdk` and `test/langtools`.
 
-Each package directory contains one subdirectory for each class in the
-package.  Thus tests for `java.io.FileInputStream` can be found in
-`java/io/FileInputStream`.
+* Tests in the `test/hotspot/jtreg` test suite are organized 
+  according to the system component.
 
-Each class directory may contain a combination of single-file tests and
-further subdirectories for tests that require more than one source file.
+* Tests in the `test/jdk` test suite are generally organized following 
+  the structure of the Java API.  For example, the `test/jdk` directory 
+  contains a `java` directory that has subdirectories `lang`, `io`, `util`,
+  and so on.
 
+  Each package directory contains one subdirectory for each class in the
+  package.  Thus tests for `java.io.FileInputStream` can be found in
+  `test/jdk/java/io/FileInputStream`.
+
+  Each class directory may contain a combination of single-file tests and
+  further subdirectories for tests that require more than one source file.
+
+* Tests in the `test/langtools` test suite are organized according to
+  a combination of the tool or API being tested.
+  
 ### What is the test root directory?
 
-The "test root directory", or "test suite root directory" is the
+The _test root directory_, or _test suite root directory_ is the
 root directory of the overall test suite.
-In OpenJDK terms, this means either of the "jdk/test/" or
-"langtools/test/" directories in an OpenJDK forest.
+In OpenJDK terms, this means a directory like `test/jdk` or
+`test/langtools` in a recent OpenJDK repo.
 
-The "test root directory" for any test is determined by finding
-the smallest enclosing directory containing a marker file called
-TEST.ROOT.
+The test root directory for any test is determined by finding the smallest 
+enclosing directory containing a marker file called TEST.ROOT. 
 The TEST.ROOT file can also be used to define some global properties
 for the test suite.
 
@@ -794,7 +1277,96 @@ In general, a test run will consist of tests from a single
 test suite, identified by a single test root directory.
 
 It _is_ possible to run tests from multiple test suites
-(such as jdk/test and langtools/test) but this is not common.
+(such as `test/jdk` and `test/langtools`) in the same invocation
+of jtreg, but this is not common.
+
+### Can I put more than one test in a file?
+
+Yes. You may place one or more separate test descriptions near the head
+of a test source file. Each test description should be in its own comment block,
+and begin with `@test`. By convention, the comment blocks should appear
+after any leading legal header, and before any executable code in the
+file. The feature is supported in normal Java tests, in shell tests,
+and in legacy applet tests.
+(It is not supported in JUnit or TestNG tests, which do not use explicit
+test descriptions.)
+
+The test descriptions are independent of each other, and may be
+
+Example: MyJavaTest.java
+<pre style="margin-left:0.25in; border:1px solid grey; padding: 5px; width: 50%">
+/* Copyright (C) A.N.Other. */
+
+/* @test
+ * @run main MyJavaTest 1 2 3
+ */
+
+/* @test
+ * @run main MyJavaTest a b c
+ */
+
+public class MyJavaTest {
+    public static void main(String... args) {
+        System.out.println(java.util.Arrays.toString(args));
+    }
+}
+</pre>
+
+Example: MyShellTest.sh
+<pre style="margin-left:0.25in; border:1px solid grey; padding: 5px; width: 50%">
+#!/bin/sh
+# Copyright (C) A.N.Other
+
+# @test
+# @shell MyShellTest 1 2 3
+
+# @test
+# @shell MyShellTest a b c
+
+echo $*
+</pre>
+
+#### How are the tests named? {.unnumbered}
+
+If there is only one test description in a file, the test is named
+according to the path of the file relative to the top level directory
+of the test suite, that contains the `TEST.ROOT` file.
+
+If there is more than one test description in a file, each one is named
+by appending a URL-style "fragment identifier" to the path of the file 
+relative to the top level directory of the test suite. Each fragment
+identifier is of the form `id`_N_, starting from _N_ equal to 0.
+
+Examples:
+
+    MyJavaTest.java#id0
+    MyJavaTest.java#id1
+
+
+#### How are the test results organized? {.unnumbered}
+
+The fragment identifier is incorporated into the name of the result (_.jtr_)
+file and any directory containing test-specific results, replacing the
+`#` with `_`.
+
+Examples:
+
+    MyJavaTest_id0.jtr
+    MyJavaTest_id1.jtr
+
+
+#### How do I list the tests in an exclude file, such as `ProblemList.txt`? {.unnumbered}
+
+Specify the test names, using the fragment identifier form.
+
+Example:
+
+    MyJavaTest.java#id0   1234567 generic-all This test is broken!
+
+
+_Note:_ It is currently not possible to exclude all the tests in a file
+with a single entry.  See
+[CODETOOLS-7902265](https://bugs.openjdk.java.net/browse/CODETOOLS-7902265).
 
 --------
 
@@ -833,7 +1405,7 @@ jtreg supports TestNG tests in two ways.
  These tests can be freely intermixed with other tests using
  "@run main", "@run shell", "@run applet" and so on.
 
-1. If you have a group of TestNG tests written in their own
+2. If you have a group of TestNG tests written in their own
  package hierarchy, you can include that entire package
  hierarchy as a subdirectory under the main test root directory.
  If you do this, you must identify the root directory of that
@@ -1551,4 +2123,6 @@ available. To do this, you should do one of the following:
 
 If you do not have a copy of junit.jar on your system, you can download
 it from the [JUnit home page](http://junit.org/).
+
+_Note:_ recent builds of jtreg automatically include a copy of JUnit to run tests.
 
