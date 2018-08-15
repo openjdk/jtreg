@@ -497,6 +497,13 @@ The plain text files in the report directory include the following:
 
 Reports can be disabled with the `-noreport` option.
 
+It is generally recommended that the work and report directories should _not_ be 
+placed anywhere in the test suite itself. Since jtreg may scan the entire test suite 
+looking for tests, it is unnecessary work for jtreg to have the scan these directories
+looking for the unlikely possibility of tests. This implies a corollary that you should
+not rely on the default settings for these directories (`.JTwork` and `.JTreport`)
+if you choose to execute jtreg in any directory in the test suite.
+
 ### What is a scratch directory? {#scratch-directory}
 
 When jtreg executes a test, the current directory for the test is set to a 
@@ -599,8 +606,8 @@ command line, using either the `-agentvm` or `-othervm` options
 or their shorter-form aliases. If no option is specified, 
 `-othervm` is the default.
 
-_Note:_ the JDK `make runtest` feature uses the `-agentvm` option,
-so that agentVM mode is the default when using `make runtest`.
+_Note:_ the JDK `make run-test` feature uses the `-agentvm` option,
+so that agentVM mode is the default when using `make run-test`.
 
 The default action can be overridden for the tests in a
 directory (and its subdirectories) by using the `othervm.dirs`
@@ -882,7 +889,7 @@ action (@build, @compile, @run, and so on) in order.  For each action:
     
     *   Reset the default locale, if it was changed during the action.
     
-    Note that jtreg cannot close any files that may have been left open;
+    Note that jtreg cannot close any files or sockets that may have been left open;
     that is the responsibility of the test itself. Any other significant 
     global state that is modified during the course of an action is
     also the responsibity of the test to clean up.
@@ -1217,17 +1224,36 @@ considered to have passed.
 Be very careful about where failure is checked.  The AWT event thread does
 not propagate exceptions!
 
+### Can I (and should I) write shell tests?
+
+Yes (and no). While jtreg supports the use of shell tests (that is, tests using 
+`@run shell` actions), and while it was convenient at one time to be able to write 
+such tests, the use of such tests is now deprecated. In practice, it is difficult 
+to write tests that behave correctly and as intended, under all conditions on all 
+platforms, especially when the item being tested may not be behaving as expected. 
+There is also some amount of a performance penalty, since many of the operations 
+that may be performed by a shell script can be performed faster, by relatively 
+simple API calls, in a Java program. Therefore, it is now recommended to write 
+Java code to perform the same work that might otherwise be done with a shell script, 
+perhaps using JDK API or shared test library code to perform commonly-used operations 
+such as file manipulation, executing commands in sub-processes when necessary, 
+and analyzing the results of those commands.
+
+jtreg provides a variant of `@run main` that can be useful in such situations: 
+`@run driver`. This is the same as `@run main` with the exception that any VM
+options specified on the command line will not be used when running the specified class.
+
 --------
 
 ## Organizing tests
 
-### How are the test directories organized?
+### How are the OpenJDK test suites organized?
 
 For mostly historical reasons, the OpenJDK tests are grouped into
 three test suites: `test/hotspot/jtreg`, `test/jdk` and `test/langtools`.
 
 * Tests in the `test/hotspot/jtreg` test suite are organized 
-  according to the system component.
+  according to the subsystem to be tested.
 
 * Tests in the `test/jdk` test suite are generally organized following 
   the structure of the Java API.  For example, the `test/jdk` directory 
@@ -1280,6 +1306,57 @@ It _is_ possible to run tests from multiple test suites
 (such as `test/jdk` and `test/langtools`) in the same invocation
 of jtreg, but this is not common.
 
+### How should I organize tests, libraries, and other test-related files?
+
+The directories within a test suite may be used for a number of
+different purposes:
+
+* The overall test hierarchy, as reflected in the name of each test.
+
+* Java source code, organized in a module or package hierarchy.
+  Such code may provide packages, modules or patches for modules
+  to be used by tests, or may be a collection of TestNG or JUnit
+  tests.
+
+* Library code, as referenced by a `@library` directive in a test description.
+
+* Additional test-specific files, such as resource files, configuration
+  information, and even additional source files, such as may be used
+  when testing the javac and javadoc tools.
+  
+Given all those possibilities: here are some guidelines to follow.
+
+* Tests are normally written to be in the unnamed package (that is,
+  with no `package` statement)
+  
+* Don't place too many tests in the same directory.
+
+* If a test requires a number of test-specific additional files,
+  consider placing the test and those files in a separate directory.
+  It would be reasonable to colocate additional tests that also
+  require access to those files.
+
+* Library code should normally use named packages. This helps avoid
+  name clashes that may occur if a test uses multiple libraries.
+  
+* A directory that is named as a library directory (such as with `@library`)
+  should only contain the packages for that library, and nothing else.
+
+Some guidelines follow from this one fundamental guideline:
+
+* If a directory is part of a source-code package hierarchy, 
+  all the source files in that directory  should be part of that
+  same package hierarchy.
+  
+  For example: 
+  
+  * Don't use "nested" package hierarchies: that is, don't use 
+    a package hierarchy whose root is part of an enclosing package.
+  * Don't place one library within another.
+  * Don't place tests in a library.
+  * Don't use the anti-pattern in which a test refers to a library 
+    in an enclosing directory, such as `@library ../..`.
+  
 ### Can I put more than one test in a file?
 
 Yes. You may place one or more separate test descriptions near the head
@@ -1291,7 +1368,9 @@ and in legacy applet tests.
 (It is not supported in JUnit or TestNG tests, which do not use explicit
 test descriptions.)
 
-The test descriptions are independent of each other, and may be
+The test descriptions are independent of each other, and may be used
+to run a test class with different arguments, such as in the following
+examples:
 
 Example: MyJavaTest.java
 <pre style="margin-left:0.25in; border:1px solid grey; padding: 5px; width: 50%">
@@ -1392,18 +1471,18 @@ Most jtreg tests are written in the "unnamed package"
 jtreg supports TestNG tests in two ways.
 
 1. Tests can be written with a full test description
- (the comment beginning /* @test....*/) and can use the following
+ (the comment beginning `/* @test....*/`) and can use the following
  action tag to run the test with TestNG:
 
-      @run testng classname args"
+      @run testng classname args
 
  Such a test would otherwise be similar to a standard test
- using "@run main". You can use other tags such as @library and
- @build, just as you would for "@run main".
+ using `@run main`. You can use other tags such as `@library` and
+ `@build`, just as you would for `@run main`.
  These tests would normally be in the unnamed directory
  (i.e. no package statement.)
  These tests can be freely intermixed with other tests using
- "@run main", "@run shell", "@run applet" and so on.
+ `@run main`, `@run shell`, `@run applet` and so on.
 
 2. If you have a group of TestNG tests written in their own
  package hierarchy, you can include that entire package
