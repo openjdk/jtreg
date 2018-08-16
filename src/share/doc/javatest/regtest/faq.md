@@ -1270,6 +1270,30 @@ These guidelines can be summarized as follows:
 * If you're updating a test because it was affected by a bug fix,
   but the test is not otherwise a regression test for the bug fix,
   then you should probably not update the `@bug` entry.
+  
+### When should I use the `intermittent` or `randomness` keyword in a test?"
+
+The `intermittent` keyword should be used to mark tests that are
+known to fail intermittently. 
+
+Extra care should be taken to handle test failures of such tests.
+
+For more details, see these email threads:
+[March 2015](http://mail.openjdk.java.net/pipermail/jdk9-dev/2015-March/001991.html),
+[April 2015](http://mail.openjdk.java.net/pipermail/jdk9-dev/2015-April/002164.html).
+  
+### When should I use the `randomnness` keyword in a test?
+
+The `randomness` keyword should be used to mark tests that use randomness 
+such that the test cases will differ from run to run. (A test using a 
+fixed random seed would not count as "randomness" by this definition.) 
+
+Extra care should be taken to handle test failures of tests using
+random behavior.
+
+For more details, see these email threads:
+[March 2015](http://mail.openjdk.java.net/pipermail/jdk9-dev/2015-March/001991.html),
+[April 2015](http://mail.openjdk.java.net/pipermail/jdk9-dev/2015-April/002164.html).
 
 --------
 
@@ -1474,6 +1498,23 @@ Example:
 _Note:_ It is currently not possible to exclude all the tests in a file
 with a single entry.  See
 [CODETOOLS-7902265](https://bugs.openjdk.java.net/browse/CODETOOLS-7902265).
+
+### What is "tiered testing"?
+
+"Tiered testing" is a policy used in OpenJDK test suites to categorize
+tests according to their importance and reliability. The tiers are 
+implemented as jtreg groups:
+
+* `tier1`: All tier 1 tests should always pass whenever they are run.
+* `tier2`: All tier 2 tests should typically pass, although some 
+   failures may occasionally occur.
+* `tier3` and above: mMre failures may be expected when these tests are 
+   run.
+   
+For more details, see these email threads:
+[March 2015](http://mail.openjdk.java.net/pipermail/jdk9-dev/2015-March/001991.html),
+[April 2015](http://mail.openjdk.java.net/pipermail/jdk9-dev/2015-April/002164.html),
+[June 2015](http://mail.openjdk.java.net/pipermail/jdk9-dev/2015-June/002325.html).
 
 --------
 
