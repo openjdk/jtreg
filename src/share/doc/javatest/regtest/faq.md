@@ -1243,6 +1243,34 @@ jtreg provides a variant of `@run main` that can be useful in such situations:
 `@run driver`. This is the same as `@run main` with the exception that any VM
 options specified on the command line will not be used when running the specified class.
 
+### When should I update the `@bug` entry in a test description?
+
+When a new test is added to a test suite, it is generally considered good
+practice to add an `@bug` entry that identifies one or more bug numbers
+for the issue that the new test is addressing. 
+
+Sometimes, when fixing a bug, it may be more appropriate to modify an
+existing test than to write a completely new one. In this case, it is
+appropriate to add a bug number to the existing `@bug` entry, to indicate
+that this test is both a test for the original issue and for one or
+more additional issues.
+
+If you're modifying an existing test, check whether the `@summary` entry
+should be updated as well: if it is too specific to the original reason for
+the test, you should generalize the summary.
+
+It can also happen that when you're fixing a bug, you may break some 
+existing, unrelated tests, such that you need to update those tests to
+work again. In this case, you should probably _not_ update the `@bug` entry.
+
+These guidelines can be summarized as follows:
+
+* If you're updating a test to be a regression test for a bug fix,
+  then you should probably update the `@bug` entry.
+* If you're updating a test because it was affected by a bug fix,
+  but the test is not otherwise a regression test for the bug fix,
+  then you should probably not update the `@bug` entry.
+
 --------
 
 ## Organizing tests
