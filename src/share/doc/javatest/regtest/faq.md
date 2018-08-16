@@ -421,7 +421,7 @@ You may also refine the set of tests to be run in various ways:
   The option can be given multiple times, and are combined conjunctively.
   Keywords may be defined explicitly in tests using `@key` or may be
   be defined implicitly from other properties of the test, such as
-  whether is a "shell" test or a "manual" test.
+  whether it is a "shell" test or a "manual" test.
   
 * You can filter the tests by their prior execution status, using the `-status`
   option. For example, you can select the tests which previously failed or
@@ -501,7 +501,7 @@ It is generally recommended that the work and report directories should _not_ be
 placed anywhere in the test suite itself. Since jtreg may scan the entire test suite 
 looking for tests, it is unnecessary work for jtreg to have the scan these directories
 looking for the unlikely possibility of tests. This implies a corollary that you should
-not rely on the default settings for these directories (`.JTwork` and `.JTreport`)
+not rely on the default settings for these directories (`./JTwork` and `./JTreport`)
 if you choose to execute jtreg in any directory in the test suite.
 
 ### What is a scratch directory? {#scratch-directory}
@@ -705,8 +705,8 @@ a single report based of the results of executing each of the sections.
 You can specify additional VM options for all JVMs started by jtreg,
 using the `-vmoption` and `-vmoptions` options.
 
-*   `-vmoption` can be used multiple times and can be used to set an 
-    option whose value contains whitespace characters.
+*   `-vmoption` can be used multiple times and can be used to add an 
+    option with any value, including one containing whitespace characters.
 *   `-vmoptions` can be used to set a whitespace-separated list of
     options. There is no support for quoting any values that may contain
     whitespace; use `-vmoption` instead.
@@ -722,8 +722,8 @@ using the `-javaoption` and `-javaoptions` options. These options apply to
 the JVMs used for the `@run main` and `@run applet` actions. (They do _not_
 apply to the JVMs used for the `@build` and `@compile` actions.)
 
-*   `-javaoption` can be used multiple times and can be used to set an 
-    option whose value contains whitespace characters.
+*   `-javaoption` can be used multiple times and can be used to add an 
+    option with any value, including one containing whitespace characters.
 *   `-javaoptions` can be used to set a whitespace-separated list of
     options. There is no support for quoting any values that may contain
     whitespace; use `-javaoption` instead.
@@ -732,8 +732,8 @@ Although not common to do so, you can specify additional options for
 use whenever javac is invoked. You can do this with the `-javacoption`
 and `-javacoptions` options. 
 
-*   `-javacoption` can be used multiple times and can be used to set an 
-    option whose value contains whitespace characters.
+*   `-javacoption` can be used multiple times and can be used to add an 
+    option with any value, including one containing whitespace characters.
 *   `-javacoptions` can be used to set a whitespace-separated list of
     options. There is no support for quoting any values that may contain
     whitespace; use `-javacoption` instead.
@@ -767,7 +767,9 @@ can access the value using the `TESTTIMEOUUTFACTOR` environment variable.
 It may be convenient to run code in a JVM when an action for a test is 
 about to be timed out: such code may perform a thread dump or some other
 detailed analysis of the JVM involved. jtreg allows such code to be provided
-using the `-timeoutHandler` and `-timeoutHanderDir` options.
+using the `-timeoutHandler` and `-timeoutHanderDir` options. The default
+timeout handler will try and call `jstack` to generate stack traces of all
+the Java threads running the the JVM being used for the action. 
 
 For all timeout-related options, use `jtreg -help timeout`.
 
@@ -869,7 +871,8 @@ action (@build, @compile, @run, and so on) in order.  For each action:
     occurs:
     * when the `main` method returns (for `@run main`)
     * when the user clicks on one if `Pass`, `Fail` or `Done`(for `@run applet`)
-    * when any thread in the thread group throws an exception
+    * when any thread in the thread group throws an exception,
+      which is detected by using an uncaught exception handler for the thread group
 
 *   If the action was executed in agentVM mode, jtreg will try and reset
     some well-known global values to the state before the action was performed.
@@ -1242,6 +1245,13 @@ and analyzing the results of those commands.
 jtreg provides a variant of `@run main` that can be useful in such situations: 
 `@run driver`. This is the same as `@run main` with the exception that any VM
 options specified on the command line will not be used when running the specified class.
+Such code can start processes using the standard `java.util.ProcessBuilder` API. 
+To build up the command line to be invoked, the code may want to reference details 
+about the test (such as the class path) or values that were given on the jtreg 
+command line (such as the JDK being tested, or the set of any  VM options that 
+were specified.)  All these values are available in system properties, most of 
+which have names beginning `test.`; the complete list is given in the
+[tag specification](tag-spec.html#testvars). 
 
 ### When should I update the `@bug` entry in a test description?
 
