@@ -1305,6 +1305,39 @@ For more details, see these email threads:
 [March 2015](http://mail.openjdk.java.net/pipermail/jdk9-dev/2015-March/001991.html),
 [April 2015](http://mail.openjdk.java.net/pipermail/jdk9-dev/2015-April/002164.html).
 
+### What if a test does not apply in a given situation?
+
+Sometimes a test should not be run in a particular situation.
+For example, a test may require the presence of specific modules
+in the JDK being tested, in order to function correctly;
+or, a test may specifically verify a behavior on 
+one kind of platform (such as Windows), and not be relevant on other
+kinds of platform (such as Linux or macOS). 
+
+A test may specify the modules that need to be present in the JDK 
+being tested using the `@modules` tag. A test may specify more 
+general conditions to determine whether it should be run using 
+the `@requires` tag, which can test the values of properties (such
+as system properties) that are determined in a JVM running the
+JDK being tested.
+
+If jtreg determines that a test fails to meet the conditions expressed
+in `@modules` and `@requires`, no additional processing of the test
+will occur: in particular, none of the actions will be executed.
+
+While `@modules` and `@requires` will cover many cases, there may 
+be cases where the determination of whether the test is applicable
+needs to be determined by the test itself. For example, a test may
+want to check the presence of a shared library containing compiled
+native code, and to skip the main body of the test if the library
+is not available. In such cases, a test may throw an exception
+named `jtreg.SkippedException`. (To avoid any dependency on any
+jtreg library, so that the code can be run standalone, the exception
+should be defined in test library code.)  This exception will be
+treated specially: unlike for any other exception, the test will be
+deemed to have passed, but the reason will be set to a message
+saying that the test was skipped instead of executing normally.
+
 --------
 
 ## Organizing tests
