@@ -1419,7 +1419,7 @@ Some guidelines follow from this one fundamental guideline:
   * Don't use the anti-pattern in which a test refers to a library 
     in an enclosing directory, such as `@library ../..`.
   
-### Can I put more than one test in a file?
+### Can I put more than one test in a file? {#multiple-tests}
 
 Yes. You may place one or more separate test descriptions near the head
 of a test source file. Each test description should be in its own comment block,
@@ -1528,7 +1528,7 @@ For more details, see these email threads:
 
 --------
 
-## TestNG tests
+## TestNG and JUnit tests
 
 ### What is a "package root"?
 
@@ -1541,58 +1541,65 @@ Most jtreg tests are written in the "unnamed package"
  (i.e. without a package statement) and so for most jtreg tests,
  the directory directly containing the test is the package root
  for the test.  This is different from other test suites using
- other test harnesses (such as TestNG) in which all the tests
+ other test harnesses (such as TestNG or JUnit) in which all the tests
  of a test suite are placed in a single package hierarchy,
  often mirroring the package hierarchy of API being tested.
 
-### How does jtreg support TestNG tests?
+### How does jtreg support TestNG and JUnit tests?
 
-jtreg supports TestNG tests in two ways.
+jtreg supports TestNG and Junit tests in two ways.
 
 1. Tests can be written with a full test description
- (the comment beginning `/* @test....*/`) and can use the following
- action tag to run the test with TestNG:
+   (the comment beginning `/* @test....*/`) and can use one of
+   the following action tags to run a test class with TestNG or JUnit:
 
-      @run testng classname args
+       @run testng classname args
+       @run junit classname args
 
- Such a test would otherwise be similar to a standard test
- using `@run main`. You can use other tags such as `@library` and
- `@build`, just as you would for `@run main`.
- These tests would normally be in the unnamed directory
- (i.e. no package statement.)
- These tests can be freely intermixed with other tests using
- `@run main`, `@run shell`, `@run applet` and so on.
+   Such a test is otherwise similar to a standard test
+   using `@run main`. You can use other tags such as `@library` and
+   `@build`, just as you would for `@run main`.
+   These tests should normally be in the unnamed package
+   (i.e. no package statement.)
+   These tests can be freely intermixed with other tests using
+   `@run main`, `@run shell`, `@run applet` and so on.
+   
+   You may place [multiple tests](#multiple-tests) containing such actions 
+   in a file.
 
-2. If you have a group of TestNG tests written in their own
- package hierarchy, you can include that entire package
- hierarchy as a subdirectory under the main test root directory.
- If you do this, you must identify the root directory of that
- package hierarchy to jtreg, so that it knows to treat all the
- files in that package hierarchy specially.
- In such a group of tests, you do not need to provide test
- descriptions in each test.
+2. If you have a group of TestNG or JUnit tests written in their own
+   package hierarchy, you can include that entire package
+   hierarchy as a subdirectory under the main test root directory.
+   To do this, you must identify the root directory of that
+   package hierarchy to jtreg, so that it knows to treat all the
+   files in that package hierarchy specially.
+   
+   In such a group of tests, you do not need to provide test
+   descriptions in each test, but you may optionally provide a 
+   test description if you choose to do so, if you wish to specify 
+   information tags such as`@bug`, `@summary` and `@keyword`.
+   You must not specify any action tags, such as `@run`, `@compile`,
+   etc, since the actions are implicit for every test in the group
+   of tests.
+   
+   At most one such test description may be provided in each file
+   in the group.
 
- You may optionally provide a test description if you choose to
- do so, if you wish to specify information tags such as
- `@bug`, `@summary` and `@keyword`.
- You must not specify any action tags, such as `@run`, `@compile`,
- etc, since the actions are implicit for every test in the group
- of tests.
+### How do I identify a group of TestNG or JUnit tests in their own directory?
 
-### How do I identify a group of TestNG tests in their own directory?
-
-Add a line specifying the directory to TEST.ROOT
+Add a line specifying the directory to TEST.ROOT; the line is the same
+for both TestNG and JUnit tests:
 
     TestNG.dirs = dir1 dir2 dir3 ...
 
-Include the package root directory for each group of TestNG
+Include the package root directory for each group of TestNG or JUnit
 tests, and specify the package root directory relative to the test
 root directory.
 
 You can also override the value in TEST.ROOT by using the
 TEST.properties file in any subdirectory of the test root directory
 that contains the package root.
-If you put the declaration in a TEST.properties file, you can
+If you put the declaration in a TEST.properties file, you must
 specify the path relative to the directory containing the
 TEST.properties file.
 In particular, instead of declaring the directory in TEST.ROOT,
@@ -1602,24 +1609,40 @@ the declaration would be simply:
 
     TestNG.dirs = .
 
-###  How does jtreg run TestNG tests?
+You can mix TestNG and JUnit tests in the same group of tests,
+although it may not be good style to do so.
+
+###  How does jtreg run TestNG and JUnit tests?
 
 Tests using `@run testng` are compiled in the standard way,
 with TestNG libraries on the classpath.
 The test is run using the class `org.testng.TestNG`.
-For any TestNG test in a group of TestNG tests, any tests in the
-group that need compiling are compiled together before any
-test in the group is run.
+
+Tests using `@run junit` are compiled in the standard way,
+with JUnit libraries on the classpath.
+The test is run using the class `org.junit.runner.JUnitCore`.
+
+For any JUnit or TestNG tests in a group of TestNG or JUnit tests, 
+any tests in the group that need compiling are compiled together, 
+before any test in the group is run.
 Then, the selected test classes are run one at a time using
-`org.testng.TestNG`.
+`org.testng.TestNG`. If the class imports JUnit classes,
+it will be run with TestNG "mixed mode" enabled.
 Each test that is run will have its results stored in a
-corresponding *.jtr file.
+corresponding `*.jtr` file.  _Note:_ it is not possible to reliably
+determine via static analysis which files may contain TestNG or
+JUnit tests and which do not. As a result, jtreg may run some
+classes only to have TestNG report that no tests were found in the
+file. If there are many such classes in the group, you may want to
+move those classes to a separate library that can be used by the 
+tests in the group; this will avoid jtreg running the library classes
+in case they contain tests.
 
-### How do I specify any libraries I want to use in TestNG tests?
+### How do I specify any libraries I want to use in TestNG and JUnit tests?
 
-Tests using `@run testng` can use `@library` and `@build` in the standard way.
-For any test in a group of TestNG tests, you can specify the
-library by adding a line specifying the library in the
+Tests using `@run testng` or `@run junit`can use `@library` and `@build` 
+in the standard way.For any test in a group of TestNG or JUnit tests, 
+you can specify the library by adding a line specifying the library in the
 TEST.properties file in the package root directory for the group of
 tests.
 
@@ -1630,15 +1653,18 @@ it will be evaluated relative to the test root directory;
 otherwise, it will be evaluated relative to the directory
 containing the TEST.properties file.
 
-For any particular group of TestNG tests, you can only
+For any particular group of TestNG or JUnit tests, you can only
 specify libraries for the entire group: you cannot specify one
 library for some of the tests and another library for other tests.
 This is because the all the source files in the group are
 compiled together.
 
-### What version of TestNG does jtreg support?
+### What version of TestNG and JUnit does jtreg support?
 
 Run the command `jtreg -version` to see the version of jtreg and available components.
+
+For OpenJDK, the policy is to use a supported, older version
+and not necessarily the latest and greatest version.
 
 --------
 
