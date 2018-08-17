@@ -1088,7 +1088,9 @@ copyright processing that might affect the operation of the test.
 
 ### My test opens files and sockets: do I have to close them before the test exits?
 
-If you want to be able to run the action in agentVM mode, then yes.
+If you want to be able to run the action in agentVM mode, then 
+any open files and sockets must be closed before the action
+is completed: jtreg cannot do it for you.
 
 If the action will always be run in otherVM mode, then it may
 be good practice to close any open files and sockets, but the
@@ -1097,18 +1099,22 @@ if you do not.
 
 ### My test changes observable system state like system properties or the default locale: do I have to reset it?
 
-If you want to be able to run the action in agentVM mode, then maybe.
+If you want to be able to run the action in agentVM mode, then 
+you may need to reset the value before the action is completed.
 When an action is run in agentVM mode, jtreg will try and reset some 
 commonly used values to their their state at the beginning of the action.
-If you modify any other values, you must either reset it in the
-test code before the action exits, or switch to using otherVM mode.
+If you modify any other values, you must either reset them in the
+test code before the action exits, or ensure the use of otherVM mode
+for the action.
 
 If the action will always be run in otherVM mode, there is no need to reset 
 any system state that was modified during the action.
 
 ### My test creates and uses additional threads: do I have to clean them up?
 
-If you want to be able to run the action in agentVM mode, then maybe.
+If you want to be able to run the action in agentVM mode, then you
+either need ensure that any threads have been terminated, or that they
+can be terminated by being interrupted.
 jtreg will run the main test code in a new thread in a new thread group.
 When that thread exits, or when any thread in the thread group
 throws an exception, jtreg will try to ensure that all threads in
@@ -2440,7 +2446,7 @@ _Note:_ recent builds of jtreg automatically include a copy of JUnit to run test
 ### `JavaTest Message: Problem cleaning up the following threads:`
 
 **More symptoms**: After the message, jtreg lists the stacktrace for
-one or more threads started by the test.
+one or more threads started by the test code.
 
 **Answer**: When you run tests in agentVM mode, jtreg will try to 
 ensure that any threads started by the test have terminated, so that
