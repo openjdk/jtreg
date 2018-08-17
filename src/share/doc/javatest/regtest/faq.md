@@ -1392,23 +1392,6 @@ Example: MyShellTest.sh
 echo $*
 </pre>
 
-It may be convenient to use this feature in conjunction with `@requires`
-so that the test can be run appropriately in different situations.
-For example, the following (somewhat contrived) example shows how to run a
-class with different parameters depending on the platform being tested:
-
-<pre style="margin-left:0.25in; border:1px solid grey; padding: 5px; width: 50%">
-/* @test
- * @requires os.family == windows
- * @run main MyJavaTest --root C:
- */
-
-/* @test
- * @requires os.family != windows
- * @run main MyJavaTest --root /
- */
-</pre>
-
 #### How are the tests named? {.unnumbered}
 
 If there is only one test description in a file, the test is named
@@ -1450,6 +1433,28 @@ Example:
 _Note:_ It is currently not possible to exclude all the tests in a file
 with a single entry.  See
 [CODETOOLS-7902265](https://bugs.openjdk.java.net/browse/CODETOOLS-7902265).
+
+### Can I run tests differently, depending on the circumstances?
+
+Yes; one way is to use a combination of putting multiple tests in a file,
+and `@requires` to select which one will be run.
+For example, the following simple, somewhat contrived, example shows how to run a
+class with different parameters depending on the platform being tested:
+
+<pre style="margin-left:0.25in; border:1px solid grey; padding: 5px; width: 50%">
+/* @test
+ * @requires os.family == windows
+ * @run main MyJavaTest --root C:
+ */
+
+/* @test
+ * @requires os.family != windows
+ * @run main MyJavaTest --root /
+ */
+</pre>
+
+jtreg does not support any sort of conditional flow within the sequence of actions.
+You can use `@run driver` to run a class that provides more complex logic, if needed.
 
 --------
 
