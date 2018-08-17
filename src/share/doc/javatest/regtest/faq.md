@@ -356,6 +356,18 @@ longer than 128 characters.
 The complete JavaTest harness GUI is available via the `-gui` option
 to `jtreg`. 
 
+### Can I test a JRE?
+
+Yes. Use the `-testJDK` option to specify the JRE or other image to be
+tested, and use the `-compileJDK` option to specify a matching version
+of JDK, containing all the standard JDK modules and tools.
+
+For OpenJDK version 9 and later, this relies on the tests being 
+correctly marked up with appropriate `@modules` tags. For earlier
+versions, the appropriate subset of tests will need to be determined
+and specified on the command line. Some tests may fail if they are
+not correctly marked up, or if they are inappropriately selected.
+
 ### How do I run `jtreg` under Windows?
 
 `jtreg` is normally invoked by a wrapper script, written
