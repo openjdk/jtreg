@@ -758,14 +758,31 @@ javac. In particular, the javac option `-J`_vm-option_ is not supported.
 Because most users do not closely monitor the execution of all the tests 
 in a test run, jtreg will monitor the time take for various events during its
 overall execution, to ensure that those events do not take longer than
-anticipated.  This includes the time taken to execute each of the actions
-in a test. The default time is 120 seconds (2 minutes) but can be changed
-using the `/timeout` option for the action. To allow for reasonable
-variations in the speed of execution, it is recommended that the typical
-execution time for an action should be not more than half of the default or
-specified time when the test is executed on a reasonable modern system 
-such as may be used by developer or in use in a continuous build and test 
-system.
+anticipated.  This includes the following:
+
+* The time taken to execute each of the actions in a test. 
+  The default time is 120 seconds (2 minutes) but can be changed
+  using the `/timeout` option for the action. To allow for reasonable
+  variations in the speed of execution, it is recommended that the typical
+  execution time for an action should be not more than half of the default or
+  specified time when the test is executed on a reasonable modern system 
+  such as may be used by developer or in use in a continuous build and test 
+  system.
+
+* The time taken to clean up after each individual action. 
+  This includes any time that spent waiting for any threads to complete,
+  that may may been started by the code in the action, for which the
+  maximum time is 10 seconds.
+
+* The time taken to clean up after a test, when all the actions
+  that will be executed have been executed. This includes any time
+  that may be spent waiting for any files in the scratch directory to
+  be deleted, for which the maximum time is 15 seconds per file on Windows
+  and 0 otherwise.
+  
+* The time taken to run a "timeout handler" (see below).
+  The default time is 300 seconds (5 minutes), which can be changed
+  by using the `-timeoutHandlerTimeout` option.
 
 To allow for running tests on slow hardware, or when using VM options that
 might adversely affect system performance, the timeout intervals can be
@@ -1068,6 +1085,42 @@ While not part of the tag specification, some tests use the
 string "`/nodynamiccopyright/`" after the `@test` tag
 to indicate that that the file should not be subject to automated
 copyright processing that might affect the operation of the test.
+
+### My test opens files and sockets: do I have to close them before the test exits?
+
+If you want to be able to run the action in agentVM mode, then yes.
+
+If the action will always be run in otherVM mode, then it may
+be good practice to close any open files and sockets, but the
+operating system will probably close the open items for you 
+if you do not.
+
+### My test changes observable system state like system properties or the default locale: do I have to reset it?
+
+If you want to be able to run the action in agentVM mode, then maybe.
+When an action is run in agentVM mode, jtreg will try and reset some 
+commonly used values to their their state at the beginning of the action.
+If you modify any other values, you must either reset it in the
+test code before the action exits, or switch to using otherVM mode.
+
+If the action will always be run in otherVM mode, there is no need to reset 
+any system state that was modified during the action.
+
+### My test creates and uses additional threads: do I have to clean them up?
+
+If you want to be able to run the action in agentVM mode, then maybe.
+jtreg will run the main test code in a new thread in a new thread group.
+When that thread exits, or when any thread in the thread group
+throws an exception, jtreg will try to ensure that all threads in
+that thread group have existed. It will periodically interrupt those 
+threads for a short period, to give them a chance to terminate
+themselves, and will report an error if they do not terminate in a 
+timely fashion. An action should clean up for itself any threads that
+will not respond to being interrupted, or which are created in some
+other thread group.
+
+If the action will always be run in othervm mode, there is no need
+to help ensure that all threads have terminated.
 
 ### What should I do with a test once I've written it?
 
@@ -2384,3 +2437,16 @@ it from the [JUnit home page](http://junit.org/).
 
 _Note:_ recent builds of jtreg automatically include a copy of JUnit to run tests.
 
+### `JavaTest Message: Problem cleaning up the following threads:`
+
+**More symptoms**: After the message, jtreg lists the stacktrace for
+one or more threads started by the test.
+
+**Answer**: When you run tests in agentVM mode, jtreg will try to 
+ensure that any threads started by the test have terminated, so that
+they don't affect any code that might run subsequently in the same JVM. 
+It does this by checking for the presence of any threads in the 
+thread group that was created to run the main test code. If there
+are any such threads, jtreg will periodically interrupt them, until
+a timeout has been reached, at which point the message in question
+will be reported and the test will be reported as having an error.
