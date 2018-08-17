@@ -1008,6 +1008,12 @@ condition that the bug violates.
 The arguments of a tag are the words between that tag and the next tag,
 if there is one, or the end of the comment enclosing the tags.
 
+### Can I put comments in a test description?
+
+Yes, use the `@comment` tag. It can be followed with any text, 
+excluding `@` characters, up to the next `@` or the end of the comment
+containing the test description.
+
 ### If a test fails, do I have to throw my own exception?
 
 No.  In cases like the above example in which you must check a condition
@@ -1338,6 +1344,113 @@ treated specially: unlike for any other exception, the test will be
 deemed to have passed, but the reason will be set to a message
 saying that the test was skipped instead of executing normally.
 
+### Can I put more than one test in a file? {#multiple-tests}
+
+Yes. You may place one or more separate test descriptions near the head
+of a test source file. Each test description should be in its own comment block,
+and begin with `@test`. By convention, the comment blocks should appear
+after any leading legal header, and before any executable code in the
+file. The feature is supported in normal Java tests, in shell tests,
+and in legacy applet tests.
+(It is not supported in JUnit or TestNG tests, which do not use explicit
+test descriptions.)
+
+The test descriptions are independent of each other, and may be used
+to run a test class with different arguments, such as in the following
+examples:
+
+Example: MyJavaTest.java
+<pre style="margin-left:0.25in; border:1px solid grey; padding: 5px; width: 50%">
+/* Copyright (C) A.N.Other. */
+
+/* @test
+ * @run main MyJavaTest 1 2 3
+ */
+
+/* @test
+ * @run main MyJavaTest a b c
+ */
+
+public class MyJavaTest {
+    public static void main(String... args) {
+        System.out.println(java.util.Arrays.toString(args));
+    }
+}
+</pre>
+
+Example: MyShellTest.sh
+<pre style="margin-left:0.25in; border:1px solid grey; padding: 5px; width: 50%">
+#!/bin/sh
+# Copyright (C) A.N.Other
+
+# @test
+# @shell MyShellTest 1 2 3
+
+# @test
+# @shell MyShellTest a b c
+
+echo $*
+</pre>
+
+It may be convenient to use this feature in conjunction with `@requires`
+so that the test can be run appropriately in different situations.
+For example, the following (somewhat contrived) example shows how to run a
+class with different parameters depending on the platform being tested:
+
+<pre style="margin-left:0.25in; border:1px solid grey; padding: 5px; width: 50%">
+/* @test
+ * @requires os.family == windows
+ * @run main MyJavaTest --root C:
+ */
+
+/* @test
+ * @requires os.family != windows
+ * @run main MyJavaTest --root /
+ */
+</pre>
+
+#### How are the tests named? {.unnumbered}
+
+If there is only one test description in a file, the test is named
+according to the path of the file relative to the top level directory
+of the test suite, that contains the `TEST.ROOT` file.
+
+If there is more than one test description in a file, each one is named
+by appending a URL-style "fragment identifier" to the path of the file 
+relative to the top level directory of the test suite. Each fragment
+identifier is of the form `id`_N_, starting from _N_ equal to 0.
+
+Examples:
+
+    MyJavaTest.java#id0
+    MyJavaTest.java#id1
+
+
+#### How are the test results organized? {.unnumbered}
+
+The fragment identifier is incorporated into the name of the result (_.jtr_)
+file and any directory containing test-specific results, replacing the
+`#` with `_`.
+
+Examples:
+
+    MyJavaTest_id0.jtr
+    MyJavaTest_id1.jtr
+
+
+#### How do I list the tests in an exclude file, such as `ProblemList.txt`? {.unnumbered}
+
+Specify the test names, using the fragment identifier form.
+
+Example:
+
+    MyJavaTest.java#id0   1234567 generic-all This test is broken!
+
+
+_Note:_ It is currently not possible to exclude all the tests in a file
+with a single entry.  See
+[CODETOOLS-7902265](https://bugs.openjdk.java.net/browse/CODETOOLS-7902265).
+
 --------
 
 ## Organizing tests
@@ -1452,95 +1565,6 @@ Some guidelines follow from this one fundamental guideline:
   * Don't use the anti-pattern in which a test refers to a library 
     in an enclosing directory, such as `@library ../..`.
   
-### Can I put more than one test in a file? {#multiple-tests}
-
-Yes. You may place one or more separate test descriptions near the head
-of a test source file. Each test description should be in its own comment block,
-and begin with `@test`. By convention, the comment blocks should appear
-after any leading legal header, and before any executable code in the
-file. The feature is supported in normal Java tests, in shell tests,
-and in legacy applet tests.
-(It is not supported in JUnit or TestNG tests, which do not use explicit
-test descriptions.)
-
-The test descriptions are independent of each other, and may be used
-to run a test class with different arguments, such as in the following
-examples:
-
-Example: MyJavaTest.java
-<pre style="margin-left:0.25in; border:1px solid grey; padding: 5px; width: 50%">
-/* Copyright (C) A.N.Other. */
-
-/* @test
- * @run main MyJavaTest 1 2 3
- */
-
-/* @test
- * @run main MyJavaTest a b c
- */
-
-public class MyJavaTest {
-    public static void main(String... args) {
-        System.out.println(java.util.Arrays.toString(args));
-    }
-}
-</pre>
-
-Example: MyShellTest.sh
-<pre style="margin-left:0.25in; border:1px solid grey; padding: 5px; width: 50%">
-#!/bin/sh
-# Copyright (C) A.N.Other
-
-# @test
-# @shell MyShellTest 1 2 3
-
-# @test
-# @shell MyShellTest a b c
-
-echo $*
-</pre>
-
-#### How are the tests named? {.unnumbered}
-
-If there is only one test description in a file, the test is named
-according to the path of the file relative to the top level directory
-of the test suite, that contains the `TEST.ROOT` file.
-
-If there is more than one test description in a file, each one is named
-by appending a URL-style "fragment identifier" to the path of the file 
-relative to the top level directory of the test suite. Each fragment
-identifier is of the form `id`_N_, starting from _N_ equal to 0.
-
-Examples:
-
-    MyJavaTest.java#id0
-    MyJavaTest.java#id1
-
-
-#### How are the test results organized? {.unnumbered}
-
-The fragment identifier is incorporated into the name of the result (_.jtr_)
-file and any directory containing test-specific results, replacing the
-`#` with `_`.
-
-Examples:
-
-    MyJavaTest_id0.jtr
-    MyJavaTest_id1.jtr
-
-
-#### How do I list the tests in an exclude file, such as `ProblemList.txt`? {.unnumbered}
-
-Specify the test names, using the fragment identifier form.
-
-Example:
-
-    MyJavaTest.java#id0   1234567 generic-all This test is broken!
-
-
-_Note:_ It is currently not possible to exclude all the tests in a file
-with a single entry.  See
-[CODETOOLS-7902265](https://bugs.openjdk.java.net/browse/CODETOOLS-7902265).
 
 ### What is "tiered testing"?
 
