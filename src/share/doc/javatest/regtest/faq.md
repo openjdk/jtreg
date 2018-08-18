@@ -418,7 +418,7 @@ the sections containing any of the specified terms.
 The most basic way to specify which tests to run is to give one or more paths 
 directly on the command line, for directories and files containing tests. 
 If a file contains multiple tests, you can specify the name of a test within 
-that file by appending `#id`_N_ to the file path, where _N_ is the number of 
+that file by appending `#id`_N_ to the file path, where N is the number of 
 the test within the file, where `0` identifies the first test.
 
 If you wish to specify a long list of files, you can put the list in a file
@@ -798,7 +798,7 @@ about to be timed out: such code may perform a thread dump or some other
 detailed analysis of the JVM involved. jtreg allows such code to be provided
 using the `-timeoutHandler` and `-timeoutHanderDir` options. The default
 timeout handler will try and call `jstack` to generate stack traces of all
-the Java threads running the the JVM being used for the action. 
+the Java threads running in the JVM being used for the action. 
 
 For all timeout-related options, use `jtreg -help timeout`.
 
@@ -899,7 +899,7 @@ action (@build, @compile, @run, and so on) in order.  For each action:
     in a newly-created thread group. The action is over when one of the following
     occurs:
     * when the `main` method returns (for `@run main`)
-    * when the user clicks on one if `Pass`, `Fail` or `Done`(for `@run applet`)
+    * when the user clicks on one of `Pass`, `Fail` or `Done`(for `@run applet`)
     * when any thread in the thread group throws an exception,
       which is detected by using an uncaught exception handler for the thread group
 
@@ -1113,7 +1113,7 @@ any system state that was modified during the action.
 ### My test creates and uses additional threads: do I have to clean them up?
 
 If you want to be able to run the action in agentVM mode, then you
-either need ensure that any threads have been terminated, or that they
+either must ensure that any threads have been terminated, or that they
 can be terminated by being interrupted.
 jtreg will run the main test code in a new thread in a new thread group.
 When that thread exits, or when any thread in the thread group
@@ -1581,7 +1581,7 @@ current directory.
 ### Can I have more than one TEST.ROOT?
 
 In general, no.  Each test is uniquely associated with
-exactly one test root directory, which is the the smallest
+exactly one test root directory, which is the smallest
 enclosing directory containing a marker file called TEST.ROOT.
 In general, a test run will consist of tests from a single
 test suite, identified by a single test root directory.
