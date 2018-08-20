@@ -1118,7 +1118,7 @@ can be terminated by being interrupted.
 jtreg will run the main test code in a new thread in a new thread group.
 When that thread exits, or when any thread in the thread group
 throws an exception, jtreg will try to ensure that all threads in
-that thread group have existed. It will periodically interrupt those 
+that thread group have exited. It will periodically interrupt those 
 threads for a short period, to give them a chance to terminate
 themselves, and will report an error if they do not terminate in a 
 timely fashion. An action should clean up for itself any threads that
@@ -1127,6 +1127,104 @@ other thread group.
 
 If the action will always be run in othervm mode, there is no need
 to help ensure that all threads have terminated.
+
+### What is a combo test? {#combo-test}
+
+"Combo test" is an informal term used by OpenJDK developers to describe a style
+of writing a test so that it executes many test cases within the test, often by
+iterating over all combinations of a set of parameters. Such a technique can
+lead to a combinatorial explosion in the number of test cases, yielding hundreds
+or even thousands of test cases; when writing a test like this, it is important 
+to consider [how much time](#how-much-time) it will take to execute and
+[how much output](#how-much-output) it may generate.
+
+### How much output can a test generate? {#how-much-output}
+
+While a test can generate as much output as it wants, jtreg limits the amount
+that is saved of output written to any stream used by an action. This includes
+the standard output and error streams, and the "direct" output written by the
+compiler (javac) when run in agentVM mode.
+
+The default for the maximum amount that is saved is 100K characters. If a test
+exceeds this limit, the first recourse should be to try and reduce the amount of
+output.  Ask yourself whether all the information being written by the test is
+actually useful and if anyone is likely to read it all?  Writing an unnecessary 
+amount of detail affects everyone who runs the test and stores the output for
+any length of time.
+
+Consider the following possibilities, to reduce the amount written by a test:
+
+*   In a [combo test](#combo-test), reduce the amount of information written by 
+    test cases that pass, and just generate more details when a test case fails. 
+*   Make the amount of output be  [configurable](#configurable), so that it can 
+    be less verbose by default and more verbose when needed, such as when a
+    developer might be developing or debugging the test.
+
+If you really need to have jtreg save more of the output, you can override the
+limit in two ways:
+
+*   To override the limit for a single test run, set the jtreg system property
+    `javatest.maxOutputSize` to an integer giving the new size.  If you are
+    running jtreg using the normal script, remember to use `-J`, to set the
+    system property in the jtreg JVM, and not the system property in a test JVM.
+
+        jtreg -J-Djavatest.maxOutputSize=250000 ...
+
+*   To override the limit test runs for some or all tests in a test suite,
+    set the property `maxOutputSize` in either the top-level `TEST.ROOT`
+    file (to affect all tests) or in a `TEST.properties` file (to affect
+    tests in that directory and its subdirectories.)
+
+If the limit is exceeded, jtreg will discard the middle of the output, so that
+it can save the beginning of the output, which often contains configuration
+details written by the action or the top of a long stacktrace, and can save the
+end of the output, which contains the output that was written most recently by
+the action.
+
+The discarded output will be replaced with a message like the following:
+
+        Output overflow:
+        JT Harness has limited the test output to the text
+        at the beginning and the end, so that you can see how the
+        test began, and how it completed.
+        If you need to see more of the output from the test,
+        set the system property javatest.maxOutputSize to a higher
+        value. The current value is 100000.
+
+### How much time can a test take? {#how-much-time}
+
+jtreg limits the amount of time that may be used to execute each action  of the
+test. The default limit is 120 seconds (2 minutes). If a test exceeds this
+limit, the first recourse should be to try and reduce the  time that is being
+used. If a test takes an excessive amount of time to run, that affects everyone
+who runs the test.
+
+*   Try to avoid executing code in a subprocess when it could be done 
+    equivalently and faster within the same JVM, perhaps using library code.  
+    A good example of that is compiling code on the fly: it is much faster to 
+    execute javac via the `java.util.spi.ToolProvider` API or Java Compiler API 
+    than it is to run `javac` in a separate process. 
+*   In a [combo test](#combo-test), consider reducing the number of test cases 
+    that are executed. 
+*   Make the amount of execution be [configurable](#configurable), so that it
+    executes less by default and more when needed, such as when a developer 
+    might be developing or debugging the test.
+
+If you really need to increase the time allowed for an action, use the
+`/timeout` option for the action.
+
+If you want to scale all the timeouts in a test run, use the `-timeoutFactor` 
+command-line option.
+
+### How can I make a test configurable? {#configurable}
+
+It can sometimes be useful to make a test behave differently when so
+required. One way to do so is to make the test code read the value of
+a system property or environment variable.  You can set a system property
+on the jtreg command-line (for all tests) with `-D` or any of the ways
+to set a VM option. If you want to use an environment variable, you
+must declare that using the jtreg `-e` option. (If you don't, jtreg
+will not pass the environment variable into any JVMs that it starts.)
 
 ### What should I do with a test once I've written it?
 
