@@ -1228,9 +1228,57 @@ will not pass the environment variable into any JVMs that it starts.)
 
 ### What should I do with a test once I've written it?
 
-Check it into the test directory in your repository.
+[Test it](#do-i-need-to-test-a-test) and then when you're satisfied,
+check it into the test directory in your repository.
 
 Yes, it really is that simple.
+
+### Do I need to test a test?
+
+Yes! While there are procedures in place to routinely run tests to detect any
+issues in the product, that presumes that each test will work as expected. It is
+not practical to routinely test that every test is working as intended, because
+to do so would require a malfunctioning product that will help exercise the code
+pathways that are typically not executed. It is therefore especially important
+to ensure the test functions correctly (meaning, it will actually detect the
+errors it is designed to catch)  at the time it is being written and reviewed.
+
+### How do I test a test?
+
+There is no "one size fits all" solution, but here are some guidelines.
+
+If a test is a regression test, meaning it is designed to test the fix for
+a bug that was found in the product, then check the following:
+
+* Does the test detect the failure on a recent version of the product that
+  does _not_ include the fix?
+* Does the test demonstrate the absence of the failure on a version of the
+  product that _does_ include the fix?
+
+If the test is a unit test or system test for new functionality that has
+been added to the system, there is no prior version of the system that would
+demonstrate any errors, but you can try temporarily injecting some errors into
+the product code, in order to verify that the test will correctly detect those
+errors. One way to indirectly achieve this goal is to develop and use the test
+while developing the new feature
+(so-called [test-driven development](https://en.wikipedia.org/wiki/Test-driven_development)),
+instead of leaving it until afterwards.
+
+For any type of test, ask yourself if the test is designed to cover all the
+lines of code that were affected in the corresponding change to the product.
+If code was changed, but is not exercised by any existing test or the new test,
+then that code is effectively untested. There may be minor exceptions to this
+rule for code that will really difficult to exercise, such as code to detect
+"out of memory" or "disk full" conditions, but the general principle holds. 
+If you have access to code coverage tools, check that all of the modified lines
+of code in the product have been executed: if code has not been executed, it has
+definitely not been tested.
+
+For some types of test, it may be possible to build in some amount of
+self-testing.  For example, if a test is designed to exercise a number
+of different behaviors in the product, where those behaviors can be
+externally monitored, ensure that all those behaviors were actually
+exercised, and report an error if any were not.
 
 ### Where are the OpenJDK tests?
 
