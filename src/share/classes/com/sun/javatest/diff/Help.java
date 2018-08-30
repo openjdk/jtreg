@@ -304,7 +304,6 @@ public class Help {
         for (String n: o.names) {
             if (sb.length() > 0)
                 sb.append("  |  ");
-            sb.append("-");
             sb.append(n);
             switch (o.argType) {
                 case NONE:

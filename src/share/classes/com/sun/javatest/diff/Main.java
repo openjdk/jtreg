@@ -94,7 +94,7 @@ public class Main {
                 title = arg;
             }
         },
-        new Option(REST, DOC, "help", "-h", "-help", "-usage") {
+        new Option(REST, DOC, "help", "-h", "-help", "--help", "-usage") {
             @Override
             public void process(String opt, String arg) {
                 if (help == null)
