@@ -159,8 +159,6 @@ public class GetJDKProperties {
             return null;
         } catch (NoSuchMethodException e) {
             return null;
-        } catch (SecurityException e) {
-            return null;
         } catch (InvocationTargetException e) {
             return null;
         }
@@ -203,8 +201,6 @@ public class GetJDKProperties {
         } catch (IllegalArgumentException e) {
             return null;
         } catch (NoSuchMethodException e) {
-            return null;
-        } catch (SecurityException e) {
             return null;
         } catch (InvocationTargetException e) {
             return null;
