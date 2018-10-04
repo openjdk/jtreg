@@ -26,6 +26,8 @@
 package com.sun.javatest.regtest.config;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -186,6 +188,10 @@ public class RegressionParameters
             if (tlf != null)
                 filters.add(tlf);
 
+            TestFilter mlf = getMatchListFilter();
+            if (mlf != null)
+                filters.add(mlf);
+
             TestFilter f = new CompositeFilter(filters.toArray(new TestFilter[filters.size()]));
             relevantTestFilter = new CachingTestFilter(f);
         }
@@ -317,6 +323,84 @@ public class RegressionParameters
         };
     }
 
+
+    private static class TestListWithPlatforms {
+        private static final Set<String> PLATFORMS = new HashSet<>();
+
+        static {
+            // warning: os.arch depends on JVM; it ideally should come from the test jdk
+            OS os = OS.current();
+
+            // On JPRT, we see the following various types of values for these properties
+            //    os.arch              amd64
+            //    os.arch              i386
+            //    os.arch              sparc
+            //    os.arch              x86
+            //    os.name              Linux
+            //    os.name              SunOS
+            //    os.name              Windows 2003
+            //    os.name              Windows XP
+            //    os.version           2.6.27.21-78.2.41.fc9.i686
+            //    os.version           2.6.27.21-78.2.41.fc9.x86_64
+            //    os.version           5.1
+            //    os.version           5.10
+            //    os.version           5.2
+            // On a Mac, we see the following types of values
+            //    os.arch              x86_64
+            //    os.arch              universal
+            //    os.name              Darwin
+            //    os.name              Mac OS X
+            //    os.version           10.6.7
+            //    os.version           10.7.4
+
+            // ProblemList.txt uses the following encoding
+            //    generic-all   Problems on all platforms
+            //    generic-ARCH  Where ARCH is one of: sparc, sparcv9, x64, i586, etc.
+            //    OSNAME-all    Where OSNAME is one of: solaris, linux, windows
+            //    OSNAME-ARCH   Specific on to one OSNAME and ARCH, e.g. solaris-x64
+            //    OSNAME-REV    Specific on to one OSNAME and REV, e.g. solaris-5.8
+            for (String p: Arrays.asList(os.name, os.name.replaceAll("\\s", ""), os.family, "generic")) {
+                for (String q: Arrays.asList(null, os.arch, os.simple_arch, os.version, os.simple_version, "all")) {
+                    String ep = (q == null) ? p : p + "-" + q;
+                    PLATFORMS.add(ep.toLowerCase());
+                }
+            }
+        }
+
+        private final ExcludeList el;
+
+        TestListWithPlatforms(ExcludeList el) {
+            this.el = el;
+        }
+
+        public boolean match(TestDescription td) {
+            ExcludeList.Entry e = el.getEntry(td.getRootRelativeURL());
+            if (e == null) {
+                return false;
+            }
+            String[] platforms = e.getPlatforms();
+            if (platforms.length == 0 || (platforms.length == 1 && platforms[0].length() == 0)) {
+                // allow for old ProblemList.txt format
+                String[] bugIds = e.getBugIdStrings();
+                if (bugIds.length > 0 && !bugIds[0].matches("0|([1-9][0-9,]*)"))
+                    platforms = bugIds;
+            }
+
+            if (platforms.length == 0 || (platforms.length == 1 && platforms[0].length() == 0)) {
+                return true;
+            }
+
+            for (String p: platforms) {
+                if (PLATFORMS.contains(p.toLowerCase())) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+    }
+
     /**
      * {@inheritDoc}
      *
@@ -333,55 +417,13 @@ public class RegressionParameters
      */
     @Override
     public CachingTestFilter getExcludeListFilter() {
-        // warning: os.arch depends on JVM; it ideally should come from the test jdk
-        OS os = OS.current();
-
-        // On JPRT, we see the following various types of values for these properties
-        //    os.arch              amd64
-        //    os.arch              i386
-        //    os.arch              sparc
-        //    os.arch              x86
-        //    os.name              Linux
-        //    os.name              SunOS
-        //    os.name              Windows 2003
-        //    os.name              Windows XP
-        //    os.version           2.6.27.21-78.2.41.fc9.i686
-        //    os.version           2.6.27.21-78.2.41.fc9.x86_64
-        //    os.version           5.1
-        //    os.version           5.10
-        //    os.version           5.2
-        // On a Mac, we see the following types of values
-        //    os.arch              x86_64
-        //    os.arch              universal
-        //    os.name              Darwin
-        //    os.name              Mac OS X
-        //    os.version           10.6.7
-        //    os.version           10.7.4
-
-        // ProblemList.txt uses the following encoding
-        //    generic-all   Problems on all platforms
-        //    generic-ARCH  Where ARCH is one of: sparc, sparcv9, x64, i586, etc.
-        //    OSNAME-all    Where OSNAME is one of: solaris, linux, windows
-        //    OSNAME-ARCH   Specific on to one OSNAME and ARCH, e.g. solaris-x64
-        //    OSNAME-REV    Specific on to one OSNAME and REV, e.g. solaris-5.8
-
-        final Set<String> excludedPlatforms = new HashSet<>();
-        for (String p: Arrays.asList(os.name, os.name.replaceAll("\\s", ""), os.family, "generic")) {
-            for (String q: Arrays.asList(null, os.arch, os.simple_arch, os.version, os.simple_version, "all")) {
-                String ep = (q == null) ? p : p + "-" + q;
-                excludedPlatforms.add(ep.toLowerCase());
-            }
-        }
-
-        // System.err.println("excluded platforms: " + excludedPlatforms);
-
-
         if (excludeListFilter == UNSET) {
             final ExcludeList el = getExcludeList();
-            if (el == null)
+            if (el == null) {
                 excludeListFilter = null;
-            else {
+            } else {
                 excludeListFilter = new CachingTestFilter(new TestFilter() {
+                    final TestListWithPlatforms list = new TestListWithPlatforms(el);
                     @Override
                     public String getName() {
                         return "jtregExcludeListFilter";
@@ -399,27 +441,7 @@ public class RegressionParameters
 
                     @Override
                     public boolean accepts(TestDescription td) throws TestFilter.Fault {
-                        ExcludeList.Entry e = el.getEntry(td.getRootRelativeURL());
-                        if (e == null)
-                            return true;
-
-                        String[] platforms = e.getPlatforms();
-                        if (platforms.length == 0 || (platforms.length == 1 && platforms[0].length() == 0)) {
-                            // allow for old ProblemList.txt format
-                            String[] bugIds = e.getBugIdStrings();
-                            if (bugIds.length > 0 && !bugIds[0].matches("0|([1-9][0-9,]*)"))
-                                platforms = bugIds;
-                        }
-
-                        if (platforms.length == 0 || (platforms.length == 1 && platforms[0].length() == 0))
-                            return false;
-
-                        for (String p: platforms) {
-                            if (excludedPlatforms.contains(p.toLowerCase()))
-                                return false;
-                        }
-
-                        return true;
+                        return !list.match(td);
                     }
                 });
             }
@@ -428,6 +450,47 @@ public class RegressionParameters
     }
 
     private CachingTestFilter excludeListFilter = UNSET;
+
+    private TestFilter getMatchListFilter() {
+        if (matchListFilter == UNSET) {
+            List<File> matchList = getMatchLists();
+            if (matchList.isEmpty()) {
+                matchListFilter = null;
+            } else {
+                final ExcludeList el;
+                try {
+                    el = new ExcludeList(matchList.toArray(new File[]{}));
+                } catch (ExcludeList.Fault | IOException e) {
+                    throw new Error(e);
+                }
+                matchListFilter = new CachingTestFilter(new TestFilter() {
+                    final TestListWithPlatforms list = new TestListWithPlatforms(el);
+                    @Override
+                    public String getName() {
+                        return "jtregMatchListFilter";
+                    }
+
+                    @Override
+                    public String getDescription() {
+                        return "Select tests which are in a match list";
+                    }
+
+                    @Override
+                    public String getReason() {
+                        return "Test has not been matched by a match list";
+                    }
+
+                    @Override
+                    public boolean accepts(TestDescription td) throws TestFilter.Fault {
+                        return list.match(td);
+                    }
+                });
+            }
+        }
+        return matchListFilter;
+    }
+
+    CachingTestFilter matchListFilter = UNSET;
 
     /**
      * {@inheritDoc}
@@ -1100,6 +1163,18 @@ public class RegressionParameters
     }
 
     private long timeoutHandlerTimeout;
+
+    public void setMatchLists(File[] files) {
+        this.matchLists = Arrays.asList(files);
+    }
+
+    List<File> getMatchLists() {
+        return Collections.unmodifiableList(matchLists);
+    }
+
+    private List<File> matchLists;
+
+
 
     // Ideally, this method would be better on a "shared execution context" object
     public TimeoutHandlerProvider getTimeoutHandlerProvider() throws MalformedURLException {

@@ -406,6 +406,14 @@ public class Tool {
             }
         },
 
+        new Option(STD, SELECT, null, "-match") {
+            @Override
+            public void process(String opt, String arg) {
+                File f = getNormalizedFile(new File(arg));
+                matchListArgs.add(f);
+            }
+        },
+
         new Option(NONE, MAIN, null, "-startHttpd") {
             @Override
             public void process(String opt, String arg) {
@@ -1582,6 +1590,7 @@ public class Tool {
             }
 
             rp.setExcludeLists(excludeListArgs.toArray(new File[excludeListArgs.size()]));
+            rp.setMatchLists(matchListArgs.toArray(new File[matchListArgs.size()]));
 
             if (priorStatusValuesArg == null || priorStatusValuesArg.length() == 0)
                 rp.setPriorStatusValues(null);
@@ -2152,6 +2161,7 @@ public class Tool {
     private boolean xmlFlag;
     private boolean xmlVerifyFlag;
     private File exclusiveLockArg;
+    private List<File> matchListArgs = new ArrayList<>();
 
     private File javatest_jar;
     private File jtreg_jar;
