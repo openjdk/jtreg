@@ -284,7 +284,7 @@ public class MainAction extends Action
             }
         }
         if (policyFN != null)
-            files.add(new File(policyFN));
+            files.add(policyFN);
         return files;
     }
 
@@ -451,12 +451,10 @@ public class MainAction extends Action
         Map<String, String> javaProps = new LinkedHashMap<>();
         javaProps.putAll(script.getTestProperties());
 
-        String newPolicyFN;
         if (policyFN != null) {
             // add permission to read JTwork/classes by adding a grant entry
-            newPolicyFN = addGrantEntry(policyFN);
-            javaProps.put("java.security.policy",
-                          overrideSysPolicy ? "=" + newPolicyFN : newPolicyFN);
+            File newPolicyFN = addGrantEntries(policyFN, argFile);
+            javaProps.put("java.security.policy", (overrideSysPolicy ? "=" : "") + newPolicyFN);
         }
 
         if (secureCN != null) {
@@ -736,7 +734,7 @@ public class MainAction extends Action
     private List<String> driverArgs = null;
     private String  testModuleName  = null;
     private String  testClassName  = null;
-    private String  policyFN = null;
+    private File    policyFN = null;
     private String  secureCN = null;
     private boolean overrideSysPolicy = false;
 

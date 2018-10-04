@@ -265,10 +265,9 @@ public class AppletAction extends Action
         if (!mx)
             command.add("-mx128m");
 
-        String newPolicyFN;
         if (policyFN != null) {
             // add pemission to read JTwork/classes by adding a grant entry
-            newPolicyFN = addGrantEntry(policyFN);
+            File newPolicyFN = addGrantEntries(policyFN);
             String cmd = overrideSysPolicy
                             ? "-Djava.security.policy==" + newPolicyFN
                             : "-Djava.security.policy=" + newPolicyFN;
@@ -637,17 +636,17 @@ public class AppletAction extends Action
         Map<String, String> appletAttrs;
     } // class HTMLFileContents
 
-    //----------member variables------------------------------------------------
+    //----------member variables---------------- --------------------------------
 
     private String  manual   = "unset";
     private boolean reverseStatus = false;
     private boolean othervm  = false;
     private int     timeout  = -1;
-    private String  policyFN = null;
+    private File    policyFN = null;
     private String  secureFN = null;
     private boolean overrideSysPolicy = false;
-    private String htmlFN;
-    private String clsName;
+    private String  htmlFN;
+    private String  clsName;
     private HTMLFileContents htmlFileContents;
     private static final Object appletLock = new Object();
 }

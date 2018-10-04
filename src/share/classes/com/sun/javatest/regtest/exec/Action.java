@@ -257,9 +257,24 @@ public abstract class Action extends ActionHelper {
      *             file.
      * @throws TestRunException if a problem occurred adding this grant entry.
      */
-    protected String addGrantEntry(String fileName) throws TestRunException {
+    protected File addGrantEntries(File fileName) throws TestRunException {
+        return addGrantEntries(fileName, null);
+    }
+
+    /**
+     * Add a grant entry to the policy file so that jtreg and other libraries can read
+     * JTwork/classes. An entry is added for the argFile, if one is given.
+     *
+     * The remaining entries in the policy file should remain the same.
+     *
+     * @param fileName The absolute name of the original policy file.
+     * @return     A string indicating the absolute name of the modified policy
+     *             file.
+     * @throws TestRunException if a problem occurred adding this grant entry.
+     */
+    protected File addGrantEntries(File fileName, File argFile) throws TestRunException {
         File newPolicy = new File(script.absTestScratchDir(),
-                                  (new File(fileName).getName()) + "_new");
+                                  (fileName.getName()) + "_new");
 
         try {
             try (FileWriter fw = new FileWriter(newPolicy)) {
@@ -267,8 +282,14 @@ public abstract class Action extends ActionHelper {
                 fw.write("grant {" + LINESEP);
                 fw.write("    permission java.io.FilePermission \""
                         + script.absTestClsTopDir().getPath().replace(FILESEP, "{/}")
-                        + "${/}-\"" + ", \"read\";" + LINESEP);
+                        + "${/}-\", \"read\";" + LINESEP);
+                if (argFile != null) {
+                    fw.write("    permission java.io.FilePermission \""
+                            + argFile.getPath().replace(FILESEP, "{/}")
+                            + "\", \"read\";" + LINESEP);
+                }
                 fw.write("};" + LINESEP);
+
                 List<File> libs = new ArrayList<>();
                 libs.addAll(script.getJavaTestClassPath().asList());
                 if (script.isJUnitRequired()) {
@@ -300,8 +321,8 @@ public abstract class Action extends ActionHelper {
             throw new TestRunException(POLICY_SM_PROB + newPolicy.toString());
         }
 
-        return newPolicy.toString();
-    } // addGrantEntry()
+        return newPolicy;
+    } // addGrantEntries()
 
     /**
      * This method parses the <em>policy</em> action option used by several
@@ -309,18 +330,18 @@ public abstract class Action extends ActionHelper {
      * directory containing the defining file of the test.
      *
      * @param value The proposed filename for the policy file.
-     * @return     A string indicating the absolute name of the policy file for
+     * @return     a file representing the absolute name of the policy file for
      *             the test.
      * @exception  ParseException If the passed filename is null, the empty
      *             string, or does not exist.
      */
-    protected String parsePolicy(String value) throws ParseException {
+    protected File parsePolicy(String value) throws ParseException {
         if ((value == null) || value.equals(""))
             throw new ParseException(MAIN_NO_POLICY_NAME);
         File policyFile = new File(script.absTestSrcDir(), value);
         if (!policyFile.exists())
             throw new ParseException(MAIN_CANT_FIND_POLICY + policyFile);
-        return policyFile.toString();
+        return policyFile;
     } // parsePolicy()
 
     /**
