@@ -898,7 +898,9 @@ use with the <code>@requires</code> tag. Each class must implement
 When invoked, the <code>call()</code> method should return properties that can be referenced in
 an expression in a <code>@requires</code> tag. <i>Note:</i> the names of the
 new properties that may be returned by calling these classes must also be declared in
-a <code>requires.properties</code> entry.
+a <code>requires.properties</code> entry. If an error occurs while computing a value,
+the value may be set to the special value <code>__ERROR__</code>, optionally followed by
+a short explanation of the error that occurred.
 <p>If this option is specified, the following additional options may also be specified:
 <ul>
 <li><code>requires.extraPropDefns.libs <var>&lt;source-files&gt;</var></code>
@@ -1272,3 +1274,6 @@ support modules.
 
 </tbody>
 </table>
+
+</body>
+</html>
