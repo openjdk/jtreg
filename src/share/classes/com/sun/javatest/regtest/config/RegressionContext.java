@@ -111,9 +111,19 @@ public class RegressionContext implements Expr.Context {
         return validPropNames.contains(name);
     }
 
-    public String get(String name) {
+    public String get(String name) throws Expr.Fault  {
         String v = values.get(name);
-        return (v == null) ? "null" : v;
+        if (v == null) {
+            return null;
+        } else if (v.startsWith("__ERROR__")) {
+            String reason = v.substring("__ERROR__".length()).trim();
+            if (reason.isEmpty()) {
+                reason = "error determining value";
+            }
+            throw new Expr.Fault(name + ": " + reason);
+        } else {
+            return v;
+        }
     }
 
     @Override

@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2015, 2017, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2015, 2018, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -93,3 +93,22 @@ $(BUILDDIR)/ExtraPropDefnsTest.bad-execute.ok: \
 TESTS.jtreg += \
 	$(BUILDDIR)/ExtraPropDefnsTest.bad-execute.ok
 
+#-------------------------------------------------------------------------------
+#
+$(BUILDDIR)/ExtraPropDefnsTest.error.ok: \
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	    $(JTREG_IMAGEDIR)/bin/jtreg
+	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(JDKHOME) \
+		$(TESTDIR)/extra-props/error \
+			> $(@:%.ok=%/jt.log) 2>&1 || \
+		true "non-zero exit code from JavaTest intentionally ignored"
+	$(GREP) -s 'Test results: error: 3' $(@:%.ok=%/jt.log)  > /dev/null
+	g=`$(GREP) -v 'Error.* buggyExtra: error determining value' $(@:%.ok=%/report/text/summary.txt)` ; \
+	if [ -n "$$g" ]; then echo "Error: test results:" ; echo "$$g" ; exit 1 ; fi
+	echo "test passed at `date`" > $@
+
+TESTS.jtreg += \
+	$(BUILDDIR)/ExtraPropDefnsTest.error.ok
