@@ -41,6 +41,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
 
+import com.sun.javatest.TestFilter;
 import com.sun.javatest.TestFinder;
 import com.sun.javatest.TestResult;
 import com.sun.javatest.TestResultTable;
@@ -299,7 +300,7 @@ public class TestManager {
                 File f = new File(rootDir, path);
                 if (f.isDirectory())
                     return true;
-                TreeIterator iter = trt.getIterator(new String[] { path }, null);
+                TreeIterator iter = trt.getIterator(new String[] { path }, new TestFilter[0]);
                 while (iter.hasNext()) {
                     TestResult tr = (TestResult) iter.next();
                     String trp = tr.getDescription().getRootRelativePath();
