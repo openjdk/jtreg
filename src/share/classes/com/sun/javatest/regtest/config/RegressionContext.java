@@ -114,7 +114,7 @@ public class RegressionContext implements Expr.Context {
     public String get(String name) throws Expr.Fault  {
         String v = values.get(name);
         if (v == null) {
-            return null;
+            return "null";
         } else if (v.startsWith("__ERROR__")) {
             String reason = v.substring("__ERROR__".length()).trim();
             if (reason.isEmpty()) {
