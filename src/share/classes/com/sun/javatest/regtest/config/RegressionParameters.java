@@ -161,7 +161,7 @@ public class RegressionParameters
      * The following map provides a way of recording whether a problem
      * was encountered by a filter.
      */
-    public Map<TestDescription, String> filterFaults = new HashMap<>();
+    public Map<String, String> filterFaults = new HashMap<>();
 
     /* A RegressionContext is used by various filters, but initializing it may throw an
      * exception. Therefore, it should be initialized explicitly, and the exception
@@ -192,14 +192,24 @@ public class RegressionParameters
             if (mlf != null)
                 filters.add(mlf);
 
-            TestFilter f = new CompositeFilter(filters.toArray(new TestFilter[filters.size()]));
-            relevantTestFilter = new CachingTestFilter(f);
+            final TestFilter f = new CompositeFilter(filters.toArray(new TestFilter[filters.size()]));
+            return new CachingTestFilter(f.getName(), f.getDescription(), f.getReason()) {
+                @Override
+                protected String getCacheKey(TestDescription td) {
+                    return td.getRootRelativeURL();
+                }
+
+                @Override
+                protected boolean getCacheableValue(TestDescription td) throws Fault {
+                    return f.accepts(td);
+                }
+            };
         }
         return relevantTestFilter;
 
     }
 
-    CachingTestFilter relevantTestFilter = UNSET;
+    TestFilter relevantTestFilter = UNSET;
 
     TestFilter getModulesFilter() {
         JDK jdk = getTestJDK();
@@ -210,25 +220,21 @@ public class RegressionParameters
         if (availModules.isEmpty())
             return null;
 
-        return new TestFilter() {
+        return new CachingTestFilter(
+                "ModulesFilter",
+                "Select tests for which all required modules are available",
+                "A required module is not available") {
+
+            private static final String MODULES = "modules";
+
             @Override
-            public String getName() {
-                return "ModulesFilter";
+            protected String getCacheKey(TestDescription td) {
+                return td.getParameter(MODULES);
             }
 
             @Override
-            public String getDescription() {
-                return "Select tests for which all required modules are available";
-            }
-
-            @Override
-            public String getReason() {
-                return "A required module is not available";
-            }
-
-            @Override
-            public boolean accepts(TestDescription td) {
-                String reqdModules = td.getParameter("modules");
+            public boolean getCacheableValue(TestDescription td) {
+                String reqdModules = td.getParameter(MODULES);
                 if (reqdModules == null)
                     return true;
 
@@ -247,31 +253,27 @@ public class RegressionParameters
     }
 
     TestFilter getRequiresFilter() {
-        return new TestFilter() {
+        return new CachingTestFilter(
+                "RequiresFilter",
+                "Select tests that satisfy a given set of platform requirements",
+                "The platform does not meet the specified requirements") {
+
+            private static final String REQUIRES = "requires";
+
             @Override
-            public String getName() {
-                return "RequiresFilter";
+            protected String getCacheKey(TestDescription td) {
+                return td.getParameter(REQUIRES);
             }
 
             @Override
-            public String getDescription() {
-                return "Select tests that satisfy a given set of platform requirements";
-            }
-
-            @Override
-            public String getReason() {
-                return "The platform does not meet the specified requirements";
-            }
-
-            @Override
-            public boolean accepts(TestDescription td) {
+            public boolean getCacheableValue(TestDescription td) {
                 try {
-                    String requires = td.getParameter("requires");
+                    String requires = td.getParameter(REQUIRES);
                     if (requires == null)
                         return true;
                     return Expr.parse(requires, exprContext).evalBoolean(exprContext);
                 } catch (Expr.Fault ex) {
-                    filterFaults.put(td, "Error evaluating expression: " + ex.getMessage());
+                    filterFaults.put(td.getRootRelativeURL(), "Error evaluating expression: " + ex.getMessage());
                     // While it may seem more obvious to return false in this case,
                     // that would make it easier to overlook the fault since the
                     // test will have been quietly filtered out.
@@ -288,26 +290,21 @@ public class RegressionParameters
         if (timeLimit <= 0)
             return null;
 
-        return new TestFilter() {
+        return new CachingTestFilter(
+                "TestLimitFilter",
+                "Select tests that do not exceed a specified timeout value",
+                "Test declares a timeout which exceeds the requested time limit") {
+
+            final String MAX_TIMEOUT = "maxTimeout";
 
             @Override
-            public String getName() {
-                return "TestLimitFilter";
+            protected String getCacheKey(TestDescription td) {
+                return td.getParameter(MAX_TIMEOUT);
             }
 
             @Override
-            public String getDescription() {
-                return "Select tests that do not exceed a specified timeout value";
-            }
-
-            @Override
-            public String getReason() {
-                return "Test declares a timeout which exceeds the requested time limit";
-            }
-
-            @Override
-            public boolean accepts(TestDescription td) throws TestFilter.Fault {
-                String maxTimeoutValue = td.getParameter("maxTimeout");
+            public boolean getCacheableValue(TestDescription td) {
+                String maxTimeoutValue = td.getParameter(MAX_TIMEOUT);
                 if (maxTimeoutValue != null) {
                     try {
                         int maxTimeout = Integer.parseInt(maxTimeoutValue);
@@ -319,7 +316,6 @@ public class RegressionParameters
                 }
                 return true;
             }
-
         };
     }
 
@@ -398,7 +394,6 @@ public class RegressionParameters
 
             return false;
         }
-
     }
 
     /**
@@ -422,28 +417,21 @@ public class RegressionParameters
             if (el == null) {
                 excludeListFilter = null;
             } else {
-                excludeListFilter = new CachingTestFilter(new TestFilter() {
+                excludeListFilter = new CachingTestFilter(
+                        "jtregExcludeListFilter",
+                        "Select tests which are not excluded on any exclude list",
+                        "Test has been excluded by an exclude list") {
                     final TestListWithPlatforms list = new TestListWithPlatforms(el);
                     @Override
-                    public String getName() {
-                        return "jtregExcludeListFilter";
+                    protected String getCacheKey(TestDescription td) {
+                        return td.getRootRelativeURL();
                     }
 
                     @Override
-                    public String getDescription() {
-                        return "Select tests which are not excluded on any exclude list";
-                    }
-
-                    @Override
-                    public String getReason() {
-                        return "Test has been excluded by an exclude list";
-                    }
-
-                    @Override
-                    public boolean accepts(TestDescription td) throws TestFilter.Fault {
+                    public boolean getCacheableValue(TestDescription td) {
                         return !list.match(td);
                     }
-                });
+                };
             }
         }
         return excludeListFilter;
@@ -463,34 +451,27 @@ public class RegressionParameters
                 } catch (ExcludeList.Fault | IOException e) {
                     throw new Error(e);
                 }
-                matchListFilter = new CachingTestFilter(new TestFilter() {
+                matchListFilter = new CachingTestFilter(
+                        "jtregMatchListFilter",
+                        "Select tests which are in a match list",
+                        "Test has not been matched by a match list") {
                     final TestListWithPlatforms list = new TestListWithPlatforms(el);
                     @Override
-                    public String getName() {
-                        return "jtregMatchListFilter";
+                    protected String getCacheKey(TestDescription td) {
+                        return td.getRootRelativeURL();
                     }
 
                     @Override
-                    public String getDescription() {
-                        return "Select tests which are in a match list";
-                    }
-
-                    @Override
-                    public String getReason() {
-                        return "Test has not been matched by a match list";
-                    }
-
-                    @Override
-                    public boolean accepts(TestDescription td) throws TestFilter.Fault {
+                    public boolean getCacheableValue(TestDescription td) {
                         return list.match(td);
                     }
-                });
+                };
             }
         }
         return matchListFilter;
     }
 
-    CachingTestFilter matchListFilter = UNSET;
+    TestFilter matchListFilter = UNSET;
 
     /**
      * {@inheritDoc}
@@ -501,34 +482,64 @@ public class RegressionParameters
      * @return a filter based on the keywords given on the command line.
      */
     @Override
-    public CachingTestFilter getKeywordsFilter() {
-        if (keywordsFilter == UNSET) {
+    public KeywordsTestFilter getKeywordsFilter() {
+        if (keywordsFilter == UNSET_KEYWORDS_FILTER) {
             TestFilter f = super.getKeywordsFilter();
-            keywordsFilter = (f == null) ? null : new CachingTestFilter(f);
+            keywordsFilter = (f == null) ? null : new KeywordsTestFilter(f);
         }
         return keywordsFilter;
     }
 
-    private CachingTestFilter keywordsFilter = UNSET;
+    private KeywordsTestFilter keywordsFilter = UNSET_KEYWORDS_FILTER;
 
-    private static final CachingTestFilter UNSET = new CachingTestFilter(new TestFilter() {
+    public static class KeywordsTestFilter extends TestFilter {
+        private final TestFilter delegate;
+        public final Set<String> ignored = new HashSet<>();
+
+        KeywordsTestFilter(TestFilter delegate) {
+            this.delegate = delegate;
+        }
+
         @Override
         public String getName() {
-            throw new IllegalStateException();
+            return delegate.getName();
         }
+
         @Override
         public String getDescription() {
-            throw new IllegalStateException();
+            return delegate.getDescription();
         }
+
         @Override
         public String getReason() {
+            return delegate.getReason();
+        }
+
+        @Override
+        public boolean accepts(TestDescription td) throws Fault {
+            // for standard jtreg tests, there's no point in caching the
+            // evaluation of the keywords, because each test probably has a
+            // unique set of keywords, by virtue of implicit keywords,
+            // such as for @bug.  However, we can record the ignored tests.
+            boolean ok = delegate.accepts(td);
+            if (!ok && td.getKeywordTable().contains("ignore")) {
+                ignored.add(td.getRootRelativeURL());
+            }
+            return ok;
+        }
+    }
+
+    private static final CachingTestFilter UNSET = new CachingTestFilter("", "", "") {
+        public String getCacheKey(TestDescription td) {
             throw new IllegalStateException();
         }
         @Override
-        public boolean accepts(TestDescription td) throws TestFilter.Fault {
+        public boolean getCacheableValue(TestDescription td) {
             throw new IllegalStateException();
         }
-    });
+    };
+
+    private static KeywordsTestFilter UNSET_KEYWORDS_FILTER = new KeywordsTestFilter(UNSET);
 
     //---------------------------------------------------------------------
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -25,6 +25,7 @@
 
 package com.sun.javatest.regtest.config;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -33,42 +34,99 @@ import com.sun.javatest.TestDescription;
 import com.sun.javatest.TestFilter;
 
 /**
- * A test filter that caches the results of a delegate filter.
+ * A test filter that caches its results.
  */
-public class CachingTestFilter extends TestFilter {
-    private TestFilter delegate;
-    private final Map<TestDescription, Boolean> cache = new HashMap<TestDescription, Boolean>();
+public abstract class CachingTestFilter extends TestFilter {
+    private final String name;
+    private final String description;
+    private final String reason;
 
-    CachingTestFilter(TestFilter delegate) {
-        if (delegate == null)
-            throw new NullPointerException();
-        this.delegate = delegate;
+    public class Entry {
+        public final TestDescription td;
+        public final Boolean value;
+        Entry(TestDescription td, Boolean v) {
+            this.td = td;
+            this.value = v;
+        }
+    }
+    private final Map<String, Entry> cache = new HashMap<String, Entry>();
+
+    /**
+     * Creates a CachingTestFilter.
+     *
+     * @param name the name of this filter
+     * @param description a description of this filter
+     * @param reason the reason to give when not accepting a test
+     */
+    CachingTestFilter(String name, String description, String reason) {
+        this.name = name;
+        this.description = description;
+        this.reason = reason;
     }
 
-    public Map<TestDescription, Boolean> getCache() {
-        return Collections.unmodifiableMap(cache);
+    /**
+     * Returns the cache key to use for a test description.
+     *
+     * @param td the test description
+     * @return the key to use when looking up values in the cache
+     */
+    protected abstract String getCacheKey(TestDescription td);
+
+    /**
+     * Returns the value to be used as the result the {@code accept} method.
+     *
+     * @param td the test description
+     * @return the value
+     */
+    protected abstract boolean getCacheableValue(TestDescription td) throws Fault;
+
+    /**
+     * Returns the unmodifiable collection of entries in the cache.
+     * @return the entries
+     */
+    public Collection<Entry> getCacheEntries() {
+        return Collections.unmodifiableCollection(cache.values());
+    }
+
+    /**
+     * Clears all entries from the cache.
+     */
+    public void clear() {
+        cache.clear();
     }
 
     @Override
     public String getName() {
-        return delegate.getName();
+        return name;
     }
 
     @Override
     public String getDescription() {
-        return delegate.getDescription();
+        return description;
     }
 
     @Override
     public String getReason() {
-        return delegate.getReason();
+        return reason;
     }
 
+    /**
+     * Returns whether or not this filter accepts a test description.
+     *
+     * If there is not already a value for the test description in the cache,
+     * the value will be determined by calling {@code getCacheableValue}.
+     *
+     * @param td the test description
+     * @return whether or not this filter accepts the test description
+     * @throws Fault if an error occurs.
+     */
     @Override
-    public boolean accepts(TestDescription td) throws Fault {
-        Boolean b = cache.get(td);
-        if (b == null)
-            cache.put(td, b = delegate.accepts(td));
-        return b;
+    public final boolean accepts(TestDescription td) throws Fault {
+        String key = getCacheKey(td);
+        Entry e = cache.get(key);
+        if (e == null) {
+            cache.put(key, e = new Entry(td, getCacheableValue(td)));
+        }
+        return e.value;
     }
 }

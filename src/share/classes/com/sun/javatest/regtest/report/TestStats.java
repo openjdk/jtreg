@@ -60,19 +60,14 @@ public class TestStats {
             public void finishedTesting() {
                 CachingTestFilter ef = params.getExcludeListFilter();
                 if (ef != null) {
-                    for (Boolean b: ef.getCache().values()) {
-                        if (!b)
+                    for (CachingTestFilter.Entry e: ef.getCacheEntries()) {
+                        if (!e.value)
                             excluded++;
                     }
                 }
-                CachingTestFilter kf = params.getKeywordsFilter();
+                RegressionParameters.KeywordsTestFilter kf = params.getKeywordsFilter();
                 if (kf != null) {
-                    for (Map.Entry<TestDescription, Boolean> e: params.getKeywordsFilter().getCache().entrySet()) {
-                        TestDescription td = e.getKey();
-                        boolean accepted = e.getValue();
-                        if (!accepted && td.getKeywordTable().contains("ignore"))
-                            ignored++;
-                    }
+                    ignored = kf.ignored.size();
                 }
             }
 

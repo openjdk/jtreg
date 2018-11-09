@@ -108,7 +108,7 @@ public class RegressionScript extends Script {
         defaultModules = params.getTestJDK().getDefaultModules(params);
         systemModules = params.getTestJDK().getSystemModules(params);
 
-        String filterFault = params.filterFaults.get(td);
+        String filterFault = params.filterFaults.get(td.getRootRelativeURL());
         if (filterFault != null)
             return Status.error(filterFault);
 
