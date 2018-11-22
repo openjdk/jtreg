@@ -83,7 +83,7 @@ public class JTRegConfiguration extends JavaTestConfigurationBase {
     }
 
     @Override
-    public void setEnvs(@NotNull Map<String, String> map) {
+    public void setEnvs(Map<String, String> map) {
     }
 
     @NotNull
