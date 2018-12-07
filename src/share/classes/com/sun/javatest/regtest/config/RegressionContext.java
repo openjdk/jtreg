@@ -44,7 +44,7 @@ public class RegressionContext implements Expr.Context {
         try {
             return new RegressionContext(null);
         } catch (JDK.Fault f) {
-            throw new IllegalStateException();
+            throw new IllegalStateException(f);
         }
     }
 

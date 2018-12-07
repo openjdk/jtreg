@@ -26,7 +26,6 @@
 package com.sun.javatest.regtest.config;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
@@ -321,11 +320,8 @@ public class RegressionParameters
 
 
     private static class TestListWithPlatforms {
-        private static final Set<String> PLATFORMS = new HashSet<>();
 
-        static {
-            // warning: os.arch depends on JVM; it ideally should come from the test jdk
-            OS os = OS.current();
+        private static Set<String> getPlatforms(OS os) {
 
             // On JPRT, we see the following various types of values for these properties
             //    os.arch              amd64
@@ -355,18 +351,22 @@ public class RegressionParameters
             //    OSNAME-all    Where OSNAME is one of: solaris, linux, windows
             //    OSNAME-ARCH   Specific on to one OSNAME and ARCH, e.g. solaris-x64
             //    OSNAME-REV    Specific on to one OSNAME and REV, e.g. solaris-5.8
+            Set<String> platforms = new HashSet<>();
             for (String p: Arrays.asList(os.name, os.name.replaceAll("\\s", ""), os.family, "generic")) {
                 for (String q: Arrays.asList(null, os.arch, os.simple_arch, os.version, os.simple_version, "all")) {
                     String ep = (q == null) ? p : p + "-" + q;
-                    PLATFORMS.add(ep.toLowerCase());
+                    platforms.add(ep.toLowerCase());
                 }
             }
+            return platforms;
         }
 
         private final ExcludeList el;
+        private final Set<String> osPlatforms;
 
-        TestListWithPlatforms(ExcludeList el) {
+        TestListWithPlatforms(ExcludeList el, OS os) {
             this.el = el;
+            this.osPlatforms = getPlatforms(os);
         }
 
         public boolean match(TestDescription td) {
@@ -387,7 +387,7 @@ public class RegressionParameters
             }
 
             for (String p: platforms) {
-                if (PLATFORMS.contains(p.toLowerCase())) {
+                if (osPlatforms.contains(p.toLowerCase())) {
                     return true;
                 }
             }
@@ -421,7 +421,7 @@ public class RegressionParameters
                         "jtregExcludeListFilter",
                         "Select tests which are not excluded on any exclude list",
                         "Test has been excluded by an exclude list") {
-                    final TestListWithPlatforms list = new TestListWithPlatforms(el);
+                    final TestListWithPlatforms list = new TestListWithPlatforms(el, getTestOS());
                     @Override
                     protected String getCacheKey(TestDescription td) {
                         return td.getRootRelativeURL();
@@ -455,7 +455,7 @@ public class RegressionParameters
                         "jtregMatchListFilter",
                         "Select tests which are in a match list",
                         "Test has not been matched by a match list") {
-                    final TestListWithPlatforms list = new TestListWithPlatforms(el);
+                    final TestListWithPlatforms list = new TestListWithPlatforms(el, getTestOS());
                     @Override
                     protected String getCacheKey(TestDescription td) {
                         return td.getRootRelativeURL();
@@ -1201,6 +1201,27 @@ public class RegressionParameters
     }
 
     private TimeoutHandlerProvider timeoutHandlerProvider;
+
+    //---------------------------------------------------------------------
+
+    private OS getTestOS() {
+        // In general, and particularly when running tests, the testJDK should always be set.
+        // But in some testing and reporting situations, it may not be. In these cases,
+        // we default to the current platform.
+        JDK jdk = getTestJDK();
+        if (jdk == null) {
+            return OS.current();
+        } else {
+            try {
+                return OS.forProps(testJDK.getProperties(this));
+            } catch (JDK.Fault f) {
+                // If it was going to happen, this exception would have been thrown
+                // and caught early on, during Tool.createParameters; by now, the
+                // properties should always be available.
+                throw new IllegalStateException(f);
+            }
+        }
+    }
 
     //---------------------------------------------------------------------
 
