@@ -155,6 +155,10 @@ public class TestProperties {
         return getEntry(file).maxOutputSize;
     }
 
+    boolean getAllowSmartActionArgs(File file) {
+        return getEntry(file).allowSmartActionArgs;
+    }
+
     private Cache.Entry getEntry(File file) {
         File dir = file.isDirectory() ? file : file.getParentFile();
         return cache.getEntry(dir);
@@ -201,6 +205,7 @@ public class TestProperties {
             final Set<File> extLibRoots;
             final Set<String> modules;
             final int maxOutputSize;
+            final boolean allowSmartActionArgs;
 
             Entry(Entry parent, File dir) {
                 this.parent = parent;
@@ -247,6 +252,12 @@ public class TestProperties {
 
                     // add the maxOutputSize for result content
                     maxOutputSize = getInt("maxOutputSize", -1);
+
+                    // determine whether tests can use "smart action args"
+                    allowSmartActionArgs =
+                            properties.containsKey("allowSmartActionArgs")
+                                    ? properties.getProperty("allowSmartActionArgs").equals("true")
+                                    : parent == null ? false : parent.allowSmartActionArgs;
                 } else {
                     if (parent == null)
                         throw new IllegalStateException("TEST.ROOT not found");
@@ -262,6 +273,7 @@ public class TestProperties {
                     extLibRoots = parent.extLibRoots;
                     modules = parent.modules;
                     maxOutputSize = parent.maxOutputSize;
+                    allowSmartActionArgs = parent.allowSmartActionArgs;
                 }
 
                 useBootClassPath= initUseBootClassPath(parent, dir);

@@ -48,6 +48,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.sun.javatest.Script;
 import com.sun.javatest.Status;
@@ -58,6 +60,7 @@ import com.sun.javatest.TestSuite;
 import com.sun.javatest.regtest.agent.JDK_Version;
 import com.sun.javatest.regtest.agent.SearchPath;
 import com.sun.javatest.regtest.config.ExecMode;
+import com.sun.javatest.regtest.config.Expr;
 import com.sun.javatest.regtest.config.IgnoreKind;
 import com.sun.javatest.regtest.config.JDK;
 import com.sun.javatest.regtest.config.JDKOpts;
@@ -268,15 +271,12 @@ public class RegressionScript extends Script {
             if (e.getCause() != null)
                 msg += " (" + e.getCause() + ")";
             status = error(msg);
-        } catch (TestSuite.Fault e) {
-            status = error(e.getMessage());
-        } catch (Locations.Fault e) {
-            status = error(e.getMessage());
-        } catch (Modules.Fault e) {
-            status = error(e.getMessage());
-        } catch (ParseActionsException e) {
-            status = error(e.getMessage());
-        } catch (TestRunException e) {
+        } catch (Expr.Fault
+                | Locations.Fault
+                | Modules.Fault
+                | ParseActionsException
+                | TestRunException
+                | TestSuite.Fault e) {
             status = error(e.getMessage());
         } finally {
             int elapsed = (int) (System.currentTimeMillis() - started);
@@ -346,11 +346,11 @@ public class RegressionScript extends Script {
                     files.addAll(a);
             }
             return files;
-        } catch (Locations.Fault e) {
-            return Collections.emptySet();
-        } catch (Modules.Fault e) {
-            return Collections.emptySet();
-        } catch (ParseException e) {
+        } catch (Expr.Fault
+                | Locations.Fault
+                | Modules.Fault
+                | ParseException
+                | TestSuite.Fault e) {
             return Collections.emptySet();
         } catch (ParseActionsException shouldNotHappen) {
             throw new Error(shouldNotHappen);
@@ -372,11 +372,13 @@ public class RegressionScript extends Script {
      * is found, a ParseActionsException will be thrown, giving a detail message.
      * @return a Fifo of Action objects
      */
-    LinkedList<Action> parseActions(String actions, boolean stopOnError) throws ParseActionsException, ParseException {
+    LinkedList<Action> parseActions(String actions, boolean stopOnError)
+            throws ParseActionsException, ParseException, TestSuite.Fault, Expr.Fault {
         LinkedList<Action> actionList = new LinkedList<>();
         String[] runCmds = StringUtils.splitTerminator(LINESEP, actions);
         populateActionTable();
 
+        Expr.Context exprContext = params.getExprContext();
         for (String runCmd : runCmds) {
             // e.g. reason compile/fail/ref=Foo.ref -debug Foo.java
             // where "reason" indicates why the action should run
@@ -404,7 +406,7 @@ public class RegressionScript extends Script {
                     continue;
                 }
                 Action action = (Action) (c.getDeclaredConstructor().newInstance());
-                action.init(opts, args, getReason(tokens), this);
+                action.init(opts, processArgs(args, exprContext), getReason(tokens), this);
                 actionList.add(action);
             } catch (IllegalAccessException e) {
                 if (stopOnError)
@@ -417,6 +419,43 @@ public class RegressionScript extends Script {
 
         return actionList;
 
+    }
+
+    private List<String> processArgs(List<String> args, Expr.Context c) throws TestSuite.Fault, Expr.Fault {
+        if (!testSuite.getAllowSmartActionArgs(td))
+            return args;
+
+        boolean fast = true;
+        for (String arg : args) {
+            fast = fast && (arg.indexOf("${") == -1);
+        }
+        if (fast) {
+            return args;
+        }
+        List<String> newArgs = new ArrayList<>();
+        for (String arg : args) {
+            newArgs.add(evalNames(arg, c));
+        }
+        return newArgs;
+    }
+
+    private static final Pattern namePattern = Pattern.compile("\\$\\{([A-Za-z0-9._]+)\\}");
+
+    private static String evalNames(String arg, Expr.Context c) throws Expr.Fault {
+        Matcher m = namePattern.matcher(arg);
+        StringBuffer sb = null;
+        while (m.find()) {
+            if (sb == null) {
+                sb = new StringBuffer();
+            }
+            m.appendReplacement(sb, c.get(m.group(1)));
+        }
+        if (sb == null) {
+            return arg;
+        } else {
+            m.appendTail(sb);
+            return sb.toString();
+        }
     }
 
     //---------- methods for timing --------------------------------------------
@@ -1178,7 +1217,7 @@ public class RegressionScript extends Script {
         } // TestClassException()
     }
 
-    static String getVersion() {
+    private static String getVersion() {
         if (version == null) {
             StringBuilder sb = new StringBuilder();
             Version v = Version.getCurrent();
@@ -1194,7 +1233,7 @@ public class RegressionScript extends Script {
         return version;
     }
     // where
-    static String version;
+    private static String version;
 
     //----------misc statics---------------------------------------------------
 

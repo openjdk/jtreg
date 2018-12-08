@@ -172,6 +172,10 @@ public class RegressionParameters
         exprContext = new RegressionContext(this);
     }
 
+    public Expr.Context getExprContext() {
+        return exprContext;
+    }
+
     @Override
     public TestFilter getRelevantTestFilter() {
         if (relevantTestFilter == UNSET) {

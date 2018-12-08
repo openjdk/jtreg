@@ -51,7 +51,7 @@
 <p>Comments and questions to:
 <a href="mailto:jtreg-use@openjdk.java.net">jtreg-use@openjdk.java.net</a>.
 <br>
-1.44, 31 July, 2018
+1.45, 07 December, 2018
 </div>
 
 <p>This is a specification document, not a tutorial.  For more basic information
@@ -79,7 +79,7 @@ please consult the jtreg FAQ at
 <a href="#requires_names">Supported names for @requires</a> &middot;
 <a href="#testvars">Test-specific system properties and environment variables</a>
 
-<h2><a id="LEADING_COMMENTS">LEADING COMMENTS AND DEFINING FILES</a></h2>
+<h2 id="LEADING_COMMENTS">LEADING COMMENTS AND DEFINING FILES</h2>
 
 <p>A particular test may involve several files of various types, but the test is
 specified in just one of them.  Let this be called the <dfn>defining file</dfn> of the
@@ -122,7 +122,7 @@ without comments is not a defining file; a file whose leading comment
 does not start with "<code>@test</code>" is not a defining file.
 
 
-<h2><a id="TAG_SYNTAX">TAG SYNTAX</a></h2>
+<h2 id="TAG_SYNTAX">TAG SYNTAX</h2>
 
 <p>Within a leading comment, a tag consists of a tag token followed by some number
 of arguments.  A tag token is any token whose first character is '@'.  There is
@@ -141,8 +141,15 @@ the comment, the end of the file, or the next tag token, whichever comes first.
 Argument tokens are separated by whitespace; if commas are used, they will be
 considered to be part of the tokens to which they are adjacent.
 
+<p>The arguments of a tag may contain references to various properties, using
+the syntax <code>${<var>&lt;name&gt;</var>}</code>. 
+The set of names is the same as the set that may be used in an 
+<code>@requires</code> expression, and is defined in <a href="#requires_names">Appendix 1</a>.
+This feature is off by default; it can be enabled or disabled by updating
+<code><a href="#allowSmartActionArgs">allowSmartActionArgs</a></code> in
+the <a href="#config">configuration files</a>.
 
-<h2><a id="INFORMATIONAL_TAGS">INFORMATIONAL TAGS</a></h2>
+<h2 id="INFORMATIONAL_TAGS">INFORMATIONAL TAGS</h2>
 
 <p>Informational tags document the test.  They do not affect the operation of the
 harness, but may be used by the harness in generating reports.
@@ -176,7 +183,7 @@ better left to the source code management system for the test suite.
 once in a given test. The <code>@comment</code> tag may be used multiple times.
 
 
-<h2><a id="DECLARATIVE_TAGS">DECLARATIVE TAGS</a></h2>
+<h2 id="DECLARATIVE_TAGS">DECLARATIVE TAGS</h2>
 
 <p>Declarative tags govern the execution of the tags that follow them.
 
@@ -337,7 +344,7 @@ be enclosed in parentheses and combined with '&amp;'.</p>
 
 </dl>
 
-<h2><a id="ACTION_TAGS">ACTION TAGS</a></h2>
+<h2 id="ACTION_TAGS">ACTION TAGS</h2>
 
 <p>Action tags tell the harness how to perform the test.  They are executed in the
 order in which they are given.  Each action either passes or fails.  If an
@@ -373,7 +380,7 @@ in double quotes to prevent the usual interpretation of '=', '/', and
 whitespace.
 
 
-<h3><a id="ACTION_OPTIONS">ACTION OPTIONS</a></h3>
+<h3 id="ACTION_OPTIONS">ACTION OPTIONS</h3>
 
 <p>Not all action types support all options.
 
@@ -448,7 +455,7 @@ assumed.
 <p>This option may only be used in conjunction with the <code>/othervm</code> option.
 </dl>
 
-<h3><a id="CLASS_NAMES">CLASS NAMES AS ACTION ARGUMENTS</a></h3>
+<h3 id="CLASS_NAMES">CLASS NAMES AS ACTION ARGUMENTS</h3>
 
 <p>Some actions take one or more class names as arguments.  Each such argument is
 the name of a class, not the name of a class file, so the ".class" suffix
@@ -466,7 +473,7 @@ the corresponding directory relative to the directory containing the defining
 file of the test.
 
 
-<h3><a id="WILDCARDS">CLASS-NAME WILDCARDS</a></h3>
+<h3 id="WILDCARDS">CLASS-NAME WILDCARDS</h3>
 
 <p>Some actions take either class names or class-name wildcards as arguments.  A
 class-name wildcard can be specified in one of the following ways:
@@ -479,7 +486,7 @@ class-name wildcard can be specified in one of the following ways:
 </ul>
 
 
-<h3><a id="ACTION_TYPES">ACTION TYPES</a></h3>
+<h3 id="ACTION_TYPES">ACTION TYPES</h3>
 
 <dl class="tags">
 
@@ -746,7 +753,7 @@ describe why the test is being ignored.  These tokens may be displayed by the
 harness in some appropriate fashion.
 </dl>
 
-<h2><a id="ORDER">ORDER OF TAGS</a></h2>
+<h2 id="ORDER">ORDER OF TAGS</h2>
 
 <p>The following is the recommended order for the tags in a test description:</p>
 <ul>
@@ -760,7 +767,7 @@ harness in some appropriate fashion.
     <li><i>action tags, in the order to be executed</i></li>
 </ul>
 
-<h2><a id="TESTNG">TESTNG</a></h2>
+<h2 id="TESTNG">TESTNG</h2>
 
 <p>A directory within the source directory structure may be configured to
 be the root of a set of TestNG tests. When so configured, all Java source
@@ -773,7 +780,7 @@ may not contain any action tags.
 action specifying all the Java source files in the set, followed by an
 implicit action to execute the test as a TestNG test.
 
-<h2><a id="DIRECTORY_CONTEXT">DIRECTORY CONTEXT</a></h2>
+<h2 id="DIRECTORY_CONTEXT">DIRECTORY CONTEXT</h2>
 
 <p>Each test is run in a context that defines the following directories.
 <dl class="terms">
@@ -828,7 +835,7 @@ InputStream in = new FileInputStream(f);
 <p>By defaulting the directory to ".", this technique allows the test to be run
 standalone in its source directory.
 
-<h2><a id="TEST_GROUPS">TEST GROUPS</a></h2>
+<h2 id="TEST_GROUPS">TEST GROUPS</h2>
 
 <p>Groups are defined in a test suite using one or more Java
 properties files. The names of these files must be listed in
@@ -846,8 +853,8 @@ There must be no spaces between the "-" and the name that follows.
 There must be no spaces between the ":" and the name that follows.
 </ul>
 
-<h2><a id="SOURCE_STRUCTURE">SOURCE-DIRECTORY STRUCTURE</a> AND
-<a id="config">TEST-SUITE CONFIGURATION FILES</a></h2>
+<h2 id="SOURCE_STRUCTURE">SOURCE-DIRECTORY STRUCTURE AND
+<span id="config">TEST-SUITE CONFIGURATION FILES</span></h2>
 
 <p>This specification places few constraints upon the structure of a tree of source
 directories.  Some test harnesses may be able to provide more robust behavior or
@@ -858,7 +865,7 @@ test-source tree.
 
 
 
-<p>The <a id="TEST_ROOT">TEST.ROOT</a> file contains test-suite configuration
+<p>The <span id="TEST_ROOT">TEST.ROOT</span> file contains test-suite configuration
 information. It is in the standard Java property-file format as described in the
 specification of the <code>java.util.Properties</code> class.
 Properties defined in this file apply to the entire test suite.
@@ -982,10 +989,16 @@ by setting the system property <code>javatest.maxOutputSize</code>.
 <p style="font-size:smaller"><i>Note:</i>To set a system property for jtreg
 on the command line, use <code>-J-D<i>&lt;name&gt;</i>=<i>&lt;value&gt;</i></code>.
 
+<dt><code>allowSmartActionArgs <var>&lt;true|false&gt;+</var></code>
+<dd>Specify whether or not to permit the use of <code>${<var>&lt;name&gt;</var></code>
+in the arguments for an action. The set of names is the same as the set that
+may be used in an <code>@requires</code> expression. 
+See <a href="#requires_names">Appendix 1</a>.
+
 </dl>
 
 
-<h2><a id="DEFAULTS">DEFAULTS</a></h2>
+<h2 id="DEFAULTS">DEFAULTS</h2>
 
 <p>If no <code>@run</code> tags are present in a defining file, a default is assumed depending
 upon the file's filename extension.
@@ -1003,12 +1016,12 @@ upon the file's filename extension.
 </table>
 
 
-<h2><a id="SHORTHANDS">SHORTHANDS</a></h2>
+<h2 id="SHORTHANDS">SHORTHANDS</h2>
 
 <table>
 <caption>Shorthands</caption>
 <thead>
-    <tr><th>Shorthand                       <th>Equivalent
+    <tr><th>Shorthand                                  <th>Equivalent
 <tbody>
     <tr><td>@build <var>&lt;classname&gt;+</var>       <td>  @run build <var>&lt;classname&gt;+</var>
     <tr><td>@clean <var>&lt;classname&gt;+</var>       <td>  @run clean <var>&lt;classname&gt;+</var>
@@ -1016,7 +1029,7 @@ upon the file's filename extension.
     <tr><td>@ignore <var>&lt;word&gt;*</var>           <td>  @run ignore <var>&lt;word&gt;*</var>
 </table>
 
-<h2 class="appendix"><a id="EXAMPLES">EXAMPLES</a></h2>
+<h2 class="appendix" id="EXAMPLES">EXAMPLES</h2>
 
 <p>Run <code>Foo</code> in a separate VM, with the heap limited to 2MB and the verifier turned on:
 
@@ -1084,19 +1097,19 @@ paranoid.sp policy file:
  */
 </pre>
 
-<h2 class="appendix"><a id="requires_names">APPENDIX 1: SUPPORTED NAMES FOR @requires</a></h2>
+<h2 class="appendix" id="requires_names">APPENDIX 1: SUPPORTED NAMES FOR @requires AND ACTION ARGUMENTS</h2>
 
 <p><i>Note:</i> See the details for the test-suite <a href="#config">configuration files</a>
 for information on how to extend the set of supported names for a particular test suite.
 
 <table>
-<caption>Supported names for <code>@requires</code></caption>
+<caption>Supported names for <code>@requires</code> and action arguments</caption>
 <thead>
 <tr>
-    <th>@requires name
+    <th>Name
     <th>Description
-    <th>value if set
-    <th>default value<br><span style="font-size:smaller">if not null</span>
+    <th>Value if set
+    <th>Default value<br><span style="font-size:smaller">if not null</span>
 </thead>
 
 <tbody>
@@ -1187,7 +1200,7 @@ for information on how to extend the set of supported names for a particular tes
 </table>
 
 
-<h2 class="appendix"><a id="testvars">APPENDIX 2: TEST-SPECIFIC SYSTEM PROPERTIES and ENVIRONMENT VARIABLES</a></h2>
+<h2 class="appendix" id="testvars">APPENDIX 2: TEST-SPECIFIC SYSTEM PROPERTIES and ENVIRONMENT VARIABLES</h2>
 
 <p>The system properties in the following table will be set
 while executing any class specified in an action tag;
