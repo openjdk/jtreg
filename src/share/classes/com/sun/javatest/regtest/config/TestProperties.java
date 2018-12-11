@@ -254,10 +254,7 @@ public class TestProperties {
                     maxOutputSize = getInt("maxOutputSize", -1);
 
                     // determine whether tests can use "smart action args"
-                    allowSmartActionArgs =
-                            properties.containsKey("allowSmartActionArgs")
-                                    ? properties.getProperty("allowSmartActionArgs").equals("true")
-                                    : parent == null ? false : parent.allowSmartActionArgs;
+                    allowSmartActionArgs = initAllowSmartActionArgs(parent);
                 } else {
                     if (parent == null)
                         throw new IllegalStateException("TEST.ROOT not found");
@@ -428,6 +425,24 @@ public class TestProperties {
                     if (dir.equals(file))
                         return true;
                 }
+                return false;
+            }
+
+            private boolean initAllowSmartActionArgs(Entry parent) {
+                if (properties.containsKey("allowSmartActionArgs")) {
+                    return properties.getProperty("allowSmartActionArgs").equals("true");
+                }
+
+                if (parent != null) {
+                    return parent.allowSmartActionArgs;
+                }
+
+                // If and when this code is run, the main requiredVersion member is not yet initialized.
+                String rv = properties.getProperty("requiredVersion");
+                if (rv != null) {
+                    return new Version(rv).compareTo(new Version("4.2 b14")) >= 0;
+                }
+
                 return false;
             }
 

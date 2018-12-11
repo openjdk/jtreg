@@ -29,7 +29,7 @@
 import java.util.Arrays;
 
 public class Test {
-    private static final boolean expectDollar = true; // opt-auto, i.e. out
+    private static final boolean expectDollar = false; // opt-auto, i.e. in
 
     public static void main(String... args) throws Exception {
         System.out.println(Arrays.toString(args));

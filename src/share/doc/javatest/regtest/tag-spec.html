@@ -34,6 +34,7 @@
     dl.tags > dt { font-family: monospace; font-size:smaller }
     dl.terms > dt { font-style: italic }
     dl dd { margin-bottom: 1em } 
+    span.note { font-size: smaller; font-style: italic }
     table { border: 1px black solid; border-collapse: collapse }
     td { border-right: 1px black solid }
     th { border-right: 1px black solid; border-bottom: 1px black solid }
@@ -145,9 +146,12 @@ considered to be part of the tokens to which they are adjacent.
 the syntax <code>${<var>&lt;name&gt;</var>}</code>. 
 The set of names is the same as the set that may be used in an 
 <code>@requires</code> expression, and is defined in <a href="#requires_names">Appendix 1</a>.
-This feature is off by default; it can be enabled or disabled by updating
-<code><a href="#allowSmartActionArgs">allowSmartActionArgs</a></code> in
-the <a href="#config">configuration files</a>.
+<span class="note">
+Note: For compatibility reasons, this feature is only enabled by default
+when the test suite declares a <a href="#requiredVersion">required version</a> of 
+<code>jtreg 4.2 b14</code> and higher. The feature can be explicitly enabled or disabled 
+by setting <code><a href="#allowSmartActionArgs">allowSmartActionArgs</a></code> in
+the <a href="#config">configuration files</a>.</span>
 
 <h2 id="INFORMATIONAL_TAGS">INFORMATIONAL TAGS</h2>
 
@@ -876,28 +880,28 @@ that apply to files in that directory and its subdirectories.
 <p>The following properties may only appear in TEST.ROOT:
 
 <dl>
-<dt><code>checkBugId true|false</code>
+<dt id="checkBugId"><code>checkBugId true|false</code>
 <dd><p>Whether or not to check the format of strings in @bug tags.
 Checking is disabled if this property is set to <code>false</code>.</p>
 
-<dt><code>defaultExecMode agentvm|othervm|samevm</code>
+<dt id="defaultExecMode"><code>defaultExecMode agentvm|othervm|samevm</code>
 <dd><p>The default execution mode for tests in the test suite.
 A harness that supports multiple test execution modes may use
 this value to determine the default execution mode for tests in
 this test-suite.</p>
 
-<dt><code>groups <var>&lt;files&gt;</var></code>
+<dt id="groups"><code>groups <var>&lt;files&gt;</var></code>
 <dd><p>Where to find group definition files.
 A space separated list of files. Optional files should be enclosed in
 square brackets.</p>
 
-<dt><code>requiredVersion <var>&lt;version&gt;</var></code>
+<dt id="requiredVersion"><code>requiredVersion <var>&lt;version&gt;</var></code>
 <dd><p>Minimal version of the harness required for this test-suite.
 A version string in the format "[0-9.]+ ?b[0-9]+" (without the quotes). For example
 a value of "4.1 b03" declares that at least that version of the harness is required
 to run all the tests in the test suite.</p>
 
-<dt><code>requires.extraPropDefns <var>&lt;source-files&gt;</var></code><br>
+<dt id="requires.extraPropDefns"><code>requires.extraPropDefns <var>&lt;source-files&gt;</var></code><br>
 <dd><p>This option is used to provide source files for classes that will be used at the
 beginning of each test suite run, to determine additional characteristics of the system for
 use with the <code>@requires</code> tag. Each class must implement
@@ -928,13 +932,13 @@ will be given if the file is not available.
 <p>The following properties may appear in either TEST.ROOT or any TEST.properties file:
 
 <dl>
-<dt><code>keys <var>&lt;keywords&gt;</var></code>
+<dt id="keys"><code>keys <var>&lt;keywords&gt;</var></code>
 <dd><p>The set of valid keywords that can be used in @key tags.
 A harness that supports keyword-based test selection should reject any test
 containing keywords that are not present in this list.
 If this property is not present then no keywords should be accepted.</p>
 
-<dt><code>bootclasspath.dirs <var>&lt;directories&gt;</var></code>
+<dt id="bootclasspath.dirs"><code>bootclasspath.dirs <var>&lt;directories&gt;</var></code>
 <dd><p>Directories that when used should be placed on the bootclasspath.</p>
 
 <dt><code>othervm.dirs <var>&lt;directories&gt;</var></code>
@@ -943,45 +947,45 @@ A harness that supports multiple test execution modes should ensure
 that all tests in the specified directories are run in <code>othervm</code>
 mode.</p>
 
-<dt><code>exclusiveAccess.dirs <var>&lt;directories&gt;</var></code>
+<dt id="exclusiveAccess.dirs"><code>exclusiveAccess.dirs <var>&lt;directories&gt;</var></code>
 <dd><p>Directories containing tests which should not be run concurrently at
 the same time as other tests.
 A harness that supports concurrent test execution should ensure
 that all tests in the specified directories are run when no other
 tests in the same directory is being run.</p>
 
-<dt><code>TestNG.dirs <var>&lt;directories&gt;</var></code>
+<dt id="TestNG.dirs"><code>TestNG.dirs <var>&lt;directories&gt;</var></code>
 <dd><p>Directories containing TestNG-style tests.</p>
 
-<dt><code>lib.dirs <var>&lt;directories&gt;</var></code>
+<dt id="lib.dirs"><code>lib.dirs <var>&lt;directories&gt;</var></code>
 <dd><p>Default library directories used by all tests in or under the directory
 containing this property declaration.</p>
 
-<dt><code>lib.build <var>&lt;build-arguments&gt;</var></code>
+<dt id="lib.build"><code>lib.build <var>&lt;build-arguments&gt;</var></code>
 <dd><p>Default library components that will be built by tests in TestNG directories
 in or under the directory containing this property declaration.
 The values should be of a form that can be accepted by an <code>@build</code> tag.
 If not specified, the entire contents of any currently specified libraries will
 be built.</p>
 
-<dt><code>external.lib.roots <var>&lt;directories&gt;</var></code>
+<dt id="external.lib.roots"><code>external.lib.roots <var>&lt;directories&gt;</var></code>
 <dd><p>A search path for libraries specified in an <code>@library</code> tag.
 Relative paths will be evaluated relative to the directory containing the
 configuration file.</p>
 
-<dt><code>modules <var>&lt;module[/package[:flag]]&gt;+</var></code>
+<dt id="modules"><code>modules <var>&lt;module[/package[:flag]]&gt;+</var></code>
 <dd>
 <p>Express a default dependence, for tests in this directory and its subdirectories, 
 on modules in the system being tested, and optionally,
 on selected internal packages in some or all of those modules.</p>
 
-<dt><code>requires.properties <var>&lt;property-name&gt;+</var></code>
+<dt id="requires.properties"><code>requires.properties <var>&lt;property-name&gt;+</var></code>
 <dd>Declare property names that may be used in a <code>@requires</code> expression.
 The names may identify either system properties or additional test-suite specific
 properties return by calling the classes defined by the <code>@requires.extraPropDefns</code>
 family of configuration values.
 
-<dt><code>maxOutputSize <var>&lt;int-value&gt;+</var></code>
+<dt id="maxOutputSize"><code>maxOutputSize <var>&lt;int-value&gt;+</var></code>
 <dd>Override the default limit for the amount of output that will be
 saved on any stream being recorded by the test harness. For jtreg, the default
 limit for all tests is 100,000 characters, or can be set on the command line
@@ -989,7 +993,7 @@ by setting the system property <code>javatest.maxOutputSize</code>.
 <p style="font-size:smaller"><i>Note:</i>To set a system property for jtreg
 on the command line, use <code>-J-D<i>&lt;name&gt;</i>=<i>&lt;value&gt;</i></code>.
 
-<dt><code>allowSmartActionArgs <var>&lt;true|false&gt;+</var></code>
+<dt id="allowSmartActionArgs"><code>allowSmartActionArgs <var>&lt;true|false&gt;+</var></code>
 <dd>Specify whether or not to permit the use of <code>${<var>&lt;name&gt;</var></code>
 in the arguments for an action. The set of names is the same as the set that
 may be used in an <code>@requires</code> expression. 
