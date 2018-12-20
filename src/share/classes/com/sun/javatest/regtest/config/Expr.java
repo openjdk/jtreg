@@ -502,7 +502,7 @@ public abstract class Expr {
         }
 
         public String eval(Context c) throws Fault {
-            return String.valueOf(left.evalBoolean(c) & right.evalBoolean(c));
+            return String.valueOf(left.evalBoolean(c) ? right.evalBoolean(c) : false);
         }
 
         int precedence() {
@@ -811,7 +811,7 @@ public abstract class Expr {
         }
 
         public String eval(Context c) throws Fault {
-            return String.valueOf(left.evalBoolean(c) | right.evalBoolean(c));
+            return String.valueOf(left.evalBoolean(c) ? true : right.evalBoolean(c));
         }
 
         int precedence() {
