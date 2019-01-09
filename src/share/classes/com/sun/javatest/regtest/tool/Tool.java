@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -570,6 +570,17 @@ public class Tool {
                 if (!f.isDirectory())
                     throw new BadArgs(i18n, "main.nativePathNotDir", arg);
                 nativeDirArg = f;
+            }
+        },
+
+        new Option(NONE, MAIN, null, "-wsl") {
+            @Override
+            public void process(String opt, String arg) throws BadArgs {
+                if (OS.current().family.equals("windows")) {
+                    useWindowsSubsystemForLinux = true;
+                } else {
+                    throw new BadArgs(i18n, "main.windowsOnly", opt);
+                }
             }
         },
 
@@ -1694,6 +1705,8 @@ public class Tool {
             if (nativeDirArg != null)
                 rp.setNativeDir(nativeDirArg);
 
+            rp.setUseWindowsSubsystemForLinux(useWindowsSubsystemForLinux);
+
             rp.initExprContext(); // will invoke/init jdk.getProperties(params)
 
             return rp;
@@ -2156,6 +2169,7 @@ public class Tool {
     private IgnoreKind ignoreKind;
     private List<File> classPathAppendArg = new ArrayList<>();
     private File nativeDirArg;
+    private boolean useWindowsSubsystemForLinux;
     private boolean jitFlag = true;
     private Help help;
     private boolean xmlFlag;

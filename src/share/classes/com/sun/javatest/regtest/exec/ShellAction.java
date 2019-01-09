@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -27,6 +27,7 @@ package com.sun.javatest.regtest.exec;
 
 import java.io.File;
 import java.io.PrintWriter;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -228,8 +229,15 @@ public class ShellAction extends Action
             }
 
             List<String> command = new ArrayList<>();
-            command.add("sh");
-            command.add(shellFile.getPath());
+            if (script.useWindowsSubsystemForLinux()) {
+                env.put("WSLENV", getWSLENV(env));
+                command.add("wsl.exe");
+                command.add("sh");
+                command.add(getWSLPath(shellFile));
+            } else {
+                command.add("sh");
+                command.add(shellFile.getPath());
+            }
             command.addAll(shellArgs);
 
             // PASS TO PROCESSCOMMAND
@@ -319,6 +327,42 @@ public class ShellAction extends Action
             value = "novalue";
         return value;
     } // parseShellManual()
+
+    private String getWSLENV(Map<String, String> env) {
+         StringBuilder sb = new StringBuilder();
+         String sep = "";
+         for (String name : env.keySet()) {
+             String suffix;
+             switch (name) {
+                 case "TESTSRC": case "TESTCLASSES":
+                 case "COMPILEJAVA": case "TESTJAVA":
+                     suffix = "/p";
+                     break;
+                 case "TESTSRCPATH": case "TESTCLASSPATH":
+                 case "TESTNATIVEPATH":
+                     suffix = "/l";
+                     break;
+                 default:
+                     if (name.equalsIgnoreCase("PATH")) {
+                         continue;
+                     }
+                     suffix = "";
+             }
+             sb.append(sep).append(name).append(suffix);
+             sep = ":";
+         }
+         return sb.toString();
+    }
+
+    private String getWSLPath(File file) {
+        Path path = file.toPath().toAbsolutePath();
+        StringBuilder result = new StringBuilder();
+        result.append("/mnt/").append(path.getRoot().toString().toLowerCase());
+        for (Path pathElement : path) {
+            result.append("/").append(pathElement);
+        }
+        return result.toString();
+    }
 
     //----------member variables------------------------------------------------
 

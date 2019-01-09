@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2001, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -1143,6 +1143,8 @@ public class RegressionParameters
 
     private String timeoutHandlerClassName;
 
+    //---------------------------------------------------------------------
+
     void setTimeoutHandlerPath(String timeoutHandlerPath) {
         timeoutHandlerPath.getClass(); // null check
         this.timeoutHandlerPath = new ArrayList<>();
@@ -1164,6 +1166,7 @@ public class RegressionParameters
 
     private List<File> timeoutHandlerPath;
 
+    //---------------------------------------------------------------------
 
     public void setTimeoutHandlerTimeout(long timeout) {
         this.timeoutHandlerTimeout = timeout;
@@ -1179,6 +1182,8 @@ public class RegressionParameters
 
     private long timeoutHandlerTimeout;
 
+    //---------------------------------------------------------------------
+
     public void setMatchLists(File[] files) {
         this.matchLists = Arrays.asList(files);
     }
@@ -1189,7 +1194,19 @@ public class RegressionParameters
 
     private List<File> matchLists;
 
+    //---------------------------------------------------------------------
 
+    public void setUseWindowsSubsystemForLinux(boolean useWindowsSubsystemForLinux) {
+        this.useWindowsSubsystemForLinux = useWindowsSubsystemForLinux;
+    }
+
+    public boolean useWindowsSubsystemForLinux() {
+        return useWindowsSubsystemForLinux;
+    }
+
+    private boolean useWindowsSubsystemForLinux;
+
+    //---------------------------------------------------------------------
 
     // Ideally, this method would be better on a "shared execution context" object
     public TimeoutHandlerProvider getTimeoutHandlerProvider() throws MalformedURLException {

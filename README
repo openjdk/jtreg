@@ -15,7 +15,7 @@ This is the recommended way to build jtreg, for those that want a simple,
 basic way to build jtreg.
 
 The script is intended to be run in a Unix-like shell, such as bash on Linux or
-MacOS, or with Cygwin on Windows. It takes one argument which is the
+Mac OS X, or with Cygwin or WSL on Windows. It takes one argument which is the
 installation of JDK to be used to build jtreg. In addition, Ant must be on your
 execution path as well as a suitable version of Java to run Ant. The version of
 JDK must be either JDK 7 or JDK 8.

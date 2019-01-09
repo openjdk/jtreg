@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -120,6 +120,7 @@ public class Main {
         private File reportDir;
         private File workDir;
         private File nativeDir;
+        private boolean wsl;
         private String concurrency;
         private String status;
         private String vmOption;
@@ -152,6 +153,10 @@ public class Main {
 
         public void setNativeDir(File nativeDir) {
             this.nativeDir = nativeDir;
+        }
+
+        public void setWSL(boolean wsl) {
+            this.wsl = wsl;
         }
 
         public void setJDK(File jdk) {
@@ -251,6 +256,7 @@ public class Main {
                 decoder.process("-reportDir", reportDir);
                 decoder.process("-workDir", workDir);
                 decoder.process("-nativeDir", nativeDir);
+                decoder.process("-wsl", wsl);
                 decoder.process("-jdk", jdk);
                 decoder.process("-verbose", verbose);
                 decoder.process("-agentVM", agentVM);
