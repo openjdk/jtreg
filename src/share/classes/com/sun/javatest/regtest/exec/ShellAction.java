@@ -357,7 +357,8 @@ public class ShellAction extends Action
     private String getWSLPath(File file) {
         Path path = file.toPath().toAbsolutePath();
         StringBuilder result = new StringBuilder();
-        result.append("/mnt/").append(path.getRoot().toString().toLowerCase());
+        // in the following line, just extract the drive letter (e.g. "C") from the root (e.g. "C:")
+        result.append("/mnt/").append(Character.toLowerCase(path.getRoot().toString().charAt(0)));
         for (Path pathElement : path) {
             result.append("/").append(pathElement);
         }
