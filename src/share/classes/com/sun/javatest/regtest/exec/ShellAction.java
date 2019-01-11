@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -356,9 +357,9 @@ public class ShellAction extends Action
 
     private String getWSLPath(File file) {
         Path path = file.toPath().toAbsolutePath();
+        char driveLetter = Character.toLowerCase(path.getRoot().toString().charAt(0));
         StringBuilder result = new StringBuilder();
-        // in the following line, just extract the drive letter (e.g. "C") from the root (e.g. "C:")
-        result.append("/mnt/").append(Character.toLowerCase(path.getRoot().toString().charAt(0)));
+        result.append("/mnt/").append(driveLetter);
         for (Path pathElement : path) {
             result.append("/").append(pathElement);
         }
