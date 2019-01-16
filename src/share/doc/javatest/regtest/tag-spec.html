@@ -741,6 +741,11 @@ and the following variables will be propagated if they are set:
     <code>TZ</code> and
     <code>windir</code>.
 
+In addition, when using Windows Subsystem for Linux (WSL) to run shell tests:
+<code>WSLENV</code> will be set appropriately;
+and <code>EXE_SUFFIX</code> will be set to <code>.exe</code>, to facilitate creating
+paths for tools to be executed by the shell script.
+
 <p>In addition, a number of test-specific environment variables will be
 set, giving details about the test itself. See <a href="#testvars">Appendix 2</a>
 for the complete list of these variables.
