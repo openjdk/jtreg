@@ -231,8 +231,8 @@ public class ShellAction extends Action
 
             List<String> command = new ArrayList<>();
             if (script.useWindowsSubsystemForLinux()) {
-                env.put("WSLENV", getWSLENV(env));
                 env.put("EXE_SUFFIX", ".exe");
+                env.put("WSLENV", getWSLENV(env));
                 command.add("wsl.exe");
                 command.add("sh");
                 command.add(getWSLPath(shellFile));
