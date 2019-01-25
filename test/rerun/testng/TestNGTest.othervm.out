@@ -19,6 +19,7 @@ TZ=GMT+0.00 \
         -J-Dtest.jdk=%JDKHOME% \
         -J-Dcompile.jdk=%JDKHOME% \
         -J-Dtest.timeout.factor=1.0 \
+        -J-Dtest.root=%WS%/test/rerun \
         @%BUILD%/RerunTest.othervm/work/testng/TestNGTest.d/compile.0.jta
 
 ### Section testng
@@ -42,6 +43,7 @@ CLASSPATH=%BUILD%/RerunTest.othervm/work/classes/testng:%WS%/test/rerun/testng:%
         -Dtest.jdk=%JDKHOME% \
         -Dcompile.jdk=%JDKHOME% \
         -Dtest.timeout.factor=1.0 \
+        -Dtest.root=%WS%/test/rerun \
         -Dmy.vm.option=x \
         -Dmy.java.option=x \
         com.sun.javatest.regtest.agent.MainWrapper %BUILD%/RerunTest.othervm/work/testng/TestNGTest.d/testng.1.jta testng/TestNGTest.java false TestNGTest

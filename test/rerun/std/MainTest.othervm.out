@@ -19,6 +19,7 @@ TZ=GMT+0.00 \
         -J-Dtest.jdk=%JDKHOME% \
         -J-Dcompile.jdk=%JDKHOME% \
         -J-Dtest.timeout.factor=1.0 \
+        -J-Dtest.root=%WS%/test/rerun \
         -XDmy.javac.option=x \
         -d %BUILD%/RerunTest.othervm/work/classes/std/MainTest.d \
         -sourcepath %WS%/test/rerun/std \
@@ -46,6 +47,7 @@ CLASSPATH=%BUILD%/RerunTest.othervm/work/classes/std/MainTest.d:%WS%/test/rerun/
         -Dtest.jdk=%JDKHOME% \
         -Dcompile.jdk=%JDKHOME% \
         -Dtest.timeout.factor=1.0 \
+        -Dtest.root=%WS%/test/rerun \
         -Dmy.vm.option=x \
         -Dmy.java.option=x \
         com.sun.javatest.regtest.agent.MainWrapper %BUILD%/RerunTest.othervm/work/std/MainTest.d/main.0.jta

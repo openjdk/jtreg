@@ -1100,6 +1100,7 @@ public class RegressionScript extends Script {
         p.put("test.jdk", getTestJDK().getAbsolutePath());
         p.put("compile.jdk", getCompileJDK().getAbsolutePath());
         p.put("test.timeout.factor", String.valueOf(getTimeoutFactor()));
+        p.put("test.root", getTestRootDir().getPath());
         if (!modules.isEmpty())
             p.put("test.modules", modules.toString());
         File nativeDir = getNativeDir();
@@ -1125,6 +1126,10 @@ public class RegressionScript extends Script {
             sb.append(f.getPath());
         }
         return sb.toString();
+    }
+
+    File getTestRootDir() {
+        return params.getTestSuite().getRootDir();
     }
 
     //--------------------------------------------------------------------------

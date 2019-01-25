@@ -17,6 +17,7 @@ TESTTOOLVMOPTS=-J-Dmy.vm.option=x \
 TESTJAVACOPTS=-XDmy.javac.option=x \
 TESTJAVAOPTS=-Dmy.java.option=x \
 TESTTIMEOUTFACTOR=1.0 \
+TESTROOT=%WS%/test/rerun \
     sh \
         %WS%/test/rerun/std/ShellTest.sh
 

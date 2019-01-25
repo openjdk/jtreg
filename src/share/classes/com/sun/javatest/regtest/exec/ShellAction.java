@@ -220,7 +220,8 @@ public class ShellAction extends Action
             env.put("TESTJAVACOPTS", fixupSep(StringUtils.join(compilerOpts, " ")));
             List<String> javaOpts = script.getTestJavaOptions();
             env.put("TESTJAVAOPTS", fixupSep(StringUtils.join(javaOpts, " ")));
-            env.put("TESTTIMEOUTFACTOR", script.getTimeoutFactor() + "");
+            env.put("TESTTIMEOUTFACTOR", String.valueOf(script.getTimeoutFactor()));
+            env.put("TESTROOT", script.getTestRootDir().getPath());
             Modules modules = script.getModules();
             if (!modules.isEmpty())
                 env.put("TESTMODULES", modules.toString());

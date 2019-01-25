@@ -21,6 +21,7 @@ TZ=GMT+0.00 \
         -J-Dtest.jdk=%JDKHOME% \
         -J-Dcompile.jdk=%JDKHOME% \
         -J-Dtest.timeout.factor=1.0 \
+        -J-Dtest.root=%WS%/test/rerun \
         -XDmy.javac.option=x \
         -d %BUILD%/RerunTest.agentvm/work/classes/std/MainTest.d \
         -sourcepath %WS%/test/rerun/std \
@@ -48,6 +49,7 @@ TZ=GMT+0.00 \
         -Dtest.jdk=%JDKHOME% \
         -Dcompile.jdk=%JDKHOME% \
         -Dtest.timeout.factor=1.0 \
+        -Dtest.root=%WS%/test/rerun \
         -classpath %BUILD%/RerunTest.agentvm/work/classes/std/MainTest.d:%WS%/test/rerun/std:%JDKHOME%/lib/tools.jar:%BUILD%/images/jtreg/lib/javatest.jar:%BUILD%/images/jtreg/lib/jtreg.jar \
         MainTest
 

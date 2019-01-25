@@ -19,6 +19,7 @@ TZ=GMT+0.00 \
         -J-Dtest.jdk=%JDKHOME% \
         -J-Dcompile.jdk=%JDKHOME% \
         -J-Dtest.timeout.factor=1.0 \
+        -J-Dtest.root=%WS%/test/rerun \
         -XDmy.javac.option=x \
         -d %BUILD%/RerunTest.othervm/work/classes/std/CompileTest.d \
         -sourcepath %WS%/test/rerun/std \

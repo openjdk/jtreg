@@ -19,6 +19,7 @@ TZ=GMT+0.00 \
         -J-Dtest.jdk=%JDKHOME% \
         -J-Dcompile.jdk=%JDKHOME% \
         -J-Dtest.timeout.factor=1.0 \
+        -J-Dtest.root=%WS%/test/rerun \
         -XDmy.javac.option=x \
         -d %BUILD%/RerunTest.othervm/work/classes/std/AppletTest.d \
         -sourcepath %WS%/test/rerun/std \
@@ -48,5 +49,6 @@ TZ=GMT+0.00 \
         -Dtest.jdk=%JDKHOME% \
         -Dcompile.jdk=%JDKHOME% \
         -Dtest.timeout.factor=1.0 \
+        -Dtest.root=%WS%/test/rerun \
         -mx128m com.sun.javatest.regtest.agent.AppletWrapper %BUILD%/RerunTest.othervm/work/std/AppletTest.d/applet.0.jta
 
