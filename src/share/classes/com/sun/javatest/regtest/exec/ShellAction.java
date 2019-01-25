@@ -41,6 +41,7 @@ import com.sun.javatest.Status;
 import com.sun.javatest.regtest.TimeoutHandler;
 import com.sun.javatest.regtest.config.Locations;
 import com.sun.javatest.regtest.config.Modules;
+import com.sun.javatest.regtest.config.OS;
 import com.sun.javatest.regtest.config.ParseException;
 import com.sun.javatest.regtest.util.StringUtils;
 
@@ -232,12 +233,26 @@ public class ShellAction extends Action
 
             List<String> command = new ArrayList<>();
             if (script.useWindowsSubsystemForLinux()) {
+                File java_exe = new File(new File(script.getTestJDK().getFile(), "bin"), "java.exe");
+                if (java_exe.exists()) {
+                    // invoking a Windows binary: use standard Windows separator characters
+                    env.put("FS", File.separator);
+                    env.put("PS", File.pathSeparator);
+                } else {
+                    // invoking a Linux binary: use Linux separator characters
+                    env.put("FS", "/");
+                    env.put("PS", ";");
+                }
+                env.put("NULL", "/dev/null");
                 env.put("EXE_SUFFIX", ".exe");
                 env.put("WSLENV", getWSLENV(env));
                 command.add("wsl.exe");
                 command.add("sh");
                 command.add(getWSLPath(shellFile));
             } else {
+                env.put("FS", File.separator);
+                env.put("PS", File.pathSeparator);
+                env.put("NULL", OS.current().family.equals("windows") ? "NUL" : "/dev/null");
                 command.add("sh");
                 command.add(shellFile.getPath());
             }
