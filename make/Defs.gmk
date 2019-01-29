@@ -141,6 +141,15 @@ JDKJAVA = $(JDKHOME)/bin/java
 JDKJAVAC = $(JDKHOME)/bin/javac
 JAR = $(JDKHOME)/bin/jar
 
+# Only use -source -target, to support legacy platforms, when building with JDK 7 or 8
+# Otherwise, use default values for $JDKHOME/bin/javac
+SUPPORT_OLD_SOURCE_TARGET = $(shell expr index "`$(JDKJAVAC) -version 2>&1`" 78 > /dev/null && echo true )
+ifneq ($(SUPPORT_OLD_SOURCE_TARGET),)
+    OLD_JAVAC_SOURCE_TARGET = -source 1.2 -target 1.1
+    AGENT_JAVAC_SOURCE_TARGET = -source 5 -target 5
+    TOOL_JAVAC_SOURCE_TARGET = -source 7 -target 7
+endif 
+
 ifdef JDK15HOME
     JDK15_BOOTCLASSPATH = -bootclasspath $(JDK15HOME)/jre/lib/rt.jar
 endif
@@ -151,17 +160,17 @@ endif
 # for files needed to run othervm tests on oldest supported platforms
 REGTEST_OLD_JAVAC = $(JDKHOME)/bin/javac
 REGTEST_OLD_JAVAC_OPTIONS = \
-	-source 1.2 -target 1.1 $(JDK15_BOOTCLASSPATH) -Xlint:all,-options -Werror
+	$(OLD_JAVAC_SOURCE_TARGET) $(JDK15_BOOTCLASSPATH) -Xlint:all,-options -Werror
 
 # for files needed to run agentvm tests (on platforms back to JDK 1.5)
 REGTEST_AGENT_JAVAC = $(JDKHOME)/bin/javac
 REGTEST_AGENT_JAVAC_OPTIONS = \
-	-source 5 -target 5 $(JDK15_BOOTCLASSPATH) -Xlint:all,-options -Werror
+	$(AGENT_JAVAC_SOURCE_TARGET) $(JDK15_BOOTCLASSPATH) -Xlint:all,-options -Werror
 
 # for files needed for jtreg tool
 REGTEST_TOOL_JAVAC = $(JDKHOME)/bin/javac
 REGTEST_TOOL_JAVAC_OPTIONS = \
-	-source 7 -target 7 $(JDK17_BOOTCLASSPATH) -Xlint:all,-options -Werror
+	$(TOOL_JAVAC_SOURCE_TARGET) $(JDK17_BOOTCLASSPATH) -Xlint:all,-options -Werror
 
 #----- JavaHelp
 #
