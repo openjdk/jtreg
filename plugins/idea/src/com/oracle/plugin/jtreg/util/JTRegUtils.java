@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2016, 2019 Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -32,15 +32,21 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.psi.util.PsiUtil;
+import com.intellij.openapi.diagnostic.Logger;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.stream.Stream;
+
 
 /**
  * This class contains several helper routines that are used by the jtreg plugin.
  */
 public class JTRegUtils {
+
+    private static final Logger LOG = Logger.getInstance(JTRegUtils.class);
 
     /**
      * Are we inside a jtreg test root?
@@ -58,14 +64,75 @@ public class JTRegUtils {
         return findJTRegRoot(file) != null;
     }
 
+    /**
+     * Given a file, searches up the vfs hierarchy for the closest parent directory containing the
+     * associated test suite config (TEST.ROOT).
+     * @param file the file
+     * @return file referring to the test root directory or null if not found
+     */
     public static VirtualFile findJTRegRoot(VirtualFile file) {
+        VirtualFile test_root_file = findRootFile(file);
+        if (test_root_file != null) {
+            return file.getParent();
+        }
+        return null;
+    }
+
+    /**
+     * Given a file, searches up the vfs hierarchy for the associated test suite
+     * configuration (a TEST.ROOT file in a parent directory).
+     * @param file the virtual file
+     * @return virtual file referring to TEST.ROOT or null if not found.
+     */
+    private static VirtualFile findRootFile(VirtualFile file) {
         while (file != null) {
-            if (file.findChild("TEST.ROOT") != null) {
-                return file;
+            VirtualFile rootFile = file.findChild("TEST.ROOT");
+            if (rootFile != null) {
+                return rootFile;
             }
             file = file.getParent();
         }
         return null;
+    }
+
+    /**
+     * Parse a test suite configuration.
+     * @param rootFile a file representing a test suite configuration (TEST.ROOT)
+     * @return a Properties object containing the parsed TEST.ROOT
+     */
+    private static Properties parseTestSuiteConfig(VirtualFile rootFile) {
+        Properties prop = null;
+        try {
+            prop = new Properties();
+            InputStream input = rootFile.getInputStream();
+            prop.load(input);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return prop;
+    }
+
+    // cache parsed test configurations.
+    private static HashMap<VirtualFile, Properties> _cachedTestConfigs = new HashMap<>();
+
+    /**
+     * Parse a test suite configuration.
+     * @param rootFile a file representing a test suite configuration (TEST.ROOT)
+     * @return a Properties object containing the parsed TEST.ROOT
+     */
+    private static Properties testSuiteConfigForRootFile(VirtualFile rootFile) {
+        Properties p = _cachedTestConfigs.get(rootFile);
+        if (p == null) {
+            p = parseTestSuiteConfig(rootFile);
+            if (p != null) {
+                LOG.debug("Parsing test suite config " + rootFile + "...");
+                _cachedTestConfigs.put(rootFile, p);
+                LOG.debug("Content: " + p);
+            }
+        } else {
+            LOG.debug("Returning cached test suite config for " + rootFile);
+        }
+        return p;
     }
 
     /**
@@ -130,6 +197,7 @@ public class JTRegUtils {
      * Retrieve the source roots associated with jtreg test with header.
      */
     public static List<VirtualFile> getJTRegRoots(PsiFile file) {
+        LOG.debug("JTregRoots for " + file + "...");
         if (file instanceof PsiJavaFile) {
             Optional<PsiComment> optHeader = PsiTreeUtil.findChildrenOfType(file, PsiComment.class).stream()
                     .filter(JTRegUtils::hasTestTag).findFirst();
@@ -138,8 +206,10 @@ public class JTRegUtils {
                 List<VirtualFile> roots = new ArrayList<>();
                 VirtualFile pkgRoot = getPackageRoot(file);
                 if (pkgRoot != null) {
+                    LOG.debug("Package root: " + pkgRoot.getParent());
                     roots.add(pkgRoot);
                 } else {
+                    LOG.debug("Package root not found, adding immediate parent.");
                     roots.add(file.getVirtualFile().getParent());
                 }
                 JTRegTagParser.Result result = JTRegTagParser.parseTags(header);
@@ -149,16 +219,57 @@ public class JTRegUtils {
                     for (Tag libTag : libTags) {
                         String libVal = libTag.getValue();
                         for (String lib : libVal.split(" ")) {
-                            VirtualFile libFile;
+                            VirtualFile libFile = null;
+                            LOG.debug("Processing @library \"" + lib + "\"...");
                             if (lib.startsWith("/")) {
                                 //absolute
-                                libFile = findJTRegRoot(file.getVirtualFile()).findFileByRelativePath(lib.substring(1));
+                                // Excerpt from jtreg tags specification:
+                                // "If an argument begins with '/', it will first be evaluated relative to the root
+                                //  directory of the test suite. It is an error if the resulting path is outside the
+                                //  test suite."
+                                VirtualFile testRootFile = findRootFile(file.getVirtualFile());
+                                if (testRootFile != null) {
+                                    VirtualFile jtRegRoot = testRootFile.getParent();
+                                    libFile = jtRegRoot.findFileByRelativePath(lib.substring(1));
+                                    if (libFile != null) {
+                                        LOG.debug("Found : " + libFile + " relative to test suite root.");
+                                    } else {
+                                        // "If the result does not identify an existing directory, it will be further
+                                        // evaluated against each entry of a search path in turn, until an existing
+                                        // directory is found. The search path is specified by the external.lib.roots
+                                        // entry in the test suite configuration files."
+                                        LOG.debug("Nothing found relative to test suite root.");
+                                        Properties testSuiteConfig = testSuiteConfigForRootFile(testRootFile);
+                                        if (testSuiteConfig != null) {
+                                            String s = testSuiteConfig.getProperty("external.lib.roots").trim();
+                                            if (s != null) {
+                                                LOG.debug("external.lib.roots = \"" + s + "\"");
+                                                // Note: jtreg tag specification for "external.lib.roots" talks about a
+                                                // search path with separate segments; however, all usages I see in our
+                                                // configurations are single paths, so to keep matters simple I treat it
+                                                // as a single path.
+                                                // The "external.lib.roots" is relative to the jtreg root
+                                                VirtualFile searchPath = jtRegRoot.findFileByRelativePath(s);
+                                                if (searchPath != null) {
+                                                    libFile = searchPath.findFileByRelativePath(lib);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
                             } else {
                                 //relative
                                 libFile = file.getParent().getVirtualFile().findFileByRelativePath(lib);
                             }
-                            if (libFile != null && libFile.exists()) {
-                                roots.add(libFile);
+                            if (libFile != null) {
+                                LOG.debug("@library \"" + lib + "\" resolves to " + libFile + ".");
+                                if (libFile.exists()) {
+                                    LOG.debug("which exists.");
+                                    roots.add(libFile);
+                                } else {
+                                    LOG.debug("which does not exists.");
+                                }
                             }
                         }
                     }

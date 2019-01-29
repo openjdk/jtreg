@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017, 2019 Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -204,6 +204,7 @@ public class JTRegFileManagerListener implements FileEditorManagerListener {
                 for (VirtualFile f : sourceRoots) {
                     Integer i = refCount.get(f);
                     if (i == null) {
+                        LOG.debug("Adding source folder: " + f);
                         contentEntry.addSourceFolder(f, true);
                     }
                     refCount.put(f, i == null ? 1 : i + 1);
@@ -226,6 +227,7 @@ public class JTRegFileManagerListener implements FileEditorManagerListener {
                 if (i == null) {
                     //not found - skip
                 } else if (i == 1) {
+                    LOG.debug("Removing source folder: " + s);
                     contentEntry.removeSourceFolder(s);
                     refCount.remove(f);
                 } else {
