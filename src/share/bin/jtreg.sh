@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright (c) 1998, 2016, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1998, 2019, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -47,6 +47,27 @@
 #
 # jtreg also provides Ant tasks; see the documentation for details.
 
+# Implementation notes for Windows:
+# Cygwin:
+#   Detected with `uname -s` (CYGWIN*)
+#   Windows drives are mounted with /cygdrive/LETTER
+# Windows Subsystem for Linux (WSL):
+#   Detected with `uname -s` (Linux) and /proc/version contains "Microsoft"
+#   Windows drives are mounted with /mnt/LETTER
+#   Windows binaries need an explicit .exe suffix.
+#
+# Values are evaluated according to whether the are used in the context of the
+# shell, or in the context of the JDK under test.
+# JTJAVA is evaluated for use in the shell, to run java
+# JTHOME is evaluated as a JDK arg, for use in -classpath or -jar args
+# Other command line are updated to be JDK args for jtreg.
+
+case "`uname -s`" in
+    CYGWIN* ) cygwin=1 ;;
+    Linux ) if grep -q Microsoft /proc/version ; then wsl=1 ; fi ;;
+esac
+
+
 # Determine jtreg/JavaTest installation directory
 if [ -n "$JT_HOME" ]; then
     if [ ! -r $JT_HOME/lib/jtreg.jar ];then
@@ -56,7 +77,8 @@ if [ -n "$JT_HOME" ]; then
 else
     # Deduce where script is installed
     # - should work on most derivatives of Bourne shell, like ash, bash, ksh,
-    #   sh, zsh, etc, including on Windows, MKS (ksh) and Cygwin (ash or bash)
+    #   sh, zsh, etc, including on Windows, MKS (ksh), Cygwin (ash or bash)
+    #   and Windows Subsystem for Linux (WSL)
     if type -p type 1>/dev/null 2>&1 && test -z "`type -p type`" ; then
         myname=`type -p "$0"`
     elif type type 1>/dev/null 2>&1 ; then
@@ -75,14 +97,8 @@ else
     fi
 fi
 
-# Normalize JT_HOME if using Cygwin
-case "`uname -s`" in
-    CYGWIN* ) cygwin=1 ; JT_HOME=`cygpath -a -m "$JT_HOME"` ;;
-esac
 
-
-# Separate out -J* options for the JVM
-# Note jdk as possible default to run jtreg
+# Look for -jdk option as possible default to run jtreg
 # Unset IFS and use newline as arg separator to preserve spaces in args
 DUALCASE=1  # for MKS: make case statement case-sensitive (6709498)
 saveIFS="$IFS"
@@ -90,12 +106,8 @@ nl='
 '
 for i in "$@" ; do
     IFS=
-    if [ -n "$cygwin" ]; then i=`echo $i | sed -e 's|/cygdrive/\([A-Za-z]\)/|\1:/|'` ; fi
     case $i in
-    -jdk:* )    jdk="`echo $i | sed -e 's/^-jdk://'`"
-                jtregOpts=$jtregOpts$nl$i ;;
-    -J* )       javaOpts=$javaOpts$nl`echo $i | sed -e 's/^-J//'` ;;
-    *   )       jtregOpts=$jtregOpts$nl$i ;;
+    -jdk:* )    jdk="`echo $i | sed -e 's/^-jdk://'`" ;;
     esac
     IFS="$saveIFS"
 done
@@ -114,6 +126,14 @@ else
     JT_JAVA=java
 fi
 
+# Fixup JT_JAVA, JTHOME as needed, if using Cygwin or WSL
+if [ -n "$cygwin" ]; then
+    JT_HOME=`cygpath -a -m "$JT_HOME"` ;
+elif [ -n "$wsl" -a -x "$JT_JAVA".exe ]; then
+    JT_JAVA="$JT_JAVA".exe
+    JT_HOME=`wslpath -a -m "$JT_HOME"`
+fi
+
 # Verify java version (1.)7 or newer used to run jtreg
 version=`"$JT_JAVA" -classpath "${JT_HOME}/lib/jtreg.jar" com.sun.javatest.regtest.agent.GetSystemProperty java.version 2>&1 |
         grep 'java.version=' | sed -e 's/^.*=//' -e 's/^1\.//' -e 's/\([1-9][0-9]*\).*/\1/'`
@@ -125,6 +145,28 @@ elif [ "$version" -lt 7 ]; then
     echo "java version 7 or later is required to run jtreg"
     exit 1;
 fi
+
+# Separate out -J* options for the JVM
+# Unset IFS and use newline as arg separator to preserve spaces in arg
+DUALCASE=1  # for MKS: make case statement case-sensitive (6709498)
+saveIFS="$IFS"
+nl='
+'
+if [ -n "$cygwin" ]; then
+  driveDir=cygdrive ;
+elif [ -n "$wsl" -a "${JT_JAVA##*.}" = "exe" ]; then
+  driveDir=mnt ;
+fi
+for i in "$@" ; do
+    IFS=
+    if [ -n "$driveDir" ]; then i=`echo $i | sed -e 's|/'$driveDir'/\([A-Za-z]\)/|\1:/|'` ; fi
+    case $i in
+    -J* )       javaOpts=$javaOpts$nl`echo $i | sed -e 's/^-J//'` ;;
+    *   )       jtregOpts=$jtregOpts$nl$i ;;
+    esac
+    IFS="$saveIFS"
+done
+unset DUALCASE
 
 # And finally ...
 
