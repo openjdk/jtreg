@@ -383,7 +383,7 @@ any of the following:
 
 You can also start `jtreg` directly, with a command of
 the form `java -jar jtreg.jar` _options_, but you
-will still need MKS, Cygwin or WSL installed to be able to run shell tests.
+will still need to install one of MKS, Cygwin or WSL to be able to run shell tests.
 
 ### Which should I use? MKS, Cygwin or WSL?
 
@@ -399,8 +399,10 @@ test at least works with MKS. If you prefer to use Cygwin, and can make
 your test run with both, so much the better.
 
 Support for Windows Subsystem for Linux is being added to the build system
-and tests for JDK 13. To enable the support in `jtreg`, use the new `jtreg`
-command-line option `-wsl`.
+and tests for JDK 13. If jtreg detects Cygwin on the execution path, jtreg will
+use Cygwin to run shell tests; otherwise, if jtreg detect WSL on the path,
+jtreg will use WSL to run shell tests. You can override the automatic selection
+by using either the `-wsl` or `-cygwin` command-line options.
 
 ### Does jtreg provide command-line help?
 
@@ -412,7 +414,7 @@ the options by using the `-help` option by itself:
 
 You may also get command line help for any option or topic by giving
 arguments to the `-help` option, in which case jtreg will just print
-the sections containing any of the specified terms.
+the sections containing any of the specified terms. For example:
 
     $ jtreg -help -workDir
     $ jtreg -help jdk
@@ -2619,3 +2621,17 @@ thread group that was created to run the main test code. If there
 are any such threads, jtreg will periodically interrupt them, until
 a timeout has been reached, at which point the message in question
 will be reported and the test will be reported as having an error.
+
+### Incompatible kind of JDK used to compile or run tests (...) with that used to run jtreg (...)
+
+**Answer**:  When using Windows Subsystem for Linux (WSL) to run jtreg, 
+or to run shell tests within jtreg, it is possible to run tests on either
+a Windows JDK or a Linux JDK. However, there is a restriction that to run 
+tests on a Linux JDK, you must also use a Linux JDK to run jtreg itself.
+(It need not be the same instance or same version of JDK).
+Likewise, to run tests on a Windows JDK, you must also use a Windows
+JDK to run jtreg itself. (Again, it need not be the same instance or 
+the same version.)
+
+If you see this message, you are trying to run jtreg on one kind of JDK,
+and use a different kind of JDK to compile or run the tests.

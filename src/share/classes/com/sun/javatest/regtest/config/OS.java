@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -158,6 +158,12 @@ public class OS {
                 (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
         maxMemory = osMXBean.getTotalPhysicalMemorySize();
         maxSwap = osMXBean.getTotalSwapSpaceSize();
+    }
+
+    public String toString() {
+        return "[name:" + name + ",arch:" + arch + ",version:" + version
+                + ",family:" + family + ",simple_arch:" + simple_arch + ",simple_version:" + simple_version
+                + ",processors:" + processors + ",maxMemory:" + maxMemory + ",maxSwap:" + maxSwap + "]";
     }
 
 }

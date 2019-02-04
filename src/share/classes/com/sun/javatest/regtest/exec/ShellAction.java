@@ -234,25 +234,39 @@ public class ShellAction extends Action
             List<String> command = new ArrayList<>();
             if (script.useWindowsSubsystemForLinux()) {
                 File java_exe = new File(new File(script.getTestJDK().getFile(), "bin"), "java.exe");
+                env.put("NULL", "/dev/null");
                 if (java_exe.exists()) {
                     // invoking a Windows binary: use standard Windows separator characters
-                    env.put("FS", File.separator);
+                    env.put("EXE_SUFFIX", ".exe");
+                    env.put("FS", "/");
                     env.put("PS", File.pathSeparator);
+                    env.put("WSLENV", getWSLENV(env, true));
                 } else {
                     // invoking a Linux binary: use Linux separator characters
                     env.put("FS", "/");
                     env.put("PS", ";");
+                    env.put("WSLENV", getWSLENV(env, false));
                 }
-                env.put("NULL", "/dev/null");
-                env.put("EXE_SUFFIX", ".exe");
-                env.put("WSLENV", getWSLENV(env));
                 command.add("wsl.exe");
                 command.add("sh");
                 command.add(getWSLPath(shellFile));
             } else {
-                env.put("FS", File.separator);
-                env.put("PS", File.pathSeparator);
-                env.put("NULL", OS.current().family.equals("windows") ? "NUL" : "/dev/null");
+                // Set up default values for env vars; then override as needed
+                String FS = File.separator;
+                String PS = File.pathSeparator;
+                String NULL = "/dev/null";
+                if (OS.current().family.equals("windows")) {
+                    if (System.getenv("PATH").contains("/cygwin")) {
+                        // override values for Cygwin
+                        FS = "/";
+                    } else {
+                        // override values for MKS (now mostly unsupported)
+                        NULL = "NUL";
+                    }
+                }
+                env.put("FS", FS);
+                env.put("PS", PS);
+                env.put("NULL", NULL);
                 command.add("sh");
                 command.add(shellFile.getPath());
             }
@@ -346,20 +360,29 @@ public class ShellAction extends Action
         return value;
     } // parseShellManual()
 
-    private String getWSLENV(Map<String, String> env) {
+    private String getWSLENV(Map<String, String> env, boolean targetIsWindows) {
          StringBuilder sb = new StringBuilder();
          String sep = "";
          for (String name : env.keySet()) {
              String suffix;
              switch (name) {
-                 case "TESTSRC": case "TESTCLASSES":
-                 case "COMPILEJAVA": case "TESTJAVA":
+                 case "COMPILEJAVA":
+                 case "TESTJAVA":
+                 case "TESTROOT":
                      suffix = "/p";
                      break;
-                 case "TESTSRCPATH": case "TESTCLASSPATH":
-                 case "TESTNATIVEPATH":
-                     suffix = "/l";
+
+                 case "TESTSRC":
+                 case "TESTCLASSES":
+                     suffix = targetIsWindows ? "" : "/p";
                      break;
+
+                 case "TESTSRCPATH":
+                 case "TESTCLASSPATH":
+                 case "TESTNATIVEPATH":
+                     suffix = targetIsWindows ? "" : "/l";
+                     break;
+
                  default:
                      if (name.equalsIgnoreCase("PATH")) {
                          continue;

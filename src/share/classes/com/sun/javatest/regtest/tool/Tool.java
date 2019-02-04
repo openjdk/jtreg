@@ -573,14 +573,29 @@ public class Tool {
             }
         },
 
-        new Option(NONE, MAIN, null, "-wsl") {
+        new Option(NONE, MAIN, "wsl-cygwin", "-wsl") {
             @Override
             public void process(String opt, String arg) throws BadArgs {
-                if (OS.current().family.equals("windows")) {
-                    useWindowsSubsystemForLinux = true;
-                } else {
+                if (!isWindows()) {
                     throw new BadArgs(i18n, "main.windowsOnly", opt);
                 }
+                if (isCygwinDetected()) {
+                    out.println(i18n.getString("main.warn.wsl.specified.found.cygwin"));
+                }
+                useWindowsSubsystemForLinux = true;
+            }
+        },
+
+        new Option(NONE, MAIN, "wsl-cygwin", "-cygwin") {
+            @Override
+            public void process(String opt, String arg) throws BadArgs {
+                if (!isWindows()) {
+                    throw new BadArgs(i18n, "main.windowsOnly", opt);
+                }
+                if (isWindowsSubsystemForLinuxDetected()) {
+                    out.println(i18n.getString("main.warn.cygwin.specified.found.wsl"));
+                }
+                useWindowsSubsystemForLinux = false;
             }
         },
 
@@ -1070,6 +1085,29 @@ public class Tool {
             testJDK = com.sun.javatest.regtest.config.JDK.of(f);
         }
 
+        JDK_Version testJDK_version = checkJDK(testJDK);
+
+        if (compileJDK != null) {
+            JDK_Version compileJDK_version = checkJDK(compileJDK);
+            if (!compileJDK_version.equals(testJDK_version)) {
+                out.println("Warning: compileJDK has a different version ("
+                        + compileJDK_version + ") from testJDK ("
+                        + testJDK_version + ")");
+            }
+        }
+
+        if (isWindows()) {
+            if (useWindowsSubsystemForLinux == null) {
+                // The test for Cygwin is more specific than the test for WSL,
+                // and so we give priority to Cygwin if both are detected.
+                useWindowsSubsystemForLinux = isCygwinDetected()
+                        ? false
+                        : isWindowsSubsystemForLinuxDetected();
+            }
+        } else {
+            useWindowsSubsystemForLinux = false;
+        }
+
         if (jitFlag == false) {
             envVarArgs.add("JAVA_COMPILER=");
         }
@@ -1081,17 +1119,6 @@ public class Tool {
             // this means this value will be on JVM classpath and in URLClassLoader args
             // (minor nit)
             envVarArgs.add("CPAPPEND=" + filesToAbsolutePath(classPathAppendArg));
-        }
-
-        JDK_Version testJDK_version = checkJDK(testJDK);
-
-        if (compileJDK != null) {
-            JDK_Version compileJDK_version = checkJDK(compileJDK);
-            if (!compileJDK_version.equals(testJDK_version)) {
-                out.println("Warning: compileJDK has a different version ("
-                        + compileJDK_version + ") from testJDK ("
-                        + testJDK_version + ")");
-            }
         }
 
         if (workDirArg == null) {
@@ -1325,6 +1352,16 @@ public class Tool {
     JDK_Version checkJDK(JDK jdk) throws Fault {
         if (!jdk.exists())
             throw new Fault(i18n, "main.jdk.not.found", jdk);
+
+        // Check that we're not trying to use a Linux JDK when running on a Windows JDK,
+        // and vice versa.
+        JDK jtregJDK = com.sun.javatest.regtest.config.JDK.of(System.getProperty("java.home"));
+        File jtregJava = jtregJDK.getProg("java", true);
+        File jdkJava = jdk.getProg("java", true);
+        if (!jdkJava.getName().equals(jtregJava.getName())) {
+            throw new Fault(i18n, "main.incompatibleJDK", jdk, jtregJDK);
+        }
+
         JDK_Version v = jdk.getJDKVersion(new SearchPath(jtreg_jar, javatest_jar));
         if (v == null)
             throw new Fault(i18n, "main.jdk.unknown.version", jdk);
@@ -2093,6 +2130,42 @@ public class Tool {
         return (kw1 == null ? kw2 : kw1 + " & " + kw2);
     }
 
+    private boolean isWindows() {
+        return OS.current().family.equals("windows");
+    }
+
+    /**
+     * Returns whether or not Cygwin may be available, by examining
+     * to see if "LETTER:\cygwin" is mentioned anywhere in the PATH.
+     */
+    private boolean isCygwinDetected() {
+        if (isWindows()) {
+            String PATH = System.getenv("PATH");
+            return (PATH != null) && PATH.matches("(?i).*;[a-z]:\\\\cygwin.*");
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Returns whether or not Windows Subsystem for Linux may be
+     * available, by examining to see whether wsl.exe can be found on
+     * the path.
+     */
+    private boolean isWindowsSubsystemForLinuxDetected() {
+        if (isWindows()) {
+            String PATH = System.getenv("PATH");
+            if (PATH != null) {
+                for (File f : new SearchPath(PATH).asList()) {
+                    if (new File(f, "wsl.exe").exists()) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
     private void error(String msg) {
         err.println(i18n.getString("main.error", msg));
         errors++;
@@ -2169,7 +2242,7 @@ public class Tool {
     private IgnoreKind ignoreKind;
     private List<File> classPathAppendArg = new ArrayList<>();
     private File nativeDirArg;
-    private boolean useWindowsSubsystemForLinux;
+    private Boolean useWindowsSubsystemForLinux;
     private boolean jitFlag = true;
     private Help help;
     private boolean xmlFlag;

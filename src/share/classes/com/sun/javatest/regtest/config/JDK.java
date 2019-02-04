@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2007, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -149,7 +149,7 @@ public class JDK {
      * @return a path for the Java launcher for this JDK
      */
     public File getJavaProg() {
-        return new File(new File(absJDK, "bin"), "java");
+        return getProg("java", false);
     }
 
     /**
@@ -157,7 +157,26 @@ public class JDK {
      * @return a path for the Java compiler for this JDK
      */
     public File getJavacProg() {
-        return new File(new File(absJDK, "bin"), "javac");
+        return getProg("javac", false);
+    }
+
+    /**
+     * Returns a path for a command in the bin directory of this JDK,
+     * optionally including an explicit ".exe" extension, if appropriate.
+     * @param command the name of the command
+     * @param checkExe whether to include the name of the extension
+     * @return the path
+     */
+    public File getProg(String command, boolean checkExe) {
+        File bin = new File(absJDK, "bin");
+        File prog = new File(bin, command);
+        if (!prog.exists() && checkExe) {
+            File prog_exe = new File(bin, command + ".exe");
+            if (prog_exe.exists()) {
+                return prog_exe;
+            }
+        }
+        return prog;
     }
 
     /**
