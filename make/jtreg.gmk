@@ -129,10 +129,11 @@ $(JTREG_FAQ):   $(SRCJTREGDOCDIR)/faq.md \
 	    --number-sections \
 	    $(SRCJTREGDOCDIR)/faq.md | \
 	$(SED) \
-            -e 's/^code > span\.\([a-z][a-z] .*\)/code span.\1/' \
-            -e 's/-section-number">0./-section-number">/' \
+	    -e 's/^code > span\.\([a-z][a-z] .*\)/code span.\1/' \
+	    -e 's/-section-number">0./-section-number">/' \
 	    -e 's/…/\&hellip;/g' \
 	    -e 's/™/\&trade;/g' \
+	    -e '/<header>/{:a;N;/<\/header>/!ba};/<h1 class="title">/d' \
 	    > $(JTREG_FAQ)	
 
 

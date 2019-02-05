@@ -1496,6 +1496,9 @@ for a tool. For example:
 
     javac="${TESTJAVA+${TESTJAVA}/bin/}javac${EXE_SUFFIX}"
 
+For more information on writing shell tests, see
+[Shell Tests in jtreg](shellTests.html).
+
 ### When should I update the `@bug` entry in a test description?
 
 When a new test is added to a test suite, it is generally considered good
