@@ -126,7 +126,6 @@ $(JTREG_FAQ):   $(SRCJTREGDOCDIR)/faq.md \
 	    --include-before $(SRCJTREGDOCDIR)/faq-intro.html \
 	    --toc \
 	    --to html5 \
-	    --title 'jtreg FAQ' \
 	    --number-sections \
 	    $(SRCJTREGDOCDIR)/faq.md | \
 	$(SED) \
