@@ -120,6 +120,7 @@ $(JTREG_FAQ):   $(SRCJTREGDOCDIR)/faq.md \
 		$(SRCJTREGDOCDIR)/faq-local-style.html \
 		$(SRCJTREGDOCDIR)/faq-intro.html
 	$(MKDIR) -p $(@D)
+	$(ECHO) '/<header>/{;:a;N;/<\/header>/!ba;};/<h1 class="title">/d' | tr ';' '\n' > $(BUILDDIR)/fixupheader
 	$(PANDOC) \
 	    --standalone \
 	    --include-in-header $(SRCJTREGDOCDIR)/faq-local-style.html \
@@ -133,7 +134,7 @@ $(JTREG_FAQ):   $(SRCJTREGDOCDIR)/faq.md \
 	    -e 's/-section-number">0./-section-number">/' \
 	    -e 's/…/\&hellip;/g' \
 	    -e 's/™/\&trade;/g' \
-	    -e '/<header>/{:a;N;/<\/header>/!ba};/<h1 class="title">/d' \
+	    -f  $(BUILDDIR)/fixupheader \
 	    > $(JTREG_FAQ)	
 
 
