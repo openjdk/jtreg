@@ -355,6 +355,12 @@ public class CompileAction extends Action {
                 status = jcod(jcodArgs);
             if (status.isPassed() && runJavac) {
                 javacArgs = getJavacCommandArgs(javacArgs);
+                for (String arg: javacArgs) {
+                    if (arg.startsWith("-J")) {
+                        othervmOverrideReasons.add("JVM options specified for compiler");
+                        break;
+                    }
+                }
                 if (explicitAnnotationProcessingRequested(javacArgs)
                         && !getExtraModuleConfigOptions(Modules.Phase.DYNAMIC).isEmpty()) {
                     othervmOverrideReasons.add("additional runtime exports needed for annotation processing");
@@ -554,8 +560,12 @@ public class CompileAction extends Action {
             File argFile = getArgFile();
             try (BufferedWriter w = new BufferedWriter(new FileWriter(argFile))) {
                 for (String arg: javacArgs) {
-                    w.write(arg);
-                    w.newLine();
+                    if (arg.startsWith("-J")) {
+                        javacVMOpts.add(arg);
+                    } else {
+                        w.write(arg);
+                        w.newLine();
+                    }
                 }
             } catch (IOException e) {
                 return error(COMPILE_CANT_WRITE_ARGS);
