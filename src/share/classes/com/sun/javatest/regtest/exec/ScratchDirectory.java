@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -230,19 +230,17 @@ abstract class ScratchDirectory {
         return ok;
     }
 
-    boolean delete(File f, Set<File> cantDelete, PrintWriter log) {
-        if (f.delete()) {
+    private boolean delete(File f, Set<File> cantDelete, PrintWriter log) {
+        if (f.delete() && !f.exists()) {
             cantDelete.remove(f);
             return true;
         } else {
-//            // See CODETOOLS-7901369
-//            // The following needs JDK 1.6, and/or convert jtreg to use nio.file.Path
-//            if (!f.canWrite()) {
-//                if (f.setWritable(true) && f.delete()) {
-//                    cantDelete.remove(f);
-//                    return true;
-//                }
-//            }
+            if (!f.canWrite()) {
+                if (f.setWritable(true) && f.delete() && !f.exists()) {
+                    cantDelete.remove(f);
+                    return true;
+                }
+            }
             if (verboseScratchDir) {
                 log.println("warning: failed to delete "
                         + (f.isDirectory() ? "directory " : "")
