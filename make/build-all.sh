@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #
-# Copyright (c) 2017, 2018, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2017, 2019, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -49,6 +49,16 @@ if case ${JAVA_VERSION} in 1.8*) false ;; *) true; esac; then
     echo "Error: Expected a path to JDK with version 1.8, got version ${JAVA_VERSION}" >&2
     exit 1
 fi
+
+case `uname` in CYGWIN*) CYGWIN=1 ;; *) CYGWIN=0 ;; esac
+
+native_path() {
+    if [ $CYGWIN == 1 ]; then echo `cygpath -w $1`; else echo $1; fi
+}
+
+mixed_path() {
+    if [ $CYGWIN == 1 ]; then echo `cygpath -m $1`; else echo $1; fi
+}
 
 export JAVA_HOME=$1
 export PATH="$JAVA_HOME:$PATH"
@@ -129,7 +139,7 @@ fi
 
 ASMTOOLS_SRC=${ASMTOOLS_BUILD_DIR}/asmtools-${ASMTOOLS_VERSION}
 ASMTOOLS_DIST=${ASMTOOLS_BUILD_DIR}/build
-${ANT} -DBUILD_DIR=${ASMTOOLS_DIST} -f ${ASMTOOLS_SRC}/build/build.xml
+${ANT} -DBUILD_DIR=`native_path ${ASMTOOLS_DIST}` -f `native_path ${ASMTOOLS_SRC}/build/build.xml`
 ASMTOOLS_JAR=${ASMTOOLS_DIST}/binaries/lib/asmtools.jar
 ASMTOOLS_LICENSE=${ASMTOOLS_SRC}/LICENSE
 
@@ -150,7 +160,7 @@ fi
 
 JTHARNESS_SRC=${JTHARNESS_BUILD_DIR}/jtharness-${JTHARNESS_VERSION}
 JTHARNESS_DIST=${JTHARNESS_BUILD_DIR}/build
-${ANT} -DBUILD_DIR=${JTHARNESS_DIST} -f ${JTHARNESS_SRC}/build/build.xml
+${ANT} -DBUILD_DIR=`native_path ${JTHARNESS_DIST}` -f `native_path ${JTHARNESS_SRC}/build/build.xml`
 
 JAVATEST_JAR=${JTHARNESS_DIST}/binaries/lib/javatest.jar
 JTHARNESS_LICENSE=${JTHARNESS_SRC}/legal/license.txt
@@ -193,16 +203,16 @@ fi
 JCOV_SRC=${JCOV_BUILD_DIR}/jcov-${JCOV_VERSION}
 JCOV_DIST=${JCOV_BUILD_DIR}/build
 ( cd ${JCOV_SRC}/build
-${ANT} -Dresult.dir=${JCOV_DIST}      \
-    -Dasm.jar=${ASM_JAR}           \
-    -Dasm.checksum=${ASM_JAR_CHECKSUM} \
-    -Dasm.tree.jar=${ASM_TREE_JAR} \
+${ANT} -Dresult.dir=`native_path ${JCOV_DIST}`   \
+    -Dasm.jar=`native_path ${ASM_JAR}`           \
+    -Dasm.checksum=${ASM_JAR_CHECKSUM}           \
+    -Dasm.tree.jar=`native_path ${ASM_TREE_JAR}` \
     -Dasm.tree.checksum=${ASM_TREE_JAR_CHECKSUM} \
-    -Dasm.util.jar=${ASM_UTIL_JAR} \
+    -Dasm.util.jar=`native_path ${ASM_UTIL_JAR}` \
     -Dasm.util.checksum=${ASM_UTIL_JAR_CHECKSUM} \
-    -Djavatestjar=${JAVATEST_JAR}  \
-    -Dverify.strict=               \
-    -f ${JCOV_SRC}/build/build.xml
+    -Djavatestjar=`native_path ${JAVATEST_JAR}`  \
+    -Dverify.strict=                             \
+    -f `native_path ${JCOV_SRC}/build/build.xml`
 )
 
 JCOV_JAR=${JCOV_DIST}/jcov_3.0/jcov.jar
@@ -253,17 +263,17 @@ fi
 
 # Build jtreg
 cd ${ROOT}/make
-make JUNIT_JAR=${JUNIT_JAR}                           \
+make JUNIT_JAR=`mixed_path ${JUNIT_JAR}`              \
      JUNIT_LICENSE=${JUNIT_LICENSE}                   \
-     TESTNG_JAR=${TESTNG_JAR}                         \
+     TESTNG_JAR=`mixed_path ${TESTNG_JAR}`            \
      TESTNG_LICENSE=${TESTNG_LICENSE}                 \
      JCOMMANDER_JAR=${JCOMMANDER_JAR}                 \
      ANT=${ANT}                                       \
-     ANT_JAR=${ANT_JAR}                               \
+     ANT_JAR=`mixed_path ${ANT_JAR}`                  \
      JCOV_JAR=${JCOV_JAR}                             \
      JCOV_LICENSE=${JCOV_LICENSE}                     \
      JCOV_NETWORK_SAVER_JAR=${JCOV_NETWORK_SAVER_JAR} \
-     JAVATEST_JAR=${JAVATEST_JAR}                     \
+     JAVATEST_JAR=`mixed_path ${JAVATEST_JAR}`        \
      JTHARNESS_LICENSE=${JTHARNESS_LICENSE}           \
      JTHARNESS_COPYRIGHT=${JTHARNESS_COPYRIGHT}       \
      ASMTOOLS_JAR=${ASMTOOLS_JAR}                     \
@@ -273,4 +283,3 @@ make JUNIT_JAR=${JUNIT_JAR}                           \
      BUILD_NUMBER=${BUILD_NUMBER}                     \
      JDKHOME=$JAVA_HOME                               \
      ${MAKE_ARGS:-}
-
