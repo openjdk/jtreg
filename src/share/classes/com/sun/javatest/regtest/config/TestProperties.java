@@ -280,7 +280,7 @@ public class TestProperties {
             }
 
             private int getInt(String propertyName, int defaultValue) {
-                String v = properties.getProperty("maxOutputSize");
+                String v = properties.getProperty(propertyName);
                 try {
                     if (v != null) {
                         return Integer.parseInt(v.trim());
