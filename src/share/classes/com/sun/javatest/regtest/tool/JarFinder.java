@@ -100,6 +100,11 @@ public class JarFinder {
                             String ssp = uri.getRawSchemeSpecificPart();
                             int sep = ssp.lastIndexOf("!");
                             uri = new URI(ssp.substring(0, sep));
+                        } else if (uri.getScheme().equals("file")) {
+                            // not a jar, try the root path of class files
+                            String ssp = uri.getRawSchemeSpecificPart();
+                            int sep = ssp.indexOf(resName);
+                            uri = new URI("file://" + ssp.substring(0, sep));
                         }
                         if (uri.getScheme().equals("file"))
                             result.append(new File(uri.getPath()));
