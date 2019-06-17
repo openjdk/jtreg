@@ -1,0 +1,161 @@
+ #
+# Copyright (c) 2019, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+#----------------------------------------------------------------------
+
+
+$(BUILDDIR)/StatusFilter.ok: \
+		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
+		$(JTREG_IMAGEDIR)/lib/javatest.jar \
+		$(JTREG_IMAGE_JAVAHELP_JAR)
+	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
+	$(MKDIR) -p $(@:%.ok=%)
+	#
+	@echo "*** run p1 tests with 1 failure; expect 4 pass 1 fail"
+	$(JDKHOME)/bin/java \
+		-jar $(ABS_JTREG_IMAGEJARDIR)/jtreg.jar \
+		-w:$(@:%.ok=%/work) \
+		-r:$(@:%.ok=%/report) \
+		-jdk:$(JDKHOME) \
+		-agentvm \
+		-e mode=fail \
+		$(TESTDIR)/statusFilter/p1 \
+		> $(@:%.ok=%/init.log 2>&1) || \
+	    true "non-zero exit code from JavaTest intentionally ignored"
+	$(GREP) -s '^Test results: passed: 4; failed: 1$$' $(@:%.ok=%/init.log) > /dev/null
+	lines=`$(CAT) $(@:%.ok=%/report)/text/summary.txt | $(WC) -l` ; \
+	if [ "$$lines" != "5" ]; then echo "!! bad summary.txt" ; $(CAT) $(@:%.ok=%/report)/text/summary.txt; exit 1 ; fi
+	#
+	@echo "*** rerun failed p1 tests, test fails again; expect 1 fail"
+	$(JDKHOME)/bin/java \
+		-jar $(ABS_JTREG_IMAGEJARDIR)/jtreg.jar \
+		-w:$(@:%.ok=%/work) \
+		-r:$(@:%.ok=%/report) \
+		-jdk:$(JDKHOME) \
+		-agentvm \
+		-status:fail \
+		-e mode=fail \
+		$(TESTDIR)/statusFilter/p1 \
+		> $(@:%.ok=%/rerun-status-fail-report-default.log 2>&1) || \
+	    true "non-zero exit code from JavaTest intentionally ignored"
+	$(GREP) -s '^Test results: failed: 1$$' $(@:%.ok=%/rerun-status-fail-report-default.log) > /dev/null
+	lines=`$(CAT) $(@:%.ok=%/report)/text/summary.txt | $(WC) -l` ; \
+	if [ "$$lines" != "5" ]; then echo "!! bad summary.txt" ; $(CAT) $(@:%.ok=%/report)/text/summary.txt; exit 1 ; fi
+	#
+	@echo "*** reportonly run; expect 4 pass 1 fail"
+	$(JDKHOME)/bin/java \
+		-jar $(ABS_JTREG_IMAGEJARDIR)/jtreg.jar \
+		-w:$(@:%.ok=%/work) \
+		-r:$(@:%.ok=%/report) \
+		-jdk:$(JDKHOME) \
+		-agentvm \
+		-reportonly \
+		$(TESTDIR)/statusFilter/p1 \
+		> $(@:%.ok=%/rerun-reportonly.log 2>&1) || \
+	    true "non-zero exit code from JavaTest intentionally ignored"
+	$(GREP) -s '^Test results: passed: 4; failed: 1$$' $(@:%.ok=%/rerun-reportonly.log) > /dev/null
+	lines=`$(CAT) $(@:%.ok=%/report)/text/summary.txt | $(WC) -l` ; \
+	if [ "$$lines" != "5" ]; then echo "!! bad summary.txt" ; $(CAT) $(@:%.ok=%/report)/text/summary.txt; exit 1 ; fi
+	#
+	@echo "*** rerun failed p1 tests, test fails again; report all; expect 1 fail, all in report"
+	$(JDKHOME)/bin/java \
+		-jar $(ABS_JTREG_IMAGEJARDIR)/jtreg.jar \
+		-w:$(@:%.ok=%/work) \
+		-r:$(@:%.ok=%/report) \
+		-jdk:$(JDKHOME) \
+		-agentvm \
+		-status:fail \
+		-e mode=fail \
+		-report:all \
+		$(TESTDIR)/statusFilter/p1 \
+		> $(@:%.ok=%/rerun-status-fail-report-all.log 2>&1) || \
+	    true "non-zero exit code from JavaTest intentionally ignored"
+	$(GREP) -s '^Test results: failed: 1$$' $(@:%.ok=%/rerun-status-fail-report-all.log) > /dev/null
+	lines=`$(CAT) $(@:%.ok=%/report)/text/summary.txt | $(WC) -l` ; \
+	if [ "$$lines" != "10" ]; then echo bad summary.txt ; exit 1 ; fi
+	#
+	@echo "*** rerun failed p1 tests; report all; expect 1 pass, all in report"
+	$(JDKHOME)/bin/java \
+		-jar $(ABS_JTREG_IMAGEJARDIR)/jtreg.jar \
+		-w:$(@:%.ok=%/work) \
+		-r:$(@:%.ok=%/report) \
+		-jdk:$(JDKHOME) \
+		-agentvm \
+		-status:fail \
+		-report:all \
+		$(TESTDIR)/statusFilter/p1 \
+		> $(@:%.ok=%/rerun-2.log 2>&1) || \
+	    true "non-zero exit code from JavaTest intentionally ignored"
+	$(GREP) -s '^Test results: passed: 1$$' $(@:%.ok=%/rerun-2.log) > /dev/null
+	lines=`$(CAT) $(@:%.ok=%/report)/text/summary.txt | $(WC) -l` ; \
+	if [ "$$lines" != "10" ]; then echo bad summary.txt ; exit 1 ; fi
+	#
+	$(JDKHOME)/bin/java \
+		-jar $(ABS_JTREG_IMAGEJARDIR)/jtreg.jar \
+		-w:$(@:%.ok=%/work) \
+		-r:$(@:%.ok=%/report) \
+		-jdk:$(JDKHOME) \
+		-agentvm \
+		-exclude:$(TESTDIR)/statusFilter/exclude.jtx \
+		$(TESTDIR)/statusFilter \
+		> $(@:%.ok=%/rerun-all-executed.log 2>&1) || \
+	    true "non-zero exit code from JavaTest intentionally ignored"
+	$(GREP) -s '^Test results: passed: 8; error: 1$$' $(@:%.ok=%/rerun-all-executed.log) > /dev/null
+	lines=`$(CAT) $(@:%.ok=%/report)/text/summary.txt | $(WC) -l` ; \
+	if [ "$$lines" != "9" ]; then echo bad summary.txt ; exit 1 ; fi
+	#
+	$(JDKHOME)/bin/java \
+		-jar $(ABS_JTREG_IMAGEJARDIR)/jtreg.jar \
+		-w:$(@:%.ok=%/work) \
+		-r:$(@:%.ok=%/report) \
+		-jdk:$(JDKHOME) \
+		-agentvm \
+		-report:all \
+		-exclude:$(TESTDIR)/statusFilter/exclude.jtx \
+		$(TESTDIR)/statusFilter \
+		> $(@:%.ok=%/rerun-all.log 2>&1) || \
+	    true "non-zero exit code from JavaTest intentionally ignored"
+	$(GREP) -s '^Test results: passed: 8; error: 1$$' $(@:%.ok=%/rerun-all.log) > /dev/null
+	lines=`$(CAT) $(@:%.ok=%/report)/text/summary.txt | $(WC) -l` ; \
+	if [ "$$lines" != "10" ]; then echo bad summary.txt ; exit 1 ; fi
+	#
+	echo $@ passed at `date` > $@
+
+
+TESTS.jtreg += \
+    $(BUILDDIR)/StatusFilter.ok
+
+#----------------------------------------------------------------------
+
+
+
+#3310  ./build/images/jtreg/bin/jtreg -jdk:/opt/jdk/1.8.0 -w build/w -r build/r -e mode=fail test/statusFilter/
+# 3311  ./build/images/jtreg/bin/jtreg -jdk:/opt/jdk/1.8.0 -w build/w -r build/r -e mode=fail -status:fail test/statusFilter/
+# 3312  more build/r/text/summary.txt 
+# 3313  ./build/images/jtreg/bin/jtreg -jdk:/opt/jdk/1.8.0 -w build/w -r build/r -ro test/statusFilter/
+# 3314  more build/r/text/summary.txt 
+# 3315  ./build/images/jtreg/bin/jtreg -jdk:/opt/jdk/1.8.0 -w build/w -r build/r -status:fail -report:all test/statusFilter/
+# 3316  more build/r/text/summary.txt 
+

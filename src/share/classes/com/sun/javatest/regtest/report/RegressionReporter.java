@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -42,12 +42,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.sun.javatest.CompositeFilter;
+import com.sun.javatest.TestFilter;
+import com.sun.javatest.regtest.Main.Fault;
 import com.sun.javatest.regtest.config.RegressionParameters;
 import com.sun.javatest.regtest.config.RegressionTestSuite;
 import com.sun.javatest.regtest.config.TestManager;
-import com.sun.javatest.regtest.Main.Fault;
 import com.sun.javatest.report.Report;
+import com.sun.javatest.report.ReportSettings;
 import com.sun.javatest.util.HTMLWriter;
 
 /**
@@ -61,8 +62,8 @@ public class RegressionReporter {
         this.log = log;
     }
 
-    @SuppressWarnings("deprecation")
-    public void report(RegressionParameters params, ElapsedTimeHandler elapsedTimeHandler, TestStats testStats, boolean quiet) {
+    public void report(RegressionParameters params, ElapsedTimeHandler elapsedTimeHandler,
+                       TestStats testStats, TestFilter filter, boolean quiet) {
         File rd = params.getReportDir();
         File wd = params.getWorkDirectory().getRoot();
 
@@ -76,10 +77,11 @@ public class RegressionReporter {
             }
 
             Report r = new Report();
-            Report.Settings s = new Report.Settings(params);
+            ReportSettings s = new ReportSettings(params);
             if (reportKinds.contains("html")) {
                 s.setEnableHtmlReport(true);
                 s.setHtmlMainReport(true, true);
+                s.setShowKflReport(false);
             }
             if (reportKinds.contains("text")) {
                 s.setEnablePlainReport(true);
@@ -87,7 +89,7 @@ public class RegressionReporter {
             if (reportKinds.contains("xml")) {
                 s.setEnableXmlReport(true);
             }
-            s.setFilter(new CompositeFilter(params.getFilters()));
+            s.setFilter(filter);
             if (backups == null)
                 s.setEnableBackups(false);
             else {
@@ -99,7 +101,7 @@ public class RegressionReporter {
                 }
             }
             rd.mkdirs();
-            r.writeReport(s, rd);
+            r.writeReports(s, rd);
             if (s.isPlainEnabled()) {
                 if (elapsedTimeHandler != null)
                     elapsedTimeHandler.report(r);

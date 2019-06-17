@@ -53,6 +53,7 @@ import java.util.Date;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -62,12 +63,15 @@ import java.util.regex.Pattern;
 import javax.swing.Timer;
 
 import com.sun.interview.Interview;
+import com.sun.javatest.AllTestsFilter;
 import com.sun.javatest.Harness;
 import com.sun.javatest.InterviewParameters;
 import com.sun.javatest.JavaTestSecurityManager;
 import com.sun.javatest.Keywords;
+import com.sun.javatest.ParameterFilter;
 import com.sun.javatest.ProductInfo;
 import com.sun.javatest.Status;
+import com.sun.javatest.StatusFilter;
 import com.sun.javatest.TestEnvironment;
 import com.sun.javatest.TestFilter;
 import com.sun.javatest.TestFinder;
@@ -323,15 +327,44 @@ public class Tool {
         new Option(NONE, MAIN, "ro-nr", "-nr", "-noreport") {
             @Override
             public void process(String opt, String arg) {
-                noReportFlag = true;
+                reportMode = ReportMode.NONE;
             }
         },
 
         new Option(STD, MAIN, "ro-nr", "-show") {
             @Override
             public void process(String opt, String arg) {
-                noReportFlag = true;
+                reportMode = ReportMode.NONE;
                 showStream = arg;
+            }
+        },
+
+        new Option(STD, MAIN, "ro-nr", "-report") {
+            @Override
+            public String[] getChoices() {
+                String[] values = new String[ReportMode.values().length];
+                int i = 0;
+                for (ReportMode m: ReportMode.values())
+                    values[i++] = m.toString().toLowerCase(Locale.US).replace("_", "-");
+                return values;
+            }
+
+            @Override
+            public void process(String opt, String arg) throws BadArgs {
+                switch (arg) {
+                    case "none":
+                        reportMode = ReportMode.NONE;
+                        break;
+                    case "executed":
+                        reportMode = ReportMode.EXECUTED;
+                        break;
+                    case "all-executed":
+                        reportMode = ReportMode.ALL_EXECUTED;
+                        break;
+                    case "all":
+                        reportMode = ReportMode.ALL;
+                        break;
+                }
             }
         },
 
@@ -1121,11 +1154,15 @@ public class Tool {
             envVarArgs.add("CPAPPEND=" + filesToAbsolutePath(classPathAppendArg));
         }
 
+        if (reportMode == null) {
+            reportMode = ReportMode.ALL_EXECUTED;
+        }
+
         if (workDirArg == null) {
             workDirArg = new File("JTwork");
         }
 
-        if (reportDirArg == null && !noReportFlag) {
+        if (reportDirArg == null && reportMode != ReportMode.NONE) {
             reportDirArg = new File("JTreport");
         }
 
@@ -1159,7 +1196,7 @@ public class Tool {
 
         makeDir(new File(workDirArg, "scratch"), true);
 
-        if (!noReportFlag) {
+        if (reportMode != ReportMode.NONE) {
             makeDir(reportDirArg, false);
             testManager.setReportDirectory(reportDirArg);
 
@@ -1288,7 +1325,7 @@ public class Tool {
                     out.println("Overall summary:");
                 }
                 testStats.showResultStats(out);
-                if (!noReportFlag) {
+                if (reportMode != ReportMode.NONE) {
                     RegressionReporter r = new RegressionReporter(out);
                     r.report(testManager);
                 }
@@ -1798,7 +1835,7 @@ public class Tool {
     private TestStats batchHarness(RegressionParameters params, boolean quiet)
             throws Fault, Harness.Fault, InterruptedException {
         boolean reportRequired =
-                !noReportFlag && !Boolean.getBoolean("javatest.noReportRequired");
+                reportMode != ReportMode.NONE && !Boolean.getBoolean("javatest.noReportRequired");
 
         try {
             TestStats stats = new TestStats();
@@ -1913,7 +1950,39 @@ public class Tool {
 
             if (reportRequired) {
                 RegressionReporter r = new RegressionReporter(out);
-                r.report(params, elapsedTimeHandler, stats, quiet);
+                TestFilter tf;
+                if (reportOnlyFlag) {
+                    ParameterFilter pf = new ParameterFilter();
+                    pf.update(params);
+                    tf = pf;
+                } else {
+                    switch (reportMode) {
+                        case NONE:
+                        default:
+                            throw new IllegalStateException();
+
+                        case EXECUTED:
+                            ParameterFilter pf = new ParameterFilter();
+                            pf.update(params);
+                            tf = pf;
+                            break;
+
+                        case ALL_EXECUTED:
+                            boolean[] statusValues = new boolean[Status.NUM_STATES];
+                            statusValues[Status.PASSED] = true;
+                            statusValues[Status.FAILED] = true;
+                            statusValues[Status.ERROR] = true;
+                            statusValues[Status.NOT_RUN] = false;
+                            tf = new StatusFilter(statusValues, params.getWorkDirectory().getTestResultTable());
+                            break;
+
+                        case ALL:
+                            tf = new AllTestsFilter();
+                            break;
+                    }
+
+                }
+                r.report(params, elapsedTimeHandler, stats, tf, quiet);
             }
 
             if (!reportOnlyFlag && !quiet)
@@ -2220,8 +2289,9 @@ public class Tool {
     private JDK testJDK;
     private boolean guiFlag;
     private boolean reportOnlyFlag;
-    private boolean noReportFlag;
     private String showStream;
+    public enum ReportMode { NONE, EXECUTED, ALL_EXECUTED, ALL };
+    private ReportMode reportMode;
     private boolean allowSetSecurityManagerFlag = true;
     private static Verbose  verbose;
     private boolean httpdFlag;

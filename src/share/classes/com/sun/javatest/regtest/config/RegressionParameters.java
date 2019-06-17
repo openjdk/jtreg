@@ -475,7 +475,7 @@ public class RegressionParameters
         return matchListFilter;
     }
 
-    TestFilter matchListFilter = UNSET;
+    private TestFilter matchListFilter = UNSET;
 
     /**
      * {@inheritDoc}
@@ -544,6 +544,34 @@ public class RegressionParameters
     };
 
     private static KeywordsTestFilter UNSET_KEYWORDS_FILTER = new KeywordsTestFilter(UNSET);
+
+    @Override
+    public TestFilter getPriorStatusFilter() {
+        if (priorStatusFilter == UNSET) {
+            final TestFilter psf = super.getPriorStatusFilter();
+            if (psf == null) {
+                priorStatusFilter = null;
+            } else {
+                priorStatusFilter = new CachingTestFilter(
+                        "jtregPriorStatusFilter",
+                        "Select tests which match a specified status",
+                        "Test did not match a specified status") {
+                    @Override
+                    protected String getCacheKey(TestDescription td) {
+                        return td.getRootRelativeURL();
+                    }
+
+                    @Override
+                    public boolean getCacheableValue(TestDescription td) throws Fault {
+                        return psf.accepts(td);
+                    }
+                };
+            }
+        }
+        return priorStatusFilter;
+    }
+
+    private CachingTestFilter priorStatusFilter = UNSET;
 
     //---------------------------------------------------------------------
 
