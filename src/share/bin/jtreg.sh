@@ -64,7 +64,7 @@
 
 case "`uname -s`" in
     CYGWIN* ) cygwin=1 ;;
-    Linux ) if grep -q Microsoft /proc/version ; then wsl=1 ; fi ;;
+    Linux ) if grep -qi Microsoft /proc/version ; then wsl=1 ; fi ;;
 esac
 
 
