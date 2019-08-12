@@ -63,9 +63,9 @@ mixed_path() {
 export JAVA_HOME=$1
 export PATH="$JAVA_HOME:$PATH"
 
-if [ -n `which sha1sum` ]; then
+if [ -n "`which sha1sum`" ]; then
     SHASUM=sha1sum;
-elif [ -n `which shasum` ]; then
+elif [ -n "`which shasum`" ]; then
     SHASUM="shasum -a 1"
 else
     echo "Error: can't find shasum or sha1sum" >&2
@@ -179,17 +179,17 @@ mkdir -p ${JCOV_DEPS_DIR}
 ASM_JAR=${JCOV_DEPS_DIR}/asm-6.2.jar
 ASM_JAR_CHECKSUM='1b6c4ff09ce03f3052429139c2a68e295cae6604'
 WGet ${MAVEN_REPO_URL}/org/ow2/asm/asm/6.2/asm-6.2.jar ${ASM_JAR}
-echo "${ASM_JAR_CHECKSUM} ${ASM_JAR}" | ${SHASUM} --check -
+echo "${ASM_JAR_CHECKSUM}  ${ASM_JAR}" | ${SHASUM} --check -
 
 ASM_TREE_JAR=${JCOV_DEPS_DIR}/asm-tree-6.2.jar
 ASM_TREE_JAR_CHECKSUM='61570e046111559f38d4e0e580c005f75988c0a6'
 WGet ${MAVEN_REPO_URL}/org/ow2/asm/asm-tree/6.2/asm-tree-6.2.jar ${ASM_TREE_JAR}
-echo "${ASM_TREE_JAR_CHECKSUM} ${ASM_TREE_JAR}" | ${SHASUM} --check -
+echo "${ASM_TREE_JAR_CHECKSUM}  ${ASM_TREE_JAR}" | ${SHASUM} --check -
 
 ASM_UTIL_JAR=${JCOV_DEPS_DIR}/asm-utils-6.2.jar
 ASM_UTIL_JAR_CHECKSUM='a9690730f92cc79eeadc20e400ebb41eccce10b1'
 WGet ${MAVEN_REPO_URL}/org/ow2/asm/asm-util/6.2/asm-util-6.2.jar ${ASM_UTIL_JAR}
-echo "${ASM_UTIL_JAR_CHECKSUM} ${ASM_UTIL_JAR}" | ${SHASUM} --check -
+echo "${ASM_UTIL_JAR_CHECKSUM}  ${ASM_UTIL_JAR}" | ${SHASUM} --check -
 
 # Build jcov
 JCOV_SRC_ZIP=${JCOV_BUILD_DIR}/source.zip
