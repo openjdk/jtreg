@@ -231,24 +231,43 @@ abstract class ScratchDirectory {
     }
 
     private boolean delete(File f, Set<File> cantDelete, PrintWriter log) {
+        // optimistically assume the enclosing directory is writable
         if (f.delete() && !f.exists()) {
             cantDelete.remove(f);
             return true;
-        } else {
-            if (!f.canWrite()) {
-                if (f.setWritable(true) && f.delete() && !f.exists()) {
-                    cantDelete.remove(f);
-                    return true;
-                }
-            }
-            if (verboseScratchDir) {
-                log.println("warning: failed to delete "
-                        + (f.isDirectory() ? "directory " : "")
-                        + f);
-            }
-            cantDelete.add(f);
-            return false;
         }
+
+        // retry if the enclosing directory was not writable and can be made writable
+        File dir = f.getParentFile();
+        if (dir != null && !dir.canWrite() && setWritable(dir, log)) {
+            return delete(f, cantDelete, log);
+        }
+
+        if (verboseScratchDir) {
+            log.println("warning: failed to delete "
+                    + (f.isDirectory() ? "directory " : "")
+                    + f);
+        }
+        cantDelete.add(f);
+        return false;
+    }
+
+    private boolean setWritable(File dir, PrintWriter log) {
+        // optimistically assume the enclosing directory is writable
+        if (dir.setWritable(true)) {
+            return true;
+        }
+
+        // retry if the enclosing directory was not writable and can be made writable
+        File parent = dir.getParentFile();
+        if (parent != null && !parent.canWrite() && setWritable(parent, log)) {
+            return setWritable(dir, log);
+        }
+
+        if (verboseScratchDir) {
+            log.println("warning: failed to set directory writable: " + dir);
+        }
+        return false;
     }
 
     // </editor-fold>
