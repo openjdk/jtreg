@@ -4,7 +4,7 @@ DISPLAY=%DISPLAY% \
 HOME=%HOME% \
 LANG=en_US.UTF-8 \
 MY_ENV_VAR=x \
-PATH=/bin:/usr/bin \
+PATH=/bin:/usr/bin:/usr/sbin \
 TZ=GMT+0.00 \
     %JDKHOME%/bin/javac \
         -J-Dmy.vm.option=x \
@@ -34,7 +34,7 @@ DISPLAY=%DISPLAY% \
 HOME=%HOME% \
 LANG=en_US.UTF-8 \
 MY_ENV_VAR=x \
-PATH=/bin:/usr/bin \
+PATH=/bin:/usr/bin:/usr/sbin \
 TZ=GMT+0.00 \
     %JDKHOME%/bin/java \
         -Dtest.class.path.prefix=%BUILD%/RerunTest.agentvm/work/classes/std/TestNGTest.d:%WS%/test/rerun/std \

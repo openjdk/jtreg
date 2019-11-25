@@ -2152,7 +2152,7 @@ public class Tool {
             addEnvVars(envVars, "PATH"); // accept user's path, for now
         } else {
             addEnvVars(envVars, DEFAULT_UNIX_ENV_VARS);
-            addEnvVars(envVars, "PATH=/bin:/usr/bin");
+            addEnvVars(envVars, "PATH=/bin:/usr/bin:/usr/sbin");
         }
         addEnvVars(envVars, envVarArgs);
         for (Map.Entry<String, String> e: System.getenv().entrySet()) {

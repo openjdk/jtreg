@@ -1983,7 +1983,7 @@ As per spec, the only shell environment variables that are
 automatically propagated into the test's JVM are:
 
 * Linux and Solaris:
-    * `PATH` is set to `/bin:/usr/bin`
+    * `PATH` is set to `/bin:/usr/bin:/usr/sbin`
     * The following are propogated from the user's environment:
         `DISPLAY`,
         `HOME`
