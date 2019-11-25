@@ -299,8 +299,10 @@ public class RegressionScript extends Script {
                 }
                 if (errmsg != null) {
                     msgPW.println(errmsg);
-                    msgPW.println("Test result (overridden): " + status);
-                    status = error("failed to clean up files after test");
+                    msgPW.println("WARNING: failed to clean up files after test");
+                    if (!agents.isEmpty()) {
+                        msgPW.println("WARNING: closing agent(s)");
+                    }
                     closeAgents();
                 }
             }

@@ -80,8 +80,8 @@ $(BUILDDIR)/CleanupTests.othervm.conc.ok: \
 	echo "test passed at `date`" > $@
 
 #####
-# In agent mode with -retain, the tests all return error
-# because the selected files cannot be retained
+# In agent mode with -retain, the tests all pass
+# even if the selected files cannot be retained
 
 $(BUILDDIR)/CleanupTests.agentvm.retain.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
@@ -97,7 +97,7 @@ $(BUILDDIR)/CleanupTests.agentvm.retain.ok: \
 		$(TESTDIR)/cleanup \
 			> $(@:%.ok=%/jt.log) 2>&1 || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
-	$(GREP) -s 'Test results: error: 5' $(@:%.ok=%/jt.log)  > /dev/null
+	$(GREP) -s 'Test results: passed: 5' $(@:%.ok=%/jt.log)  > /dev/null
 	dirs=`cd $(@:%.ok=%)/work ; $(FIND) . -type d -print | $(GREP) scratch | $(GREP) -v readonly | $(SORT)` ; \
 	echo $$dirs ; \
 	if [ `echo $$dirs | $(WC) -w` != 5 ]; then echo "wrong number of scratch directories found" ; exit 1 ; fi
