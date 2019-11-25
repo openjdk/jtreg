@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -561,7 +561,8 @@ public class CompileAction extends Action {
             try (BufferedWriter w = new BufferedWriter(new FileWriter(argFile))) {
                 for (String arg: javacArgs) {
                     if (arg.startsWith("-J")) {
-                        javacVMOpts.add(arg);
+                        // remove -J for now; it will be added back later
+                        javacVMOpts.add(arg.substring(2));
                     } else {
                         w.write(arg);
                         w.newLine();
