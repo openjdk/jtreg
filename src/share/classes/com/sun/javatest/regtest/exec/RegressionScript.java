@@ -381,6 +381,7 @@ public class RegressionScript extends Script {
         populateActionTable();
 
         Expr.Context exprContext = params.getExprContext();
+        Map<String,String> testProps = getTestProperties();
         for (String runCmd : runCmds) {
             // e.g. reason compile/fail/ref=Foo.ref -debug Foo.java
             // where "reason" indicates why the action should run
@@ -408,7 +409,7 @@ public class RegressionScript extends Script {
                     continue;
                 }
                 Action action = (Action) (c.getDeclaredConstructor().newInstance());
-                action.init(opts, processArgs(args, exprContext), getReason(tokens), this);
+                action.init(opts, processArgs(args, exprContext, testProps), getReason(tokens), this);
                 actionList.add(action);
             } catch (IllegalAccessException e) {
                 if (stopOnError)
@@ -423,7 +424,8 @@ public class RegressionScript extends Script {
 
     }
 
-    private List<String> processArgs(List<String> args, Expr.Context c) throws TestSuite.Fault, Expr.Fault {
+    private List<String> processArgs(List<String> args, Expr.Context c, Map<String,String> testProps)
+            throws TestSuite.Fault, Expr.Fault {
         if (!testSuite.getAllowSmartActionArgs(td))
             return args;
 
@@ -436,21 +438,24 @@ public class RegressionScript extends Script {
         }
         List<String> newArgs = new ArrayList<>();
         for (String arg : args) {
-            newArgs.add(evalNames(arg, c));
+            newArgs.add(evalNames(arg, c, testProps));
         }
         return newArgs;
     }
 
     private static final Pattern namePattern = Pattern.compile("\\$\\{([A-Za-z0-9._]+)\\}");
 
-    private static String evalNames(String arg, Expr.Context c) throws Expr.Fault {
+    private static String evalNames(String arg, Expr.Context c, Map<String,String> testProps)
+            throws Expr.Fault {
         Matcher m = namePattern.matcher(arg);
         StringBuffer sb = null;
         while (m.find()) {
             if (sb == null) {
                 sb = new StringBuffer();
             }
-            m.appendReplacement(sb, c.get(m.group(1)));
+            String name = m.group(1);
+            String value = testProps.containsKey(name) ? testProps.get(name) : c.get(name);
+            m.appendReplacement(sb, value);
         }
         if (sb == null) {
             return arg;
@@ -1079,7 +1084,7 @@ public class RegressionScript extends Script {
 
     // Get the standard properties to be set for tests
 
-    Map<String, String> getTestProperties() throws TestClassException {
+    Map<String, String> getTestProperties()  {
         Map<String, String> p = new LinkedHashMap<>();
         // The following will be added to javac.class.path on the test JVM
         switch (getExecMode()) {
