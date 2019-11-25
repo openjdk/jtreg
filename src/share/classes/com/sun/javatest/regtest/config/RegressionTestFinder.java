@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -204,6 +204,7 @@ public class RegressionTestFinder extends TagTestFinder
             if (super_fastScan)
                 cs.setFastScan(true);
 
+            Set<String> allIds = new HashSet<>();
             String comment = cs.readComment();
             while (comment != null) {
                 @SuppressWarnings({"unchecked", "cast"}) // temporary, to cover transition generifying TestFinder
@@ -218,8 +219,25 @@ public class RegressionTestFinder extends TagTestFinder
                 if (tagValues.get("id") == null) {
                     // if there are more comments to come, or if there have already
                     // been additional comments, set an explicit id for each set of tags
-                    if ((comment != null && comment.trim().startsWith("@test")) || testDescNumber  != 0)
-                        tagValues.put("id", "id" + (new Integer(testDescNumber)).toString());
+                    if ((comment != null && comment.trim().startsWith("@test")) || testDescNumber  != 0) {
+                        String test = tagValues.get("test");
+                        String id = null;
+                        if (test != null) {
+                            Matcher m = Pattern.compile("id=(?<id>[A-Za-z0-9-_]+)\\b.*").matcher(test);
+                            if (m.matches()) {
+                                id = m.group("id");
+                                if (allIds.contains(id)) {
+                                    error(i18n, "tag.duplicateId", id);
+                                    id = null; // use default
+                                }
+                            }
+                        }
+
+                        if (id == null) {
+                            id = "id" + testDescNumber;
+                        }
+                        tagValues.put("id", id);
+                    }
                     testDescNumber++;
                 }
 
@@ -771,7 +789,7 @@ public class RegressionTestFinder extends TagTestFinder
     /**
      * Verify that the provided set of keys are allowed for the current
      * test-suite.  The set of keys is stored in the system property
-     * <code>env.regtest.key</code>.
+     * {@code env.regtest.key}.
      *
      * @param tagValues The map of all of the current tag values.
      * @param value     The value of the entry currently being processed.

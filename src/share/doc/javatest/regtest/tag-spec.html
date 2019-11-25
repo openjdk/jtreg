@@ -33,7 +33,7 @@
     pre.example { margin-left: 0.5in }
     dl.tags > dt { font-family: monospace; font-size:smaller }
     dl.terms > dt { font-style: italic }
-    dl dd { margin-bottom: 1em } 
+    dl dd { margin-bottom: 1em }
     span.note { font-size: smaller; font-style: italic }
     table { border: 1px black solid; border-collapse: collapse }
     td { border-right: 1px black solid }
@@ -52,7 +52,7 @@
 <p>Comments and questions to:
 <a href="mailto:jtreg-use@openjdk.java.net">jtreg-use@openjdk.java.net</a>.
 <br>
-1.45, 07 December, 2018
+1.46, 25 November, 2019
 </div>
 
 <p>This is a specification document, not a tutorial.  For more basic information
@@ -133,8 +133,8 @@ is an error for the leading comment of a defining file to contain any tag token
 not defined here.
 
 <p>As a special case, the token "<code>@(#)</code>" is not treated as a tag token.
-This token may appear in the arguments to an <code>@test</code> tag as part of the SCCS
-identification string.
+For historical reasons, this token may appear in the arguments to an
+<code>@test</code> tag as part of an SCCS identification string.
 
 <p>The arguments of a tag are simply the tokens that follow it.  The argument
 tokens of a tag extend from the first token after the tag token to the end of
@@ -143,13 +143,13 @@ Argument tokens are separated by whitespace; if commas are used, they will be
 considered to be part of the tokens to which they are adjacent.
 
 <p>The arguments of a tag may contain references to various properties, using
-the syntax <code>${<var>&lt;name&gt;</var>}</code>. 
-The set of names is the same as the set that may be used in an 
+the syntax <code>${<var>&lt;name&gt;</var>}</code>.
+The set of names is the same as the set that may be used in an
 <code>@requires</code> expression, and is defined in <a href="#requires_names">Appendix 1</a>.
 <span class="note">
 Note: For compatibility reasons, this feature is only enabled by default
-when the test suite declares a <a href="#requiredVersion">required version</a> of 
-<code>jtreg 4.2 b14</code> and higher. The feature can be explicitly enabled or disabled 
+when the test suite declares a <a href="#requiredVersion">required version</a> of
+<code>jtreg 4.2 b14</code> and higher. The feature can be explicitly enabled or disabled
 by setting <code><a href="#allowSmartActionArgs">allowSmartActionArgs</a></code> in
 the <a href="#config">configuration files</a>.</span>
 
@@ -162,7 +162,14 @@ harness, but may be used by the harness in generating reports.
 
 <dt>@test <var>&lt;token&gt;*</var>
 <dd>
-<p>Defining-file identifier; <var>&lt;token&gt;*</var> is typically SCCS identification info
+<p>Defining-file identifier; in general, <var>&lt;token&gt;*</var> is a comment
+and is ignored.
+
+<p>As a special case, if the file contains multiple comments beginning
+with <code>@test</code>, if the tokens that follow <code>@test</code> are
+<code>id=</code><var>identifier</var>, the identifier will be used to construct
+a unique name for the test. If there is no such identifier, a default one will
+be used.
 
 <dt>@bug <var>&lt;bugid&gt;+</var>
 <dd>
@@ -197,7 +204,7 @@ once in a given test. The <code>@comment</code> tag may be used multiple times.
 <dd>
 <p>Add one or more pathnames or jar filenames to the library path list.
 Each argument must use forward slash to separate file name components, and
-may use ".." to denote parent directories. 
+may use ".." to denote parent directories.
 
 <ul>
 <li>If an argument is relative (that is, it does not begin with '/'), it will
@@ -245,7 +252,7 @@ related to the library; it should not contain subdirectories containing other co
 such as tests, or other separate libraries.
 
 <p>In general, classes in library directories are not automatically compiled
-as part of a compilation command explicitly naming the source files containing 
+as part of a compilation command explicitly naming the source files containing
 those classes. A test that relies upon library classes should contain appropriate
 <code>@build</code> directives to ensure that the classes will be compiled.
 It is strongly recommended that tests do not rely on the use of implicit compilation
@@ -298,11 +305,11 @@ package.
 <table>
 <thead><tr class="head"><th>Flag</th><th>Access</th></thead>
 <tbody>
-<tr><td><i>none</i><td>The package should be exported, 
+<tr><td><i>none</i><td>The package should be exported,
 so that its public types will be available for use by the test at compile time and run time.
-<tr><td><code>open</code><td>The package should be opened, 
+<tr><td><code>open</code><td>The package should be opened,
 so that its types will be available for use by the test at run time using deep reflection.
-<tr><td><code>+open</code><td>The package should be both exported and opened, 
+<tr><td><code>+open</code><td>The package should be both exported and opened,
 so that its public types will be available for use by the test at compile time and run time,
 and other types will be available at run time using deep reflection.
 </table>
@@ -311,7 +318,7 @@ and other types will be available at run time using deep reflection.
 <dd>
 <p>Express a dependence on characteristics of the system being tested.
 Some harnesses allow tests to be selected according to the characteristics
-of the system being tested. 
+of the system being tested.
 The expression may be composed of the following elements:
 
 <ul>
@@ -399,7 +406,7 @@ it passed, and vice versa.
 <dd>
 <p>Specify the timeout value.  The default timeout is two minutes.  If an action
 does not finish before the timeout expires, it fails.  The timeout period
-applies to the entire action, not to particular steps of the action. A value of 
+applies to the entire action, not to particular steps of the action. A value of
 zero means there is no timeout. The /timeout option may not be given in
 conjunction with the <code>/manual</code> option.
 
@@ -986,7 +993,7 @@ configuration file.</p>
 
 <dt id="modules"><code>modules <var>&lt;module[/package[:flag]]&gt;+</var></code>
 <dd>
-<p>Express a default dependence, for tests in this directory and its subdirectories, 
+<p>Express a default dependence, for tests in this directory and its subdirectories,
 on modules in the system being tested, and optionally,
 on selected internal packages in some or all of those modules.</p>
 
@@ -1007,7 +1014,7 @@ on the command line, use <code>-J-D<i>&lt;name&gt;</i>=<i>&lt;value&gt;</i></cod
 <dt id="allowSmartActionArgs"><code>allowSmartActionArgs <var>&lt;true|false&gt;+</var></code>
 <dd>Specify whether or not to permit the use of <code>${<var>&lt;name&gt;</var></code>
 in the arguments for an action. The set of names is the same as the set that
-may be used in an <code>@requires</code> expression. 
+may be used in an <code>@requires</code> expression.
 See <a href="#requires_names">Appendix 1</a>.
 
 </dl>
@@ -1148,7 +1155,7 @@ for information on how to extend the set of supported names for a particular tes
 <tr><td><code>os.family</code>
     <td>The operation system family, derived from the operating sytsem name.
     <td>One of <code>linux</code> <code>mac</code> <code>solaris</code> <code>windows</code>
-    <td>first word of <code>os.name</code>	
+    <td>first word of <code>os.name</code>
 
 <tr><td><code>os.arch</code>
     <td>The operating system architecture, as given by the corresponding system property.
@@ -1201,7 +1208,7 @@ for information on how to extend the set of supported names for a particular tes
     <td>A VM option, derived from option <code>-XX:<i>name</i>=<i>value</i></code>
     <td><code><i>value</i></code>
     <td>
-	
+
 <tr style="color:gray"><td><code>profile</code>
     <td>The name of the highest profile supported by the test JDK.
     <td>One of <code>compact1</code> <code>compact2</code> <code>compact3</code>
@@ -1303,7 +1310,7 @@ support modules.
 <tr>
 <td><code>test.root</code>
 <td><code>TESTROOT</code>
-<td>The root directory of the test suite 
+<td>The root directory of the test suite
 (the directory containing the <a href="#TEST_ROOT">TEST.ROOT</a> file.)
 
 <tr>
