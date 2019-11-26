@@ -200,55 +200,49 @@ public class RegressionTestFinder extends TagTestFinder
         }
 
         try {
-            cs.init(new BufferedReader(new FileReader(file)));
+            LineCounterBufferedReader r = new LineCounterBufferedReader(new FileReader(file));
+            cs.init(r);
             if (super_fastScan)
                 cs.setFastScan(true);
 
-            Set<String> allIds = new HashSet<>();
             String comment = cs.readComment();
+            int commentLine = r.lineNumber;
             while (comment != null) {
                 @SuppressWarnings({"unchecked", "cast"}) // temporary, to cover transition generifying TestFinder
                 Map<String,String> tagValues = (Map<String,String>) parseComment(comment, file);
 
                 // Look ahead to see if there are more comments
-                comment = cs.readComment();
+                String nextComment = cs.readComment();
+                int nextCommentLine = r.lineNumber;
 
-                if (tagValues.isEmpty())
-                    continue;
-
-                if (tagValues.get("id") == null) {
-                    // if there are more comments to come, or if there have already
-                    // been additional comments, set an explicit id for each set of tags
-                    if ((comment != null && comment.trim().startsWith("@test")) || testDescNumber  != 0) {
-                        String test = tagValues.get("test");
-                        String id = null;
-                        if (test != null) {
-                            Matcher m = Pattern.compile("id=(?<id>[A-Za-z0-9-_]+)\\b.*").matcher(test);
-                            if (m.matches()) {
-                                id = m.group("id");
-                                if (allIds.contains(id)) {
-                                    error(i18n, "tag.duplicateId", id);
-                                    id = null; // use default
-                                }
-                            }
+                if (!tagValues.isEmpty()) {
+                    if (tagValues.get("id") == null) {
+                        // if there are more comments to come, or if there have already
+                        // been additional comments, set an explicit id for each set of tags
+                        if ((nextComment != null && nextComment.trim().startsWith("@test")) || testDescNumber != 0) {
+                            String test = tagValues.get("test");
+                            Matcher m;
+                            String id = (test != null
+                                    && (m = Pattern.compile("id=(?<id>[A-Za-z0-9-_]+)\\b.*").matcher(test)).matches())
+                                    ? m.group("id")
+                                    : "id" + testDescNumber;
+                            tagValues.put("id", id);
                         }
-
-                        if (id == null) {
-                            id = "id" + testDescNumber;
-                        }
-                        tagValues.put("id", id);
+                        testDescNumber++;
                     }
-                    testDescNumber++;
+
+                    // The "test" marker can now be removed so that we don't waste
+                    // space unnecessarily.  We need to do the remove *after* the
+                    // isEmpty() check because of the potential to interfere with
+                    // defaults based on file extension. (i.e. The TD /* @test */
+                    // still needs to evaluate to a valid test description.)
+                    tagValues.remove("test");
+
+                    foundTestDescription(tagValues, file, commentLine);
                 }
 
-                // The "test" marker can now be removed so that we don't waste
-                // space unnecessarily.  We need to do the remove *after* the
-                // isEmpty() check because of the potential to interfere with
-                // defaults based on file extension. (i.e. The TD /* @test */
-                // still needs to evaluate to a valid test description.)
-                tagValues.remove("test");
-
-                foundTestDescription(tagValues, file, /*line*/0);
+                comment = nextComment;
+                commentLine = nextCommentLine;
             }
         }
         catch (FileNotFoundException e) {
@@ -262,6 +256,43 @@ public class RegressionTestFinder extends TagTestFinder
                 cs.close();
             }
             catch (IOException e) {
+            }
+        }
+    }
+
+    private class LineCounterBufferedReader extends BufferedReader {
+        int lineNumber;
+
+        LineCounterBufferedReader(FileReader r) {
+            super(r);
+            lineNumber = 1;
+        }
+        @Override
+        public int read() throws IOException {
+            int ch = super.read();
+            checkNewline(ch);
+            return ch;
+        }
+
+        @Override
+        public String readLine() throws IOException {
+            String line = super.readLine();
+            lineNumber++;
+            return line;
+        }
+
+        @Override
+        public int read(char[] buf, int offset, int length) throws IOException {
+            int n = super.read(buf, offset, length);
+            for (int i = offset; i < offset + n; i++) {
+                checkNewline(buf[i]);
+            }
+            return n;
+        }
+
+        private void checkNewline(int ch) {
+            if (ch == '\n') {
+                lineNumber++;
             }
         }
     }

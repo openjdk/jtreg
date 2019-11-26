@@ -37,6 +37,11 @@
  * @test id=beta
  */
 
+/*
+ * @test id=beta
+ * @comment intentional duplicate
+ */
+
 import java.util.Map;
 
 public class Test {
