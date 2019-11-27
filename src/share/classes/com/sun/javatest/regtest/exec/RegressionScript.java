@@ -425,7 +425,7 @@ public class RegressionScript extends Script {
     }
 
     private List<String> processArgs(List<String> args, Expr.Context c, Map<String,String> testProps)
-            throws TestSuite.Fault, Expr.Fault {
+            throws TestSuite.Fault, Expr.Fault, ParseException {
         if (!testSuite.getAllowSmartActionArgs(td))
             return args;
 
@@ -446,7 +446,7 @@ public class RegressionScript extends Script {
     private static final Pattern namePattern = Pattern.compile("\\$\\{([A-Za-z0-9._]+)\\}");
 
     private static String evalNames(String arg, Expr.Context c, Map<String,String> testProps)
-            throws Expr.Fault {
+            throws Expr.Fault, ParseException {
         Matcher m = namePattern.matcher(arg);
         StringBuffer sb = null;
         while (m.find()) {
@@ -455,6 +455,9 @@ public class RegressionScript extends Script {
             }
             String name = m.group(1);
             String value = testProps.containsKey(name) ? testProps.get(name) : c.get(name);
+            if ("null".equals(value)) {
+                throw new ParseException("unset property " + name);
+            }
             m.appendReplacement(sb, value);
         }
         if (sb == null) {
