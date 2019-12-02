@@ -61,18 +61,14 @@ mixed_path() {
 }
 
 get_scm_type() {
-    hg root 2>&1 > /dev/null
-    if [ $? -eq 0 ]; then
-       echo "HG"
-       return
+    if [ -d .hg ]; then
+        echo "HG"
+    elif [ -d .git ]; then
+        echo "GIT"
+    else 
+        echo "Error: unrecognized repository, it must be Git or Mercurial" >&2
+        exit 1
     fi
-    git tag 2>&1 > /dev/null
-    if [ $? -eq 0 ]; then
-       echo "GIT"
-       return
-    fi
-    echo "Error: unrecognized repository, it must be Git or Mercurial" >&2
-    exit 1
 }
 
 SCM_TYPE=`get_scm_type`
