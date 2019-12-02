@@ -41,7 +41,6 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.*;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.Alarm;
-import com.intellij.util.containers.hash.HashMap;
 import com.oracle.plugin.jtreg.util.JTRegUtils;
 import org.jetbrains.annotations.NotNull;
 

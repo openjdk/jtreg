@@ -26,15 +26,14 @@
 <idea-plugin>
     <id>jtreg</id>
     <name>jtreg Test Support</name>
-    <version>1.9</version>
+    <version>1.10</version>
     <description><![CDATA[
       Allows execution of tests developed using the <a href="http://openjdk.java.net/jtreg/">jtreg</a> framework.
     ]]></description>
 
     <change-notes><![CDATA[
     <ul>
-      <li>Add support for IntelliJ IDE2018.3</li>
-      <li>Allow support for external library resolution</li>
+      <li>Add support for IntelliJ IDE2019.3</li>
     </ul>
     ]]>
     </change-notes>

@@ -38,6 +38,7 @@ import com.intellij.execution.runners.ProgramRunner;
 import com.intellij.execution.testframework.SearchForTestsTask;
 import com.intellij.execution.testframework.TestSearchScope;
 import com.intellij.execution.ui.DefaultJreSelector;
+import com.intellij.openapi.module.Module;
 import com.intellij.openapi.projectRoots.JdkUtil;
 import com.intellij.openapi.projectRoots.ProjectJdkTable;
 import com.intellij.openapi.projectRoots.Sdk;
@@ -150,7 +151,6 @@ class JTRegConfigurationRunnableState extends JavaTestFrameworkRunnableState<JTR
         return javaParameters;
     }
 
-    @Override
     protected void configureRTClasspath(JavaParameters javaParameters) {
         JTRegService jtregSettings = JTRegService.getInstance(getConfiguration().getProject());
         javaParameters.getClassPath().add(jtregSettings.getJTRegDir() + "/lib/jtreg.jar");
@@ -158,6 +158,10 @@ class JTRegConfigurationRunnableState extends JavaTestFrameworkRunnableState<JTR
         javaParameters.getClassPath().add(jtregSettings.getJTRegDir() + "/lib/testng.jar");
         javaParameters.getClassPath().add(jtregSettings.getJTRegDir() + "/lib/junit.jar");
         javaParameters.getClassPath().add(jtregSettings.getJTRegDir() + "/lib/asmtools.jar");
+    }
+
+    protected void configureRTClasspath(JavaParameters javaParameters, Module module) throws CantRunException {
+        configureRTClasspath(javaParameters);
     }
 
     @Override
