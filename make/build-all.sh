@@ -60,6 +60,39 @@ mixed_path() {
     if [ $CYGWIN == 1 ]; then echo `cygpath -m $1`; else echo $1; fi
 }
 
+get_scm_type() {
+    hg root 2>&1 > /dev/null
+    if [ $? -eq 0 ]; then
+       echo "HG"
+       return
+    fi
+    git tag 2>&1 > /dev/null
+    if [ $? -eq 0 ]; then
+       echo "GIT"
+       return
+    fi
+    echo "Error: unrecognized repository, it must be Git or Mercurial" >&2
+    exit 1
+}
+
+SCM_TYPE=`get_scm_type`
+
+get_root() {
+   case $SCM_TYPE in
+       HG)  hg root ;;
+       GIT) git rev-parse --show-toplevel ;;
+       *) echo "Error: unknown SCM" >&2 ; exit 1 ;;
+   esac
+}
+
+get_tag_info() {
+   case $SCM_TYPE in
+       HG)  hg tags | grep jtreg | head -1 ;;
+       GIT) git tag | grep jtreg | tail -1 ;;
+       *) echo "Error: unknown SCM" >&2 ; exit 1 ;;
+   esac
+}
+
 export JAVA_HOME=$1
 export PATH="$JAVA_HOME:$PATH"
 
@@ -77,7 +110,9 @@ UNZIP_OPTS="${UNZIP_OPTS:--q} -u"
 WGET=wget
 WGET_OPTS=${WGET_OPTS:--q}
 
-ROOT=$(hg root)
+
+ROOT=`get_root`
+
 BUILD_DIR=${BUILD_DIR:-${ROOT}/build}
 
 if [ "${SKIP_WGET:-}" = "" -a -d ${BUILD_DIR} ]; then
@@ -254,11 +289,12 @@ echo "6375e521c1e11d6563d4f25a07ce124ccf8cd171  ${JCOMMANDER_JAR}" | ${SHASUM} -
 
 
 ## Set version and build numbers to the latest tagged version by default
+TAG_INFO=`get_tag_info`
 if [ -z ${BUILD_NUMBER:-} ]; then
-    BUILD_NUMBER=`hg tags | grep jtreg | head -1 | sed 's/jtreg\([0-9]\.[0-9]\)-\(b[0-9]*\).*/\2/'`
+    BUILD_NUMBER=`echo $TAG_INFO | sed 's/jtreg\([0-9]\.[0-9]\)-\(b[0-9]*\).*/\2/'`
 fi
 if [ -z ${BUILD_VERSION:-} ]; then
-    BUILD_VERSION=`hg tags | grep jtreg | head -1 | sed 's/jtreg\([0-9]\.[0-9]\)-\(b[0-9]*\).*/\1/'`
+    BUILD_VERSION=`echo $TAG_INFO | sed 's/jtreg\([0-9]\.[0-9]\)-\(b[0-9]*\).*/\1/'`
 fi
 
 # Build jtreg
