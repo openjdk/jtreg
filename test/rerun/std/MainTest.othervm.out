@@ -8,6 +8,7 @@ PATH=/bin:/usr/bin:/usr/sbin \
 TZ=GMT+0.00 \
     %JDKHOME%/bin/javac \
         -J-Dmy.vm.option=x \
+        -J-Dtest.file=%WS%/test/rerun/std/MainTest.java \
         -J-Dtest.src=%WS%/test/rerun/std \
         -J-Dtest.src.path=%WS%/test/rerun/std \
         -J-Dtest.classes=%BUILD%/RerunTest.othervm/work/classes/std/MainTest.d \
@@ -36,6 +37,7 @@ PATH=/bin:/usr/bin:/usr/sbin \
 TZ=GMT+0.00 \
 CLASSPATH=%BUILD%/RerunTest.othervm/work/classes/std/MainTest.d:%WS%/test/rerun/std:%JDKHOME%/lib/tools.jar:%BUILD%/images/jtreg/lib/javatest.jar:%BUILD%/images/jtreg/lib/jtreg.jar \
     %JDKHOME%/bin/java \
+        -Dtest.file=%WS%/test/rerun/std/MainTest.java \
         -Dtest.src=%WS%/test/rerun/std \
         -Dtest.src.path=%WS%/test/rerun/std \
         -Dtest.classes=%BUILD%/RerunTest.othervm/work/classes/std/MainTest.d \

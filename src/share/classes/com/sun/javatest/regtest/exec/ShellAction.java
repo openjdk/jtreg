@@ -207,6 +207,7 @@ public class ShellAction extends Action
             Map<String, String> env = new LinkedHashMap<>();
             env.putAll(getEnvVars(true));
             Locations locations = script.locations;
+            env.put("TESTFILE", fixupSep(locations.absTestFile()));
             env.put("TESTSRC", fixupSep(locations.absTestSrcDir()));
             env.put("TESTSRCPATH", fixupSep(locations.absTestSrcPath()));
             env.put("TESTCLASSES" , fixupSep(locations.absTestClsDir()));

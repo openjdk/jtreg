@@ -10,6 +10,7 @@ TZ=GMT+0.00 \
         -J-Dmy.vm.option=x \
         -J-Dmy.java.option=x \
         -J-Dtest.class.path.prefix=%BUILD%/RerunTest.agentvm/work/classes/std/TestNGTest.d:%WS%/test/rerun/std \
+        -J-Dtest.file=%WS%/test/rerun/std/TestNGTest.java \
         -J-Dtest.src=%WS%/test/rerun/std \
         -J-Dtest.src.path=%WS%/test/rerun/std \
         -J-Dtest.classes=%BUILD%/RerunTest.agentvm/work/classes/std/TestNGTest.d \
@@ -38,6 +39,7 @@ PATH=/bin:/usr/bin:/usr/sbin \
 TZ=GMT+0.00 \
     %JDKHOME%/bin/java \
         -Dtest.class.path.prefix=%BUILD%/RerunTest.agentvm/work/classes/std/TestNGTest.d:%WS%/test/rerun/std \
+        -Dtest.file=%WS%/test/rerun/std/TestNGTest.java \
         -Dtest.src=%WS%/test/rerun/std \
         -Dtest.src.path=%WS%/test/rerun/std \
         -Dtest.classes=%BUILD%/RerunTest.agentvm/work/classes/std/TestNGTest.d \

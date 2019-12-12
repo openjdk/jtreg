@@ -14,6 +14,7 @@ TZ=GMT+0.00 \
         -J-Dmy.vm.option=x \
         -J-Dmy.java.option=x \
         -J-Dtest.class.path.prefix=%BUILD%/RerunTest.agentvm/work/classes/std/BuildTest.d:%WS%/test/rerun/std \
+        -J-Dtest.file=%WS%/test/rerun/std/BuildTest.java \
         -J-Dtest.src=%WS%/test/rerun/std \
         -J-Dtest.src.path=%WS%/test/rerun/std \
         -J-Dtest.classes=%BUILD%/RerunTest.agentvm/work/classes/std/BuildTest.d \

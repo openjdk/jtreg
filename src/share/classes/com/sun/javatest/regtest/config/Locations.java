@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -142,6 +142,7 @@ public class Locations {
     private final SearchPath jtpath;
     private final JDK testJDK;
 
+    private final File absTestFile;
     private final File absBaseSrcDir;
     private final File absTestSrcDir;
     private final File absBaseClsDir;
@@ -163,6 +164,7 @@ public class Locations {
         boolean useUniqueClassDir = (v.version != null)
                 && (v.compareTo(new Version("4.2 b08")) >= 0);
 
+        absTestFile = td.getFile().getAbsoluteFile();
         File relTestFile = td.getRootRelativeFile();
         String relTestDir = relTestFile.getParent();
         if (relTestDir == null)
@@ -355,6 +357,14 @@ public class Locations {
 
     boolean isSystemModule(String name) {
         return (systemModules != null) && systemModules.contains(name);
+    }
+
+    /**
+     * Gets the path of the test defining file.
+     * @return the path
+     */
+    public File absTestFile() {
+        return absTestFile;
     }
 
     /**

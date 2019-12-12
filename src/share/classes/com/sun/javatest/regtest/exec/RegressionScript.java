@@ -1099,6 +1099,7 @@ public class RegressionScript extends Script {
                     .append(locations.absLibSrcJarList());
                 p.put("test.class.path.prefix", path.toString());
         }
+        p.put("test.file", locations.absTestFile().getPath());
         p.put("test.src", locations.absTestSrcDir().getPath());
         p.put("test.src.path", toString(locations.absTestSrcPath()));
         p.put("test.classes", locations.absTestClsDir().getPath());

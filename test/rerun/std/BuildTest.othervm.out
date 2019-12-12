@@ -12,6 +12,7 @@ PATH=/bin:/usr/bin:/usr/sbin \
 TZ=GMT+0.00 \
     %JDKHOME%/bin/javac \
         -J-Dmy.vm.option=x \
+        -J-Dtest.file=%WS%/test/rerun/std/BuildTest.java \
         -J-Dtest.src=%WS%/test/rerun/std \
         -J-Dtest.src.path=%WS%/test/rerun/std \
         -J-Dtest.classes=%BUILD%/RerunTest.othervm/work/classes/std/BuildTest.d \
