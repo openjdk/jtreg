@@ -449,12 +449,7 @@ public class RegressionScript extends Script {
             throws Expr.Fault, ParseException {
         Matcher m = namePattern.matcher(arg);
         StringBuffer sb = null;
-        // Note that '\' may appear in the replacement value for paths on Windows,
-        // and so, in the following loop, avoid using Matcher::appendReplacement,
-        // which interprets '\' and `$' in the replacement string.
-        // Instead, use explicit operations to append the literal replacement value.
-        int pos = 0;
-        while (m.find(pos)) {
+        while (m.find()) {
             if (sb == null) {
                 sb = new StringBuffer();
             }
@@ -463,14 +458,12 @@ public class RegressionScript extends Script {
             if ("null".equals(value)) {
                 throw new ParseException("unset property " + name);
             }
-            sb.append(arg.substring(pos, m.start()));
-            sb.append(value);
-            pos = m.end();
+            m.appendReplacement(sb, value);
         }
         if (sb == null) {
             return arg;
         } else {
-            sb.append(arg.substring(pos));
+            m.appendTail(sb);
             return sb.toString();
         }
     }
