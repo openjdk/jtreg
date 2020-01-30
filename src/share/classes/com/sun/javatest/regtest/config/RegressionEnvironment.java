@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2005, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -25,6 +25,7 @@
 
 package com.sun.javatest.regtest.config;
 
+import java.util.ArrayList;
 import java.util.Map;
 
 import com.sun.javatest.TestEnvironment;
@@ -32,7 +33,7 @@ import com.sun.javatest.TestEnvironment;
 public class RegressionEnvironment extends TestEnvironment
 {
     RegressionEnvironment(RegressionParameters params) throws Fault {
-        super("regtest", new Map<?, ?>[] { }, new String[] { });
+        super("regtest", new ArrayList<Map<String, String>>(), new String[] { });
         this.params = params;
     }
 
