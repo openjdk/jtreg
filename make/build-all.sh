@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #
-# Copyright (c) 2017, 2019, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2017, 2020, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -135,7 +135,7 @@ MAVEN_REPO_URL=https://repo1.maven.org/maven2
 CODE_TOOLS_URL=http://hg.openjdk.java.net/code-tools
 # The following are Mercurial tags for the corresponding OpenJDK Code Tools repo
 ASMTOOLS_VERSION=${ASMTOOLS_VERSION:-7.0-b06} # early access for 7.0
-JTHARNESS_VERSION=${JTHARNESS_VERSION:-jt6.0-b04} # early access for 6.0
+JTHARNESS_VERSION=${JTHARNESS_VERSION:-jt6.0-b08} # early access for 6.0
 JCOV_VERSION=${JCOV_VERSION:-jcov3.0-b05} # jcov3.0, ASM 6.2
 
 # ANT
