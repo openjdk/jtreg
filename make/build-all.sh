@@ -53,11 +53,11 @@ fi
 case `uname` in CYGWIN*) CYGWIN=1 ;; *) CYGWIN=0 ;; esac
 
 native_path() {
-    if [ $CYGWIN == 1 ]; then echo `cygpath -w $1`; else echo $1; fi
+    if [ $CYGWIN -eq 1 ]; then echo `cygpath -w $1`; else echo $1; fi
 }
 
 mixed_path() {
-    if [ $CYGWIN == 1 ]; then echo `cygpath -m $1`; else echo $1; fi
+    if [ $CYGWIN -eq 1 ]; then echo `cygpath -m $1`; else echo $1; fi
 }
 
 get_scm_type() {
