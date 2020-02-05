@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -2205,12 +2205,12 @@ public class Tool {
 
     /**
      * Returns whether or not Cygwin may be available, by examining
-     * to see if "LETTER:\cygwin" is mentioned anywhere in the PATH.
+     * to see if "LETTER:STUFF\cygwin" is mentioned anywhere in the PATH.
      */
     private boolean isCygwinDetected() {
         if (isWindows()) {
             String PATH = System.getenv("PATH");
-            return (PATH != null) && PATH.matches("(?i).*;[a-z]:\\\\cygwin.*");
+            return (PATH != null) && PATH.matches("(?i).*;[a-z]:[^;]*\\\\cygwin.*");
         } else {
             return false;
         }
