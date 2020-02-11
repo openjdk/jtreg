@@ -28,6 +28,13 @@ to be a bug, but in the course of doing the evaluation you write a test that
 checks for correct behavior.  You can help improve the quality of the JDK by
 checking this test into the test directory.
 
+### What is the difference between a unit test and a regression test?
+
+*   A unit test is one you write as insurance against having to write a regression
+    test later on.
+*   A regression test is the penalty you pay for not having written better
+    unit tests in the first place.
+
 ### What is the JavaTest&trade; harness?
 
 The JavaTest harness is a set of tools designed to execute test programs.
@@ -51,7 +58,7 @@ implement this specification, and is an older name for what is now known as
 
 ### What are the system requirements for using the JDK regression extensions?
 
-It is recommended that you run jtreg using JDK 1.7 or later.
+It is recommended that you run jtreg using JDK 1.8 or later.
 
 ### Where can I find a copy of jtreg?
 
@@ -2628,13 +2635,13 @@ will be reported and the test will be reported as having an error.
 
 ### Incompatible kind of JDK used to compile or run tests (...) with that used to run jtreg (...)
 
-**Answer**:  When using Windows Subsystem for Linux (WSL) to run jtreg, 
+**Answer**:  When using Windows Subsystem for Linux (WSL) to run jtreg,
 or to run shell tests within jtreg, it is possible to run tests on either
-a Windows JDK or a Linux JDK. However, there is a restriction that to run 
+a Windows JDK or a Linux JDK. However, there is a restriction that to run
 tests on a Linux JDK, you must also use a Linux JDK to run jtreg itself.
 (It need not be the same instance or same version of JDK).
 Likewise, to run tests on a Windows JDK, you must also use a Windows
-JDK to run jtreg itself. (Again, it need not be the same instance or 
+JDK to run jtreg itself. (Again, it need not be the same instance or
 the same version.)
 
 If you see this message, you are trying to run jtreg on one kind of JDK,
