@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -44,10 +44,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.sun.javatest.regtest.util.GraphUtils;
 import com.sun.javatest.regtest.util.GraphUtils.Node;
 import com.sun.javatest.regtest.util.GraphUtils.TarjanNode;
+import com.sun.javatest.util.I18NResourceBundle;
 
 /**
  * Manage test groups, for use on the jtreg command line.
@@ -79,7 +81,7 @@ public class GroupManager {
     private Collection<String> ignoreDirs = Collections.emptySet();
     private Collection<String> allowExtns = Collections.emptySet();
 
-    public class InvalidGroup extends Exception {
+    public static class InvalidGroup extends Exception {
         private static final long serialVersionUID = 1L;
     }
 
@@ -148,8 +150,15 @@ public class GroupManager {
         return groups.keySet();
     }
 
+    public boolean invalid() {
+        return groups.values().stream().anyMatch(g -> g.invalid);
+    }
+
     private void validate() {
         for (Group g: groups.values()) {
+            if (!g.name.matches("(?i)[a-z][a-z0-9_]*")) {
+                error(g, i18n.getString("gm.invalid.name.for.group"));
+            }
             for (Entry e: g.entries) {
                 @SuppressWarnings("unchecked")
                 List<Set<File>> allFiles = Arrays.asList(e.includeFiles, e.excludeFiles);
@@ -157,15 +166,15 @@ public class GroupManager {
                     for (File f: files) {
                         if (!f.exists()) {
                             URI u = root.toURI().relativize(f.toURI());
-                            error(e.origin, g, "file not found: " + u.getPath());
+                            error(e.origin, g, i18n.getString("gm.file.not.found", u.getPath()));
                         }
                     }
                 }
                 for (Group eg: e.includeGroups) {
                     if (eg.isEmpty())
-                        error(e.origin, g, "group not found: " + eg.name);
+                        error(e.origin, g, i18n.getString("gm.group.not.found", eg.name));
                     if (eg == g)
-                        error(e.origin, g, "group includes itself");
+                        error(e.origin, g, i18n.getString("gm.group.includes.itself"));
                 }
             }
         }
@@ -190,11 +199,31 @@ public class GroupManager {
                 }
             });
         }
+
         Set<? extends Set<? extends TarjanNode<Group>>> cycles = GraphUtils.tarjan(nodes.values());
+        for (Set<? extends TarjanNode<Group>> cycle : cycles) {
+            if (cycle.size() > 1) {
+                String s = cycle.stream()
+                        .map(tn -> tn.data.name)
+                        .collect(Collectors.joining(", "));
+                cycle.stream()
+                        .map(tn -> tn.data)
+                        .forEach(g -> error(g, i18n.getString("gm.cycle.detected", s)));
+            }
+        }
+    }
+
+    private void error(Group g, String message) {
+        if (g.entries.isEmpty()) {
+            out.println(i18n.getString("gm.group.prefix", new Object[] { g.name, message }));
+            g.invalid = true;
+        } else {
+            error(g.entries.get(0).origin, g, message);
+        }
     }
 
     private void error(File f, Group g, String message) {
-        out.println(f + ": group " + g + ": " + message);
+        out.println(i18n.getString("gm.file.group.prefix", new Object[] { f, g.name, message }));
         g.invalid = true;
     }
 
@@ -359,4 +388,6 @@ public class GroupManager {
                     + "]";
         }
     }
+
+    private static final I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(GroupManager.class);
 }

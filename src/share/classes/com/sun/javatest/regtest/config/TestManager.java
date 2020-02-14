@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -49,6 +49,7 @@ import com.sun.javatest.TestResultTable.TreeIterator;
 import com.sun.javatest.TestSuite;
 import com.sun.javatest.WorkDirectory;
 import com.sun.javatest.regtest.Main.Fault;
+import com.sun.javatest.regtest.tool.Version;
 import com.sun.javatest.util.I18NResourceBundle;
 
 /**
@@ -418,6 +419,16 @@ public class TestManager {
         try {
             Set<File> results = new LinkedHashSet<>();
             GroupManager gm = e.testSuite.getGroupManager(out);
+
+            if (gm.invalid()) {
+                Version v = e.testSuite.getRequiredVersion();
+                boolean reportErrorIfInvalidGroups = (v.version != null)
+                        && (v.compareTo(new Version("5.1 b01")) >= 0);
+                if (reportErrorIfInvalidGroups) {
+                    throw new Fault(i18n, "tm.invalidGroups");
+                }
+            }
+
             for (String group: e.groups) {
                 try {
                     results.addAll(gm.getFiles(group));

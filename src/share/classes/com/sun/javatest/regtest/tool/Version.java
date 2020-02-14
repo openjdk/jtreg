@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2006, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -59,12 +59,17 @@ public class Version implements Comparable<Version> {
         if (manifest == null)
             manifest = new Properties();
 
-        product = manifest.getProperty("jtreg-Name");
-        version = manifest.getProperty("jtreg-Version");
-        milestone = manifest.getProperty("jtreg-Milestone");
-        build = manifest.getProperty("jtreg-Build");
-        buildJavaVersion = manifest.getProperty("jtreg-BuildJavaVersion");
-        buildDate = manifest.getProperty("jtreg-BuildDate");
+        product = getManifestProperty("jtreg-Name");
+        version = getManifestProperty("jtreg-Version");
+        milestone = getManifestProperty("jtreg-Milestone");
+        build = getManifestProperty("jtreg-Build");
+        buildJavaVersion = getManifestProperty("jtreg-BuildJavaVersion");
+        buildDate = getManifestProperty("jtreg-BuildDate");
+    }
+
+    private String getManifestProperty(String key) {
+        // Allow overriding values for testing new versions
+        return System.getProperty("OVERRIDE-" + key, manifest.getProperty(key));
     }
 
     public Version(String versionAndBuild) {

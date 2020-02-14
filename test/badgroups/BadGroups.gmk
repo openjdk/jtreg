@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2013, 2020, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -25,46 +25,39 @@
 
 #----------------------------------------------------------------------
 
-GroupTest.GROUPS := $(shell $(GREP) -h '=' \
-	$(TESTDIR)/groups/TEST.group* | \
-	$(AWK) '{print $$1}' | $(SORT) -unk 1.2 )
 
-$(BUILDDIR)/GroupTest.ok: $(GroupTest.GROUPS:%=$(BUILDDIR)/GroupTest.%.ok)
-	echo $@ passed at `date` > $@
-
-$(GroupTest.GROUPS:%=$(BUILDDIR)/GroupTest.%.ok): \
+$(BUILDDIR)/BadGroups_badname.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	$(MKDIR) -p $(@:%.ok=%) 
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDKHOME) \
-		$(TESTDIR)/groups:$(@:$(BUILDDIR)/GroupTest.%.ok=%) ; \
+		$(TESTDIR)/badgroups/$(@:$(BUILDDIR)/BadGroups_%.ok=%) \
+                > $(@:%.ok=%)/jt.log 2>&1 ; \
             status=$$? ; echo status=$$status ; \
-            case "$(@:$(BUILDDIR)/GroupTest.%.ok=%)" in \
-		g6 )  expect=1 ;; \
-		g10|g11|g12 ) expect=5 ;; \
-                * ) expect=0 ;; \
-            esac ; \
-            if [ "$$status" != "$$expect" ]; then echo "unexpected exit: $$status" ; exit 1; fi
+            if [ "$$status" != "0" ]; then echo "unexpected exit: $$status" ; exit 1; fi
+	$(GREP) "TEST.groups: group a/b: invalid name for group" $(@:%.ok=%)/jt.log
 	echo $@ passed at `date` > $@
 
-TESTS.jtreg += $(BUILDDIR)/GroupTest.ok
+TESTS.jtreg += $(BUILDDIR)/BadGroups_badname.ok
 
-$(BUILDDIR)/ShowGroupTest.ok: \
+
+$(BUILDDIR)/BadGroups_badname51.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	$(MKDIR) -p $(@:%.ok=%) 
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-J-DOVERRIDE-jtreg-Version=5.1 \
+		-J-DOVERRIDE-jtreg-Build=b01 \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDKHOME) \
-                -showGroups \
-		$(TESTDIR)/groups \
-                > $(@:%.ok=%)/jt.log 2>&1
-	$(GREP) '^g3[0-9]' $(@:%.ok=%)/jt.log > $(@:%.ok=%)/g3.found
-	$(GREP) '^# g3[0-9]*' $(TESTDIR)/groups/TEST.groups3 \
-	        | $(SED) -e 's/# //' > $(@:%.ok=%)/g3.expect
-	$(DIFF) $(@:%.ok=%)/g3.expect $(@:%.ok=%)/g3.found
+		$(TESTDIR)/badgroups/$(@:$(BUILDDIR)/BadGroups_%.ok=%) \
+                > $(@:%.ok=%)/jt.log 2>&1 ; \
+            status=$$? ; echo status=$$status ; \
+            if [ "$$status" != "5" ]; then echo "unexpected exit: $$status" ; exit 1; fi
+	$(GREP) "TEST.groups: group a/b: invalid name for group" $(@:%.ok=%)/jt.log
+	$(GREP) "Error: One or more groups are invalid" $(@:%.ok=%)/jt.log
 	echo $@ passed at `date` > $@
 
-TESTS.jtreg += $(BUILDDIR)/ShowGroupTest.ok
+TESTS.jtreg += $(BUILDDIR)/BadGroups_badname.ok
