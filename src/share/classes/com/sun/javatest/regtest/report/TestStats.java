@@ -108,12 +108,10 @@ public class TestStats {
                 msg = getText(format);
             else {
                 msg = i18n.getString("stats.tests",
-                        new Object[] {
                     p, ((p > 0) && (f + e + nr > 0) ? 1 : 0),
                     f, ((f > 0) && (    e + nr > 0) ? 1 : 0),
                     e, ((e > 0) && (        nr > 0) ? 1 : 0),
-                    nr
-                });
+                    nr);
             }
         }
         out.println(msg);

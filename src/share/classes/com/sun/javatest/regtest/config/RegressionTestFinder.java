@@ -147,7 +147,7 @@ public class RegressionTestFinder extends TagTestFinder
                 modifiedScanFile(file);
             }
         } catch (TestSuite.Fault e) {
-            error(i18n, "finder.cant.read.test.properties", new Object[] { e.getMessage() });
+            error(i18n, "finder.cant.read.test.properties", e.getMessage());
         }
     }
 
@@ -187,7 +187,7 @@ public class RegressionTestFinder extends TagTestFinder
         @SuppressWarnings("unchecked")
         Class<? extends CommentStream> csc = (Class<? extends CommentStream>) getClassForExtension(extn);
         if (csc == null) {
-            error(super_i18n, "tag.noParser", new Object[] {file, extn});
+            error(super_i18n, "tag.noParser", file, extn);
             return;
         }
         CommentStream cs;
@@ -195,7 +195,7 @@ public class RegressionTestFinder extends TagTestFinder
             cs = csc.getDeclaredConstructor().newInstance();
         }
         catch (ReflectiveOperationException e) {
-            error(super_i18n, "tag.cantCreateClass", new Object[] {csc.getName(), extn});
+            error(super_i18n, "tag.cantCreateClass", csc.getName(), extn);
             return;
         }
 
@@ -621,7 +621,7 @@ public class RegressionTestFinder extends TagTestFinder
                 }
             }
         } catch (TestSuite.Fault e) {
-            error(i18n, "finder.cant.read.test.properties", new Object[] { e.getMessage() });
+            error(i18n, "finder.cant.read.test.properties", e.getMessage());
         }
 
         /*
@@ -704,8 +704,7 @@ public class RegressionTestFinder extends TagTestFinder
         String wrp = TestResult.getWorkRelativePath(td);
         TestDescription other = paths.get(wrp);
         if (other != null && !td.getRootRelativeURL().equals(other.getRootRelativeURL())) {
-            error(i18n, "finder.jtrClash",
-                    new Object[] { td.getFile(), other.getFile() });
+            error(i18n, "finder.jtrClash", td.getFile(), other.getFile());
             return;
         }
 

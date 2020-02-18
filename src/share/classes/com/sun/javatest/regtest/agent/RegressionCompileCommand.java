@@ -174,7 +174,7 @@ public class RegressionCompileCommand
 
             Object[] compileMethodArgs;
             Method compileMethod = getMethod(compilerClass, "compile", // JDK1.4+
-                                             new Class<?>[] { String[].class, PrintWriter.class });
+                                             String[].class, PrintWriter.class);
             if (compileMethod != null)
                 compileMethodArgs = new Object[] { args, ref };
             else {
@@ -227,7 +227,7 @@ public class RegressionCompileCommand
         }
     }
 
-    private Method getMethod(Class<?> c, String name, Class<?>[] argTypes) {
+    private Method getMethod(Class<?> c, String name, Class<?>... argTypes) {
         try {
             return c.getMethod(name, argTypes);
         }

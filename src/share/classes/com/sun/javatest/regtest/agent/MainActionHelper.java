@@ -153,12 +153,12 @@ public class MainActionHelper extends ActionHelper {
             Object[] methodArgs;
             if (TestRunner.class.isAssignableFrom(c)) {
                 // Marker interface found: use main(ClassLoader, String...)
-                argTypes = new Class<?>[]{ ClassLoader.class, String[].class };
-                methodArgs = new Object[]{ loader, classArgsArray };
+                argTypes = new Class<?>[] { ClassLoader.class, String[].class };
+                methodArgs = new Object[] { loader, classArgsArray };
             } else {
                 // Normal case: marker interface not found; use standard main method
-                argTypes = new Class<?>[]{ String[].class };
-                methodArgs = new Object[]{ classArgsArray };
+                argTypes = new Class<?>[] { String[].class };
+                methodArgs = new Object[] { classArgsArray };
             }
 
             Method method = c.getMethod("main", argTypes);

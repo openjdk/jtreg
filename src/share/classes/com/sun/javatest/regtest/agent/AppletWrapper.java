@@ -113,7 +113,7 @@ public class AppletWrapper
     } // main()
 
     private static Dictionary stringToDictionary(String s) {
-        String [] pairs = StringArray.splitTerminator("\034", s);
+        String[] pairs = StringArray.splitTerminator("\034", s);
         Dictionary retVal = new Hashtable(3);
         for (int i = 0; i < pairs.length; i+=2)
             retVal.put(pairs[i], pairs[i+1]);

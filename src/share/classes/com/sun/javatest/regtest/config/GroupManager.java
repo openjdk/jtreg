@@ -215,7 +215,7 @@ public class GroupManager {
 
     private void error(Group g, String message) {
         if (g.entries.isEmpty()) {
-            out.println(i18n.getString("gm.group.prefix", new Object[] { g.name, message }));
+            out.println(i18n.getString("gm.group.prefix", g.name, message));
             g.invalid = true;
         } else {
             error(g.entries.get(0).origin, g, message);
@@ -223,7 +223,7 @@ public class GroupManager {
     }
 
     private void error(File f, Group g, String message) {
-        out.println(i18n.getString("gm.file.group.prefix", new Object[] { f, g.name, message }));
+        out.println(i18n.getString("gm.file.group.prefix", f, g.name, message));
         g.invalid = true;
     }
 

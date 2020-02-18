@@ -64,7 +64,7 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
             Method bootMethod = layerClass.getMethod("boot");
             Object bootLayer = bootMethod.invoke(null);
             Method findLoaderMth = layerClass.getMethod("findLoader", String.class);
-            cl = (ClassLoader) findLoaderMth.invoke(bootLayer, new Object[]{moduleName});
+            cl = (ClassLoader) findLoaderMth.invoke(bootLayer, moduleName);
         } else if (loader != null) {
             cl = loader;
         } else {
