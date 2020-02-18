@@ -59,7 +59,6 @@ import com.sun.javatest.TestResult;
 import com.sun.javatest.regtest.TimeoutHandler;
 import com.sun.javatest.regtest.agent.ActionHelper;
 import com.sun.javatest.regtest.agent.AgentServer;
-import com.sun.javatest.regtest.agent.AgentServer.KeepAlive;
 import com.sun.javatest.regtest.agent.Alarm;
 import com.sun.javatest.regtest.agent.Flags;
 import com.sun.javatest.regtest.agent.SearchPath;

@@ -25,12 +25,9 @@
 
 package com.sun.javatest.regtest.agent;
 
-
-import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.io.Writer;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.security.Provider;

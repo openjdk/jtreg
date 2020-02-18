@@ -41,7 +41,6 @@ import com.sun.javatest.regtest.util.StringUtils;
 
 import static com.sun.javatest.regtest.util.StringUtils.afterPart;
 import static com.sun.javatest.regtest.util.StringUtils.beforePart;
-import static com.sun.javatest.regtest.util.StringUtils.join;
 import static com.sun.javatest.regtest.util.StringUtils.split;
 import static com.sun.javatest.regtest.util.StringUtils.join;
 

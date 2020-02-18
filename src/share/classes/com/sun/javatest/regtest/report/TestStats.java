@@ -30,12 +30,10 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Map;
 
 import com.sun.javatest.Harness;
 import com.sun.javatest.Parameters;
 import com.sun.javatest.Status;
-import com.sun.javatest.TestDescription;
 import com.sun.javatest.TestResult;
 import com.sun.javatest.regtest.config.CachingTestFilter;
 import com.sun.javatest.regtest.config.RegressionParameters;

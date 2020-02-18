@@ -27,7 +27,6 @@ package com.sun.javatest.regtest.agent;
 
 
 import java.io.PrintWriter;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
