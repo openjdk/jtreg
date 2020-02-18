@@ -135,7 +135,4 @@ public class JarFinder {
         }
         return null;
     }
-
-    private static final String PATHSEP = File.pathSeparator;
-
 }

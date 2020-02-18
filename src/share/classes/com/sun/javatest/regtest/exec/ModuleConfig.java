@@ -44,7 +44,6 @@ import static com.sun.javatest.regtest.util.StringUtils.beforePart;
 import static com.sun.javatest.regtest.util.StringUtils.split;
 import static com.sun.javatest.regtest.util.StringUtils.join;
 
-
 /**
  * Reports details on module configurations.
  * The configuration can include any of the following information:

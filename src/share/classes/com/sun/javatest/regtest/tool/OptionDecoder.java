@@ -227,7 +227,7 @@ public class OptionDecoder {
         StringBuilder sb = new StringBuilder();
         while (iter.hasNext()) {
             if (sb.length() > 0)
-                sb.append(" ");
+                sb.append(sep);
             sb.append(iter.next());
         }
         return sb.toString();
