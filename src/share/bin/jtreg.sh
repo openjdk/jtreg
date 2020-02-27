@@ -128,10 +128,12 @@ fi
 
 # Fixup JT_JAVA, JTHOME as needed, if using Cygwin or WSL
 if [ -n "$cygwin" ]; then
-    JT_HOME=`cygpath -a -m "$JT_HOME"` ;
+    JT_HOME=`cygpath -a -m "$JT_HOME"` 
+    driveDir=cygdrive
 elif [ -n "$wsl" -a -x "$JT_JAVA".exe ]; then
     JT_JAVA="$JT_JAVA".exe
     JT_HOME=`wslpath -a -m "$JT_HOME"`
+    driveDir=mnt
 fi
 
 # Verify java version (1.)7 or newer used to run jtreg
@@ -152,11 +154,6 @@ DUALCASE=1  # for MKS: make case statement case-sensitive (6709498)
 saveIFS="$IFS"
 nl='
 '
-if [ -n "$cygwin" ]; then
-  driveDir=cygdrive ;
-elif [ -n "$wsl" -a "${JT_JAVA##*.}" = "exe" ]; then
-  driveDir=mnt ;
-fi
 for i in "$@" ; do
     IFS=
     if [ -n "$driveDir" ]; then i=`echo $i | sed -e 's|/'$driveDir'/\([A-Za-z]\)/|\1:/|'` ; fi
