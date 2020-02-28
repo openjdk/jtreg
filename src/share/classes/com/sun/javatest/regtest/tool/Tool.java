@@ -120,6 +120,7 @@ import static com.sun.javatest.regtest.Main.EXIT_NO_TESTS;
 import static com.sun.javatest.regtest.Main.EXIT_OK;
 import static com.sun.javatest.regtest.Main.EXIT_TEST_ERROR;
 import static com.sun.javatest.regtest.Main.EXIT_TEST_FAILED;
+import com.sun.javatest.regtest.agent.MainWrapper;
 import static com.sun.javatest.regtest.tool.Option.ArgType.*;
 
 
@@ -458,6 +459,13 @@ public class Tool {
             @Override
             public void process(String opt, String arg) {
                 observerClassName = arg;
+            }
+        },
+
+       new Option(OLD, MAIN, "", "-mw", "-mainWrapper") {
+            @Override
+            public void process(String opt, String arg) {
+                mainWrapper = arg;
             }
         },
 
@@ -1225,8 +1233,15 @@ public class Tool {
                     if (timeoutFactorArg != null) {
                         p.setTimeoutFactor(timeoutFactorArg);
                     }
+                    if (!(mainWrapper == null) && !mainWrapper.isEmpty()) {
+                        p.setMainWrapper(mainWrapper);
+                        testVMOpts.add("-D" + MainWrapper.MAIN_WRAPPER + "=" + mainWrapper);
+                    }
                     break;
                 case OTHERVM:
+                    if (!(mainWrapper == null) && !mainWrapper.isEmpty()) {
+                        testVMOpts.add("-D" + MainWrapper.MAIN_WRAPPER + "=" + mainWrapper);
+                    }
                     break;
                 default:
                     throw new AssertionError();
@@ -2297,6 +2312,7 @@ public class Tool {
     private boolean httpdFlag;
     private String timeLimitArg;
     private String observerClassName;
+    private String mainWrapper;
     private List<File> observerPathArg;
     private String timeoutHandlerClassName;
     private List<File> timeoutHandlerPathArg;

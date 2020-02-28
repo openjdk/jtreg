@@ -37,6 +37,8 @@ import java.lang.reflect.Method;
   */
 public class MainWrapper
 {
+    public static String MAIN_WRAPPER = "main.wrapper";
+
     public static void main(String [] args) {
         String moduleName;
         String className;
@@ -68,14 +70,21 @@ public class MainWrapper
 
         // RUN JAVA IN ANOTHER THREADGROUP
         MainThreadGroup tg = new  MainThreadGroup();
-        Thread t = new Thread(tg, new MainThread(moduleName, className, classArgs), "MainThread");
+        Runnable task = new MainTask(moduleName, className, classArgs);
+        Thread t;
+        if (!"Virtual".equals(System.getProperty(MAIN_WRAPPER))) {
+            t = new Thread(tg, task, "MainThread");
+        } else {
+            t = Thread.builder().virtual().name("MainThread").task(task).build();
+        }
         t.start();
         try {
             t.join();
         } catch (InterruptedException e) {
             AStatus.failed(MAIN_THREAD_INTR + Thread.currentThread().getName()).exit();
-        }
+            }
 //      tg.cleanup();
+
 
         if (tg.uncaughtThrowable != null) {
             handleTestException(tg.uncaughtThrowable);
@@ -96,8 +105,8 @@ public class MainWrapper
         }
     }
 
-    static class MainThread extends Thread {
-        MainThread(String moduleName, String className, String[] args) {
+    static class MainTask implements Runnable {
+        MainTask(String moduleName, String className, String[] args) {
             this.moduleName = moduleName;
             this.className = className;
             this.args = args;

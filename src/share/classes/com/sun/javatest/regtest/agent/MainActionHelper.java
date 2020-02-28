@@ -55,6 +55,7 @@ public class MainActionHelper extends ActionHelper {
     private List<String> classArgs;
     private int timeout;
     private float timeoutFactor;
+    private String mainWrapper;
     private OutputHandler outputHandler;
 
     MainActionHelper(String testName) {
@@ -98,6 +99,11 @@ public class MainActionHelper extends ActionHelper {
 
     MainActionHelper timeoutFactor(float timeoutFactor) {
         this.timeoutFactor = timeoutFactor;
+        return this;
+    }
+
+     MainActionHelper mainWrapper(String mainWrapper) {
+        this.mainWrapper = mainWrapper;
         return this;
     }
 
@@ -169,10 +175,18 @@ public class MainActionHelper extends ActionHelper {
                 return stat;
             }
 
+            AgentVMRunnable avmr = new AgentVMRunnable(method, methodArgs, err);
+
+            // Main and Thread are same here
             // RUN JAVA IN ANOTHER THREADGROUP
             AgentVMThreadGroup tg = new AgentVMThreadGroup(err, MSG_PREFIX, timeoutFactor);
-            AgentVMRunnable avmr = new AgentVMRunnable(method, methodArgs, err);
-            Thread t = new Thread(tg, avmr, "AgentVMThread");
+            Thread t;
+            if (!("Virtual").equals(mainWrapper)) {
+                t = new Thread(tg, avmr, "AgentVMThread");
+            } else {
+                t = Thread.builder().virtual().name("AgentVMThread").task(avmr).build();
+            }
+
             Alarm alarm = null;
             if (timeout > 0) {
                 PrintWriter alarmOut = outputHandler.getPrintWriter(OutputHandler.OutputKind.LOG, true);
@@ -210,26 +224,26 @@ public class MainActionHelper extends ActionHelper {
                         status = error(MAIN_THREAD_TIMEOUT);
                     }
                 }
+                if (((avmr.t != null) || (tg.uncaughtThrowable != null)) && (error == null)) {
+                    if (avmr.t == null) {
+                        error = tg.uncaughtThrowable;
+                    } else {
+                        error = avmr.t;
+                    }
+                    if (SKIP_EXCEPTION.equals(error.getClass().getName())) {
+                        status = passed(MAIN_SKIPPED + error.toString());
+                    } else {
+                        status = failed(MAIN_THREW_EXCEPT + error.toString());
+                    }
+                }
+                if (status.getReason().contains("java.lang.SecurityException: System.exit() forbidden")) {
+                    status = failed(UNEXPECT_SYS_EXIT);
+                } else if (!tg.cleanupOK) {
+                    status = error(EXEC_ERROR_CLEANUP);
+                }
             }
 
-            if (((avmr.t != null) || (tg.uncaughtThrowable != null)) && (error == null)) {
-                if (avmr.t == null) {
-                    error = tg.uncaughtThrowable;
-                } else {
-                    error = avmr.t;
-                }
-                if (SKIP_EXCEPTION.equals(error.getClass().getName())) {
-                    status = passed(MAIN_SKIPPED + error.toString());
-                } else {
-                    status = failed(MAIN_THREW_EXCEPT + error.toString());
-                }
-            }
 
-            if (status.getReason().contains("java.lang.SecurityException: System.exit() forbidden")) {
-                status = failed(UNEXPECT_SYS_EXIT);
-            } else if (!tg.cleanupOK) {
-                status = error(EXEC_ERROR_CLEANUP);
-            }
         } catch (ClassNotFoundException e) {
             e.printStackTrace(err);
             err.println();

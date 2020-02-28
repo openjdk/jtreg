@@ -144,7 +144,7 @@
             <manifest>
                 <attribute name="Built-By" value="${user.name}"/>
                 <attribute name="Main-Class" value="com.sun.javatest.regtest.Main"/>
-                <attribute name="Class-Path" value="javatest.jar jh.jar junit.jar"/>
+                <attribute name="Class-Path" value="javatest.jar jh.jar junit.jar asmtools.jar"/>
                 <attribute name="jtreg-Name" value="jtreg"/>
                 <attribute name="jtreg-Version" value="${build.version}"/>
                 <attribute name="jtreg-Milestone" value="${build.milestone}"/>

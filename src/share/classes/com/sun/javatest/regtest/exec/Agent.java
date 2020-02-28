@@ -83,7 +83,7 @@ public class Agent {
      * Start a JDK with given JVM options.
      */
     private Agent(File dir, JDK jdk, List<String> vmOpts, Map<String, String> envVars,
-            File policyFile, float timeoutFactor) throws Fault {
+            File policyFile, float timeoutFactor, String mainWrapper) throws Fault {
         try {
             id = count++;
             this.jdk = jdk;
@@ -111,6 +111,11 @@ public class Agent {
             if (timeoutFactor != 1.0f) {
                 cmd.add(AgentServer.TIMEOUTFACTOR);
                 cmd.add(String.valueOf(timeoutFactor));
+            }
+
+            if (!(mainWrapper == null) && !mainWrapper.isEmpty()) {
+                cmd.add(AgentServer.MAINWRAPPER);
+                cmd.add(String.valueOf(mainWrapper));
             }
 
             show("Started " + cmd);
@@ -498,12 +503,16 @@ public class Agent {
             this.timeoutFactor = factor;
         }
 
+        public void setMainWrapper(String wrapper) {
+            this.mainWrapper = wrapper;
+        }
+
         synchronized Agent getAgent(File dir, JDK jdk, List<String> vmOpts, Map<String, String> envVars)
                 throws Fault {
             Queue<Agent> agents = map.get(getKey(dir, jdk, vmOpts));
             Agent a = (agents == null) ? null : agents.poll();
             if (a == null) {
-                a = new Agent(dir, jdk, vmOpts, envVars, policyFile, timeoutFactor);
+                a = new Agent(dir, jdk, vmOpts, envVars, policyFile, timeoutFactor, mainWrapper);
             }
             return a;
         }
@@ -547,5 +556,6 @@ public class Agent {
         private final Map<String, Queue<Agent>> map;
         private File policyFile;
         private float timeoutFactor = 1.0f;
+        private String mainWrapper;
     }
 }

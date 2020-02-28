@@ -1209,7 +1209,17 @@ public class RegressionParameters
     }
 
     private long timeoutHandlerTimeout;
+    //---------------------------------------------------------------------
 
+    public void setMainWrapper(String mainWrapper) {
+        this.mainWrapper = mainWrapper;
+    }
+
+    String getMainWrapper() {
+        return mainWrapper;
+    }
+
+    private String mainWrapper;
     //---------------------------------------------------------------------
 
     public void setMatchLists(File[] files) {
