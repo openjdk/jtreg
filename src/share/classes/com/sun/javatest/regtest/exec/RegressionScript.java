@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -50,6 +50,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import com.sun.javatest.Script;
 import com.sun.javatest.Status;
@@ -674,6 +675,15 @@ public class RegressionScript extends Script {
         try {
             return testSuite.getLibBuildArgs(td);
         } catch (TestSuite.Fault e) {
+            throw new TestRunException(e.getMessage(), e);
+        }
+    }
+
+    Pattern getIgnoreRefLinesPattern() throws TestRunException {
+        try {
+            return params.getRefIgnoreLinesPattern();
+        } catch (PatternSyntaxException e) {
+            // this exception will only occur at most once per test run
             throw new TestRunException(e.getMessage(), e);
         }
     }

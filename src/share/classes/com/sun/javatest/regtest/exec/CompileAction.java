@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -47,6 +47,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 import com.sun.javatest.Status;
 import com.sun.javatest.regtest.TimeoutHandler;
@@ -793,10 +794,10 @@ public class CompileAction extends Action {
      */
     private Status checkGoldenFile(String actual, Status status) throws TestRunException {
         File refFile = new File(script.absTestSrcDir(), ref);
-        try (BufferedReader r1 = new BufferedReader(new StringReader(actual));
-            BufferedReader r2 = new BufferedReader(new FileReader(refFile)) ) {
+        try (BufferedReader actualReader = new BufferedReader(new StringReader(actual));
+            BufferedReader refReader = new BufferedReader(new FileReader(refFile)) ) {
             int lineNum;
-            if ((lineNum = compareGoldenFile(r1, r2)) != 0) {
+            if ((lineNum = compareGoldenFile(actualReader, refReader)) != 0) {
                 return failed(COMPILE_GOLD_FAIL + ref +
                         COMPILE_GOLD_LINE + lineNum);
             }
@@ -813,18 +814,25 @@ public class CompileAction extends Action {
      * differences are found, then 0 is returned.  Otherwise, the line number
      * where differences are first detected is returned.
      *
-     * @param r1   The first item for comparison.
-     * @param r2   The second item for comparison.
-     * @return 0   If no differences are returned.  Otherwise, the line number
-     *             where differences were first detected.
+     * @param actualReader the reader for the output actually found
+     * @param refReader    the reader for the reference (expected) content
+     * @return the line number where differences were first detected,
+     *         or 0 if no differences were detected
      */
-    private int compareGoldenFile(BufferedReader r1, BufferedReader r2)
-    throws TestRunException {
+    private int compareGoldenFile(BufferedReader actualReader, BufferedReader refReader)
+            throws TestRunException {
+        Pattern ignoreLinesPattern = script.getIgnoreRefLinesPattern();
         try {
             int lineNum = 0;
             for ( ; ; ) {
-                String s1 = r1.readLine();
-                String s2 = r2.readLine();
+                String s1 = actualReader.readLine();
+                if (ignoreLinesPattern != null) {
+                    while (s1 != null && ignoreLinesPattern.matcher(s1).matches()) {
+                        section.getMessageWriter().println("Ignoring line: " + s1);
+                        s1 = actualReader.readLine();
+                    }
+                }
+                String s2 = refReader.readLine();
                 lineNum++;
 
                 if ((s1 == null) && (s2 == null))
