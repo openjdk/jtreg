@@ -132,7 +132,7 @@ WGet() {
 APACHE_ANT_URL=https://archive.apache.org/dist/ant/binaries
 MAVEN_REPO_URL=https://repo1.maven.org/maven2
 
-CODE_TOOLS_URL=http://hg.openjdk.java.net/code-tools
+CODE_TOOLS_URL="${CODE_TOOLS_URL:-https://git.openjdk.java.net}"
 # The following are Mercurial tags for the corresponding OpenJDK Code Tools repo
 ASMTOOLS_VERSION=${ASMTOOLS_VERSION:-7.0-b06} # early access for 7.0
 JTHARNESS_VERSION=${JTHARNESS_VERSION:-jt6.0-b08} # early access for 6.0
