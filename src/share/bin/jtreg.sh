@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright (c) 1998, 2019, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1998, 2020, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -28,19 +28,20 @@
 #    jtreg ...args....
 #       Run the application via the regression test-suite front end
 #       with the given arguments.
-#       The Java runtime used to run JavaTest is found as follows:
-#       -   $JT_JAVA is used, if it is set
+#       The Java runtime used to run jtreg is found as follows:
+#       -   $JTREG_JAVA is used, if it is set
 #       -   Otherwise, $JAVA_HOME/bin/java is used if $JAVA_HOME is set
-#           (cf JDK.)
+#           (that is, similar to JDK.)
+#       -   Otherwise, the value of the -jdk option is used if found
 #       -   Otherwise, "java" is used
 #
-# jtreg requires a version of Java equivalent to JDK 1.7.0 or higher.
+# jtreg requires a version of Java equivalent to JDK 1.8.0 or higher.
 
-# $JT_HOME can be used to specify the jtreg installation directory
-#   (e.g. /usr/local/jtreg/4.2)
+# $JTREG_HOME can be used to specify the jtreg installation directory
+#   (e.g. /usr/local/jtreg/5.0)
 #
-# $JT_JAVA is used to specify the version of java to use when running JavaTest
-#   (e.g. /usr/local/java/jdk1.7.0/solaris-sparc/bin/java)
+# $JTREG_JAVA is used to specify the version of java to use when running jtreg
+#   (e.g. /usr/local/java/jdk1.8.0/bin/java)
 #
 # You can also run the jar file directly, as in
 #   java -jar <path>/lib/jtreg.jar ...args...
@@ -56,10 +57,10 @@
 #   Windows drives are mounted with /mnt/LETTER
 #   Windows binaries need an explicit .exe suffix.
 #
-# Values are evaluated according to whether the are used in the context of the
+# Values are evaluated according to whether they are used in the context of the
 # shell, or in the context of the JDK under test.
-# JTJAVA is evaluated for use in the shell, to run java
-# JTHOME is evaluated as a JDK arg, for use in -classpath or -jar args
+# JTREG_JAVA is evaluated for use in the shell, to run java
+# JTREG_HOME is evaluated as a JDK arg, for use in -classpath or -jar args
 # Other command line are updated to be JDK args for jtreg.
 
 case "`uname -s`" in
@@ -67,11 +68,11 @@ case "`uname -s`" in
     Linux ) if grep -qi Microsoft /proc/version ; then wsl=1 ; fi ;;
 esac
 
-
-# Determine jtreg/JavaTest installation directory
-if [ -n "$JT_HOME" ]; then
-    if [ ! -r $JT_HOME/lib/jtreg.jar ];then
-        echo "Invalid JT_HOME=$JT_HOME. Cannot find or read $JT_HOME/lib/jtreg.jar"
+# Determine jtreg installation directory
+JTREG_HOME=${JTREG_HOME:-$JT_HOME}      # allow for old version of name
+if [ -n "$JTREG_HOME" ]; then
+    if [ ! -r $JTREG_HOME/lib/jtreg.jar ];then
+        echo "Invalid JTREG_HOME=$JTREG_HOME. Cannot find or read $JTREG_HOME/lib/jtreg.jar"
        exit 1;
     fi
 else
@@ -89,11 +90,11 @@ else
     mydir=`dirname "$myname"`
     p=`cd "$mydir" ; pwd`
     while [ -n "$p" -a "$p" != "/" ]; do
-        if [ -r "$p"/lib/jtreg.jar ]; then JT_HOME="$p" ; break; fi
+        if [ -r "$p"/lib/jtreg.jar ]; then JTREG_HOME="$p" ; break; fi
         p=`dirname "$p"`
     done
-    if [ -z "$JT_HOME" ]; then
-        echo "Cannot determine JT_HOME; please set it explicitly"; exit 1
+    if [ -z "$JTREG_HOME" ]; then
+        echo "Cannot determine JTREG_HOME; please set it explicitly"; exit 1
     fi
 fi
 
@@ -113,38 +114,39 @@ for i in "$@" ; do
 done
 unset DUALCASE
 
-# Determine java for jtreg, from JT_JAVA, JAVA_HOME, -jdk, java
-if [ -n "$JT_JAVA" ]; then
-    if [ -d "$JT_JAVA" ]; then
-        JT_JAVA="$JT_JAVA/bin/java"
+# Determine java for jtreg, from JTREG_JAVA, JAVA_HOME, -jdk, java
+JTREG_JAVA=${JTREG_JAVA:-$JT_JAVA}      # allow for old version of name
+if [ -n "$JTREG_JAVA" ]; then
+    if [ -d "$JTREG_JAVA" ]; then
+        JTREG_JAVA="$JTREG_JAVA/bin/java"
     fi
 elif [ -n "$JAVA_HOME" ]; then
-    JT_JAVA="$JAVA_HOME/bin/java"
+    JTREG_JAVA="$JAVA_HOME/bin/java"
 elif [ -n "$jdk" ]; then
-    JT_JAVA="$jdk/bin/java"
+    JTREG_JAVA="$jdk/bin/java"
 else
-    JT_JAVA=java
+    JTREG_JAVA=java
 fi
 
-# Fixup JT_JAVA, JTHOME as needed, if using Cygwin or WSL
+# Fixup JTREG_JAVA, JTREG_HOME as needed, if using Cygwin or WSL
 if [ -n "$cygwin" ]; then
-    JT_HOME=`cygpath -a -m "$JT_HOME"` 
+    JTREG_HOME=`cygpath -a -m "$JTREG_HOME"`
     driveDir=cygdrive
-elif [ -n "$wsl" -a -x "$JT_JAVA".exe ]; then
-    JT_JAVA="$JT_JAVA".exe
-    JT_HOME=`wslpath -a -m "$JT_HOME"`
+elif [ -n "$wsl" -a -x "$JTREG_JAVA".exe ]; then
+    JTREG_JAVA="$JTREG_JAVA".exe
+    JTREG_HOME=`wslpath -a -m "$JTREG_HOME"`
     driveDir=mnt
 fi
 
-# Verify java version (1.)7 or newer used to run jtreg
-version=`"$JT_JAVA" -classpath "${JT_HOME}/lib/jtreg.jar" com.sun.javatest.regtest.agent.GetSystemProperty java.version 2>&1 |
+# Verify java version (1.)8 or newer used to run jtreg
+version=`"$JTREG_JAVA" -classpath "${JTREG_HOME}/lib/jtreg.jar" com.sun.javatest.regtest.agent.GetSystemProperty java.version 2>&1 |
         grep 'java.version=' | sed -e 's/^.*=//' -e 's/^1\.//' -e 's/\([1-9][0-9]*\).*/\1/'`
 
 if [ -z "$version" ]; then
     echo "Cannot determine version of java to run jtreg"
     exit 1;
-elif [ "$version" -lt 7 ]; then
-    echo "java version 7 or later is required to run jtreg"
+elif [ "$version" -lt 8 ]; then
+    echo "java version 8 or later is required to run jtreg"
     exit 1;
 fi
 
@@ -169,8 +171,8 @@ unset DUALCASE
 
 IFS=$nl
 
-"${JT_JAVA}" \
+"${JTREG_JAVA}" \
     $javaOpts \
     -Dprogram=`basename "$0"` \
-    -jar "${JT_HOME}/lib/jtreg.jar" \
+    -jar "${JTREG_HOME}/lib/jtreg.jar" \
     $jtregOpts
