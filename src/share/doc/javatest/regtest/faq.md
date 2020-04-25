@@ -1703,6 +1703,27 @@ class with different parameters depending on the platform being tested:
 jtreg does not support any sort of conditional flow within the sequence of actions.
 You can use `@run driver` to run a class that provides more complex logic, if needed.
 
+### My test uses "preview features": how do I specify the necessary options?
+
+Tests that use preview features must use the `--enable-option` to compile
+and run the code.  In addition, to compile the code you must also specify the 
+appropriate source level.
+
+To provide these options, you can either do so explicitly, in `@compile` and `@run main`
+actions, or you can use the `@enablePreview` declarative tag, in which case jtreg
+will automatically add any necessary options.
+
+Using explicit options in  `@compile` and `@run main` actions can be inconvenient
+and disruptive to the test description when the test can otherwise be set up to use
+implicit `@build` actions and the ensuing `@compile` actions. 
+In these situations, the use of `@enablePreview` is generally recommended.
+
+The equivalent of `@enablePreview` can be set on all the tests in a directory
+and its subdirectories by configuring an entry for `enablePreview` in the 
+`TEST.properties` file in an enclosing directory. Any value set in a `TEST.properties`
+file can be overriden in individual tests by using `@enablePreview`.
+
+
 --------
 
 ## Organizing tests
@@ -1738,8 +1759,8 @@ In OpenJDK terms, this means a directory like `test/jdk` or
 `test/langtools` in a recent OpenJDK repo.
 
 The test root directory for any test is determined by finding the smallest
-enclosing directory containing a marker file called TEST.ROOT.
-The TEST.ROOT file can also be used to define some global properties
+enclosing directory containing a marker file called `TEST.ROOT`.
+The `TEST.ROOT` file can also be used to define some global properties
 for the test suite.
 
 ### Why is the "test root directory" important?
@@ -1754,11 +1775,11 @@ However, note that tests can be specified on the command line
 by any valid file system path, either absolute or relative to the
 current directory.
 
-### Can I have more than one TEST.ROOT?
+### Can I have more than one `TEST.ROOT`?
 
 In general, no.  Each test is uniquely associated with
 exactly one test root directory, which is the smallest
-enclosing directory containing a marker file called TEST.ROOT.
+enclosing directory containing a marker file called `TEST.ROOT`.
 In general, a test run will consist of tests from a single
 test suite, identified by a single test root directory.
 
@@ -1896,7 +1917,7 @@ jtreg supports TestNG and Junit tests in two ways.
 
 ### How do I identify a group of TestNG or JUnit tests in their own directory?
 
-Add a line specifying the directory to TEST.ROOT; the line is the same
+Add a line specifying the directory to `TEST.ROOT`; the line is the same
 for both TestNG and JUnit tests:
 
     TestNG.dirs = dir1 dir2 dir3 ...
@@ -1905,14 +1926,14 @@ Include the package root directory for each group of TestNG or JUnit
 tests, and specify the package root directory relative to the test
 root directory.
 
-You can also override the value in TEST.ROOT by using the
-TEST.properties file in any subdirectory of the test root directory
+You can also override the value in `TEST.ROOT` by using the
+`TEST.properties` file in any subdirectory of the test root directory
 that contains the package root.
-If you put the declaration in a TEST.properties file, you must
+If you put the declaration in a `TEST.properties` file, you must
 specify the path relative to the directory containing the
-TEST.properties file.
-In particular, instead of declaring the directory in TEST.ROOT,
-you could place the declaration in a TEST.properties file in the
+`TEST.properties` file.
+In particular, instead of declaring the directory in `TEST.ROOT`,
+you could place the declaration in a `TEST.properties` file in the
 package root directory for the group of tests, in which case
 the declaration would be simply:
 
@@ -1952,7 +1973,7 @@ in case they contain tests.
 Tests using `@run testng` or `@run junit`can use `@library` and `@build`
 in the standard way.For any test in a group of TestNG or JUnit tests,
 you can specify the library by adding a line specifying the library in the
-TEST.properties file in the package root directory for the group of
+`TEST.properties` file in the package root directory for the group of
 tests.
 
     lib.dirs = path-to-library ...
@@ -1960,7 +1981,7 @@ tests.
 As with the `@library` tag, if the path begins with "/",
 it will be evaluated relative to the test root directory;
 otherwise, it will be evaluated relative to the directory
-containing the TEST.properties file.
+containing the `TEST.properties` file.
 
 For any particular group of TestNG or JUnit tests, you can only
 specify libraries for the entire group: you cannot specify one

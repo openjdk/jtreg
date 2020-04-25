@@ -205,7 +205,7 @@ public class CompileAction extends Action {
         boolean foundAsmFile = false;
 
         for (int i = 0; i < args.size(); i++) {
-            // note: in the following code, some args are overrwritten in place
+            // note: in the following code, some args are overwritten in place
             String currArg = args.get(i);
 
             if (currArg.endsWith(".java")) {
@@ -327,18 +327,48 @@ public class CompileAction extends Action {
         List<String> jcodArgs = new ArrayList<>();
         boolean runJavac = process;
 
+        int insertPos = -1;
+        boolean seenSourceOrRelease = false;
+        boolean seenEnablePreview = false;
+
         for (String currArg : args) {
             if (currArg.endsWith(".java")) {
                 if (!(new File(currArg)).exists())
                     throw new TestRunException(CANT_FIND_SRC + currArg);
+                if (insertPos == -1) {
+                    insertPos = javacArgs.size();
+                }
                 javacArgs.add(currArg);
                 runJavac = true;
             } else if (currArg.endsWith(".jasm")) {
                 jasmArgs.add(currArg);
             } else if (currArg.endsWith(".jcod")) {
                 jcodArgs.add(currArg);
-            } else
+            } else {
+                int eq = currArg.indexOf("=");
+                switch (eq == -1 ? currArg : currArg.substring(0, eq)) {
+                    case "--enable-preview":
+                        seenEnablePreview = true;
+                        break;
+                    case "-source":
+                    case "--source":
+                    case "--release":
+                        if (insertPos == -1) {
+                            insertPos = javacArgs.size();
+                        }
+                        seenSourceOrRelease= true;
+                        break;
+                }
                 javacArgs.add(currArg);
+            }
+        }
+
+        if (script.enablePreview() && !seenEnablePreview) {
+            javacArgs.add(insertPos, "--enable-preview");
+            if (!seenSourceOrRelease) {
+                int v = script.getTestJDKVersion().major;
+                javacArgs.add(insertPos + 1, "--release=" + v);
+            }
         }
 
         Status status;

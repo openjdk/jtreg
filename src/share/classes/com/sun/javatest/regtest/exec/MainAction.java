@@ -188,12 +188,16 @@ public class MainAction extends Action
             othervmOverrideReasons.add("test or library uses bootclasspath");
         }
 
+        boolean seenEnablePreview = false;
         // separate the arguments into the options to java, the
         // classname and the parameters to the named class
         for (int i = 0; i < args.size(); i++) {
             String arg = args.get(i);
             if (testClassName == null) {
                 if (arg.startsWith("-")) {
+                    if (arg.equals("--enable-preview")) {
+                        seenEnablePreview = true;
+                    }
                     testJavaArgs.add(arg);
                     if (JDKOpts.hasFollowingArg(arg)) {
                         testJavaArgs.add(args.get(++i));
@@ -225,6 +229,15 @@ public class MainAction extends Action
                 throw new ParseException(PARSE_POLICY_OTHERVM);
             if (secureCN != null)
                 throw new ParseException(PARSE_SECURE_OTHERVM);
+        }
+
+        if (script.enablePreview() && !seenEnablePreview) {
+            testJavaArgs.add("--enable-preview");
+            if (!othervm) {
+                // ideally, this should not force othervm mode, but just allow
+                // the use of an agent with preview enabled
+                othervmOverrideReasons.add("test requires --enable-preview");
+            }
         }
 
         if (!othervm && !useModuleExportAPI) {

@@ -425,6 +425,11 @@ public class RegressionScript extends Script {
 
     }
 
+    boolean enablePreview() {
+        String ep = td.getParameter("enablePreview");
+        return ep != null && ep.equals("true");
+    }
+
     private List<String> processArgs(List<String> args, Expr.Context c, Map<String,String> testProps)
             throws TestSuite.Fault, Expr.Fault, ParseException {
         if (!testSuite.getAllowSmartActionArgs(td))

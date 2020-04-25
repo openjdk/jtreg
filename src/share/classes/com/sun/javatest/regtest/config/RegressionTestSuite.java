@@ -244,6 +244,10 @@ public class RegressionTestSuite extends TestSuite
         return properties.getAllowSmartActionArgs(td.getFile());
     }
 
+    public boolean getEnablePreview(TestDescription td) throws TestSuite.Fault {
+        return properties.getEnablePreview(td.getFile());
+    }
+
     private final TestFinder.ErrorHandler errHandler;
     private final TestProperties properties;
     private static final I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(RegressionTestSuite.class);
