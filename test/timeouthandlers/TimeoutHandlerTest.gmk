@@ -36,7 +36,7 @@ $(BUILDDIR)/TimeoutHandlerTestDefault.othervm.ok: \
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(JDK18HOME) \
+		-jdk:$(JDK8HOME) \
 		-va \
 		$(@:$(BUILDDIR)/TimeoutHandlerTestDefault.%.ok=-%) \
 		$(TESTDIR)/timeouthandlers/TestJavaHang.java  \
@@ -52,7 +52,7 @@ $(BUILDDIR)/TimeoutHandlerTestDefault.shell.ok: \
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(JDK18HOME) \
+		-jdk:$(JDK8HOME) \
 		-va \
 		-timeoutFactor:0.1 \
 		$(TESTDIR)/timeouthandlers/TestShellHang.sh  \
@@ -76,12 +76,12 @@ $(BUILDDIR)/TimeoutHandlerTestExternal.othervm.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
-	$(JDK18HOME)/bin/javac -cp $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	$(JDK8HOME)/bin/javac -cp $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		-d $(@:%.ok=%) \
 		$(TESTDIR)/timeouthandlers/MyHandler.java
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(JDK18HOME) \
+		-jdk:$(JDK8HOME) \
 		-va \
 		-timeoutHandler:MyHandler \
 		-timeoutHandlerDir:$(@:%.ok=%) \
@@ -97,12 +97,12 @@ $(BUILDDIR)/TimeoutHandlerTestExternal.shell.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
-	$(JDK18HOME)/bin/javac -cp $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	$(JDK8HOME)/bin/javac -cp $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		-d $(@:%.ok=%) \
 		$(TESTDIR)/timeouthandlers/MyHandler.java
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(JDK18HOME) \
+		-jdk:$(JDK8HOME) \
 		-va \
 		-timeoutFactor:0.1 \
 		-timeoutHandler:MyHandler \
@@ -119,7 +119,7 @@ TESTS.timeouthandler += \
 	$(BUILDDIR)/TimeoutHandlerTestExternal.othervm.ok \
 	$(BUILDDIR)/TimeoutHandlerTestExternal.shell.ok
 
-ifdef JDK18HOME
+ifdef JDK8HOME
 TESTS.jtreg += ${TESTS.timeouthandler}
 endif
 

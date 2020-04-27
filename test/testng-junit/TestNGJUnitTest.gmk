@@ -34,7 +34,7 @@ $(BUILDDIR)/TestNGJUnitTest.othervm.ok: \
 		$(JTREG_IMAGEDIR)/bin/jtreg
 	$(MKDIR) -p $(@:%.ok=%)
 	$(JTREG_IMAGEDIR)/bin/jtreg \
-		-jdk:$(JDK18HOME) \
+		-jdk:$(JDK8HOME) \
 		-w:$(@:%.ok=%/work) \
 		-r:$(@:%.ok=%/report) \
 		$(@:$(BUILDDIR)/TestNGJUnitTest.%.ok=-%) \
@@ -45,7 +45,7 @@ $(BUILDDIR)/TestNGJUnitTest.othervm.ok: \
 	$(GREP) -s 'Total tests run: 3, Failures: 0, Skips: 0' $(@:%.ok=%/work)/testng/p/T2.jtr  > /dev/null
 	echo $@ passed at `date` > $@
 
-ifdef JDK18HOME
+ifdef JDK8HOME
 TESTS.jtreg += \
 	$(BUILDDIR)/TestNGJUnitTest.agentvm.ok \
 	$(BUILDDIR)/TestNGJUnitTest.othervm.ok

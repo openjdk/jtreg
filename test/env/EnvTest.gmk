@@ -39,13 +39,13 @@ $(BUILDDIR)/EnvTest.simple.ok: $(ENV.files) \
 	  echo "test.tool.vm.opts=" ; \
 	  echo "test.compiler.opts=" ; \
 	  echo "test.java.opts="; \
-	  echo "test.jdk=$(JDK16HOME)"; \
-	  echo "compile.jdk=$(JDK16HOME)" ) > $(@:%.ok=%/ref.properties)
+	  echo "test.jdk=$(JDK6HOME)"; \
+	  echo "compile.jdk=$(JDK6HOME)" ) > $(@:%.ok=%/ref.properties)
 	DISPLAY=`BUILDDIR=$(BUILDDIR) sh display.sh` export DISPLAY ; \
 	trap "BUILDDIR=$(BUILDDIR) sh `pwd`/display.sh -kill" 0 ; \
 	JT_JAVA=$(JDKHOME) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(JDK16HOME) \
+		-jdk:$(JDK6HOME) \
 		-e:refprops=`cd $(@:%.ok=%); pwd`/ref.properties \
 		-va \
 		$(TESTDIR)/env \
@@ -67,14 +67,14 @@ $(BUILDDIR)/EnvTest.full.ok: $(ENV.files) \
 	  echo "test.tool.vm.opts=-J-DVM_OPT=vm_opt" ; \
 	  echo "test.compiler.opts=-XDJAVAC_OPT=javac_opt" ; \
 	  echo "test.java.opts=-DJAVA_OPT=java_opt"; \
-	  echo "test.jdk=$(JDK17HOME)"; \
-	  echo "compile.jdk=$(JDK16HOME)" ) > $(@:%.ok=%/ref.properties)
+	  echo "test.jdk=$(JDK7HOME)"; \
+	  echo "compile.jdk=$(JDK6HOME)" ) > $(@:%.ok=%/ref.properties)
 	DISPLAY=`BUILDDIR=$(BUILDDIR) sh display.sh` export DISPLAY ; \
 	trap "BUILDDIR=$(BUILDDIR) sh `pwd`/display.sh -kill" 0 ; \
 	JT_JAVA=$(JDKHOME) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-compilejdk:$(JDK16HOME) \
-		-testjdk:$(JDK17HOME) \
+		-compilejdk:$(JDK6HOME) \
+		-testjdk:$(JDK7HOME) \
 		-vmoption:-DVM_OPT=vm_opt \
 		-javaoption:-DJAVA_OPT=java_opt \
 		-javacoption:-XDJAVAC_OPT=javac_opt \
@@ -87,8 +87,8 @@ $(BUILDDIR)/EnvTest.full.ok: $(ENV.files) \
 
 
 ifneq ($(OS_NAME), windows)
-ifdef JDK16HOME
-ifdef JDK17HOME
+ifdef JDK6HOME
+ifdef JDK7HOME
 TESTS.jtreg += \
 	$(BUILDDIR)/EnvTest.simple.ok \
 	$(BUILDDIR)/EnvTest.full.ok

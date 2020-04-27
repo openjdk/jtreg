@@ -32,7 +32,7 @@ $(BUILDDIR)/ignoresymbolfile.agentvm.ok: \
 	    	$(JTREG_IMAGE_JAVAHELP_JAR) 
 	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
 	$(MKDIR) -p $(@:%.ok=%)
-	$(JDK18HOME)/bin/java \
+	$(JDK8HOME)/bin/java \
 		-Djavatest.regtest.showCmd=true \
 		-Djavatest.regtest.debugChild=true \
 		-Djavatest.regtest.traceAgent=true \
@@ -45,7 +45,7 @@ $(BUILDDIR)/ignoresymbolfile.agentvm.ok: \
 	    || (cat $(@:%.ok=%/log) ; exit 1)
 	echo $@ passed at `date` > $@
 
-ifdef JDK18HOME
+ifdef JDK8HOME
 TESTS.jtreg += \
 	$(BUILDDIR)/ignoresymbolfile.othervm.ok \
 	$(BUILDDIR)/ignoresymbolfile.agentvm.ok

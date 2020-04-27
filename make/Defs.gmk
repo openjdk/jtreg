@@ -86,33 +86,33 @@ override BUILDDIR := $(call FullPath, $(BUILDDIR))
 # Explicit JDK versions, for use as needed by tests, all optional for build.
 # At a minimum, JDKHOME must be set, either directly or indirectly. (See below).
 
-ifndef JDK15HOME
+ifndef JDK5HOME
   ifdef SLASHJAVA
-    JDK15HOME = $(SLASHJAVA)/re/jdk/1.5.0/archive/fcs/binaries/linux-i586
+    JDK5HOME = $(SLASHJAVA)/re/jdk/1.5.0/archive/fcs/binaries/linux-i586
   endif
 endif
-JDK15HOME := $(call FullPath,$(JDK15HOME))
+JDK5HOME := $(call FullPath,$(JDK5HOME))
 
-ifndef JDK16HOME
+ifndef JDK6HOME
   ifdef SLASHJAVA
-    JDK16HOME = $(SLASHJAVA)/re/jdk/1.6.0/archive/fcs/binaries/linux-i586
+    JDK6HOME = $(SLASHJAVA)/re/jdk/1.6.0/archive/fcs/binaries/linux-i586
   endif
 endif
-JDK16HOME := $(call FullPath,$(JDK16HOME))
+JDK6HOME := $(call FullPath,$(JDK6HOME))
 
-ifndef JDK17HOME
+ifndef JDK7HOME
   ifdef SLASHJAVA
-    JDK17HOME = $(SLASHJAVA)/re/jdk/1.7.0/archive/fcs/binaries/linux-i586
+    JDK7HOME = $(SLASHJAVA)/re/jdk/1.7.0/archive/fcs/binaries/linux-i586
   endif
 endif
-JDK17HOME := $(call FullPath,$(JDK17HOME))
+JDK7HOME := $(call FullPath,$(JDK7HOME))
 
-ifndef JDK18HOME
+ifndef JDK8HOME
   ifdef SLASHJAVA
-    JDK18HOME = $(SLASHJAVA)/re/jdk/1.8.0/promoted/latest/binaries/linux-i586
+    JDK8HOME = $(SLASHJAVA)/re/jdk/1.8.0/promoted/latest/binaries/linux-i586
   endif
 endif
-JDK18HOME := $(call FullPath,$(JDK18HOME))
+JDK8HOME := $(call FullPath,$(JDK8HOME))
 
 ifndef JDK9HOME
   ifdef SLASHJAVA
@@ -123,12 +123,12 @@ JDK9HOME := $(call FullPath,$(JDK9HOME))
 
 # The JDK used to build jtreg and to run most tests.
 # It should be set to JDK 8 or later.
-# If not set, it defaults to $(JDK18HOME), or to $(J2SEHOME) for backwards
+# If not set, it defaults to $(JDK8HOME), or to $(J2SEHOME) for backwards
 # compatibility
 
 ifndef JDKHOME
-  ifdef JDK18HOME
-    JDKHOME = $(JDK18HOME)
+  ifdef JDK8HOME
+    JDKHOME = $(JDK8HOME)
   else
     ifdef J2SEHOME
       JDKHOME = $(J2SEHOME)
@@ -150,27 +150,27 @@ ifneq ($(SUPPORT_OLD_SOURCE_TARGET),)
     TOOL_JAVAC_SOURCE_TARGET = -source 8 -target 8
 endif 
 
-ifdef JDK15HOME
-    JDK15_BOOTCLASSPATH = -bootclasspath $(JDK15HOME)/jre/lib/rt.jar
+ifdef JDK5HOME
+    JDK5_BOOTCLASSPATH = -bootclasspath $(JDK5HOME)/jre/lib/rt.jar
 endif
-ifdef JDK18HOME
-    JDK18_BOOTCLASSPATH = -bootclasspath $(JDK18HOME)/jre/lib/rt.jar
+ifdef JDK8HOME
+    JDK8_BOOTCLASSPATH = -bootclasspath $(JDK8HOME)/jre/lib/rt.jar
 endif
 
 # for files needed to run othervm tests on oldest supported platforms
 REGTEST_OLD_JAVAC = $(JDKHOME)/bin/javac
 REGTEST_OLD_JAVAC_OPTIONS = \
-	$(OLD_JAVAC_SOURCE_TARGET) $(JDK15_BOOTCLASSPATH) -Xlint:all,-options -Werror
+	$(OLD_JAVAC_SOURCE_TARGET) $(JDK5_BOOTCLASSPATH) -Xlint:all,-options -Werror
 
 # for files needed to run agentvm tests (on platforms back to JDK 1.5)
 REGTEST_AGENT_JAVAC = $(JDKHOME)/bin/javac
 REGTEST_AGENT_JAVAC_OPTIONS = \
-	$(AGENT_JAVAC_SOURCE_TARGET) $(JDK15_BOOTCLASSPATH) -Xlint:all,-options -Werror
+	$(AGENT_JAVAC_SOURCE_TARGET) $(JDK5_BOOTCLASSPATH) -Xlint:all,-options -Werror
 
 # for files needed for jtreg tool
 REGTEST_TOOL_JAVAC = $(JDKHOME)/bin/javac
 REGTEST_TOOL_JAVAC_OPTIONS = \
-	$(TOOL_JAVAC_SOURCE_TARGET) $(JDK18_BOOTCLASSPATH) -Xlint:all,-options -Werror
+	$(TOOL_JAVAC_SOURCE_TARGET) $(JDK8_BOOTCLASSPATH) -Xlint:all,-options -Werror
 
 #----- JavaHelp
 #
@@ -274,7 +274,7 @@ ifndef JCOV_LICENSE
 endif
 JCOV_LICENSE := $(call FullPath,$(JCOV_LICENSE))
 
-JCOV = $(JDK16HOME)/bin/java -jar $(JCOV_JAR)
+JCOV = $(JDK6HOME)/bin/java -jar $(JCOV_JAR)
 
 #----- AsmTools 7.0:  https://wiki.openjdk.java.net/display/CodeTools/asmtools
 #

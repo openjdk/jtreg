@@ -43,7 +43,7 @@ $(BUILDDIR)/RerunTest.othervm.ok: \
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-J-Djavatest.regtest.allowTrailingBuild=true \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(JDK18HOME) \
+		-jdk:$(JDK8HOME) \
 		-verbose:summary \
 		-e:MY_ENV_VAR=x -vmoption:-Dmy.vm.option=x $(JAVAOPTION) $(JAVACOPTION) \
                 -ignore:run \
@@ -55,14 +55,14 @@ $(BUILDDIR)/RerunTest.othervm.ok: \
 	    echo Checking $(@:$(BUILDDIR)/RerunTest.%.ok=%) $$i ; \
 	    mkdir -p `dirname $(@:%.ok=%)/out/$$i` ; \
 	    $(JTREG_IMAGEDIR)/bin/jtreg \
-		-jdk:$(JDK18HOME) \
+		-jdk:$(JDK8HOME) \
 		-w:$(@:%.ok=%)/work \
 		-dir:$(TESTDIR)/rerun \
 		-show:rerun $$i | \
 		sed -e 's|^HOME=.* \\|HOME=%HOME% \\|' \
 		    -e 's|^DISPLAY=.* \\|DISPLAY=%DISPLAY% \\|' \
-		    -e 's|$(JDK18HOME)|%JDKHOME%|g' \
-		    -e "s|`cd $(JDK18HOME); pwd -P`|%JDKHOME%|g" \
+		    -e 's|$(JDK8HOME)|%JDKHOME%|g' \
+		    -e "s|`cd $(JDK8HOME); pwd -P`|%JDKHOME%|g" \
 		    -e 's|$(BUILDDIR)|%BUILD%|g' \
 		    -e 's|$(ABSTOPDIR)|%WS%|g' \
 		    -e 's|%BUILD%.images.jtreg.lib.jcommander\.jar.||g' \
@@ -72,7 +72,7 @@ $(BUILDDIR)/RerunTest.othervm.ok: \
 	done  
 	echo "test passed at `date`" > $@
 
-ifdef JDK18HOME
+ifdef JDK8HOME
 ifneq ($(OS_NAME), windows)
 TESTS.jtreg += \
 	$(BUILDDIR)/RerunTest.agentvm.ok \

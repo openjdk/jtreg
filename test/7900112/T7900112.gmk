@@ -30,7 +30,7 @@ $(BUILDDIR)/T7900112.ok: \
 	$(JTREG_IMAGEDIR)/lib/javatest.jar \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
-	$(JDK16HOME)/bin/java -jar $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	$(JDK6HOME)/bin/java -jar $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		-w $(BUILDDIR)/7900112/work/ -r $(BUILDDIR)/7900112/report/ \
 		$(TESTDIR)/7900112 > $(@:%.ok=%/jt.log) 2>&1; \
         $(GREP) 'java.lang.Exception: thrown exception is success' $(BUILDDIR)/7900112/work/TestExpected.jtr > /dev/null ; rc=$$?; \

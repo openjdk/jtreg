@@ -74,7 +74,7 @@ $(BUILDDIR)/TestNativePath.ok: \
 
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-jdk:$(JDKHOME) \
-		-nativepath:$(JTREG_IMAGEDIR)/bin/jtreg:$(JDK16HOME) \
+		-nativepath:$(JTREG_IMAGEDIR)/bin/jtreg:$(JDK6HOME) \
 		$(TESTDIR)/nativepath \
 		2>&1 | grep -q "The argument to -nativepath cannot be more than one path." 
 
