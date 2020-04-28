@@ -72,6 +72,7 @@ public class AgentServer implements ActionHelper.OutputHandler {
     public static final boolean traceServer = Flags.get("traceServer");
 
     public static final String ALLOW_SET_SECURITY_MANAGER = "-allowSetSecurityManager";
+    public static final String ID = "-id";
     public static final String HOST = "-host";
     public static final String PORT = "-port";
     public static final String TIMEOUTFACTOR = "-timeoutFactor";
@@ -145,9 +146,16 @@ public class AgentServer implements ActionHelper.OutputHandler {
         // use explicit localhost to avoid VPN issues
         InetAddress host = InetAddress.getByName("localhost");
         int port = -1;
+        int id = 0;
         for (int i = 0; i < args.length; i++) {
             String arg = args[i];
-            if (arg.equals(ALLOW_SET_SECURITY_MANAGER)) {
+            if (arg.equals(ID)) {
+                try {
+                    id = Integer.parseInt(args[++i]);
+                } catch (NumberFormatException e) {
+                    id = 0;
+                }
+            } else if (arg.equals(ALLOW_SET_SECURITY_MANAGER)) {
                 allowSetSecurityManagerFlag = true;
             } else if (arg.equals(PORT) && i + 1 < args.length) {
                 port = Integer.valueOf(args[++i]);

@@ -85,7 +85,7 @@ public class Agent {
     private Agent(File dir, JDK jdk, List<String> vmOpts, Map<String, String> envVars,
             File policyFile, float timeoutFactor) throws Fault {
         try {
-            id = count++;
+            id = ++count;
             this.jdk = jdk;
             this.scratchDir = dir;
             this.vmOpts = vmOpts;
@@ -96,6 +96,10 @@ public class Agent {
             if (policyFile != null)
                 cmd.add("-Djava.security.policy=" + policyFile.toURI());
             cmd.add(AgentServer.class.getName());
+
+            cmd.add(AgentServer.ID);
+            cmd.add(String.valueOf(id));
+
             if (policyFile != null)
                 cmd.add(AgentServer.ALLOW_SET_SECURITY_MANAGER);
 
