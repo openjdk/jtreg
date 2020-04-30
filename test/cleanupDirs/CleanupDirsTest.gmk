@@ -47,7 +47,7 @@ $(BUILDDIR)/CleanupDirsTests.othervm.ok: \
 	$(GREP) -s 'Test results: passed: 8' $(@:%.ok=%/jt.log)  > /dev/null
 	dirs=`cd $(@:%.ok=%)/work ; $(FIND) . -type d -print | $(GREP) scratch | $(GREP) -v readonly | $(SORT)` ; \
 	echo $$dirs ; \
-	if [ `echo $$dirs | $(WC) -w` != 1 ]; then echo "wrong number of scratch directories found" ; exit 1 ; fi
+	if [ `echo $$dirs | $(WC) -w` -ne 1 ]; then echo "wrong number of scratch directories found" ; exit 1 ; fi
 	$(CHMOD) -R +w $(@:%.ok=%)
 	echo "test passed at `date`" > $@
 
@@ -56,6 +56,10 @@ $(BUILDDIR)/CleanupDirsTests.othervm.ok: \
 # In agentvm and othervm mode using concurrency, jtreg should successfully 
 # run each test by moving to a new scratch directory when it can't clear 
 # the previous one.
+# Note: without some form of `-retain`, we cannot rely on (and check for)
+# the final contents of the scratch directories, which depends on which
+# test executed last in each scratch directory. Therefore, we just count
+# and check the number of scratch directories that were created.
 
 $(BUILDDIR)/CleanupDirsTests.agentvm.conc.ok \
 $(BUILDDIR)/CleanupDirsTests.othervm.conc.ok: \
@@ -73,9 +77,9 @@ $(BUILDDIR)/CleanupDirsTests.othervm.conc.ok: \
 			> $(@:%.ok=%/jt.log) 2>&1 || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
 	$(GREP) -s 'Test results: passed: 8' $(@:%.ok=%/jt.log)  > /dev/null
-	dirs=`cd $(@:%.ok=%)/work ; $(FIND) . -type d -print | $(GREP) scratch/ | $(GREP) -v readonly | $(SORT)` ; \
+	dirs=`cd $(@:%.ok=%)/work ; $(LS) scratch | $(SORT)` ; \
 	echo $$dirs ; \
-	if [ `echo $$dirs | $(WC) -w` != 2 ]; then echo "wrong number of scratch directories found" ; exit 1 ; fi
+	if [ `echo $$dirs | $(WC) -w` -ne 2 ]; then echo "wrong number of scratch directories found" ; exit 1 ; fi
 	$(CHMOD) -R +w $(@:%.ok=%)
 	echo "test passed at `date`" > $@
 
@@ -100,7 +104,7 @@ $(BUILDDIR)/CleanupDirsTests.agentvm.retain.ok: \
 	$(GREP) -s 'Test results: passed: 8' $(@:%.ok=%/jt.log)  > /dev/null
 	dirs=`cd $(@:%.ok=%)/work ; $(FIND) . -type d -print | $(GREP) scratch | $(GREP) -v readonly | $(SORT)` ; \
 	echo $$dirs ; \
-	if [ `echo $$dirs | $(WC) -w` != 1 ]; then echo "wrong number of scratch directories found" ; exit 1 ; fi
+	if [ `echo $$dirs | $(WC) -w` -ne 1 ]; then echo "wrong number of scratch directories found" ; exit 1 ; fi
 	$(CHMOD) -R +w $(@:%.ok=%)
 	echo "test passed at `date`" > $@
 
@@ -126,7 +130,7 @@ $(BUILDDIR)/CleanupDirsTests.othervm.retain.ok: \
 	$(GREP) -s 'Test results: passed: 8' $(@:%.ok=%/jt.log)  > /dev/null
 	dirs=`cd $(@:%.ok=%)/work ; $(FIND) . -type d -print | $(GREP) scratch | $(GREP) -v readonly | $(SORT)` ; \
 	echo $$dirs ; \
-	if [ `echo $$dirs | $(WC) -w` != 1 ]; then echo "wrong number of scratch directories found" ; exit 1 ; fi
+	if [ `echo $$dirs | $(WC) -w` -ne 1 ]; then echo "wrong number of scratch directories found" ; exit 1 ; fi
 	$(CHMOD) -R +w $(@:%.ok=%)
 	echo "test passed at `date`" > $@
 

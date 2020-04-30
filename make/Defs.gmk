@@ -415,6 +415,7 @@ ECHO	= /bin/echo
 FIND	= /usr/bin/find
 GREP 	:= $(shell if [ -r /bin/grep ]; then echo /bin/grep ; else echo /usr/bin/grep ; fi )
 LN	= /bin/ln
+LS	= /bin/ls
 MKDIR 	= /bin/mkdir
 MV 	= /bin/mv
 PANDOC  = $(shell if [ -r /usr/bin/pandoc ]; then \
