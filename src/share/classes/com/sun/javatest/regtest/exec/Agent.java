@@ -25,13 +25,13 @@
 
 package com.sun.javatest.regtest.exec;
 
-import com.sun.javatest.regtest.util.ProcessUtils;
 
 import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -40,7 +40,6 @@ import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -51,11 +50,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+import java.util.WeakHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import com.sun.javatest.Status;
 import com.sun.javatest.TestResult;
+import com.sun.javatest.WorkDirectory;
 import com.sun.javatest.regtest.TimeoutHandler;
 import com.sun.javatest.regtest.agent.ActionHelper;
 import com.sun.javatest.regtest.agent.AgentServer;
@@ -63,10 +64,12 @@ import com.sun.javatest.regtest.agent.Alarm;
 import com.sun.javatest.regtest.agent.Flags;
 import com.sun.javatest.regtest.agent.SearchPath;
 import com.sun.javatest.regtest.config.JDK;
+import com.sun.javatest.regtest.config.RegressionParameters;
+import com.sun.javatest.regtest.util.ProcessUtils;
 import com.sun.javatest.regtest.util.StringUtils;
 
-import static com.sun.javatest.regtest.agent.AgentServer.*;
 import static com.sun.javatest.regtest.RStatus.createStatus;
+import static com.sun.javatest.regtest.agent.AgentServer.*;
 
 public class Agent {
     public static class Fault extends Exception {
@@ -76,6 +79,8 @@ public class Agent {
         }
     }
 
+    // legacy support for logging to stderr
+    // showAgent is superseded by always-on log to file
     static final boolean showAgent = Flags.get("showAgent");
     static final boolean traceAgent = Flags.get("traceAgent");
 
@@ -83,12 +88,13 @@ public class Agent {
      * Start a JDK with given JVM options.
      */
     private Agent(File dir, JDK jdk, List<String> vmOpts, Map<String, String> envVars,
-            File policyFile, float timeoutFactor) throws Fault {
+            File policyFile, float timeoutFactor, Logger logger) throws Fault {
         try {
             id = ++count;
             this.jdk = jdk;
-            this.scratchDir = dir;
+            this.execDir = dir;
             this.vmOpts = vmOpts;
+            this.logger = logger;
 
             List<String> cmd = new ArrayList<>();
             cmd.add(jdk.getJavaProg().getPath());
@@ -99,6 +105,8 @@ public class Agent {
 
             cmd.add(AgentServer.ID);
             cmd.add(String.valueOf(id));
+            cmd.add(AgentServer.LOGFILE);
+            cmd.add(logger.getAgentServerLogFile(id).getPath());
 
             if (policyFile != null)
                 cmd.add(AgentServer.ALLOW_SET_SECURITY_MANAGER);
@@ -117,7 +125,7 @@ public class Agent {
                 cmd.add(String.valueOf(timeoutFactor));
             }
 
-            show("Started " + cmd);
+            log("Started " + cmd);
 
             ProcessBuilder pb = new ProcessBuilder(cmd);
             pb.directory(dir);
@@ -169,7 +177,7 @@ public class Agent {
     }
 
     public boolean matches(File scratchDir, JDK jdk, List<String> vmOpts) {
-        return scratchDir.getName().equals(this.scratchDir.getName()) && this.jdk.equals(jdk) && this.vmOpts.equals(vmOpts);
+        return scratchDir.getName().equals(this.execDir.getName()) && this.jdk.equals(jdk) && this.vmOpts.equals(vmOpts);
     }
 
     public Status doCompileAction(
@@ -335,7 +343,7 @@ public class Agent {
     }
 
     public void close() {
-        show("Closing...");
+        log("Closing...");
 
         keepAlive.finished();
 
@@ -354,7 +362,7 @@ public class Agent {
             if (rc != 0)
                 trace("Exited, process exit code: " + rc);
         } catch (InterruptedException e) {
-            trace("Interrupted while closing");
+            log("Interrupted while closing");
             log("Killing process");
             ProcessUtils.destroyForcibly(process);
         } finally {
@@ -362,7 +370,7 @@ public class Agent {
             Thread.interrupted(); // clear any interrupted status
         }
 
-        show("Closed");
+        log("Closed");
     }
 
     void writeCollection(Collection<String> c) throws IOException {
@@ -440,102 +448,253 @@ public class Agent {
         throw new EOFException("unexpected EOF");
     }
 
+    /**
+     * Returns the id for this agent.
+     * The id is just a small strictly-positive integer, allocated from 1 on up.
+     * The id is used to identify the agent in logging messages.
+     *
+     * @return the id
+     */
     public int getId() {
         return id;
     }
 
-    // 2016-12-21 13:19:46,998
-    private static final SimpleDateFormat logDateFormat = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss,SSS");
-
-    private void log(String s, PrintStream out) {
-        out.println("[" + logDateFormat.format(new Date()) + "] Agent[" + getId() + "]: " + s);
-    }
-
-    private void log(String s) {
-        log(s, System.err);
+    /**
+     * Logs a message to the log file managed by the logger.
+     *
+     * @param message the message
+     */
+    private void log(String message) {
+        logger.log(this, message);
+        show(message);
     }
 
     private void show(String s) {
         if (showAgent || traceAgent) {
-            log(s);
+            log(s, System.err);
         }
     }
 
     private void trace(String s) {
         if (traceAgent) {
-            log(s);
+            log(s, System.err);
         }
+    }
+
+    // legacy show/trace support
+    private void log(String message, PrintStream out) {
+        out.println("[" + AgentServer.logDateFormat.format(new Date()) + "] Agent[" + getId() + "]: " + message);
     }
 
     final JDK jdk;
     final List<String> vmOpts;
-    final File scratchDir;
+    final File execDir;
     final Process process;
     final DataInputStream in;
     final DataOutputStream out;
     final KeepAlive keepAlive;
     final int id;
+    final Logger logger;
 
     static int count;
 
     /**
+     * Logger provides a directory ion which log files can be created,
+     * and a writer for writing client-side logging messages.
+     * The directory is the system jtData directory in the work directory;
+     * The file for client-side logging is jtData/agent.trace.
+     * Log messages are prefixed with a standard sort-friendly timestamp,
+     * so that the log files in the directory can be merge-sorted into
+     * a single log for later analysis.
+     */
+    public static class Logger {
+        private static WeakHashMap<RegressionParameters, Logger> instances = new WeakHashMap<>();
+
+        public static synchronized Logger instance(RegressionParameters params) {
+            return instances.computeIfAbsent(params, Logger::new);
+        }
+
+        public static void close(RegressionParameters params) throws IOException {
+            Logger l = instances.get(params);
+            if (l != null) {
+                l.close();
+            }
+        }
+
+        private File agentLogFileDirectory;
+        private final PrintWriter agentLogWriter;
+
+        Logger(RegressionParameters params) {
+            WorkDirectory wd = params.getWorkDirectory();
+            agentLogFileDirectory = wd.getJTData();
+            File logFile = new File(agentLogFileDirectory, "agent.trace");
+            PrintWriter out;
+            try {
+                out = new PrintWriter(new FileWriter(logFile));
+            } catch (IOException e) {
+                System.err.println("Cannot open agent log file: " + e);
+                out = new PrintWriter(System.err, true) {
+                    @Override
+                    public void close() {
+                        flush();
+                    }
+                };
+            }
+            agentLogWriter = out;
+        }
+
+        void log(Agent agent, String message) {
+            agentLogWriter.printf("[%s] Agent[%d]: %s%n",
+                    AgentServer.logDateFormat.format(new Date()),
+                    agent.getId(),
+                    message);
+        }
+
+        File getAgentServerLogFile(int id) {
+            return new File(agentLogFileDirectory, "agentServer." + id + ".trace");
+        }
+
+        public void close() throws IOException {
+            agentLogWriter.close();
+        }
+    }
+
+    /**
      * A reusable collection of JVMs with varying VM options.
+     * <p>
+     * Pools are associated with an instance of RegressionParameters, from which
+     * it gets a Logger to report activity that may be useful in case of any problems.
      */
     public static class Pool {
-        private static Pool instance;
+        /**
+         * The instances.
+         * It is expected that there will typically be exactly one entry in this collection.
+         */
+        private static WeakHashMap<RegressionParameters, Pool> instances = new WeakHashMap<>();
 
-        public static synchronized Pool instance() {
-            if (instance == null)
-                instance = new Pool();
-            return instance;
+        /**
+         * Returns the instance for the given RegressionParameters object.
+         *
+         * @param params the RegressionParameters object
+         * @return the instance
+         */
+        public static synchronized Pool instance(RegressionParameters params) {
+            return instances.computeIfAbsent(params, Pool::new);
         }
 
-        private Pool() {
+        private Pool(RegressionParameters params) {
             map = new HashMap<>();
+            logger = Logger.instance(params);
         }
 
+        /**
+         * Sets the policy file to be used for agents created for this pool.
+         *
+         * @param policyFile the file
+         */
         public void setSecurityPolicy(File policyFile) {
             this.policyFile = policyFile;
         }
 
+        /**
+         * Sets the timeout factor to be used for agents created for this pool.
+         *
+         * @param factor the timeout factor
+         */
         public void setTimeoutFactor(float factor) {
             this.timeoutFactor = factor;
         }
 
-        synchronized Agent getAgent(File dir, JDK jdk, List<String> vmOpts, Map<String, String> envVars)
+        /**
+         * Obtains an agent with the desired properties.
+         * If a suitable agent already exists in the pool, it will be removed from the pool and
+         * returned; otherwise, a new one will be created.
+         *
+         * @param dir     the execution directory for the agent
+         * @param jdk     the JDK for the agent
+         * @param vmOpts  the VM options for the agent
+         * @param envVars the environment variables for the agent
+         * @return the agent
+         * @throws Fault if there is a problem obtaining a suitable agent
+         */
+        synchronized Agent getAgent(File dir,
+                                    JDK jdk,
+                                    List<String> vmOpts,
+                                    Map<String, String> envVars)
                 throws Fault {
             Queue<Agent> agents = map.get(getKey(dir, jdk, vmOpts));
             Agent a = (agents == null) ? null : agents.poll();
             if (a == null) {
-                a = new Agent(dir, jdk, vmOpts, envVars, policyFile, timeoutFactor);
+                a = new Agent(dir, jdk, vmOpts, envVars, policyFile, timeoutFactor, logger);
             }
             return a;
         }
 
+        /**
+         * Saves an agent in the pool for potential reuse.
+         * The agent is assumed to have been restored to some standard state.
+         *
+         * @param agent the agent
+         */
         synchronized void save(Agent agent) {
-            String key = getKey(agent.scratchDir, agent.jdk, agent.vmOpts);
+            String key = getKey(agent.execDir, agent.jdk, agent.vmOpts);
             Queue<Agent> agents = map.get(key);
             if (agents == null)
                 map.put(key, agents = new LinkedList<>());
             agents.add(agent);
         }
 
+        /**
+         * Flushes any agents that may have been saved in a pool associated with
+         * the given RegressionParameters object.
+         *
+         * @param params the RegressionParameters object
+         */
+        public static synchronized void flush(RegressionParameters params) {
+            Pool instance = instances.get(params);
+            if (instance != null) {
+                instance.flush();
+            }
+
+        }
+
+        /**
+         * Flushes all agents that have been saved in this pool.
+         */
         public synchronized void flush() {
-            for (Queue<Agent> agents: map.values()) {
-                for (Agent agent: agents) {
+            for (Queue<Agent> agents : map.values()) {
+                for (Agent agent : agents) {
                     agent.close();
                 }
             }
             map.clear();
         }
 
-        /** Close all agents associated with a specific scratch directory. */
-        synchronized void close(File scratchDir) {
+        /**
+         * Closes any agents with a given execution directory that may have been saved in a pool
+         * associated with the given RegressionParameters object.
+         *
+         * @param params the RegressionParameters object
+         * @param dir    the execution directory
+         */
+        static synchronized void close(RegressionParameters params, File dir) {
+            Pool instance = instances.get(params);
+            if (instance != null) {
+                instance.close(dir);
+            }
+        }
+
+        /**
+         * Closes all agents in this pool with the given execution directory.
+         *
+         * @param dir the execution directory
+         */
+        synchronized void close(File dir) {
             for (Iterator<Queue<Agent>> mapValuesIter = map.values().iterator(); mapValuesIter.hasNext(); ) {
                 Queue<Agent> agents = mapValuesIter.next();
                 for (Iterator<Agent> agentIter = agents.iterator(); agentIter.hasNext(); ) {
                     Agent agent = agentIter.next();
-                    if (agent.scratchDir.equals(scratchDir))
+                    if (agent.execDir.equals(dir))
                         agentIter.remove();
                 }
                 if (agents.isEmpty()) {
@@ -548,6 +707,7 @@ public class Agent {
             return (dir.getAbsolutePath() + " " + jdk.getAbsoluteFile() + " " + StringUtils.join(vmOpts, " "));
         }
 
+        private final Logger logger;
         private final Map<String, Queue<Agent>> map;
         private File policyFile;
         private float timeoutFactor = 1.0f;

@@ -29,6 +29,8 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
@@ -41,7 +43,9 @@ import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CoderResult;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -73,6 +77,7 @@ public class AgentServer implements ActionHelper.OutputHandler {
 
     public static final String ALLOW_SET_SECURITY_MANAGER = "-allowSetSecurityManager";
     public static final String ID = "-id";
+    public static final String LOGFILE = "-logfile";
     public static final String HOST = "-host";
     public static final String PORT = "-port";
     public static final String TIMEOUTFACTOR = "-timeoutFactor";
@@ -145,8 +150,9 @@ public class AgentServer implements ActionHelper.OutputHandler {
         boolean allowSetSecurityManagerFlag = false;
         // use explicit localhost to avoid VPN issues
         InetAddress host = InetAddress.getByName("localhost");
-        int port = -1;
         int id = 0;
+        int port = -1;
+        File logFile = null;
         for (int i = 0; i < args.length; i++) {
             String arg = args[i];
             if (arg.equals(ID)) {
@@ -155,6 +161,8 @@ public class AgentServer implements ActionHelper.OutputHandler {
                 } catch (NumberFormatException e) {
                     id = 0;
                 }
+            } else if (arg.equals(LOGFILE)) {
+                logFile = new File(args[++i]);
             } else if (arg.equals(ALLOW_SET_SECURITY_MANAGER)) {
                 allowSetSecurityManagerFlag = true;
             } else if (arg.equals(PORT) && i + 1 < args.length) {
@@ -167,15 +175,37 @@ public class AgentServer implements ActionHelper.OutputHandler {
                 throw new IllegalArgumentException(arg);
             }
         }
+
+        this.id = id;
+
+        PrintWriter pw = null;
+        if (logFile != null) {
+            try {
+                pw = new PrintWriter(new FileWriter(logFile));
+            } catch (IOException e) {
+                traceOut.println("Cannot open log writer: " + e);
+                pw = new PrintWriter(System.err) {
+                    @Override
+                    public void close() {
+                        flush();
+                    }
+                };
+            }
+        }
+        logWriter = pw;
+        log("Started");
+
         if (port > 0) {
             Socket s = new Socket(host, port);
             s.setSoTimeout((int)(KeepAlive.READ_TIMEOUT * timeoutFactor));
             in = new DataInputStream(new BufferedInputStream(s.getInputStream()));
             out = new DataOutputStream(new BufferedOutputStream(s.getOutputStream()));
+            log("Listening on port " + port);
         } else {
             in = new DataInputStream(new BufferedInputStream(System.in));
             out = new DataOutputStream(new BufferedOutputStream(System.out));
         }
+
         keepAlive = new KeepAlive(out, traceServer);
         RegressionSecurityManager.install();
         SecurityManager sm = System.getSecurityManager();
@@ -190,6 +220,7 @@ public class AgentServer implements ActionHelper.OutputHandler {
     }
 
     public void run() throws IOException {
+        log("Running");
         try {
             int op;
             while ((op = in.read()) != -1) {
@@ -212,6 +243,8 @@ public class AgentServer implements ActionHelper.OutputHandler {
             }
         } finally {
             keepAlive.finished();
+            log("exiting");
+            logWriter.close();
         }
     }
 
@@ -223,12 +256,14 @@ public class AgentServer implements ActionHelper.OutputHandler {
         String testName = in.readUTF();
         Map<String, String> testProps = readMap(in);
         List<String> cmdArgs = readList(in);
+        log(testName + ": starting compilation");
         keepAlive.setEnabled(true);
         try {
             AStatus status = CompileActionHelper.runCompile(testName, testProps, cmdArgs, 0, this);
             writeStatus(status);
         } finally {
             keepAlive.setEnabled(false);
+            log(testName + ": finished compilation");
         }
         if (traceServer) {
             traceOut.println("Agent.Server.doCompile DONE");
@@ -250,6 +285,7 @@ public class AgentServer implements ActionHelper.OutputHandler {
         if (traceServer) {
             traceOut.println("Agent.Server.doMain: " + testName);
         }
+        log(testName + ": starting execution of " + className);
         keepAlive.setEnabled(true);
         try {
             AStatus status = new MainActionHelper(testName)
@@ -266,6 +302,7 @@ public class AgentServer implements ActionHelper.OutputHandler {
             writeStatus(status);
         } finally {
             keepAlive.setEnabled(false);
+            log(testName + ": finished execution of " + className);
         }
         if (traceServer) {
             traceOut.println("Agent.Server.doMain DONE");
@@ -310,10 +347,28 @@ public class AgentServer implements ActionHelper.OutputHandler {
         }
         writers.clear();
     }
+
+    // This format is also used by Agent.java in the client-side log messages.
+    // The format is like this:
+    //     2016-12-21 13:19:46,998
+    // It is "sort-friendly" so that the lines in all the logs for a test run
+    // can be merged and sorted into a single log.
+    public static final SimpleDateFormat logDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss,SSS");
+
+    void log(String message) {
+        logWriter.printf("[%s] AgentServer[%d]: %s%n",
+                AgentServer.logDateFormat.format(new Date()),
+                id,
+                message);
+
+    }
+
     private final KeepAlive keepAlive;
     private final DataInputStream in;
     private final DataOutputStream out;
     private final PrintStream traceOut = System.err;
+    private final PrintWriter logWriter;
+    private final int id;
     private final Map<OutputKind, Writer> writers = new EnumMap<OutputKind, Writer>(OutputKind.class);
 
     /**

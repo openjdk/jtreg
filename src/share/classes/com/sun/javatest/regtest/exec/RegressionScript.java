@@ -1198,7 +1198,7 @@ public class RegressionScript extends Script {
         SearchPath cp = new SearchPath().append(jdk.getJDKClassPath()).append(getJavaTestClassPath());
         envVars.put("CLASSPATH", cp.toString());
 
-        Agent.Pool p = Agent.Pool.instance();
+        Agent.Pool p = Agent.Pool.instance(params);
         Agent agent = p.getAgent(absTestScratchDir(), jdk, vmOpts.toList(), envVars);
         agents.add(agent);
         return agent;
@@ -1228,9 +1228,11 @@ public class RegressionScript extends Script {
      * The agents are made available for future reuse.
      */
     void releaseAgents() {
-        Agent.Pool pool = Agent.Pool.instance();
-        for (Agent agent: agents) {
-            pool.save(agent);
+        if (!agents.isEmpty()) {
+            Agent.Pool pool = Agent.Pool.instance(params);
+            for (Agent agent: agents) {
+                pool.save(agent);
+            }
         }
     }
 

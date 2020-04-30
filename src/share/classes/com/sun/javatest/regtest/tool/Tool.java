@@ -1216,23 +1216,6 @@ public class Tool {
             }
         }
 
-        if (allowSetSecurityManagerFlag) {
-            switch (execMode) {
-                case AGENTVM:
-                    initPolicyFile();
-                    Agent.Pool p = Agent.Pool.instance();
-                    p.setSecurityPolicy(policyFile);
-                    if (timeoutFactorArg != null) {
-                        p.setTimeoutFactor(timeoutFactorArg);
-                    }
-                    break;
-                case OTHERVM:
-                    break;
-                default:
-                    throw new AssertionError();
-            }
-        }
-
         if (jcovManager.isEnabled()) {
             jcovManager.setTestJDK(testJDK);
             jcovManager.setWorkDir(getNormalizedFile(workDirArg));
@@ -1300,6 +1283,23 @@ public class Tool {
                     foundEmptyGroup = true;
 
                 checkLockFiles(params.getWorkDirectory().getRoot(), "start");
+
+                if (allowSetSecurityManagerFlag) {
+                    switch (execMode) {
+                        case AGENTVM:
+                            initPolicyFile();
+                            Agent.Pool p = Agent.Pool.instance(params);
+                            p.setSecurityPolicy(policyFile);
+                            if (timeoutFactorArg != null) {
+                                p.setTimeoutFactor(timeoutFactorArg);
+                            }
+                            break;
+                        case OTHERVM:
+                            break;
+                        default:
+                            throw new AssertionError();
+                    }
+                }
 
                 // Before we install our own security manager (which will restrict access
                 // to the system properties), take a copy of the system properties.
@@ -1941,7 +1941,12 @@ public class Tool {
                 String[] tests = params.getTests();
                 ok = (tests != null && tests.length == 0) || h.batch(params);
 
-                Agent.Pool.instance().flush();
+                Agent.Pool.flush(params);
+                try {
+                    Agent.Logger.close(params);
+                } catch (IOException e) {
+                    err.println(i18n.getString("main.errorClosingAgentLog", e));
+                }
                 Lock.get(params).close();
             }
 
