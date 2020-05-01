@@ -243,7 +243,7 @@ public class AgentServer implements ActionHelper.OutputHandler {
             }
         } finally {
             keepAlive.finished();
-            log("exiting");
+            log("Exiting");
             logWriter.close();
         }
     }
