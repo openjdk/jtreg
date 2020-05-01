@@ -133,8 +133,8 @@ public class Agent {
             env.clear();
             env.putAll(envVars);
             process = pb.start();
-            copyStream("stdout", process.getInputStream(), System.out);
-            copyStream("stderr", process.getErrorStream(), System.err);
+            copyAgentProcessStream("stdout", process.getInputStream());
+            copyAgentProcessStream("stderr", process.getErrorStream());
 
             try {
                 final int ACCEPT_TIMEOUT = (int) (60 * 1000 * timeoutFactor);
@@ -156,17 +156,23 @@ public class Agent {
         }
     }
 
-    void copyStream(final String name, final InputStream in, final PrintStream out) {
-        // Read a stream from the process and echo it to the local output.
-        // TODO?: allow a script to temporarily claim an agent so that output
-        // can be directed to the script's .jtr file?
+    /**
+     * Reads the output written by an agent process, and copies it either to
+     * the current TestResult object (when one is available) or to the agent's
+     * log file, if output is found while there is no test using the agent.
+     *
+     * @param name the name of the stream
+     * @param in   the stream
+     */
+    void copyAgentProcessStream(final String name, final InputStream in) {
         Thread t = new Thread() {
             @Override
             public void run() {
                 try (BufferedReader inReader = new BufferedReader(new InputStreamReader(in))) {
                     String line;
-                    while ((line = inReader.readLine()) != null)
-                        log(name + ": " + line, out);
+                    while ((line = inReader.readLine()) != null) {
+                        handleProcessStreamLine(name, line);
+                    }
                 } catch (IOException e) {
                     // ignore
                 }
@@ -174,6 +180,64 @@ public class Agent {
         };
         t.setDaemon(true);
         t.start();
+    }
+
+    /**
+     * This field is set during doAction, and when set, any output received
+     * from the agent process on stdout (fd1) and stderr (fd2) will be written
+     * to the appropriate block in the current test result section.
+     * Any data received from the agent when this is not set is written to the
+     * agent log file.
+     */
+    private TestResult.Section currentTestResultSection;
+
+    /**
+     * A map of the currently open writers for process streams capturing
+     * output written by the agent on stdout (fd0) and stderr (fd1).
+     */
+    private Map<String, PrintWriter> processStreamWriters = new HashMap<>();
+
+    /**
+     * Starts or stops capturing output written by the agent on stdout (fd1) and stderr (fd2)
+     * into the given test result section.
+     *
+     * If the given section is not {code null}, output written by the agent will
+     * be recorded in blocks in the given section.
+     * If the given section is {@code null}, output written by the agent will
+     * be recorded in the agent's log file.
+     *
+     * It is expected that this method will be used to set a non-null section
+     * for the duration of an ac tion (see doAction), so that output written
+     * by the agent during that time will be recorded in the appropriate test
+     * result section.
+     *
+     * @param section the test result section to be used, or {@code null}
+     */
+    private synchronized void captureProcessStreams(TestResult.Section section) {
+        currentTestResultSection = section;
+        if (currentTestResultSection == null) {
+            for (PrintWriter pw : processStreamWriters.values()) {
+                pw.close();
+            }
+            processStreamWriters.clear();
+        }
+    }
+
+    /**
+     * Saves a line of output that was written by the agent to stdout (fd1) or stderr (fd2).
+     * If there is a current test result section, the line is saved there;
+     * otherwise it is written to the agent log file.
+     *
+     * @param name the name of the stream from which the line was read
+     * @param line the line that was read
+     */
+    private synchronized void handleProcessStreamLine(String name, String line) {
+        if (currentTestResultSection == null) {
+            log(name + ": " + line);
+        } else {
+            processStreamWriters.computeIfAbsent(name, currentTestResultSection::createOutput)
+                    .println(line);
+        }
     }
 
     public boolean matches(File scratchDir, JDK jdk, List<String> vmOpts) {
@@ -275,6 +339,7 @@ public class Agent {
         }
         keepAlive.setEnabled(false);
         try {
+            captureProcessStreams(trs);
             synchronized (out) {
                 agentAction.send();
             }
@@ -284,6 +349,7 @@ public class Agent {
             trace(actionName + ":  error " + e);
             throw new Fault(e);
         } finally {
+            captureProcessStreams(null);
             alarm.cancel();
             keepAlive.setEnabled(true);
             if (alarm.didFire()) {

@@ -50,7 +50,7 @@ $(BUILDDIR)/BadSecurityManagerTest.ok: \
 		-agentvm -allowSetSecurityManager \
 		$(TESTDIR)/SecurityManager/error \
 		2>&1 | tee $(@:%.ok=%)/out.txt
-	grep "Cannot reset security manager" $(@:%.ok=%)/out.txt
+	grep "Cannot reset security manager" $(@:%.ok=%)/work/error/BadSecurityManagerTest.jtr
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += \
