@@ -180,12 +180,14 @@ public class Tool {
      * Call System.exit, taking care to get permission from the
      * JavaTestSecurityManager, if it is installed.
      */
+    @SuppressWarnings("static")
     private static void exit(int exitCode) {
         // If our security manager is installed, it won't allow a call of
         // System.exit unless we ask it nicely, pretty please, thank you.
         SecurityManager sc = System.getSecurityManager();
-        if (sc instanceof JavaTestSecurityManager)
+        if (sc instanceof JavaTestSecurityManager) {
             ((JavaTestSecurityManager) sc).setAllowExit(true);
+        }
         System.exit(exitCode);
     }
 

@@ -50,7 +50,7 @@ public class BasicObserver implements Harness.Observer {
     public void stoppingTestRun() { }
 
     /** {@inheritDoc} */
-    @Override
+    @Override @SuppressWarnings("deprecation")
     public void finishedTesting() { }
 
     /** {@inheritDoc} */
