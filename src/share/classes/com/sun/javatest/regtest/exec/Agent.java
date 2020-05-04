@@ -697,11 +697,21 @@ public class Agent {
                                     List<String> vmOpts,
                                     Map<String, String> envVars)
                 throws Fault {
+            logger.log(null,
+                    "POOL: get agent for:\n"
+                            + "   directory: " + dir + "\n"
+                            + "         JDK: " + jdk + "\n"
+                            + "  VM options: " + vmOpts + "\n"
+            );
             Queue<Agent> agents = map.get(getKey(dir, jdk, vmOpts));
             Agent a = (agents == null) ? null : agents.poll();
-            if (a == null) {
+            if (a != null) {
+                logger.log(null, "POOL: Reusing Agent[" + a.getId() + "]");
+            } else {
+                logger.log(null, "POOL: Creating new agent");
                 a = new Agent(dir, jdk, vmOpts, envVars, policyFile, timeoutFactor, logger);
             }
+
             return a;
         }
 
@@ -712,11 +722,9 @@ public class Agent {
          * @param agent the agent
          */
         synchronized void save(Agent agent) {
+            logger.log(agent, "Saving agent to pool");
             String key = getKey(agent.execDir, agent.jdk, agent.vmOpts);
-            Queue<Agent> agents = map.get(key);
-            if (agents == null)
-                map.put(key, agents = new LinkedList<>());
-            agents.add(agent);
+            map.computeIfAbsent(key, k -> new LinkedList<>()).add(agent);
         }
 
         /**
