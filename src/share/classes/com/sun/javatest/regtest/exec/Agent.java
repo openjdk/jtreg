@@ -610,10 +610,19 @@ public class Agent {
         }
 
         void log(Agent agent, String message) {
-            agentLogWriter.printf("[%s] Agent[%d]: %s%n",
-                    AgentServer.logDateFormat.format(new Date()),
-                    agent.getId(),
-                    message);
+            String dateInfo = AgentServer.logDateFormat.format(new Date());
+            String agentInfo = (agent == null) ? "" : " Agent[" + agent.getId() + "]";
+            if (message.contains("\n")) {
+                String[] lines = message.split("\\R");
+                int i = 0;
+                for (String line : lines) {
+                    agentLogWriter.printf("[%s]%s: #%d/%d %s%n",
+                            dateInfo, agentInfo, ++i, lines.length, line);
+                }
+            } else {
+                agentLogWriter.printf("[%s]%s: %s%n",
+                        dateInfo, agentInfo, message);
+            }
         }
 
         File getAgentServerLogFile(int id) {
