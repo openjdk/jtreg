@@ -55,9 +55,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 import java.util.regex.Pattern;
 
 import javax.swing.Timer;
@@ -996,7 +999,24 @@ public class Tool {
 
         help = new Help(options);
         if (javatest_jar != null) {
-            help.addJarVersionHelper("JTHarness", javatest_jar, "META-INF/buildInfo.txt");
+            help.addVersionHelper(o -> {
+                try (JarFile jf = new JarFile(javatest_jar)) {
+                    JarEntry e = jf.getJarEntry("META-INF/buildInfo.txt");
+                    if (e != null) {
+                        try (InputStream in = jf.getInputStream(e)) {
+                            Properties p = new Properties();
+                            p.load(in);
+                            String v = p.getProperty("version");
+                            String s = "JT Harness" + ", version " + v
+                                    + " " + p.getProperty("milestone")
+                                    + " " + p.getProperty("build")
+                                    + " (" + p.getProperty("date") + ")";
+                            o.println(s);
+                        }
+                    }
+                } catch (IOException e) {
+                }
+            });
         }
         if (jcovManager != null && jcovManager.isJCovInstalled()) {
             help.addVersionHelper(new VersionHelper() {
@@ -1594,7 +1614,26 @@ public class Tool {
                 .classes("org.openjdk.asmtools.Main")
                 .libDir(libDir)
                 .getPath();
-        help.addPathVersionHelper("AsmTools", asmtoolsPath);
+        help.addVersionHelper(out -> {
+            for (File f : asmtoolsPath.asList()) {
+                try (JarFile jf = new JarFile(f)) {
+                    JarEntry e = jf.getJarEntry("org/openjdk/asmtools/util/productinfo.properties");
+                    if (e != null) {
+                        try (InputStream in = jf.getInputStream(e)) {
+                            Properties p = new Properties();
+                            p.load(in);
+                            String v = p.getProperty("PRODUCT_VERSION");
+                            String s = p.getProperty("PRODUCT_NAME_LONG") + ", version " + v
+                                    + " " + p.getProperty("PRODUCT_MILESTONE")
+                                    + " " + p.getProperty("PRODUCT_BUILDNUMBER")
+                                    + " (" + p.getProperty("PRODUCT_DATE") + ")";
+                            out.println(s);
+                        }
+                    }
+                } catch (IOException e) {
+                }
+            }
+        });
     }
 
     void initPolicyFile() throws Fault {
