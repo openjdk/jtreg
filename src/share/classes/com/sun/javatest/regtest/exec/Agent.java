@@ -42,14 +42,18 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.WeakHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -647,6 +651,8 @@ public class Agent {
          */
         private static WeakHashMap<RegressionParameters, Pool> instances = new WeakHashMap<>();
 
+        private Stats stats = new Stats();
+
         /**
          * Returns the instance for the given RegressionParameters object.
          *
@@ -707,9 +713,11 @@ public class Agent {
             Agent a = (agents == null) ? null : agents.poll();
             if (a != null) {
                 logger.log(null, "POOL: Reusing Agent[" + a.getId() + "]");
+                stats.reuse(a);
             } else {
                 logger.log(null, "POOL: Creating new agent");
                 a = new Agent(dir, jdk, vmOpts, envVars, policyFile, timeoutFactor, logger);
+                stats.add(a);
             }
 
             return a;
@@ -725,6 +733,10 @@ public class Agent {
             logger.log(agent, "Saving agent to pool");
             String key = getKey(agent.execDir, agent.jdk, agent.vmOpts);
             map.computeIfAbsent(key, k -> new LinkedList<>()).add(agent);
+            int poolSize = map.values().stream()
+                    .mapToInt(Queue::size)
+                    .sum();
+            stats.trackPoolSize(poolSize);
         }
 
         /**
@@ -751,6 +763,7 @@ public class Agent {
                 }
             }
             map.clear();
+            stats.report(new File(logger.agentLogFileDirectory, "agent.summary"), logger);
         }
 
         /**
@@ -794,5 +807,58 @@ public class Agent {
         private final Map<String, Queue<Agent>> map;
         private File policyFile;
         private float timeoutFactor = 1.0f;
+    }
+
+    static class Stats {
+        Set<File> allDirs = new TreeSet<>();
+        Set<JDK> allJDKs = new TreeSet<>(Comparator.comparing( j -> j.getPath()));
+        Set<List<String>> allVMOpts = new TreeSet<>(Comparator.comparing(Objects::toString));
+        Map<Integer, Integer> useCounts = new TreeMap<>();
+        Map<Integer, Integer> sizeCounts = new TreeMap<>();
+
+        void add(Agent a) {
+            allDirs.add(a.execDir);
+            allJDKs.add(a.jdk);
+            allVMOpts.add(a.vmOpts);
+
+            useCounts.put(a.id, 1);
+        }
+
+        void reuse(Agent a) {
+            useCounts.put(a.id, useCounts.get(a.id) + 1);
+        }
+
+        void trackPoolSize(int size) {
+            sizeCounts.put(size, sizeCounts.computeIfAbsent(size, s -> 0) + 1);
+        }
+
+        void clear() {
+            allDirs.clear();
+            allJDKs.clear();
+            allVMOpts.clear();
+            useCounts.clear();
+            sizeCounts.clear();
+        }
+
+        void report(File file, Logger logger) {
+            try (PrintWriter out = new PrintWriter(new FileWriter(file))) {
+                report(out, "Execution Directories", allDirs);
+                report(out, "JDKs", allJDKs);
+                report(out, "VM Options", allVMOpts);
+
+                out.format("Agent Usage:%n");
+                useCounts.forEach((id, c) -> out.format("    %2d: %3d%n", id, c));
+                out.format("Pool Size:%n");
+                useCounts.forEach((size, c) -> out.format("    %2d: %3d%n", size, c));
+
+            } catch (IOException e) {
+                logger.log(null, "STATS: can't write stats file " + file + ": " + e);
+            }
+        }
+
+        private <T> void report(PrintWriter out, String title, Set<T> set) {
+            out.format("%s: %d%n", title, set.size());
+            set.forEach(item -> out.format("    %s%n", item));
+        }
     }
 }
