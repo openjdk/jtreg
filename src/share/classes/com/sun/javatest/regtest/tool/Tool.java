@@ -1979,6 +1979,13 @@ public class Tool {
                     initModuleHelper(params.getWorkDirectory());
                 }
 
+                File versionFile = params.getWorkDirectory().getSystemFile("jtreg.version");
+                try (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(versionFile)))) {
+                    help.showVersion(out);
+                } catch (IOException e) {
+                    err.println(i18n.getString("main.errorReportingVersion", e));
+                }
+
                 String[] tests = params.getTests();
                 ok = (tests != null && tests.length == 0) || h.batch(params);
 

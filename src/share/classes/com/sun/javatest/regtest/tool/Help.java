@@ -285,7 +285,7 @@ public class Help {
 
     private File getClassPathFileForClass(Class<?> c) {
         URL url = getClassPathEntryForClass(c);
-        if (url.getProtocol().equals("file"))
+        if (url != null && url.getProtocol().equals("file"))
             return new File(url.getPath());
         return null;
     }
