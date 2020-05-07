@@ -53,6 +53,7 @@ import com.sun.javatest.regtest.config.Locations.LibLocn;
 import com.sun.javatest.regtest.config.Modules;
 import com.sun.javatest.regtest.config.ParseException;
 import com.sun.javatest.regtest.exec.RegressionScript.PathKind;
+import com.sun.javatest.regtest.tool.Version;
 import com.sun.javatest.regtest.util.StringUtils;
 
 import static com.sun.javatest.regtest.RStatus.createStatus;
@@ -571,8 +572,17 @@ public class MainAction extends Action
                 .append(script.getTestNGPath())
                 .asList();
 
+        Version v = script.getRequiredVersion();
+
+        // In the following, using the preferred behavior reduces the number of kinds of agents,
+        // and so increases the reuse of agents, but some tests inadvertently rely on the old
+        // behavior. Therefore, the new preferred behavior is opt-in for test suites that
+        // require version 5.1 b01 or better.
         SearchPath classpath = paths.get(PathKind.CLASSPATH);
-        SearchPath agentClasspath = new SearchPath(classpath).retainAll(stdLibs);
+        SearchPath agentClasspath = (v.version == null)
+                        || (v.compareTo(new Version("5.1 b01")) >= 0)
+                ? new SearchPath().append(stdLibs)                  // preferred behavior
+                : new SearchPath(classpath).retainAll(stdLibs);     // old behavior
         SearchPath runClasspath = new SearchPath(classpath).removeAll(stdLibs);
 
         if (showMode)

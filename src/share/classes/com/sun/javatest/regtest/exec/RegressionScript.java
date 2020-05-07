@@ -670,6 +670,13 @@ public class RegressionScript extends Script {
     }
 
     /**
+     * Returns the version of jtreg required by this test suite.
+     */
+    Version getRequiredVersion() {
+        return params.getTestSuite().getRequiredVersion();
+    }
+
+    /**
      * Get content of @modules.
      */
     Modules getModules() {
