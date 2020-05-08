@@ -849,7 +849,7 @@ public class Agent {
                 out.format("Agent Usage:%n");
                 useCounts.forEach((id, c) -> out.format("    %2d: %3d%n", id, c));
                 out.format("Pool Size:%n");
-                useCounts.forEach((size, c) -> out.format("    %2d: %3d%n", size, c));
+                sizeCounts.forEach((size, c) -> out.format("    %2d: %3d%n", size, c));
 
             } catch (IOException e) {
                 logger.log(null, "STATS: can't write stats file " + file + ": " + e);
