@@ -843,13 +843,27 @@ public class Agent {
         void report(File file, Logger logger) {
             try (PrintWriter out = new PrintWriter(new FileWriter(file))) {
                 report(out, "Execution Directories", allDirs);
+                out.println();
+
                 report(out, "JDKs", allJDKs);
+                out.println();
+
                 report(out, "VM Options", allVMOpts);
+                out.println();
+
 
                 out.format("Agent Usage:%n");
-                useCounts.forEach((id, c) -> out.format("    %2d: %3d%n", id, c));
+                useCounts.forEach((id, c) -> out.format("    %3d: %3d%n", id, c));
+                double[] use_m_sd = getSimpleMeanStandardDeviation(useCounts.values());
+                out.format("Mean:          %5.1f%n", use_m_sd[0]);
+                out.format("Std Deviation: %5.1f%n", use_m_sd[1]);
+                out.println();
+
                 out.format("Pool Size:%n");
-                sizeCounts.forEach((size, c) -> out.format("    %2d: %3d%n", size, c));
+                sizeCounts.forEach((size, c) -> out.format("    %3d: %3d%n", size, c));
+                double[] size_m_sd = getWeightedMeanStandardDeviation(sizeCounts);
+                out.format("Mean          %5.1f%n", size_m_sd[0]);
+                out.format("Std Deviation %5.1f%n", size_m_sd[1]);
 
             } catch (IOException e) {
                 logger.log(null, "STATS: can't write stats file " + file + ": " + e);
@@ -859,6 +873,59 @@ public class Agent {
         private <T> void report(PrintWriter out, String title, Set<T> set) {
             out.format("%s: %d%n", title, set.size());
             set.forEach(item -> out.format("    %s%n", item));
+        }
+
+        /**
+         * Returns the mean and standard deviation of a collection of values.
+         *
+         * @param values the values
+         * @return an array containing the mean and standard deviation
+         */
+        double[] getSimpleMeanStandardDeviation(Collection<Integer> values) {
+            double sum = 0;
+            for (Integer v : values) {
+                sum += v;
+            }
+            double mean = sum / values.size();
+
+            double sum2 = 0;
+            for (Integer v : values) {
+                double x = v - mean;
+                sum2 += x * x;
+            }
+            double sd = Math.sqrt(sum2 / values.size());
+
+            return new double[] { mean, sd };
+        }
+
+        /**
+         * Returns the mean and standard deviation of a collection of weighted values.
+         * The values are provided in a map of {@code value -> frequency}.
+         *
+         * @param map the map of weighted values
+         * @return an array containing the mean and standard deviation
+         */
+        double[] getWeightedMeanStandardDeviation(Map<Integer, Integer> map) {
+            long count = 0;
+            double sum = 0;
+            for (Map.Entry<Integer, Integer> e : map.entrySet()) {
+                int value = e.getKey();
+                int freq = e.getValue();
+                sum += value * freq;
+                count += freq;
+            }
+            double mean = sum / count;
+
+            double sum2 = 0;
+            for (Map.Entry<Integer, Integer> e : map.entrySet()) {
+                int value = e.getKey();
+                int freq = e.getValue();
+                double x = value - mean;
+                sum2 += x * x * freq;
+            }
+            double sd = Math.sqrt(sum2 / count);
+
+            return new double[] { mean, sd };
         }
     }
 }
