@@ -46,6 +46,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.text.DateFormat;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -211,6 +212,7 @@ public class Tool {
     public static final String VERBOSE = "verbose";     // verbose controls
     public static final String DOC = "doc";             // help or doc info
     public static final String TIMEOUT = "timeout";     // timeout-related options
+    public static final String AGENT_POOL = "pool";     // agent pool related options
 
     public List<Option> options = Arrays.asList(new Option(OPT, VERBOSE, "verbose", "-v", "-verbose") {
             @Override
@@ -388,6 +390,30 @@ public class Tool {
             @Override
             public void process(String opt, String arg) {
                 timeLimitArg = arg;
+            }
+        },
+
+        new Option(GNU, AGENT_POOL, null, "--max-pool-size") {
+            @Override
+            public void process(String opt, String arg) throws BadArgs {
+                try {
+                    maxPoolSize = Integer.parseInt(arg);
+                } catch (NumberFormatException e) {
+                    throw new BadArgs(i18n, "main.badMaxPoolSize", arg);
+                }
+            }
+
+        },
+
+        new Option(GNU, AGENT_POOL, null, "--pool-idle-timeout") {
+            @Override
+            public void process(String opt, String arg) throws BadArgs {
+                try {
+                    poolIdleTimeout = Duration.ofMillis((long) (1000 * Float.parseFloat(arg)));
+                } catch (NumberFormatException e) {
+                    throw new BadArgs(i18n, "main.badPoolIdleTimeout", arg);
+                }
+
             }
         },
 
@@ -1306,21 +1332,32 @@ public class Tool {
 
                 checkLockFiles(params.getWorkDirectory().getRoot(), "start");
 
-                if (allowSetSecurityManagerFlag) {
-                    switch (execMode) {
-                        case AGENTVM:
+                switch (execMode) {
+                    case AGENTVM:
+                        Agent.Pool p = Agent.Pool.instance(params);
+                        if (allowSetSecurityManagerFlag) {
                             initPolicyFile();
-                            Agent.Pool p = Agent.Pool.instance(params);
                             p.setSecurityPolicy(policyFile);
-                            if (timeoutFactorArg != null) {
-                                p.setTimeoutFactor(timeoutFactorArg);
-                            }
-                            break;
-                        case OTHERVM:
-                            break;
-                        default:
-                            throw new AssertionError();
-                    }
+                        }
+                        if (timeoutFactorArg != null) {
+                            p.setTimeoutFactor(timeoutFactorArg);
+                        }
+                        if (maxPoolSize == -1) {
+                            // The default max pool size depends on the concurrency
+                            // and whether there are additional VM options to be set
+                            // when executing tests, as compared to when compiling tests.
+                            // Also, the classpath for compile actions is typically
+                            // different for compile actions and main actions.
+                            int factor = 2; // (testJavaOpts.isEmpty() ? 1 : 2);
+                            maxPoolSize = params.getConcurrency() * factor;
+                        }
+                        p.setMaxPoolSize(maxPoolSize);
+                        p.setIdleTimeout(poolIdleTimeout);
+                        break;
+                    case OTHERVM:
+                        break;
+                    default:
+                        throw new AssertionError();
                 }
 
                 // Before we install our own security manager (which will restrict access
@@ -2354,6 +2391,8 @@ public class Tool {
     private String timeoutHandlerClassName;
     private List<File> timeoutHandlerPathArg;
     private long timeoutHandlerTimeoutArg = -1; // -1: default; 0: no timeout; >0: timeout in seconds
+    private int maxPoolSize = -1;
+    private Duration poolIdleTimeout = Duration.ofSeconds(30);
     private List<String> testCompilerOpts = new ArrayList<>();
     private List<String> testJavaOpts = new ArrayList<>();
     private List<String> testVMOpts = new ArrayList<>();

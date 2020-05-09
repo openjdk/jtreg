@@ -40,10 +40,13 @@ import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -244,8 +247,10 @@ public class Agent {
         }
     }
 
-    public boolean matches(File scratchDir, JDK jdk, List<String> vmOpts) {
-        return scratchDir.getName().equals(this.execDir.getName()) && this.jdk.equals(jdk) && this.vmOpts.equals(vmOpts);
+    public boolean matches(File execDir, JDK jdk, List<String> vmOpts) {
+        return this.execDir.getName().equals(execDir.getName())
+                && this.jdk.equals(jdk)
+                && this.vmOpts.equals(vmOpts);
     }
 
     public Status doCompileAction(
@@ -565,6 +570,7 @@ public class Agent {
     final KeepAlive keepAlive;
     final int id;
     final Logger logger;
+    Instant idleStartTime;
 
     static int count;
 
@@ -664,7 +670,8 @@ public class Agent {
         }
 
         private Pool(RegressionParameters params) {
-            map = new HashMap<>();
+            agentsByKey = new HashMap<>();
+            allAgents = new LinkedList<>();
             logger = Logger.instance(params);
         }
 
@@ -687,9 +694,32 @@ public class Agent {
         }
 
         /**
+         * Sets the idle timeout for VMs in the pool.
+         *
+         * @param timeout the timeout
+         */
+        public void setIdleTimeout(Duration timeout) {
+            this.idleTimeout = timeout;
+            logger.log(null, "POOL: idle timeout: " + timeout);
+        }
+
+        /**
+         * Sets the maximum number of VMs in the pool.
+         *
+         * @param size the maximum number of VMs to keep in the pool
+         */
+        public void setMaxPoolSize(int size) {
+            this.maxPoolSize = size;
+            logger.log(null, "POOL: max pool size: " + maxPoolSize);
+        }
+
+        /**
          * Obtains an agent with the desired properties.
          * If a suitable agent already exists in the pool, it will be removed from the pool and
          * returned; otherwise, a new one will be created.
+         * Eventually, the agent should either be {@link #save(Agent) returned} to the pool,
+         * if it can be reused, or {@link Agent#close() closed}, if it should not be reused.
+         *
          *
          * @param dir     the execution directory for the agent
          * @param jdk     the JDK for the agent
@@ -709,10 +739,13 @@ public class Agent {
                             + "         JDK: " + jdk + "\n"
                             + "  VM options: " + vmOpts + "\n"
             );
-            Queue<Agent> agents = map.get(getKey(dir, jdk, vmOpts));
-            Agent a = (agents == null) ? null : agents.poll();
+            Deque<Agent> agents = agentsByKey.get(getKey(dir, jdk, vmOpts));
+            // reuse the most recently used agent, to increase the possibility
+            // that older, less-used agents can be reclaimed.
+            Agent a = (agents == null) ? null : agents.pollLast();
             if (a != null) {
                 logger.log(null, "POOL: Reusing Agent[" + a.getId() + "]");
+                allAgents.remove(a);
                 stats.reuse(a);
             } else {
                 logger.log(null, "POOL: Creating new agent");
@@ -732,11 +765,49 @@ public class Agent {
         synchronized void save(Agent agent) {
             logger.log(agent, "Saving agent to pool");
             String key = getKey(agent.execDir, agent.jdk, agent.vmOpts);
-            map.computeIfAbsent(key, k -> new LinkedList<>()).add(agent);
-            int poolSize = map.values().stream()
-                    .mapToInt(Queue::size)
-                    .sum();
-            stats.trackPoolSize(poolSize);
+            agentsByKey.computeIfAbsent(key, k -> new LinkedList<>()).add(agent);
+            allAgents.addLast(agent);
+
+            Instant now = Instant.now();
+            agent.idleStartTime = now;
+            cleanOldEntries(now);
+
+            stats.trackPoolSize(allAgents.size());
+        }
+
+        /**
+         * Remove any old entries from the pool.
+         *
+         * The current policy is to remove excess agents when there are too many,
+         * and to remove any agents that have been idle too long.
+         * The maximum number of agents in the pool, and the maximum idle time
+         * are both configurable.
+         *
+         * @param now the current time
+         */
+        private synchronized void cleanOldEntries(Instant now) {
+            while (allAgents.size() > maxPoolSize) {
+                Agent a = allAgents.getFirst();
+                logger.log(a, "Removing excess agent from pool");
+                removeAgent(a);
+            }
+
+            while (!allAgents.isEmpty()
+                    && isIdleTooLong(allAgents.peekFirst(), now)) {
+                Agent a = allAgents.getFirst();
+                logger.log(a, "Removing idle agent from pool");
+                removeAgent(a);
+            }
+        }
+
+        private void removeAgent(Agent a) {
+            agentsByKey.get(getKey(a)).remove(a);
+            allAgents.remove(a);
+            a.close();
+        }
+
+        private boolean isIdleTooLong(Agent a, Instant now) {
+            return Duration.between(a.idleStartTime, now).compareTo(idleTimeout) > 0;
         }
 
         /**
@@ -750,19 +821,18 @@ public class Agent {
             if (instance != null) {
                 instance.flush();
             }
-
         }
 
         /**
          * Flushes all agents that have been saved in this pool.
          */
         public synchronized void flush() {
-            for (Queue<Agent> agents : map.values()) {
-                for (Agent agent : agents) {
-                    agent.close();
-                }
+            logger.log(null, "POOL: closing all agents");
+            for (Agent a : allAgents) {
+                a.close();
             }
-            map.clear();
+            allAgents.clear();
+            agentsByKey.clear();
             stats.report(new File(logger.agentLogFileDirectory, "agent.summary"), logger);
         }
 
@@ -782,21 +852,33 @@ public class Agent {
 
         /**
          * Closes all agents in this pool with the given execution directory.
+         * This is for use when the directory is no longer suitable for use,
+         * such as when containing a file that cannot be deleted.
          *
          * @param dir the execution directory
          */
         synchronized void close(File dir) {
-            for (Iterator<Queue<Agent>> mapValuesIter = map.values().iterator(); mapValuesIter.hasNext(); ) {
-                Queue<Agent> agents = mapValuesIter.next();
-                for (Iterator<Agent> agentIter = agents.iterator(); agentIter.hasNext(); ) {
-                    Agent agent = agentIter.next();
-                    if (agent.execDir.equals(dir))
-                        agentIter.remove();
-                }
-                if (agents.isEmpty()) {
-                    mapValuesIter.remove();
+            logger.log(null, "POOL: closing agents using directory " + dir);
+            for (Iterator<Agent> iter = allAgents.iterator(); iter.hasNext(); ) {
+                Agent agent = iter.next();
+                if (agent.execDir.equals(dir)) {
+                    // remove from the allAgents list, currently being iterated
+                    iter.remove();
+                    // remove from the agentsByKey map
+                    String agentKey = getKey(agent);
+                    Deque<Agent> deque = agentsByKey.get(agentKey);
+                    deque.remove(agent);
+                    if (deque.isEmpty()) {
+                        agentsByKey.remove(agentKey);
+                    }
+                    // close the agent
+                    agent.close();
                 }
             }
+        }
+
+        private static String getKey(Agent agent) {
+            return getKey(agent.execDir, agent.jdk, agent.vmOpts);
         }
 
         private static String getKey(File dir, JDK jdk, List<String> vmOpts) {
@@ -804,9 +886,27 @@ public class Agent {
         }
 
         private final Logger logger;
-        private final Map<String, Queue<Agent>> map;
+
+        /**
+         * A map of the currently available agents, indexed by a key
+         * derived from the agent's primary execution characteristics.
+         * For each key, a deque is maintained of agents with that key.
+         * The most recently used entries are "last" in the deque;
+         * the oldest entries are "first" in the deque.
+         */
+        private final Map<String, Deque<Agent>> agentsByKey;
+
+        /**
+         * A list of all the currently available agents.
+         * The most recently used entries are "last" in the deque;
+         * the oldest entries are "first" in the deque.
+         */
+        private final Deque<Agent> allAgents;
+
         private File policyFile;
         private float timeoutFactor = 1.0f;
+        private int maxPoolSize;
+        private Duration idleTimeout;
     }
 
     static class Stats {

@@ -978,6 +978,43 @@ cannot be deleted.
 jtreg will try hard to delete files in the scratch directory, and will wait
 a while in case the files go away in a timely manner.
 
+### What is the agent pool?
+
+The agent pool is a collection of reusable VMs that can be used to run 
+test actions, like `@compile` and `@run main`, when it is not required to
+run the action in a separate VM. VMs are started automatically as needed,
+and after each use, if they can be reset to a standard state, they are saved
+for potential reuse by subsequent actions that require a VM with similar
+characteristics.
+
+The characteristics used to select a VM from the pool are:
+
+* the execution directory
+* the JDK
+* the VM options
+
+### How do I control the agent pool?
+
+There is a limit to the number of VMs in the pool at any one time.
+The default is double the number of tests that may run 
+[concurrently](#how-do-i-specify-whether-to-run-tests-concurrently).
+The value can be overridden with the `--max-pool-size` option.
+Setting a larger number will mean more system resources are used
+to keep idle VMs available for potential reuse;  
+setting a smaller number will save system resources but will reduce
+the chance of being able to reuse a JVM.
+
+There is also a time limit on how long an idle VM will remain in the pool,
+The default is 30 seconds.
+The value can be overridden with the `--pool-idle-timeout` option.
+Setting a larger number will mean more system resources are used
+to keep idle VMs available for potential reuse;  
+setting a smaller number will save system resources but will reduce
+the chance of being able to reuse a JVM.
+The value is used as given; it is not subject to the modification
+by the [`-timeoutFactor`](#what-do-i-need-to-know-about-test-timeouts)
+option.
+
 --------
 
 ## Writing a JDK Regression Test

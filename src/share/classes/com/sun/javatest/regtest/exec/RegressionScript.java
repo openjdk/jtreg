@@ -1192,8 +1192,9 @@ public class RegressionScript extends Script {
          * record the agents that the script has already obtained for use.
          */
         for (Agent agent: agents) {
-            if (agent.matches(absTestScratchDir(), jdk, vmOpts.toList()))
+            if (agent.matches(absTestScratchDir(), jdk, vmOpts.toList())) {
                 return agent;
+            }
         }
 
         Map<String, String> envVars = new HashMap<>();
