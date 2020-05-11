@@ -67,9 +67,9 @@ $(BUILDDIR)/RerunTest.othervm.ok: \
 		    -e 's|$(ABSTOPDIR)|%WS%|g' \
 		    -e 's|%BUILD%.images.jtreg.lib.jcommander\.jar.||g' \
 		> $(@:%.ok=%)/out/$${i%.*}.out ; \
-	    diff $(TESTDIR)/rerun/$${i%.*}.$(@:$(BUILDDIR)/RerunTest.%.ok=%).out \
+	    diff -c $(TESTDIR)/rerun/$${i%.*}.$(@:$(BUILDDIR)/RerunTest.%.ok=%).out \
 		$(@:%.ok=%)/out/$${i%.*}.out || exit 1 ; \
-	done  
+	done
 	echo "test passed at `date`" > $@
 
 ifdef JDK8HOME

@@ -38,6 +38,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
@@ -100,7 +101,7 @@ public class RegressionParameters
 
     /**
      * This method is to workaround an earlier workaround
-     * (in {@link BasicInterviewParameters#getParameters})
+     * (in {@link BasicInterviewParameters#getMaxConcurrency()})
      * for the max concurrency.
      * @return  the maximum permitted concurrency
      */
@@ -1286,6 +1287,40 @@ public class RegressionParameters
     }
 
     private TimeoutHandlerProvider timeoutHandlerProvider;
+
+    //---------------------------------------------------------------------
+
+    /**
+     * Returns a map containing the properties that are passed to all tests and
+     * other VBMs started by jtreg.
+     *
+     * @return the map
+     */
+    // Ideally, this method would be better on a "shared execution context" object
+    public Map<String, String> getBasicTestProperties() {
+        if (basicTestProperties == null) {
+            Map<String, String> map = new LinkedHashMap<>();
+            put(map, "test.vm.opts", getTestVMOptions(), v -> StringUtils.join(v, " "));
+            put(map, "test.tool.vm.opts", getTestToolVMOptions(), v -> StringUtils.join(v, " "));
+            put(map, "test.compiler.opts", getTestCompilerOptions(), v -> StringUtils.join(v, " "));
+            put(map, "test.java.opts", getTestJavaOptions(), v -> StringUtils.join(v, " "));
+            put(map, "test.jdk", getTestJDK(), JDK::getAbsolutePath);
+            put(map, "compile.jdk", getCompileJDK(), JDK::getAbsolutePath);
+            put(map, "test.timeout.factor", getTimeoutFactor(), String::valueOf);
+            put(map, "test.nativepath", getNativeDir(), File::getAbsolutePath);
+            put(map, "test.root", getTestSuite().getRootDir(), File::getAbsolutePath);
+            basicTestProperties = map;
+        }
+        return basicTestProperties;
+    }
+
+    private <T> void put(Map<String, String> map, String name, T value, Function<T, String> toString) {
+        if (value != null) {
+            map.put(name, toString.apply(value));
+        }
+    }
+
+    private Map<String, String> basicTestProperties;
 
     //---------------------------------------------------------------------
 

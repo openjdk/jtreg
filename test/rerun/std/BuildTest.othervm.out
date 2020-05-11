@@ -12,11 +12,6 @@ PATH=/bin:/usr/bin:/usr/sbin \
 TZ=GMT+0.00 \
     %JDKHOME%/bin/javac \
         -J-Dmy.vm.option=x \
-        -J-Dtest.file=%WS%/test/rerun/std/BuildTest.java \
-        -J-Dtest.src=%WS%/test/rerun/std \
-        -J-Dtest.src.path=%WS%/test/rerun/std \
-        -J-Dtest.classes=%BUILD%/RerunTest.othervm/work/classes/std/BuildTest.d \
-        -J-Dtest.class.path=%BUILD%/RerunTest.othervm/work/classes/std/BuildTest.d \
         -J-Dtest.vm.opts=-Dmy.vm.option=x \
         -J-Dtest.tool.vm.opts=-J-Dmy.vm.option=x \
         -J-Dtest.compiler.opts=-XDmy.javac.option=x \
@@ -25,6 +20,11 @@ TZ=GMT+0.00 \
         -J-Dcompile.jdk=%JDKHOME% \
         -J-Dtest.timeout.factor=1.0 \
         -J-Dtest.root=%WS%/test/rerun \
+        -J-Dtest.file=%WS%/test/rerun/std/BuildTest.java \
+        -J-Dtest.src=%WS%/test/rerun/std \
+        -J-Dtest.src.path=%WS%/test/rerun/std \
+        -J-Dtest.classes=%BUILD%/RerunTest.othervm/work/classes/std/BuildTest.d \
+        -J-Dtest.class.path=%BUILD%/RerunTest.othervm/work/classes/std/BuildTest.d \
         -XDmy.javac.option=x \
         -d %BUILD%/RerunTest.othervm/work/classes/std/BuildTest.d \
         -sourcepath %WS%/test/rerun/std \

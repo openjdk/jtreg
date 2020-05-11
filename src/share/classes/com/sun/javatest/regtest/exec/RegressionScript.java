@@ -51,6 +51,7 @@ import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+import java.util.stream.Collectors;
 
 import com.sun.javatest.Script;
 import com.sun.javatest.Status;
@@ -1117,10 +1118,12 @@ public class RegressionScript extends Script {
     // Get the standard properties to be set for tests
 
     Map<String, String> getTestProperties()  {
-        Map<String, String> p = new LinkedHashMap<>();
-        // The following will be added to javac.class.path on the test JVM
+        // initialize the properties with standard properties common to all tests
+        Map<String, String> p = new LinkedHashMap<>(params.getBasicTestProperties());
+        // add test-specific properties
         switch (getExecMode()) {
             case AGENTVM:
+                // The following will be added to javac.class.path on the test VM
                 SearchPath path = new SearchPath()
                     .append(locations.absTestClsDir())
                     .append(locations.absTestSrcDir())
@@ -1133,19 +1136,8 @@ public class RegressionScript extends Script {
         p.put("test.src.path", toString(locations.absTestSrcPath()));
         p.put("test.classes", locations.absTestClsDir().getPath());
         p.put("test.class.path", toString(locations.absTestClsPath()));
-        p.put("test.vm.opts", StringUtils.join(getTestVMOptions(), " "));
-        p.put("test.tool.vm.opts", StringUtils.join(getTestToolVMOptions(), " "));
-        p.put("test.compiler.opts", StringUtils.join(getTestCompilerOptions(), " "));
-        p.put("test.java.opts", StringUtils.join(getTestJavaOptions(), " "));
-        p.put("test.jdk", getTestJDK().getAbsolutePath());
-        p.put("compile.jdk", getCompileJDK().getAbsolutePath());
-        p.put("test.timeout.factor", String.valueOf(getTimeoutFactor()));
-        p.put("test.root", getTestRootDir().getPath());
         if (!modules.isEmpty())
             p.put("test.modules", modules.toString());
-        File nativeDir = getNativeDir();
-        if (nativeDir != null)
-            p.put("test.nativepath", nativeDir.getAbsolutePath());
         if (usePatchModules()) {
             SearchPath pp = new SearchPath();
             pp.append(locations.absLibClsList(LibLocn.Kind.SYS_MODULE));
@@ -1160,12 +1152,9 @@ public class RegressionScript extends Script {
     }
     // where
     private String toString(List<File> files) {
-        StringBuilder sb = new StringBuilder();
-        for (File f: files) {
-            if (sb.length() > 0) sb.append(File.pathSeparator);
-            sb.append(f.getPath());
-        }
-        return sb.toString();
+        return files.stream()
+                .map(File::getPath)
+                .collect(Collectors.joining(File.pathSeparator));
     }
 
     File getTestRootDir() {
