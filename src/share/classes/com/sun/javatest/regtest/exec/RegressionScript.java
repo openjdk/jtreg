@@ -1121,21 +1121,21 @@ public class RegressionScript extends Script {
         // initialize the properties with standard properties common to all tests
         Map<String, String> p = new LinkedHashMap<>(params.getBasicTestProperties());
         // add test-specific properties
-        switch (getExecMode()) {
-            case AGENTVM:
-                // The following will be added to javac.class.path on the test VM
-                SearchPath path = new SearchPath()
-                    .append(locations.absTestClsDir())
-                    .append(locations.absTestSrcDir())
-                    .append(locations.absLibClsList(LibLocn.Kind.PACKAGE))
-                    .append(locations.absLibSrcJarList());
-                p.put("test.class.path.prefix", path.toString());
-        }
+        p.put("test.name", testResult.getTestName());
         p.put("test.file", locations.absTestFile().getPath());
         p.put("test.src", locations.absTestSrcDir().getPath());
         p.put("test.src.path", toString(locations.absTestSrcPath()));
         p.put("test.classes", locations.absTestClsDir().getPath());
         p.put("test.class.path", toString(locations.absTestClsPath()));
+        if (getExecMode() == ExecMode.AGENTVM) {
+            // The following will be added to javac.class.path on the test VM
+            SearchPath path = new SearchPath()
+                    .append(locations.absTestClsDir())
+                    .append(locations.absTestSrcDir())
+                    .append(locations.absLibClsList(LibLocn.Kind.PACKAGE))
+                    .append(locations.absLibSrcJarList());
+            p.put("test.class.path.prefix", path.toString());
+        }
         if (!modules.isEmpty())
             p.put("test.modules", modules.toString());
         if (usePatchModules()) {

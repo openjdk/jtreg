@@ -17,12 +17,13 @@ TZ=GMT+0.00 \
         -J-Dcompile.jdk=%JDKHOME% \
         -J-Dtest.timeout.factor=1.0 \
         -J-Dtest.root=%WS%/test/rerun \
-        -J-Dtest.class.path.prefix=%BUILD%/RerunTest.agentvm/work/classes/std/JUnitTest.d:%WS%/test/rerun/std \
+        -J-Dtest.name=std/JUnitTest.java \
         -J-Dtest.file=%WS%/test/rerun/std/JUnitTest.java \
         -J-Dtest.src=%WS%/test/rerun/std \
         -J-Dtest.src.path=%WS%/test/rerun/std \
         -J-Dtest.classes=%BUILD%/RerunTest.agentvm/work/classes/std/JUnitTest.d \
         -J-Dtest.class.path=%BUILD%/RerunTest.agentvm/work/classes/std/JUnitTest.d \
+        -J-Dtest.class.path.prefix=%BUILD%/RerunTest.agentvm/work/classes/std/JUnitTest.d:%WS%/test/rerun/std \
         -XDmy.javac.option=x \
         -d %BUILD%/RerunTest.agentvm/work/classes/std/JUnitTest.d \
         -sourcepath %WS%/test/rerun/std \
@@ -46,12 +47,13 @@ TZ=GMT+0.00 \
         -Dcompile.jdk=%JDKHOME% \
         -Dtest.timeout.factor=1.0 \
         -Dtest.root=%WS%/test/rerun \
-        -Dtest.class.path.prefix=%BUILD%/RerunTest.agentvm/work/classes/std/JUnitTest.d:%WS%/test/rerun/std \
+        -Dtest.name=std/JUnitTest.java \
         -Dtest.file=%WS%/test/rerun/std/JUnitTest.java \
         -Dtest.src=%WS%/test/rerun/std \
         -Dtest.src.path=%WS%/test/rerun/std \
         -Dtest.classes=%BUILD%/RerunTest.agentvm/work/classes/std/JUnitTest.d \
         -Dtest.class.path=%BUILD%/RerunTest.agentvm/work/classes/std/JUnitTest.d \
+        -Dtest.class.path.prefix=%BUILD%/RerunTest.agentvm/work/classes/std/JUnitTest.d:%WS%/test/rerun/std \
         -classpath %BUILD%/RerunTest.agentvm/work/classes/std/JUnitTest.d:%WS%/test/rerun/std:%BUILD%/images/jtreg/lib/junit.jar:%JDKHOME%/lib/tools.jar:%BUILD%/images/jtreg/lib/javatest.jar:%BUILD%/images/jtreg/lib/jtreg.jar \
         com.sun.javatest.regtest.agent.JUnitRunner std/JUnitTest.java JUnitTest
 

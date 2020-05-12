@@ -17,12 +17,13 @@ TZ=GMT+0.00 \
         -J-Dcompile.jdk=%JDKHOME% \
         -J-Dtest.timeout.factor=1.0 \
         -J-Dtest.root=%WS%/test/rerun \
-        -J-Dtest.class.path.prefix=%BUILD%/RerunTest.agentvm/work/classes/std/AppletTest.d:%WS%/test/rerun/std \
+        -J-Dtest.name=std/AppletTest.java \
         -J-Dtest.file=%WS%/test/rerun/std/AppletTest.java \
         -J-Dtest.src=%WS%/test/rerun/std \
         -J-Dtest.src.path=%WS%/test/rerun/std \
         -J-Dtest.classes=%BUILD%/RerunTest.agentvm/work/classes/std/AppletTest.d \
         -J-Dtest.class.path=%BUILD%/RerunTest.agentvm/work/classes/std/AppletTest.d \
+        -J-Dtest.class.path.prefix=%BUILD%/RerunTest.agentvm/work/classes/std/AppletTest.d:%WS%/test/rerun/std \
         -XDmy.javac.option=x \
         -d %BUILD%/RerunTest.agentvm/work/classes/std/AppletTest.d \
         -sourcepath %WS%/test/rerun/std \
@@ -49,11 +50,12 @@ TZ=GMT+0.00 \
         -Dcompile.jdk=%JDKHOME% \
         -Dtest.timeout.factor=1.0 \
         -Dtest.root=%WS%/test/rerun \
-        -Dtest.class.path.prefix=%BUILD%/RerunTest.agentvm/work/classes/std/AppletTest.d:%WS%/test/rerun/std \
+        -Dtest.name=std/AppletTest.java \
         -Dtest.file=%WS%/test/rerun/std/AppletTest.java \
         -Dtest.src=%WS%/test/rerun/std \
         -Dtest.src.path=%WS%/test/rerun/std \
         -Dtest.classes=%BUILD%/RerunTest.agentvm/work/classes/std/AppletTest.d \
         -Dtest.class.path=%BUILD%/RerunTest.agentvm/work/classes/std/AppletTest.d \
+        -Dtest.class.path.prefix=%BUILD%/RerunTest.agentvm/work/classes/std/AppletTest.d:%WS%/test/rerun/std \
         -mx128m com.sun.javatest.regtest.agent.AppletWrapper %BUILD%/RerunTest.agentvm/work/std/AppletTest.d/applet.0.jta
 
