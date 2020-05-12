@@ -215,11 +215,7 @@ TARGETS.JAR.jtreg += $(TARGETS.com.sun.javatest.regtest)
 
 $(JTREG_IMAGEDIR)/lib/jtreg.jar: JAR_MAINCLASS = com.sun.javatest.regtest.Main
 
-ifdef JAVAHELP_JAR
-$(JTREG_IMAGEDIR)/lib/jtreg.jar: JAR_CLASSPATH = javatest.jar jh.jar asmtools.jar
-else
 $(JTREG_IMAGEDIR)/lib/jtreg.jar: JAR_CLASSPATH = javatest.jar asmtools.jar
-endif
 
 $(JTREG_IMAGEJARDIR)/jtreg.jar: \
 	$(JTREG_IMAGEDIR)/lib/javatest.jar \
@@ -261,24 +257,6 @@ $(JTREG_IMAGEDIR)/legal/jtharness/copyright.txt: $(call PosixPath,$(JTHARNESS_CO
 
 ifdef JTHARNESS_COPYRIGHT
     TARGETS.ZIP.jtreg += $(JTREG_IMAGEDIR)/legal/jtharness/copyright.txt
-endif
-
-#----------------------------------------------------------------------
-#
-# import JavaHelp (required for JavaTest/JT Harness 4.6), if available;
-# remove any (probably out-of-date) signatures
-
-$(IMAGES_DIR)/%/jh.jar: $(call PosixPath,$(JAVAHELP_JAR))
-	$(RM) -f $@
-	$(MKDIR) -p $(@D)
-	$(ECHO) JAVAHELP_HOME $(JAVAHELP_HOME)
-	$(ECHO) JAVAHELP_JAR $(JAVAHELP_JAR)
-	$(CP) $(JAVAHELP_JAR) $@
-	-$(ZIP) -d $@ 'META-INF/*.SF' 'META-INF/*.RSA' 'META-INF/*.DSA' 
-
-ifdef JAVAHELP_JAR
-    JTREG_IMAGE_JAVAHELP_JAR = $(JTREG_IMAGEDIR)/lib/jh.jar
-    TARGETS.ZIP.jtreg += $(JTREG_IMAGEDIR)/lib/jh.jar
 endif
 
 #----------------------------------------------------------------------

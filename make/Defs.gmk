@@ -172,27 +172,6 @@ REGTEST_TOOL_JAVAC = $(JDKHOME)/bin/javac
 REGTEST_TOOL_JAVAC_OPTIONS = \
 	$(TOOL_JAVAC_SOURCE_TARGET) $(JDK8_BOOTCLASSPATH) -Xlint:all,-options -Werror
 
-#----- JavaHelp
-#
-# JavaHelp, previously available at https://javahelp.dev.java.net/,
-# is no longer supported or generally available.
-# If you use JT Harness 5.0 or later, you do not need JavaHelp.
-# If you use JT Harness 4.6 (in order to test on very old versions of JDK),
-# you will need JavaHelp.
-
-ifndef JAVAHELP_HOME
-  ifdef SLASHJAVA
-    JAVAHELP_HOME = $(SLASHJAVA)/re/jh/2.0_01/promoted/fcs/latest/binaries/jh2.0/javahelp
-  endif
-endif
-
-ifndef JAVAHELP_JAR
-  ifdef JAVAHELP_HOME
-    JAVAHELP_JAR = $(JAVAHELP_HOME)/lib/jh.jar
-  endif
-endif
-JAVAHELP_JAR := $(call FullPath,$(JAVAHELP_JAR))
-
 #----- JavaTest: https://wiki.openjdk.java.net/display/CodeTools/JT+Harness
 #
 # At a minimum, JAVATEST_JAR must be set, either directly or indirectly.
