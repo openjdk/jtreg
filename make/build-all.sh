@@ -134,8 +134,8 @@ MAVEN_REPO_URL=https://repo1.maven.org/maven2
 
 CODE_TOOLS_URL="${CODE_TOOLS_URL:-https://git.openjdk.java.net}"
 # The following are Mercurial tags for the corresponding OpenJDK Code Tools repo
-ASMTOOLS_VERSION=${ASMTOOLS_VERSION:-7.0-b06} # early access for 7.0
-JTHARNESS_VERSION=${JTHARNESS_VERSION:-jt6.0-b08} # early access for 6.0
+ASMTOOLS_VERSION=${ASMTOOLS_VERSION:-7.0-b08} # early access for 7.0
+JTHARNESS_VERSION=${JTHARNESS_VERSION:-jt6.0-b11} # early access for 6.0
 JCOV_VERSION=${JCOV_VERSION:-jcov3.0-b05} # jcov3.0, ASM 6.2
 
 # ANT

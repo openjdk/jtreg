@@ -183,7 +183,7 @@ REGTEST_TOOL_JAVAC_OPTIONS = \
 
 ifndef JTHARNESS_HOME
   ifdef SLASHJAVA
-    JTHARNESS_HOME = $(SLASHJAVA)/re/jtharness/6.0/promoted/latest/binaries/
+    JTHARNESS_HOME = $(SLASHJAVA)/re/jtharness/6.0/promoted/ea/b11/binaries/
   endif
 endif 
 
@@ -269,7 +269,7 @@ JCOV = $(JDK6HOME)/bin/java -jar $(JCOV_JAR)
 
 ifndef ASMTOOLS_HOME
   ifdef SLASHJAVA
-    ASMTOOLS_HOME = $(SLASHJAVA)/re/asmtools/7.0/opensource/promoted/latest/binaries/asmtools-7.0
+    ASMTOOLS_HOME = $(SLASHJAVA)/re/asmtools/7.0/promoted/opensource/ea/b08/binaries/asmtools-7.0/
   endif
 endif
 
