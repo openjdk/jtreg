@@ -1056,7 +1056,7 @@ public class RegressionParameters
     public void setRetainArgs(List<String> retainArgs) {
 
         retainStatusSet.clear();
-        if (retainArgs == null) {
+        if (retainArgs == null || retainArgs.contains("lastRun")) {
             // equivalent to "none"
             retainFilesPattern = null;
             return;

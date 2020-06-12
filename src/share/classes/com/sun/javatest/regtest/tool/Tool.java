@@ -301,7 +301,7 @@ public class Tool {
         new Option(OPT, MAIN, "", "-retain") {
             @Override
             public String[] getChoices() {
-                return new String[] { "none", "pass", "fail", "error", "all", "file-pattern" };
+                return new String[] { "none", "lastRun", "pass", "fail", "error", "all", "file-pattern" };
             }
             @Override
             public void process(String opt, String arg) throws BadArgs {
@@ -313,6 +313,9 @@ public class Tool {
                     retainArgs = Arrays.asList(arg.split(","));
                 if (retainArgs.contains("none") && retainArgs.size() > 1) {
                     throw new BadArgs(i18n, "main.badRetainNone", arg);
+                }
+                if (retainArgs.contains("lastRun") && retainArgs.size() > 1) {
+                    throw new BadArgs(i18n, "main.badRetainLastRun", arg);
                 }
             }
         },
