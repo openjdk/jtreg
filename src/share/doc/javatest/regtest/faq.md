@@ -1015,6 +1015,13 @@ The value is used as given; it is not subject to the modification
 by the [`-timeoutFactor`](#what-do-i-need-to-know-about-test-timeouts)
 option.
 
+### How do I run JDK jtreg tests using `make test` and the JDK makefile infrastructure
+
+This is described in detail in the file `doc/testing.md` in all recent
+versions of the main JDK repository.  You can see the latest version,
+in HTML, here:
+[Testing the JDK](https://htmlpreview.github.io/?https://raw.githubusercontent.com/openjdk/jdk/master/doc/testing.html).
+
 --------
 
 ## Writing a JDK Regression Test
