@@ -148,6 +148,10 @@ ifneq ($(SUPPORT_OLD_SOURCE_TARGET),)
     OLD_JAVAC_SOURCE_TARGET = -source 1.2 -target 1.1
     AGENT_JAVAC_SOURCE_TARGET = -source 5 -target 5
     TOOL_JAVAC_SOURCE_TARGET = -source 8 -target 8
+else
+    OLD_JAVAC_SOURCE_TARGET = -source 11 -target 11
+    AGENT_JAVAC_SOURCE_TARGET = -source 11 -target 11
+    TOOL_JAVAC_SOURCE_TARGET = -source 11 -target 11
 endif
 
 ifdef JDK15HOME
