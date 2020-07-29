@@ -63,8 +63,8 @@ $(BUILDDIR)/classes.com.sun.javatest.regtest.agent.ok: \
 ### The following files are for the jtreg and jtdiff tools
 
 JAVAFILES.com.sun.javatest.regtest-tools := \
-	$(shell $(FIND) $(JAVADIR)/com/sun/javatest/regtest -name agent -prune -o -name \*.java -print ) \
-	$(JAVADIR)/java/lang/JTRegModuleHelper.java
+	$(shell $(FIND) $(JAVADIR)/com/sun/javatest/regtest -name agent -prune -o -name \*.java -print )
+
 
 $(BUILDDIR)/classes.com.sun.javatest.regtest.ok: \
 		$(JAVAFILES.com.sun.javatest.regtest-tools) \
@@ -74,6 +74,12 @@ $(BUILDDIR)/classes.com.sun.javatest.regtest.ok: \
 		-d $(CLASSDIR) \
 		-encoding ISO8859-1 \
 		$(JAVAFILES.com.sun.javatest.regtest-tools)
+	CLASSPATH="$(CLASSDIR)$(PS)$(ANT_JAR)$(PS)$(JAVATEST_JAR)$(PS)$(JUNIT_JAR)$(PS)$(TESTNG_JAR)" \
+	    $(REGTEST_TOOL_JAVAC) $(REGTEST_TOOL_JAVAC_OPTIONS) \
+		-d $(CLASSDIR) \
+		-encoding ISO8859-1 \
+                --patch-module java.base=../src \
+		$(JAVADIR)/java/lang/JTRegModuleHelper.java
 	echo "classes built at `date`" > $@
 
 TARGETS.com.sun.javatest.regtest += $(BUILDDIR)/classes.com.sun.javatest.regtest.ok
@@ -93,7 +99,7 @@ RESOURCES.com.sun.javatest.regtest = \
 TARGETS.com.sun.javatest.regtest += $(RESOURCES.com.sun.javatest.regtest)
 
 #----------------------------------------------------------------------
-# 
+#
 # Misc. doc files
 
 JTREG_COPYRIGHT 	= $(JTREG_IMAGEDIR)/COPYRIGHT
@@ -135,7 +141,7 @@ $(JTREG_FAQ):   $(SRCJTREGDOCDIR)/faq.md \
 	    -e 's/…/\&hellip;/g' \
 	    -e 's/™/\&trade;/g' \
 	    -f  $(BUILDDIR)/fixupheader \
-	    > $(JTREG_FAQ)	
+	    > $(JTREG_FAQ)
 
 
 $(JTREG_README): $(SRCJTREGDOCDIR)/README
@@ -143,7 +149,7 @@ $(JTREG_README): $(SRCJTREGDOCDIR)/README
 	$(RM) $@
 	$(CP) $< $@
 
-$(JTREG_TAGSPEC): $(JTREG_IMAGEDIR)/doc/jtreg/%: $(SRCJTREGDOCDIR)/% 
+$(JTREG_TAGSPEC): $(JTREG_IMAGEDIR)/doc/jtreg/%: $(SRCJTREGDOCDIR)/%
 	$(RM) $@
 	$(MKDIR) -p $(@D)
 	$(CP) $^ $@
@@ -196,7 +202,7 @@ $(JTREG_IMAGEDIR)/doc/devapi/index.html: \
 		-subpackages com.sun.javatest.regtest \
                 -tag "implNote:a:Implementation Note:" \
                 $(JAVATEST_SRCFILES)
-		
+
 
 #----------------------------------------------------------------------
 #
@@ -227,7 +233,7 @@ $(JTREG_IMAGEJARDIR)/jtreg.jar: \
 
 ifdef JAVAHELP_JAR
 $(JTREG_IMAGEJARDIR)/jtreg.jar: \
-	$(JTREG_IMAGEJARDIR)/jh.jar 
+	$(JTREG_IMAGEJARDIR)/jh.jar
 endif
 
 TARGETS.ZIP.jtreg += $(JTREG_IMAGEJARDIR)/jtreg.jar
@@ -274,7 +280,7 @@ $(IMAGES_DIR)/%/jh.jar: $(call PosixPath,$(JAVAHELP_JAR))
 	$(ECHO) JAVAHELP_HOME $(JAVAHELP_HOME)
 	$(ECHO) JAVAHELP_JAR $(JAVAHELP_JAR)
 	$(CP) $(JAVAHELP_JAR) $@
-	-$(ZIP) -d $@ 'META-INF/*.SF' 'META-INF/*.RSA' 'META-INF/*.DSA' 
+	-$(ZIP) -d $@ 'META-INF/*.SF' 'META-INF/*.RSA' 'META-INF/*.DSA'
 
 ifdef JAVAHELP_JAR
     JTREG_IMAGE_JAVAHELP_JAR = $(JTREG_IMAGEDIR)/lib/jh.jar
@@ -328,7 +334,7 @@ endif
 
 $(JTREG_IMAGEDIR)/legal/testng/LICENSE: $(call PosixPath,$(TESTNG_LICENSE))
 	$(MKDIR) -p $(@D)
-	$(CP) $< $@ 
+	$(CP) $< $@
 
 ifdef TESTNG_LICENSE
     TARGETS.ZIP.jtreg += $(JTREG_IMAGEDIR)/legal/testng/LICENSE
@@ -392,7 +398,7 @@ endif
 #
 # executable scripts
 
-$(JTREG_IMAGEDIR)/bin/jtreg: $(SRCSHAREBINDIR)/jtreg.sh 
+$(JTREG_IMAGEDIR)/bin/jtreg: $(SRCSHAREBINDIR)/jtreg.sh
 	$(MKDIR) -p $(@D)
 	$(RM) $@
 	$(CP) $<  $@
@@ -434,5 +440,4 @@ VERBOSEZIPFILES += $(JTREG_ZIPFILES:%.zip=%-$(VERBOSE_ZIP_SUFFIX).zip)
 #JTREG_JAVA_OPTS = -Ddebug.com.sun.javatest.TestResultCache=98
 #JTREG_OPTS = 	$(JTREG_JAVA_OPTS:%=-J%)
 
-TESTS += $(TESTS.jtreg) 
-
+TESTS += $(TESTS.jtreg)

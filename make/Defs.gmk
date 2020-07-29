@@ -48,7 +48,7 @@ SYSTEM_UNAME := $(shell uname)
 ifeq ($(SYSTEM_UNAME), Windows_NT)
 DEV_NULL = NUL
 else
-DEV_NULL = /dev/null 
+DEV_NULL = /dev/null
 endif
 
 ifneq (,$(findstring CYGWIN,$(SYSTEM_UNAME)))
@@ -148,7 +148,7 @@ ifneq ($(SUPPORT_OLD_SOURCE_TARGET),)
     OLD_JAVAC_SOURCE_TARGET = -source 1.2 -target 1.1
     AGENT_JAVAC_SOURCE_TARGET = -source 5 -target 5
     TOOL_JAVAC_SOURCE_TARGET = -source 8 -target 8
-endif 
+endif
 
 ifdef JDK15HOME
     JDK15_BOOTCLASSPATH = -bootclasspath $(JDK15HOME)/jre/lib/rt.jar
@@ -160,17 +160,17 @@ endif
 # for files needed to run othervm tests on oldest supported platforms
 REGTEST_OLD_JAVAC = $(JDKHOME)/bin/javac
 REGTEST_OLD_JAVAC_OPTIONS = \
-	$(OLD_JAVAC_SOURCE_TARGET) $(JDK15_BOOTCLASSPATH) -Xlint:all,-options -Werror
+	$(OLD_JAVAC_SOURCE_TARGET) $(JDK15_BOOTCLASSPATH) -Xlint:all
 
 # for files needed to run agentvm tests (on platforms back to JDK 1.5)
 REGTEST_AGENT_JAVAC = $(JDKHOME)/bin/javac
 REGTEST_AGENT_JAVAC_OPTIONS = \
-	$(AGENT_JAVAC_SOURCE_TARGET) $(JDK15_BOOTCLASSPATH) -Xlint:all,-options -Werror
+	$(AGENT_JAVAC_SOURCE_TARGET) $(JDK15_BOOTCLASSPATH) -Xlint:all
 
 # for files needed for jtreg tool
 REGTEST_TOOL_JAVAC = $(JDKHOME)/bin/javac
 REGTEST_TOOL_JAVAC_OPTIONS = \
-	$(TOOL_JAVAC_SOURCE_TARGET) $(JDK18_BOOTCLASSPATH) -Xlint:all,-options -Werror
+	$(TOOL_JAVAC_SOURCE_TARGET) $(JDK18_BOOTCLASSPATH) -Xlint:all
 
 #----- JavaHelp
 #
@@ -199,14 +199,14 @@ JAVAHELP_JAR := $(call FullPath,$(JAVAHELP_JAR))
 # If not set explicitly, it defaults to values derived from JAVATEST_HOME,
 # JTHARNESS_HOME or SLASH_JAVA.
 # Set JTHARNESS_LICENSE and JTHARNESS_COPYRIGHT to include license and
-# copyright files in the product image. If not set explicitly, these 
+# copyright files in the product image. If not set explicitly, these
 # default to values derived from JAVATEST_HOME, JTHARNESS_HOME or SLASH_JAVA.
 
 ifndef JTHARNESS_HOME
   ifdef SLASHJAVA
     JTHARNESS_HOME = $(SLASHJAVA)/re/jtharness/6.0/promoted/latest/binaries/
   endif
-endif 
+endif
 
 ifndef JAVATEST_HOME
   ifdef JTHARNESS_HOME
@@ -237,14 +237,14 @@ JTHARNESS_COPYRIGHT := $(call FullPath,$(JTHARNESS_COPYRIGHT))
 
 #----- JCov 3.0:  https://wiki.openjdk.java.net/display/CodeTools/jcov
 #
-# JCov is optional. 
+# JCov is optional.
 # If provided, coverage-collection features in jtreg will be enabled.
 #
 # To include support for JCov, JCOV_JAR and JCOV_NETWORK_SAVER_JAR
 # must be set. If not set explicitly, these default to values derived
 # from JCOV_HOME or SLASH_JAVA.
 # Set JCOV_LICENSE to include the license file in the product image.
-# If not set explicitly, this defaults to a value derived from JCOV_HOME 
+# If not set explicitly, this defaults to a value derived from JCOV_HOME
 # or SLASH_JAVA.
 
 ifndef JCOV_HOME
@@ -285,7 +285,7 @@ JCOV = $(JDK16HOME)/bin/java -jar $(JCOV_JAR)
 # If not set explicitly, it defaults to a value derived from
 # ASMTOOLS_HOME or SLASHJAVA.
 # Set ASMTOOLS_LICENSE to include the license file in the product image.
-# If not set explicitly, this defaults to a value derived from 
+# If not set explicitly, this defaults to a value derived from
 # ASMTOOLS_HOME or SLASH_JAVA.
 
 ifndef ASMTOOLS_HOME
@@ -313,7 +313,7 @@ ASMTOOLS_LICENSE := $(call FullPath,$(ASMTOOLS_LICENSE))
 # If not set explicitly, it defaults to a value derived from
 # JUNIT_HOME or SLASHJAVA.
 # Set JUNIT_LICENSE to include the license file in the product image.
-# If not set explicitly, this defaults to a value derived from 
+# If not set explicitly, this defaults to a value derived from
 # JUNIT_HOME or SLASH_JAVA.
 
 ifndef JUNIT_HOME
@@ -345,7 +345,7 @@ JUNIT_LICENSE := $(call FullPath,$(JUNIT_LICENSE))
 # If not set explicitly, it defaults to a value derived from
 # TESTNG_HOME or SLASHJAVA.
 # Set TESTNG_LICENSE to include the license file in the product image.
-# If not set explicitly, this defaults to a value derived from 
+# If not set explicitly, this defaults to a value derived from
 # TESTNG_HOME or SLASH_JAVA.
 
 ifndef TESTNG_HOME
@@ -474,8 +474,8 @@ BUILD_NUMBER = b00
 BUILD_YEAR_CMD = /bin/date '+%Y'
 #BUILD_DOCDATE:sh = /bin/date +"%B %d, %Y"
 BUILD_DOCDATE_CMD = /bin/date  +'%B %d, %Y'
-#BUILD_ZIPDATE:sh = /bin/date '+%d %h %Y' 
-BUILD_ZIPDATE_CMD = /bin/date  '+%d %h %Y' 
+#BUILD_ZIPDATE:sh = /bin/date '+%d %h %Y'
+BUILD_ZIPDATE_CMD = /bin/date  '+%d %h %Y'
 BUILD_NONFCS_MILESTONE_sh = echo $(BUILD_MILESTONE) | sed -e 's/[fF][cC][sS]//'
 BUILD_NONFCS_MILESTONE = $(BUILD_NONFCS_MILESTONE_sh:sh)
 
@@ -486,4 +486,3 @@ ZIPSFX_BUILD_sh = echo '$(BUILD_NUMBER)'
 ZIPSFX_DATE_sh = echo "`$(BUILD_ZIPDATE_CMD)`" | /usr/bin/tr -s '[A-Z] ' '[a-z]_'
 
 VERBOSE_ZIP_SUFFIX = $(shell $(ZIPSFX_VERSION_sh))-$(shell $(ZIPSFX_MILESTONE_sh))-bin-$(shell $(ZIPSFX_BUILD_sh))-$(shell $(ZIPSFX_DATE_sh))
-

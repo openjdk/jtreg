@@ -45,10 +45,10 @@ fi
 
 JAVA_VERSION=$($1/bin/java -version 2>&1 | grep "^.* version \".*\"$" | sed 's/.*\"\(.*\)\".*/\1/')
 
-if case ${JAVA_VERSION} in 1.8*) false ;; *) true; esac; then
-    echo "Error: Expected a path to JDK with version 1.8, got version ${JAVA_VERSION}" >&2
-    exit 1
-fi
+#if case ${JAVA_VERSION} in 1.8*) false ;; *) true; esac; then
+#    echo "Error: Expected a path to JDK with version 1.8, got version ${JAVA_VERSION}" >&2
+#    exit 1
+#fi
 
 case `uname` in CYGWIN*) CYGWIN=1 ;; *) CYGWIN=0 ;; esac
 
@@ -65,7 +65,7 @@ get_scm_type() {
         echo "HG"
     elif [ -d .git ]; then
         echo "GIT"
-    else 
+    else
         echo "Error: unrecognized repository, it must be Git or Mercurial" >&2
         exit 1
     fi
