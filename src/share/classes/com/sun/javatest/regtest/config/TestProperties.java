@@ -159,6 +159,10 @@ public class TestProperties {
         return getEntry(file).allowSmartActionArgs;
     }
 
+    boolean getEnablePreview(File file) {
+        return getEntry(file).enablePreview;
+    }
+
     private Cache.Entry getEntry(File file) {
         File dir = file.isDirectory() ? file : file.getParentFile();
         return cache.getEntry(dir);
@@ -206,6 +210,7 @@ public class TestProperties {
             final Set<String> modules;
             final int maxOutputSize;
             final boolean allowSmartActionArgs;
+            final boolean enablePreview;
 
             Entry(Entry parent, File dir) {
                 this.parent = parent;
@@ -255,6 +260,9 @@ public class TestProperties {
 
                     // determine whether tests can use "smart action args"
                     allowSmartActionArgs = initAllowSmartActionArgs(parent);
+
+                    // determine whether tests use preview features, and so require --enable-preview option
+                    enablePreview = initEnablePreview(parent);
                 } else {
                     if (parent == null)
                         throw new IllegalStateException("TEST.ROOT not found");
@@ -271,6 +279,7 @@ public class TestProperties {
                     modules = parent.modules;
                     maxOutputSize = parent.maxOutputSize;
                     allowSmartActionArgs = parent.allowSmartActionArgs;
+                    enablePreview = parent.enablePreview;
                 }
 
                 useBootClassPath= initUseBootClassPath(parent, dir);
@@ -441,6 +450,18 @@ public class TestProperties {
                 String rv = properties.getProperty("requiredVersion");
                 if (rv != null) {
                     return new Version(rv).compareTo(new Version("4.2 b14")) >= 0;
+                }
+
+                return false;
+            }
+
+            private boolean initEnablePreview(Entry parent) {
+                if (properties.containsKey("enablePreview")) {
+                    return properties.getProperty("enablePreview").equals("true");
+                }
+
+                if (parent != null) {
+                    return parent.enablePreview;
                 }
 
                 return false;

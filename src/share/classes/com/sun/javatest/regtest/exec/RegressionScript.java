@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -50,6 +50,8 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
+import java.util.stream.Collectors;
 
 import com.sun.javatest.Script;
 import com.sun.javatest.Status;
@@ -424,6 +426,11 @@ public class RegressionScript extends Script {
 
     }
 
+    boolean enablePreview() {
+        String ep = td.getParameter("enablePreview");
+        return ep != null && ep.equals("true");
+    }
+
     private List<String> processArgs(List<String> args, Expr.Context c, Map<String,String> testProps)
             throws TestSuite.Fault, Expr.Fault, ParseException {
         if (!testSuite.getAllowSmartActionArgs(td))
@@ -664,6 +671,13 @@ public class RegressionScript extends Script {
     }
 
     /**
+     * Returns the version of jtreg required by this test suite.
+     */
+    Version getRequiredVersion() {
+        return params.getTestSuite().getRequiredVersion();
+    }
+
+    /**
      * Get content of @modules.
      */
     Modules getModules() {
@@ -674,6 +688,15 @@ public class RegressionScript extends Script {
         try {
             return testSuite.getLibBuildArgs(td);
         } catch (TestSuite.Fault e) {
+            throw new TestRunException(e.getMessage(), e);
+        }
+    }
+
+    Pattern getIgnoreRefLinesPattern() throws TestRunException {
+        try {
+            return params.getRefIgnoreLinesPattern();
+        } catch (PatternSyntaxException e) {
+            // this exception will only occur at most once per test run
             throw new TestRunException(e.getMessage(), e);
         }
     }
@@ -1095,35 +1118,26 @@ public class RegressionScript extends Script {
     // Get the standard properties to be set for tests
 
     Map<String, String> getTestProperties()  {
-        Map<String, String> p = new LinkedHashMap<>();
-        // The following will be added to javac.class.path on the test JVM
-        switch (getExecMode()) {
-            case AGENTVM:
-                SearchPath path = new SearchPath()
-                    .append(locations.absTestClsDir())
-                    .append(locations.absTestSrcDir())
-                    .append(locations.absLibClsList(LibLocn.Kind.PACKAGE))
-                    .append(locations.absLibSrcJarList());
-                p.put("test.class.path.prefix", path.toString());
-        }
+        // initialize the properties with standard properties common to all tests
+        Map<String, String> p = new LinkedHashMap<>(params.getBasicTestProperties());
+        // add test-specific properties
+        p.put("test.name", testResult.getTestName());
         p.put("test.file", locations.absTestFile().getPath());
         p.put("test.src", locations.absTestSrcDir().getPath());
         p.put("test.src.path", toString(locations.absTestSrcPath()));
         p.put("test.classes", locations.absTestClsDir().getPath());
         p.put("test.class.path", toString(locations.absTestClsPath()));
-        p.put("test.vm.opts", StringUtils.join(getTestVMOptions(), " "));
-        p.put("test.tool.vm.opts", StringUtils.join(getTestToolVMOptions(), " "));
-        p.put("test.compiler.opts", StringUtils.join(getTestCompilerOptions(), " "));
-        p.put("test.java.opts", StringUtils.join(getTestJavaOptions(), " "));
-        p.put("test.jdk", getTestJDK().getAbsolutePath());
-        p.put("compile.jdk", getCompileJDK().getAbsolutePath());
-        p.put("test.timeout.factor", String.valueOf(getTimeoutFactor()));
-        p.put("test.root", getTestRootDir().getPath());
+        if (getExecMode() == ExecMode.AGENTVM) {
+            // The following will be added to javac.class.path on the test VM
+            SearchPath path = new SearchPath()
+                    .append(locations.absTestClsDir())
+                    .append(locations.absTestSrcDir())
+                    .append(locations.absLibClsList(LibLocn.Kind.PACKAGE))
+                    .append(locations.absLibSrcJarList());
+            p.put("test.class.path.prefix", path.toString());
+        }
         if (!modules.isEmpty())
             p.put("test.modules", modules.toString());
-        File nativeDir = getNativeDir();
-        if (nativeDir != null)
-            p.put("test.nativepath", nativeDir.getAbsolutePath());
         if (usePatchModules()) {
             SearchPath pp = new SearchPath();
             pp.append(locations.absLibClsList(LibLocn.Kind.SYS_MODULE));
@@ -1138,12 +1152,9 @@ public class RegressionScript extends Script {
     }
     // where
     private String toString(List<File> files) {
-        StringBuilder sb = new StringBuilder();
-        for (File f: files) {
-            if (sb.length() > 0) sb.append(File.pathSeparator);
-            sb.append(f.getPath());
-        }
-        return sb.toString();
+        return files.stream()
+                .map(File::getPath)
+                .collect(Collectors.joining(File.pathSeparator));
     }
 
     File getTestRootDir() {
@@ -1170,8 +1181,9 @@ public class RegressionScript extends Script {
          * record the agents that the script has already obtained for use.
          */
         for (Agent agent: agents) {
-            if (agent.matches(absTestScratchDir(), jdk, vmOpts.toList()))
+            if (agent.matches(absTestScratchDir(), jdk, vmOpts.toList())) {
                 return agent;
+            }
         }
 
         Map<String, String> envVars = new HashMap<>();
@@ -1183,7 +1195,7 @@ public class RegressionScript extends Script {
         SearchPath cp = new SearchPath().append(jdk.getJDKClassPath()).append(getJavaTestClassPath());
         envVars.put("CLASSPATH", cp.toString());
 
-        Agent.Pool p = Agent.Pool.instance();
+        Agent.Pool p = Agent.Pool.instance(params);
         Agent agent = p.getAgent(absTestScratchDir(), jdk, vmOpts.toList(), envVars);
         agents.add(agent);
         return agent;
@@ -1213,9 +1225,11 @@ public class RegressionScript extends Script {
      * The agents are made available for future reuse.
      */
     void releaseAgents() {
-        Agent.Pool pool = Agent.Pool.instance();
-        for (Agent agent: agents) {
-            pool.save(agent);
+        if (!agents.isEmpty()) {
+            Agent.Pool pool = Agent.Pool.instance(params);
+            for (Agent agent: agents) {
+                pool.save(agent);
+            }
         }
     }
 

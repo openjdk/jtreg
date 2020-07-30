@@ -36,12 +36,12 @@ $(BUILDDIR)/CompileTest.1.othervm.ok: \
 	JT_JAVA=$(JDKHOME) \
 		$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-compilejdk:$(JDK15HOME) \
+		-compilejdk:$(JDK5HOME) \
 		-jdk:$(BUILDDIR)/not-a-jdk \
 		$(@:$(BUILDDIR)/CompileTest.1.%.ok=-%) \
 		$(TESTDIR)/compilejdk/CompileTest.java
-	grep $(JDK15HOME) $(@:%.ok=%)/work/CompileTest.jtr
-	if grep $(JDK16HOME) $(@:%.ok=%)/work/CompileTest.jtr ; then exit 1; fi
+	grep $(JDK5HOME) $(@:%.ok=%)/work/CompileTest.jtr
+	if grep $(JDKHOME) $(@:%.ok=%)/work/CompileTest.jtr ; then exit 1; fi
 	echo "test passed at `date`" > $@
 
 # Precompile test classes, then test @run main with -testjdk, use not-a-jdk for -compilejdk
@@ -54,7 +54,7 @@ $(BUILDDIR)/CompileTest.2.othervm.ok: \
 	JTREG_SHOWAGENT=true JTREG_SHOWCMD=true \
 	JT_JAVA=$(JDKHOME) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(JDK15HOME) \
+		-jdk:$(JDK5HOME) \
 		$(@:$(BUILDDIR)/CompileTest.2.%.ok=-%) \
 		$(TESTDIR)/compilejdk/ExecuteTest.java
 	JTREG_SHOWAGENT=true JTREG_SHOWCMD=true \
@@ -62,11 +62,11 @@ $(BUILDDIR)/CompileTest.2.othervm.ok: \
 		$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-compilejdk:$(BUILDDIR)/not-a-jdk \
-		-jdk:$(JDK15HOME) \
+		-jdk:$(JDK5HOME) \
 		$(@:$(BUILDDIR)/CompileTest.2.%.ok=-%) \
 		$(TESTDIR)/compilejdk/ExecuteTest.java
-	grep $(JDK15HOME) $(@:%.ok=%)/work/ExecuteTest.jtr
-	if grep $(JDK16HOME) $(@:%.ok=%)/work/ExecuteTest.jtr ; then exit 1; fi
+	grep $(JDK5HOME) $(@:%.ok=%)/work/ExecuteTest.jtr
+	if grep $(JDKHOME) $(@:%.ok=%)/work/ExecuteTest.jtr ; then exit 1; fi
 	echo "test passed at `date`" > $@
 
 # Test compilation on JDK, execution on just-java (JRE lookalike)
@@ -80,7 +80,7 @@ $(BUILDDIR)/CompileTest.3.othervm.ok: \
 	JT_JAVA=$(JDKHOME) \
 		$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-compilejdk:$(JDK15HOME) \
+		-compilejdk:$(JDK5HOME) \
 		-jdk:$(BUILDDIR)/just-java \
 		$(@:$(BUILDDIR)/CompileTest.3.%.ok=-%) \
 		$(TESTDIR)/compilejdk/ExecuteTest.java
@@ -97,8 +97,8 @@ $(BUILDDIR)/CompileTest.4.othervm.ok: \
 	JT_JAVA=$(JDKHOME) \
 		$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-compilejdk:$(JDK15HOME) \
-		-jdk:$(JDK16HOME) \
+		-compilejdk:$(JDK5HOME) \
+		-jdk:$(JDK6HOME) \
 		$(@:$(BUILDDIR)/CompileTest.4.%.ok=-%) \
 		$(TESTDIR)/compilejdk/ToolsJarTest.java
 	echo "test passed at `date`" > $@
@@ -111,11 +111,11 @@ $(BUILDDIR)/CompileTest.5.ok: \
 	JT_JAVA=$(JDKHOME) \
 		$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-compilejdk:$(JDK15HOME) \
-		-jdk:$(JDK16HOME) \
+		-compilejdk:$(JDK5HOME) \
+		-jdk:$(JDK6HOME) \
 		$(TESTDIR)/compilejdk/ShellTest.sh
-	fgrep 'COMPILEJAVA=$(JDK15HOME)' $(@:%.ok=%)/work/ShellTest.jtr
-	fgrep 'TESTJAVA=$(JDK16HOME)' $(@:%.ok=%)/work/ShellTest.jtr
+	fgrep 'COMPILEJAVA=$(JDK5HOME)' $(@:%.ok=%)/work/ShellTest.jtr
+	fgrep 'TESTJAVA=$(JDK6HOME)' $(@:%.ok=%)/work/ShellTest.jtr
 	echo "test passed at `date`" > $@
 
 # Invalid JDK, to trap unexpected use; suitable for -version, not much else
@@ -133,11 +133,11 @@ $(BUILDDIR)/not-a-jdk/bin/java:
 # Just Java, no javac
 $(BUILDDIR)/just-java/bin/java:
 	mkdir -p $(@D)
-	echo '$(JDK16HOME)/bin/java $$*' > $@
+	echo '$(JDK6HOME)/bin/java $$*' > $@
 	chmod +x $@
 
 ifneq ($(OS_NAME), windows)
-ifdef JDK15HOME
+ifdef JDK5HOME
 TESTS.jtreg += \
 	$(BUILDDIR)/CompileTest.1.agentvm.ok \
 	$(BUILDDIR)/CompileTest.1.othervm.ok \

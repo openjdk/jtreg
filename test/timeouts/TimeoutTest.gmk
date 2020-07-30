@@ -71,7 +71,7 @@ $(BUILDDIR)/TimeoutTest.othervm.ok: \
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(JDK16HOME) \
+		-jdk:$(JDK6HOME) \
 		-va \
 		$(@:$(BUILDDIR)/TimeoutTest.%.ok=-%) \
 		$(TESTDIR)/timeouts/test  \

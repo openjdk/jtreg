@@ -46,6 +46,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.text.DateFormat;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -55,9 +56,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 import java.util.regex.Pattern;
 
 import javax.swing.Timer;
@@ -181,12 +185,14 @@ public class Tool {
      * Call System.exit, taking care to get permission from the
      * JavaTestSecurityManager, if it is installed.
      */
+    @SuppressWarnings("static")
     private static void exit(int exitCode) {
         // If our security manager is installed, it won't allow a call of
         // System.exit unless we ask it nicely, pretty please, thank you.
         SecurityManager sc = System.getSecurityManager();
-        if (sc instanceof JavaTestSecurityManager)
+        if (sc instanceof JavaTestSecurityManager) {
             ((JavaTestSecurityManager) sc).setAllowExit(true);
+        }
         System.exit(exitCode);
     }
 
@@ -207,6 +213,7 @@ public class Tool {
     public static final String VERBOSE = "verbose";     // verbose controls
     public static final String DOC = "doc";             // help or doc info
     public static final String TIMEOUT = "timeout";     // timeout-related options
+    public static final String AGENT_POOL = "pool";     // agent pool related options
 
     public List<Option> options = Arrays.asList(new Option(OPT, VERBOSE, "verbose", "-v", "-verbose") {
             @Override
@@ -295,7 +302,7 @@ public class Tool {
         new Option(OPT, MAIN, "", "-retain") {
             @Override
             public String[] getChoices() {
-                return new String[] { "none", "pass", "fail", "error", "all", "file-pattern" };
+                return new String[] { "none", "lastRun", "pass", "fail", "error", "all", "file-pattern" };
             }
             @Override
             public void process(String opt, String arg) throws BadArgs {
@@ -307,6 +314,9 @@ public class Tool {
                     retainArgs = Arrays.asList(arg.split(","));
                 if (retainArgs.contains("none") && retainArgs.size() > 1) {
                     throw new BadArgs(i18n, "main.badRetainNone", arg);
+                }
+                if (retainArgs.contains("lastRun") && retainArgs.size() > 1) {
+                    throw new BadArgs(i18n, "main.badRetainLastRun", arg);
                 }
             }
         },
@@ -384,6 +394,30 @@ public class Tool {
             @Override
             public void process(String opt, String arg) {
                 timeLimitArg = arg;
+            }
+        },
+
+        new Option(GNU, AGENT_POOL, null, "--max-pool-size") {
+            @Override
+            public void process(String opt, String arg) throws BadArgs {
+                try {
+                    maxPoolSize = Integer.parseInt(arg);
+                } catch (NumberFormatException e) {
+                    throw new BadArgs(i18n, "main.badMaxPoolSize", arg);
+                }
+            }
+
+        },
+
+        new Option(GNU, AGENT_POOL, null, "--pool-idle-timeout") {
+            @Override
+            public void process(String opt, String arg) throws BadArgs {
+                try {
+                    poolIdleTimeout = Duration.ofMillis((long) (1000 * Float.parseFloat(arg)));
+                } catch (NumberFormatException e) {
+                    throw new BadArgs(i18n, "main.badPoolIdleTimeout", arg);
+                }
+
             }
         },
 
@@ -1002,7 +1036,24 @@ public class Tool {
 
         help = new Help(options);
         if (javatest_jar != null) {
-            help.addJarVersionHelper("JTHarness", javatest_jar, "META-INF/buildInfo.txt");
+            help.addVersionHelper(o -> {
+                try (JarFile jf = new JarFile(javatest_jar)) {
+                    JarEntry e = jf.getJarEntry("META-INF/buildInfo.txt");
+                    if (e != null) {
+                        try (InputStream in = jf.getInputStream(e)) {
+                            Properties p = new Properties();
+                            p.load(in);
+                            String v = p.getProperty("version");
+                            String s = "JT Harness" + ", version " + v
+                                    + " " + p.getProperty("milestone")
+                                    + " " + p.getProperty("build")
+                                    + " (" + p.getProperty("date") + ")";
+                            o.println(s);
+                        }
+                    }
+                } catch (IOException e) {
+                }
+            });
         }
         if (jcovManager != null && jcovManager.isJCovInstalled()) {
             help.addVersionHelper(new VersionHelper() {
@@ -1224,30 +1275,6 @@ public class Tool {
             }
         }
 
-        if (allowSetSecurityManagerFlag) {
-            switch (execMode) {
-                case AGENTVM:
-                    initPolicyFile();
-                    Agent.Pool p = Agent.Pool.instance();
-                    p.setSecurityPolicy(policyFile);
-                    if (timeoutFactorArg != null) {
-                        p.setTimeoutFactor(timeoutFactorArg);
-                    }
-                    if (!(mainWrapper == null) && !mainWrapper.isEmpty()) {
-                        p.setMainWrapper(mainWrapper);
-                        testVMOpts.add("-D" + MainWrapper.MAIN_WRAPPER + "=" + mainWrapper);
-                    }
-                    break;
-                case OTHERVM:
-                    if (!(mainWrapper == null) && !mainWrapper.isEmpty()) {
-                        testVMOpts.add("-D" + MainWrapper.MAIN_WRAPPER + "=" + mainWrapper);
-                    }
-                    break;
-                default:
-                    throw new AssertionError();
-            }
-        }
-
         if (jcovManager.isEnabled()) {
             jcovManager.setTestJDK(testJDK);
             jcovManager.setWorkDir(getNormalizedFile(workDirArg));
@@ -1315,6 +1342,41 @@ public class Tool {
                     foundEmptyGroup = true;
 
                 checkLockFiles(params.getWorkDirectory().getRoot(), "start");
+
+                switch (execMode) {
+                    case AGENTVM:
+                        Agent.Pool p = Agent.Pool.instance(params);
+                        if (allowSetSecurityManagerFlag) {
+                            initPolicyFile();
+                            p.setSecurityPolicy(policyFile);
+                        }
+                        if (timeoutFactorArg != null) {
+                            p.setTimeoutFactor(timeoutFactorArg);
+                        }
+                        if (maxPoolSize == -1) {
+                            // The default max pool size depends on the concurrency
+                            // and whether there are additional VM options to be set
+                            // when executing tests, as compared to when compiling tests.
+                            // Also, the classpath for compile actions is typically
+                            // different for compile actions and main actions.
+                            int factor = 2; // (testJavaOpts.isEmpty() ? 1 : 2);
+                            maxPoolSize = params.getConcurrency() * factor;
+                        }
+                        p.setMaxPoolSize(maxPoolSize);
+                        p.setIdleTimeout(poolIdleTimeout);
+                        if (!(mainWrapper == null) && !mainWrapper.isEmpty()) {
+                            p.setMainWrapper(mainWrapper);
+                            testVMOpts.add("-D" + MainWrapper.MAIN_WRAPPER + "=" + mainWrapper);
+                        }
+                        break;
+                    case OTHERVM:
+                        if (!(mainWrapper == null) && !mainWrapper.isEmpty()) {
+                            testVMOpts.add("-D" + MainWrapper.MAIN_WRAPPER + "=" + mainWrapper);
+                        }
+                        break;
+                    default:
+                        throw new AssertionError();
+                }
 
                 // Before we install our own security manager (which will restrict access
                 // to the system properties), take a copy of the system properties.
@@ -1607,7 +1669,26 @@ public class Tool {
                 .classes("org.openjdk.asmtools.Main")
                 .libDir(libDir)
                 .getPath();
-        help.addPathVersionHelper("AsmTools", asmtoolsPath);
+        help.addVersionHelper(out -> {
+            for (File f : asmtoolsPath.asList()) {
+                try (JarFile jf = new JarFile(f)) {
+                    JarEntry e = jf.getJarEntry("org/openjdk/asmtools/util/productinfo.properties");
+                    if (e != null) {
+                        try (InputStream in = jf.getInputStream(e)) {
+                            Properties p = new Properties();
+                            p.load(in);
+                            String v = p.getProperty("PRODUCT_VERSION");
+                            String s = p.getProperty("PRODUCT_NAME_LONG") + ", version " + v
+                                    + " " + p.getProperty("PRODUCT_MILESTONE")
+                                    + " " + p.getProperty("PRODUCT_BUILDNUMBER")
+                                    + " (" + p.getProperty("PRODUCT_DATE") + ")";
+                            out.println(s);
+                        }
+                    }
+                } catch (IOException e) {
+                }
+            }
+        });
     }
 
     void initPolicyFile() throws Fault {
@@ -1953,10 +2034,22 @@ public class Tool {
                     initModuleHelper(params.getWorkDirectory());
                 }
 
+                File versionFile = params.getWorkDirectory().getSystemFile("jtreg.version");
+                try (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(versionFile)))) {
+                    help.showVersion(out);
+                } catch (IOException e) {
+                    err.println(i18n.getString("main.errorReportingVersion", e));
+                }
+
                 String[] tests = params.getTests();
                 ok = (tests != null && tests.length == 0) || h.batch(params);
 
-                Agent.Pool.instance().flush();
+                Agent.Pool.flush(params);
+                try {
+                    Agent.Logger.close(params);
+                } catch (IOException e) {
+                    err.println(i18n.getString("main.errorClosingAgentLog", e));
+                }
                 Lock.get(params).close();
             }
 
@@ -2317,6 +2410,8 @@ public class Tool {
     private String timeoutHandlerClassName;
     private List<File> timeoutHandlerPathArg;
     private long timeoutHandlerTimeoutArg = -1; // -1: default; 0: no timeout; >0: timeout in seconds
+    private int maxPoolSize = -1;
+    private Duration poolIdleTimeout = Duration.ofSeconds(30);
     private List<String> testCompilerOpts = new ArrayList<>();
     private List<String> testJavaOpts = new ArrayList<>();
     private List<String> testVMOpts = new ArrayList<>();

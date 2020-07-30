@@ -25,13 +25,13 @@
 
 package com.sun.javatest.regtest.exec;
 
-import com.sun.javatest.regtest.util.ProcessUtils;
 
 import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -40,22 +40,30 @@ import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.text.SimpleDateFormat;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
+import java.util.WeakHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import com.sun.javatest.Status;
 import com.sun.javatest.TestResult;
+import com.sun.javatest.WorkDirectory;
 import com.sun.javatest.regtest.TimeoutHandler;
 import com.sun.javatest.regtest.agent.ActionHelper;
 import com.sun.javatest.regtest.agent.AgentServer;
@@ -63,10 +71,12 @@ import com.sun.javatest.regtest.agent.Alarm;
 import com.sun.javatest.regtest.agent.Flags;
 import com.sun.javatest.regtest.agent.SearchPath;
 import com.sun.javatest.regtest.config.JDK;
+import com.sun.javatest.regtest.config.RegressionParameters;
+import com.sun.javatest.regtest.util.ProcessUtils;
 import com.sun.javatest.regtest.util.StringUtils;
 
-import static com.sun.javatest.regtest.agent.AgentServer.*;
 import static com.sun.javatest.regtest.RStatus.createStatus;
+import static com.sun.javatest.regtest.agent.AgentServer.*;
 
 public class Agent {
     public static class Fault extends Exception {
@@ -76,6 +86,8 @@ public class Agent {
         }
     }
 
+    // legacy support for logging to stderr
+    // showAgent is superseded by always-on log to file
     static final boolean showAgent = Flags.get("showAgent");
     static final boolean traceAgent = Flags.get("traceAgent");
 
@@ -83,12 +95,13 @@ public class Agent {
      * Start a JDK with given JVM options.
      */
     private Agent(File dir, JDK jdk, List<String> vmOpts, Map<String, String> envVars,
-            File policyFile, float timeoutFactor, String mainWrapper) throws Fault {
+            File policyFile, float timeoutFactor, Logger logger, String mainWrapper) throws Fault {
         try {
-            id = count++;
+            id = ++count;
             this.jdk = jdk;
-            this.scratchDir = dir;
+            this.execDir = dir;
             this.vmOpts = vmOpts;
+            this.logger = logger;
 
             List<String> cmd = new ArrayList<>();
             cmd.add(jdk.getJavaProg().getPath());
@@ -96,6 +109,12 @@ public class Agent {
             if (policyFile != null)
                 cmd.add("-Djava.security.policy=" + policyFile.toURI());
             cmd.add(AgentServer.class.getName());
+
+            cmd.add(AgentServer.ID);
+            cmd.add(String.valueOf(id));
+            cmd.add(AgentServer.LOGFILE);
+            cmd.add(logger.getAgentServerLogFile(id).getPath());
+
             if (policyFile != null)
                 cmd.add(AgentServer.ALLOW_SET_SECURITY_MANAGER);
 
@@ -117,8 +136,7 @@ public class Agent {
                 cmd.add(AgentServer.MAINWRAPPER);
                 cmd.add(String.valueOf(mainWrapper));
             }
-
-            show("Started " + cmd);
+            log("Started " + cmd);
 
             ProcessBuilder pb = new ProcessBuilder(cmd);
             pb.directory(dir);
@@ -126,8 +144,8 @@ public class Agent {
             env.clear();
             env.putAll(envVars);
             process = pb.start();
-            copyStream("stdout", process.getInputStream(), System.out);
-            copyStream("stderr", process.getErrorStream(), System.err);
+            copyAgentProcessStream("stdout", process.getInputStream());
+            copyAgentProcessStream("stderr", process.getErrorStream());
 
             try {
                 final int ACCEPT_TIMEOUT = (int) (60 * 1000 * timeoutFactor);
@@ -149,17 +167,23 @@ public class Agent {
         }
     }
 
-    void copyStream(final String name, final InputStream in, final PrintStream out) {
-        // Read a stream from the process and echo it to the local output.
-        // TODO?: allow a script to temporarily claim an agent so that output
-        // can be directed to the script's .jtr file?
+    /**
+     * Reads the output written by an agent process, and copies it either to
+     * the current TestResult object (when one is available) or to the agent's
+     * log file, if output is found while there is no test using the agent.
+     *
+     * @param name the name of the stream
+     * @param in   the stream
+     */
+    void copyAgentProcessStream(final String name, final InputStream in) {
         Thread t = new Thread() {
             @Override
             public void run() {
                 try (BufferedReader inReader = new BufferedReader(new InputStreamReader(in))) {
                     String line;
-                    while ((line = inReader.readLine()) != null)
-                        log(name + ": " + line, out);
+                    while ((line = inReader.readLine()) != null) {
+                        handleProcessStreamLine(name, line);
+                    }
                 } catch (IOException e) {
                     // ignore
                 }
@@ -169,8 +193,68 @@ public class Agent {
         t.start();
     }
 
-    public boolean matches(File scratchDir, JDK jdk, List<String> vmOpts) {
-        return scratchDir.getName().equals(this.scratchDir.getName()) && this.jdk.equals(jdk) && this.vmOpts.equals(vmOpts);
+    /**
+     * This field is set during doAction, and when set, any output received
+     * from the agent process on stdout (fd1) and stderr (fd2) will be written
+     * to the appropriate block in the current test result section.
+     * Any data received from the agent when this is not set is written to the
+     * agent log file.
+     */
+    private TestResult.Section currentTestResultSection;
+
+    /**
+     * A map of the currently open writers for process streams capturing
+     * output written by the agent on stdout (fd0) and stderr (fd1).
+     */
+    private Map<String, PrintWriter> processStreamWriters = new HashMap<>();
+
+    /**
+     * Starts or stops capturing output written by the agent on stdout (fd1) and stderr (fd2)
+     * into the given test result section.
+     *
+     * If the given section is not {code null}, output written by the agent will
+     * be recorded in blocks in the given section.
+     * If the given section is {@code null}, output written by the agent will
+     * be recorded in the agent's log file.
+     *
+     * It is expected that this method will be used to set a non-null section
+     * for the duration of an ac tion (see doAction), so that output written
+     * by the agent during that time will be recorded in the appropriate test
+     * result section.
+     *
+     * @param section the test result section to be used, or {@code null}
+     */
+    private synchronized void captureProcessStreams(TestResult.Section section) {
+        currentTestResultSection = section;
+        if (currentTestResultSection == null) {
+            for (PrintWriter pw : processStreamWriters.values()) {
+                pw.close();
+            }
+            processStreamWriters.clear();
+        }
+    }
+
+    /**
+     * Saves a line of output that was written by the agent to stdout (fd1) or stderr (fd2).
+     * If there is a current test result section, the line is saved there;
+     * otherwise it is written to the agent log file.
+     *
+     * @param name the name of the stream from which the line was read
+     * @param line the line that was read
+     */
+    private synchronized void handleProcessStreamLine(String name, String line) {
+        if (currentTestResultSection == null) {
+            log(name + ": " + line);
+        } else {
+            processStreamWriters.computeIfAbsent(name, currentTestResultSection::createOutput)
+                    .println(line);
+        }
+    }
+
+    public boolean matches(File execDir, JDK jdk, List<String> vmOpts) {
+        return this.execDir.getName().equals(execDir.getName())
+                && this.jdk.equals(jdk)
+                && this.vmOpts.equals(vmOpts);
     }
 
     public Status doCompileAction(
@@ -268,6 +352,7 @@ public class Agent {
         }
         keepAlive.setEnabled(false);
         try {
+            captureProcessStreams(trs);
             synchronized (out) {
                 agentAction.send();
             }
@@ -277,6 +362,7 @@ public class Agent {
             trace(actionName + ":  error " + e);
             throw new Fault(e);
         } finally {
+            captureProcessStreams(null);
             alarm.cancel();
             keepAlive.setEnabled(true);
             if (alarm.didFire()) {
@@ -336,7 +422,7 @@ public class Agent {
     }
 
     public void close() {
-        show("Closing...");
+        log("Closing...");
 
         keepAlive.finished();
 
@@ -355,7 +441,7 @@ public class Agent {
             if (rc != 0)
                 trace("Exited, process exit code: " + rc);
         } catch (InterruptedException e) {
-            trace("Interrupted while closing");
+            log("Interrupted while closing");
             log("Killing process");
             ProcessUtils.destroyForcibly(process);
         } finally {
@@ -363,7 +449,7 @@ public class Agent {
             Thread.interrupted(); // clear any interrupted status
         }
 
-        show("Closed");
+        log("Closed");
     }
 
     void writeCollection(Collection<String> c) throws IOException {
@@ -441,64 +527,172 @@ public class Agent {
         throw new EOFException("unexpected EOF");
     }
 
+    /**
+     * Returns the id for this agent.
+     * The id is just a small strictly-positive integer, allocated from 1 on up.
+     * The id is used to identify the agent in logging messages.
+     *
+     * @return the id
+     */
     public int getId() {
         return id;
     }
 
-    // 2016-12-21 13:19:46,998
-    private static final SimpleDateFormat logDateFormat = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss,SSS");
-
-    private void log(String s, PrintStream out) {
-        out.println("[" + logDateFormat.format(new Date()) + "] Agent[" + getId() + "]: " + s);
-    }
-
-    private void log(String s) {
-        log(s, System.err);
+    /**
+     * Logs a message to the log file managed by the logger.
+     *
+     * @param message the message
+     */
+    private void log(String message) {
+        logger.log(this, message);
+        show(message);
     }
 
     private void show(String s) {
         if (showAgent || traceAgent) {
-            log(s);
+            log(s, System.err);
         }
     }
 
     private void trace(String s) {
         if (traceAgent) {
-            log(s);
+            log(s, System.err);
         }
+    }
+
+    // legacy show/trace support
+    private void log(String message, PrintStream out) {
+        out.println("[" + AgentServer.logDateFormat.format(new Date()) + "] Agent[" + getId() + "]: " + message);
     }
 
     final JDK jdk;
     final List<String> vmOpts;
-    final File scratchDir;
+    final File execDir;
     final Process process;
     final DataInputStream in;
     final DataOutputStream out;
     final KeepAlive keepAlive;
     final int id;
+    final Logger logger;
+    Instant idleStartTime;
 
     static int count;
 
     /**
+     * Logger provides a directory ion which log files can be created,
+     * and a writer for writing client-side logging messages.
+     * The directory is the system jtData directory in the work directory;
+     * The file for client-side logging is jtData/agent.trace.
+     * Log messages are prefixed with a standard sort-friendly timestamp,
+     * so that the log files in the directory can be merge-sorted into
+     * a single log for later analysis.
+     */
+    public static class Logger {
+        private static WeakHashMap<RegressionParameters, Logger> instances = new WeakHashMap<>();
+
+        public static synchronized Logger instance(RegressionParameters params) {
+            return instances.computeIfAbsent(params, Logger::new);
+        }
+
+        public static void close(RegressionParameters params) throws IOException {
+            Logger l = instances.get(params);
+            if (l != null) {
+                l.close();
+            }
+        }
+
+        private File agentLogFileDirectory;
+        private final PrintWriter agentLogWriter;
+
+        Logger(RegressionParameters params) {
+            WorkDirectory wd = params.getWorkDirectory();
+            agentLogFileDirectory = wd.getJTData();
+            File logFile = new File(agentLogFileDirectory, "agent.trace");
+            PrintWriter out;
+            try {
+                out = new PrintWriter(new FileWriter(logFile));
+            } catch (IOException e) {
+                System.err.println("Cannot open agent log file: " + e);
+                out = new PrintWriter(System.err, true) {
+                    @Override
+                    public void close() {
+                        flush();
+                    }
+                };
+            }
+            agentLogWriter = out;
+        }
+
+        void log(Agent agent, String message) {
+            String dateInfo = AgentServer.logDateFormat.format(new Date());
+            String agentInfo = (agent == null) ? "" : " Agent[" + agent.getId() + "]";
+            if (message.contains("\n")) {
+                String[] lines = message.split("\\R");
+                int i = 0;
+                for (String line : lines) {
+                    agentLogWriter.printf("[%s]%s: #%d/%d %s%n",
+                            dateInfo, agentInfo, ++i, lines.length, line);
+                }
+            } else {
+                agentLogWriter.printf("[%s]%s: %s%n",
+                        dateInfo, agentInfo, message);
+            }
+        }
+
+        File getAgentServerLogFile(int id) {
+            return new File(agentLogFileDirectory, "agentServer." + id + ".trace");
+        }
+
+        public void close() throws IOException {
+            agentLogWriter.close();
+        }
+    }
+
+    /**
      * A reusable collection of JVMs with varying VM options.
+     * <p>
+     * Pools are associated with an instance of RegressionParameters, from which
+     * it gets a Logger to report activity that may be useful in case of any problems.
      */
     public static class Pool {
-        private static Pool instance;
+        /**
+         * The instances.
+         * It is expected that there will typically be exactly one entry in this collection.
+         */
+        private static WeakHashMap<RegressionParameters, Pool> instances = new WeakHashMap<>();
 
-        public static synchronized Pool instance() {
-            if (instance == null)
-                instance = new Pool();
-            return instance;
+        private Stats stats = new Stats();
+
+        /**
+         * Returns the instance for the given RegressionParameters object.
+         *
+         * @param params the RegressionParameters object
+         * @return the instance
+         */
+        public static synchronized Pool instance(RegressionParameters params) {
+            return instances.computeIfAbsent(params, Pool::new);
         }
 
-        private Pool() {
-            map = new HashMap<>();
+        private Pool(RegressionParameters params) {
+            agentsByKey = new HashMap<>();
+            allAgents = new LinkedList<>();
+            logger = Logger.instance(params);
         }
 
+        /**
+         * Sets the policy file to be used for agents created for this pool.
+         *
+         * @param policyFile the file
+         */
         public void setSecurityPolicy(File policyFile) {
             this.policyFile = policyFile;
         }
 
+        /**
+         * Sets the timeout factor to be used for agents created for this pool.
+         *
+         * @param factor the timeout factor
+         */
         public void setTimeoutFactor(float factor) {
             this.timeoutFactor = factor;
         }
@@ -507,55 +701,340 @@ public class Agent {
             this.mainWrapper = wrapper;
         }
 
-        synchronized Agent getAgent(File dir, JDK jdk, List<String> vmOpts, Map<String, String> envVars)
+        /**
+         * Sets the idle timeout for VMs in the pool.
+         *
+         * @param timeout the timeout
+         */
+        public void setIdleTimeout(Duration timeout) {
+            this.idleTimeout = timeout;
+            logger.log(null, "POOL: idle timeout: " + timeout);
+        }
+
+        /**
+         * Sets the maximum number of VMs in the pool.
+         *
+         * @param size the maximum number of VMs to keep in the pool
+         */
+        public void setMaxPoolSize(int size) {
+            this.maxPoolSize = size;
+            logger.log(null, "POOL: max pool size: " + maxPoolSize);
+        }
+
+        /**
+         * Obtains an agent with the desired properties.
+         * If a suitable agent already exists in the pool, it will be removed from the pool and
+         * returned; otherwise, a new one will be created.
+         * Eventually, the agent should either be {@link #save(Agent) returned} to the pool,
+         * if it can be reused, or {@link Agent#close() closed}, if it should not be reused.
+         *
+         *
+         * @param dir     the execution directory for the agent
+         * @param jdk     the JDK for the agent
+         * @param vmOpts  the VM options for the agent
+         * @param envVars the environment variables for the agent
+         * @return the agent
+         * @throws Fault if there is a problem obtaining a suitable agent
+         */
+        synchronized Agent getAgent(File dir,
+                                    JDK jdk,
+                                    List<String> vmOpts,
+                                    Map<String, String> envVars)
                 throws Fault {
-            Queue<Agent> agents = map.get(getKey(dir, jdk, vmOpts));
-            Agent a = (agents == null) ? null : agents.poll();
-            if (a == null) {
-                a = new Agent(dir, jdk, vmOpts, envVars, policyFile, timeoutFactor, mainWrapper);
+            logger.log(null,
+                    "POOL: get agent for:\n"
+                            + "   directory: " + dir + "\n"
+                            + "         JDK: " + jdk + "\n"
+                            + "  VM options: " + vmOpts + "\n"
+            );
+            Deque<Agent> agents = agentsByKey.get(getKey(dir, jdk, vmOpts));
+            // reuse the most recently used agent, to increase the possibility
+            // that older, less-used agents can be reclaimed.
+            Agent a = (agents == null) ? null : agents.pollLast();
+            if (a != null) {
+                logger.log(null, "POOL: Reusing Agent[" + a.getId() + "]");
+                allAgents.remove(a);
+                stats.reuse(a);
+            } else {
+                logger.log(null, "POOL: Creating new agent");
+                a = new Agent(dir, jdk, vmOpts, envVars, policyFile, timeoutFactor, logger, mainWrapper);
+                stats.add(a);
             }
+
             return a;
         }
 
+        /**
+         * Saves an agent in the pool for potential reuse.
+         * The agent is assumed to have been restored to some standard state.
+         *
+         * @param agent the agent
+         */
         synchronized void save(Agent agent) {
-            String key = getKey(agent.scratchDir, agent.jdk, agent.vmOpts);
-            Queue<Agent> agents = map.get(key);
-            if (agents == null)
-                map.put(key, agents = new LinkedList<>());
-            agents.add(agent);
+            logger.log(agent, "Saving agent to pool");
+            String key = getKey(agent.execDir, agent.jdk, agent.vmOpts);
+            agentsByKey.computeIfAbsent(key, k -> new LinkedList<>()).add(agent);
+            allAgents.addLast(agent);
+
+            Instant now = Instant.now();
+            agent.idleStartTime = now;
+            cleanOldEntries(now);
+
+            stats.trackPoolSize(allAgents.size());
         }
 
+        /**
+         * Remove any old entries from the pool.
+         *
+         * The current policy is to remove excess agents when there are too many,
+         * and to remove any agents that have been idle too long.
+         * The maximum number of agents in the pool, and the maximum idle time
+         * are both configurable.
+         *
+         * @param now the current time
+         */
+        private synchronized void cleanOldEntries(Instant now) {
+            while (allAgents.size() > maxPoolSize) {
+                Agent a = allAgents.getFirst();
+                logger.log(a, "Removing excess agent from pool");
+                removeAgent(a);
+            }
+
+            while (!allAgents.isEmpty()
+                    && isIdleTooLong(allAgents.peekFirst(), now)) {
+                Agent a = allAgents.getFirst();
+                logger.log(a, "Removing idle agent from pool");
+                removeAgent(a);
+            }
+        }
+
+        private void removeAgent(Agent a) {
+            agentsByKey.get(getKey(a)).remove(a);
+            allAgents.remove(a);
+            a.close();
+        }
+
+        private boolean isIdleTooLong(Agent a, Instant now) {
+            return Duration.between(a.idleStartTime, now).compareTo(idleTimeout) > 0;
+        }
+
+        /**
+         * Flushes any agents that may have been saved in a pool associated with
+         * the given RegressionParameters object.
+         *
+         * @param params the RegressionParameters object
+         */
+        public static synchronized void flush(RegressionParameters params) {
+            Pool instance = instances.get(params);
+            if (instance != null) {
+                instance.flush();
+            }
+        }
+
+        /**
+         * Flushes all agents that have been saved in this pool.
+         */
         public synchronized void flush() {
-            for (Queue<Agent> agents: map.values()) {
-                for (Agent agent: agents) {
+            logger.log(null, "POOL: closing all agents");
+            for (Agent a : allAgents) {
+                a.close();
+            }
+            allAgents.clear();
+            agentsByKey.clear();
+            stats.report(new File(logger.agentLogFileDirectory, "agent.summary"), logger);
+        }
+
+        /**
+         * Closes any agents with a given execution directory that may have been saved in a pool
+         * associated with the given RegressionParameters object.
+         *
+         * @param params the RegressionParameters object
+         * @param dir    the execution directory
+         */
+        static synchronized void close(RegressionParameters params, File dir) {
+            Pool instance = instances.get(params);
+            if (instance != null) {
+                instance.close(dir);
+            }
+        }
+
+        /**
+         * Closes all agents in this pool with the given execution directory.
+         * This is for use when the directory is no longer suitable for use,
+         * such as when containing a file that cannot be deleted.
+         *
+         * @param dir the execution directory
+         */
+        synchronized void close(File dir) {
+            logger.log(null, "POOL: closing agents using directory " + dir);
+            for (Iterator<Agent> iter = allAgents.iterator(); iter.hasNext(); ) {
+                Agent agent = iter.next();
+                if (agent.execDir.equals(dir)) {
+                    // remove from the allAgents list, currently being iterated
+                    iter.remove();
+                    // remove from the agentsByKey map
+                    String agentKey = getKey(agent);
+                    Deque<Agent> deque = agentsByKey.get(agentKey);
+                    deque.remove(agent);
+                    if (deque.isEmpty()) {
+                        agentsByKey.remove(agentKey);
+                    }
+                    // close the agent
                     agent.close();
                 }
             }
-            map.clear();
         }
 
-        /** Close all agents associated with a specific scratch directory. */
-        synchronized void close(File scratchDir) {
-            for (Iterator<Queue<Agent>> mapValuesIter = map.values().iterator(); mapValuesIter.hasNext(); ) {
-                Queue<Agent> agents = mapValuesIter.next();
-                for (Iterator<Agent> agentIter = agents.iterator(); agentIter.hasNext(); ) {
-                    Agent agent = agentIter.next();
-                    if (agent.scratchDir.equals(scratchDir))
-                        agentIter.remove();
-                }
-                if (agents.isEmpty()) {
-                    mapValuesIter.remove();
-                }
-            }
+        private static String getKey(Agent agent) {
+            return getKey(agent.execDir, agent.jdk, agent.vmOpts);
         }
 
         private static String getKey(File dir, JDK jdk, List<String> vmOpts) {
             return (dir.getAbsolutePath() + " " + jdk.getAbsoluteFile() + " " + StringUtils.join(vmOpts, " "));
         }
 
-        private final Map<String, Queue<Agent>> map;
+        private final Logger logger;
+
+        /**
+         * A map of the currently available agents, indexed by a key
+         * derived from the agent's primary execution characteristics.
+         * For each key, a deque is maintained of agents with that key.
+         * The most recently used entries are "last" in the deque;
+         * the oldest entries are "first" in the deque.
+         */
+        private final Map<String, Deque<Agent>> agentsByKey;
+
+        /**
+         * A list of all the currently available agents.
+         * The most recently used entries are "last" in the deque;
+         * the oldest entries are "first" in the deque.
+         */
+        private final Deque<Agent> allAgents;
+
         private File policyFile;
         private float timeoutFactor = 1.0f;
         private String mainWrapper;
+        private int maxPoolSize;
+        private Duration idleTimeout;
+    }
+
+    static class Stats {
+        Set<File> allDirs = new TreeSet<>();
+        Set<JDK> allJDKs = new TreeSet<>(Comparator.comparing( j -> j.getPath()));
+        Set<List<String>> allVMOpts = new TreeSet<>(Comparator.comparing(Objects::toString));
+        Map<Integer, Integer> useCounts = new TreeMap<>();
+        Map<Integer, Integer> sizeCounts = new TreeMap<>();
+
+        void add(Agent a) {
+            allDirs.add(a.execDir);
+            allJDKs.add(a.jdk);
+            allVMOpts.add(a.vmOpts);
+
+            useCounts.put(a.id, 1);
+        }
+
+        void reuse(Agent a) {
+            useCounts.put(a.id, useCounts.get(a.id) + 1);
+        }
+
+        void trackPoolSize(int size) {
+            sizeCounts.put(size, sizeCounts.computeIfAbsent(size, s -> 0) + 1);
+        }
+
+        void clear() {
+            allDirs.clear();
+            allJDKs.clear();
+            allVMOpts.clear();
+            useCounts.clear();
+            sizeCounts.clear();
+        }
+
+        void report(File file, Logger logger) {
+            try (PrintWriter out = new PrintWriter(new FileWriter(file))) {
+                report(out, "Execution Directories", allDirs);
+                out.println();
+
+                report(out, "JDKs", allJDKs);
+                out.println();
+
+                report(out, "VM Options", allVMOpts);
+                out.println();
+
+
+                out.format("Agent Usage:%n");
+                useCounts.forEach((id, c) -> out.format("    %3d: %3d%n", id, c));
+                double[] use_m_sd = getSimpleMeanStandardDeviation(useCounts.values());
+                out.format("Mean:          %5.1f%n", use_m_sd[0]);
+                out.format("Std Deviation: %5.1f%n", use_m_sd[1]);
+                out.println();
+
+                out.format("Pool Size:%n");
+                sizeCounts.forEach((size, c) -> out.format("    %3d: %3d%n", size, c));
+                double[] size_m_sd = getWeightedMeanStandardDeviation(sizeCounts);
+                out.format("Mean          %5.1f%n", size_m_sd[0]);
+                out.format("Std Deviation %5.1f%n", size_m_sd[1]);
+
+            } catch (IOException e) {
+                logger.log(null, "STATS: can't write stats file " + file + ": " + e);
+            }
+        }
+
+        private <T> void report(PrintWriter out, String title, Set<T> set) {
+            out.format("%s: %d%n", title, set.size());
+            set.forEach(item -> out.format("    %s%n", item));
+        }
+
+        /**
+         * Returns the mean and standard deviation of a collection of values.
+         *
+         * @param values the values
+         * @return an array containing the mean and standard deviation
+         */
+        double[] getSimpleMeanStandardDeviation(Collection<Integer> values) {
+            double sum = 0;
+            for (Integer v : values) {
+                sum += v;
+            }
+            double mean = sum / values.size();
+
+            double sum2 = 0;
+            for (Integer v : values) {
+                double x = v - mean;
+                sum2 += x * x;
+            }
+            double sd = Math.sqrt(sum2 / values.size());
+
+            return new double[] { mean, sd };
+        }
+
+        /**
+         * Returns the mean and standard deviation of a collection of weighted values.
+         * The values are provided in a map of {@code value -> frequency}.
+         *
+         * @param map the map of weighted values
+         * @return an array containing the mean and standard deviation
+         */
+        double[] getWeightedMeanStandardDeviation(Map<Integer, Integer> map) {
+            long count = 0;
+            double sum = 0;
+            for (Map.Entry<Integer, Integer> e : map.entrySet()) {
+                int value = e.getKey();
+                int freq = e.getValue();
+                sum += value * freq;
+                count += freq;
+            }
+            double mean = sum / count;
+
+            double sum2 = 0;
+            for (Map.Entry<Integer, Integer> e : map.entrySet()) {
+                int value = e.getKey();
+                int freq = e.getValue();
+                double x = value - mean;
+                sum2 += x * x * freq;
+            }
+            double sd = Math.sqrt(sum2 / count);
+
+            return new double[] { mean, sd };
+        }
     }
 }

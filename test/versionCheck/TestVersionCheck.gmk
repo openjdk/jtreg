@@ -35,8 +35,8 @@ $(BUILDDIR)/TestVersionCheck.match.ok: \
 		-jar $(ABS_JTREG_IMAGEJARDIR)/jtreg.jar \
 		-w:$(@:%.ok=%/work) \
 		-r:$(@:%.ok=%/report) \
-		-compileJDK:$(JDK18HOME) \
-		-testJDK:$(JDK18HOME) \
+		-compileJDK:$(JDK8HOME) \
+		-testJDK:$(JDK8HOME) \
 		$(TESTDIR)/versionCheck \
 		> $(@:%.ok=%/log 2>&1) \
 	    || (cat $(@:%.ok=%/log) ; exit 1)
@@ -45,7 +45,7 @@ $(BUILDDIR)/TestVersionCheck.match.ok: \
 	fi
 	echo $@ passed at `date` > $@
 
-ifdef JDK18HOME
+ifdef JDK8HOME
 TESTS.jtreg += \
 	$(BUILDDIR)/TestVersionCheck.match.ok
 endif
@@ -62,8 +62,8 @@ $(BUILDDIR)/TestVersionCheck.mismatch.ok: \
 		-jar $(ABS_JTREG_IMAGEJARDIR)/jtreg.jar \
 		-w:$(@:%.ok=%/work) \
 		-r:$(@:%.ok=%/report) \
-		-compileJDK:$(JDK17HOME) \
-		-testJDK:$(JDK18HOME) \
+		-compileJDK:$(JDK7HOME) \
+		-testJDK:$(JDK8HOME) \
 		$(TESTDIR)/versionCheck \
 		> $(@:%.ok=%/log 2>&1) \
 	    || (cat $(@:%.ok=%/log) ; exit 1)
@@ -74,8 +74,8 @@ $(BUILDDIR)/TestVersionCheck.mismatch.ok: \
 	fi
 	echo $@ passed at `date` > $@
 
-ifdef JDK17HOME
-ifdef JDK18HOME
+ifdef JDK7HOME
+ifdef JDK8HOME
 TESTS.jtreg += \
 	$(BUILDDIR)/TestVersionCheck.mismatch.ok
 endif

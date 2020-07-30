@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2001, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -38,7 +38,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
+import java.util.stream.Collectors;
 
 import com.sun.interview.Interview;
 import com.sun.interview.Question;
@@ -98,7 +101,7 @@ public class RegressionParameters
 
     /**
      * This method is to workaround an earlier workaround
-     * (in {@link BasicInterviewParameters#getParameters})
+     * (in {@link BasicInterviewParameters#getMaxConcurrency()})
      * for the max concurrency.
      * @return  the maximum permitted concurrency
      */
@@ -1053,7 +1056,7 @@ public class RegressionParameters
     public void setRetainArgs(List<String> retainArgs) {
 
         retainStatusSet.clear();
-        if (retainArgs == null) {
+        if (retainArgs == null || retainArgs.contains("lastRun")) {
             // equivalent to "none"
             retainFilesPattern = null;
             return;
@@ -1246,6 +1249,40 @@ public class RegressionParameters
 
     //---------------------------------------------------------------------
 
+    public Pattern getRefIgnoreLinesPattern() {
+        if (refIgnoreLinesPattern == UNSET_PATTERN) {
+            String refIgnoreLines = System.getenv("JTREG_REF_IGNORE_LINES");
+            String re;
+            if (refIgnoreLines != null) {
+                // User-specified list of regular expressions for lines to ignore in golden file comparison.
+                re = Arrays.asList(refIgnoreLines.trim().split("\\s+")).stream()
+                        .map(s -> "(" + s + ")")
+                        .collect(Collectors.joining("|"));
+            } else {
+                // Default regular expressions, based on VM warnings when specific powerful VM options are set.
+                // Override these by setting JTREG_REF_IGNORE_LINES to either empty or alternative regex list
+                Map<String, String> envVars = getEnvVars();
+                re = Arrays.asList("JAVA_TOOL_OPTIONS", "_JAVA_OPTIONS").stream()
+                        .filter(envVars::containsKey)
+                        .map(e -> "(Picked up " + e + ":.*)")
+                        .collect(Collectors.joining("|"));
+            }
+            try {
+                refIgnoreLinesPattern = re.isEmpty() ? null : Pattern.compile(re);
+            } catch (PatternSyntaxException e) {
+                refIgnoreLinesPattern = null;
+                throw e;
+            }
+        }
+        return refIgnoreLinesPattern;
+
+    }
+
+    private static Pattern UNSET_PATTERN = Pattern.compile("");
+    private Pattern refIgnoreLinesPattern = UNSET_PATTERN;
+
+    //---------------------------------------------------------------------
+
     // Ideally, this method would be better on a "shared execution context" object
     public TimeoutHandlerProvider getTimeoutHandlerProvider() throws MalformedURLException {
         if (timeoutHandlerProvider == null) {
@@ -1260,6 +1297,40 @@ public class RegressionParameters
     }
 
     private TimeoutHandlerProvider timeoutHandlerProvider;
+
+    //---------------------------------------------------------------------
+
+    /**
+     * Returns a map containing the properties that are passed to all tests and
+     * other VBMs started by jtreg.
+     *
+     * @return the map
+     */
+    // Ideally, this method would be better on a "shared execution context" object
+    public Map<String, String> getBasicTestProperties() {
+        if (basicTestProperties == null) {
+            Map<String, String> map = new LinkedHashMap<>();
+            put(map, "test.vm.opts", getTestVMOptions(), v -> StringUtils.join(v, " "));
+            put(map, "test.tool.vm.opts", getTestToolVMOptions(), v -> StringUtils.join(v, " "));
+            put(map, "test.compiler.opts", getTestCompilerOptions(), v -> StringUtils.join(v, " "));
+            put(map, "test.java.opts", getTestJavaOptions(), v -> StringUtils.join(v, " "));
+            put(map, "test.jdk", getTestJDK(), JDK::getAbsolutePath);
+            put(map, "compile.jdk", getCompileJDK(), JDK::getAbsolutePath);
+            put(map, "test.timeout.factor", getTimeoutFactor(), String::valueOf);
+            put(map, "test.nativepath", getNativeDir(), File::getAbsolutePath);
+            put(map, "test.root", getTestSuite().getRootDir(), File::getAbsolutePath);
+            basicTestProperties = map;
+        }
+        return basicTestProperties;
+    }
+
+    private <T> void put(Map<String, String> map, String name, T value, Function<T, String> toString) {
+        if (value != null) {
+            map.put(name, toString.apply(value));
+        }
+    }
+
+    private Map<String, String> basicTestProperties;
 
     //---------------------------------------------------------------------
 

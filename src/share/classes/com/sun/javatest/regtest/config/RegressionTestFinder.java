@@ -613,11 +613,19 @@ public class RegressionTestFinder extends TagTestFinder
             newTagValues.put("maxTimeout", String.valueOf(maxTimeout));
 
         try {
-            String modules = newTagValues.get("modules");
+            String modules = newTagValues.get(MODULES);
             if (modules == null || modules.isEmpty()) {
                 Set<String> defaultModules = properties.getModules(getCurrentFile());
                 if (defaultModules != null && !defaultModules.isEmpty()) {
                     processModules(newTagValues, defaultModules);
+                }
+            }
+
+            String enablePreview = newTagValues.get(ENABLE_PREVIEW);
+            if (enablePreview == null) {
+                boolean ep = properties.getEnablePreview(getCurrentFile());
+                if (ep) {
+                    newTagValues.put(ENABLE_PREVIEW, "true");
                 }
             }
         } catch (TestSuite.Fault e) {
@@ -675,24 +683,45 @@ public class RegressionTestFinder extends TagTestFinder
         }
 
         try {
-            if (!validTagNames.contains(name)) {
-                parseError(tagValues, PARSE_TAG_BAD + name);
-            } else if (name.equals(RUN)) {
-                processRun(tagValues, value);
-            } else if (name.equals(BUG)) {
-                processBug(tagValues, value);
-            } else if (name.equals(REQUIRES)) {
-                processRequires(tagValues, value);
-            } else if (name.equals(KEY)) {
-                processKey(tagValues, value);
-            } else if (name.equals(MODULES)) {
-                processModules(tagValues, value);
-            } else if (name.equals(LIBRARY)) {
-                processLibrary(tagValues, value);
-            } else if (name.equals(COMMENT)) {
-                // no-op
-            } else {
-                tagValues.put(name, value);
+            switch (name) {
+                case RUN:
+                    processRun(tagValues, value);
+                    break;
+
+                case BUG:
+                    processBug(tagValues, value);
+                    break;
+
+                case REQUIRES:
+                    processRequires(tagValues, value);
+                    break;
+
+                case KEY:
+                    processKey(tagValues, value);
+                    break;
+
+                case MODULES:
+                    processModules(tagValues, value);
+                    break;
+
+                case LIBRARY:
+                    processLibrary(tagValues, value);
+                    break;
+
+                case COMMENT:
+                    // no-op
+                    break;
+
+                case ENABLE_PREVIEW:
+                    processEnablePreview(tagValues, value);
+                    break;
+
+                default:
+                    if (!validTagNames.contains(name)) {
+                        parseError(tagValues, PARSE_TAG_BAD + name);
+                    } else {
+                        tagValues.put(name, value);
+                    }
             }
         } catch (TestSuite.Fault e) {
             reportError(tagValues, e.getMessage());
@@ -914,6 +943,23 @@ public class RegressionTestFinder extends TagTestFinder
         }
     }
 
+    private void processEnablePreview(Map<String, String> tagValues, String value) {
+        if (value.isEmpty()) {
+            tagValues.put(ENABLE_PREVIEW, "true");
+        } else {
+            String v = value.trim();
+            switch (v) {
+                case "false":
+                case "true":
+                    tagValues.put(ENABLE_PREVIEW, v);
+                    break;
+                default:
+                    parseError(tagValues, PARSE_INVALID_ENABLE_PREVIEW + v);
+            }
+        }
+
+    }
+
     private Set<String> getValidTagNames(boolean allowKey) {
         Set<String> tags = new HashSet<>();
         // JDK specific tags
@@ -930,6 +976,7 @@ public class RegressionTestFinder extends TagTestFinder
         tags.add(BUILD);
         tags.add(REQUIRES);
         tags.add(COMMENT);
+        tags.add(ENABLE_PREVIEW);
 
         // @key allowed only if TEST.ROOT contains a non-empty entry for
         // "key".  This is handled by the testsuite object.
@@ -948,6 +995,7 @@ public class RegressionTestFinder extends TagTestFinder
     public static final String BUILD   = "build";
     public static final String CLEAN   = "clean";
     public static final String COMPILE = "compile";
+    public static final String ENABLE_PREVIEW = "enablePreview";
     public static final String ERROR   = "error";
     public static final String IGNORE  = "ignore";
     public static final String KEY     = "key";
@@ -982,7 +1030,10 @@ public class RegressionTestFinder extends TagTestFinder
         PARSE_REQUIRES_SYNTAX = "Syntax error in @requires expression: ",
         PARSE_RUN_ENDS_WITH_BUILD = "No action after @build",
         PARSE_MULTIPLE_COMMENTS_NOT_ALLOWED
-                              = "Multiple test descriptions not allowed";
+                              = "Multiple test descriptions not allowed",
+        PARSE_INVALID_ENABLE_PREVIEW
+                              = "invalid value for @enablePreview: ";
+
 
     private static final Pattern
         BOOTCLASSPATH_OPTION = getOptionPattern("bootclasspath"),

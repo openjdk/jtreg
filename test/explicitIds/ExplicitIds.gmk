@@ -37,9 +37,11 @@ $(BUILDDIR)/ExplicitIds.othervm.ok: \
 			> $(@:%.ok=%/jt.log)  2>&1 || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
 	$(GREP) -s 'Test results: passed: 5' $(@:%.ok=%/jt.log)  > /dev/null
-	files=`cd $(@:%.ok=%)/work ; $(FIND) . -name \*.jtr | $(SORT) | xargs echo` ; \
-	echo $$files ; \
-	if [ "$$files" != "./Test_alpha.jtr ./Test_beta__1.jtr ./Test_beta.jtr ./Test_id0.jtr ./Test_id2.jtr" ]; then \
+	files=`cd $(@:%.ok=%)/work ; $(FIND) . -name \*.jtr | LANG="C" $(SORT) | xargs echo` ; \
+	expect="./Test_alpha.jtr ./Test_beta.jtr ./Test_beta__1.jtr ./Test_id0.jtr ./Test_id2.jtr" ;\
+	echo expect "$$expect" ; \
+	echo found. "$$files" ; \
+	if [ "$$files" != "$$expect" ]; then \
 	    echo "unexpected files found: " $${files} ; exit 1 ; \
 	fi
 	echo "test passed at `date`" > $@

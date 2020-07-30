@@ -98,7 +98,7 @@ public class JDK {
 
     /**
      * Creates a JDK object, given its "$JAVA_HOME" path.
-     * @param javaHome the "home" directory for the JDK
+     * @param jdk the "home" directory for the JDK
      * @return the JDK object
      */
     private JDK(File jdk) {
@@ -245,8 +245,9 @@ public class JDK {
      * Returns the value of the {@code java.specification.version} property
      * found when this JDK is run.
      * {@implNote The value is cached. }
-     * @param classpath used to locate the class to determine the value of the
-     *  system property.
+     *
+     * @param getSysPropClassPath used to locate the class to determine the value of the
+     *                            system property.
      * @return the value of the {@code java.specification.version} property
      */
     private synchronized String getJavaSpecificationVersion(SearchPath getSysPropClassPath) {
@@ -528,6 +529,8 @@ public class JDK {
             jdkOpts.add("-Xbootclasspath/a:" + bcp);
         }
 
+        params.getBasicTestProperties()
+                .forEach((name, value) -> jdkOpts.add("-D" + name + "=" + value));
         List<String> vmOpts = params.getTestVMJavaOptions();
         jdkOpts.addAll(vmOpts);
         jdkOpts.addAll(extraVMOpts);

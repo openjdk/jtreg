@@ -1,0 +1,2 @@
+keys = bad
+allowSmartActionArgs = true

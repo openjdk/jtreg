@@ -403,6 +403,7 @@ public class Basic
         public void startingTest(TestResult tr) { }
         public void finishedTest(TestResult tr) {  }
         public void stoppingTestRun() { }
+        @SuppressWarnings("deprecation")
         public void finishedTesting() { }
         public void finishedTestRun(boolean allOK) { }
 

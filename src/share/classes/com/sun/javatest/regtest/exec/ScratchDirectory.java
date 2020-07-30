@@ -88,8 +88,7 @@ abstract class ScratchDirectory {
      * If any file cannot be deleted, it is retried a few times, after a
      * short interval.
      * @param log A stream to which to write messages about any issues encountered.
-     * @throws com.sun.javatest.regtest.ScratchDirectory.Fault if the directory
-     *      cannot be initialized.
+     * @throws ScratchDirectory.Fault if the directory cannot be initialized.
      * @throws InterruptedException if the method is interrupted.
      */
     void init(PrintWriter log) throws Fault, InterruptedException {
@@ -98,7 +97,7 @@ abstract class ScratchDirectory {
                 deleteFiles(dir, null, false, log);
             } catch (Fault e) {
                 addBadDir(dir);
-                Agent.Pool.instance().close(dir);
+                Agent.Pool.close(params, dir);
                 throw e;
             }
         } else {

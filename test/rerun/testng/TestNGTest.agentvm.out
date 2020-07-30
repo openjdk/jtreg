@@ -9,12 +9,6 @@ TZ=GMT+0.00 \
     %JDKHOME%/bin/javac \
         -J-Dmy.vm.option=x \
         -J-Dmy.java.option=x \
-        -J-Dtest.class.path.prefix=%BUILD%/RerunTest.agentvm/work/classes/testng:%WS%/test/rerun/testng \
-        -J-Dtest.file=%WS%/test/rerun/testng/TestNGTest.java \
-        -J-Dtest.src=%WS%/test/rerun/testng \
-        -J-Dtest.src.path=%WS%/test/rerun/testng \
-        -J-Dtest.classes=%BUILD%/RerunTest.agentvm/work/classes/testng \
-        -J-Dtest.class.path=%BUILD%/RerunTest.agentvm/work/classes/testng \
         -J-Dtest.vm.opts=-Dmy.vm.option=x \
         -J-Dtest.tool.vm.opts=-J-Dmy.vm.option=x \
         -J-Dtest.compiler.opts=-XDmy.javac.option=x \
@@ -23,6 +17,13 @@ TZ=GMT+0.00 \
         -J-Dcompile.jdk=%JDKHOME% \
         -J-Dtest.timeout.factor=1.0 \
         -J-Dtest.root=%WS%/test/rerun \
+        -J-Dtest.name=testng/TestNGTest.java \
+        -J-Dtest.file=%WS%/test/rerun/testng/TestNGTest.java \
+        -J-Dtest.src=%WS%/test/rerun/testng \
+        -J-Dtest.src.path=%WS%/test/rerun/testng \
+        -J-Dtest.classes=%BUILD%/RerunTest.agentvm/work/classes/testng \
+        -J-Dtest.class.path=%BUILD%/RerunTest.agentvm/work/classes/testng \
+        -J-Dtest.class.path.prefix=%BUILD%/RerunTest.agentvm/work/classes/testng:%WS%/test/rerun/testng \
         -XDmy.javac.option=x \
         -d %BUILD%/RerunTest.agentvm/work/classes/testng \
         -sourcepath %WS%/test/rerun/testng \
@@ -39,12 +40,6 @@ MY_ENV_VAR=x \
 PATH=/bin:/usr/bin:/usr/sbin \
 TZ=GMT+0.00 \
     %JDKHOME%/bin/java \
-        -Dtest.class.path.prefix=%BUILD%/RerunTest.agentvm/work/classes/testng:%WS%/test/rerun/testng \
-        -Dtest.file=%WS%/test/rerun/testng/TestNGTest.java \
-        -Dtest.src=%WS%/test/rerun/testng \
-        -Dtest.src.path=%WS%/test/rerun/testng \
-        -Dtest.classes=%BUILD%/RerunTest.agentvm/work/classes/testng \
-        -Dtest.class.path=%BUILD%/RerunTest.agentvm/work/classes/testng \
         -Dtest.vm.opts=-Dmy.vm.option=x \
         -Dtest.tool.vm.opts=-J-Dmy.vm.option=x \
         -Dtest.compiler.opts=-XDmy.javac.option=x \
@@ -53,6 +48,13 @@ TZ=GMT+0.00 \
         -Dcompile.jdk=%JDKHOME% \
         -Dtest.timeout.factor=1.0 \
         -Dtest.root=%WS%/test/rerun \
+        -Dtest.name=testng/TestNGTest.java \
+        -Dtest.file=%WS%/test/rerun/testng/TestNGTest.java \
+        -Dtest.src=%WS%/test/rerun/testng \
+        -Dtest.src.path=%WS%/test/rerun/testng \
+        -Dtest.classes=%BUILD%/RerunTest.agentvm/work/classes/testng \
+        -Dtest.class.path=%BUILD%/RerunTest.agentvm/work/classes/testng \
+        -Dtest.class.path.prefix=%BUILD%/RerunTest.agentvm/work/classes/testng:%WS%/test/rerun/testng \
         -classpath %BUILD%/RerunTest.agentvm/work/classes/testng:%WS%/test/rerun/testng:%BUILD%/images/jtreg/lib/testng.jar:%JDKHOME%/lib/tools.jar:%BUILD%/images/jtreg/lib/javatest.jar:%BUILD%/images/jtreg/lib/jtreg.jar \
         com.sun.javatest.regtest.agent.TestNGRunner testng/TestNGTest.java false TestNGTest
 

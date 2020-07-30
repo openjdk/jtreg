@@ -32,7 +32,7 @@ $(BUILDDIR)/JDK11Test.1.ok: \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%)
 	JTREG_SHOWAGENT=true JTREG_SHOWCMD=true \
-	JT_JAVA=$(JDK16HOME) \
+	JT_JAVA=$(JDK6HOME) \
 		$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDK11HOME) \
@@ -45,11 +45,11 @@ $(BUILDDIR)/JDK11Test.2.ok: \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%)
 	JTREG_SHOWAGENT=true JTREG_SHOWCMD=true \
-	JT_JAVA=$(JDK16HOME) \
+	JT_JAVA=$(JDK6HOME) \
 		$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-compilejdk:$(JDK11HOME) \
-		-jdk:$(JDK16HOME) \
+		-jdk:$(JDK6HOME) \
 		$(TESTDIR)/jdk11/ExecuteTest.java
 	echo "test passed at `date`" > $@
 

@@ -65,9 +65,9 @@ make command line or with values in make/Defs.gmk. You can also include the
 appropriate license files in the jtreg image, by setting the appropriate make
 variables. These are documented in make/Defs.gmk
 
-JDK 1.7 (or better)
+JDK 1.8 (or better)
     Set JDKHOME to the JDK or equivalent used to build jtreg. It must be
-    equivalent to JDK 1.7 or later.
+    equivalent to JDK 1.8 or later.
 
 JT Harness
     See https://wiki.openjdk.java.net/display/CodeTools/JT+Harness.
@@ -100,23 +100,27 @@ JCov
     It should be version 2.0 or better.
 
 JDK 1.5
-    This is used when running some of the tests. Set JDK15HOME to run these
+    This is used when running some of the tests. Set JDK5HOME to run these
     tests. It need not be set if you are just building jtreg.
 
 JDK 1.6
-    This is used when running some of the tests. Set JDK16HOME to run these
+    This is used when running some of the tests. Set JDK6HOME to run these
     tests. It need not be set if you are just building jtreg.
 
 JDK 1.7
-    This is used when running some of the tests. Set JDK17HOME to run these
+    This is used when running some of the tests. Set JDK7HOME to run these
     tests. It need not be set if you are just building jtreg.
 
 JDK 1.8
-    This is used when running some of the tests. Set JDK18HOME to run these
+    This is used when running some of the tests. Set JDK8HOME to run these
     tests. It need not be set if you are just building jtreg.
 
-JDK 1.9
-    This is used when running some of the tests. Set JDK19HOME to run these
+JDK 9
+    This is used when running some of the tests. Set JDK9HOME to run these
+    tests. It need not be set if you are just building jtreg.
+
+JDK 14
+    This is used when running some of the tests. Set JDK14HOME to run these
     tests. It need not be set if you are just building jtreg.
 
 Running jtreg Self-Tests
