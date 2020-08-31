@@ -230,6 +230,9 @@ public class ShellAction extends Action
             if (nativeDir != null) {
                 env.put("TESTNATIVEPATH", nativeDir.getAbsolutePath());
             }
+            if (script.enablePreview()) {
+                env.put("TESTENABLEPREVIEW", "true");
+            }
 
             List<String> command = new ArrayList<>();
             if (script.useWindowsSubsystemForLinux()) {

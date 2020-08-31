@@ -1320,22 +1320,29 @@ support modules.
 (the directory containing the <a href="#TEST_ROOT">TEST.ROOT</a> file.)
 
 <tr>
-    <td><i>Not Applicable</i>
-    <td><code>FS</code>
-    <td>The file separator character to use.
-    (<code>\</code> for Windows tools; <code>/</code> otherwise.)
+<td><code>test.enable.preview</code>
+<td><code>TESTENABLEPREVIEW</code>
+<td>Set (to <code>true</code>code>) if the test is using "preview features"
+as indicated by <code>@enablePreview</code> in the test description
+or an <code>enablePreview</code> entry in a TEST.properties file.
 
 <tr>
-    <td><i>Not Applicable</i>
-    <td><code>PS</code>
-    <td>The path separator character to use.
-        (<code>;</code> for Windows tools; <code>:</code> otherwise.)
+<td><i>Not Applicable</i>
+<td><code>FS</code>
+<td>The file separator character to use.
+(<code>\</code> for Windows tools; <code>/</code> otherwise.)
 
 <tr>
-    <td><i>Not Applicable</i>
-    <td><code>NULL</code>
-    <td>The "null sink" to use.
-        (<code>NUL</code> in a WIndows environment; <code>/dev/null</code> otherwise.)
+<td><i>Not Applicable</i>
+<td><code>PS</code>
+<td>The path separator character to use.
+    (<code>;</code> for Windows tools; <code>:</code> otherwise.)
+
+<tr>
+<td><i>Not Applicable</i>
+<td><code>NULL</code>
+<td>The "null sink" to use.
+    (<code>NUL</code> in a WIndows environment; <code>/dev/null</code> otherwise.)
 
 </tbody>
 </table>

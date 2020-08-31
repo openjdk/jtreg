@@ -1148,6 +1148,10 @@ public class RegressionScript extends Script {
             pp.append(locations.absLibClsList(LibLocn.Kind.USER_MODULE));
             p.put("test.module.path", pp.toString());
         }
+        if (enablePreview()) {
+            p.put("test.enable.preview", "true");
+        }
+        p.put("test.root", getTestRootDir().getPath());
         return Collections.unmodifiableMap(p);
     }
     // where
