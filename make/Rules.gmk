@@ -86,6 +86,9 @@ $(IMAGES_DIR)/%.jar: pkgsToFiles.sh
 %-$(VERBOSE_ZIP_SUFFIX).zip: %.zip 
 	cp $(@:%-$(VERBOSE_ZIP_SUFFIX).zip=%.zip) $@
 
+%-$(NEW_VERBOSE_ZIP_SUFFIX).zip: %.zip
+	ln $(@:%-$(NEW_VERBOSE_ZIP_SUFFIX).zip=%.zip) $@
+
 #----------------------------------------------------------------------
 #
 # cancel implicit rules

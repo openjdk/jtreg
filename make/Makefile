@@ -52,6 +52,8 @@ quick-test: $(INITIAL_TESTS)
 
 images: $(VERBOSEZIPFILES)
 
+new-images: $(NEWVERBOSEZIPFILES)
+
 clean:
 	$(RM) $(BUILDDIR)
 
@@ -92,9 +94,12 @@ endif
 	@echo "TESTNG_JAR          = $(TESTNG_JAR)"
 	@echo "TESTNG_LICENSE      = $(TESTNG_LICENSE)"
 	@echo "JCOMMANDER_JAR      = $(JCOMMANDER_JAR)"
+	@echo "BUILD_VERSION       = $(BUILD_VERSION)"
+	@echo "BUILD_MILESTONE     = $(BUILD_MILESTONE)"
+	@echo "BUILD_NUMBER        = $(BUILD_NUMBER)"
 
 #----------------------------------------------------------------------
 
 
-.PHONY: default all build test images clean sanity
+.PHONY: default all build test images new-images clean sanity
 
