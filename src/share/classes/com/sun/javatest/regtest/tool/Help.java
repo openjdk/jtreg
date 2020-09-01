@@ -205,9 +205,16 @@ public class Help {
         // build properties, from manifest
         String prefix = "jtreg"; // base name of containing .jar file
         String product = v.getProperty(prefix + "-Name", unknown);
-        String version = v.getProperty(prefix + "-Version", unknown);
-        String milestone = v.getProperty(prefix + "-Milestone", unknown);
-        String build = v.getProperty(prefix + "-Build", unknown);
+
+        String versionString = v.versionString; // use new-style if available
+        if (versionString == null) {
+            // old-style
+            String version = v.getProperty(prefix + "-Version", unknown);
+            String milestone = v.getProperty(prefix + "-Milestone", unknown);
+            String build = v.getProperty(prefix + "-Build", unknown);
+            versionString = String.format("version %s %s %s", version, milestone, build);
+        }
+
         String buildJavaVersion = v.getProperty(prefix + "-BuildJavaVersion", unknown);
         String buildDate = v.getProperty(prefix + "-BuildDate", unknown);
 
@@ -221,9 +228,7 @@ public class Help {
 
         Object[] versionArgs = {
             product,
-            version,
-            milestone,
-            build,
+            versionString,
             classPath,
             thisJavaVersion,
             thisJavaHome,
@@ -234,10 +239,10 @@ public class Help {
         /*
          * Example format string:
          *
-         * {0}, version {1} {2} {3}
-         * Installed in {4}
-         * Running on platform version {5} from {6}.
-         * Built with {7} on {8}.
+         * {0}, version {1}
+         * Installed in {2}
+         * Running on platform version {3} from {4}.
+         * Built with {5} on {6}.
          *
          * Example output:
          *

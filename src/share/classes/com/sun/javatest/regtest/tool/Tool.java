@@ -1130,8 +1130,8 @@ public class Tool {
             if (requiredVersion.compareTo(currentVersion) > 0) {
                 throw new Fault(i18n, "main.requiredVersion",
                         ts.getPath(),
-                        requiredVersion.version, requiredVersion.build,
-                        currentVersion.version, currentVersion.build);
+                        requiredVersion.getVersionBuildString(),
+                        currentVersion.getVersionBuildString());
             }
         }
 

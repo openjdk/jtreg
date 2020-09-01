@@ -59,9 +59,10 @@ $(IMAGES_DIR)/%.jar: pkgsToFiles.sh
 	$(RM) $@ $(@:$(IMAGES_DIR)/%.jar=$(BUILDDIR)/jarData/%) 
 	$(MKDIR) -p $(@D)
 	$(MKDIR) -p $(@:$(IMAGES_DIR)/%.jar=$(BUILDDIR)/jarData/%)
-	( if [ ! -z "$(JAR_MAINCLASS)" ]; then echo "Main-class: $(JAR_MAINCLASS)" ; fi ; \
-	  if [ ! -z "$(JAR_CLASSPATH)" ]; then echo "Class-Path: $(JAR_CLASSPATH)" ; fi ; \
+	( if [ -n "$(JAR_MAINCLASS)" ]; then echo "Main-class: $(JAR_MAINCLASS)" ; fi ; \
+	  if [ -n "$(JAR_CLASSPATH)" ]; then echo "Class-Path: $(JAR_CLASSPATH)" ; fi ; \
 	  echo "$(@F:%.jar=%)-Name: $(@F:%.jar=%)" ; \
+	  if [ -n "$(BUILD_VERSION_STRING)" ]; then echo "$(@F:%.jar=%)-VersionString: $(BUILD_VERSION_STRING)" ; fi ; \
 	  echo "$(@F:%.jar=%)-Version: $(BUILD_VERSION)" ; \
 	  echo "$(@F:%.jar=%)-Milestone: $(BUILD_MILESTONE)" ; \
 	  echo "$(@F:%.jar=%)-Build: $(BUILD_NUMBER)" ; \
