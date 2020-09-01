@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import com.sun.javatest.regtest.agent.JDK_Version;
 
@@ -40,15 +41,29 @@ import com.sun.javatest.regtest.agent.JDK_Version;
  * @author jjg
  */
 public class RegressionContext implements Expr.Context {
+    /**
+     * Returns a default context.
+     * Any errors detected will be reported to {@link System#err}.
+     *
+     * @return a default context
+     */
     static RegressionContext getDefault() {
         try {
-            return new RegressionContext(null);
+            return new RegressionContext(null, System.err::println);
         } catch (JDK.Fault f) {
             throw new IllegalStateException(f);
         }
     }
 
-    RegressionContext(RegressionParameters params) throws JDK.Fault {
+    /**
+     * Creates a context for used with nteh specified parameters.
+     *
+     * @param params the parameters
+     * @param logger an object to which to write logging messages
+     *
+     * @throws JDK.Fault if an error occurs while accessing info for this object
+     */
+    RegressionContext(RegressionParameters params, Consumer<String> logger) throws JDK.Fault {
         this.params = params;
         validPropNames = null;
 
@@ -62,7 +77,7 @@ public class RegressionContext implements Expr.Context {
             os = OS.current();
         } else {
             JDK jdk = params.getTestJDK();
-            Properties jdkProps = jdk.getProperties(params);
+            Properties jdkProps = jdk.getProperties(params, logger);
             for (Map.Entry<?, ?> e: jdkProps.entrySet()) {
                 values.put((String) e.getKey(), (String) e.getValue());
             }

@@ -34,6 +34,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 import com.sun.javatest.TestDescription;
 import com.sun.javatest.regtest.agent.SearchPath;
@@ -63,7 +64,7 @@ public class Locations {
      * the location of the source and class files of the test itself.
      */
     public static class LibLocn {
-        public static enum Kind { PACKAGE, PRECOMPILED_JAR, SYS_MODULE, USER_MODULE };
+        public enum Kind { PACKAGE, PRECOMPILED_JAR, SYS_MODULE, USER_MODULE }
         public final String name;
         public final File absSrcDir;
         public final File absClsDir;
@@ -153,10 +154,19 @@ public class Locations {
     private final String relLibDir;
     private final List<LibLocn> libList;
 
-    public Locations(RegressionParameters params, TestDescription td)
+    /**
+     * Creates an object to handle the various locations for a test.
+     *
+     * @param params the parameters for the test run
+     * @param td     the test
+     * @param logger an object to which to write logging messages
+     *
+     * @throws Fault if an error occurs
+     */
+    public Locations(RegressionParameters params, TestDescription td, Consumer<String> logger)
             throws Fault {
         testSuite = params.getTestSuite();
-        systemModules = params.getTestJDK().getSystemModules(params);
+        systemModules = params.getTestJDK().getSystemModules(params, logger);
         jtpath = params.getJavaTestClassPath();
         testJDK = params.getTestJDK();
 

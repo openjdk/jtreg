@@ -48,6 +48,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -92,6 +93,9 @@ public class RegressionScript extends Script {
      * The method that interprets the tags provided in the test description and
      * performs actions accordingly.
      *
+     * Any messages that are reported while accessing the {@link JDK} and related classes
+     * will be reported to the main message section in the resulting {@code .jtr} file.
+     *
      * @param argv Any arguments that the RegressionScript may use.  Currently
      *             there are none (value ignored).
      * @param td   The current TestDescription.
@@ -110,8 +114,6 @@ public class RegressionScript extends Script {
         regEnv = (RegressionEnvironment) env;
         params = regEnv.params;
         testSuite = params.getTestSuite();
-        defaultModules = params.getTestJDK().getDefaultModules(params);
-        systemModules = params.getTestJDK().getSystemModules(params);
 
         String filterFault = params.filterFaults.get(td.getRootRelativeURL());
         if (filterFault != null)
@@ -143,7 +145,10 @@ public class RegressionScript extends Script {
             testResult.putProperty("compileJDK", getCompileJDK().getAbsolutePath());
         }
 
-        PrintWriter msgPW = testResult.getTestCommentWriter();
+        msgPW = testResult.getTestCommentWriter();
+
+        defaultModules = params.getTestJDK().getDefaultModules(params, msgPW::println);
+        systemModules = params.getTestJDK().getSystemModules(params, msgPW::println);
 
         try {
             int maxOutputSize = testSuite.getMaxOutputSize(td);
@@ -156,7 +161,7 @@ public class RegressionScript extends Script {
                 }
             }
 
-            locations = new Locations(params, td);
+            locations = new Locations(params, td, msgPW::println);
             if (params.getTestJDK().hasModules()) {
                 modules = new Modules(params, td);
                 if (!modules.isEmpty())
@@ -318,7 +323,7 @@ public class RegressionScript extends Script {
         pw.print(label);
         pw.print(": ");
         pw.println(jdk.getAbsoluteFile());
-        String v = jdk.getVersionText(opts);
+        String v = jdk.getVersionText(opts, pw::println);
         if (v.length() > 0) {
             pw.println(v);
         }
@@ -331,15 +336,16 @@ public class RegressionScript extends Script {
      * @return the set of source files known to the test
      **/
     public static Set<File> getSourceFiles(RegressionParameters p, TestDescription td) {
+        Consumer<String> logger = System.err::println;
         try {
             RegressionScript tmp = new RegressionScript();
             // init the script enough to parse the actions
             tmp.params = p;
             tmp.td= td;
-            tmp.locations = new Locations(p, td);
+            tmp.locations = new Locations(p, td, logger);
             tmp.modules = new Modules(p, td);
-            tmp.defaultModules = p.getTestJDK().getDefaultModules(p);
-            tmp.systemModules = p.getTestJDK().getSystemModules(p);
+            tmp.defaultModules = p.getTestJDK().getDefaultModules(p, logger);
+            tmp.systemModules = p.getTestJDK().getSystemModules(p, logger);
             String actions = td.getParameter("run");
             LinkedList<Action> actionList = tmp.parseActions(actions, false);
             Set<File> files = new TreeSet<>();
@@ -1092,7 +1098,7 @@ public class RegressionScript extends Script {
     }
 
     JDK_Version getTestJDKVersion() {
-        return getTestJDK().getVersion(params);
+        return getTestJDK().getVersion(params, msgPW::println);
     }
 
     String getJavaProg() {
@@ -1106,7 +1112,7 @@ public class RegressionScript extends Script {
     }
 
     JDK_Version getCompileJDKVersion() {
-        return getCompileJDK().getVersion(params);
+        return getCompileJDK().getVersion(params, msgPW::println);
     }
 
     String getJavacProg() {
@@ -1300,6 +1306,7 @@ public class RegressionScript extends Script {
     private RegressionEnvironment regEnv;
     private RegressionParameters params;
     private RegressionTestSuite testSuite;
+    private PrintWriter msgPW;
     Set<String> defaultModules;
     Set<String> systemModules;
     private boolean useBootClassPath;

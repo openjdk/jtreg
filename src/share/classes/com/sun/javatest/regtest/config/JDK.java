@@ -30,7 +30,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.PrintStream;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -42,6 +42,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Consumer;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
@@ -54,9 +55,13 @@ import com.sun.javatest.regtest.util.StringUtils;
 
 /**
  * Info about a JDK.
+ *
  * Some information can be statically determined given its $JAVA_HOME.
  * Additional information requires code to be executed in a running instance
- * of the JDK.
+ * of the JDK, which may encounter errors that can be reported to
+ * a "logger". The information is typically cached, and so once the information
+ * has been obtained the first time, there will not be errors on subsequent
+ * attempts to access the information.
  */
 public class JDK {
     /**
@@ -75,7 +80,9 @@ public class JDK {
 
     /**
      * Creates a JDK object, given its "$JAVA_HOME" path.
+     *
      * @param javaHome the "home" directory for the JDK
+     *
      * @return the JDK object
      */
     public static JDK of(String javaHome) {
@@ -84,7 +91,9 @@ public class JDK {
 
     /**
      * Creates a JDK object, given its "$JAVA_HOME" path.
+     *
      * @param javaHome the "home" directory for the JDK
+     *
      * @return the JDK object
      */
     public static synchronized JDK of(File javaHome) {
@@ -98,8 +107,8 @@ public class JDK {
 
     /**
      * Creates a JDK object, given its "$JAVA_HOME" path.
+     *
      * @param jdk the "home" directory for the JDK
-     * @return the JDK object
      */
     private JDK(File jdk) {
         this.jdk = jdk;
@@ -107,12 +116,13 @@ public class JDK {
     }
 
     /**
-     * Equality is defined in terms of equality of the absolute path for the JDK.
      * {@inheritDoc}
+     *
+     * Equality is defined in terms of equality of the absolute path for the JDK.
      */
     @Override
     public boolean equals(Object o) {
-        if (o == null || !(o instanceof JDK))
+        if (!(o instanceof JDK))
             return false;
         JDK other = (JDK) o;
         return absJDK.equals(other.absJDK);
@@ -130,7 +140,8 @@ public class JDK {
 
     /**
      * Returns the home directory for the JDK, as specified when the object was created.
-     * @return  the home directory for the JDK
+     *
+     * @return the home directory for the JDK
      */
     public File getFile() {
         return jdk;
@@ -138,7 +149,8 @@ public class JDK {
 
     /**
      * Returns the absolute path of the home directory for the JDK.
-     * @return  the absolute path of the home directory for the JDK
+     *
+     * @return the absolute path of the home directory for the JDK
      */
     public File getAbsoluteFile() {
         return absJDK;
@@ -146,6 +158,7 @@ public class JDK {
 
     /**
      * Returns a path for the Java launcher for this JDK.
+     *
      * @return a path for the Java launcher for this JDK
      */
     public File getJavaProg() {
@@ -154,6 +167,7 @@ public class JDK {
 
     /**
      * Returns a path for the Java compiler for this JDK.
+     *
      * @return a path for the Java compiler for this JDK
      */
     public File getJavacProg() {
@@ -163,8 +177,10 @@ public class JDK {
     /**
      * Returns a path for a command in the bin directory of this JDK,
      * optionally including an explicit ".exe" extension, if appropriate.
-     * @param command the name of the command
+     *
+     * @param command  the name of the command
      * @param checkExe whether to include the name of the extension
+     *
      * @return the path
      */
     public File getProg(String command, boolean checkExe) {
@@ -181,6 +197,7 @@ public class JDK {
 
     /**
      * Checks whether or not the home directory for this JDK exists.
+     *
      * @return whether or not the home directory for this JDK exists
      */
     public boolean exists() {
@@ -189,15 +206,17 @@ public class JDK {
 
     /**
      * Returns the home directory for the JDK as a string, as specified when the object was created.
-     * @return  the home directory for the JDK
+     *
+     * @return the home directory for the JDK
      */
     public String getPath() {
         return jdk.getPath();
     }
 
     /**
-     * Returns the absolute path of the home directory for the JDK, as a String.
-     * @return  the absolute path of the home directory for the JDK
+     * Returns the absolute path of the home directory for the JDK, as a string.
+     *
+     * @return the absolute path of the home directory for the JDK
      */
     public String getAbsolutePath() {
         return absJDK.getPath();
@@ -206,7 +225,8 @@ public class JDK {
     /**
      * Returns a search path to access JDK classes.
      * {@implNote The result contains tools.jar if it exists, and is empty otherwise.}
-     * @return a search path used to access JDK classes.
+     *
+     * @return a search path used to access JDK classes
      */
     public SearchPath getJDKClassPath() {
         // will return an empty path if tools.jar does not exist
@@ -216,26 +236,32 @@ public class JDK {
     /**
      * Returns the version of this JDK, as determined from the
      * {@code java.specification.version} found when the JDK is run.
+     *
      * @param params parameters used to locate the class to determine the value of the
-     *  system property.
+     *               system property
+     * @param logger an object to which to write logging messages
+     *
      * @return the version of this JDK
      */
     // params just used for javatestClassPath
     // could use values from getProperties if available
-    public JDK_Version getVersion(RegressionParameters params) {
-        return getJDKVersion(params.getJavaTestClassPath());
+    public JDK_Version getVersion(RegressionParameters params, Consumer<String> logger) {
+        return getJDKVersion(params.getJavaTestClassPath(), logger);
     }
 
     /**
      * Returns the version of this JDK, as determined from the
      * {@code java.specification.version}found when the JDK is run.
+     *
      * @param classpath used to locate the class to determine the value of the
-     *  system property.
+     *                  system property
+     * @param logger    an object to which to write logging messages
+     *
      * @return the version of this JDK
      */
-    public synchronized JDK_Version getJDKVersion(SearchPath classpath) {
+    public synchronized JDK_Version getJDKVersion(SearchPath classpath, Consumer<String> logger) {
         if (jdkVersion == null) {
-            jdkVersion = JDK_Version.forName(getJavaSpecificationVersion(classpath));
+            jdkVersion = JDK_Version.forName(getJavaSpecificationVersion(classpath, logger));
         }
 
         return jdkVersion;
@@ -244,13 +270,17 @@ public class JDK {
     /**
      * Returns the value of the {@code java.specification.version} property
      * found when this JDK is run.
-     * {@implNote The value is cached. }
+     *
+     * @implNote The value is cached.
      *
      * @param getSysPropClassPath used to locate the class to determine the value of the
-     *                            system property.
+     *                            system property
+     * @param logger              an object to which to write logging messages
+     *
      * @return the value of the {@code java.specification.version} property
      */
-    private synchronized String getJavaSpecificationVersion(SearchPath getSysPropClassPath) {
+    private synchronized String getJavaSpecificationVersion(SearchPath getSysPropClassPath,
+                                                            Consumer<String> logger) {
         if (javaSpecificationVersion != null)
             return javaSpecificationVersion;
 
@@ -273,7 +303,7 @@ public class JDK {
         pb.redirectErrorStream(true);
         try {
             Process p = pb.start();
-            List<String> lines = getOutput(p);
+            List<String> lines = getOutput(p, logger);
             int rc = p.waitFor();
             if (rc == 0) {
                 for (String line : lines) {
@@ -283,11 +313,20 @@ public class JDK {
                         break;
                     }
                 }
+                if (javaSpecificationVersion.equals("unknown")) {
+                    logger.accept("Error getting " + VERSION_PROPERTY + " for " + jdk + ": property not found in output");
+                    lines.forEach(logger::accept);
+                }
+            } else {
+                logger.accept("Error getting " + VERSION_PROPERTY + " for " + jdk + ": exit code " + rc);
+                lines.forEach(logger::accept);
             }
         } catch (InterruptedException e) {
             // ignore, leave version as default
+            logger.accept("Error getting " + VERSION_PROPERTY + " for " + jdk + ": " + e);
         } catch (IOException e) {
             // ignore, leave version as default
+            logger.accept("Error getting " + VERSION_PROPERTY + " for " + jdk + ": " + e);
         }
 
         // java.specification.version is not defined in JDK1.1.*
@@ -299,12 +338,17 @@ public class JDK {
 
     /**
      * Returns the output from running {@code java -version} with a given set of VM options.
+     *
      * @param vmOpts the VM options to be used when {@code java -version} is run
-     * @return  the output from "{@code java -version}"
+     * @param logger an object to which to write logging messages
+     *
+     * @return the output from "{@code java -version}"
      */
-    public synchronized String getVersionText(Collection<String> vmOpts) {
+    public synchronized String getVersionText(Collection<String> vmOpts, Consumer<String> logger) {
         if (fullVersions == null)
             fullVersions = new HashMap<>();
+
+        final String VERSION_OPTION = "-version";
 
         Set<String> vmOptsSet = new LinkedHashSet<>(vmOpts);
         String fullVersion = fullVersions.get(vmOptsSet);
@@ -313,21 +357,26 @@ public class JDK {
             List<String> cmdArgs = new ArrayList<>();
             cmdArgs.add(getJavaProg().getPath());
             cmdArgs.addAll(vmOpts);
-            cmdArgs.add("-version");
+            cmdArgs.add(VERSION_OPTION);
 
             try {
                 Process p = new ProcessBuilder(cmdArgs)
                         .redirectErrorStream(true)
                         .start();
-                List<String> lines = getOutput(p);
+                List<String> lines = getOutput(p, logger);
                 int rc = p.waitFor();
                 if (rc == 0) {
                     fullVersion = StringUtils.join(lines, "\n");
+                } else {
+                    logger.accept("Error running 'java " + VERSION_OPTION + "' for " + jdk + ": exit code " + rc);
+                    lines.forEach(logger::accept);
                 }
             } catch (InterruptedException e) {
                 // ignore, leave version as default
+                logger.accept("Error running 'java " + VERSION_OPTION + "' for " + jdk + ": " + e);
             } catch (IOException e) {
                 // ignore, leave version as default
+                logger.accept("Error running 'java " + VERSION_OPTION + "' for " + jdk + ": " + e);
             }
 
             fullVersions.put(vmOptsSet, fullVersion);
@@ -345,19 +394,24 @@ public class JDK {
      * <li>the system properties
      * <li>additional properties for internal use, such as jtreg.installed.modules
      * </ul>
+     *
      * @param params used to help invoke GetJDKProperties
+     * @param logger an object to which to write logging messages
+     *
      * @return the properties
      * @throws Fault if an error occurred while getting the properties
      */
-    public synchronized Properties getProperties(RegressionParameters params) throws Fault {
+    public synchronized Properties getProperties(RegressionParameters params,
+                                                 Consumer<String> logger) throws Fault {
         Info info = getInfo(params);
 
         if (info.jdkProperties == null) {
             // get default modules as well
             info.jdkProperties = execGetProperties(params,
-                    Collections.<String>emptyList(),
+                    Collections.emptyList(),
                     Arrays.asList("--system-properties", "--modules=boot-layer"),
-                    true);
+                    true,
+                    logger);
         }
 
         return info.jdkProperties;
@@ -365,14 +419,18 @@ public class JDK {
 
     /**
      * Checks whether or not the JDK has modules.
-     * {@implNote Eventually, this should be a simple property of the version.}
+     * Any errors will be logged to {@link System#err}.
+     *
+     * @implNote Eventually, this should be a simple property of the version.
+     *
      * @return whether or not the JDK has modules
      */
     public boolean hasModules() {
+        Consumer<String> logger = System.err::println;
         // whether or not a JDK has modules is independent of the params used,
         // so arbitrarily use the first (and typically only) one.
         for (RegressionParameters p: infoMap.keySet()) {
-            return !getDefaultModules(p).isEmpty();
+            return !getDefaultModules(p, logger).isEmpty();
         }
         // jdk.getProperties should be called early on, to avoid this happening
         throw new IllegalStateException();
@@ -380,18 +438,21 @@ public class JDK {
 
     /**
      * Get the set of default modules for this JDK, taking into account any VM options
-     * like --add-modules or --limit-modules.
+     * like {@code --add-modules} or {@code --limit-modules}.
      * This is determined by running {@link GetJDKProperties}, which will include
      * a property giving the set of installed modules, if any.
-     * @param params to help run GetJDKProperties
+     *
+     * @param params to help run {@code GetJDKProperties}
+     * @param logger an object to which to write logging messages
+     *
      * @return the set of installed modules
      */
-    public synchronized Set<String> getDefaultModules(RegressionParameters params) {
+    public synchronized Set<String> getDefaultModules(RegressionParameters params, Consumer<String> logger) {
         Info info = getInfo(params);
 
         if (info.defaultModules == null) {
             try {
-                Properties props = getProperties(params);
+                Properties props = getProperties(params, logger);
                 String m = props.getProperty(GetJDKProperties.JTREG_MODULES);
                 if (m == null) {
                     info.defaultModules = Collections.emptySet();
@@ -412,17 +473,21 @@ public class JDK {
 
     /**
      * Get the set of system modules for this JDK, taking into account any VM options
-     * like --add-modules or --limit-modules.
-     * This is determined by running {@link GetJDKProperties}, using --add-modules=ALL-SYSTEM
+     * like {@code --add-modules} or {@code --limit-modules}.
+     * This is determined by running {@link GetJDKProperties}, using {@code --add-modules=ALL-SYSTEM}
      * which will include a property giving the set of installed modules, if any.
+     *
      * @param params to help run GetJDKProperties
+     * @param logger an object to which to write logging messages
+     *
      * @return the set of installed modules
      */
-    public synchronized Set<String> getSystemModules(RegressionParameters params) {
+    public synchronized Set<String> getSystemModules(RegressionParameters params,
+                                                     Consumer<String> logger) {
         Info info = getInfo(params);
 
         if (info.systemModules == null) {
-            if (getVersion(params).compareTo(JDK_Version.V9) >= 0) {
+            if (getVersion(params, logger).compareTo(JDK_Version.V9) >= 0) {
                 try {
                     // Despite the name, --add-modules=ALL-SYSTEM does not
                     // resolve all system modules: it excludes those marked
@@ -442,8 +507,8 @@ public class JDK {
                         }
                     }
                     Properties props = execGetProperties(params,
-                            Collections.<String>emptyList(),    // vm options
-                            Arrays.asList(modulesOpt), false);  // requested info from probe
+                            Collections.emptyList(),    // vm options
+                            Arrays.asList(modulesOpt), false, logger);  // requested info from probe
                     String m = props.getProperty(GetJDKProperties.JTREG_MODULES);
                     if (m == null) {
                         info.systemModules = Collections.emptySet();
@@ -469,8 +534,9 @@ public class JDK {
      * Checks whether or not the JDK has an "old-style" ct.sym file,
      * such that you might need to use {@code -XDignore.symbol.file=true} to
      * access hidden internal API.
-     * {@implNote Eventually, this should be a simple property of the version.}
+     *
      * @return whether or not the JDK has an "old-style" ct.sym file.
+     * @implNote Eventually, this should be a simple property of the version.
      */
     public boolean hasOldSymbolFile() {
         if (hasOldSymbolFile == null) {
@@ -498,18 +564,22 @@ public class JDK {
 
     /**
      * Executes the {@link GetJDKProperties} utility class in the target JDK.
-     * @param params parameters used to determine additional classes to run, a
-     *  and how to compile them
-     * @param extraVMOpts additional VM options to be specified when the class is run
-     * @param opts options to be passed to the utility class
+     *
+     * @param params                parameters used to determine additional classes to run,
+     *                              and how to compile them
+     * @param extraVMOpts           additional VM options to be specified when the class is run
+     * @param opts                  options to be passed to the utility class
      * @param includeExtraPropDefns whether or not to compile and run the "extraPropDefn"
-     *  classes specified in the test-suite TEST.ROOT file.
+     *                              classes specified in the test-suite TEST.ROOT file
+     * @param logger                an object to which to write logging messages
+     *
      * @return the properties returns from the utility class.
      * @throws Fault if any error occurs while getting the properties.
      */
     private Properties execGetProperties(RegressionParameters params,
-            List<String> extraVMOpts, List<String> opts, boolean includeExtraPropDefns)
-            throws Fault {
+            List<String> extraVMOpts, List<String> opts, boolean includeExtraPropDefns,
+            Consumer<String> logger)
+                throws Fault {
 
         ExtraPropDefns epd = includeExtraPropDefns ? params.getTestSuite().getExtraPropDefns() : new ExtraPropDefns();
         try {
@@ -544,7 +614,6 @@ public class JDK {
         cmdArgs.addAll(opts);
         cmdArgs.addAll(epd.getClasses());
 
-        Properties props = new Properties();
         try {
             File scratchDir = params.getWorkDirectory().getFile("scratch");
             // The scratch directory probably already exists, but just in case,
@@ -553,51 +622,77 @@ public class JDK {
             final Process p = new ProcessBuilder(cmdArgs)
                     .directory(scratchDir)
                     .start();
-            asyncCopy(p.getErrorStream(), System.err);
-            props.load(p.getInputStream());
+            asyncCopy(p.getErrorStream(), logger);
+            List<String> lines = readLines(p.getInputStream());
+
             int rc = p.waitFor();
             if (rc != 0) {
-                throw new Fault("failed to get JDK properties for "
-                        + getJavaProg() + " " + StringUtils.join(vmOpts, " ") + "; exit code " + rc);
+                String msg = "failed to get JDK properties for "
+                        + getJavaProg() + " " + StringUtils.join(vmOpts, " ") + "; exit code " + rc;
+                logger.accept(msg);
+                throw new Fault(msg);
             }
+
+            return loadProperties(lines, logger);
+
         } catch (InterruptedException e) {
+            logger.accept("Error accessing extra property definitions: " + e);
             throw new Fault("Error accessing extra property definitions: " + e, e);
         } catch (IOException e) {
+            logger.accept("Error accessing extra property definitions: " + e);
             throw new Fault("Error accessing extra property definitions: " + e, e);
         }
-
-        return props;
-
     }
 
-    private void asyncCopy(final InputStream in, final PrintStream out) {
-        new Thread() {
-            @Override
-            public void run() {
-                try {
-                    BufferedReader err = new BufferedReader(new InputStreamReader(in));
-                    String line;
-                    while ((line = err.readLine()) != null) {
-                        out.println(line);
-                    }
-                } catch (IOException e) {
-
-                }
-            }
-        }.start();
-    }
-
-    private List<String> getOutput(Process p) {
+    private List<String> readLines(InputStream is) throws IOException {
         List<String> lines = new ArrayList<>();
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(is))) {
+            String line;
+            while ((line = in.readLine()) != null) {
+                lines.add(line);
+            }
+        }
+        return lines;
+    }
+
+    private Properties loadProperties(List<String> lines, Consumer<String> logger) throws Fault {
+        Properties props = new Properties();
         try {
-            StringBuilder sb = new StringBuilder();
-            BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            props.load(new StringReader(String.join("\n", lines)));
+        } catch (IOException e) {
+            logger.accept("Error loading extra property definitions: " + e);
+            lines.forEach(logger::accept);
+            throw new Fault("Error loading extra property definitions: " + e);
+        }
+        return props;
+    }
+
+    private void asyncCopy(final InputStream in, final Consumer<String> logger) {
+        new Thread(() -> {
+            try {
+                BufferedReader err = new BufferedReader(new InputStreamReader(in));
+                String line;
+                while ((line = err.readLine()) != null) {
+                    logger.accept(line);
+                }
+            } catch (IOException e) {
+                logger.accept("Error reading stderr while accessing properties: " + e);
+            }
+        }).start();
+    }
+
+    private List<String> getOutput(Process p, Consumer<String> logger) {
+        List<String> lines = new ArrayList<>();
+        try (BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
             String line;
             while ((line = r.readLine()) != null) {
                 lines.add(line);
             }
             return lines;
         } catch (IOException e) {
+            logger.accept("Error getting output from process: " + e);
+            logger.accept("Output so far:");
+            lines.forEach(logger::accept);
             return Collections.singletonList(e.getMessage());
         }
     }
@@ -632,5 +727,5 @@ public class JDK {
         Set<String> systemModules;
     }
 
-    private static boolean showModules = Flags.get("showModules");
+    private static final boolean showModules = Flags.get("showModules");
 }

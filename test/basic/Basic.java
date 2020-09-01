@@ -350,7 +350,7 @@ public class Basic
         RegressionParameters rp = null;
 
         try {
-            rp = new RegressionParameters("basic", testSuite);
+            rp = new RegressionParameters("basic", testSuite, System.err::println);
 
             rp.setWorkDirectory(workDir);
             rp.setTests((String[])null);
