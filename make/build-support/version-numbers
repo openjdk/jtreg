@@ -1,0 +1,50 @@
+#
+# Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+JTREG_VERSION=5.2
+
+DEFAULT_ANT_VERSION=1.10.8
+DEFAULT_ANT_ARCHIVE_CHECKSUM=dbe187ce2963f9df8a67de8aaff3b0a437d06978
+DEFAULT_ANT_JAR_CHECKSUM=ae148abb0532b685c5eeb22fdec9d124e89be5de
+
+DEFAULT_ASMTOOLS_SRC_TAG=7.0-b08
+DEFAULT_ASMTOOLS_SRC_ARCHIVE_CHECKSUM=18379d84e51af47b2aa2277f03f0174128af8832
+
+DEFAULT_JCOMMANDER_VERSION=1.72
+DEFAULT_JCOMMANDER_JAR_CHECKSUM=6375e521c1e11d6563d4f25a07ce124ccf8cd171
+
+DEFAULT_JCOV_SRC_TAG=jcov3.0-b05
+DEFAULT_JCOV_SRC_ARCHIVE_CHECKSUM=3eee5f50e61d25bf7c13ca56d669e7d024d21939
+
+DEFAULT_JTHARNESS_SRC_TAG=jt6.0-b11
+DEFAULT_JTHARNESS_SRC_ARCHIVE_CHECKSUM=8ed53b7314d4ae75561dd15a935cfcaf85e80d91
+
+DEFAULT_JUNIT_VERSION=4.10
+DEFAULT_JUNIT_JAR_CHECKSUM=e4f1766ce7404a08f45d859fb9c226fc9e41a861
+
+DEFAULT_TESTNG_VERSION=6.9.6
+DEFAULT_TESTNG_JAR_CHECKSUM=e6788337be58ddc30c01d0ade783fb06cc825c7c
+DEFAULT_TESTNG_LICENSE_VERSION=6.9.7
+DEFAULT_TESTNG_LICENSE_CHECKSUM=7df059597099bb7dcf25d2a9aedfaf4465f72d8d
