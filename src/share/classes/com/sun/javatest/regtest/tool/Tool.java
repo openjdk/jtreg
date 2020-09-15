@@ -1225,6 +1225,10 @@ public class Tool {
             reportDirArg = new File("JTreport");
         }
 
+        if (!(mainWrapper == null) && !mainWrapper.isEmpty()) {
+            testVMOpts.add("-D" + MainWrapper.MAIN_WRAPPER + "=" + mainWrapper);
+        }
+
         makeDir(workDirArg, false);
         testManager.setWorkDirectory(workDirArg);
 
@@ -1364,15 +1368,8 @@ public class Tool {
                         }
                         p.setMaxPoolSize(maxPoolSize);
                         p.setIdleTimeout(poolIdleTimeout);
-                        if (!(mainWrapper == null) && !mainWrapper.isEmpty()) {
-                            p.setMainWrapper(mainWrapper);
-                            testVMOpts.add("-D" + MainWrapper.MAIN_WRAPPER + "=" + mainWrapper);
-                        }
                         break;
                     case OTHERVM:
-                        if (!(mainWrapper == null) && !mainWrapper.isEmpty()) {
-                            testVMOpts.add("-D" + MainWrapper.MAIN_WRAPPER + "=" + mainWrapper);
-                        }
                         break;
                     default:
                         throw new AssertionError();
