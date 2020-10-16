@@ -28,6 +28,7 @@ package com.oracle.plugin.jtreg.service.ui;
 import com.intellij.execution.ExecutionBundle;
 import com.intellij.execution.ui.DefaultJreSelector;
 import com.intellij.execution.ui.JrePathEditor;
+import com.intellij.icons.AllIcons;
 import com.intellij.lang.ant.AntBundle;
 import com.intellij.lang.ant.config.AntBuildTarget;
 import com.intellij.lang.ant.config.AntConfiguration;
@@ -58,6 +59,7 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.awt.*;
+import java.lang.reflect.Field;
 
 /**
  * This class models the dialog associated with the (project-wide) jtreg tool settings.
@@ -216,6 +218,26 @@ public class JTRegServiceConfigurable implements SearchableConfigurable {
         }
     }
 
+    static Icon TARGET;
+
+    static {
+        //some reflective goop to retain compatibility with earlier versions
+        Class<?>[] iconClasses = { AntIcons.class, AllIcons.Nodes.class };
+        Field targetIcon;
+        for (Class<?> iconClass : iconClasses) {
+            try {
+                targetIcon = iconClass.getDeclaredField("Target");
+                TARGET = (Icon) targetIcon.get(null);
+                break;
+            } catch (ReflectiveOperationException ex) {
+                // try again
+            }
+        }
+        if (TARGET == null) {
+            throw new ExceptionInInitializerError("Cannot find Target icon!");
+        }
+    }
+
     private class MyListCellRenderer extends JBList.StripedListCellRenderer {
         @Override
         public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
@@ -229,7 +251,7 @@ public class JTRegServiceConfigurable implements SearchableConfigurable {
         }
 
         public Icon getTaskIcon(AntBuildTarget antTarget) {
-            return antTarget instanceof MetaTarget ? AntIcons.MetaTarget : AntIcons.Target;
+            return antTarget instanceof MetaTarget ? AntIcons.MetaTarget : TARGET;
         }
 
         public String getDescription(AntBuildTarget antTarget) {
