@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -50,7 +50,9 @@ public class MainActionHelper extends ActionHelper {
     private Map<String, String> props;
     private Set<String> addExports;
     private Set<String> addOpens;
+    private Set<String> addMods;
     private SearchPath classpath;
+    private SearchPath modulepath;
     private String className;
     private List<String> classArgs;
     private int timeout;
@@ -76,8 +78,18 @@ public class MainActionHelper extends ActionHelper {
         return this;
     }
 
+    MainActionHelper addMods(Set<String> addMods) {
+        this.addMods = addMods;
+        return this;
+    }
+
     MainActionHelper classpath(SearchPath classpath) {
         this.classpath = classpath;
+        return this;
+    }
+
+    MainActionHelper modulepath(SearchPath modulepath) {
+        this.modulepath = modulepath;
         return this;
     }
 
@@ -128,23 +140,25 @@ public class MainActionHelper extends ActionHelper {
         AStatus status = passed(EXEC_PASS);
         try {
             Class<?> c;
-            ClassLoader loader;
-            if (classpath != null) {
+            ClassLoader loader = ClassLoader.getSystemClassLoader();
+            if (modulepath != null && !modulepath.isEmpty()) {
+                loader = ModuleHelper.addModules(modulepath.asList(), addMods);
+            }
+            if (classpath != null && !classpath.isEmpty()) {
                 List<URL> urls = new ArrayList<URL>();
-                for (File f : new SearchPath(classpath).asList()) {
+                for (File f : classpath.asList()) {
                     try {
                         urls.add(f.toURI().toURL());
                     } catch (MalformedURLException e) {
                     }
                 }
-                loader = new URLClassLoader(urls.toArray(new URL[urls.size()]));
-                ModuleHelper.addExports(addExports, loader);
-                ModuleHelper.addOpens(addOpens, loader);
-                c = loader.loadClass(className);
-            } else {
-                loader = null;
-                c = Class.forName(className);
+                loader = new URLClassLoader(urls.toArray(new URL[urls.size()]), loader);
             }
+
+            ModuleHelper.addExports(addExports, loader);
+            ModuleHelper.addOpens(addOpens, loader);
+
+            c = loader.loadClass(className);
 
             // Select signature for main method depending on whether the class
             // implements the TestRunner marker interface.

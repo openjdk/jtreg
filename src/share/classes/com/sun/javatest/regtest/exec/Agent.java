@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -285,7 +285,9 @@ public class Agent {
             final Map<String, String> testProps,
             final Set<String> addExports,
             final Set<String> addOpens,
+            final Set<String> addMods,
             final SearchPath testClassPath,
+            final SearchPath modulePath,
             final String testClass,
             final List<String> testArgs,
             int timeout,
@@ -294,6 +296,7 @@ public class Agent {
                 throws Fault {
         trace("doMainAction: " + testName
                     + " " + testClassPath
+                    + " " + modulePath
                     + " " + testClass
                     + " " + testArgs);
 
@@ -307,7 +310,9 @@ public class Agent {
                         writeMap(testProps);
                         writeCollection(addExports);
                         writeCollection(addOpens);
+                        writeCollection(addMods);
                         out.writeUTF(testClassPath.toString());
+                        out.writeUTF(modulePath.toString());
                         out.writeUTF(testClass);
                         writeCollection(testArgs);
                         out.flush();

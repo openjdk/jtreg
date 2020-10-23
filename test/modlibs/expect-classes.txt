@@ -33,6 +33,7 @@
 ./classes/mainAction/patchmods/RunPatchMod.d/patches/java.base/java/util/TestHelper.class
 ./classes/mainAction/usermods/RunUserMod.d/modules/um1/module-info.class
 ./classes/mainAction/usermods/RunUserMod.d/modules/um1/um1_p1/um1_p1_M1.class
+./classes/mainAction/usermods/UseUserModAsLib.d/UseUserModAsLib.class
 ./classes/testngAction/patchmods/patches/java.base/java/util/java_util_TestNGTest.class
 ./classes/testngAction/usermods/modules/um1/module-info.class
 ./classes/testngAction/usermods/modules/um1/um1_p1/um1_p1_T.class
