@@ -127,7 +127,7 @@
 #         The full URL for the archive.
 #     2b. ANT_ARCHIVE_URL_BASE + ANT_VERSION
 #         The individual URL components used to construct the full URL.
-#    
+#
 # Ant jar
 #     Checksum variables:
 #         ANT_JAR_CHECKSUM: checksum of binary archive
@@ -138,7 +138,7 @@
 #         The full URL for the jar.
 #     2b. ANT_JAR_URL_BASE + ANT_JAR_VERSION
 #         The individual URL components used to construct the full URL.
-#    
+#
 # AsmTools
 #     Checksum variables:
 #         ASMTOOLS_ARCHIVE_CHECKSUM: checksum of binary archive
@@ -438,7 +438,7 @@ setup_jtharness_javatest_jar() {
             JTHARNESS_ARCHIVE_URL="${JTHARNESS_ARCHIVE_URL_BASE}/${JTHARNESS_VERSION}/${JTHARNESS_BUILD_NUMBER}/${JTHARNESS_FILE}"
         fi
     fi
-    
+
     local JTHARNESS_DEPS_DIR="${DEPS_DIR}/jtharness"
 
     if [ -n "${JTHARNESS_ARCHIVE_URL:-}" ]; then
@@ -458,7 +458,7 @@ setup_jtharness_javatest_jar() {
         export JTHARNESS_SRC_TAG="${JTHARNESS_SRC_TAG}"
         export JTHARNESS_SRC_ARCHIVE_CHECKSUM="${JTHARNESS_SRC_ARCHIVE_CHECKSUM}"
         export ANT="${ANT}"
-        bash -x "${mydir}/build-support/jtharness/build.sh"
+        bash "${mydir}/build-support/jtharness/build.sh"
     )
     ret=$?
     if [ ! $ret = 0 ]; then
