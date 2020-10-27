@@ -29,7 +29,6 @@ import java.io.File;
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.nio.file.Path;
 import java.util.*;
 
 public class ModuleHelper {
@@ -161,9 +160,20 @@ public class ModuleHelper {
             return;
 
         try {
+            // new in Java SE 7
+            Class<?> pathClass = Class.forName("java.nio.file.Path");
+            Class<?> pathArrayClass = Class.forName("java.nio.file.Path[]");
+            toPathMethod = File.class.getDeclaredMethod("toPath");
+            emptyArrayOfPaths = (Object[]) Array.newInstance(pathClass, 0);
+
+            // new in Java SE 8
+            Class<?> optionalClass = Class.forName("java.util.Optional");
+            isPresentMethod = optionalClass.getDeclaredMethod("isPresent");
+            getMethod = optionalClass.getDeclaredMethod("get");
+
             // new in Jave SE 9
             Class<?> moduleFinderClass = Class.forName("java.lang.module.ModuleFinder");
-            moduleFinderOfMethod = moduleFinderClass.getDeclaredMethod("of", Path[].class);
+            moduleFinderOfMethod = moduleFinderClass.getDeclaredMethod("of", pathArrayClass);
 
             Class<?> configurationClass = Class.forName("java.lang.module.Configuration");
             resolveMethod = configurationClass.getDeclaredMethod("resolve", moduleFinderClass, moduleFinderClass, Collection.class);
@@ -188,14 +198,6 @@ public class ModuleHelper {
 
             getUnnamedModuleMethod = ClassLoader.class.getDeclaredMethod("getUnnamedModule");
 
-            // new in Java SE 8
-            Class<?> optionalClass = Class.forName("java.util.Optional");
-            isPresentMethod = optionalClass.getDeclaredMethod("isPresent");
-            getMethod = optionalClass.getDeclaredMethod("get");
-
-            // new in Java SE 7
-            toPathMethod = File.class.getDeclaredMethod("toPath");
-            emptyArrayOfPaths = (Object[]) Array.newInstance(Class.forName("java.nio.file.Path"), 0);
         } catch (ClassNotFoundException e) {
             throw new Fault("unexpected exception: " + e, e);
         } catch (NoSuchMethodException e) {
