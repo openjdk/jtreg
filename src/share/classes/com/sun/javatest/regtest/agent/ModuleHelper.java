@@ -69,8 +69,8 @@ public class ModuleHelper {
             ModuleLayer layer = bootLayer.defineModulesWithOneLoader(configuration, ClassLoader.getSystemClassLoader());
             ClassLoader result = layer.findLoader(modules.iterator().next());
             */
-            Object finder = moduleFinderOfMethod.invoke(null, new Object[]{paths.toArray(emptyArrayOfPaths)});
-            Object emptyFinder = moduleFinderOfMethod.invoke(null,  new Object[]{emptyArrayOfPaths});
+            Object finder = moduleFinderOfMethod.invoke(null, new Object[] { paths.toArray(emptyArrayOfPaths) });
+            Object emptyFinder = moduleFinderOfMethod.invoke(null,  new Object[] { emptyArrayOfPaths });
             Object bootConfig = configurationMethod.invoke(bootLayer);
             Object config = resolveMethod.invoke(bootConfig, finder, emptyFinder, modules);
             Object layer = defineModulesWithOneLoaderMethod.invoke(bootLayer, config, ClassLoader.getSystemClassLoader());
@@ -162,9 +162,9 @@ public class ModuleHelper {
         try {
             // new in Java SE 7
             Class<?> pathClass = Class.forName("java.nio.file.Path");
-            Class<?> pathArrayClass = Class.forName("java.nio.file.Path[]");
             toPathMethod = File.class.getDeclaredMethod("toPath");
             emptyArrayOfPaths = (Object[]) Array.newInstance(pathClass, 0);
+            Class<?> pathArrayClass = emptyArrayOfPaths.getClass();
 
             // new in Java SE 8
             Class<?> optionalClass = Class.forName("java.util.Optional");
