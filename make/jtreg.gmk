@@ -289,7 +289,7 @@ $(JTREG_IMAGEDIR)/lib/testng.jar: $(call PosixPath,$(TESTNG_JAR))
 	$(CP) $(TESTNG_JAR) $@
 	jquery=`$(JAR) tf $@ | $(GREP) 'jquery.*.js'` ; \
 	if [ -n "$$jquery" ]; then \
-	    $(RM) $(BUILDDIR)/$$jquery ; $(TOUCH) $(BUILDDIR)/$$jquery ; \
+	    $(RM) $(BUILDDIR)/$$jquery ; $(MKDIR) -p `dirname $(BUILDDIR)/$$jquery` ; $(TOUCH) $(BUILDDIR)/$$jquery ; \
 	    $(JAR) uf $@ -C $(BUILDDIR) $$jquery ; \
 	fi
 
@@ -302,6 +302,24 @@ $(JTREG_IMAGEDIR)/lib/jcommander.jar: $(call PosixPath,$(JCOMMANDER_JAR))
 
 ifdef JCOMMANDER_JAR
     TARGETS.ZIP.jtreg += $(JTREG_IMAGEJARDIR)/jcommander.jar
+endif
+
+$(JTREG_IMAGEDIR)/lib/guice.jar: $(call PosixPath,$(GOOGLE_GUICE_JAR))
+	$(RM) $@
+	$(MKDIR) -p $(@D)
+	$(CP) $(GOOGLE_GUICE_JAR) $@
+
+ifdef GOOGLE_GUICE_JAR
+    TARGETS.ZIP.jtreg += $(JTREG_IMAGEJARDIR)/guice.jar
+endif
+
+$(JTREG_IMAGEDIR)/lib/hamcrest.jar: $(call PosixPath,$(HAMCREST_JAR))
+	$(RM) $@
+	$(MKDIR) -p $(@D)
+	$(CP) $(HAMCREST_JAR) $@
+
+ifdef HAMCREST_JAR
+    TARGETS.ZIP.jtreg += $(JTREG_IMAGEJARDIR)/hamcrest.jar
 endif
 
 $(JTREG_IMAGEDIR)/legal/testng/LICENSE: $(call PosixPath,$(TESTNG_LICENSE))

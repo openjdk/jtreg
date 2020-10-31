@@ -94,6 +94,8 @@ endif
 	@echo "TESTNG_JAR          = $(TESTNG_JAR)"
 	@echo "TESTNG_LICENSE      = $(TESTNG_LICENSE)"
 	@echo "JCOMMANDER_JAR      = $(JCOMMANDER_JAR)"
+	@echo "GOOGLE_JUICE_JAR    = $(GOOGLE_JUICE_JAR)"
+	@echo "HAMCREST_JAR        = $(HAMCREST_JAR)"
 	@echo "BUILD_VERSION       = $(BUILD_VERSION)"
 	@echo "BUILD_MILESTONE     = $(BUILD_MILESTONE)"
 	@echo "BUILD_NUMBER        = $(BUILD_NUMBER)"

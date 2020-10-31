@@ -1638,14 +1638,14 @@ public class Tool {
 
         File libDir = jtreg_jar.getParentFile();
 
-        junitPath = new JarFinder("junit.jar")
-                .classes("org.junit.runner.JUnitCore")
+        junitPath = new JarFinder("junit.jar", "hamcrest.jar")
+                .classes("org.junit.runner.JUnitCore", "org.hamcrest.SelfDescribing")
                 .libDir(libDir)
                 .getPath();
         // no convenient version info for junit.jar
 
-        testngPath = new JarFinder("testng.jar", "jcommander.jar")
-                .classes("org.testng.annotations.Test", "com.beust.jcommander.JCommander")
+        testngPath = new JarFinder("testng.jar", "jcommander.jar", "guice.jar")
+                .classes("org.testng.annotations.Test", "com.beust.jcommander.JCommander", "com.google.inject.Stage")
                 .libDir(libDir)
                 .getPath();
         help.addPathVersionHelper("TestNG", testngPath);

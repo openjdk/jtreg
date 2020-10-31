@@ -153,6 +153,28 @@
 #     3. ASMTOOLS_SRC_TAG
 #         The SCM repository tag to use when building from source.
 #
+# Google Guice
+#     Checksum variables:
+#         GOOGLE_GUICE_JAR_CHECKSUM: checksum of jar
+#
+#     1. GOOGLE_GUICE_JAR
+#         The path to guice.jar.
+#     2a. GOOGLE_GUICE_JAR_URL
+#         The full URL for the jar.
+#     2b. GOOGLE_GUICE_JAR_URL_BASE + GOOGLE_GUICE_VERSION
+#         The individual URL components used to construct the full URL.
+#
+# Hamcrest
+#     Checksum variables:
+#         HAMCREST_JAR_CHECKSUM: checksum of jar
+#
+#     1. HAMCREST_JAR
+#         The path to hamcrest.jar.
+#     2a. HAMCREST_JAR_URL
+#         The full URL for the jar.
+#     2b. HAMCREST_JAR_URL_BASE + HAMCREST_VERSION
+#         The individual URL components used to construct the full URL.
+#
 # JCommander
 #     Checksum variables:
 #         JCOMMANDER_JAR_CHECKSUM: checksum of jar
@@ -302,6 +324,14 @@ ANT_JAR_CHECKSUM="${ANT_JAR_CHECKSUM:-${DEFAULT_ANT_JAR_CHECKSUM}}"
 ASMTOOLS_SRC_TAG="${ASMTOOLS_SRC_TAG:-${DEFAULT_ASMTOOLS_SRC_TAG}}"
 ASMTOOLS_SRC_ARCHIVE_CHECKSUM="${ASMTOOLS_SRC_ARCHIVE_CHECKSUM:-${DEFAULT_ASMTOOLS_SRC_ARCHIVE_CHECKSUM}}"
 
+GOOGLE_GUICE_VERSION="${GOOGLE_GUICE_VERSION:-${DEFAULT_GOOGLE_GUICE_VERSION}}"
+GOOGLE_GUICE_JAR_URL_BASE="${GOOGLE_GUICE_JAR_URL_BASE:-${MAVEN_REPO_URL_BASE}}"
+GOOGLE_GUICE_JAR_CHECKSUM="${GOOGLE_GUICE_JAR_CHECKSUM:-${DEFAULT_GOOGLE_GUICE_JAR_CHECKSUM}}"
+
+HAMCREST_VERSION="${HAMCREST_VERSION:-${DEFAULT_HAMCREST_VERSION}}"
+HAMCREST_JAR_URL_BASE="${HAMCREST_JAR_URL_BASE:-${MAVEN_REPO_URL_BASE}}"
+HAMCREST_JAR_CHECKSUM="${HAMCREST_JAR_CHECKSUM:-${DEFAULT_HAMCREST_JAR_CHECKSUM}}"
+
 JCOMMANDER_VERSION="${JCOMMANDER_VERSION:-${DEFAULT_JCOMMANDER_VERSION}}"
 JCOMMANDER_JAR_URL_BASE="${JCOMMANDER_JAR_URL_BASE:-${MAVEN_REPO_URL_BASE}}"
 JCOMMANDER_JAR_CHECKSUM="${JCOMMANDER_JAR_CHECKSUM:-${DEFAULT_JCOMMANDER_JAR_CHECKSUM}}"
@@ -317,6 +347,7 @@ JTHARNESS_SRC_ARCHIVE_CHECKSUM="${JTHARNESS_SRC_ARCHIVE_CHECKSUM:-${DEFAULT_JTHA
 JUNIT_VERSION="${JUNIT_VERSION:-${DEFAULT_JUNIT_VERSION}}"
 JUNIT_JAR_URL_BASE="${JUNIT_JAR_URL_BASE:-${MAVEN_REPO_URL_BASE}}"
 JUNIT_JAR_CHECKSUM="${JUNIT_JAR_CHECKSUM:-${DEFAULT_JUNIT_JAR_CHECKSUM}}"
+JUNIT_LICENSE_FILE="${JUNIT_LICENSE_FILE:-${DEFAULT_JUNIT_LICENSE_FILE}}"
 
 TESTNG_VERSION="${TESTNG_VERSION:-${DEFAULT_TESTNG_VERSION}}"
 TESTNG_JAR_URL_BASE="${TESTNG_JAR_URL_BASE:-${MAVEN_REPO_URL_BASE}}"
@@ -647,8 +678,8 @@ setup_junit_license() {
     fi
 
     local JUNIT_LICENSE_DEPS_DIR="${DEPS_DIR}/junit-license"
-    "${UNZIP_CMD}" ${UNZIP_OPTIONS} "${JUNIT_JAR}" LICENSE.txt -d "${JUNIT_LICENSE_DEPS_DIR}"
-    JUNIT_LICENSE="${JUNIT_LICENSE_DEPS_DIR}/LICENSE.txt"
+    "${UNZIP_CMD}" ${UNZIP_OPTIONS} "${JUNIT_JAR}" ${JUNIT_LICENSE_FILE} -d "${JUNIT_LICENSE_DEPS_DIR}"
+    JUNIT_LICENSE="${JUNIT_LICENSE_DEPS_DIR}/${JUNIT_LICENSE_FILE}"
 }
 setup_junit_license
 info "JUNIT_LICENSE: ${JUNIT_LICENSE}"
@@ -696,7 +727,7 @@ setup_testng_license() {
 setup_testng_license
 info "TESTNG_LICENSE: ${TESTNG_LICENSE}"
 
-#----- JCommander -----
+#----- JCommander (required by TestNG) -----
 setup_jcommander() {
     check_arguments "${FUNCNAME}" 0 $#
 
@@ -723,6 +754,62 @@ setup_jcommander() {
 }
 setup_jcommander
 info "JCOMMANDER_JAR: ${JCOMMANDER_JAR}"
+
+#----- Google Guice (required by TestNG) -----
+setup_google_guice() {
+    check_arguments "${FUNCNAME}" 0 $#
+
+    if [ -n "${GOOGLE_GUICE_JAR:-}" ]; then
+        return
+    fi
+
+    if [ -z "${GOOGLE_GUICE_JAR_URL:-}" ]; then
+        if [ -n "${GOOGLE_GUICE_JAR_URL_BASE:-}" ]; then
+            GOOGLE_GUICE_JAR_URL="${GOOGLE_GUICE_JAR_URL_BASE}/com/google/inject/guice/${GOOGLE_GUICE_VERSION}/guice-${GOOGLE_GUICE_VERSION}.jar"
+        fi
+    fi
+
+    local GOOGLE_GUICE_DEPS_DIR="${DEPS_DIR}/guice"
+
+    if [ -n "${GOOGLE_GUICE_JAR_URL:-}" ]; then
+        GOOGLE_GUICE_JAR="${GOOGLE_GUICE_DEPS_DIR}/$(basename "${GOOGLE_GUICE_JAR_URL}")"
+        download_and_checksum "${GOOGLE_GUICE_JAR_URL}" "${GOOGLE_GUICE_JAR}" "${GOOGLE_GUICE_JAR_CHECKSUM}"
+        return
+    fi
+
+    error "None of GOOGLE_GUICE_JAR, GOOGLE_GUICE_JAR_URL or GOOGLE_GUICE_JAR_URL_BASE are set"
+    exit 1
+}
+setup_google_guice
+info "GOOGLE_GUICE_JAR: ${GOOGLE_GUICE_JAR}"
+
+#----- HamCrest Core (required by JUnit) -----
+setup_hamcrest() {
+    check_arguments "${FUNCNAME}" 0 $#
+
+    if [ -n "${HAMCREST_JAR:-}" ]; then
+        return
+    fi
+
+    if [ -z "${HAMCREST_JAR_URL:-}" ]; then
+        if [ -n "${HAMCREST_JAR_URL_BASE:-}" ]; then
+            HAMCREST_JAR_URL="${HAMCREST_JAR_URL_BASE}/org/hamcrest/hamcrest/${HAMCREST_VERSION}/hamcrest-${HAMCREST_VERSION}.jar"
+        fi
+    fi
+
+    local HAMCREST_DEPS_DIR="${DEPS_DIR}/hamcrest"
+
+    if [ -n "${HAMCREST_JAR_URL:-}" ]; then
+        HAMCREST_JAR="${HAMCREST_DEPS_DIR}/$(basename "${HAMCREST_JAR_URL}")"
+        download_and_checksum "${HAMCREST_JAR_URL}" "${HAMCREST_JAR}" "${HAMCREST_JAR_CHECKSUM}"
+        return
+    fi
+
+    error "None of HAMCREST_JAR, HAMCREST_JAR_URL or HAMCREST_JAR_URL_BASE are set"
+    exit 1
+}
+setup_hamcrest
+info "HAMCREST_JAR: ${HAMCREST_JAR}"
 
 ##
 # The build version typically comes from the version-numbers file;
@@ -771,6 +858,8 @@ check_file "${ANT}"
 check_file "${ANT_JAR}"
 check_file "${ASMTOOLS_JAR}"
 check_file "${ASMTOOLS_LICENSE}"
+check_file "${GOOGLE_GUICE_JAR}"
+check_file "${HAMCREST_JAR}"
 check_dir  "${JAVA_HOME}"
 check_file "${JCOMMANDER_JAR}"
 check_file "${JCOV_JAR}"
@@ -799,6 +888,8 @@ make ANT="${ANT}"                                             \
      BUILD_NUMBER="${JTREG_BUILD_NUMBER}"                     \
      BUILD_VERSION="${JTREG_VERSION}"                         \
      BUILD_VERSION_STRING="${JTREG_VERSION_STRING}"           \
+     GOOGLE_GUICE_JAR="${GOOGLE_GUICE_JAR}"                   \
+     HAMCREST_JAR="${HAMCREST_JAR}"                           \
      JAVATEST_JAR="$(mixed_path "${JTHARNESS_JAVATEST_JAR}")" \
      JCOMMANDER_JAR="${JCOMMANDER_JAR}"                       \
      JCOV_JAR="${JCOV_JAR}"                                   \
