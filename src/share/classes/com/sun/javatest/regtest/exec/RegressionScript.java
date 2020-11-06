@@ -1081,6 +1081,10 @@ public class RegressionScript extends Script {
 
     private int nextSerial = 0;
 
+    PrintWriter getMessageWriter() {
+        return msgPW;
+    }
+
     //--------------------------------------------------------------------------
 
     TimeoutHandlerProvider getTimeoutHandlerProvider() throws TestRunException {
