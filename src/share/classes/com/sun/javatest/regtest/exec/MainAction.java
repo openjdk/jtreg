@@ -241,6 +241,16 @@ public class MainAction extends Action
             }
         }
 
+        if (!othervm) {
+            for (Modules.Entry m : script.getModules()) {
+                String name = m.moduleName;
+                if (script.systemModules.contains(name) && !script.defaultModules.contains(name)) {
+                    othervmOverrideReasons.add("test requires non-default system module");
+                    break;
+                }
+            }
+        }
+
         if (!othervm && (this instanceof TestNGAction || this instanceof JUnitAction)) {
             Set<LibLocn.Kind> testKinds = script.locations.getDirKinds(script.locations.absTestSrcDir());
             boolean multiModule = testKinds.equals(EnumSet.of(LibLocn.Kind.USER_MODULE));
