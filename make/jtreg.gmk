@@ -292,7 +292,7 @@ $(JTREG_IMAGEDIR)/lib/testng.jar: $(call PosixPath,$(TESTNG_JAR))
 	    $(RM) $(BUILDDIR)/$$jquery ; $(MKDIR) -p `dirname $(BUILDDIR)/$$jquery` ; $(TOUCH) $(BUILDDIR)/$$jquery ; \
 	    $(JAR) uf $@ -C $(BUILDDIR) $$jquery ; \
 	fi
-	$(ZIP) -d $@ Version.java
+	- $(ZIP) -d $@ Version.java
 
 TARGETS.ZIP.jtreg += $(JTREG_IMAGEJARDIR)/testng.jar
 
