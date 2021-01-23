@@ -28,10 +28,10 @@ The script will create a build sub-directory, download and build dependencies,
 and finally build jtreg itself. The resulting image will be in
 _build/images/jtreg_.
 
-If you have access to the public Internet, no environment variables need to be 
-specified to get a standard build of jtreg. However, you can set environment 
-variables used to define the location of dependencies to be downloaded. 
-These are documented in _make/build.sh_ and normally  specified in 
+If you have access to the public Internet, no environment variables need to be
+specified to get a standard build of jtreg. However, you can set environment
+variables used to define the location of dependencies to be downloaded.
+These are documented in _make/build.sh_ and normally  specified in
 _make/build-support/version-numbers_ and _make/build-support/*/version-numbers_.
 
 ## Building jtreg with GNU Make
@@ -49,7 +49,7 @@ commands:
 jtreg has a number of build dependencies. These can be set with values on the
 make command line or with values in _make/Defs.gmk_. You can also include the
 appropriate license files in the jtreg image, by setting the appropriate make
-variables. 
+variables.
 
 * JDK 1.8 (or better):
     Set `JDKHOME` to the JDK or equivalent used to build jtreg. It must be
@@ -58,32 +58,32 @@ variables.
 * JT Harness:
     See <https://wiki.openjdk.java.net/display/CodeTools/JT+Harness>.
     Set `JTHARNESS_HOME` to the installed copy of the version of JT Harness to be
-    used. It should be version 6.0 or better.
+    used. It should be version 6.0-b14 or better.
 
 * Ant:
     See <http://ant.apache.org/>. Set `ANTHOME` to an installed copy of Ant. It
-    should be version 1.9.x. or better.
+    should be version 1.10.x. or better.
 
 * AsmTools:
-    See <https://wiki.openjdk.java.net/display/CodeTools/asmtools>. 
-    Set `ASMTOOLS_HOME` to the installed copy of the version of AsmTools to be 
-    used. It should be version 6.0 or better.
+    See <https://wiki.openjdk.java.net/display/CodeTools/asmtools>.
+    Set `ASMTOOLS_HOME` to the installed copy of the version of AsmTools to be
+    used. It should be version 7.0-b09 or better.
 
     Note: Do not confuse this component with ASM bytecode engineering library
     available at <http://asm.ow2.org/>
 
 * JUnit:
-    See <http://junit.org/>. The recommended version is currently JUnit 4.10.
+    See <http://junit.org/>. The recommended version is currently JUnit 4.13.
 
 * TestNG:
-    See <http://testng.org/>. The recommended version is currently 6.9.5.
+    See <http://testng.org/>. The recommended version is currently 7.1.0.
 
 The following dependencies are optional.
 
 * JCov:
-    See <https://wiki.openjdk.java.net/display/CodeTools/jcov>. 
-    Set `JCOV_HOME` to the installed copy of the version of JCov to be used. 
-    It should be version 2.0 or better.
+    See <https://wiki.openjdk.java.net/display/CodeTools/jcov>.
+    Set `JCOV_HOME` to the installed copy of the version of JCov to be used.
+    It should be version 3.0-b07 or better.
 
 * JDK 1.5:
     This is used when running some of the tests. Set `JDK5HOME` to run these
@@ -174,9 +174,7 @@ older versions of NetBeans.)
 ## Using the IntelliJ IDE
 
 The jtreg repo also contains a plugin for the IntelliJ IDE.
-This is a convenience plugin which adds jtreg capabilities to the IntelliJ IDE. 
-With this plugin, OpenJDK developers can write, run, and debug jtreg tests 
-without leaving their IDE environment.  For more details, see the file 
+This is a convenience plugin which adds jtreg capabilities to the IntelliJ IDE.
+With this plugin, OpenJDK developers can write, run, and debug jtreg tests
+without leaving their IDE environment.  For more details, see the file
 _plugins/idea/README.md_ in this repo.
-
-
