@@ -261,6 +261,10 @@ usage() {
     echo "      Path to JDK; must be JDK 8 or higher"
     echo "--quiet | -q"
     echo "      Reduce the logging output."
+    echo "--show-default-versions"
+    echo "      Show default versions of external components"
+    echo "--show-config-details"
+    echo "      Show configuration details"
     echo "--skip-checksum-check"
     echo "      Skip the checksum check for downloaded files."
     echo "--skip-download"
@@ -289,6 +293,8 @@ process_args() {
             --help|-h )             HELP=1 ;                                        shift ;;
             --jdk )                 ensure_arg "$1" $# ; JAVA_HOME="$2" ;           shift ; shift ;;
             --quiet|-q )            export QUIET=1 ;                                shift ;;
+            --show-config-details ) SHOW_CONFIG_DETAILS=1 ;                         shift ;;
+            --show-default-versions ) SHOW_DEFAULT_VERSIONS=1 ;                     shift ;;
             --skip-checksum-check ) export SKIP_CHECKSUM_CHECK=1 ;                  shift ;;
             --skip-download )       export SKIP_DOWNLOAD=1 ;                        shift ;;
             --skip-make )           SKIP_MAKE=1 ;                                   shift ;;
@@ -355,6 +361,21 @@ TESTNG_JAR_CHECKSUM="${TESTNG_JAR_CHECKSUM:-${DEFAULT_TESTNG_JAR_CHECKSUM}}"
 TESTNG_LICENSE_VERSION="${TESTNG_LICENSE_VERSION:-${DEFAULT_TESTNG_LICENSE_VERSION:-${TESTNG_VERSION}}}"
 TESTNG_LICENSE_CHECKSUM="${TESTNG_LICENSE_CHECKSUM:-${DEFAULT_TESTNG_LICENSE_CHECKSUM}}"
 
+if [ "${SHOW_DEFAULT_VERSIONS:-}" != "" ]; then
+    find ${mydir} -name version-numbers | \
+        xargs cat | \
+        grep -v '^#' | \
+        grep -E 'DEFAULT.*(_VERSION|_SRC_TAG)' | \
+        sort -u
+    exit
+fi
+
+if [ "${SHOW_CONFIG_DETAILS:-}"ß != "" ]; then
+    ( set -o posix ; set ) | \
+        grep -E '^(ANT|ASM|ASMTOOLS|GOOGLE_GUICE|HAMCREST|JCOMMANDER|JCOV|JTHARNESS|JUNIT|TESTNG)_[A-Z_]*=' | \
+        sort -u
+    exit
+fi
 
 setup_java_home() {
     check_arguments "${FUNCNAME}" 0 $#
