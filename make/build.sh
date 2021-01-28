@@ -435,6 +435,16 @@ sanity_check_java_home() {
         error "Could not find an executable binary at '${JAVA_HOME}/bin/java'"
         exit 1
     fi
+
+    local version=$(${JAVA_HOME}/bin/java -version 2>&1)
+    local vnum=$(echo "${version}" | \
+        grep ^java |
+        head -n 1 | \
+        sed -e 's/^[^0-9]*//' -e 's/[^0-9.].*//' )
+    if [ "${vnum:-0}" -lt "8" ]; then
+        error "JDK 8 or newer is required to build jtreg"
+        exit 1
+    fi
 }
 setup_java_home
 sanity_check_java_home
