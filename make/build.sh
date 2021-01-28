@@ -370,7 +370,7 @@ if [ "${SHOW_DEFAULT_VERSIONS:-}" != "" ]; then
     exit
 fi
 
-if [ "${SHOW_CONFIG_DETAILS:-}"ß != "" ]; then
+if [ "${SHOW_CONFIG_DETAILS:-}" != "" ]; then
     ( set -o posix ; set ) | \
         grep -E '^(ANT|ASM|ASMTOOLS|GOOGLE_GUICE|HAMCREST|JCOMMANDER|JCOV|JTHARNESS|JUNIT|TESTNG)_[A-Z_]*=' | \
         sort -u
