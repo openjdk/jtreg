@@ -333,13 +333,16 @@ public class MainAction extends Action
         if (nativeCode && script.getNativeDir() == null)
             return error(MAIN_NO_NATIVES);
 
-        startAction(true);
-
         if (script.isCheck()) {
+            startAction(true);
             status = passed(CHECK_PASS);
         } else {
             Lock lock = script.getLockIfRequired();
             if (lock != null) lock.lock();
+
+            // Start action after the lock is taken to ensure correct "elapsed time".
+            startAction(true);
+
             try {
                 switch (!othervmOverrideReasons.isEmpty() ? ExecMode.OTHERVM : script.getExecMode()) {
                     case AGENTVM:
