@@ -440,7 +440,7 @@ sanity_check_java_home() {
     local vnum=$(echo "${version}" | \
         grep ^java |
         head -n 1 | \
-        sed -e 's/^[^0-9]*//' -e 's/[^0-9.].*//' )
+        sed -e 's/^[^0-9]*\(1\.\)*\([1-9][0-9]*\).*/\2/' )
     if [ "${vnum:-0}" -lt "8" ]; then
         error "JDK 8 or newer is required to build jtreg"
         exit 1
