@@ -338,8 +338,7 @@ public class MainAction extends Action
         if (script.isCheck()) {
             status = passed(CHECK_PASS);
         } else {
-            Lock lock = script.getLockIfRequired();
-            if (lock != null) lock.lock();
+            Lock lock = script.acquireLock();
             try {
                 switch (!othervmOverrideReasons.isEmpty() ? ExecMode.OTHERVM : script.getExecMode()) {
                     case AGENTVM:
