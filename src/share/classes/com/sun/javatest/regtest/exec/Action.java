@@ -40,6 +40,10 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.jar.Attributes;
+import java.util.jar.JarFile;
+import java.util.jar.Manifest;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -540,8 +544,32 @@ public abstract class Action extends ActionHelper {
         return false;
     }
 
+    private static final Map<File, String> automaticNames = new ConcurrentHashMap<>();
+
     // see java.lang.module.ModulePath.deriveModuleDescriptor
+    // See ModuleFinder.of for info on determining automatic module names
+    //    https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/module/ModuleFinder.html#of(java.nio.file.Path...)
     private String getAutomaticModuleName(File f) {
+        // Step 0: see if already cached
+        String cached = automaticNames.get(f);
+        if (cached != null) {
+            return cached;
+        }
+
+        // Step 1: check for Automatic-Module-Name in thge main jar file manifest
+        try (JarFile jar = new JarFile(f)) {
+            Manifest mf = jar.getManifest();
+            Attributes attrs = mf.getMainAttributes();
+            String amn = attrs.getValue("Automatic-Module-Name");
+            if (amn != null) {
+                automaticNames.put(f, amn);
+                return amn;
+            }
+        } catch (IOException e) {
+            script.getMessageWriter().println("Problem reading jar manifest to get Automatic-Module-Name: " + f + " " + e);
+        }
+
+        // Step 2: infer the name from the jar file name
         String fn = f.getName();
 
         // drop .jar

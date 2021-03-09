@@ -37,10 +37,12 @@ $(BUILDDIR)/TestVMOpts.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		-r:$(BUILDDIR)/jtreg/cmd.othervm/report \
 		-verbose:fail \
 		$(TESTDIR)/vmopts
+ifdef ANT
 	JAVA_HOME=$(JDKHOME) $(ANT) -f $(TESTDIR)/vmopts/build.xml \
 		-Dbuild.jtreg=$(BUILDDIR)/jtreg \
 		-Djtreg.jar=$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		-Dtestjdk=$(JDKHOME)
+endif
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += $(BUILDDIR)/TestVMOpts.ok

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -92,9 +92,22 @@ public class DriverAction extends MainAction
     @Override
     List<String> filterJavaOpts(List<String> args) {
         List<String> results = new ArrayList<>();
-        for (String arg: args) {
-            if (arg.startsWith("-D"))
+        int i = 0, n = args.size();
+        while (i < n) {
+            String arg = args.get(i);
+            if (arg.startsWith("-D")) {
                 results.add(arg);
+            } else if (i < n - 1) {
+                switch (arg) {
+                    case "--module-path":
+                    case "--add-modules":
+                    case "--add-exports":
+                    case "--add-opens":
+                        results.add(arg);
+                        results.add(args.get(++i));
+                }
+            }
+            ++i;
         }
         return results;
     }

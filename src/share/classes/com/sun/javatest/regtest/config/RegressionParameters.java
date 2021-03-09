@@ -38,6 +38,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -67,8 +68,21 @@ public class RegressionParameters
     extends BasicInterviewParameters
     implements Parameters.EnvParameters
 {
-    public RegressionParameters(String tag, RegressionTestSuite testSuite) throws InterviewParameters.Fault {
+    private final Consumer<String> logger;
+
+    /**
+     * Creates an object to handle the parameters for a test run.
+     *
+     * @param tag       a string to identify the set of parameters
+     * @param testSuite the test suite
+     * @param logger    an object to which to write logging messages
+     *
+     * @throws InterviewParameters.Fault if a problem occurs while creating this object
+     */
+    public RegressionParameters(String tag, RegressionTestSuite testSuite, Consumer<String> logger)
+            throws InterviewParameters.Fault {
         super(tag, testSuite);
+        this.logger = logger;
 
         setTitle("jtreg Configuration Editor"); // I18N
         setEdited(false);
@@ -172,7 +186,7 @@ public class RegressionParameters
     private Expr.Context exprContext;
 
     public void initExprContext() throws JDK.Fault {
-        exprContext = new RegressionContext(this);
+        exprContext = new RegressionContext(this, logger);
     }
 
     public Expr.Context getExprContext() {
@@ -219,10 +233,10 @@ public class RegressionParameters
 
     TestFilter getModulesFilter() {
         JDK jdk = getTestJDK();
-        if (jdk == null || jdk.getVersion(this).compareTo(JDK_Version.V9) == -1)
+        if (jdk == null || jdk.getVersion(this, logger).compareTo(JDK_Version.V9) == -1)
             return null;
 
-        final Set<String> availModules = jdk.getSystemModules(this);
+        final Set<String> availModules = jdk.getSystemModules(this, logger);
         if (availModules.isEmpty())
             return null;
 
@@ -1343,7 +1357,7 @@ public class RegressionParameters
             return OS.current();
         } else {
             try {
-                return OS.forProps(testJDK.getProperties(this));
+                return OS.forProps(testJDK.getProperties(this, logger));
             } catch (JDK.Fault f) {
                 // If it was going to happen, this exception would have been thrown
                 // and caught early on, during Tool.createParameters; by now, the

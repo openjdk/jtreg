@@ -69,6 +69,11 @@ public class JTRegConfigurationType implements ConfigurationType {
             public RunConfiguration createTemplateConfiguration(@NotNull Project project) {
                 return new JTRegConfiguration(project, this);
             }
+
+            @NotNull
+            public String getId() {
+                return "jtreg";
+            }
         }};
     }
 

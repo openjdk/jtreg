@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -23,20 +23,8 @@
 # questions.
 #
 
-#----------------------------------------------------------------------
+DEFAULT_JTHARNESS_SRC_TAG=jt6.0-b14
+DEFAULT_JTHARNESS_SRC_ARCHIVE_CHECKSUM=3a455d4cf2c184f7db2bc73d0c110a6bf668b2fc
 
-# 6533043: support failureProperty and errorProperty in <jtreg> task
-$(BUILDDIR)/T6533043.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
-		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
-		$(JTREG_IMAGEDIR)/bin/jtreg
-	JAVA_HOME=$(JDKHOME) $(ANT) -f $(TESTDIR)/6533043/build.xml \
-		-Dbuild.jtreg=$(BUILDDIR)/jtreg \
-		-Djtreg.jar=$(JTREG_IMAGEDIR)/lib/jtreg.jar \
-		-Dtestjdk=$(JDK5HOME)
-	echo "test passed at `date`" > $@
-
-ifdef ANT
-ifdef JDK5HOME
-TESTS.jtreg += $(BUILDDIR)/T6533043.ok
-endif
-endif
+DEFAULT_ANT_VERSION=1.10.8
+DEFAULT_ANT_ARCHIVE_CHECKSUM=dbe187ce2963f9df8a67de8aaff3b0a437d06978

@@ -38,6 +38,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Consumer;
 
 import com.sun.javatest.TestSuite;
 import com.sun.javatest.WorkDirectory;
@@ -49,6 +50,8 @@ public class JDKModulesTest {
     public static void main(String... args) throws Exception {
         new JDKModulesTest().run(args);
     }
+
+    private static final Consumer<String> logger = System.err::println;
 
     private final JDK jdk;
     private final RegressionTestSuite dummyTestSuite;
@@ -104,10 +107,10 @@ public class JDKModulesTest {
         params.setWorkDirectory(dummyWorkDir);
         params.setTestVMOptions(vmOpts);
 
-        jdk.getVersion(params);
+        jdk.getVersion(params, logger);
 
-        Set<String> defaultModules = new TreeSet<>(jdk.getDefaultModules(params));
-        Set<String> systemModules = new TreeSet<>(jdk.getSystemModules(params));
+        Set<String> defaultModules = new TreeSet<>(jdk.getDefaultModules(params, logger));
+        Set<String> systemModules = new TreeSet<>(jdk.getSystemModules(params, logger));
 
         System.err.println("default modules: (" + defaultModules.size() + ") " + defaultModules);
         System.err.println("system modules: (" + systemModules.size() + ") " + systemModules);
@@ -153,9 +156,9 @@ public class JDKModulesTest {
         params.setWorkDirectory(dummyWorkDir);
         params.setTestVMOptions(vmOpts);
 
-        jdk.getVersion(params);
+        jdk.getVersion(params, System.err::println);
 
-        Set<String> defaultModules = new TreeSet<>(jdk.getDefaultModules(params));
+        Set<String> defaultModules = new TreeSet<>(jdk.getDefaultModules(params, logger));
 
         List<String> foundNonDefaultModules = new ArrayList<>();
         for (String m : modules) {

@@ -367,7 +367,7 @@ public class CompileAction extends Action {
             javacArgs.add(insertPos, "--enable-preview");
             if (!seenSourceOrRelease) {
                 int v = script.getTestJDKVersion().major;
-                javacArgs.add(insertPos + 1, "--release=" + v);
+                javacArgs.add(insertPos + 1, "--source=" + v);
             }
         }
 

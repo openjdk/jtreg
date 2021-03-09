@@ -1,0 +1,57 @@
+#
+# Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+JTREG_VERSION=6
+
+DEFAULT_ANT_VERSION=1.10.8
+DEFAULT_ANT_ARCHIVE_CHECKSUM=dbe187ce2963f9df8a67de8aaff3b0a437d06978
+DEFAULT_ANT_JAR_CHECKSUM=ae148abb0532b685c5eeb22fdec9d124e89be5de
+
+DEFAULT_ASMTOOLS_SRC_TAG=7.0-b09
+DEFAULT_ASMTOOLS_SRC_ARCHIVE_CHECKSUM=604f5e1aad1912968781dc72a1f86043e4e2dc20
+
+DEFAULT_GOOGLE_GUICE_VERSION=4.2.3
+DEFAULT_GOOGLE_GUICE_JAR_CHECKSUM=2ea992d6d7bdcac7a43111a95d182a4c42eb5ff7
+
+DEFAULT_HAMCREST_VERSION=2.2
+DEFAULT_HAMCREST_JAR_CHECKSUM=1820c0968dba3a11a1b30669bb1f01978a91dedc
+
+DEFAULT_JCOMMANDER_VERSION=1.78
+DEFAULT_JCOMMANDER_JAR_CHECKSUM=a3927de9bd6f351429bcf763712c9890629d8f51
+
+DEFAULT_JCOV_SRC_TAG=jcov3.0-b07
+DEFAULT_JCOV_SRC_ARCHIVE_CHECKSUM=c5c26085750628d58de275b3f50a7409300c0497
+
+DEFAULT_JTHARNESS_SRC_TAG=jt6.0-b14
+DEFAULT_JTHARNESS_SRC_ARCHIVE_CHECKSUM=3a455d4cf2c184f7db2bc73d0c110a6bf668b2fc
+
+DEFAULT_JUNIT_VERSION=4.13
+DEFAULT_JUNIT_JAR_CHECKSUM=e49ccba652b735c93bd6e6f59760d8254cf597dd
+DEFAULT_JUNIT_LICENSE_FILE=LICENSE-junit.txt
+
+DEFAULT_TESTNG_VERSION=7.1.0
+DEFAULT_TESTNG_JAR_CHECKSUM=b0bcea778fb2899aeb4014c558babea8833d180a
+DEFAULT_TESTNG_LICENSE_VERSION=7.1.1
+DEFAULT_TESTNG_LICENSE_CHECKSUM=7df059597099bb7dcf25d2a9aedfaf4465f72d8d

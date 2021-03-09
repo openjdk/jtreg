@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -283,7 +283,9 @@ public class AgentServer implements ActionHelper.OutputHandler {
         Map<String, String> testProps = readMap(in);
         Set<String> addExports = readSet(in);
         Set<String> addOpens = readSet(in);
+        Set<String> addMods = readSet(in);
         SearchPath classPath = new SearchPath(in.readUTF());
+        SearchPath modulePath = new SearchPath(in.readUTF());
         String className = in.readUTF();
         List<String> classArgs = readList(in);
         if (traceServer) {
@@ -296,7 +298,9 @@ public class AgentServer implements ActionHelper.OutputHandler {
                     .properties(testProps)
                     .addExports(addExports)
                     .addOpens(addOpens)
+                    .addMods(addMods)
                     .classpath(classPath)
+                    .modulepath(modulePath)
                     .className(className)
                     .classArgs(classArgs)
                     .timeout(0)

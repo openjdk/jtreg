@@ -361,6 +361,16 @@ ifdef JCOMMANDER_JAR
     JCOMMANDER_JAR := $(call FullPath,$(JCOMMANDER_JAR))
 endif
 
+# Newer versions of TestNG require Google Guice
+ifdef GOOGLE_GUICE_JAR
+    GOOGLE_GUICE_JAR := $(call FullPath,$(GOOGLE_GUICE_JAR))
+endif
+
+# Newer versions of JUnit require Hamcrest
+ifdef HAMCREST_JAR
+    HAMCREST_JAR := $(call FullPath,$(HAMCREST_JAR))
+endif
+
 #----- Ant:  http://ant.apache.org/
 #
 # Ant is required, to support the provision of a <jtreg> Ant task
@@ -467,6 +477,13 @@ BUILD_NONFCS_MILESTONE = $(BUILD_NONFCS_MILESTONE_sh:sh)
 ZIPSFX_VERSION_sh = echo '$(BUILD_VERSION)' | sed -e 's|\([^0-9][^0-9]*\)|_|g'
 ZIPSFX_MILESTONE_sh = echo '$(BUILD_MILESTONE)'
 ZIPSFX_BUILD_sh = echo '$(BUILD_NUMBER)'
+ZIPSFX_NEWBUILD_sh = echo '$(BUILD_NUMBER)' | sed -e 's|[^[0-9]||g' | xargs printf "%d"
 ZIPSFX_DATE_sh = echo "`$(BUILD_ZIPDATE_CMD)`" | /usr/bin/tr -s '[A-Z] ' '[a-z]_'
 
 VERBOSE_ZIP_SUFFIX = $(shell $(ZIPSFX_VERSION_sh))-$(shell $(ZIPSFX_MILESTONE_sh))-bin-$(shell $(ZIPSFX_BUILD_sh))-$(shell $(ZIPSFX_DATE_sh))
+
+ifdef BUILD_MILESTONE
+NEW_VERBOSE_ZIP_SUFFIX = $(BUILD_VERSION)-$(BUILD_MILESTONE)+$(shell $(ZIPSFX_NEWBUILD_sh))_bin
+else
+NEW_VERBOSE_ZIP_SUFFIX = $(BUILD_VERSION)+$(shell $(ZIPSFX_NEWBUILD_sh))_bin
+endif

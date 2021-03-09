@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -23,20 +23,16 @@
 # questions.
 #
 
-#----------------------------------------------------------------------
+DEFAULT_JCOV_SRC_TAG=jcov3.0-b07
+DEFAULT_JCOV_SRC_ARCHIVE_CHECKSUM=c5c26085750628d58de275b3f50a7409300c0497
 
-# 6533043: support failureProperty and errorProperty in <jtreg> task
-$(BUILDDIR)/T6533043.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
-		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
-		$(JTREG_IMAGEDIR)/bin/jtreg
-	JAVA_HOME=$(JDKHOME) $(ANT) -f $(TESTDIR)/6533043/build.xml \
-		-Dbuild.jtreg=$(BUILDDIR)/jtreg \
-		-Djtreg.jar=$(JTREG_IMAGEDIR)/lib/jtreg.jar \
-		-Dtestjdk=$(JDK5HOME)
-	echo "test passed at `date`" > $@
+DEFAULT_ANT_VERSION=1.10.8
+DEFAULT_ANT_ARCHIVE_CHECKSUM=dbe187ce2963f9df8a67de8aaff3b0a437d06978
 
-ifdef ANT
-ifdef JDK5HOME
-TESTS.jtreg += $(BUILDDIR)/T6533043.ok
-endif
-endif
+DEFAULT_ASM_VERSION=8.0
+DEFAULT_ASM_JAR_CHECKSUM=d1a17d07c60e9e82c8b31b1d8f9ca98726418db4
+DEFAULT_ASM_TREE_JAR_CHECKSUM=7b31ca94da9f57334a5aed79b40f2b88c5ee9f4f
+DEFAULT_ASM_UTIL_JAR_CHECKSUM=b21996293fd49851ed9017cfde3191e49f77fbd0
+
+DEFAULT_JTHARNESS_SRC_TAG=jt6.0-b13
+DEFAULT_JTHARNESS_SRC_ARCHIVE_CHECKSUM=43936b2616476fcac8ee4bd0132e73c015119337

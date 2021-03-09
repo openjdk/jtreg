@@ -144,11 +144,18 @@ public class RegressionTestSuite extends TestSuite
         RegressionTestSuite.factory = factory;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * If no {@link #setParametersFactory(ParametersFactory) factory} has been set,
+     * any errors that may be reported while using the {@link JDK} and related classes
+     * will be written to {@link System#err}.
+     */
     @Override
     public RegressionParameters createInterview() throws TestSuite.Fault {
         try {
             return (factory != null) ? factory.create(this) // expected case
-                    : new RegressionParameters("regtest", this); // fallback
+                    : new RegressionParameters("regtest", this, System.err::println); // fallback
         } catch (InterviewParameters.Fault e) {
             throw new TestSuite.Fault(i18n, "suite.cantCreateInterview", e.getMessage());
         }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -241,28 +241,23 @@ public class MainAction extends Action
             }
         }
 
-        if (!othervm && !useModuleExportAPI) {
-            for (Modules.Entry e: script.getModules()) {
-                if (e.packageName != null) {
-                    String arg = e.moduleName + "/" + e.packageName + "=ALL-UNNAMED";
-                    if (e.addExports && !includesOption("--add-exports", arg, script.getTestVMJavaOptions())) {
-                        othervmOverrideReasons.add("test needs --add-exports");
-                        break;
-                    }
-                    if (e.addOpens && !includesOption("--add-opens", arg, script.getTestVMJavaOptions())) {
-                        othervmOverrideReasons.add("test needs --add-opens");
-                        break;
-                    }
+        if (!othervm) {
+            for (Modules.Entry m : script.getModules()) {
+                String name = m.moduleName;
+                if (script.systemModules.contains(name) && !script.defaultModules.contains(name)) {
+                    othervmOverrideReasons.add("test requires non-default system module");
+                    break;
                 }
             }
         }
 
-        if (!othervm) {
-            for (Modules.Entry e: script.getModules()) {
-                if (!script.defaultModules.contains(e.moduleName)) {
-                    othervmOverrideReasons.add("test needs --add-modules");
-                    break;
-                }
+        if (!othervm && (this instanceof TestNGAction || this instanceof JUnitAction)) {
+            Set<LibLocn.Kind> testKinds = script.locations.getDirKinds(script.locations.absTestSrcDir());
+            boolean multiModule = testKinds.equals(EnumSet.of(LibLocn.Kind.USER_MODULE));
+            if (multiModule) {
+                // agent won't be able to load driver class as agent's classes aren't
+                // loaded by the CL which loaded these modules
+                othervmOverrideReasons.add("test requires testng and/or junit as modules");
             }
         }
     } // init()
@@ -442,10 +437,7 @@ public class MainAction extends Action
         javaOpts.addAllPatchModules(pp);
         javaOpts.addPath("--module-path", paths.get(PathKind.MODULEPATH));
 
-        Set<String> addMods = new LinkedHashSet<>();
-        if (testModuleName != null)
-            addMods.add(testModuleName);
-        addMods.addAll(getModules(paths.get(PathKind.MODULEPATH)));
+        Set<String> addMods = addMods(paths);
         if (!addMods.isEmpty()) {
             javaOpts.add("--add-modules");
             javaOpts.add(StringUtils.join(addMods, ","));
@@ -541,6 +533,14 @@ public class MainAction extends Action
         return status;
     } // runOtherJVM()
 
+    private Set<String> addMods(Map<PathKind, SearchPath> paths) {
+        Set<String> addMods = new LinkedHashSet<>();
+        if (testModuleName != null)
+            addMods.add(testModuleName);
+        addMods.addAll(getModules(paths.get(PathKind.MODULEPATH)));
+        return addMods;
+    }
+
     private Status runAgentJVM() throws TestRunException {
         String runModuleName;
         String runMainClass;
@@ -585,6 +585,8 @@ public class MainAction extends Action
                 : new SearchPath(classpath).retainAll(stdLibs);     // old behavior
         SearchPath runClasspath = new SearchPath(classpath).removeAll(stdLibs);
 
+        SearchPath runModulePath = paths.get(PathKind.MODULEPATH);
+
         if (showMode)
             showMode(getName(), ExecMode.AGENTVM, section);
 
@@ -594,7 +596,18 @@ public class MainAction extends Action
         Map<String, String> javaProps = script.getTestProperties();
 
         String javaProg = script.getJavaProg();
-        List<String> javaArgs = Arrays.asList("-classpath", classpath.toString());
+        List<String> javaArgs = new ArrayList<>();
+        javaArgs.add("-classpath");
+        javaArgs.add(classpath.toString());
+        if (runModulePath != null) {
+            javaArgs.add("--module-path");
+            javaArgs.add(runModulePath.toString());
+        }
+        Set<String> runAddMods = addMods(paths);
+        if (!runAddMods.isEmpty()) {
+            javaArgs.add("--add-modules");
+            javaArgs.add(StringUtils.join(runAddMods, ","));
+        }
         recorder.java(script.getEnvVars(), javaProg, javaProps, javaArgs, runMainClass, runMainArgs);
 
         Agent agent;
@@ -667,6 +680,7 @@ public class MainAction extends Action
                     .setAddExportsToUnnamed(runAddExports)
                     .setAddOpensToUnnamed(runAddOpens)
                     .setClassPath(runClasspath)
+                    .setModulePath(runModulePath)
                     .write(configWriter);
 
             // This calls through to MainActionHelper.runClass
@@ -675,7 +689,9 @@ public class MainAction extends Action
                     javaProps,
                     runAddExports,
                     runAddOpens,
+                    runAddMods,
                     runClasspath,
+                    runModulePath != null ? runModulePath : new SearchPath(),
                     runMainClass,
                     runMainArgs,
                     timeout,
@@ -767,7 +783,4 @@ public class MainAction extends Action
     protected boolean nativeCode = false;
     private int     timeout = -1;
     private String  manual  = "unset";
-
-    // No longer necessary?
-    private static final boolean useModuleExportAPI = true; // config("useModuleExportAPI");
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -25,9 +25,11 @@
 
 package com.sun.javatest.regtest.agent;
 
+import java.io.File;
+import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Set;
+import java.util.*;
 
 public class ModuleHelper {
     static class Fault extends Exception {
@@ -47,6 +49,43 @@ public class ModuleHelper {
         for (String o : opens) {
             addExportsOrOpens(o, true, loader);
         }
+    }
+
+    static ClassLoader addModules(List<File> libs, Set<String> modules) throws Fault {
+        init();
+        List<Object> paths = new ArrayList<Object>();
+        try {
+            for (File lib : libs) {
+                for (File file : lib.listFiles()) {
+                    paths.add(toPathMethod.invoke(file));
+                }
+            }
+            /*
+            java.lang.module.ModuleFinder finder = ModuleFinder.of(paths);
+            java.lang.module.ModuleFinder emptyFinder = ModuleFinder.of();
+            java.lang.module.Configuration bootConfig = bootLayer.configuration();
+
+            java.lang.module.Configuration config = bootConfig.resolve(finder, ModuleFinder.of(), modules);
+            ModuleLayer layer = bootLayer.defineModulesWithOneLoader(configuration, ClassLoader.getSystemClassLoader());
+            ClassLoader result = layer.findLoader(modules.iterator().next());
+            */
+            Object finder = moduleFinderOfMethod.invoke(null, new Object[] { paths.toArray(emptyArrayOfPaths) });
+            Object emptyFinder = moduleFinderOfMethod.invoke(null,  new Object[] { emptyArrayOfPaths });
+            Object bootConfig = configurationMethod.invoke(bootLayer);
+            Object config = resolveMethod.invoke(bootConfig, finder, emptyFinder, modules);
+            Object layer = defineModulesWithOneLoaderMethod.invoke(bootLayer, config, ClassLoader.getSystemClassLoader());
+
+            return (ClassLoader) findLoaderMethod.invoke(layer, modules.iterator().next());
+        } catch (SecurityException e) {
+            throw new Fault("unexpected exception: " + e, e);
+        } catch (IllegalAccessException e) {
+            throw new Fault("unexpected exception: " + e, e);
+        } catch (IllegalArgumentException e) {
+            throw new Fault("unexpected exception: " + e, e);
+        } catch (InvocationTargetException e) {
+            throw new Fault("unexpected exception: " + e, e);
+        }
+
     }
 
     /*
@@ -121,9 +160,29 @@ public class ModuleHelper {
             return;
 
         try {
+            // new in Java SE 7
+            Class<?> pathClass = Class.forName("java.nio.file.Path");
+            toPathMethod = File.class.getDeclaredMethod("toPath");
+            emptyArrayOfPaths = (Object[]) Array.newInstance(pathClass, 0);
+            Class<?> pathArrayClass = emptyArrayOfPaths.getClass();
+
+            // new in Java SE 8
+            Class<?> optionalClass = Class.forName("java.util.Optional");
+            isPresentMethod = optionalClass.getDeclaredMethod("isPresent");
+            getMethod = optionalClass.getDeclaredMethod("get");
+
             // new in Jave SE 9
+            Class<?> moduleFinderClass = Class.forName("java.lang.module.ModuleFinder");
+            moduleFinderOfMethod = moduleFinderClass.getDeclaredMethod("of", pathArrayClass);
+
+            Class<?> configurationClass = Class.forName("java.lang.module.Configuration");
+            resolveMethod = configurationClass.getDeclaredMethod("resolve", moduleFinderClass, moduleFinderClass, Collection.class);
+
             Class<?> layerClass = Class.forName("java.lang.ModuleLayer");
             findModuleMethod = layerClass.getDeclaredMethod("findModule", String.class);
+            configurationMethod = layerClass.getDeclaredMethod("configuration");
+            defineModulesWithOneLoaderMethod = layerClass.getDeclaredMethod("defineModulesWithOneLoader", configurationClass, ClassLoader.class);
+            findLoaderMethod = layerClass.getDeclaredMethod("findLoader", String.class);
             Method bootLayerMethod = layerClass.getDeclaredMethod("boot");
 
             /*
@@ -139,10 +198,6 @@ public class ModuleHelper {
 
             getUnnamedModuleMethod = ClassLoader.class.getDeclaredMethod("getUnnamedModule");
 
-            // new in Java SE 8
-            Class<?> optionalClass = Class.forName("java.util.Optional");
-            isPresentMethod = optionalClass.getDeclaredMethod("isPresent");
-            getMethod = optionalClass.getDeclaredMethod("get");
         } catch (ClassNotFoundException e) {
             throw new Fault("unexpected exception: " + e, e);
         } catch (NoSuchMethodException e) {
@@ -161,7 +216,16 @@ public class ModuleHelper {
 
     // on java.lang.module.Layer
     private static Method findModuleMethod;
+    private static Method configurationMethod;
+    private static Method defineModulesWithOneLoaderMethod;
+    private static Method findLoaderMethod;
     private static Object bootLayer;
+
+    // on java.lang.module.ModuleFinder
+    private static Method moduleFinderOfMethod;
+
+    // on java.lang.module.Configuration
+    private static Method resolveMethod;
 
     // on java.lang.ClassLoader
     private static Method getUnnamedModuleMethod;
@@ -169,6 +233,12 @@ public class ModuleHelper {
     // on java.util.Optional
     private static Method isPresentMethod;
     private static Method getMethod;
+
+    // on java.io.File
+    private static Method toPathMethod;
+
+    // on java.nio.file.Path
+    private static Object[] emptyArrayOfPaths;
 
     // on java.lang.JTRegModuleHelper or java.lang.reflect.JTRegModuleHelper
     private static Method addExportsMethod;

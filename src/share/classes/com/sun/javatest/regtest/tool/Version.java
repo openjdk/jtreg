@@ -29,10 +29,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Access version info in jtreg.jar META-INF/MANIFEST.MF
@@ -47,6 +50,7 @@ public class Version implements Comparable<Version> {
     private static Version currentVersion;
 
     private Properties manifest;
+    public final String versionString;
     public final String product;
     public final String version;
     public final String milestone;
@@ -59,10 +63,24 @@ public class Version implements Comparable<Version> {
         if (manifest == null)
             manifest = new Properties();
 
+
         product = getManifestProperty("jtreg-Name");
-        version = getManifestProperty("jtreg-Version");
-        milestone = getManifestProperty("jtreg-Milestone");
-        build = getManifestProperty("jtreg-Build");
+        // if new-style jtreg-VersionString is given,
+        // derive the other old-style properties from it
+        versionString = getManifestProperty("jtreg-VersionString");
+        if (versionString == null) {
+            version = getManifestProperty("jtreg-Version");
+            milestone = getManifestProperty("jtreg-Milestone");
+            build = getManifestProperty("jtreg-Build");
+        } else {
+            RuntimeVersion v = RuntimeVersion.parse(versionString);
+            version = v.version().stream()
+                    .map(Object::toString)
+                    .collect(Collectors.joining("."));
+            milestone = v.pre().orElse(null);
+            build = v.build().isPresent() ? v.build().get().toString() : null;
+        }
+
         buildJavaVersion = getManifestProperty("jtreg-BuildJavaVersion");
         buildDate = getManifestProperty("jtreg-BuildDate");
     }
@@ -74,14 +92,19 @@ public class Version implements Comparable<Version> {
 
     public Version(String versionAndBuild) {
         if (versionAndBuild != null) {
-            Pattern versionPattern = Pattern.compile("([0-9.]+) ?(b[0-9]+)");
+            // pattern for:
+            // old-style     4.2 b12
+            // new-style     5.2+1
+            Pattern versionPattern = Pattern.compile("(?<version>[0-9.]+)(\\s+b|\\+)(?<build>[0-9]+)");
             Matcher matcher = versionPattern.matcher(versionAndBuild);
             if (!matcher.matches()) {
                 throw new IllegalArgumentException(versionAndBuild);
             }
-            this.version = matcher.group(1);
-            this.build = matcher.group(2);
+            this.versionString = null;
+            this.version = matcher.group("version");
+            this.build = matcher.group("build");
         } else {
+            this.versionString = null;
             this.version = null;
             this.build = null;
         }
@@ -136,9 +159,9 @@ public class Version implements Comparable<Version> {
         return null;
     }
 
-    private static int[] parseDottedInts(String s, int length) {
+    private static int[] parseDottedInts(String s) {
         String[] elems = s.split("\\.");
-        int[] result = new int[length];
+        int[] result = new int[elems.length];
         for (int i = 0; i < elems.length; i++) {
             result[i] = Integer.parseInt(elems[i]);
         }
@@ -158,14 +181,17 @@ public class Version implements Comparable<Version> {
             return 0;
         }
 
-        int[] thisDots = parseDottedInts(this.version, 10);
-        int[] otherDots = parseDottedInts(other.version, 10);
+        int[] thisDots = parseDottedInts(this.version);
+        int[] otherDots = parseDottedInts(other.version);
 
-        for(int i = 0; i < thisDots.length; i++) {
-            if (thisDots[i] > otherDots[i]) {
+        for (int i = 0; i < Math.max(thisDots.length, otherDots.length); i++) {
+            int thisDot = i < thisDots.length ? thisDots[i] : 0;
+            int otherDot = i < otherDots.length ? otherDots[i] : 0;
+
+            if (thisDot > otherDot) {
                 return 1;
             }
-            if (thisDots[i] < otherDots[i]) {
+            if (thisDot < otherDot) {
                 return -1;
             }
             // if equal, check the next order
@@ -177,13 +203,7 @@ public class Version implements Comparable<Version> {
         if (thisBuild == 0 || otherBuild == 0) {
             return 0;
         }
-        if (thisBuild > otherBuild) {
-            return 1;
-        }
-        if (thisBuild < otherBuild) {
-            return -1;
-        }
-        return 0;
+        return Integer.compare(thisBuild, otherBuild);
     }
 
     private int getBuild() {
@@ -191,12 +211,36 @@ public class Version implements Comparable<Version> {
             return 0;
         }
 
-        if (build.matches("b[0-9]+")) {
-            String b = build.substring(1, build.length());
+        if (build.matches("b?[0-9]+")) {
+            String b = build.startsWith("b") ? build.substring(1) : build;
             return Integer.parseInt(b);
         } else {
             // ignore malformed or invalid build numbers
             return 0;
         }
+    }
+
+    String getVersionBuildString() {
+        return versionString != null
+                ? versionString
+                : String.format("%s b%s", version, build);
+    }
+
+    @Override
+    public String toString() {
+        List<String> l = new ArrayList<>();
+        if (versionString != null) {
+            l.add("versionString=" + versionString);
+        }
+        if (version != null) {
+            l.add("version=" + version);
+        }
+        if (milestone != null) {
+            l.add("milestone=" + milestone);
+        }
+        if (build != null) {
+            l.add("build=" + build);
+        }
+        return "Version[" + String.join(",", l) + "]";
     }
 }
