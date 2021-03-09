@@ -184,7 +184,7 @@ public class MainActionHelper extends ActionHelper {
             if (!("Virtual").equals(mainWrapper)) {
                 t = new Thread(tg, avmr, "AgentVMThread");
             } else {
-                t = Thread.builder().virtual().name("AgentVMThread").task(avmr).build();
+                t = Thread.ofVirtual().name("AgentVMThread").unstarted(avmr);
             }
 
             Alarm alarm = null;

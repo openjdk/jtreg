@@ -75,14 +75,14 @@ public class MainWrapper
         if (!"Virtual".equals(System.getProperty(MAIN_WRAPPER))) {
             t = new Thread(tg, task, "MainThread");
         } else {
-            t = Thread.builder().virtual().name("MainThread").task(task).build();
+            t = Thread.ofVirtual().name("MainThread").unstarted(task);
         }
         t.start();
         try {
             t.join();
         } catch (InterruptedException e) {
             AStatus.failed(MAIN_THREAD_INTR + Thread.currentThread().getName()).exit();
-            }
+        }
 //      tg.cleanup();
 
 
