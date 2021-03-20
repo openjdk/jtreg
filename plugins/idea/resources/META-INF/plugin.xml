@@ -26,14 +26,14 @@
 <idea-plugin>
     <id>jtreg</id>
     <name>jtreg Test Support</name>
-    <version>1.11</version>
+    <version>1.12</version>
     <description><![CDATA[
       Allows execution of tests developed using the <a href="http://openjdk.java.net/jtreg/">jtreg</a> framework.
     ]]></description>
 
     <change-notes><![CDATA[
     <ul>
-      <li>Fix crash in IntelliJ IDE2020.1</li>
+      <li>Fix compatibility with 2020.2</li>
     </ul>
     ]]>
     </change-notes>
