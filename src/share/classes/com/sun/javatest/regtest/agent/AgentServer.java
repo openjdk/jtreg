@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010, 2021, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -43,6 +43,7 @@ import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CoderResult;
+import java.nio.charset.CodingErrorAction;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -440,7 +441,11 @@ public class AgentServer implements ActionHelper.OutputHandler {
             private static final int BUFSIZE = 1024;
             private ByteBuffer byteBuffer = ByteBuffer.allocate(BUFSIZE);
             private CharBuffer charBuffer = CharBuffer.allocate(BUFSIZE);
-            private CharsetDecoder decoder = Charset.defaultCharset().newDecoder();
+            private CharsetDecoder decoder = Charset.forName(System.getProperty("sun.stdout.encoding",
+                                                                                System.getProperty("sun.jnu.encoding")))
+                    .newDecoder()
+                    .onMalformedInput(CodingErrorAction.REPLACE)
+                    .onUnmappableCharacter(CodingErrorAction.REPLACE);
 
             @Override
             public void write(byte[] bytes, int off, int len) throws IOException {
