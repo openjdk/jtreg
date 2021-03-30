@@ -441,11 +441,12 @@ public class AgentServer implements ActionHelper.OutputHandler {
             private static final int BUFSIZE = 1024;
             private ByteBuffer byteBuffer = ByteBuffer.allocate(BUFSIZE);
             private CharBuffer charBuffer = CharBuffer.allocate(BUFSIZE);
-            private CharsetDecoder decoder = Charset.forName(System.getProperty("sun.stdout.encoding",
-                                                                                System.getProperty("sun.jnu.encoding")))
-                    .newDecoder()
-                    .onMalformedInput(CodingErrorAction.REPLACE)
-                    .onUnmappableCharacter(CodingErrorAction.REPLACE);
+            private CharsetDecoder decoder = Charset.forName(
+                    System.getProperty("sun.stdout.encoding", System.getProperty("sun.jnu.encoding",
+                        Charset.defaultCharset().name())))
+                .newDecoder()
+                .onMalformedInput(CodingErrorAction.REPLACE)
+                .onUnmappableCharacter(CodingErrorAction.REPLACE);
 
             @Override
             public void write(byte[] bytes, int off, int len) throws IOException {
