@@ -153,7 +153,7 @@
 #     3. ASMTOOLS_SRC_TAG
 #         The SCM repository tag to use when building from source.
 #
-# Google Guice
+# Google Guice (required by TestNG)
 #     Checksum variables:
 #         GOOGLE_GUICE_JAR_CHECKSUM: checksum of jar
 #
@@ -164,7 +164,7 @@
 #     2b. GOOGLE_GUICE_JAR_URL_BASE + GOOGLE_GUICE_VERSION
 #         The individual URL components used to construct the full URL.
 #
-# Hamcrest
+# Hamcrest (required by JUnit)
 #     Checksum variables:
 #         HAMCREST_JAR_CHECKSUM: checksum of jar
 #
@@ -175,7 +175,7 @@
 #     2b. HAMCREST_JAR_URL_BASE + HAMCREST_VERSION
 #         The individual URL components used to construct the full URL.
 #
-# JCommander
+# JCommander (required by TestNG)
 #     Checksum variables:
 #         JCOMMANDER_JAR_CHECKSUM: checksum of jar
 #
@@ -225,7 +225,7 @@
 #     3. JTHARNESS_SRC_TAG
 #         The SCM repository tag to use when building from source.
 #
-# JUnit
+# JUnit (requires HamCrest)
 #     Checksum variables:
 #         JUNIT_JAR_CHECKSUM: checksum of binary archive
 #
@@ -236,7 +236,7 @@
 #     2b. JUNIT_JAR_URL_BASE + JUNIT_VERSION + JUNIT_FILE
 #         The individual URL components used to construct the full URL.
 #
-# TestNG
+# TestNG (requires JCommander, Google Guice)
 #     Checksum variables:
 #         TESTNG_JAR_CHECKSUM: checksum of binary archive
 #         TESTNG_LICENSE_CHECKSUM: checksum of LICENSE file
