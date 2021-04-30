@@ -153,7 +153,7 @@
 #     3. ASMTOOLS_SRC_TAG
 #         The SCM repository tag to use when building from source.
 #
-# Google Guice
+# Google Guice (required by TestNG)
 #     Checksum variables:
 #         GOOGLE_GUICE_JAR_CHECKSUM: checksum of jar
 #
@@ -164,7 +164,7 @@
 #     2b. GOOGLE_GUICE_JAR_URL_BASE + GOOGLE_GUICE_VERSION
 #         The individual URL components used to construct the full URL.
 #
-# Hamcrest
+# Hamcrest (required by JUnit)
 #     Checksum variables:
 #         HAMCREST_JAR_CHECKSUM: checksum of jar
 #
@@ -175,7 +175,7 @@
 #     2b. HAMCREST_JAR_URL_BASE + HAMCREST_VERSION
 #         The individual URL components used to construct the full URL.
 #
-# JCommander
+# JCommander (required by TestNG)
 #     Checksum variables:
 #         JCOMMANDER_JAR_CHECKSUM: checksum of jar
 #
@@ -225,7 +225,7 @@
 #     3. JTHARNESS_SRC_TAG
 #         The SCM repository tag to use when building from source.
 #
-# JUnit
+# JUnit (requires HamCrest)
 #     Checksum variables:
 #         JUNIT_JAR_CHECKSUM: checksum of binary archive
 #
@@ -236,7 +236,7 @@
 #     2b. JUNIT_JAR_URL_BASE + JUNIT_VERSION + JUNIT_FILE
 #         The individual URL components used to construct the full URL.
 #
-# TestNG
+# TestNG (requires JCommander, Google Guice)
 #     Checksum variables:
 #         TESTNG_JAR_CHECKSUM: checksum of binary archive
 #         TESTNG_LICENSE_CHECKSUM: checksum of LICENSE file
@@ -261,6 +261,10 @@ usage() {
     echo "      Path to JDK; must be JDK 8 or higher"
     echo "--quiet | -q"
     echo "      Reduce the logging output."
+    echo "--show-default-versions"
+    echo "      Show default versions of external components"
+    echo "--show-config-details"
+    echo "      Show configuration details"
     echo "--skip-checksum-check"
     echo "      Skip the checksum check for downloaded files."
     echo "--skip-download"
@@ -289,6 +293,8 @@ process_args() {
             --help|-h )             HELP=1 ;                                        shift ;;
             --jdk )                 ensure_arg "$1" $# ; JAVA_HOME="$2" ;           shift ; shift ;;
             --quiet|-q )            export QUIET=1 ;                                shift ;;
+            --show-config-details ) SHOW_CONFIG_DETAILS=1 ;                         shift ;;
+            --show-default-versions ) SHOW_DEFAULT_VERSIONS=1 ;                     shift ;;
             --skip-checksum-check ) export SKIP_CHECKSUM_CHECK=1 ;                  shift ;;
             --skip-download )       export SKIP_DOWNLOAD=1 ;                        shift ;;
             --skip-make )           SKIP_MAKE=1 ;                                   shift ;;
@@ -355,6 +361,21 @@ TESTNG_JAR_CHECKSUM="${TESTNG_JAR_CHECKSUM:-${DEFAULT_TESTNG_JAR_CHECKSUM}}"
 TESTNG_LICENSE_VERSION="${TESTNG_LICENSE_VERSION:-${DEFAULT_TESTNG_LICENSE_VERSION:-${TESTNG_VERSION}}}"
 TESTNG_LICENSE_CHECKSUM="${TESTNG_LICENSE_CHECKSUM:-${DEFAULT_TESTNG_LICENSE_CHECKSUM}}"
 
+if [ "${SHOW_DEFAULT_VERSIONS:-}" != "" ]; then
+    find ${mydir} -name version-numbers | \
+        xargs cat | \
+        grep -v '^#' | \
+        grep -E 'DEFAULT.*(_VERSION|_SRC_TAG)' | \
+        sort -u
+    exit
+fi
+
+if [ "${SHOW_CONFIG_DETAILS:-}" != "" ]; then
+    ( set -o posix ; set ) | \
+        grep -E '^(ANT|ASM|ASMTOOLS|GOOGLE_GUICE|HAMCREST|JCOMMANDER|JCOV|JTHARNESS|JUNIT|TESTNG)_[A-Z_]*=' | \
+        sort -u
+    exit
+fi
 
 setup_java_home() {
     check_arguments "${FUNCNAME}" 0 $#
@@ -412,6 +433,16 @@ sanity_check_java_home() {
 
     if [ ! -x "${JAVA_HOME}/bin/java" ]; then
         error "Could not find an executable binary at '${JAVA_HOME}/bin/java'"
+        exit 1
+    fi
+
+    local version=$(${JAVA_HOME}/bin/java -version 2>&1)
+    local vnum=$(echo "${version}" | \
+        grep ^java |
+        head -n 1 | \
+        sed -e 's/^[^0-9]*\(1\.\)*\([1-9][0-9]*\).*/\2/' )
+    if [ "${vnum:-0}" -lt "8" ]; then
+        error "JDK 8 or newer is required to build jtreg"
         exit 1
     fi
 }
