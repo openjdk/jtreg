@@ -171,7 +171,6 @@ class JTRegConfigurationRunnableState extends JavaTestFrameworkRunnableState<JTR
 
 
     @NotNull
-    @Override
     protected OSProcessHandler createHandler(Executor executor) throws ExecutionException {
         final OSProcessHandler processHandler = new KillableColoredProcessHandler(createCommandLine());
         ProcessTerminatedListener.attach(processHandler);

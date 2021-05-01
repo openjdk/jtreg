@@ -31,13 +31,13 @@ The output of this folder is as follows:
 
 ### Building the plugin
 
-To build the plugin, you need to have IntelliJ installed. From IntelliJ, simply browse to the location of this folder, and open it as an IntelliJ project. The project can be built by clicking on `Build -> Make Project`. Once this step is done, you should be able to run/debug the plugin.
+To build the plugin, you need to have IntelliJ installed. From IntelliJ, simply browse to the location of this folder, and open it as an IntelliJ project. The project can be built by clicking on `Build -> Build Project`. Once this step is done, you should be able to run/debug the plugin.
 
 Note: You might need to tweak the IDE project settings to correctly configure the plugin project. The two following steps are required:
 
-* When the IDE project for the plugin is first opened, IntelliJ will complain about the lack of a path variable called `JTREG_HOME`. Please follow the IDE instructions, and set this path variable to point to your jtreg installation. This step is required as the project depends on some of the jtreg libraries.
+* When the IDE project for the plugin is first opened, IntelliJ will complain about the lack of a path variable called `JTREG_HOME`. Please follow the IDE instructions, and set this path variable to point to the root of your jtreg build output or your jtreg installation (`JTREG_HOME/libs/javatest.jar` must exist). The setting can also be found in under `Settings -> Appearance and Behavior -> Path Variables`. This step is required as the project depends on some of the jtreg libraries.
 
-* You need to create an Intellij SDK and name it `IDEA JDK` for the project to work correctly. To create a new SDK, click on `File -> Project Structure`. When   the dialog opens, click on the `SDKs` entry in the left pane, and add a new SDK (by clicking on the green *plus* icon). The SDK we want to create is an 'IntelliJ Platform Plugin SDK'. Once the new SDK type has been selected, you will have to tell IntelliJ what's the SDK path - you will see that IntelliJ will already point to the folder containing your IntelliJ installation - that is a fine choice. Secondly, you will have to tell IntelliJ which JDK to use together with the plugin SDK. Any JDK 8 is a fine choice here. Once this is done, don't forget to change the SDK name to `IDEA JDK` which will allow the project to pick it up correctly.
+* You need to create an Intellij SDK and name it `IDEA JDK` for the project to work correctly. To create a new SDK, click on `File -> Project Structure`. When the dialog opens, click on the `SDKs` entry in the left pane, and add a new SDK (by clicking on the *plus* icon). The SDK we want to create is an 'IntelliJ Platform Plugin SDK'. Once the new SDK type has been selected, you will have to tell IntelliJ what's the SDK path - you will see that IntelliJ will already point to the folder containing your IntelliJ installation - that is a fine choice. Rename it to `IDEA JDK`. Secondly, you will have to tell IntelliJ which JDK to use together with the plugin SDK. Any JDK 8 (or greater) is a fine choice here.
   
 Note: by running the plugin here we mean running it in a sandbox environment - for truly installing the plugin in your IDE, see the steps below.
 
