@@ -9,7 +9,12 @@ assert file(jtregLib).exists() : """Could not find jtreg in ${jtregHome}.
 Please make sure that 'jtregHome' in 'gradle.properties' points to a valid jtreg root.
 """
 
-version '1.12'
+version pluginVersion
+
+compileJava {
+    sourceCompatibility = javaLevel
+    targetCompatibility = javaLevel
+}
 
 repositories {
     mavenCentral()

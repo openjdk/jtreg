@@ -1,22 +1,8 @@
 # jtreg plugin for IntelliJ IDE
-##### *Maurizio Cimadamore and Chris Hegarty, September 2016, version 0.4*
+##### *Maurizio Cimadamore and Chris Hegarty*
 
 This is a convenience plugin which adds jtreg capabilities to the IntelliJ IDE. With this plugin, OpenJDK developers
 can write, run, debug jtreg tests without the need of leaving their IDE environment.
-
-### Changes from 0.3
-
-* updated build instructions for new gradle build
-* added note on known issue when debugging with multiple test actions
-
-### Changes from 0.2
-
-* updated instruction on how to build the plugin
-
-### Changes from 0.1
-
-* more detailed instructions on how to configure the plugin project
-* updated section `What needs to be rebuilt before a test run?` to reflect latest plugin changes
 
 ## Plugin setup
 
@@ -32,7 +18,8 @@ The output of this folder is as follows:
      |-main
        |-java (plugin sources)
        |-resources (plugin resources - the plugin.xml file lives here)
-   |-build (where build files are stored)   
+   |-build (where build files are stored)
+       |-distributions (where the plugin zip file is generated)   
    |-.idea (a template project for editing/building/testing the plugin itself)
    |-build.gradle (the gradle build file)
    |-gradle.properties (contains properties required to build this project)
@@ -57,7 +44,7 @@ Once the build is configured correctly, the plugin can even be tested in a sandb
 
 ### Installing the plugin
 
-To install the plugin in your IDE, first you need to build a plugin module file (a `.jar` file), as described in the previous section.
+To install the plugin in your IDE, first you need to build a plugin module file (a `.zip` file), as described in the previous section.
 
 Once the plugin jar has been obtained, it can be installed in the IDE; go in `File -> Settings`, and select `Plugins` from the right panel. Then click on `Install plugin from disk` and point the IDE to the zip file you have created in the step above. The IDE will require a restart - once restart is completed the installation process is completed, and the plugin is ready to be used to run and debug jtreg tests.
 
@@ -97,7 +84,7 @@ To run an existing configuration, simply select it from the drop down list in th
 
 Debugging works as for any other Java application. Simply set breakpoints (this can be done by left-clicking the area to the left of the code in the source editor, which will cause a red circle to appear). During a test debug, execution will stop at any given breakpoints, allowing you to see values of variables, set watch expressions, etc.
 
-> Note: debugging only works with a _single_ test action (e.g. `@run` or `@compile`). If multiple test actions are present, debugging will not work correctly. This is a known issue. To workaround, please manually remove the test actions that do not need to be debugged. 
+> Note: debugging only works with a _single_ test action such as `@run` or `@compile`. If multiple test actions are present, debugging will not work correctly. This is a known issue. To workaround, please manually remove the test actions that do not need to be debugged. Conversely, `@build` actions can be safely ignored, as they do not have any adverse effect on the debugging process.  
 
 ### Inspecting jtreg test results
 
