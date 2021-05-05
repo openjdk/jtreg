@@ -21,14 +21,10 @@ dependencies {
 
 // See https://github.com/JetBrains/gradle-intellij-plugin/
 intellij {
-    version '2021.1.1'
+    version intellijVersion
     plugins = ['java', 'AntSupport', 'TestNG-J']
 }
 
 patchPluginXml {
-    changeNotes """
-    <ul>
-      <li>Fix compatibility with 2020.3</li>
-    </ul>
-    """
+    changeNotes notes
 }
