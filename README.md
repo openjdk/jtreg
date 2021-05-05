@@ -73,10 +73,10 @@ variables.
     available at <http://asm.ow2.org/>
 
 * JUnit:
-    See <http://junit.org/>. The recommended version is currently JUnit 4.13.
+    See <http://junit.org/>. The recommended version is currently JUnit 4.13.2.
 
 * TestNG:
-    See <http://testng.org/>. The recommended version is currently 7.1.0.
+    See <http://testng.org/>. The recommended version is currently 7.4.0.
 
 The following dependencies are optional.
 
