@@ -20,7 +20,6 @@ The output of this folder is as follows:
        |-resources (plugin resources - the plugin.xml file lives here)
    |-build (where build files are stored)
        |-distributions (where the plugin zip file is generated)   
-   |-.idea (a template project for editing/building/testing the plugin itself)
    |-build.gradle (the gradle build file)
    |-gradle.properties (contains properties required to build this project)
 ```
