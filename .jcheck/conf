@@ -1,3 +1,6 @@
 project=code-tools
 comments=lax
 tags=lax
+
+[checks "executables"]
+ignore=.*gradlew.*
