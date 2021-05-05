@@ -43,7 +43,7 @@ The output of this folder is as follows:
 
 This plugin can be built with `gradle`. To build the plugin, simply run the following command from the `idea` folder:
 
-`./gradlew clean build`
+`sh gradlew clean build`
 
 This will download the required IntelliJ dependencies, will build the plugin and will place the results in the `build/distributions` folder.
 
@@ -51,7 +51,7 @@ This will download the required IntelliJ dependencies, will build the plugin and
 
 Once the build is configured correctly, the plugin can even be tested in a sandbox environment, as follows:
 
-`./gradlew runIde`
+`sh gradlew runIde`
 
 ### Installing the plugin
 
