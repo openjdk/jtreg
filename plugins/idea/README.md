@@ -49,7 +49,7 @@ Once the build is configured correctly, the plugin can even be tested in a sandb
 
 To install the plugin in your IDE, first you need to build a plugin module file (a `.zip` file), as described in the previous section.
 
-Once the plugin jar has been obtained, it can be installed in the IDE; go in `File -> Settings`, and select `Plugins` from the right panel. Then click on `Install plugin from disk` and point the IDE to the zip file you have created in the step above. The IDE will require a restart - once restart is completed the installation process is completed, and the plugin is ready to be used to run and debug jtreg tests.
+Once the plugin jar has been obtained, it can be installed in the IDE; go in `Help -> Find Action...`, and type `Install plugin from disk`, and then select the corresponding action from the drop down list. A new file dialog will pop up: point the IDE to the zip file you have created in the step above. The IDE will require a restart - once restart is completed the installation process is completed, and the plugin is ready to be used to run and debug jtreg tests.
 
 ## Using the plugin
 
