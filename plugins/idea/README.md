@@ -32,6 +32,9 @@ This plugin can be built with `gradle`. To build the plugin, simply run the foll
 
 `sh gradlew clean build`
 
+> Note: when working behind a proxy, additional options might be required, such as: \
+> `-Dhttps.proxyhost=<proxyServer> -Dhttps.proxyPort=<proxyPort>`
+
 This will download the required IntelliJ dependencies, will build the plugin and will place the results in the `build/distributions` folder.
 
 > Note: to build the plugin, the build script must point to a valid jtreg installation; see the property `jtregHome` in the `gradle.properties` file, and tweak accordingly.
