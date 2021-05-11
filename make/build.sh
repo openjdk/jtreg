@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 #
 # Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
@@ -81,7 +81,7 @@
 #
 # CURL (e.g. "/path/to/my/wget")
 #     The curl-like executable to use when downloading files.
-#     Note: If available, wget will be prefered.
+#     Note: If available, wget will be preferred.
 #
 # CURL_OPTS (e.g. "-v")
 #     Additional arguments to pass to CURL when downloading files.

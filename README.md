@@ -74,9 +74,14 @@ variables.
 
 * JUnit:
     See <http://junit.org/>. The recommended version is currently JUnit 4.13.2.
+    JUnit has a dependency on Hamcrest. The recommended version is currently 2.2.
 
 * TestNG:
-    See <http://testng.org/>. The recommended version is currently 7.4.0.
+    See <http://testng.org/>. The recommended version is currently 7.3.0.
+    (Do not use 7.4.0 to run OpenJDK tests.)
+    TestNG has dependencies on JCommander and Google Guice.
+    The recommended version of JCommander is 1.78.
+    The recommended version of Google Guice is 4.2.3.
 
 The following dependencies are optional.
 
@@ -108,6 +113,8 @@ The following dependencies are optional.
 * JDK 14:
     This is used when running some of the tests. Set `JDK14HOME` to run these
     tests. It need not be set if you are just building jtreg.
+  
+The recommended versions are also defined in `make/build-support/version-numbers`.
 
 ## Running jtreg Self-Tests
 
