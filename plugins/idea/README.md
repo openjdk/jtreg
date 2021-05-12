@@ -1,17 +1,8 @@
 # jtreg plugin for IntelliJ IDE
-##### *Maurizio Cimadamore and Chris Hegarty, September 2016, version 0.3*
+##### *Maurizio Cimadamore and Chris Hegarty*
 
 This is a convenience plugin which adds jtreg capabilities to the IntelliJ IDE. With this plugin, OpenJDK developers
 can write, run, debug jtreg tests without the need of leaving their IDE environment.
-
-### Changes from 0.2
-
-* updated instruction on how to build the plugin
-
-### Changes from 0.1
-
-* more detailed instructions on how to configure the plugin project
-* updated section `What needs to be rebuilt before a test run?` to reflect latest plugin changes
 
 ## Plugin setup
 
@@ -23,29 +14,41 @@ The output of this folder is as follows:
 
 ```
  idea
-   |-src (plugin sources)
+   |-src
+     |-main
+       |-java (plugin sources)
+       |-resources (plugin resources - the plugin.xml file lives here)
    |-build (where build files are stored)
-   |-resources (plugin resources - the plugin.xml file lives here)
-   |-.idea (a template project for editing/building/testing the plugin itself)
+       |-distributions (where the plugin zip file is generated)   
+   |-build.gradle (the gradle build file)
+   |-gradle.properties (contains properties required to build this project)
 ```
 
 ### Building the plugin
 
-To build the plugin, you need to have IntelliJ installed. From IntelliJ, simply browse to the location of this folder, and open it as an IntelliJ project. The project can be built by clicking on `Build -> Build Project`. Once this step is done, you should be able to run/debug the plugin.
 
-Note: You might need to tweak the IDE project settings to correctly configure the plugin project. The two following steps are required:
+This plugin can be built with `gradle`. To build the plugin, simply run the following command from the `idea` folder:
 
-* When the IDE project for the plugin is first opened, IntelliJ will complain about the lack of a path variable called `JTREG_HOME`. Please follow the IDE instructions, and set this path variable to point to the root of your jtreg build output or your jtreg installation (`JTREG_HOME/libs/javatest.jar` must exist). The setting can also be found in under `Settings -> Appearance and Behavior -> Path Variables`. This step is required as the project depends on some of the jtreg libraries.
+`sh gradlew clean build`
 
-* You need to create an Intellij SDK and name it `IDEA JDK` for the project to work correctly. To create a new SDK, click on `File -> Project Structure`. When the dialog opens, click on the `SDKs` entry in the left pane, and add a new SDK (by clicking on the *plus* icon). The SDK we want to create is an 'IntelliJ Platform Plugin SDK'. Once the new SDK type has been selected, you will have to tell IntelliJ what's the SDK path - you will see that IntelliJ will already point to the folder containing your IntelliJ installation - that is a fine choice. Rename it to `IDEA JDK`. Secondly, you will have to tell IntelliJ which JDK to use together with the plugin SDK. Any JDK 8 (or greater) is a fine choice here.
-  
-Note: by running the plugin here we mean running it in a sandbox environment - for truly installing the plugin in your IDE, see the steps below.
+> Note: when working behind a proxy, additional options might be required, such as: \
+> `-Dhttps.proxyhost=<proxyServer> -Dhttps.proxyPort=<proxyPort>`
+
+This will download gradle and the required IntelliJ dependencies, will build the plugin and will place the results in the `build/distributions` folder.
+
+> Note: to build the plugin, the build script must point to a valid jtreg installation; see the property `jtregHome` in the `gradle.properties` file, and tweak accordingly.
+
+> Note: the property `intellijVersion` can be used to specify which IDE version should the plugin depend on (defaults to `2021.1`).
+
+Once the build is configured correctly, the plugin can even be tested in a sandbox environment, as follows:
+
+`sh gradlew runIde`
 
 ### Installing the plugin
 
-To install the plugin in your IDE, first you need to prepare a plugin module file (a `.jar` file). This can be done by selecting `Build -> Prepare Plugin Module for Deployment`. Once that is done, a new jar file should be created under the hidden `.idea` folder (and a related pop up notification should appear).
+To install the plugin in your IDE, first you need to build a plugin module file (a `.zip` file), as described in the previous section.
 
-Once you have a jar file, you can easily install it in your IDE; go in `File -> Settings`, and select `Plugins` from the right panel. Then click on `Install plugin from disk` and point the IDE to the zip file you have created in the step above. The IDE will ask you to restart - once restart is completed the installation process is completed, and the plugin is ready to be used to run and debug jtreg tests.
+Once the plugin zip has been obtained, it can be installed in the IDE; go in `Help -> Find Action...`, and type `Install plugin from disk`, and then select the corresponding action from the drop down list. A new file dialog will pop up: point the IDE to the zip file you have created in the step above. The IDE will require a restart - once restart is completed the installation process is completed, and the plugin is ready to be used to run and debug jtreg tests.
 
 ## Using the plugin
 
@@ -83,6 +86,8 @@ To run an existing configuration, simply select it from the drop down list in th
 
 Debugging works as for any other Java application. Simply set breakpoints (this can be done by left-clicking the area to the left of the code in the source editor, which will cause a red circle to appear). During a test debug, execution will stop at any given breakpoints, allowing you to see values of variables, set watch expressions, etc.
 
+> Note: debugging only works with a _single_ test action such as `@run` or `@compile`. If multiple test actions are present, debugging will not work correctly. This is a known issue. To workaround, please manually remove the test actions that do not need to be debugged. Conversely, `@build` actions can be safely ignored, as they do not have any adverse effect on the debugging process.  
+
 ### Inspecting jtreg test results
 
 Once a test (or a group of tests) have finished running, you can inspect test results in the corresponding bottom panel. This panel is organized in two sub-panels: the one on the left allows you to chose the test whose results you'd like to inspect; the panel on the right contains the actual test output (e.g. the `jtr` file).
@@ -112,4 +117,4 @@ To select which Ant target to run before a jtreg test, simply go in the `File ->
 
 ### Dealing with bugs
 
-In the unfortunate case you run into a plugin bug, you will notice a red mark in the bottom right part of the IDE. If you click on that icon, you will have the ability to show the stack trace associated with the error (and you will also be offered the option of disabling the plugin). If you want to report a bug against the jtreg plugin, we recommend that you copy the stack trace along with the IDE log file (this can be found under `Help -> Show Log in Files`) and submit them along with a description of the experienced buggy behavior. Please forward such bug reports to `jtreg-dev@openjdk.java.net`.
+In the unfortunate case you run into a plugin bug, you will notice a red mark in the bottom right part of the IDE. If you click on that icon, you will have the ability to show the stack trace associated with the error (and you will also be offered the option of disabling the plugin). If you want to report a bug against the jtreg plugin, we recommend that you copy the stack trace along with the IDE log file (this can be found under `Help -> Show Log in Files`) and submit them along with a description of the experienced buggy behavior. Please forward such bug reports to `jtreg-dev@openjdk.java.net`, or `ide-support-dev@openjdk.java.net` 
