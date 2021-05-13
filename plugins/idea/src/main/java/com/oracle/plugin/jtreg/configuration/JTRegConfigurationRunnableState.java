@@ -50,7 +50,11 @@ import com.oracle.plugin.jtreg.runtime.JTRegTestListener;
 import com.oracle.plugin.jtreg.service.JTRegService;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Method;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -153,11 +157,12 @@ class JTRegConfigurationRunnableState extends JavaTestFrameworkRunnableState<JTR
 
     protected void configureRTClasspath(JavaParameters javaParameters) {
         JTRegService jtregSettings = JTRegService.getInstance(getConfiguration().getProject());
-        javaParameters.getClassPath().add(jtregSettings.getJTRegDir() + "/lib/jtreg.jar");
-        javaParameters.getClassPath().add(jtregSettings.getJTRegDir() + "/lib/javatest.jar");
-        javaParameters.getClassPath().add(jtregSettings.getJTRegDir() + "/lib/testng.jar");
-        javaParameters.getClassPath().add(jtregSettings.getJTRegDir() + "/lib/junit.jar");
-        javaParameters.getClassPath().add(jtregSettings.getJTRegDir() + "/lib/asmtools.jar");
+        Path jtregLibDir = Path.of(jtregSettings.getJTRegDir(), "lib");
+        try (DirectoryStream<Path> libs = Files.newDirectoryStream(jtregLibDir, "*.jar")) {
+            libs.forEach(lib -> javaParameters.getClassPath().add(lib.toString()));
+        } catch (IOException ex) {
+            throw new IllegalStateException(ex);
+        }
     }
 
     protected void configureRTClasspath(JavaParameters javaParameters, Module module) throws CantRunException {
