@@ -402,10 +402,15 @@ TARGETS.ZIP.jtreg += \
 #
 # release info
 
+# based on code in OpenJDK make/SourceRevision.gmk
+ID_COMMAND := $(PRINTF) "git:%s%s\n" \
+                 "$$(git log -n1 --format=%H | cut -c1-12)" \
+                 "$$(if test -n "$$(git status --porcelain)"; then printf '+'; fi)"
+
 $(JTREG_IMAGEDIR)/release:
 	echo "JTREG_VERSION=$(BUILD_VERSION) $(BUILD_NUMBER)" > $@
 	echo "BUILD_DATE=`/bin/date +'%B %d, %Y'`" >> $@
-	if [ -r $(TOPDIR)/.hg ]; then echo "SOURCE=jtreg:`hg tip | head -1 | cut -d: -f 3`" >> $@ ; fi
+	if [ -r $(TOPDIR)/.git ]; then echo "SOURCE=$$($(ID_COMMAND))" >> $@ ; fi
 
 TARGETS.ZIP.jtreg += \
 	$(JTREG_IMAGEDIR)/release
