@@ -410,7 +410,11 @@ ID_COMMAND := $(PRINTF) "git:%s%s\n" \
 $(JTREG_IMAGEDIR)/release:
 	echo "JTREG_VERSION=$(BUILD_VERSION) $(BUILD_NUMBER)" > $@
 	echo "BUILD_DATE=`/bin/date +'%B %d, %Y'`" >> $@
-	if [ -r $(TOPDIR)/.git ]; then echo "SOURCE=$$($(ID_COMMAND))" >> $@ ; fi
+	if [ -r $(TOPDIR)/.git ]; then \
+	    echo "SOURCE=$$($(ID_COMMAND))" >> $@ ; \
+	elif [ -r $(TOPDIR)/.src-rev ]; then \
+	    echo "SOURCE=\"$$($(CAT) $(TOPDIR)/.src-rev | $(SED) -e 's/:/:git:/' -e 's/  *$$//')\"" >> $@ ; \
+	fi
 
 TARGETS.ZIP.jtreg += \
 	$(JTREG_IMAGEDIR)/release
