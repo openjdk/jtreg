@@ -336,6 +336,7 @@ public class MainAction extends Action
         if (script.isCheck()) {
             startAction(true);
             status = passed(CHECK_PASS);
+            endAction(status);
         } else {
             Lock lock = script.getLockIfRequired();
             if (lock != null) lock.lock();
@@ -357,11 +358,12 @@ public class MainAction extends Action
                         throw new AssertionError();
                 }
             } finally {
+                // End action before releasing the lock.
+                endAction(status);
                 if (lock != null) lock.unlock();
             }
         }
 
-        endAction(status);
         return status;
     } // run()
 
