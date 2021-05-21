@@ -84,10 +84,11 @@ $(IMAGES_DIR)/%.jar: pkgsToFiles.sh
 # Build zips with verbose names
 
 %-$(VERBOSE_ZIP_SUFFIX).zip: %.zip 
-	cp $(@:%-$(VERBOSE_ZIP_SUFFIX).zip=%.zip) $@
+	$(CP) $(@:%-$(VERBOSE_ZIP_SUFFIX).zip=%.zip) $@
 
 %-$(NEW_VERBOSE_ZIP_SUFFIX).zip: %.zip
-	ln $(@:%-$(NEW_VERBOSE_ZIP_SUFFIX).zip=%.zip) $@
+	$(RM) $@
+	$(LN) $(@:%-$(NEW_VERBOSE_ZIP_SUFFIX).zip=%.zip) $@
 
 #----------------------------------------------------------------------
 #
