@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2021, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -42,6 +42,7 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.Reader;
 import java.io.StreamTokenizer;
+import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -1650,18 +1651,6 @@ public class Tool {
 
         File libDir = jtreg_jar.getParentFile();
 
-        junitPath = new JarFinder("junit.jar", "hamcrest.jar")
-                .classes("org.junit.runner.JUnitCore", "org.hamcrest.SelfDescribing")
-                .libDir(libDir)
-                .getPath();
-        // no convenient version info for junit.jar
-
-        testngPath = new JarFinder("testng.jar", "jcommander.jar", "guice.jar")
-                .classes("org.testng.annotations.Test", "com.beust.jcommander.JCommander", "com.google.inject.Stage")
-                .libDir(libDir)
-                .getPath();
-        help.addPathVersionHelper("TestNG", testngPath);
-
         asmtoolsPath = new JarFinder("asmtools.jar")
                 .classes("org.openjdk.asmtools.Main")
                 .libDir(libDir)
@@ -1686,6 +1675,46 @@ public class Tool {
                 }
             }
         });
+
+        testngPath = new JarFinder("testng.jar", "jcommander.jar", "guice.jar")
+                .classes("org.testng.annotations.Test", "com.beust.jcommander.JCommander", "com.google.inject.Stage")
+                .libDir(libDir)
+                .getPath();
+        // handle TestNG specially
+        help.addVersionHelper(out -> {
+            List<URL> urls = new ArrayList<>();
+            for (File f : testngPath.asList()) {
+                try {
+                    urls.add(f.toURI().toURL());
+                } catch (MalformedURLException e) {
+                    // ignore
+                }
+            }
+            String v = null;
+            try (URLClassLoader cl = new URLClassLoader(urls.toArray(new URL[0]))) {
+                Class<?> c = cl.loadClass("org.testng.internal.Version");
+                Method m = c.getMethod("getVersionString");
+                v = (String) m.invoke(null);
+            } catch (ReflectiveOperationException | IOException e) {
+                // ignore
+            }
+            out.println("TestNG (testng.jar): version " + (v == null ? "unknown" : v)); // need i18n
+        });
+        SearchPath notTestNGPath = new SearchPath();
+        for (File f : testngPath.asList()) {
+            if (!f.getName().equals("testng.jar")) {
+                notTestNGPath.append(f);
+            }
+        }
+        // jcommander really does have no obvious version info, so leave it as "unknown"
+        help.addPathVersionHelper("TestNG", notTestNGPath);
+
+        junitPath = new JarFinder("junit.jar", "hamcrest.jar")
+                .classes("org.junit.runner.JUnitCore", "org.hamcrest.SelfDescribing")
+                .libDir(libDir)
+                .getPath();
+        // no convenient version info for junit.jar
+        help.addPathVersionHelper("JUnit", junitPath);
     }
 
     void initPolicyFile() throws Fault {

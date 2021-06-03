@@ -419,6 +419,7 @@ PANDOC  = $(shell if [ -r /usr/bin/pandoc ]; then \
 		echo /bin/echo "pandoc not available" ; \
 	fi )
 PERL	= /usr/bin/perl
+PRINTF  = /usr/bin/printf
 RM 	= /bin/rm -rf
 SED 	:= $(shell if [ -r /bin/sed ]; then echo /bin/sed ; else echo /usr/bin/sed ; fi )
 SH 	= /bin/sh

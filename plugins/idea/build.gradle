@@ -1,0 +1,35 @@
+plugins {
+    id 'java'
+    id 'org.jetbrains.intellij' version '0.7.3'
+}
+
+def jtregLib = jtregHome + File.separator + "lib" + File.separator + "jtreg.jar"
+
+assert file(jtregLib).exists() : """Could not find jtreg in ${jtregHome}.
+Please make sure that 'jtregHome' in 'gradle.properties' points to a valid jtreg root.
+"""
+
+version pluginVersion
+
+compileJava {
+    sourceCompatibility = javaLevel
+    targetCompatibility = javaLevel
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation files(jtregLib)
+}
+
+// See https://github.com/JetBrains/gradle-intellij-plugin/
+intellij {
+    version intellijVersion
+    plugins = ['java', 'AntSupport', 'TestNG-J']
+}
+
+patchPluginXml {
+    changeNotes notes
+}

@@ -73,15 +73,18 @@ public class JTRegServiceConfigurable implements SearchableConfigurable {
     private JPanel myListPane;
     private CollectionListModel<AntBuildTarget> myModel;
 
-
     Project project;
-    JTRegService service;
-    AntConfigurationBase antConfiguration;
 
-    public JTRegServiceConfigurable(Project project, JTRegService service, AntConfiguration antConfiguration) {
+    public JTRegServiceConfigurable(Project project) {
         this.project = project;
-        this.service = service;
-        this.antConfiguration = (AntConfigurationBase)antConfiguration;
+    }
+
+    private JTRegService getJTRegService() {
+        return JTRegService.getInstance(project);
+    }
+
+    private AntConfigurationBase getAntConfigurationBase() {
+        return AntConfigurationBase.getInstance(project);
     }
 
     @Nullable
@@ -116,6 +119,8 @@ public class JTRegServiceConfigurable implements SearchableConfigurable {
 
     @Override
     public boolean isModified() {
+        JTRegService service = getJTRegService();
+        AntConfigurationBase antConfiguration = getAntConfigurationBase();
         return !jtregOptions.getText().trim().equals(service.getJTregOptions()) ||
                 jrePathEditor.isAlternativeJreSelected() != service.isAlternativeJrePathEnabled() ||
                 !jtregDir.getText().trim().equals(service.getJTRegDir()) ||
@@ -127,6 +132,7 @@ public class JTRegServiceConfigurable implements SearchableConfigurable {
 
     @Override
     public void apply() throws ConfigurationException {
+        JTRegService service = getJTRegService();
         service.setJTRegOptions(jtregOptions.getText().trim());
         service.setAlternativePathEnabled(jrePathEditor.isAlternativeJreSelected());
         service.setAlternativeJrePath(jrePathEditor.getJrePathOrName());
@@ -137,6 +143,8 @@ public class JTRegServiceConfigurable implements SearchableConfigurable {
 
     @Override
     public void reset() {
+        JTRegService service = getJTRegService();
+        AntConfigurationBase antConfiguration = getAntConfigurationBase();
         jtregOptions.setText(service.getJTregOptions());
         jrePathEditor.setPathOrName(service.getAlternativeJrePath(), service.isAlternativeJrePathEnabled());
         jtregDir.setText(FileUtil.toSystemDependentName(service.getJTRegDir()));
@@ -170,6 +178,7 @@ public class JTRegServiceConfigurable implements SearchableConfigurable {
         }
 
 
+        AntConfigurationBase antConfiguration = getAntConfigurationBase();
         antConfiguration.ensureInitialized();
         boolean antConfigEnabled = JTRegUtils.getAntBuildFiles(antConfiguration).length != 0;
 
