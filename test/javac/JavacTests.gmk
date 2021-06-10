@@ -35,12 +35,15 @@ $(BUILDDIR)/javac/agentvm.ok: \
 	JTREG_USE_AGENTVM_FOR_SAMEVM=false \
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(JDKHOME) \
+		-jdk:$(JDK8HOME) \
 		$(@:$(BUILDDIR)/javac/%.ok=-%) \
 		$(TESTDIR)/javac
 	echo "test passed at `date`" > $@
 
+# test requires access to javac internals, so needs @modules tag to run on JDK 9 or later
+ifdef JDK8HOME
 TESTS.jtreg += \
 	$(BUILDDIR)/javac/othervm.ok \
 	$(BUILDDIR)/javac/agentvm.ok
+endif
 

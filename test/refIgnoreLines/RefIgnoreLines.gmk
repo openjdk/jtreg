@@ -33,12 +33,14 @@ $(BUILDDIR)/RefIgnoreLines_std.ok: \
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(JDKHOME) \
+		-jdk:$(JDK8HOME) \
 		$(TESTDIR)/refIgnoreLines \
 			> $(@:%.ok=%/jt.log)
 	echo "test passed at `date`" > $@
 
+ifdef JDK8HOME
 TESTS.jtreg += $(BUILDDIR)/RefIgnoreLines_std.ok
+endif
 
 testRefIgnoreLines: $(BUILDDIR)/RefIgnoreLines_std.ok
 
@@ -52,13 +54,16 @@ $(BUILDDIR)/RefIgnoreLines_Xmx.ok: \
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(JDKHOME) \
+		-jdk:$(JDK8HOME) \
 		-Xmx100m \
 		$(TESTDIR)/refIgnoreLines \
 			> $(@:%.ok=%/jt.log)
 	echo "test passed at `date`" > $@
 
+ifdef JDK8HOME
 TESTS.jtreg += $(BUILDDIR)/RefIgnoreLines_Xmx.ok
+endif
+
 testRefIgnoreLines: $(BUILDDIR)/RefIgnoreLines_Xmx.ok
 
 #------------------------------------------------------------
@@ -73,16 +78,18 @@ $(BUILDDIR)/RefIgnoreLines__JAVA_OPTIONS_1.ok: \
 	$(@:$(BUILDDIR)/RefIgnoreLines_%_1.ok=%)=-Xmx100m \
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(JDKHOME) \
+		-jdk:$(JD8KHOME) \
 		-e:$(@:$(BUILDDIR)/RefIgnoreLines_%_1.ok=%) \
 		$(TESTDIR)/refIgnoreLines \
 			> $(@:%.ok=%/jt.log)
 	$(GREP) 'Ignoring line: Picked up' $(@:%.ok=%)/work/Test.jtr
 	echo "test passed at `date`" > $@
 
+ifdef JDK8HOME
 TESTS.jtreg += \
 	$(BUILDDIR)/RefIgnoreLines_JAVA_TOOL_OPTIONS_1.ok \
 	$(BUILDDIR)/RefIgnoreLines__JAVA_OPTIONS_1.ok
+endif
 
 testRefIgnoreLines: \
 	$(BUILDDIR)/RefIgnoreLines_JAVA_TOOL_OPTIONS_1.ok \
@@ -99,16 +106,19 @@ $(BUILDDIR)/RefIgnoreLines__JAVA_OPTIONS_2.ok: \
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(JDKHOME) \
+		-jdk:$(JDK8HOME) \
 		-e:$(@:$(BUILDDIR)/RefIgnoreLines_%_2.ok=%)=-Xmx100m \
 		$(TESTDIR)/refIgnoreLines \
 			> $(@:%.ok=%/jt.log)
 	$(GREP) 'Ignoring line: Picked up' $(@:%.ok=%)/work/Test.jtr
 	echo "test passed at `date`" > $@
 
+
+ifdef JDK8HOME
 TESTS.jtreg += \
 	$(BUILDDIR)/RefIgnoreLines_JAVA_TOOL_OPTIONS_2.ok \
 	$(BUILDDIR)/RefIgnoreLines__JAVA_OPTIONS_2.ok
+endif
 
 testRefIgnoreLines: \
 	$(BUILDDIR)/RefIgnoreLines_JAVA_TOOL_OPTIONS_2.ok \
