@@ -24,6 +24,13 @@ used to build jtreg with the `--jdk` command-line option. It must be JDK 8 or la
     % cd jtreg-root-directory
     % sh make/build.sh --jdk JDK-directory
 
+Some shells, such as `dash`, don't support the special variables like `BASH_SOURCE`,
+which are used in `build.sh`. If local default shell `sh` doesn't support these
+special variables, the building with `build.sh` will fail. So the explicit shell,
+such as `bash`, need to be specified to replace the default shell `sh`.
+
+    % bash make/build.sh --jdk JDK-directory
+
 The script will create a build sub-directory, download and build dependencies,
 and finally build jtreg itself. The resulting image will be in
 _build/images/jtreg_.
