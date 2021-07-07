@@ -22,6 +22,6 @@
  */
 
 module um2 {
-    requires testng;
+    requires org.testng;
     exports um2_p1;
 }
