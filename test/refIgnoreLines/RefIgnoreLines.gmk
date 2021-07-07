@@ -78,7 +78,7 @@ $(BUILDDIR)/RefIgnoreLines__JAVA_OPTIONS_1.ok: \
 	$(@:$(BUILDDIR)/RefIgnoreLines_%_1.ok=%)=-Xmx100m \
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(JD8KHOME) \
+		-jdk:$(JDK8HOME) \
 		-e:$(@:$(BUILDDIR)/RefIgnoreLines_%_1.ok=%) \
 		$(TESTDIR)/refIgnoreLines \
 			> $(@:%.ok=%/jt.log)
