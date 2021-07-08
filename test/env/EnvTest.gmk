@@ -83,9 +83,11 @@ $(BUILDDIR)/EnvTest.full.ok: $(ENV.files) \
 ifneq ($(OS_NAME), windows)
 ifdef JDK6HOME
 ifdef JDK7HOME
+ifndef HEADLESS
 TESTS.jtreg += \
 	$(BUILDDIR)/EnvTest.simple.ok \
 	$(BUILDDIR)/EnvTest.full.ok
+endif
 endif
 endif
 endif

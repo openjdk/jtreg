@@ -73,8 +73,10 @@ $(BUILDDIR)/RerunTest.othervm.ok: \
 
 ifdef JDK8HOME
 ifneq ($(OS_NAME), windows)
+ifndef HEADLESS
 TESTS.jtreg += \
 	$(BUILDDIR)/RerunTest.agentvm.ok \
 	$(BUILDDIR)/RerunTest.othervm.ok
+endif
 endif
 endif
