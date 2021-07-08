@@ -113,6 +113,10 @@ The following dependencies are optional.
 * JDK 14:
     This is used when running some of the tests. Set `JDK14HOME` to run these
     tests. It need not be set if you are just building jtreg.
+
+* JDK 18:
+  This is used when running some of the tests. Set `JDK18HOME` to run these
+  tests. It need not be set if you are just building jtreg.
   
 The recommended versions are also defined in `make/build-support/version-numbers`.
 
