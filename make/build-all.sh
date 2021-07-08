@@ -84,7 +84,7 @@ get_root() {
 get_tag_info() {
    case $SCM_TYPE in
        HG)  hg tags | grep jtreg | head -1 ;;
-       GIT) git tag | grep jtreg | tail -1 ;;
+       GIT) git describe ;;
        *) echo "Error: unknown SCM" >&2 ; exit 1 ;;
    esac
 }
