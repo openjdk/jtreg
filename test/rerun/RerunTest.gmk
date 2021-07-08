@@ -32,11 +32,8 @@ $(BUILDDIR)/RerunTest.othervm.ok:  JAVACOPTION=-javacoption:-XDmy.javac.option=x
 $(BUILDDIR)/RerunTest.agentvm.ok \
 $(BUILDDIR)/RerunTest.othervm.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	    $(JTREG_IMAGEDIR)/bin/jtreg \
-	    display.sh
+	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
-	DISPLAY=`BUILDDIR=$(BUILDDIR) sh display.sh` export DISPLAY ; \
-	trap "BUILDDIR=$(BUILDDIR) sh `pwd`/display.sh -kill" 0 ; \
 	unset GNOME_DESKTOP_SESSION_ID ; \
 	unset XMODIFIERS ; \
 	LANG=en_US.UTF-8 TZ=GMT+0.00 \

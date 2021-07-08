@@ -29,8 +29,7 @@ $(BUILDDIR)/EnvTest.simple.ok: $(ENV.files) \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGE_JAVAHELP_JAR) \
-	    $(JTREG_IMAGEDIR)/bin/jtreg \
-	    display.sh
+	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%)
 	$(MKDIR) $(@:%.ok=%)
 	( echo "testRoot=`cd $(TESTDIR)/env ; pwd`" ; \
@@ -41,8 +40,6 @@ $(BUILDDIR)/EnvTest.simple.ok: $(ENV.files) \
 	  echo "test.java.opts="; \
 	  echo "test.jdk=$(JDK6HOME)"; \
 	  echo "compile.jdk=$(JDK6HOME)" ) > $(@:%.ok=%/ref.properties)
-	DISPLAY=`BUILDDIR=$(BUILDDIR) sh display.sh` export DISPLAY ; \
-	trap "BUILDDIR=$(BUILDDIR) sh `pwd`/display.sh -kill" 0 ; \
 	JT_JAVA=$(JDKHOME) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDK6HOME) \
@@ -57,8 +54,7 @@ $(BUILDDIR)/EnvTest.full.ok: $(ENV.files) \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGE_JAVAHELP_JAR) \
-	    $(JTREG_IMAGEDIR)/bin/jtreg \
-	    display.sh
+	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%)
 	$(MKDIR) $(@:%.ok=%)
 	( echo "testRoot=`cd $(TESTDIR)/env ; pwd`" ; \
@@ -69,8 +65,6 @@ $(BUILDDIR)/EnvTest.full.ok: $(ENV.files) \
 	  echo "test.java.opts=-DJAVA_OPT=java_opt"; \
 	  echo "test.jdk=$(JDK7HOME)"; \
 	  echo "compile.jdk=$(JDK6HOME)" ) > $(@:%.ok=%/ref.properties)
-	DISPLAY=`BUILDDIR=$(BUILDDIR) sh display.sh` export DISPLAY ; \
-	trap "BUILDDIR=$(BUILDDIR) sh `pwd`/display.sh -kill" 0 ; \
 	JT_JAVA=$(JDKHOME) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-compilejdk:$(JDK6HOME) \
