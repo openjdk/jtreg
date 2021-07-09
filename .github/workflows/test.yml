@@ -20,7 +20,7 @@ jobs:
       - name: build
         working-directory: jtreg
         shell: bash
-        run: sh make/build-all.sh ${JAVA_HOME_8_X64}
+        run: sh make/build.sh --jdk ${JAVA_HOME_8_X64}
 
       - name: upload artifact
         uses: actions/upload-artifact@v2
@@ -32,9 +32,8 @@ jobs:
         working-directory: jtreg
         shell: bash
         run:
-             SKIP_WGET=true
              MAKE_ARGS=test
              HEADLESS=1
-             JDK8_HOME=${JAVA_HOME_8_X64}
-             sh make/build-all.sh ${JAVA_HOME_8_X64}
+             JDK8HOME=${JAVA_HOME_8_X64}
+             sh make/build.sh --jdk ${JAVA_HOME_8_X64} --skip-download
 
