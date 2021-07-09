@@ -66,7 +66,8 @@ $(BUILDDIR)/SecurityManagerTest_agentvm_forbid.ok: \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDKHOME) \
 		-agentvm -allowSetSecurityManager:no \
-		$(TESTDIR)/SecurityManager/{pass,error} \
+		$(TESTDIR)/SecurityManager/pass \
+		$(TESTDIR)/SecurityManager/error \
 		2>&1 | tee $(@:%.ok=%)/out.txt
 	grep "Test results: failed: 5" $(@:%.ok=%)/out.txt
 	echo "test passed at `date`" > $@
