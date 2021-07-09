@@ -1073,7 +1073,7 @@ The arguments to the `@test` tag are ignored by the harness.  For
 identification it may be useful to put information such as SCCS ID keywords after the `@test` tag.
 
 While not part of the tag specification, some tests use the
-string "`/nodynamiccopyright`" after `@test`
+string "`/nodynamiccopyright/`" after `@test`
 to indicate that that the file should not be subject to automated
 copyright processing that might affect the operation of the test,
 for example, by affecting the line numbers of the test source code.
