@@ -1,0 +1,39 @@
+name: Build and Test JTReg
+
+on:
+  push:
+    branches-ignore:
+        - master
+
+jobs:
+
+  linux-x64:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Checkout the source
+        uses: actions/checkout@v2
+        with:
+          path: jtreg
+          fetch-depth: 0
+
+      - name: build
+        working-directory: jtreg
+        shell: bash
+        run: bash make/build.sh --jdk ${JAVA_HOME_8_X64}
+
+      - name: upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: jtreg
+          path: jtreg/build/images/jtreg
+
+      - name: test
+        working-directory: jtreg
+        shell: bash
+        run:
+             MAKE_ARGS=test
+             HEADLESS=1
+             JDK8HOME=${JAVA_HOME_8_X64}
+             bash make/build.sh --jdk ${JAVA_HOME_8_X64} --skip-download
+
