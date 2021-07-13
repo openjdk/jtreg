@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2007, 2021, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -75,20 +75,20 @@ public class SimpleReporter extends Reporter {
     private void writeHead() throws IOException {
         for (int i = 0; i < size; i++) {
             int[] c = testCounts.get(i);
-            int p = c[Status.PASSED];
-            int f = c[Status.FAILED];
-            int e = c[Status.ERROR];
-            int nr = c[Status.NOT_RUN];
+            int passed = c[Status.PASSED];
+            int failed = c[Status.FAILED];
+            int error = c[Status.ERROR];
+            int notRun = c[Status.NOT_RUN];
             writeI18N("simple.set", i, table.getColumnName(i));
             print("  ");
             writeI18N("simple.counts",
-                    new Integer(p),
-                    new Integer((p > 0) && (f + e + nr > 0) ? 1 : 0),
-                    new Integer(f),
-                    new Integer((f > 0) && (e + nr > 0) ? 1 : 0),
-                    new Integer(e),
-                    new Integer((e > 0) && (nr > 0) ? 1 : 0),
-                    new Integer(nr));
+                    passed,
+                    (passed > 0) && (failed + error + notRun > 0) ? 1 : 0,
+                    failed,
+                    (failed > 0) && (error + notRun > 0) ? 1 : 0,
+                    error,
+                    (error > 0) && (notRun > 0) ? 1 : 0,
+                    notRun);
             println();
         }
     }
