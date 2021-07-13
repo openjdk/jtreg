@@ -1064,15 +1064,15 @@ public class RegressionScript extends Script {
         return TestNGReporter.instance(workDir);
     }
 
-    Lock getLockIfRequired() throws TestRunException {
+    Lock acquireLock() throws TestRunException{
+        boolean exclusive;
         try {
-            if (!testSuite.needsExclusiveAccess(td))
-                return null;
+            exclusive = testSuite.needsExclusiveAccess(td);
         } catch (TestSuite.Fault e) {
             throw new TestRunException("Can't determine if lock required", e);
         }
 
-        return Lock.get(params);
+        return Lock.get(params).lock(exclusive);
     }
 
     int getNextSerial() {

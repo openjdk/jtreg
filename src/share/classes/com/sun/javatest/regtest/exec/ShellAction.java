@@ -278,8 +278,7 @@ public class ShellAction extends Action
             // PASS TO PROCESSCOMMAND
             PrintWriter sysOut = section.createOutput("System.out");
             PrintWriter sysErr = section.createOutput("System.err");
-            Lock lock = script.getLockIfRequired();
-            if (lock != null) lock.lock();
+            Lock lock = script.acquireLock();
             try {
                 if (showCmd)
                     showCmd("shell", command, section);
