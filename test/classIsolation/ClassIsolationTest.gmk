@@ -25,6 +25,10 @@
 
 UCD_FILES := $(shell find $(TESTDIR)/classIsolation -type f )
 
+# Up until jtreg 4.2 b08, class files were placed in a shared classes directory.
+# When enabled in jtreg 4.2 b08 or later, class files are placed in an unshared test-specific directory
+# See Locations constructor, local variable useUniqueClassDir
+
 $(BUILDDIR)/ClassIsolation.disable.b07.ok: $(UCD_FILES) \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
@@ -38,7 +42,7 @@ $(BUILDDIR)/ClassIsolation.disable.b07.ok: $(UCD_FILES) \
 	    -w $(@:%.ok=%)/work \
 	    -r $(@:%.ok=%)/report \
 	    $(TESTDIR)/classIsolation/disable
-	files=`$(FIND) $(@:%.ok=%)/work -name \*.class | grep 'Test.\.d'` ; \
+	files=`$(FIND) $(@:%.ok=%)/work -name patches -prune -o -name \*.class -print | grep 'Test.\.d'` ; \
 	if [ -n "$$files" ]; then \
 		echo "Unexpected files found:" ; \
 		for f in $$files ; do echo $$f ; done ; \
@@ -60,7 +64,7 @@ $(BUILDDIR)/ClassIsolation.disable.b08.ok: $(UCD_FILES) \
 	    -w $(@:%.ok=%)/work \
 	    -r $(@:%.ok=%)/report \
 	    $(TESTDIR)/classIsolation/disable
-	files=`$(FIND) $(@:%.ok=%)/work -name \*.class | grep 'Test.\.d'` ; \
+	files=`$(FIND) $(@:%.ok=%)/work -name patches -prune -o -name \*.class -print | grep 'Test.\.d'` ; \
 	if [ -n "$$files" ]; then \
 		echo "Unexpected files found:" ; \
 		for f in $$files ; do echo $$f ; done ; \
@@ -81,7 +85,7 @@ $(BUILDDIR)/ClassIsolation.default.b08.ok: $(UCD_FILES) \
 	    -w $(@:%.ok=%)/work \
 	    -r $(@:%.ok=%)/report \
 	    $(TESTDIR)/classIsolation/default
-	files=`$(FIND) $(@:%.ok=%)/work -name \*.class | grep 'Test.\.d'` ; \
+	files=`$(FIND) $(@:%.ok=%)/work -name patches -prune -o -name \*.class -print | grep 'Test.\.d'` ; \
 	if [ -n "$$files" ]; then \
 		echo "Unexpected files found:" ; \
 		for f in $$files ; do echo $$f ; done ; \
@@ -102,7 +106,7 @@ $(BUILDDIR)/ClassIsolation.enable.b08.ok: $(UCD_FILES) \
 	    -w $(@:%.ok=%)/work \
 	    -r $(@:%.ok=%)/report \
 	    $(TESTDIR)/classIsolation/enable
-	files=`$(FIND) $(@:%.ok=%)/work -name \*.class | grep -v 'Test.\.d'` ; \
+	files=`$(FIND) $(@:%.ok=%)/work -name patches -prune -o -name \*.class -print | grep -v 'Test.\.d'` ; \
 	if [ -n "$$files" ]; then \
 		echo "Unexpected files found:" ; \
 		for f in $$files ; do echo $$f ; done ; \

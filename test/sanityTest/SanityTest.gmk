@@ -23,27 +23,19 @@
 # questions.
 #
 
-#----------------------------------------------------------------------
-#
-# Verify javac etc available on path for @run main in all modes.
-
-$(BUILDDIR)/javac/othervm.ok \
-$(BUILDDIR)/javac/agentvm.ok: \
-	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	    $(JTREG_IMAGEDIR)/bin/jtreg
-	JTREG_SHOWAGENT=true JTREG_SHOWCMD=true \
-	JTREG_USE_AGENTVM_FOR_SAMEVM=false \
-	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
-		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(JDK8HOME) \
-		$(@:$(BUILDDIR)/javac/%.ok=-%) \
-		$(TESTDIR)/javac
+$(BUILDDIR)/TestSanityTest.ok:
+	$(RM) $(@:%.ok=%)
+	$(MKDIR) -p $(@:%.ok=%)
+	$(FIND) $(TOPDIR)/make $(TOPDIR)/test -name \*.gmk | \
+		xargs $(GREP) -o 'JDK[1-9][0-9_]*HOME' | $(SED) -e 's/.*://' | $(SORT) -u \
+		> $(@:%.ok=%/refs.txt)
+	$(GREP) -o 'JDK[1-9][0-9_]*HOME' $(TOPDIR)/make/Makefile | $(SED) -e 's/.*://' | $(SORT) -u \
+		> $(@:%.ok=%/sanity.txt)
+	if $(DIFF) $(@:%.ok=%/refs.txt) $(@:%.ok=%/sanity.txt) ; then \
+	    echo "expected defs found" ; \
+	else \
+	    echo "differences found" ; exit 1 ; \
+	fi
 	echo "test passed at `date`" > $@
 
-# test requires access to javac internals, so needs @modules tag to run on JDK 9 or later
-ifdef JDK8HOME
-TESTS.jtreg += \
-	$(BUILDDIR)/javac/othervm.ok \
-	$(BUILDDIR)/javac/agentvm.ok
-endif
-
+TESTS.jtreg += $(BUILDDIR)/TestSanityTest.ok

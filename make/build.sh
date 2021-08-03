@@ -438,7 +438,7 @@ sanity_check_java_home() {
 
     local version=$(${JAVA_HOME}/bin/java -version 2>&1)
     local vnum=$(echo "${version}" | \
-        grep ^java |
+        grep -e ^java -e ^openjdk |
         head -n 1 | \
         sed -e 's/^[^0-9]*\(1\.\)*\([1-9][0-9]*\).*/\2/' )
     if [ "${vnum:-0}" -lt "8" ]; then

@@ -66,7 +66,8 @@ $(BUILDDIR)/SecurityManagerTest_agentvm_forbid.ok: \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDKHOME) \
 		-agentvm -allowSetSecurityManager:no \
-		$(TESTDIR)/SecurityManager \
+		$(TESTDIR)/SecurityManager/pass \
+		$(TESTDIR)/SecurityManager/error \
 		2>&1 | tee $(@:%.ok=%)/out.txt
 	grep "Test results: failed: 5" $(@:%.ok=%)/out.txt
 	echo "test passed at `date`" > $@
@@ -89,3 +90,41 @@ $(BUILDDIR)/SecurityManagerTest_othervm.ok: \
 TESTS.jtreg += \
 	$(BUILDDIR)/SecurityManagerTest_othervm.ok
 
+#----------------------------------------------------------------------
+
+$(BUILDDIR)/SecurityManagerTest_8.ok \
+$(BUILDDIR)/SecurityManagerTest_14.ok \
+$(BUILDDIR)/SecurityManagerTest_18.ok: \
+	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	$(JTREG_IMAGEDIR)/bin/jtreg
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(JDK$(@:$(BUILDDIR)/SecurityManagerTest_%.ok=%)HOME) \
+		-agentvm \
+		$(TESTDIR)/SecurityManager/ShowSecurityManager.java
+	case "$(@:$(BUILDDIR)/SecurityManagerTest_%.ok=%)" in \
+		18 ) $(GREP) "SM=null" \
+			$(@:%.ok=%)/work/ShowSecurityManager.jtr ;; \
+		*  ) $(GREP) "SM=com.sun.javatest.regtest.agent.RegressionSecurityManager" \
+			$(@:%.ok=%)/work/ShowSecurityManager.jtr ;; \
+	esac
+	if $(GREP) "WARNING: System::setSecurityManager has been called" \
+		$(@:%.ok=%)/work/ShowSecurityManager.jtr ; then \
+		echo "error: warning message found" ; \
+	fi
+	echo "test passed at `date`" > $@
+
+ifdef JDK8HOME
+TESTS.jtreg += \
+	$(BUILDDIR)/SecurityManagerTest_8.ok
+endif
+
+ifdef JDK14HOME
+TESTS.jtreg += \
+	$(BUILDDIR)/SecurityManagerTest_14.ok
+endif
+
+ifdef JDK18HOME
+TESTS.jtreg += \
+	$(BUILDDIR)/SecurityManagerTest_18.ok
+endif

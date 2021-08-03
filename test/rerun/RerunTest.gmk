@@ -32,11 +32,8 @@ $(BUILDDIR)/RerunTest.othervm.ok:  JAVACOPTION=-javacoption:-XDmy.javac.option=x
 $(BUILDDIR)/RerunTest.agentvm.ok \
 $(BUILDDIR)/RerunTest.othervm.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	    $(JTREG_IMAGEDIR)/bin/jtreg \
-	    display.sh
+	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
-	DISPLAY=`BUILDDIR=$(BUILDDIR) sh display.sh` export DISPLAY ; \
-	trap "BUILDDIR=$(BUILDDIR) sh `pwd`/display.sh -kill" 0 ; \
 	unset GNOME_DESKTOP_SESSION_ID ; \
 	unset XMODIFIERS ; \
 	LANG=en_US.UTF-8 TZ=GMT+0.00 \
@@ -65,6 +62,8 @@ $(BUILDDIR)/RerunTest.othervm.ok: \
 		    -e "s|`cd $(JDK8HOME); pwd -P`|%JDKHOME%|g" \
 		    -e 's|$(BUILDDIR)|%BUILD%|g' \
 		    -e 's|$(ABSTOPDIR)|%WS%|g' \
+		    -e 's|%BUILD%.images.jtreg.lib.guice\.jar.||g' \
+		    -e 's|%BUILD%.images.jtreg.lib.hamcrest\.jar.||g' \
 		    -e 's|%BUILD%.images.jtreg.lib.jcommander\.jar.||g' \
 		> $(@:%.ok=%)/out/$${i%.*}.out ; \
 	    diff -c $(TESTDIR)/rerun/$${i%.*}.$(@:$(BUILDDIR)/RerunTest.%.ok=%).out \
@@ -74,8 +73,10 @@ $(BUILDDIR)/RerunTest.othervm.ok: \
 
 ifdef JDK8HOME
 ifneq ($(OS_NAME), windows)
+ifndef HEADLESS
 TESTS.jtreg += \
 	$(BUILDDIR)/RerunTest.agentvm.ok \
 	$(BUILDDIR)/RerunTest.othervm.ok
+endif
 endif
 endif

@@ -30,14 +30,24 @@ import java.util.PropertyPermission;
 
 public class RegressionSecurityManager extends JavaTestSecurityManager {
     /**
-     * Try to install a copy of this security manager. If another security manager is
-     * already installed, the install will fail;  a warning message will be written to
-     * the console if the previously installed security manager is not a subtype of
-     * com.sun.javatest.JavaTestSecurityManager.
+     * Try to install a copy of this security manager, up to but not including JDK 18.
+     * If another security manager is already installed, the install will fail;
+     * a warning message will be written to the console if the previously installed
+     * security manager is not a subtype of com.sun.javatest.JavaTestSecurityManager.
      * The install can be suppressed by setting the system property
      *  "javatest.security.noSecurityManager" to true.
      */
     public static void install() {
+        String sv = System.getProperty("java.specification.version");
+        if (sv != null && sv.matches("[0-9]+")) {  // older versions are 1.N
+            int v = Integer.parseInt(sv);
+            if (v >= 18) {
+                // Do not install any security manager for JDK 18 or later;
+                // see JEP 411: Deprecate the Security Manager for Removal
+                return;
+            }
+        }
+
         try {
             // install our own permissive security manager, to prevent anyone else
             // installing a less permissive one.

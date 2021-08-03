@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -21,7 +21,17 @@
  * questions.
  */
 
-module um2 {
-    requires org.testng;
-    exports um2_p1;
+/*
+ * @test
+ * @summary checks that user modules can be used as library classes by tests
+ * @library /libs/usermods
+ * @build lum1/*
+ * @run main UseUserModAsLib
+ * @run driver UseUserModAsLib
+ */
+
+public class UseUserModAsLib {
+    public static void main(String[] args) {
+        new lum1_p1.lum1_p1_C().run();
+    }
 }
