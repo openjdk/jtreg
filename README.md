@@ -24,6 +24,10 @@ used to build jtreg with the `--jdk` command-line option. It must be JDK 8 or la
     % cd jtreg-root-directory
     % sh make/build.sh --jdk JDK-directory
 
+If your shell is not compatible with `bash`, you may need to invoke `bash` explicitly:
+
+    % bash make/build.sh --jdk JDK-directory
+
 The script will create a build sub-directory, download and build dependencies,
 and finally build jtreg itself. The resulting image will be in
 _build/images/jtreg_.
@@ -73,10 +77,15 @@ variables.
     available at <http://asm.ow2.org/>
 
 * JUnit:
-    See <http://junit.org/>. The recommended version is currently JUnit 4.13.
+    See <http://junit.org/>. The recommended version is currently JUnit 4.13.2.
+    JUnit has a dependency on Hamcrest. The recommended version is currently 2.2.
 
 * TestNG:
-    See <http://testng.org/>. The recommended version is currently 7.1.0.
+    See <http://testng.org/>. The recommended version is currently 7.3.0.
+    (Do not use 7.4.0 to run OpenJDK tests.)
+    TestNG has dependencies on JCommander and Google Guice.
+    The recommended version of JCommander is 1.78.
+    The recommended version of Google Guice is 4.2.3.
 
 The following dependencies are optional.
 
@@ -108,6 +117,12 @@ The following dependencies are optional.
 * JDK 14:
     This is used when running some of the tests. Set `JDK14HOME` to run these
     tests. It need not be set if you are just building jtreg.
+
+* JDK 18:
+  This is used when running some of the tests. Set `JDK18HOME` to run these
+  tests. It need not be set if you are just building jtreg.
+  
+The recommended versions are also defined in `make/build-support/version-numbers`.
 
 ## Running jtreg Self-Tests
 

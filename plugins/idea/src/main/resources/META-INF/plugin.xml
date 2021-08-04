@@ -26,19 +26,9 @@
 <idea-plugin>
     <id>jtreg</id>
     <name>jtreg Test Support</name>
-    <version>1.12</version>
     <description><![CDATA[
       Allows execution of tests developed using the <a href="http://openjdk.java.net/jtreg/">jtreg</a> framework.
     ]]></description>
-
-    <change-notes><![CDATA[
-    <ul>
-      <li>Fix compatibility with 2020.2</li>
-    </ul>
-    ]]>
-    </change-notes>
-
-    <idea-version since-build="162.0"/>
 
     <depends>AntSupport</depends>
     <depends>TestNG-J</depends>
