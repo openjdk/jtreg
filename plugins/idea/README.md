@@ -38,7 +38,7 @@ This will download gradle and the required IntelliJ dependencies, will build the
 
 > Note: to build the plugin, the build script must point to a valid jtreg installation; see the property `jtregHome` in the `gradle.properties` file, and tweak accordingly.
 
-> Note: the property `intellijVersion` can be used to specify which IDE version should the plugin depend on (defaults to `2021.1`).
+> Note: the property `intellijVersion` can be used to specify which IDE version should the plugin depend on (defaults to `2021.2`).
 
 Once the build is configured correctly, the plugin can even be tested in a sandbox environment, as follows:
 
