@@ -188,7 +188,7 @@ older versions of NetBeans.)
 
 ## Using the IntelliJ IDE
 
-The jtreg repo also contains a (plugin)[plugins/idea/README.md] for the IntelliJ IDE.
+The jtreg repo also contains a [plugin](plugins/idea/README.md) for the IntelliJ IDE.
 This is a convenience plugin which adds jtreg capabilities to the IntelliJ IDE.
 With this plugin, OpenJDK developers can write, run, and debug jtreg tests
 without leaving their IDE environment.
