@@ -327,10 +327,10 @@ file called `Hello.jtr`.  These files reside in the
 work directory which contains a directory hierarchy that
 parallels the test source structure.
 
-Blocks of text within a .jtr file use `\` to escape certain characters
+Blocks of text within a .jtr file use `\` to [escape](#jtr-encoding) certain characters
 (including `\` itself). This needs to be taken into account if you
 view the contents of the file directly. If you use the GUI, or use
-the jtreg `-show` option, the escapes are automatically taken into acocunt.
+the jtreg `-show` option, the escapes are automatically taken into account.
 
 ### What's the difference between the "fail" and "error" return status?
 
@@ -838,10 +838,11 @@ You have several alternatives.
 
 1.  Use the `-verbose:all` option, or the related result-sensitive
     options `-verbose:pass`, `-verbose:fail`, `-verbose:error`.
-2.  Use the JavaTest harness GUI.
-3.  View the test's `.jtr` file.
-4.  Use the `-show` option. For example,
-    * `jtreg -show:System.out` _test-name_
+2.  Use the JavaTest (JT Harness) harness GUI.
+3.  View the test's `.jtr` file. 
+    _Note: some characters in the file may be [encoded](#jtr-encoding)._
+4.  Use the `-show` option to display the unencoded content of a stream. For example,
+    * `jtreg -w` _work-dir_ `-show:System.out` _test-name_
 
 ### How do I see what groups are defined in my test suite?
 
@@ -856,6 +857,47 @@ to see the details for a specific group, specify the test suite and group.
 Use the `-listtests` option.
 
     $ jtreg -listtests test/langtools/jdk/javadoc/doclet
+
+### Why are there extra `\` characters in the output from a test in a .jtr file? {#jtr-encoding}
+
+By design, the contents of a `.jtr` file, including any output from tests, is represented in a way
+that can be read back in again by `jtreg` and related tools. To that end, characters that are not
+standard ASCII characters (printable characters, and `CR`, `LF`, `SP`, `HT`) are encoded with escape sequences..
+Characters outside that set are represented by `\uXXXX`, and `\` itself as written as `\\`.
+Anyone viewing the contents of a `.jtr` directly, such as in a plain-text editor, or using
+command-line tools like `grep` need to be aware of that encoding and take it into account.
+
+To view the unencoded output from a test that has been recorded in a `.jtr` file, 
+use the `jtreg` `-show:name` option.
+
+    $ jtreg -w:/path/to/work-dir -show:System.out /path/to/test
+
+The `-show` option can also be used to see the `rerun` script that is provided in the `.jtr` file,
+and which may also contain escape sequences. This script allows you to [rerun the test stand-alone](#rerun),
+without the use of the `jtreg` infrastructure.
+
+### What names can I use with the `-show` option
+
+All recent versions of `jtreg` accept the name of an output stream as the name. 
+
+    $ jtreg ...  -show:stream-name ...
+
+The name of each output stream appears after a series of dashes and before a colon `:`
+in the `.jtr` file.  For example, here is a heading for a stream named `System.out`:
+
+    ----------System.out:(1/501)----------
+
+More recent versions (6.2 onwards) support an optional section name as well. 
+See the command-line help for specific details in the version you are using.
+
+    $ jtreg ... -show:section-name/stream-name
+
+The name of all the sections appear in the `testresult` part of the `.jtr` file,
+and individually after `#section:` at the beginning of each section. For example,
+
+    sections=script_messages build compile build main
+
+    #section:compile
 
 ### Can I verify the correctness of test descriptions without actually running the tests?
 
@@ -874,7 +916,7 @@ The following sample output illustrates use of this option.
     Results written to /u/iag/jtw/JTwork
     Error: some tests failed or other problems occurred
 
-### I'd like to run my test standalone, without using jtreg: how do I do that?
+### I'd like to run my test standalone, without using jtreg: how do I do that? {#rerun}
 
 All tests are generally designed so that they can be run without using jtreg.
 Tests either have a `main` method, or can be run using a framework like TestNG or JUnit.
