@@ -1995,13 +1995,24 @@ public class Tool {
                     try {
                         // work around bug CODETOOLS-7900214 -- force the sections to be reloaded
                         tr.getProperty("sections");
+                        String section, stream;
+                        int sep = showStream.indexOf("/");
+                        if (sep == -1) {
+                            section = null;
+                            stream = showStream;
+                        } else {
+                            section = showStream.substring(0, sep);
+                            stream = showStream.substring(sep + 1);
+                        }
                         for (int i = 0; i < tr.getSectionCount(); i++) {
                             TestResult.Section s = tr.getSection(i);
-                            String text = s.getOutput(showStream);
-                            // need to handle internal newlines properly
-                            if (text != null) {
-                                out.println("### Section " + s.getTitle());
-                                out.println(text);
+                            if (section == null || section.equals(s.getTitle())) {
+                                String text = s.getOutput(stream);
+                                // need to handle internal newlines properly
+                                if (text != null) {
+                                    out.println("### Section " + s.getTitle());
+                                    out.println(text);
+                                }
                             }
                         }
                         ok = true;
