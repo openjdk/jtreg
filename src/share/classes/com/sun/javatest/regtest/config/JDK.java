@@ -630,8 +630,8 @@ public class JDK {
                 for (String line : lines) {
                     logger.accept(line);
                 }
-                String msg = "failed to get JDK properties for "
-                        + getJavaProg() + " " + StringUtils.join(vmOpts, " ") + "; exit code " + rc;
+                String msg = String.format("failed to get JDK properties:%ncmd: \"%s\"%ncwd: \"%s\"%nexit code: %d",
+                        StringUtils.join(cmdArgs, "\" "), scratchDir, rc);
                 logger.accept(msg);
                 throw new Fault(msg);
             }
