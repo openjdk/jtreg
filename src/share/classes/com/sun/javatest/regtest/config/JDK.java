@@ -627,6 +627,9 @@ public class JDK {
 
             int rc = p.waitFor();
             if (rc != 0) {
+                for (String line : lines) {
+                    logger.accept(line);
+                }
                 String msg = "failed to get JDK properties for "
                         + getJavaProg() + " " + StringUtils.join(vmOpts, " ") + "; exit code " + rc;
                 logger.accept(msg);
