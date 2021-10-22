@@ -631,7 +631,7 @@ public class JDK {
                     logger.accept(line);
                 }
                 String msg = String.format("failed to get JDK properties:%ncmd: \"%s\"%ncwd: \"%s\"%nexit code: %d",
-                        StringUtils.join(cmdArgs, "\" "), scratchDir, rc);
+                        StringUtils.join(cmdArgs, "\" \""), scratchDir, rc);
                 logger.accept(msg);
                 throw new Fault(msg);
             }
