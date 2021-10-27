@@ -165,7 +165,7 @@ $(BUILDDIR)/jtreg-usage.txt: \
 		$(BUILDDIR)/classes.com.sun.javatest.regtest.ok \
 		$(BUILDDIR)/classes/com/sun/javatest/regtest/tool/i18n.properties
 	$(JDKJAVA) -cp "$(CLASSDIR)$(PS)$(JAVATEST_JAR)" \
-	    -Dprogram=jtreg com.sun.javatest.regtest.Main -help all > $@
+	    --enable-preview -Dprogram=jtreg com.sun.javatest.regtest.Main -help all > $@
 
 TARGETS.ZIP.jtreg += $(JTREG_DOCS)
 
