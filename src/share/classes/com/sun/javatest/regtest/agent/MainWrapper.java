@@ -27,8 +27,13 @@ package com.sun.javatest.regtest.agent;
 
 import java.io.FileReader;
 import java.io.IOException;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadFactory;
 
 /**
   * This class is the wrapper for all main/othervm tests.
@@ -75,7 +80,8 @@ public class MainWrapper
         if (!"Virtual".equals(System.getProperty(MAIN_WRAPPER))) {
             t = new Thread(tg, task, "MainThread");
         } else {
-            t = Thread.ofVirtual().name("MainThread").unstarted(task);
+            t = VirtualAPI.instance().factory(true).newThread(task);
+            t.setName("MainThread");
         }
         t.start();
         try {
@@ -230,4 +236,57 @@ public class MainWrapper
         MAIN_CANT_FIND_MAIN   = "Can't find `main' method",
         MAIN_SKIPPED          = "Skipped: ";
     private static final String SKIP_EXCEPTION = "jtreg.SkippedException";
+
+    public static class VirtualAPI {
+
+
+        private MethodHandles.Lookup publicLookup = MethodHandles.publicLookup();
+
+        ThreadFactory virtualThreadFactory;
+        ThreadFactory platformThreadFactory;
+
+
+        VirtualAPI() {
+             MethodType getVirtualThreadPerTaskExecutorMT = MethodType.methodType(ExecutorService.class);
+             try {
+
+                 Class builderClass =Class.forName("java.lang.Thread$Builder");
+                 Class vbuilderClass =Class.forName("java.lang.Thread$Builder$OfVirtual");
+                 Class pbuilderClass =Class.forName("java.lang.Thread$Builder$OfPlatform");
+
+
+                 MethodType vofMT = MethodType.methodType(vbuilderClass);
+                 MethodType pofMT = MethodType.methodType(pbuilderClass);
+
+                 MethodHandle ofVirtualMH =  publicLookup.findStatic(Thread.class, "ofVirtual", vofMT);
+                 MethodHandle ofPlatformMH =  publicLookup.findStatic(Thread.class, "ofPlatform", pofMT);
+
+                 Object virtualBuilder = ofVirtualMH.invoke();
+                 Object platformBuilder = ofPlatformMH.invoke();
+
+                 MethodType factoryMT = MethodType.methodType(ThreadFactory.class);
+                 MethodHandle vfactoryMH =  publicLookup.findVirtual(vbuilderClass, "factory", factoryMT);
+                 MethodHandle pfactoryMH =  publicLookup.findVirtual(pbuilderClass, "factory", factoryMT);
+
+                 virtualThreadFactory = (ThreadFactory) vfactoryMH.invoke(virtualBuilder);
+                 platformThreadFactory = (ThreadFactory) pfactoryMH.invoke(platformBuilder);
+
+             } catch (Throwable t) {
+                 throw new RuntimeException(t);
+             }
+         }
+
+        private static VirtualAPI instance = new VirtualAPI();
+
+        public static VirtualAPI instance() {
+            return instance;
+        }
+
+        public ThreadFactory factory(boolean isVirtual) {
+            return isVirtual ? virtualThreadFactory : platformThreadFactory;
+        }
+
+
+
+    }
 }

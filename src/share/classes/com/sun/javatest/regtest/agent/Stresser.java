@@ -26,6 +26,7 @@ package com.sun.javatest.regtest.agent;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.LockSupport;
 
@@ -34,10 +35,11 @@ public class Stresser {
     private final int numOfThreads = Runtime.getRuntime().availableProcessors() * 10;
     private final AtomicBoolean finish = new AtomicBoolean(false);
     private final List<Thread> threads = new ArrayList<>();
+    private final ThreadFactory threadFactory = MainWrapper.VirtualAPI.instance().factory(true);
     
     public void start() {     
         for (int i = 0; i < numOfThreads; i++) {
-            threads.add(Thread.startVirtualThread(new Task()));
+            threads.add(threadFactory.newThread(new Task()));
         }       
     }
     

@@ -145,9 +145,9 @@ JAR = $(JDKHOME)/bin/jar
 # Otherwise, use default values for $JDKHOME/bin/javac
 SUPPORT_OLD_SOURCE_TARGET = false #$(shell $(JDKJAVAC) -version 2>&1 | grep '[8]' > /dev/null && echo true )
 ifneq ($(SUPPORT_OLD_SOURCE_TARGET),)
-    OLD_JAVAC_SOURCE_TARGET =
-    AGENT_JAVAC_SOURCE_TARGET =
-    TOOL_JAVAC_SOURCE_TARGET =
+    OLD_JAVAC_SOURCE_TARGET = -source 11 -target 11
+    AGENT_JAVAC_SOURCE_TARGET = -source 11 -target 11
+    TOOL_JAVAC_SOURCE_TARGET = -source 11 -target 11
 else
     OLD_JAVAC_SOURCE_TARGET = -source 11 -target 11
     AGENT_JAVAC_SOURCE_TARGET = -source 11 -target 11
@@ -164,17 +164,17 @@ endif
 # for files needed to run othervm tests on oldest supported platforms
 REGTEST_OLD_JAVAC = $(JDKHOME)/bin/javac
 REGTEST_OLD_JAVAC_OPTIONS = \
-	$(OLD_JAVAC_SOURCE_TARGET) $(JDK5_BOOTCLASSPATH) -Xlint:all  --enable-preview -source 18
+	$(OLD_JAVAC_SOURCE_TARGET) $(JDK5_BOOTCLASSPATH) -Xlint:all
 
 # for files needed to run agentvm tests (on platforms back to JDK 1.5)
 REGTEST_AGENT_JAVAC = $(JDKHOME)/bin/javac
 REGTEST_AGENT_JAVAC_OPTIONS = \
-	$(AGENT_JAVAC_SOURCE_TARGET) $(JDK5_BOOTCLASSPATH) -Xlint:all 	--enable-preview -source 18
+	$(AGENT_JAVAC_SOURCE_TARGET) $(JDK5_BOOTCLASSPATH) -Xlint:all
 
 # for files needed for jtreg tool
 REGTEST_TOOL_JAVAC = $(JDKHOME)/bin/javac
 REGTEST_TOOL_JAVAC_OPTIONS = \
-	$(TOOL_JAVAC_SOURCE_TARGET) $(JDK8_BOOTCLASSPATH) -Xlint:all 	--enable-preview -source 18
+	$(TOOL_JAVAC_SOURCE_TARGET) $(JDK8_BOOTCLASSPATH) -Xlint:all
 
 #----- JavaTest: https://wiki.openjdk.java.net/display/CodeTools/JT+Harness
 #
