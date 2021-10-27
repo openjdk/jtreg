@@ -24,7 +24,7 @@ The following sections provide the recommended system requirements for running
 jtreg.
 
 - Java platform
-    A platform equivalent to JDK 1.7.0 or later is required.
+    A platform equivalent to JDK 1.8.0 or later is required.
 
 - Memory
     It is recommended that you run jtreg on a computer having at least 256M of 

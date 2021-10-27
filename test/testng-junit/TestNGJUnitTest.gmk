@@ -41,8 +41,8 @@ $(BUILDDIR)/TestNGJUnitTest.othervm.ok: \
 		$(TESTDIR)/testng-junit \
 		> $(@:%.ok=%/jt.log) 2>&1
 	$(GREP) -s 'Test results: passed: 2' $(@:%.ok=%/jt.log)  > /dev/null
-	$(GREP) -s 'Total tests run: 3, Failures: 0, Skips: 0' $(@:%.ok=%/work)/testng/p/T1.jtr  > /dev/null
-	$(GREP) -s 'Total tests run: 3, Failures: 0, Skips: 0' $(@:%.ok=%/work)/testng/p/T2.jtr  > /dev/null
+	$(GREP) -s 'Total tests run: 3, Passes: 3, Failures: 0, Skips: 0' $(@:%.ok=%/work)/testng/p/T1.jtr  > /dev/null
+	$(GREP) -s 'Total tests run: 3, Passes: 3, Failures: 0, Skips: 0' $(@:%.ok=%/work)/testng/p/T2.jtr  > /dev/null
 	echo $@ passed at `date` > $@
 
 ifdef JDK8HOME

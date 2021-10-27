@@ -257,6 +257,8 @@ public class ActionHelper {
                 ((RegressionSecurityManager) sc).setAllowSetIO(prev);
             } else {
                 //return Status.error(MAIN_SECMGR_BAD);
+                System.setOut(out);
+                System.setErr(err);
             }
         }
         return passed("OK");

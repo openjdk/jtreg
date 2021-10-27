@@ -35,7 +35,7 @@ $(BUILDDIR)/JDK11Test.1.ok: \
 	JT_JAVA=$(JDK6HOME) \
 		$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(JDK11HOME) \
+		-jdk:$(JDK1_1HOME) \
 		$(TESTDIR)/jdk11/ExecuteTest.java
 	echo "test passed at `date`" > $@
 
@@ -48,14 +48,16 @@ $(BUILDDIR)/JDK11Test.2.ok: \
 	JT_JAVA=$(JDK6HOME) \
 		$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-compilejdk:$(JDK11HOME) \
+		-compilejdk:$(JDK1_1HOME) \
 		-jdk:$(JDK6HOME) \
 		$(TESTDIR)/jdk11/ExecuteTest.java
 	echo "test passed at `date`" > $@
 
-ifneq ($(JDK11HOME),)
+ifdef JDK1_1HOME
+ifdef JDK6HOME
 TESTS.jtreg += \
 	$(BUILDDIR)/JDK11Test.1.ok \
 	$(BUILDDIR)/JDK11Test.2.ok
+endif
 endif
 

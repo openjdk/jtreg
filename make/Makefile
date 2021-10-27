@@ -60,22 +60,31 @@ clean:
 .NO_PARALLEL: clean
 
 sanity:
-ifdef JDK15HOME
-	@echo "JDK15HOME           = $(JDK15HOME)"
+ifdef JDK1_1HOME
+	@echo "JDK1_1HOME          = $(JDK1_1HOME)"
 endif
-ifdef JDK16HOME
-	@echo "JDK16HOME           = $(JDK16HOME)"
+ifdef JDK5HOME
+	@echo "JDK5HOME            = $(JDK5HOME)"
 endif
-ifdef JDK17HOME
-	@echo "JDK17HOME           = $(JDK17HOME)"
+ifdef JDK6HOME
+	@echo "JDK6HOME            = $(JDK6HOME)"
+endif
+ifdef JDK7HOME
+	@echo "JDK7HOME            = $(JDK7HOME)"
+endif
+ifdef JDK8HOME
+	@echo "JDK8HOME            = $(JDK8HOME)"
+endif
+ifdef JDK9HOME
+	@echo "JDK9HOME            = $(JDK9HOME)"
+endif
+ifdef JDK14HOME
+	@echo "JDK14HOME           = $(JDK14HOME)"
 endif
 ifdef JDK18HOME
 	@echo "JDK18HOME           = $(JDK18HOME)"
 endif
 	@echo "JDKHOME             = $(JDKHOME)"
-ifdef JAVAHELP_HOME
-	@echo "JAVAHELP_HOME       = $(JAVAHELP_HOME)"
-endif
 	@echo "JAVATEST_HOME       = $(JAVATEST_HOME)"
 ifneq ($(JTHARNESS_HOME), $(JAVATEST_HOME))
 	@echo "JTHARNESS_HOME      = $(JTHARNESS_HOME)"

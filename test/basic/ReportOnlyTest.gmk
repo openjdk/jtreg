@@ -41,5 +41,7 @@ $(BUILDDIR)/ReportOnlyTest.ok: $(BUILDDIR)/Basic.othervm.ok \
 	$(GREP) -s 'Test results: passed: 92; failed: 44; error: 87' $(@:%.ok=%.jt.log)  > /dev/null
 	echo $@ passed at `date` > $@
 
+ifndef HEADLESS
 TESTS.jtreg += $(BUILDDIR)/ReportOnlyTest.ok
+endif
 

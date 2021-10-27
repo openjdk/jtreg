@@ -23,6 +23,8 @@
 # questions.
 #
 
+# Tests use pre-module features, such as bootclasspath
+
 $(BUILDDIR)/RerunTest2.ok: \
 	    $(TESTDIR)/rerun2/RerunTest2.java \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
@@ -31,20 +33,22 @@ $(BUILDDIR)/RerunTest2.ok: \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	$(MKDIR) $(@:%.ok=%)/classes
-	$(JDKJAVAC) \
+	$(JDK8HOME)/bin/javac \
 		-d $(@:%.ok=%)/classes \
 		-cp $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		-Xlint -Werror \
 		$(TESTDIR)/rerun2/RerunTest2.java
-	cd $(@:%.ok=%) && $(JDKJAVA) \
+	cd $(@:%.ok=%) && $(JDK8HOME)/bin/java \
 		-classpath classes$(PS)$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		RerunTest2 \
 		../$(TESTDIR)/rerun2/test
 	echo "test passed at `date`" > $@
 
+ifdef JDK8HOME
 ifneq ($(OS_NAME), windows)
 TESTS.jtreg += \
 	$(BUILDDIR)/RerunTest2.ok
+endif
 endif
 
 

@@ -65,7 +65,6 @@ $(BUILDDIR)/classes.com.sun.javatest.regtest.agent.ok: \
 JAVAFILES.com.sun.javatest.regtest-tools := \
 	$(shell $(FIND) $(JAVADIR)/com/sun/javatest/regtest -name agent -prune -o -name \*.java -print )
 
-
 $(BUILDDIR)/classes.com.sun.javatest.regtest.ok: \
 		$(JAVAFILES.com.sun.javatest.regtest-tools) \
 		$(BUILDDIR)/classes.com.sun.javatest.regtest.agent.ok
@@ -83,6 +82,21 @@ $(BUILDDIR)/classes.com.sun.javatest.regtest.ok: \
 	echo "classes built at `date`" > $@
 
 TARGETS.com.sun.javatest.regtest += $(BUILDDIR)/classes.com.sun.javatest.regtest.ok
+
+
+JAVAFILES.java.lang := \
+	$(JAVADIR)/java/lang/JTRegModuleHelper.java
+
+$(BUILDDIR)/classes.java.lang.ok: \
+		$(JAVAFILES.java.lang)
+	CLASSPATH= \
+	    $(REGTEST_TOOL_JAVAC) $(REGTEST_TOOL_JAVAC_OPTIONS) $(REGTEST_TOOL_PATCH_JAVA_BASE_OPTIONS) \
+		-d $(CLASSDIR) \
+		-encoding ISO8859-1 \
+		$(JAVAFILES.java.lang)
+	echo "classes built at `date`" > $@
+
+TARGETS.com.sun.javatest.regtest += $(BUILDDIR)/classes.java.lang.ok
 
 
 #----------------------------------------------------------------------

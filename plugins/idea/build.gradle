@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id 'org.jetbrains.intellij' version '0.7.3'
+    id 'org.jetbrains.intellij' version '1.0'
 }
 
 def jtregLib = jtregHome + File.separator + "lib" + File.separator + "jtreg.jar"
@@ -26,10 +26,11 @@ dependencies {
 
 // See https://github.com/JetBrains/gradle-intellij-plugin/
 intellij {
-    version intellijVersion
     plugins = ['java', 'AntSupport', 'TestNG-J']
 }
 
 patchPluginXml {
-    changeNotes notes
+    changeNotes = notes
+    sinceBuild = minBuild
+    untilBuild = ''
 }

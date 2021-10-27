@@ -106,14 +106,11 @@ $(BUILDDIR)/Basic.agentvm.ok: \
 		$(JTREG_IMAGEDIR)/lib/testng.jar \
 		$(TESTDIR)/basic/Basic.java \
 		$(BUILDDIR)/i18n.com.sun.javatest.regtest.ok \
-	        $(BASIC.files) \
-		display.sh
+	        $(BASIC.files)
 	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
 	$(MKDIR) -p $(@:%.ok=%/work/scratch) $(@:%.ok=%/report) $(BUILDDIR)/basic/classes
 	CLASSPATH="$(CLASSDIR)$(PS)$(JAVADIR)$(PS)$(JAVATEST_JAR)" \
 		$(JDKJAVAC) -Xlint -Werror -encoding ISO8859-1 -d $(BUILDDIR)/basic/classes $(TESTDIR)/basic/Basic.java
-	DISPLAY=`BUILDDIR=$(BUILDDIR) sh display.sh` export DISPLAY ; \
-	trap "BUILDDIR=$(BUILDDIR) sh `pwd`/display.sh -kill" 0 ; \
 	cd $(@:%.ok=%/work/scratch) ; \
 	    $(JDKJAVA) \
 		-cp "../../../basic/classes$(PS)$(ABS_JTREG_IMAGEJARDIR)/jtreg.jar" \
@@ -134,7 +131,9 @@ $(BUILDDIR)/Basic.agentvm.ok: \
 	    || (cat ../../log ; exit 1)
 	echo $@ passed at `date` > $@
 
+ifndef HEADLESS
 INITIAL_TESTS += \
 	$(BUILDDIR)/Basic.othervm.ok \
 	$(BUILDDIR)/Basic.agentvm.ok
+endif
 
