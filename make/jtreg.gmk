@@ -93,6 +93,7 @@ $(BUILDDIR)/classes.java.lang.ok: \
 	    $(REGTEST_TOOL_JAVAC) $(REGTEST_TOOL_JAVAC_OPTIONS) $(REGTEST_TOOL_PATCH_JAVA_BASE_OPTIONS) \
 		-d $(CLASSDIR) \
 		-encoding ISO8859-1 \
+                 --patch-module java.base=../src \
 		$(JAVAFILES.java.lang)
 	echo "classes built at `date`" > $@
 
