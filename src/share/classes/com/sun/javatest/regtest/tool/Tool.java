@@ -994,7 +994,7 @@ public class Tool {
                     ? Pattern.compile("(|[^A-Za-z]|.{2,}):[A-Za-z0-9_,]+")
                     : Pattern.compile(".*:[A-Za-z0-9_,]+");
 
-            Pattern fileIdPtn = Pattern.compile("(?i).*#[a-z0-9]+");
+            Pattern fileIdPtn = Pattern.compile("(?i).*#[a-z0-9\\-_]+");
         }
     );
 
