@@ -295,9 +295,8 @@ public class TestManager {
             TestResultTable trt = wd.getTestResultTable();
             if (trt.validatePath(path)) {
                 // bypass check when fragment syntax used
-                if (path.matches(".*#[A-Za-z0-9-_]+")) {
+                if (path.matches(".*#[A-Za-z0-9-_]+"))
                     return true;
-                }
                 File rootDir = wd.getTestSuite().getRootDir();
                 File f = new File(rootDir, path);
                 if (f.isDirectory())
