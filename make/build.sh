@@ -933,6 +933,7 @@ check_file "${JTHARNESS_JAVATEST_JAR}"
 check_file "${JTHARNESS_LICENSE}"
 check_file "${JUNIT_JAR}"
 check_file "${JUNIT_LICENSE}"
+check_file "${JUNIT_PLATFORM_JAR}"
 check_file "${TESTNG_JAR}"
 check_file "${TESTNG_LICENSE}"
 
@@ -963,6 +964,7 @@ make ANT="${ANT}"                                             \
      JTHARNESS_LICENSE="${JTHARNESS_LICENSE}"                 \
      JUNIT_JAR="$(mixed_path "${JUNIT_JAR}")"                 \
      JUNIT_LICENSE="${JUNIT_LICENSE}"                         \
+     JUNIT_PLATFORM_JAR="$(mixed_path "${JUNIT_PLATFORM_JAR}")" \
      TESTNG_JAR="$(mixed_path "${TESTNG_JAR}")"               \
      TESTNG_LICENSE="${TESTNG_LICENSE}"                       \
    ${MAKE_ARGS:-}
