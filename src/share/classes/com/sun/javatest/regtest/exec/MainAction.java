@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2021, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -251,13 +251,13 @@ public class MainAction extends Action
             }
         }
 
-        if (!othervm && (this instanceof TestNGAction || this instanceof JUnitAction)) {
+        if (!othervm && (this instanceof TestNGAction || this instanceof JUnitAction || this instanceof JUnitPlatformAction)) {
             Set<LibLocn.Kind> testKinds = script.locations.getDirKinds(script.locations.absTestSrcDir());
             boolean multiModule = testKinds.equals(EnumSet.of(LibLocn.Kind.USER_MODULE));
             if (multiModule) {
                 // agent won't be able to load driver class as agent's classes aren't
                 // loaded by the CL which loaded these modules
-                othervmOverrideReasons.add("test requires testng and/or junit as modules");
+                othervmOverrideReasons.add("test requires testng and/or junit(platform) as modules");
             }
         }
     } // init()
@@ -574,6 +574,7 @@ public class MainAction extends Action
                 .append(script.getJavaTestClassPath())
                 .append(jdk.getJDKClassPath())
                 .append(script.getJUnitPath())
+                .append(script.getJUnitPlatformPath())
                 .append(script.getTestNGPath())
                 .asList();
 

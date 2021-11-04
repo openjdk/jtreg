@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2001, 2021, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -610,6 +610,7 @@ public class RegressionParameters
     private static final String IGNORE = ".ignore";
     private static final String RETAIN_ARGS = ".retain";
     private static final String JUNIT = ".junit";
+    private static final String JUNIT_PLATFORM = ".junitPlatform";
     private static final String TESTNG = ".testng";
     private static final String ASMTOOLS = ".asmtools";
     private static final String TIMELIMIT = ".timeLimit";
@@ -674,6 +675,10 @@ public class RegressionParameters
         v = data.get(prefix + JUNIT);
         if (v != null)
             setJUnitPath(new SearchPath(v));
+
+        v = data.get(prefix + JUNIT_PLATFORM);
+        if (v != null)
+            setJUnitPlatformPath(new SearchPath(v));
 
         v = data.get(prefix + TESTNG);
         if (v != null)
@@ -748,6 +753,9 @@ public class RegressionParameters
 
         if (junitPath != null)
             data.put(prefix + JUNIT, junitPath.toString());
+
+        if (junitPlatformPath != null)
+            data.put(prefix + JUNIT_PLATFORM, junitPlatformPath.toString());
 
         if (testngPath != null)
             data.put(prefix + TESTNG, testngPath.toString());
@@ -930,6 +938,23 @@ public class RegressionParameters
 
     //---------------------------------------------------------------------
 
+    public void setJUnitPlatformPath(SearchPath junitPlatformPath) {
+        junitPlatformPath.getClass(); // null check
+        this.junitPlatformPath = junitPlatformPath;
+    }
+
+    public SearchPath getJUnitPlatformPath() {
+        return junitPlatformPath;
+    }
+
+    private SearchPath junitPlatformPath;
+
+    public boolean isJUnitPlatformAvailable() {
+        return (junitPlatformPath != null) && !junitPlatformPath.isEmpty();
+    }
+
+    //---------------------------------------------------------------------
+
     public void setTestNGPath(SearchPath testngPath) {
         testngPath.getClass(); // null check
         this.testngPath = testngPath;
@@ -967,8 +992,16 @@ public class RegressionParameters
 
             if (jtClsDir.getName().equals("javatest.jar")) {
                 File installDir = jtClsDir.getParentFile();
-                // append jtreg.jar to the path
-                javaTestClassPath.append(new File(installDir, "jtreg.jar"));
+                // append jtreg.jar or exploded to the path
+                var jtreg = new File(installDir, "jtreg.jar");
+                if (jtreg.exists()) {
+                    javaTestClassPath.append(jtreg);
+                } else try {
+                    var location = getClass().getProtectionDomain().getCodeSource().getLocation();
+                    javaTestClassPath.append(new File(location.toURI()));
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
             }
         }
         return javaTestClassPath;
