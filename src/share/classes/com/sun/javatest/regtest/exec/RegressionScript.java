@@ -838,7 +838,7 @@ public class RegressionScript extends Script {
         } else {
             if (needJUnit)
                 cp.append(params.getJUnitPath());
-            if (needJUnit)
+            if (needJUnitPlatform)
                 cp.append(params.getJUnitPlatformPath());
             if (needTestNG)
                 cp.append(params.getTestNGPath());

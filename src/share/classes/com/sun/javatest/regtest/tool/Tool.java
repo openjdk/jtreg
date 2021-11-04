@@ -1698,7 +1698,7 @@ public class Tool {
         help.addPathVersionHelper("TestNG", notTestNGPath);
 
         junitPath = new JarFinder("junit.jar", "hamcrest.jar")
-                // .classes("org.junit.runner.JUnitCore", "org.hamcrest.SelfDescribing")
+                .classes("org.junit.runner.JUnitCore", "org.hamcrest.SelfDescribing")
                 .libDir(libDir)
                 .getPath();
         // no convenient version info for junit.jar
