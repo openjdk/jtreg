@@ -736,7 +736,7 @@ setup_junit_platform() {
     local JUNIT_PLATFORM_DEPS_DIR="${DEPS_DIR}/junit-platform"
 
     if [ -n "${JUNIT_PLATFORM_JAR_URL:-}" ]; then
-        JUNIT_PLATFORM_JAR="${JUNIT_PLATFORM_DEPS_DIR}/$(basename ${JUNIT_JAR_URL})"
+        JUNIT_PLATFORM_JAR="${JUNIT_PLATFORM_DEPS_DIR}/$(basename ${JUNIT_PLATFORM_JAR_URL})"
         download_and_checksum "${JUNIT_PLATFORM_JAR_URL}" "${JUNIT_PLATFORM_JAR}" "${JUNIT_PLATFORM_JAR_CHECKSUM}"
         return
     fi
