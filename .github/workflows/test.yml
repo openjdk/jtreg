@@ -24,8 +24,8 @@ jobs:
         working-directory: jtreg
         shell: bash
         run: |
-          export JDK8HOME=${JAVA_HOME_8_X64}
-          bash make/build.sh --jdk ${JAVA_HOME_8_X64}
+          java --version
+          bash make/build.sh --jdk ${JAVA_HOME_11_X64}
 
       - name: upload artifact
         uses: actions/upload-artifact@v2
@@ -39,5 +39,4 @@ jobs:
         run: |
           export MAKE_ARGS=test
           export HEADLESS=1
-          export JDK8HOME=${JAVA_HOME_8_X64}
-          bash make/build.sh --jdk ${JAVA_HOME_8_X64} --skip-download
+          bash make/build.sh --jdk ${JAVA_HOME_11_X64} --skip-download
