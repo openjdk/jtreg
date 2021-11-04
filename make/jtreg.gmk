@@ -302,7 +302,7 @@ $(JTREG_IMAGEDIR)/lib/junit-platform-console-standalone.jar: $(call PosixPath,$(
 	$(MKDIR) -p $(@D)
 	$(CP) $< $@
 
-TARGETS.ZIP.jtreg += $(JTREG_IMAGEJARDIR)junit-platform-console-standalone.jar
+TARGETS.ZIP.jtreg += $(JTREG_IMAGEJARDIR)/junit-platform-console-standalone.jar
 
 #----------------------------------------------------------------------
 #
