@@ -355,6 +355,10 @@ JUNIT_JAR_URL_BASE="${JUNIT_JAR_URL_BASE:-${MAVEN_REPO_URL_BASE}}"
 JUNIT_JAR_CHECKSUM="${JUNIT_JAR_CHECKSUM:-${DEFAULT_JUNIT_JAR_CHECKSUM}}"
 JUNIT_LICENSE_FILE="${JUNIT_LICENSE_FILE:-${DEFAULT_JUNIT_LICENSE_FILE}}"
 
+JUNIT_PLATFORM_VERSION="${JUNIT_PLATFORM_VERSION:-${DEFAULT_JUNIT_PLATFORM_VERSION}}"
+JUNIT_PLATFORM_JAR_URL_BASE="${JUNIT_PLATFORM_JAR_URL_BASE:-${MAVEN_REPO_URL_BASE}}"
+JUNIT_PLATFORM_JAR_CHECKSUM="${JUNIT_PLATFORM_JAR_CHECKSUM:-${DEFAULT_JUNIT_PLATFORM_JAR_CHECKSUM}}"
+
 TESTNG_VERSION="${TESTNG_VERSION:-${DEFAULT_TESTNG_VERSION}}"
 TESTNG_JAR_URL_BASE="${TESTNG_JAR_URL_BASE:-${MAVEN_REPO_URL_BASE}}"
 TESTNG_JAR_CHECKSUM="${TESTNG_JAR_CHECKSUM:-${DEFAULT_TESTNG_JAR_CHECKSUM}}"
@@ -715,6 +719,34 @@ setup_junit_license() {
 setup_junit_license
 info "JUNIT_LICENSE: ${JUNIT_LICENSE}"
 
+#----- JUnit Platform (Console Standalone) -----
+setup_junit_platform() {
+    check_arguments "${FUNCNAME}" 0 $#
+
+    if [ -n "${JUNIT_PLATFORM_JAR:-}" ]; then
+        return
+    fi
+
+    if [ -z "${JUNIT_PLATFORM_JAR_URL:-}" ]; then
+        if [ -n "${JUNIT_PLATFORM_JAR_URL_BASE:-}" ]; then
+            JUNIT_PLATFORM_JAR_URL="${JUNIT_PLATFORM_JAR_URL_BASE}/org/junit/platform/junit-platform-console-standalone/${JUNIT_PLATFORM_VERSION}/junit-platform-console-standalone-${JUNIT_PLATFORM_VERSION}.jar"
+        fi
+    fi
+
+    local JUNIT_PLATFORM_DEPS_DIR="${DEPS_DIR}/junit-platform"
+
+    if [ -n "${JUNIT_PLATFORM_JAR_URL:-}" ]; then
+        JUNIT_PLATFORM_JAR="${JUNIT_PLATFORM_DEPS_DIR}/$(basename ${JUNIT_PLATFORM_JAR_URL})"
+        download_and_checksum "${JUNIT_PLATFORM_JAR_URL}" "${JUNIT_PLATFORM_JAR}" "${JUNIT_PLATFORM_JAR_CHECKSUM}"
+        return
+    fi
+
+    error "None of JUNIT_PLATFORM_JAR, JUNIT_PLATFORM_JAR_URL or JUNIT_PLATFORM_JAR_URL_BASE is set"
+    exit 1
+}
+setup_junit_platform
+info "JUNIT_PLATFORM_JAR ${JUNIT_PLATFORM_JAR}"
+
 #----- TestNG -----
 setup_testng() {
     check_arguments "${FUNCNAME}" 0 $#
@@ -901,6 +933,7 @@ check_file "${JTHARNESS_JAVATEST_JAR}"
 check_file "${JTHARNESS_LICENSE}"
 check_file "${JUNIT_JAR}"
 check_file "${JUNIT_LICENSE}"
+check_file "${JUNIT_PLATFORM_JAR}"
 check_file "${TESTNG_JAR}"
 check_file "${TESTNG_LICENSE}"
 
@@ -931,6 +964,7 @@ make ANT="${ANT}"                                             \
      JTHARNESS_LICENSE="${JTHARNESS_LICENSE}"                 \
      JUNIT_JAR="$(mixed_path "${JUNIT_JAR}")"                 \
      JUNIT_LICENSE="${JUNIT_LICENSE}"                         \
+     JUNIT_PLATFORM_JAR="$(mixed_path "${JUNIT_PLATFORM_JAR}")" \
      TESTNG_JAR="$(mixed_path "${TESTNG_JAR}")"               \
      TESTNG_LICENSE="${TESTNG_LICENSE}"                       \
    ${MAKE_ARGS:-}

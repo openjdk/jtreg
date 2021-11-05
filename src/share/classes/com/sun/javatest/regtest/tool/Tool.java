@@ -1703,6 +1703,14 @@ public class Tool {
                 .getPath();
         // no convenient version info for junit.jar
         help.addPathVersionHelper("JUnit", junitPath);
+
+        // handle JUnitPlatform via its standalone JAR
+        junitPlatformPath = new JarFinder("junit-platform-console-standalone.jar")
+            .classes("org.junit.platform.launcher.Launcher")
+            .libDir(libDir)
+            .getPath();
+
+        help.addPathVersionHelper("JUnit Platform", junitPlatformPath);
     }
 
     void initPolicyFile() throws Fault {
@@ -1871,6 +1879,9 @@ public class Tool {
 
             if (junitPath != null)
                 rp.setJUnitPath(junitPath);
+
+            if (junitPlatformPath != null)
+                rp.setJUnitPlatformPath(junitPlatformPath);
 
             if (testngPath != null)
                 rp.setTestNGPath(testngPath);
@@ -2458,6 +2469,7 @@ public class Tool {
     private File javatest_jar;
     private File jtreg_jar;
     private SearchPath junitPath;
+    private SearchPath junitPlatformPath;
     private SearchPath testngPath;
     private SearchPath asmtoolsPath;
     private File policyFile;

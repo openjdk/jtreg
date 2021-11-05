@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2021, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -298,6 +298,9 @@ public abstract class Action extends ActionHelper {
                 libs.addAll(script.getJavaTestClassPath().asList());
                 if (script.isJUnitRequired()) {
                     libs.addAll(script.getJUnitPath().asList());
+                }
+                if (script.isJUnitPlatformRequired()) {
+                    libs.addAll(script.getJUnitPlatformPath().asList());
                 }
                 if (script.isTestNGRequired()) {
                     libs.addAll(script.getTestNGPath().asList());
@@ -791,6 +794,10 @@ public abstract class Action extends ActionHelper {
         // junit
         JUNIT_NO_CLASSNAME     = "No class provided for `junit'",
         JUNIT_BAD_MAIN_ARG     = "Bad argument provided for class in `junit'",
+
+        // junit-platform
+        JUNIT_PLATFORM_NO_CLASSNAME     = "No class provided for `junit-platform'",
+        JUNIT_PLATFORM_BAD_MAIN_ARG     = "Bad argument provided for class in `junit-platform'",
 
         // driver
         DRIVER_NO_CLASSNAME    = "No class provided for `driver'",

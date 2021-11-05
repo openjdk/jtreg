@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2021, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -178,15 +178,23 @@ public class RegressionScript extends Script {
             LinkedList<Action> actionList = parseActions(actions, true);
 
             needJUnit = false;
+            needJUnitPlatform = false;
             needTestNG = false;
 
             if (td.getParameter("importsJUnit") != null) {
                 needJUnit = true;
                 needTestNG = true;
-            } else {
+            }
+            if (td.getParameter("importsJUnitPlatform") != null) {
+                needJUnitPlatform = true;
+            }
+
+            if (!needJUnit && !needJUnitPlatform && !needTestNG) {
                 for (Action a: actionList) {
                     if (a instanceof JUnitAction) {
                         needJUnit = true;
+                    } else if (a instanceof JUnitPlatformAction) {
+                        needJUnitPlatform = true;
                     } else if (a instanceof TestNGAction) {
                         needTestNG = true;
                     }
@@ -195,6 +203,9 @@ public class RegressionScript extends Script {
 
             if (needJUnit && !params.isJUnitAvailable()) {
                 throw new TestRunException("JUnit not available: see the FAQ for details");
+            }
+            if (needJUnitPlatform && !params.isJUnitPlatformAvailable()) {
+                throw new TestRunException("JUnit Platform not available: see the FAQ for details");
             }
             if (needTestNG && !params.isTestNGAvailable()) {
                 throw new TestRunException("TestNG not available: see the FAQ for details");
@@ -564,6 +575,7 @@ public class RegressionScript extends Script {
         addAction(DriverAction.NAME,  DriverAction.class);
         addAction(IgnoreAction.NAME,  IgnoreAction.class);
         addAction(JUnitAction.NAME,   JUnitAction.class);
+        addAction(JUnitPlatformAction.NAME, JUnitPlatformAction.class);
         addAction(MainAction.NAME,    MainAction.class);
         addAction(ShellAction.NAME,   ShellAction.class);
         addAction(TestNGAction.NAME,  TestNGAction.class);
@@ -810,13 +822,15 @@ public class RegressionScript extends Script {
 
         // Frameworks:
         if (multiModule) {
-            if (needJUnit || needTestNG) {
+            if (needJUnit || needJUnitPlatform || needTestNG) {
                 // Put necessary jar files onto the module path as automatic modules.
                 // We cannot use the ${jtreg.home}/lib directory directly since it contains
                 // other jar files which are not valid as automatic modules.
                 File md = workDir.getFile("modules");
                 if (needJUnit)
                     install(params.getJUnitPath(), md);
+                if (needJUnitPlatform)
+                    install(params.getJUnitPlatformPath(), md);
                 if (needTestNG)
                     install(params.getTestNGPath(), md);
                 mp.append(md);
@@ -824,7 +838,8 @@ public class RegressionScript extends Script {
         } else {
             if (needJUnit)
                 cp.append(params.getJUnitPath());
-
+            if (needJUnitPlatform)
+                cp.append(params.getJUnitPlatformPath());
             if (needTestNG)
                 cp.append(params.getTestNGPath());
         }
@@ -911,13 +926,15 @@ public class RegressionScript extends Script {
         // Frameworks:
         if (multiModule) {
             // assert !testOnBootClassPath && !useXPatch()
-            if (needJUnit || needTestNG) {
+            if (needJUnit || needJUnitPlatform || needTestNG) {
                 // Put necessary jar files onto the module path as automatic modules.
                 // We cannot use the ${jtreg.home}/lib directory directly since it contains
                 // other jar files which are not valid as automatic modules.
                 File md = workDir.getFile("modules");
                 if (needJUnit)
                     install(params.getJUnitPath(), md);
+                if (needJUnitPlatform)
+                    install(params.getJUnitPlatformPath(), md);
                 if (needTestNG)
                     install(params.getTestNGPath(), md);
                 mp.append(md);
@@ -926,7 +943,8 @@ public class RegressionScript extends Script {
             SearchPath fp = (!bcp.isEmpty() || usePatchModules()) ? bcp : cp;
             if (needJUnit)
                 fp.append(params.getJUnitPath());
-
+            if (needJUnitPlatform)
+                fp.append(params.getJUnitPlatformPath());
             if (needTestNG)
                 fp.append(params.getTestNGPath());
         }
@@ -1044,8 +1062,16 @@ public class RegressionScript extends Script {
         return needJUnit;
     }
 
+    boolean isJUnitPlatformRequired() {
+        return needJUnitPlatform;
+    }
+
     SearchPath getJUnitPath() {
         return params.getJUnitPath();
+    }
+
+    SearchPath getJUnitPlatformPath() {
+        return params.getJUnitPlatformPath();
     }
 
     boolean isTestNGRequired() {
@@ -1318,6 +1344,7 @@ public class RegressionScript extends Script {
     private boolean useModulePath;
     private ExecMode defaultExecMode;
     private boolean needJUnit;
+    private boolean needJUnitPlatform;
     private boolean needTestNG;
     private Modules modules;
     private ScratchDirectory scratchDirectory;

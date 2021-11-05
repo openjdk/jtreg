@@ -295,6 +295,17 @@ $(JTREG_IMAGEDIR)/legal/junit/LICENSE: $(call PosixPath,$(JUNIT_LICENSE))
 
 #----------------------------------------------------------------------
 #
+# import JUnit Platform
+
+$(JTREG_IMAGEDIR)/lib/junit-platform-console-standalone.jar: $(call PosixPath,$(JUNIT_PLATFORM_JAR))
+	$(RM) -f $@
+	$(MKDIR) -p $(@D)
+	$(CP) $< $@
+
+TARGETS.ZIP.jtreg += $(JTREG_IMAGEJARDIR)/junit-platform-console-standalone.jar
+
+#----------------------------------------------------------------------
+#
 # import TestNG
 
 $(JTREG_IMAGEDIR)/lib/testng.jar: $(call PosixPath,$(TESTNG_JAR))
