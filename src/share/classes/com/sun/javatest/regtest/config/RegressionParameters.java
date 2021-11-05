@@ -28,6 +28,7 @@ package com.sun.javatest.regtest.config;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -967,8 +968,17 @@ public class RegressionParameters
 
             if (jtClsDir.getName().equals("javatest.jar")) {
                 File installDir = jtClsDir.getParentFile();
-                // append jtreg.jar to the path
-                javaTestClassPath.append(new File(installDir, "jtreg.jar"));
+                // append jtreg.jar or exploded directory to the search path
+                File jtreg = new File(installDir, "jtreg.jar");
+                if (jtreg.exists()) {
+                    javaTestClassPath.append(jtreg);
+                } else try {
+                    // use code source location of this class instead
+                    URL location = getClass().getProtectionDomain().getCodeSource().getLocation();
+                    javaTestClassPath.append(new File(location.toURI()));
+                } catch (Exception e) { // including NullPointerException and URISyntaxException
+                    throw new RuntimeException("Computation of Java test class-path failed", e);
+                }
             }
         }
         return javaTestClassPath;
