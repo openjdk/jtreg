@@ -53,7 +53,7 @@ JAVAFILES.com.sun.javatest.regtest-agentvm := \
 $(BUILDDIR)/classes.com.sun.javatest.regtest.agent.ok: \
 		$(JAVAFILES.com.sun.javatest.regtest-agentvm) \
 		$(BUILDDIR)/classes.com.sun.javatest.regtest-othervm.ok
-	CLASSPATH="$(CLASSDIR)$(PS)$(JAVATEST_JAR)$(PS)$(JUNIT_JAR)$(PS)$(TESTNG_JAR)" \
+	CLASSPATH="$(CLASSDIR)$(PS)$(JAVATEST_JAR)$(PS)$(JUNIT_JAR)$(PS)$(TESTNG_JAR)$(PS)$(JUNIT_PLATFORM_JAR)" \
 	    $(REGTEST_AGENT_JAVAC) $(REGTEST_AGENT_JAVAC_OPTIONS) \
 		-d $(CLASSDIR) \
 		-encoding ISO8859-1 \
@@ -68,7 +68,7 @@ JAVAFILES.com.sun.javatest.regtest-tools := \
 $(BUILDDIR)/classes.com.sun.javatest.regtest.ok: \
 		$(JAVAFILES.com.sun.javatest.regtest-tools) \
 		$(BUILDDIR)/classes.com.sun.javatest.regtest.agent.ok
-	CLASSPATH="$(CLASSDIR)$(PS)$(ANT_JAR)$(PS)$(JAVATEST_JAR)$(PS)$(JUNIT_JAR)$(PS)$(TESTNG_JAR)" \
+	CLASSPATH="$(CLASSDIR)$(PS)$(ANT_JAR)$(PS)$(JAVATEST_JAR)$(PS)$(JUNIT_JAR)$(PS)$(TESTNG_JAR)$(PS)$(JUNIT_PLATFORM_JAR)" \
 	    $(REGTEST_TOOL_JAVAC) $(REGTEST_TOOL_JAVAC_OPTIONS) \
 		-d $(CLASSDIR) \
 		-encoding ISO8859-1 \
@@ -196,7 +196,7 @@ $(JTREG_IMAGEDIR)/doc/api/index.html: \
 	$(JDKHOME)/bin/javadoc -d $(@D) \
                 -encoding iso-8859-1 \
 		-sourcepath "$(JAVADIR)$(PS)$(JAVATEST_SRCDIR)" \
-		-classpath "$(ANT_JAR)$(PS)$(JAVATEST_JAR)$(PS)$(JUNIT_JAR)$(PS)$(TESTNG_JAR)" \
+		-classpath "$(ANT_JAR)$(PS)$(JAVATEST_JAR)$(PS)$(JUNIT_JAR)$(PS)$(TESTNG_JAR)$(PS)$(JUNIT_PLATFORM_JAR)" \
 		com.sun.javatest.regtest \
                 $(JAVATEST_SRCFILES)
 
@@ -206,7 +206,7 @@ $(JTREG_IMAGEDIR)/doc/devapi/index.html: \
 	$(JDKHOME)/bin/javadoc -d $(@D) \
                 -encoding iso-8859-1 \
 		-sourcepath "$(JAVADIR)$(PS)$(JAVATEST_SRCDIR)" \
-		-classpath "$(ANT_JAR)$(PS)$(JAVATEST_JAR)$(PS)$(JUNIT_JAR)$(PS)$(TESTNG_JAR)" \
+		-classpath "$(ANT_JAR)$(PS)$(JAVATEST_JAR)$(PS)$(JUNIT_JAR)$(PS)$(TESTNG_JAR)$(PS)$(JUNIT_PLATFORM_JAR)" \
 		-subpackages com.sun.javatest.regtest \
                 -tag "implNote:a:Implementation Note:" \
                 $(JAVATEST_SRCFILES)
