@@ -1348,7 +1348,7 @@ public class RegressionParameters
 
     //---------------------------------------------------------------------
 
-    private OS getTestOS() {
+    public OS getTestOS() {
         // In general, and particularly when running tests, the testJDK should always be set.
         // But in some testing and reporting situations, it may not be. In these cases,
         // we default to the current platform.

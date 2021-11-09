@@ -70,6 +70,7 @@ import com.sun.javatest.regtest.config.JDKOpts;
 import com.sun.javatest.regtest.config.Locations;
 import com.sun.javatest.regtest.config.Locations.LibLocn;
 import com.sun.javatest.regtest.config.Modules;
+import com.sun.javatest.regtest.config.OS;
 import com.sun.javatest.regtest.config.ParseException;
 import com.sun.javatest.regtest.config.RegressionEnvironment;
 import com.sun.javatest.regtest.config.RegressionParameters;
@@ -141,6 +142,11 @@ public class RegressionScript extends Script {
         }
         testResult.putProperty("jtregVersion", getVersion());
         testResult.putProperty("testJDK", getTestJDK().getAbsolutePath());
+        OS testOs = params.getTestOS();
+        testResult.putProperty("testJDK_OS", testOs.toString());
+        testResult.putProperty("testJDK_os.name", testOs.name);
+        testResult.putProperty("testJDK_os.version", testOs.version);
+        testResult.putProperty("testJDK_os.arch", testOs.arch);
         if (!getCompileJDK().equals(getTestJDK())) {
             testResult.putProperty("compileJDK", getCompileJDK().getAbsolutePath());
         }
