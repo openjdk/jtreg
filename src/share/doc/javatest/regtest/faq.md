@@ -1791,7 +1791,7 @@ You can use `@run driver` to run a class that provides more complex logic, if ne
 
 ### My test uses "preview features": how do I specify the necessary options?
 
-Tests that use preview features must use the `--enable-option` to compile
+Tests that use preview features must use the `--enable-preview` to compile
 and run the code.  In addition, to compile the code you must also specify the 
 appropriate source level.
 
