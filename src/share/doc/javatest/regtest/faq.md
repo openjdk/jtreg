@@ -1295,6 +1295,17 @@ The discarded output will be replaced with a message like the following:
         set the system property javatest.maxOutputSize to a higher
         value. The current value is 100000.
 
+
+### How do I set `javatest.maxOutputSize`? {#how-to-set-javatest.maxOutputSize}
+
+See the [previous entry](#how-much-output).
+
+TL;DR:  If you're trying to set `javatest.maxOutputSize`, it may be because you have seen a
+message in the middle of some very long output in a `.jtr` file.  You can either
+set the default value with a system property for the JVM running jtreg (_not_ the JVM(s)
+used to run tests), or you can override the default value for some or all tests with the 
+`maxOutputSize` property in the `TEST.ROOT` or `TEST.properties` configuration files.
+
 ### How much time can a test take? {#how-much-time}
 
 jtreg limits the amount of time that may be used to execute each action  of the
