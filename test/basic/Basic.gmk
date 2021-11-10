@@ -39,11 +39,6 @@ $(BUILDDIR)/Basic.check.ok: \
 	$(JTREG_IMAGEDIR)/lib/guice.jar
 endif
 
-ifdef HAMCREST_JAR
-$(BUILDDIR)/Basic.check.ok: \
-	$(JTREG_IMAGEDIR)/lib/hamcrest.jar
-endif
-
 $(BUILDDIR)/Basic.check.ok: \
                 $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(JTREG_IMAGEDIR)/lib/javatest.jar \
@@ -89,12 +84,6 @@ ifdef GOOGLE_GUICE_JAR
 $(BUILDDIR)/Basic.othervm.ok \
 $(BUILDDIR)/Basic.agentvm.ok: \
 	$(JTREG_IMAGEDIR)/lib/guice.jar
-endif
-
-ifdef HAMCREST_JAR
-$(BUILDDIR)/Basic.othervm.ok \
-$(BUILDDIR)/Basic.agentvm.ok: \
-	$(JTREG_IMAGEDIR)/lib/hamcrest.jar
 endif
 
 $(BUILDDIR)/Basic.othervm.ok \

@@ -328,15 +328,6 @@ ifdef GOOGLE_GUICE_JAR
     TARGETS.ZIP.jtreg += $(JTREG_IMAGEJARDIR)/guice.jar
 endif
 
-$(JTREG_IMAGEDIR)/lib/hamcrest.jar: $(call PosixPath,$(HAMCREST_JAR))
-	$(RM) $@
-	$(MKDIR) -p $(@D)
-	$(CP) $(HAMCREST_JAR) $@
-
-ifdef HAMCREST_JAR
-    TARGETS.ZIP.jtreg += $(JTREG_IMAGEJARDIR)/hamcrest.jar
-endif
-
 $(JTREG_IMAGEDIR)/legal/testng/LICENSE: $(call PosixPath,$(TESTNG_LICENSE))
 	$(MKDIR) -p $(@D)
 	$(CP) $< $@ 

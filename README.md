@@ -77,8 +77,10 @@ variables.
     available at <http://asm.ow2.org/>
 
 * JUnit:
-    See <http://junit.org/>. The recommended version is currently JUnit 4.13.2.
-    JUnit has a dependency on Hamcrest. The recommended version is currently 2.2.
+    See <http://junit.org/>. The recommended version is currently JUnit 5.8.1.
+    JUnit is integrated via its `junit-platform-console-standalone` artefact.
+    This "uber" JAR contains all required dependencies, including JUnit 4.13.2
+    and Hamcrest 1.3.
 
 * TestNG:
     See <http://testng.org/>. The recommended version is currently 7.3.0.

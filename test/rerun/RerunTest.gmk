@@ -63,7 +63,6 @@ $(BUILDDIR)/RerunTest.othervm.ok: \
 		    -e 's|$(BUILDDIR)|%BUILD%|g' \
 		    -e 's|$(ABSTOPDIR)|%WS%|g' \
 		    -e 's|%BUILD%.images.jtreg.lib.guice\.jar.||g' \
-		    -e 's|%BUILD%.images.jtreg.lib.hamcrest\.jar.||g' \
 		    -e 's|%BUILD%.images.jtreg.lib.jcommander\.jar.||g' \
 		> $(@:%.ok=%)/out/$${i%.*}.out ; \
 	    diff -c $(TESTDIR)/rerun/$${i%.*}.$(@:$(BUILDDIR)/RerunTest.%.ok=%).out \

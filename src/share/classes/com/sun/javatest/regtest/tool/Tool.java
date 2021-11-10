@@ -1697,7 +1697,7 @@ public class Tool {
         // jcommander really does have no obvious version info, so leave it as "unknown"
         help.addPathVersionHelper("TestNG", notTestNGPath);
 
-        junitPath = new JarFinder("junit.jar", "hamcrest.jar")
+        junitPath = new JarFinder("junit.jar")
                 .classes("org.junit.runner.JUnitCore", "org.hamcrest.SelfDescribing")
                 .libDir(libDir)
                 .getPath();

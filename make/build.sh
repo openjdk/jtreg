@@ -164,17 +164,6 @@
 #     2b. GOOGLE_GUICE_JAR_URL_BASE + GOOGLE_GUICE_VERSION
 #         The individual URL components used to construct the full URL.
 #
-# Hamcrest (required by JUnit)
-#     Checksum variables:
-#         HAMCREST_JAR_CHECKSUM: checksum of jar
-#
-#     1. HAMCREST_JAR
-#         The path to hamcrest.jar.
-#     2a. HAMCREST_JAR_URL
-#         The full URL for the jar.
-#     2b. HAMCREST_JAR_URL_BASE + HAMCREST_VERSION
-#         The individual URL components used to construct the full URL.
-#
 # JCommander (required by TestNG)
 #     Checksum variables:
 #         JCOMMANDER_JAR_CHECKSUM: checksum of jar
@@ -225,12 +214,12 @@
 #     3. JTHARNESS_SRC_TAG
 #         The SCM repository tag to use when building from source.
 #
-# JUnit (requires HamCrest)
+# JUnit
 #     Checksum variables:
 #         JUNIT_JAR_CHECKSUM: checksum of binary archive
 #
 #     1. JUNIT_JAR + JUNIT_LICENSE
-#         The path to asmtools.jar and LICENSE respectively.
+#         The path to junit.jar and LICENSE respectively.
 #     2a. JUNIT_JAR_URL
 #         The full URL for the jar.
 #     2b. JUNIT_JAR_URL_BASE + JUNIT_VERSION + JUNIT_FILE
@@ -334,10 +323,6 @@ GOOGLE_GUICE_VERSION="${GOOGLE_GUICE_VERSION:-${DEFAULT_GOOGLE_GUICE_VERSION}}"
 GOOGLE_GUICE_JAR_URL_BASE="${GOOGLE_GUICE_JAR_URL_BASE:-${MAVEN_REPO_URL_BASE}}"
 GOOGLE_GUICE_JAR_CHECKSUM="${GOOGLE_GUICE_JAR_CHECKSUM:-${DEFAULT_GOOGLE_GUICE_JAR_CHECKSUM}}"
 
-HAMCREST_VERSION="${HAMCREST_VERSION:-${DEFAULT_HAMCREST_VERSION}}"
-HAMCREST_JAR_URL_BASE="${HAMCREST_JAR_URL_BASE:-${MAVEN_REPO_URL_BASE}}"
-HAMCREST_JAR_CHECKSUM="${HAMCREST_JAR_CHECKSUM:-${DEFAULT_HAMCREST_JAR_CHECKSUM}}"
-
 JCOMMANDER_VERSION="${JCOMMANDER_VERSION:-${DEFAULT_JCOMMANDER_VERSION}}"
 JCOMMANDER_JAR_URL_BASE="${JCOMMANDER_JAR_URL_BASE:-${MAVEN_REPO_URL_BASE}}"
 JCOMMANDER_JAR_CHECKSUM="${JCOMMANDER_JAR_CHECKSUM:-${DEFAULT_JCOMMANDER_JAR_CHECKSUM}}"
@@ -372,7 +357,7 @@ fi
 
 if [ "${SHOW_CONFIG_DETAILS:-}" != "" ]; then
     ( set -o posix ; set ) | \
-        grep -E '^(ANT|ASM|ASMTOOLS|GOOGLE_GUICE|HAMCREST|JCOMMANDER|JCOV|JTHARNESS|JUNIT|TESTNG)_[A-Z_]*=' | \
+        grep -E '^(ANT|ASM|ASMTOOLS|GOOGLE_GUICE|JCOMMANDER|JCOV|JTHARNESS|JUNIT|TESTNG)_[A-Z_]*=' | \
         sort -u
     exit
 fi
@@ -682,14 +667,14 @@ setup_junit() {
 
     if [ -z "${JUNIT_JAR_URL:-}" ]; then
         if [ -n "${JUNIT_JAR_URL_BASE:-}" ]; then
-            JUNIT_JAR_URL="${JUNIT_JAR_URL_BASE}/junit/junit/${JUNIT_VERSION}/junit-${JUNIT_VERSION}.jar"
+            JUNIT_JAR_URL="${JUNIT_JAR_URL_BASE}/org/junit/platform/junit-platform-console-standalone/${JUNIT_VERSION}/junit-platform-console-standalone-${JUNIT_VERSION}.jar"
         fi
     fi
 
     local JUNIT_DEPS_DIR="${DEPS_DIR}/junit"
 
     if [ -n "${JUNIT_JAR_URL:-}" ]; then
-        JUNIT_JAR="${JUNIT_DEPS_DIR}/$(basename ${JUNIT_JAR_URL})"
+        JUNIT_JAR="${JUNIT_DEPS_DIR}/junit.jar"
         download_and_checksum "${JUNIT_JAR_URL}" "${JUNIT_JAR}" "${JUNIT_JAR_CHECKSUM}"
         return
     fi
@@ -814,34 +799,6 @@ setup_google_guice() {
 setup_google_guice
 info "GOOGLE_GUICE_JAR: ${GOOGLE_GUICE_JAR}"
 
-#----- HamCrest Core (required by JUnit) -----
-setup_hamcrest() {
-    check_arguments "${FUNCNAME}" 0 $#
-
-    if [ -n "${HAMCREST_JAR:-}" ]; then
-        return
-    fi
-
-    if [ -z "${HAMCREST_JAR_URL:-}" ]; then
-        if [ -n "${HAMCREST_JAR_URL_BASE:-}" ]; then
-            HAMCREST_JAR_URL="${HAMCREST_JAR_URL_BASE}/org/hamcrest/hamcrest/${HAMCREST_VERSION}/hamcrest-${HAMCREST_VERSION}.jar"
-        fi
-    fi
-
-    local HAMCREST_DEPS_DIR="${DEPS_DIR}/hamcrest"
-
-    if [ -n "${HAMCREST_JAR_URL:-}" ]; then
-        HAMCREST_JAR="${HAMCREST_DEPS_DIR}/$(basename "${HAMCREST_JAR_URL}")"
-        download_and_checksum "${HAMCREST_JAR_URL}" "${HAMCREST_JAR}" "${HAMCREST_JAR_CHECKSUM}"
-        return
-    fi
-
-    error "None of HAMCREST_JAR, HAMCREST_JAR_URL or HAMCREST_JAR_URL_BASE are set"
-    exit 1
-}
-setup_hamcrest
-info "HAMCREST_JAR: ${HAMCREST_JAR}"
-
 ##
 # The build version typically comes from the version-numbers file;
 # It is expected that the build number will typically come from an external CI system.
@@ -890,7 +847,6 @@ check_file "${ANT_JAR}"
 check_file "${ASMTOOLS_JAR}"
 check_file "${ASMTOOLS_LICENSE}"
 check_file "${GOOGLE_GUICE_JAR}"
-check_file "${HAMCREST_JAR}"
 check_dir  "${JAVA_HOME}"
 check_file "${JCOMMANDER_JAR}"
 check_file "${JCOV_JAR}"
@@ -920,7 +876,6 @@ make ANT="${ANT}"                                             \
      BUILD_VERSION="${JTREG_VERSION}"                         \
      BUILD_VERSION_STRING="${JTREG_VERSION_STRING}"           \
      GOOGLE_GUICE_JAR="${GOOGLE_GUICE_JAR}"                   \
-     HAMCREST_JAR="${HAMCREST_JAR}"                           \
      JAVATEST_JAR="$(mixed_path "${JTHARNESS_JAVATEST_JAR}")" \
      JCOMMANDER_JAR="${JCOMMANDER_JAR}"                       \
      JCOV_JAR="${JCOV_JAR}"                                   \

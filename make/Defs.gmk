@@ -366,11 +366,6 @@ ifdef GOOGLE_GUICE_JAR
     GOOGLE_GUICE_JAR := $(call FullPath,$(GOOGLE_GUICE_JAR))
 endif
 
-# Newer versions of JUnit require Hamcrest
-ifdef HAMCREST_JAR
-    HAMCREST_JAR := $(call FullPath,$(HAMCREST_JAR))
-endif
-
 #----- Ant:  http://ant.apache.org/
 #
 # Ant is required, to support the provision of a <jtreg> Ant task
