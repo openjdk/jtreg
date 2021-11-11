@@ -9,6 +9,8 @@ The fundamental way to build jtreg is with GNU make, specifying where to find
 those external components, but a script is also available that will download
 appropriate copies of those components before building jtreg.
 
+Note: You may [download pre-built versions of jtreg](https://ci.adoptopenjdk.net/view/Dependencies/job/dependency_pipeline/lastSuccessfulBuild/artifact/jtreg/) from [here](https://ci.adoptopenjdk.net/view/Dependencies/job/dependency_pipeline/lastSuccessfulBuild/artifact/jtreg/).
+
 ## Building jtreg with the build.sh script
 
 This is the recommended way to build jtreg, for those that want a simple,
