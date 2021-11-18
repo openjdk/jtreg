@@ -338,8 +338,7 @@ public class MainAction extends Action
             status = passed(CHECK_PASS);
             endAction(status);
         } else {
-            Lock lock = script.getLockIfRequired();
-            if (lock != null) lock.lock();
+            Lock lock = script.acquireLock();
 
             // Start action after the lock is taken to ensure correct "elapsed time".
             startAction(true);

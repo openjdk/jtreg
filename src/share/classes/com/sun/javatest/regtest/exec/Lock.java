@@ -31,7 +31,7 @@ import java.io.RandomAccessFile;
 import java.nio.channels.FileLock;
 import java.util.Map;
 import java.util.WeakHashMap;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import com.sun.javatest.regtest.config.RegressionParameters;
 
@@ -53,34 +53,48 @@ public abstract class Lock {
         return lock;
     }
 
-    public abstract void lock();
+    public abstract Lock lock(boolean exclusive);
 
     public abstract void unlock();
 
     public void close() { }
 
     private static class SimpleLock extends Lock {
-        ReentrantLock lock = new ReentrantLock();
+        ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
         @Override
-        public void lock() {
-            lock.lock();
+        public Lock lock(boolean exclusive) {
+            final java.util.concurrent.locks.Lock l;
+            if (exclusive) {
+                l = lock.writeLock();
+            } else {
+                l = lock.readLock();
+            }
+            l.lock();
+            return new Lock() {
+                @Override
+                public Lock lock(boolean exclusive) {
+                    throw new UnsupportedOperationException();
+                }
+
+                @Override
+                public void unlock() {
+                    l.unlock();
+                }
+            };
         }
 
         @Override
         public void unlock() {
-            lock.unlock();
+            throw new UnsupportedOperationException();
         }
     }
 
     private static class MultiVMLock extends SimpleLock {
-        private File file;
         private RandomAccessFile raf;
-        private FileLock fileLock;
 
         MultiVMLock(File file) {
             try {
-                this.file = file;
                 while (!file.exists()) {
                     file.createNewFile();
                 }
@@ -91,29 +105,42 @@ public abstract class Lock {
         }
 
         @Override
-        public void lock() {
-            super.lock();
+        public Lock lock(boolean exclusive) {
+            final Lock l = super.lock(exclusive);
+            final FileLock fileLock;
             boolean acquired = false;
             try {
-                fileLock = raf.getChannel().lock();
+                fileLock = raf.getChannel().lock(0, 0, !exclusive);
                 acquired = true;
             } catch (IOException e) {
                 throw new Error(e);
             } finally {
                 if (!acquired)
-                    super.unlock();
+                    l.unlock();
             }
+
+            return new Lock() {
+                @Override
+                public Lock lock(boolean exclusive) {
+                    throw new UnsupportedOperationException();
+                }
+
+                @Override
+                public void unlock() {
+                    try {
+                        fileLock.release();
+                    } catch (IOException e) {
+                        throw new Error(e);
+                    } finally {
+                        l.unlock();
+                    }
+                }
+            };
         }
 
         @Override
         public void unlock() {
-            try {
-                fileLock.release();
-            } catch (IOException e) {
-                throw new Error(e);
-            } finally {
-                super.unlock();
-            }
+            throw new UnsupportedOperationException();
         }
 
         @Override
