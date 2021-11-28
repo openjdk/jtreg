@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2011, 2017, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2011, 2021, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -23,40 +23,40 @@
 # questions.
 #
 
-$(BUILDDIR)/ExclusiveAccessTest.ref:
-	( for t in 1 2 3 4 ; do for i in 1 2 3 4 5 ; do echo "Test: $$i" ; done ; done ) > $@
+$(BUILDDIR)/ExclusiveAccessDirTest.ref:
+	( for i in 1 2 3 4 5 ; do for t in 1 5 6 ; do echo "Test: $$i" ; done ; done; for t in 2 3 4 ; do for i in 1 2 3 4 5 ; do echo "Test: $$i" ; done ; done) > $@
 
-$(BUILDDIR)/ExclusiveAccessTest.single.ok: \
+$(BUILDDIR)/ExclusiveAccessDirTest.single.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg \
-	$(BUILDDIR)/ExclusiveAccessTest.ref
+	$(BUILDDIR)/ExclusiveAccessDirTest.ref
 	$(RM) $(@:%.ok=%) && $(MKDIR) $(@:%.ok=%)
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDKHOME) \
-		-conc:4 \
-		$(TESTDIR)/exclusive \
+		-conc:6 \
+		$(TESTDIR)/exclusiveAccessDir \
 			> $(@:%.ok=%/jt.log) 2>&1 || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
-	$(GREP) -s 'Test results: passed: 4' $(@:%.ok=%/jt.log)  > /dev/null
-	$(DIFF) $(BUILDDIR)/ExclusiveAccessTest.ref $(@:%.ok=%)/Test.log
+	$(GREP) -s 'Test results: passed: 6' $(@:%.ok=%/jt.log)  > /dev/null
+	$(DIFF) $(BUILDDIR)/ExclusiveAccessDirTest.ref $(@:%.ok=%)/Test.log
 	echo "test passed at `date`" > $@
 
-$(BUILDDIR)/ExclusiveAccessTest.multi.ok: \
+$(BUILDDIR)/ExclusiveAccessDirTest.multi.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg \
-	$(BUILDDIR)/ExclusiveAccessTest.ref
+	$(BUILDDIR)/ExclusiveAccessDirTest.ref
 	$(RM) $(@:%.ok=%) && $(MKDIR) $(@:%.ok=%)
 	for i in 1 2 3 4 ; do \
 	    $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work.$$i -r:$(@:%.ok=%)/report.$$i \
 		-jdk:$(JDKHOME) \
 		-lock:$(@:%.ok=%)/Test.lck \
-		$(TESTDIR)/exclusive/dir/Test$$i.sh \
+		$(TESTDIR)/exclusiveAccessDir/exclusive/Test$$i.sh \
 			> $(@:%.ok=%/jt.$$i.log) 2>&1 & \
         done ; wait
-	$(DIFF) $(BUILDDIR)/ExclusiveAccessTest.ref $(@:%.ok=%)/Test.log
+	$(DIFF) $(BUILDDIR)/ExclusiveAccessDirTest.ref $(@:%.ok=%)/Test.log
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += \
-	$(BUILDDIR)/ExclusiveAccessTest.single.ok
+	$(BUILDDIR)/ExclusiveAccessDirTest.single.ok

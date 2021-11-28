@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2011, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2011, 2021, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -23,5 +23,21 @@
 # questions.
 #
 
-# @test
-# @run shell Test.sh
+# The scratch directory will be either workdir/scratch* or workdir/scratch*/*
+cwd=`pwd`
+case $cwd in
+    */scratch*/* )
+        workdir=`dirname \`dirname $cwd\`` ;;
+    */scratch* )
+        workdir=`dirname $cwd` ;;
+    * )
+        echo "Error, can't find workdir"; exit 1;;
+esac
+
+logfile=`dirname $workdir`/Test.log
+
+# Append slowly to a shared resource available to all tests.
+for i in 1 2 3 4 5 ; do
+    echo "Test: $i" >> $logfile
+    sleep 1
+done
