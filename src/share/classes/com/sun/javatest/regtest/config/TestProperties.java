@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2021, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -41,6 +41,7 @@ import java.util.Set;
 
 import com.sun.javatest.TestFinder;
 import com.sun.javatest.TestSuite;
+import com.sun.javatest.regtest.exec.Exclusiveness;
 import com.sun.javatest.regtest.tool.Version;
 import com.sun.javatest.regtest.util.StringUtils;
 import com.sun.javatest.util.I18NResourceBundle;
@@ -123,8 +124,11 @@ public class TestProperties {
         return getEntry(file).testNGRoot;
     }
 
-    boolean needsExclusiveAccess(File file) throws TestSuite.Fault {
-        return getEntry(file).needsExclusiveAccess;
+    Exclusiveness exclusiveness(File file) {
+        TestProperties.Cache.Entry entry = getEntry(file);
+        return entry.exclusiveAccessMachine ? Exclusiveness.MACHINE
+                : entry.needsExclusiveAccessDirs ? Exclusiveness.DIRECTORY
+                : Exclusiveness.NONE;
     }
 
     Set<String> getLibDirs(File file) throws TestSuite.Fault {
@@ -200,8 +204,9 @@ public class TestProperties {
             private final Set<File> bootClassPathDirs;
             final boolean useOtherVM;
             private final Set<File> otherVMDirs;
-            final boolean needsExclusiveAccess;
+            final boolean needsExclusiveAccessDirs;
             private final Set<File> exclusiveAccessDirs;
+            private boolean exclusiveAccessMachine;
             final File testNGRoot;
             private final Set<File> testNGDirs;
             final Set<String> libDirs;
@@ -239,6 +244,7 @@ public class TestProperties {
 
                     // add the list of exclusive access dirs
                     exclusiveAccessDirs = initFileSet(parent == null ? null : parent.exclusiveAccessDirs, "exclusiveAccess.dirs", dir);
+                    exclusiveAccessMachine = getBoolean("exclusiveAccess.machine", false);
 
                     // add the list of TestNG dirs
                     testNGDirs = initFileSet(parent == null ? null : parent.testNGDirs, "TestNG.dirs", dir);
@@ -272,6 +278,7 @@ public class TestProperties {
                     bootClassPathDirs = parent.bootClassPathDirs;
                     otherVMDirs = parent.otherVMDirs;
                     exclusiveAccessDirs = parent.exclusiveAccessDirs;
+                    exclusiveAccessMachine = parent.exclusiveAccessMachine;
                     testNGDirs = parent.testNGDirs;
                     libDirs = parent.libDirs;
                     libBuildArgs = parent.libBuildArgs;
@@ -284,7 +291,8 @@ public class TestProperties {
 
                 useBootClassPath= initUseBootClassPath(parent, dir);
                 useOtherVM = initUseOtherVM(parent, dir);
-                needsExclusiveAccess = initNeedsExclusiveAccess(parent, dir);
+                needsExclusiveAccessDirs = initNeedsExclusiveAccessDirs(parent, dir);
+                exclusiveAccessMachine = initExclusiveAccessMachine(parent);
                 testNGRoot = initTestNGRoot(parent, dir);
             }
 
@@ -298,6 +306,15 @@ public class TestProperties {
                     error(i18n, "props.bad.value", propertyName, v);
                 }
                 return defaultValue;
+            }
+
+            private boolean getBoolean(String propertyName, boolean defaultValue) {
+                String v = properties.getProperty(propertyName);
+                if (v == null) {
+                    return defaultValue;
+                } else {
+                    return Boolean.parseBoolean(v);
+                }
             }
 
             private Set<File> initFileSet(Set<File> parent, String propertyName, File baseDir) {
@@ -399,11 +416,11 @@ public class TestProperties {
                 return false;
             }
 
-            private boolean initNeedsExclusiveAccess(Entry parent, File dir) {
+            private boolean initNeedsExclusiveAccessDirs(Entry parent, File dir) {
                 if (parent == null)
                     return false;
 
-                if (parent.needsExclusiveAccess)
+                if (parent.needsExclusiveAccessDirs)
                     return true;
 
                 for (File exclusiveAccessDir: exclusiveAccessDirs) {
@@ -412,6 +429,11 @@ public class TestProperties {
                 }
 
                 return false;
+            }
+
+            private boolean initExclusiveAccessMachine(Entry parent) {
+                return parent == null ? this.exclusiveAccessMachine
+                                      : parent.exclusiveAccessMachine || this.exclusiveAccessMachine;
             }
 
             private File initTestNGRoot(Entry parent, File dir) {

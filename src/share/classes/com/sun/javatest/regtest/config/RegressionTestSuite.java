@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2000, 2021, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -43,6 +43,7 @@ import com.sun.javatest.TestEnvironment;
 import com.sun.javatest.TestFinder;
 import com.sun.javatest.TestSuite;
 import com.sun.javatest.WorkDirectory;
+import com.sun.javatest.regtest.exec.Exclusiveness;
 import com.sun.javatest.regtest.exec.RegressionScript;
 import com.sun.javatest.regtest.tool.Version;
 import com.sun.javatest.util.BackupPolicy;
@@ -215,8 +216,8 @@ public class RegressionTestSuite extends TestSuite
         return properties.useOtherVM(td.getFile());
     }
 
-    public boolean needsExclusiveAccess(TestDescription td) throws TestSuite.Fault {
-        return properties.needsExclusiveAccess(td.getFile());
+    public Exclusiveness exclusiveness(TestDescription td) {
+        return properties.exclusiveness(td.getFile());
     }
 
     public Version getRequiredVersion() {

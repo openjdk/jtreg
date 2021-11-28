@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2021, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -1064,15 +1064,8 @@ public class RegressionScript extends Script {
         return TestNGReporter.instance(workDir);
     }
 
-    Lock acquireLock() throws TestRunException{
-        boolean exclusive;
-        try {
-            exclusive = testSuite.needsExclusiveAccess(td);
-        } catch (TestSuite.Fault e) {
-            throw new TestRunException("Can't determine if lock required", e);
-        }
-
-        return Lock.get(params).lock(exclusive);
+    Lock acquireLock() {
+        return Lock.get(params).lock(testSuite.exclusiveness(td));
     }
 
     int getNextSerial() {

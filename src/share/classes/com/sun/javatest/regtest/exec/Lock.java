@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012, 2021, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -31,6 +31,7 @@ import java.io.RandomAccessFile;
 import java.nio.channels.FileLock;
 import java.util.Map;
 import java.util.WeakHashMap;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import com.sun.javatest.regtest.config.RegressionParameters;
@@ -53,35 +54,52 @@ public abstract class Lock {
         return lock;
     }
 
-    public abstract Lock lock(boolean exclusive);
+    public abstract Lock lock(Exclusiveness exclusiveness);
 
     public abstract void unlock();
 
     public void close() { }
 
+
     private static class SimpleLock extends Lock {
-        ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+        ReentrantReadWriteLock machineLock = new ReentrantReadWriteLock();
+        ReentrantLock directoryLock = new ReentrantLock();
 
         @Override
-        public Lock lock(boolean exclusive) {
+        public Lock lock(Exclusiveness exclusiveness) {
             final java.util.concurrent.locks.Lock l;
-            if (exclusive) {
-                l = lock.writeLock();
-            } else {
-                l = lock.readLock();
-            }
-            l.lock();
-            return new Lock() {
-                @Override
-                public Lock lock(boolean exclusive) {
-                    throw new UnsupportedOperationException();
-                }
+            if (exclusiveness == Exclusiveness.DIRECTORY) {
+                l = machineLock.readLock();
+                l.lock();
+                directoryLock.lock();
+                return new Lock() {
+                    @Override
+                    public Lock lock(Exclusiveness ignored) {
+                        throw new UnsupportedOperationException();
+                    }
 
-                @Override
-                public void unlock() {
-                    l.unlock();
-                }
-            };
+                    @Override
+                    public void unlock() {
+                        directoryLock.unlock();
+                        l.unlock();
+                    }
+                };
+            } else {
+                l = exclusiveness == Exclusiveness.MACHINE
+                        ? machineLock.writeLock() : machineLock.readLock();
+                l.lock();
+                return new Lock() {
+                    @Override
+                    public Lock lock(Exclusiveness ignored) {
+                        throw new UnsupportedOperationException();
+                    }
+
+                    @Override
+                    public void unlock() {
+                        l.unlock();
+                    }
+                };
+            }
         }
 
         @Override
@@ -105,12 +123,12 @@ public abstract class Lock {
         }
 
         @Override
-        public Lock lock(boolean exclusive) {
-            final Lock l = super.lock(exclusive);
+        public Lock lock(Exclusiveness exclusiveness) {
+            final Lock l = super.lock(exclusiveness);
             final FileLock fileLock;
             boolean acquired = false;
             try {
-                fileLock = raf.getChannel().lock(0, 0, !exclusive);
+                fileLock = raf.getChannel().lock(0, 0, exclusiveness != Exclusiveness.MACHINE);
                 acquired = true;
             } catch (IOException e) {
                 throw new Error(e);
@@ -121,7 +139,7 @@ public abstract class Lock {
 
             return new Lock() {
                 @Override
-                public Lock lock(boolean exclusive) {
+                public Lock lock(Exclusiveness ignored) {
                     throw new UnsupportedOperationException();
                 }
 
