@@ -1369,6 +1369,7 @@ public class Tool {
                         }
                         p.setMaxPoolSize(maxPoolSize);
                         p.setIdleTimeout(poolIdleTimeout);
+                        p.setMainWrapper(mainWrapper);
                         break;
                     case OTHERVM:
                         break;
