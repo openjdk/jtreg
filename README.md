@@ -121,7 +121,7 @@ The following dependencies are optional.
 * JDK 18:
   This is used when running some of the tests. Set `JDK18HOME` to run these
   tests. It need not be set if you are just building jtreg.
-  
+
 The recommended versions are also defined in `make/build-support/version-numbers`.
 
 ## Running jtreg Self-Tests
@@ -188,7 +188,8 @@ older versions of NetBeans.)
 
 ## Using the IntelliJ IDE
 
-The jtreg repo also contains a [plugin](plugins/idea/README.md) for the IntelliJ IDE.
+The jtreg repo also contains a plugin for the IntelliJ IDE.
 This is a convenience plugin which adds jtreg capabilities to the IntelliJ IDE.
 With this plugin, OpenJDK developers can write, run, and debug jtreg tests
-without leaving their IDE environment.
+without leaving their IDE environment.  For more details, see the file
+[plugins/idea/README.md](plugins/idea/README.md) in this repo.
