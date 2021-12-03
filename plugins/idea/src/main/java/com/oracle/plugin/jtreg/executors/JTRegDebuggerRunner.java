@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2016, 2021 Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -36,7 +36,6 @@ import com.intellij.execution.ui.RunContentDescriptor;
 import com.oracle.plugin.jtreg.configuration.JTRegConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import com.oracle.plugin.jtreg.configuration.JTRegConfiguration;
 
 /**
  * A custom debugger executor that publicize port choices to external clients.
@@ -52,13 +51,22 @@ public class JTRegDebuggerRunner extends GenericDebuggerRunner {
         return profile instanceof JTRegConfiguration;
     }
 
-    public String address;
+    private String address;
+
+    public String address() {
+        return address;
+    }
+
+    @Override
+    public void execute(@NotNull ExecutionEnvironment environment) throws ExecutionException {
+        address = DebuggerUtils.getInstance().findAvailableDebugAddress(true);
+        super.execute(environment);
+    }
 
     @Nullable
     @Override
     protected RunContentDescriptor createContentDescriptor(@NotNull final RunProfileState state,
                                                            @NotNull final ExecutionEnvironment environment) throws ExecutionException {
-        address = DebuggerUtils.getInstance().findAvailableDebugAddress(true);
         RemoteConnection connection = new RemoteConnection(true, "127.0.0.1", address, true);
         return attachVirtualMachine(state, environment, connection, true);
     }
