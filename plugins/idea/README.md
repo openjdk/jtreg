@@ -98,7 +98,7 @@ If you click on the very first entry of the left panel (the one named 'Test Resu
 
 ### Creating new tests
 
-To create a new jtreg test, simply create a new file under a jtreg test root. Then add a comment like this:
+To create a new jtreg test, simply create a new file under a jtreg test root. Then add a javadoc comment like this:
 
 ```
 /*
