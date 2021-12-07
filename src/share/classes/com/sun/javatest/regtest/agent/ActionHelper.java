@@ -41,6 +41,7 @@ import java.util.Properties;
 import static com.sun.javatest.regtest.agent.AStatus.error;
 import static com.sun.javatest.regtest.agent.AStatus.passed;
 
+@SuppressWarnings("removal") // Security Manager and related APIs
 public class ActionHelper {
 
     // <editor-fold defaultstate="collapsed" desc=" Save State ">

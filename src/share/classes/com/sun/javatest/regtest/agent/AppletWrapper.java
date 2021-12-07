@@ -65,6 +65,7 @@ import java.util.Hashtable;
   *
   * @author Iris A Garcia
   */
+@SuppressWarnings("removal") // Applet and related APIs
 public class AppletWrapper
 {
     public static void main(String [] args) {
@@ -530,6 +531,7 @@ class CheckboxPanel extends Panel
 /**
  * This is the panel which contains the test applet.
  */
+@SuppressWarnings("removal") // Applet and related APIs
 class AppletPanel extends Panel
 {
     private static final long serialVersionUID = 1L;
