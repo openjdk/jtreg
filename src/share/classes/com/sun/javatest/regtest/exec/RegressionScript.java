@@ -136,7 +136,7 @@ public class RegressionScript extends Script {
             hostname = "127.0.0.1";
         }
         testResult.putProperty("hostname", hostname);
-        String[] props = { "user.name", "os.name", "os.arch", "os.version" };
+        String[] props = { "user.name" };
         for (String p: props) {
             testResult.putProperty(p, System.getProperty(p));
         }
