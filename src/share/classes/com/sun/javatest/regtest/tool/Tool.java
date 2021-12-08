@@ -131,6 +131,7 @@ import static com.sun.javatest.regtest.tool.Option.ArgType.*;
 /**
  * Main entry point to be used to access jtreg.
  */
+@SuppressWarnings("removal") // Security Manager and related APIs
 public class Tool {
 
     /**

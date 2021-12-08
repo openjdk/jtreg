@@ -28,6 +28,7 @@ package com.sun.javatest.regtest.agent;
 import java.security.Permission;
 import java.util.PropertyPermission;
 
+@SuppressWarnings("removal") // Security Manager and related APIs
 public class RegressionSecurityManager extends JavaTestSecurityManager {
     /**
      * Try to install a copy of this security manager, up to but not including JDK 18.

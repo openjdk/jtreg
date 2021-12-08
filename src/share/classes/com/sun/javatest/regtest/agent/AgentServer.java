@@ -56,6 +56,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 
+@SuppressWarnings("removal") // Security Manager and related APIs
 public class AgentServer implements ActionHelper.OutputHandler {
 
     /**
