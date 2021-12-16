@@ -124,7 +124,7 @@ class JTRegConfigurationRunnableState extends JavaTestFrameworkRunnableState<JTR
 
         if (getEnvironment().getRunner() instanceof JTRegDebuggerRunner) {
             JTRegDebuggerRunner runner = (JTRegDebuggerRunner) getEnvironment().getRunner();
-            javaParameters.getProgramParametersList().add("-debug:-agentlib:jdwp=transport=dt_socket,server=n,suspend=y,address=127.0.0.1:" + runner.address);
+            javaParameters.getProgramParametersList().add("-debug:-agentlib:jdwp=transport=dt_socket,server=n,suspend=y,address=127.0.0.1:" + runner.address());
             boolean hasMode = false;
             for (String s : new String[] { "-ovm", "-othervm", "-avm", "-agentvm" }) {
                 if (javaParameters.getProgramParametersList().hasParameter(s)) {
