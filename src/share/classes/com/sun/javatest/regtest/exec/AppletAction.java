@@ -638,7 +638,7 @@ public class AppletAction extends Action
 
     //----------member variables---------------- --------------------------------
 
-    private String  manual   = "unset";
+    private String  manual   = "unset"; // or "novalue", "done", "yesno"
     private boolean reverseStatus = false;
     private boolean othervm  = false;
     private int     timeout  = -1;

@@ -787,5 +787,5 @@ public class MainAction extends Action
     protected Set<String> othervmOverrideReasons = new LinkedHashSet<>();
     protected boolean nativeCode = false;
     private int     timeout = -1;
-    private String  manual  = "unset";
+    private String  manual  = "unset"; // or "novalue"
 }

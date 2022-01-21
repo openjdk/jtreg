@@ -416,5 +416,5 @@ public class ShellAction extends Action
 
     private boolean reverseStatus = false;
     private int     timeout = -1;
-    private String  manual  = "unset";
+    private String  manual  = "unset"; // or "novalue"
 }
