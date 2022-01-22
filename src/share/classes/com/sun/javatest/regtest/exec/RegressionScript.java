@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -492,7 +492,7 @@ public class RegressionScript extends Script {
 
     /**
      * Get the timeout to be used for a test.  Since the timeout for regression
-     * tests is on a per action basis rather than on a per test basis, this
+     * tests is on a per-action basis rather than on a per-test basis, this
      * method should always return zero which indicates that there is no
      * timeout.
      *
@@ -504,22 +504,22 @@ public class RegressionScript extends Script {
     }
 
     /**
-     * Get the timeout to be used for an action.  The timeout will be scaled by
-     * the timeoutFactor as necessary.  The default timeout for any action as
-     * per the tag-spec is 120 seconds scaled by a value found in the
-     * environment ("javatestTimeoutFactor").
-     * The timeout factor is available as both an integer (for backward
-     * compatibility) and a floating point number
+     * Returns the timeout to be used for an action.
      *
-     * @param time The initial timeout which may need to be scaled according
-     *             to the provided timeoutFactor.  If the initial timeout is
-     *             less than zero, then the default timeout will be returned.
-     * @return     The timeout in seconds.
+     * If no debug options have been set, the result will be the given value,
+     * or a default value if the given value is negative, scaled by the timeout factor.
+     *
+     * If debug options have been set, the result will be 0, meaning "no timeout".
+     *
+     * @param time the value of the timeout specified in the action,
+     *             or -1 if no value was specified
+     * @return     the timeout, in seconds
      */
     protected int getActionTimeout(int time) {
-        if (time < 0)
-            time = 120;
-        return (int) (time * getTimeoutFactor());
+        final int DEFAULT_ACTION_TIMEOUT = 120; // seconds
+        return isTimeoutsEnabled()
+                ? (int) ((time < 0 ? DEFAULT_ACTION_TIMEOUT : time) * getTimeoutFactor())
+                : 0;
     }
 
     protected float getTimeoutFactor() {
@@ -527,7 +527,9 @@ public class RegressionScript extends Script {
             // not synchronized, so in worst case may be set more than once
             float value = 1; // default
             try {
-                // use [1] to get the floating point timeout factor
+                // The timeout factor is available as both an integer (for backward compatibility)
+                // and a floating point number.
+                // Use [1] to get the floating point timeout factor
                 String f = (regEnv == null ? null : regEnv.lookup("javatestTimeoutFactor")[1]);
                 if (f != null)
                     value = Float.parseFloat(f);
@@ -540,6 +542,16 @@ public class RegressionScript extends Script {
     }
 
     private static float cacheJavaTestTimeoutFactor = -1;
+
+    /**
+     * Returns whether timeouts are (generally) enabled.
+     *
+     * @return {@code true} if timeouts are enabled, and {@code false} otherwise
+     */
+    protected boolean isTimeoutsEnabled() {
+        // for now, timeouts are always enabled, unless debug options have been specified for the test
+        return getTestDebugOptions().isEmpty();
+    }
 
     /**
      * Set an alarm that will interrupt the calling thread after a specified

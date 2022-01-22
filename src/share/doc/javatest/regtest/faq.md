@@ -818,6 +818,9 @@ using the `-timeoutHandler` and `-timeoutHanderDir` options. The default
 timeout handler will try and call `jstack` to generate stack traces of all
 the Java threads running in the JVM being used for the action.
 
+Test timeouts are automatically disabled when a test is being debugged,
+as indicated by the use of the `-debug` option.
+
 For all timeout-related options, use `jtreg -help timeout`.
 
 ### How do I run only tests which were written for a specific bugid?
