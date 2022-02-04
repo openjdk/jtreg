@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1999, 2018, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1999, 2022, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -84,7 +84,7 @@ JAVAFILES.java.lang := \
 $(BUILDDIR)/classes.java.lang.ok: \
 		$(JAVAFILES.java.lang)
 	CLASSPATH= \
-	    $(REGTEST_TOOL_JAVAC) $(REGTEST_TOOL_JAVAC_OPTIONS) $(REGTEST_TOOL_PATCH_JAVA_BASE_OPTIONS) \
+	    $(REGTEST_TOOL_JAVAC) $(REGTEST_TOOL_JAVAC_OPTIONS) --release 9 $(REGTEST_TOOL_PATCH_JAVA_BASE_OPTIONS) \
 		-d $(CLASSDIR) \
 		-encoding ISO8859-1 \
 		$(JAVAFILES.java.lang)

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2016, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -61,7 +61,9 @@ public class JDKModulesTest {
         Path tmpDir = Paths.get(System.getProperty("java.io.tmpdir"));
         Path testSuiteDir = tmpDir.resolve("dummyTestSuite");
         Files.createDirectories(testSuiteDir);
-        Files.createFile(testSuiteDir.resolve("TEST.ROOT"));
+        if (!Files.exists(testSuiteDir.resolve("TEST.ROOT"))) {
+            Files.createFile(testSuiteDir.resolve("TEST.ROOT"));
+        }
         dummyTestSuite = RegressionTestSuite.open(testSuiteDir.toFile(), null);
 
         Path dwd = tmpDir.resolve("dummyWorkDir");
@@ -75,22 +77,22 @@ public class JDKModulesTest {
     @Test
     void testNoVMOpts() throws TestSuite.Fault {
         test(Collections.<String>emptyList(),
-                Arrays.asList("java.desktop", "jdk.compiler", "java.corba"),
-                Arrays.asList("java.corba"));
+                Arrays.asList("java.desktop", "jdk.compiler", "java.se"),
+                Arrays.asList("java.se"));
     }
 
     @Test
     void testAddAllSystem() throws TestSuite.Fault {
         test(Arrays.asList("--add-modules", "ALL-SYSTEM"),
-                Arrays.asList("java.desktop", "jdk.compiler", "java.corba"),
+                Arrays.asList("java.desktop", "jdk.compiler", "java.se"),
                 Collections.<String>emptyList());
     }
 
     @Test
     void testLimitJDKCompiler() throws TestSuite.Fault {
         test(Arrays.asList("--limit-modules", "jdk.compiler"),
-                Arrays.asList("java.desktop", "jdk.compiler", "java.corba"),
-                Arrays.asList("java.desktop", "java.corba"));
+                Arrays.asList("java.desktop", "jdk.compiler", "java.se"),
+                Arrays.asList("java.desktop", "java.se"));
     }
 
 
