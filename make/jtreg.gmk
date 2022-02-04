@@ -27,32 +27,13 @@
 #
 # compile com.sun.javatest.regtest
 
-### The following files are required to run othervm tests
-
-REGTEST-OTHERVM-CLASSES = AppletWrapper GetSystemProperty MainWrapper AStatus StringArray
-JAVAFILES.com.sun.javatest.regtest-othervm = \
-	$(REGTEST-OTHERVM-CLASSES:%=$(JAVADIR)/com/sun/javatest/regtest/agent/%.java)
-
-# TODO: set -bootclasspath to JDK 1.1 classes?
-$(BUILDDIR)/classes.com.sun.javatest.regtest-othervm.ok: \
-		$(JAVAFILES.com.sun.javatest.regtest-othervm) \
-		$(call PosixPath,$(JAVATEST_JAR))
-	$(MKDIR) -p $(CLASSDIR)
-	CLASSPATH="$(CLASSDIR)$(PS)$(JAVATEST_JAR)" \
-	    $(REGTEST_OLD_JAVAC) $(REGTEST_OLD_JAVAC_OPTIONS) \
-		-d $(CLASSDIR) \
-		-encoding ISO8859-1 \
-		$(JAVAFILES.com.sun.javatest.regtest-othervm)
-	echo "classes built at `date`" > $@
-
-### The following files are required to run agentvm tests, as far back as JDK 1.5
+### The following files are required to run agentvm and othervm tests, as far back as JDK 8
 
 JAVAFILES.com.sun.javatest.regtest-agentvm := \
-	$(filter-out $(JAVAFILES.com.sun.javatest.regtest-othervm), $(shell $(FIND) $(JAVADIR)/com/sun/javatest/regtest/agent -name \*.java ))
+	$(shell $(FIND) $(JAVADIR)/com/sun/javatest/regtest/agent -name \*.java )
 
 $(BUILDDIR)/classes.com.sun.javatest.regtest.agent.ok: \
-		$(JAVAFILES.com.sun.javatest.regtest-agentvm) \
-		$(BUILDDIR)/classes.com.sun.javatest.regtest-othervm.ok
+		$(JAVAFILES.com.sun.javatest.regtest-agentvm)
 	CLASSPATH="$(CLASSDIR)$(PS)$(JAVATEST_JAR)$(PS)$(JUNIT_JAR)$(PS)$(TESTNG_JAR)" \
 	    $(REGTEST_AGENT_JAVAC) $(REGTEST_AGENT_JAVAC_OPTIONS) \
 		-d $(CLASSDIR) \
@@ -81,6 +62,7 @@ TARGETS.com.sun.javatest.regtest += $(BUILDDIR)/classes.com.sun.javatest.regtest
 JAVAFILES.java.lang := \
 	$(JAVADIR)/java/lang/JTRegModuleHelper.java
 
+# The hardcoded use of --release 9 reflects the introduction of the Java Platform Module System
 $(BUILDDIR)/classes.java.lang.ok: \
 		$(JAVAFILES.java.lang)
 	CLASSPATH= \

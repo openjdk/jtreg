@@ -81,7 +81,7 @@ public class StringArray {
      * @see #splitTerminator
      */
     public static String[] splitSeparator(String sep, String s) {
-        Vector v = new Vector();
+        Vector<String> v = new Vector<>();
         int tokenStart = 0;
         int tokenEnd   = 0;
 
@@ -91,7 +91,7 @@ public class StringArray {
         }
         v.addElement(s.substring(tokenStart));
 
-        String [] retVal = new String[v.size()];
+        String[] retVal = new String[v.size()];
         v.copyInto(retVal);
         return retVal;
     } // splitSeparator()
@@ -111,7 +111,7 @@ public class StringArray {
      * @see #splitSeparator
      */
     public static String[] splitTerminator(String sep, String s) {
-        Vector v = new Vector();
+        Vector<String> v = new Vector<>();
         int tokenStart = 0;
         int tokenEnd   = 0;
 
@@ -120,7 +120,7 @@ public class StringArray {
             tokenStart = tokenEnd+1;
         }
 
-        String [] retVal = new String[v.size()];
+        String[] retVal = new String[v.size()];
         v.copyInto(retVal);
         return retVal;
     } // splitTerminator()
@@ -139,7 +139,7 @@ public class StringArray {
         if (s == null)
             return new String[0];
 
-        Vector v = new Vector();
+        Vector<String> v = new Vector<>();
         int tokenStart = 0;
         int tokenEnd   = 0;
 
@@ -159,7 +159,7 @@ public class StringArray {
             tokenStart = tokenEnd;
         }
 
-        String [] retVal = new String[v.size()];
+        String[] retVal = new String[v.size()];
         v.copyInto(retVal);
         return retVal;
     } // splitWS()
