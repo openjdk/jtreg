@@ -19,7 +19,7 @@ basic way to build jtreg.
 The script is intended to be run in a Unix-like shell, such as `bash` on Linux or
 Mac OS X, or with Cygwin or WSL on Windows. At a minimum, you must either set
 the `JAVA_HOME` environment variable or specify the location of the JDK to be
-used to build jtreg with the `--jdk` command-line option. It must be JDK 8 or later.
+used to build jtreg with the `--jdk` command-line option. It must be JDK 11 or later.
 
     % cd jtreg-root-directory
     % sh make/build.sh --jdk JDK-directory
