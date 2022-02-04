@@ -25,7 +25,8 @@
 
 package com.sun.javatest.regtest.agent;
 
-import java.util.Vector;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Various static methods used to operate on arrays of strings.  This includes
@@ -67,9 +68,9 @@ public class StringArray {
 
     /**
      * Splits a string based on presence of a specified separator. Returns an
-     * array of arbitrary length.  Then end of each element in the array is
+     * array of arbitrary length.  The end of each element in the array is
      * indicated by the separator or the end of the string.  If there is a
-     * separator immeidately before the end of the string, the final element
+     * separator immediately before the end of the string, the final element
      * will be empty.  None of the strings will contain the separator. Useful
      * when separating strings such as "foo/bar/bas" using separator '/'.
      *
@@ -81,19 +82,17 @@ public class StringArray {
      * @see #splitTerminator
      */
     public static String[] splitSeparator(String sep, String s) {
-        Vector<String> v = new Vector<>();
+        List<String> v = new ArrayList<>();
         int tokenStart = 0;
-        int tokenEnd   = 0;
+        int tokenEnd;
 
         while ((tokenEnd = s.indexOf(sep, tokenStart)) != -1) {
-            v.addElement(s.substring(tokenStart, tokenEnd));
+            v.add(s.substring(tokenStart, tokenEnd));
             tokenStart = tokenEnd+1;
         }
-        v.addElement(s.substring(tokenStart));
+        v.add(s.substring(tokenStart));
 
-        String[] retVal = new String[v.size()];
-        v.copyInto(retVal);
-        return retVal;
+        return v.toArray(new String[0]);
     } // splitSeparator()
 
     /**
@@ -111,18 +110,16 @@ public class StringArray {
      * @see #splitSeparator
      */
     public static String[] splitTerminator(String sep, String s) {
-        Vector<String> v = new Vector<>();
+        List<String> v = new ArrayList<>();
         int tokenStart = 0;
-        int tokenEnd   = 0;
+        int tokenEnd;
 
         while ((tokenEnd = s.indexOf(sep, tokenStart)) != -1) {
-            v.addElement(s.substring(tokenStart, tokenEnd));
+            v.add(s.substring(tokenStart, tokenEnd));
             tokenStart = tokenEnd+1;
         }
 
-        String[] retVal = new String[v.size()];
-        v.copyInto(retVal);
-        return retVal;
+        return v.toArray(new String[0]);
     } // splitTerminator()
 
     /**
@@ -139,9 +136,9 @@ public class StringArray {
         if (s == null)
             return new String[0];
 
-        Vector<String> v = new Vector<>();
+        List<String> v = new ArrayList<>();
         int tokenStart = 0;
-        int tokenEnd   = 0;
+        int tokenEnd;
 
         while (true) {
             if (tokenStart == s.length())
@@ -155,12 +152,10 @@ public class StringArray {
             while ((tokenEnd < s.length())
                    && !Character.isWhitespace(s.charAt(tokenEnd)))
                 tokenEnd++;
-            v.addElement(s.substring(tokenStart, tokenEnd));
+            v.add(s.substring(tokenStart, tokenEnd));
             tokenStart = tokenEnd;
         }
 
-        String[] retVal = new String[v.size()];
-        v.copyInto(retVal);
-        return retVal;
+        return v.toArray(new String[0]);
     } // splitWS()
 }

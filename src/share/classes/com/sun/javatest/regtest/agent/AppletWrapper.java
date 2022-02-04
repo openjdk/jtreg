@@ -47,8 +47,6 @@ import java.awt.TextArea;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.FileReader;
@@ -56,8 +54,8 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
 import java.net.URL;
-import java.util.Dictionary;
-import java.util.Hashtable;
+import java.util.Map;
+import java.util.HashMap;
 
 
 /**
@@ -92,8 +90,8 @@ public class AppletWrapper
             classpath = appArgs[i++];
             manual = appArgs[i++];
             body   = appArgs[i++];
-            appletParams = stringToDictionary(appArgs[i++]);
-            appletAtts   = stringToDictionary(appArgs[i++]);
+            appletParams = stringToMap(appArgs[i++]);
+            appletAtts   = stringToMap(appArgs[i++]);
 
         } catch (IOException e) {
             status = AStatus.failed("JavaTest Error:  Can't read applet args file.");
@@ -106,20 +104,20 @@ public class AppletWrapper
         try {
             t.join();
         } catch (InterruptedException e) {
-            status = AStatus.failed("Thread interrupted: " + t.toString());
+            status = AStatus.failed("Thread interrupted: " + t);
             status.exit();
         }
         // never get here because t.run() always calls Status.exit() in the
         // non-interrupted case
     } // main()
 
-    private static Dictionary<String,String> stringToDictionary(String s) {
+    private static Map<String,String> stringToMap(String s) {
         String[] pairs = StringArray.splitTerminator("\034", s);
-        Dictionary<String,String> retVal = new Hashtable<>(3);
+        Map<String,String> retVal = new HashMap<>(3);
         for (int i = 0; i < pairs.length; i+=2)
             retVal.put(pairs[i], pairs[i+1]);
         return retVal;
-    } // stringToDictionary()
+    } // stringToMap()
 
 //     //  For printing debug messages
 //     private static void Msg(String s) {
@@ -166,7 +164,7 @@ public class AppletWrapper
                 try {
                     Thread.sleep(2000);
                 } catch (InterruptedException e) {
-                    status = AStatus.failed("Thread interrupted: " + e.toString());
+                    status = AStatus.failed("Thread interrupted: " + e);
                     status.exit();
                 }
                 // just in case the system is slow, ensure paint is called
@@ -192,12 +190,8 @@ public class AppletWrapper
                 Class<?> eventQueueClass = EventQueue.class;
                 Method isDispatchThread  = eventQueueClass.getMethod("isDispatchThread");
                 Method invokeAndWait = eventQueueClass.getMethod("invokeAndWait", Runnable.class );
-                if (!((Boolean) (isDispatchThread.invoke(null))).booleanValue()) {
-                    invokeAndWait.invoke(null, new Runnable() {
-                            public void run() {
-                                c.validate();
-                            }
-                        });
+                if (!((Boolean) (isDispatchThread.invoke(null)))) {
+                    invokeAndWait.invoke(null, (Runnable) c::validate);
                     return;
                 }
             }
@@ -260,7 +254,7 @@ public class AppletWrapper
             if (e instanceof ThreadDeath)
                 return;
             e.printStackTrace();
-            status = AStatus.failed("Applet thread threw exception: " + e.toString());
+            status = AStatus.failed("Applet thread threw exception: " + e);
             status.exit();
         } // uncaughtException()
 
@@ -484,8 +478,8 @@ public class AppletWrapper
     private static String classpath;
     private static String manual;
     private static String body;
-    private static Dictionary<String,String> appletParams;
-    private static Dictionary<String,String> appletAtts;
+    private static Map<String,String> appletParams;
+    private static Map<String,String> appletAtts;
 } // class AppletWrapper
 
 /**
@@ -510,17 +504,9 @@ class CheckboxPanel extends Panel
         add(b1);
         add(b2);
 
-        b1.addItemListener(new ItemListener() {
-            public void itemStateChanged(ItemEvent event) {
-                panel.setFixedSize();
-            }
-        });
+        b1.addItemListener(event -> panel.setFixedSize());
 
-        b2.addItemListener(new ItemListener() {
-            public void itemStateChanged(ItemEvent event) {
-                panel.setVariableSize();
-            }
-        });
+        b2.addItemListener(event -> panel.setVariableSize());
     } // makeCheckBoxGroup()
 
     private Checkbox b1, b2;
@@ -674,7 +660,7 @@ class AppletWaiter
             try {
                 wait();
             } catch (InterruptedException e) {
-                AStatus.failed("Thread interrupted: " + e.toString()).exit();
+                AStatus.failed("Thread interrupted: " + e).exit();
             }
         }
     } // waitForDone();

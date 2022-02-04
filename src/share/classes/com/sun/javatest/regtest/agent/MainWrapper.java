@@ -62,7 +62,7 @@ public class MainWrapper
             className  = (sep == -1) ? moduleClassName : moduleClassName.substring(sep + 1);
             classArgs = StringArray.splitWS(fileArgs[i++]);
         } catch (IOException e) {
-            AStatus.failed(MAIN_CANT_READ_ARGS + e.toString()).exit();
+            AStatus.failed(MAIN_CANT_READ_ARGS + e).exit();
             throw new IllegalStateException(); // implies exit() didn't sucees
         }
 
@@ -88,10 +88,10 @@ public class MainWrapper
 
     private static void handleTestException(Throwable e) {
         if (SKIP_EXCEPTION.equals(e.getClass().getName())) {
-            AStatus.passed(MAIN_SKIPPED + e.toString())
+            AStatus.passed(MAIN_SKIPPED + e)
                    .exit();
         } else {
-            AStatus.failed(MAIN_THREW_EXCEPT + e.toString())
+            AStatus.failed(MAIN_THREW_EXCEPT + e)
                    .exit();
         }
     }
@@ -178,7 +178,7 @@ public class MainWrapper
                 uncaughtThread    = t;
             }
 //          cleanup();
-            AStatus.failed(MAIN_THREW_EXCEPT + e.toString()).exit();
+            AStatus.failed(MAIN_THREW_EXCEPT + e).exit();
         } // uncaughtException()
 
 //      public void cleanup() {
