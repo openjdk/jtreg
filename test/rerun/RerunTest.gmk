@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2013, 2018, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2013, 2022, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -37,7 +37,7 @@ $(BUILDDIR)/RerunTest.othervm.ok: \
 	unset GNOME_DESKTOP_SESSION_ID ; \
 	unset XMODIFIERS ; \
 	LANG=en_US.UTF-8 TZ=GMT+0.00 \
-	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+	JTREG_JAVA=$(JDKJAVA) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-J-Djavatest.regtest.allowTrailingBuild=true \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDK8HOME) \
@@ -51,7 +51,7 @@ $(BUILDDIR)/RerunTest.othervm.ok: \
 	for i in `cd $(TESTDIR)/rerun ; ls */*.sh */*.java` ; do \
 	    echo Checking $(@:$(BUILDDIR)/RerunTest.%.ok=%) $$i ; \
 	    mkdir -p `dirname $(@:%.ok=%)/out/$$i` ; \
-	    $(JTREG_IMAGEDIR)/bin/jtreg \
+	    JTREG_JAVA=$(JDKJAVA) $(JTREG_IMAGEDIR)/bin/jtreg \
 		-jdk:$(JDK8HOME) \
 		-w:$(@:%.ok=%)/work \
 		-dir:$(TESTDIR)/rerun \
@@ -60,6 +60,7 @@ $(BUILDDIR)/RerunTest.othervm.ok: \
 		    -e 's|^DISPLAY=.* \\|DISPLAY=%DISPLAY% \\|' \
 		    -e 's|$(JDK8HOME)|%JDKHOME%|g' \
 		    -e "s|`cd $(JDK8HOME); pwd -P`|%JDKHOME%|g" \
+		    -e '/JTREG_JAVA=/d' \
 		    -e 's|$(BUILDDIR)|%BUILD%|g' \
 		    -e 's|$(ABSTOPDIR)|%WS%|g' \
 		    -e 's|%BUILD%.images.jtreg.lib.guice\.jar.||g' \

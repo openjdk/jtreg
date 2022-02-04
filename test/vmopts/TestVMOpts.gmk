@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2022, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -31,14 +31,14 @@
 $(BUILDDIR)/TestVMOpts.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(JTREG_IMAGEDIR)/bin/jtreg
-	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+	JTREG_JAVA=$(JDKJAVA) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-jdk:$(JDK8HOME) -Dfoo=bar -Xbootclasspath/p:baz \
 		-w:$(BUILDDIR)/jtreg/cmd.othervm/work \
 		-r:$(BUILDDIR)/jtreg/cmd.othervm/report \
 		-verbose:fail \
 		$(TESTDIR)/vmopts
 ifdef ANT
-	JAVA_HOME=$(JDK8HOME) $(ANT) -f $(TESTDIR)/vmopts/build.xml \
+	JAVA_HOME=$(JDKHOME) $(ANT) -f $(TESTDIR)/vmopts/build.xml \
 		-Dbuild.jtreg=$(BUILDDIR)/jtreg \
 		-Djtreg.jar=$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		-Dtestjdk=$(JDK8HOME)

@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2022, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -25,8 +25,6 @@
 
 #----------------------------------------------------------------------
 
-ifdef JDK9HOME
-
 $(BUILDDIR)/JDKModulesTest.ok: \
 	    $(TESTDIR)/jdkModulesTest/JDKModulesTest.java \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
@@ -38,12 +36,14 @@ $(BUILDDIR)/JDKModulesTest.ok: \
 		-cp $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		-Xlint -Werror \
 		-encoding ISO8859-1 $(TESTDIR)/jdkModulesTest/JDKModulesTest.java
-	$(JDK9HOME)/bin/java -cp "$(@:%.ok=%)/classes$(PS)$(JTREG_IMAGEDIR)/lib/jtreg.jar" \
+	$(JDKHOME)/bin/java -cp "$(@:%.ok=%)/classes$(PS)$(JTREG_IMAGEDIR)/lib/jtreg.jar" \
+		-Djava.io.tmpdir=$(@:%.ok=%) \
+		JDKModulesTest -Ddummy.vm.option
+	$(JDKHOME)/bin/java -cp "$(@:%.ok=%)/classes$(PS)$(JTREG_IMAGEDIR)/lib/jtreg.jar" \
 		-Djava.io.tmpdir=$(@:%.ok=%) \
 		JDKModulesTest 
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += $(BUILDDIR)/JDKModulesTest.ok
 
-endif
 

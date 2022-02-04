@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #
-# Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2020, 2022, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -258,7 +258,7 @@ usage() {
     echo "--help"
     echo "      Show this message"
     echo "--jdk /path/to/jdk"
-    echo "      Path to JDK; must be JDK 8 or higher"
+    echo "      Path to JDK; must be JDK 11 or higher"
     echo "--quiet | -q"
     echo "      Reduce the logging output."
     echo "--show-default-versions"
@@ -441,13 +441,27 @@ sanity_check_java_home() {
         grep -e ^java -e ^openjdk |
         head -n 1 | \
         sed -e 's/^[^0-9]*\(1\.\)*\([1-9][0-9]*\).*/\2/' )
-    if [ "${vnum:-0}" -lt "8" ]; then
-        error "JDK 8 or newer is required to build jtreg"
+    if [ "${vnum:-0}" -lt "11" ]; then
+        error "JDK 11 or newer is required to build jtreg"
         exit 1
     fi
 }
+
+checkJavaOSVersion() {
+  # This checks that the value in the Java "os.version" system property
+  # is as expected.  While it is OK to *build* jtreg with a JDK with this bug,
+  # some of the `jtreg` self-tests will fail: notably, test/problemList.
+  # See https://bugs.openjdk.java.net/browse/JDK-8253702
+  case `uname` in
+    Darwin )
+      OS_VERSION=`defaults read loginwindow SystemVersionStampAsString`
+      ${JAVA_HOME}/bin/java ${mydir}/CheckJavaOSVersion.java ${OS_VERSION}
+  esac
+}
+
 setup_java_home
 sanity_check_java_home
+#checkJavaOSVersion   #temp: check for presence of the JDK os.version bug (JDK-8253702)
 export JAVA_HOME
 info "JAVA_HOME: ${JAVA_HOME}"
 
