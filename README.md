@@ -55,9 +55,9 @@ make command line or with values in _make/Defs.gmk_. You can also include the
 appropriate license files in the jtreg image, by setting the appropriate make
 variables.
 
-* JDK 1.8 (or better):
+* JDK 11 (or better):
     Set `JDKHOME` to the JDK or equivalent used to build jtreg. It must be
-    equivalent to JDK 8 or later.
+    equivalent to JDK 11 or later.
 
 * JT Harness:
     See <https://wiki.openjdk.java.net/display/CodeTools/JT+Harness>.
@@ -93,18 +93,6 @@ The following dependencies are optional.
     See <https://wiki.openjdk.java.net/display/CodeTools/jcov>.
     Set `JCOV_HOME` to the installed copy of the version of JCov to be used.
     It should be version 3.0-b07 or better.
-
-* JDK 1.5:
-    This is used when running some of the tests. Set `JDK5HOME` to run these
-    tests. It need not be set if you are just building jtreg.
-
-* JDK 1.6:
-    This is used when running some of the tests. Set `JDK6HOME` to run these
-    tests. It need not be set if you are just building jtreg.
-
-* JDK 1.7:
-    This is used when running some of the tests. Set `JDK7HOME` to run these
-    tests. It need not be set if you are just building jtreg.
 
 * JDK 1.8:
     This is used when running some of the tests. Set `JDK8HOME` to run these
