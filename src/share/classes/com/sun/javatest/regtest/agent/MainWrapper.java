@@ -37,7 +37,7 @@ import java.lang.reflect.Method;
   */
 public class MainWrapper
 {
-    public static void main(String [] args) {
+    public static void main(String[] args) {
         String moduleName;
         String className;
         String[] classArgs;
@@ -62,7 +62,7 @@ public class MainWrapper
             className  = (sep == -1) ? moduleClassName : moduleClassName.substring(sep + 1);
             classArgs = StringArray.splitWS(fileArgs[i++]);
         } catch (IOException e) {
-            AStatus.failed(MAIN_CANT_READ_ARGS + e.toString()).exit();
+            AStatus.failed(MAIN_CANT_READ_ARGS + e).exit();
             throw new IllegalStateException(); // implies exit() didn't sucees
         }
 
@@ -88,10 +88,10 @@ public class MainWrapper
 
     private static void handleTestException(Throwable e) {
         if (SKIP_EXCEPTION.equals(e.getClass().getName())) {
-            AStatus.passed(MAIN_SKIPPED + e.toString())
+            AStatus.passed(MAIN_SKIPPED + e)
                    .exit();
         } else {
-            AStatus.failed(MAIN_THREW_EXCEPT + e.toString())
+            AStatus.failed(MAIN_THREW_EXCEPT + e)
                    .exit();
         }
     }
@@ -107,24 +107,24 @@ public class MainWrapper
             try {
                 ClassLoader cl;
                 if (moduleName != null) {
-                    Class layerClass;
+                    Class<?> layerClass;
                     try {
                         layerClass = Class.forName("java.lang.ModuleLayer");
                     } catch (ClassNotFoundException e) {
                         layerClass = Class.forName("java.lang.reflect.Layer");
                     }
-                    Method bootMethod = layerClass.getMethod("boot", new Class[] { });
-                    Object bootLayer = bootMethod.invoke(null, new Object[] { });
-                    Method findLoaderMth = layerClass.getMethod("findLoader", new Class[] { String.class });
-                    cl = (ClassLoader) findLoaderMth.invoke(bootLayer, new Object[] { moduleName });
+                    Method bootMethod = layerClass.getMethod("boot");
+                    Object bootLayer = bootMethod.invoke(null);
+                    Method findLoaderMth = layerClass.getMethod("findLoader", String.class);
+                    cl = (ClassLoader) findLoaderMth.invoke(bootLayer, moduleName);
                 } else {
                     cl = getClass().getClassLoader();
                 }
 
                 // RUN JAVA PROGRAM
-                Class c = Class.forName(className, false, cl);
-                Method mainMethod = c.getMethod("main", new Class[] { String[].class });
-                mainMethod.invoke(null, new Object[] { args });
+                Class<?> c = Class.forName(className, false, cl);
+                Method mainMethod = c.getMethod("main", String[].class);
+                mainMethod.invoke(null, (Object) args);
 
             } catch (InvocationTargetException e) {
                 Throwable throwable = e.getTargetException();
@@ -160,7 +160,7 @@ public class MainWrapper
 
         private final String moduleName;
         private final String className;
-        private final String [] args;
+        private final String[] args;
     }
 
     static class MainThreadGroup extends ThreadGroup
@@ -178,7 +178,7 @@ public class MainWrapper
                 uncaughtThread    = t;
             }
 //          cleanup();
-            AStatus.failed(MAIN_THREW_EXCEPT + e.toString()).exit();
+            AStatus.failed(MAIN_THREW_EXCEPT + e).exit();
         } // uncaughtException()
 
 //      public void cleanup() {
