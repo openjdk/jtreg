@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2007, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -31,6 +31,9 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -39,6 +42,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.sun.javatest.regtest.agent.SearchPath;
+import com.sun.javatest.regtest.util.FileUtils;
 
 
 /**
@@ -109,12 +113,12 @@ public class ExtraPropDefns {
     /**
      * The directory used to store classes to be put on the application class path.
      */
-    private File classDir;
+    private Path classDir;
 
     /**
      * The directory used to store classes to be put on the application boot class path.
      */
-    private File bootClassDir;
+    private Path bootClassDir;
 
     /**
      * The list of names of classes to be called, to get extra properties.
@@ -135,19 +139,23 @@ public class ExtraPropDefns {
     }
 
     void compile(RegressionParameters params, JDK jdk, File outDir) throws Fault {
-        File baseDir = params.getTestSuite().getRootDir();
-        classDir = new File(outDir, "classes");
-        bootClassDir = new File(outDir, "bootClasses");
+        compile(params, jdk, outDir.toPath());
+    }
+
+    void compile(RegressionParameters params, JDK jdk, Path outDir) throws Fault {
+        Path baseDir = params.getTestSuite().getRootDir().toPath();
+        classDir = outDir.resolve("classes");
+        bootClassDir = outDir.resolve("bootClasses");
         compile(jdk, bootClassDir, new SearchPath(), baseDir, bootLibs, true);
         compile(jdk, classDir, new SearchPath(bootClassDir), baseDir, libs, true);
         classes = compile(jdk, classDir, new SearchPath(bootClassDir), baseDir, files, false);
     }
 
-    File getClassDir() {
+    Path getClassDir() {
         return classDir;
     }
 
-    File getBootClassDir() {
+    Path getBootClassDir() {
         return bootClassDir;
     }
 
@@ -159,16 +167,22 @@ public class ExtraPropDefns {
         return vmOpts;
     }
 
-    private List<String> compile(JDK jdk, File classDir, SearchPath classpath,
-            File srcDir, List<String> files, boolean allowDirs) throws Fault {
+    private List<String> compile(JDK jdk, Path classDir, SearchPath classpath,
+            Path srcDir, List<String> files, boolean allowDirs) throws Fault {
         if (files.isEmpty())
             return Collections.emptyList();
 
         List<String> classNames = new ArrayList<>();
         List<String> javacArgs = new ArrayList<>();
         javacArgs.add("-d");
-        javacArgs.add(classDir.getPath());
-        classDir.mkdirs();
+        javacArgs.add(classDir.toString());
+
+        try {
+            // ensure classDir exists before creating the search path for -classpath
+            Files.createDirectories(classDir);
+        } catch (IOException e) {
+            throw new Fault("cannot create classes directory", e);
+        }
 
         // no need to differentiate -classpath and -Xbootclasspath/a: at compile time
         javacArgs.add("-classpath");
@@ -177,11 +191,6 @@ public class ExtraPropDefns {
         javacArgs.addAll(javacOpts);
 
         boolean needCompilation = false;
-
-        if (!classDir.exists()) {
-            needCompilation = true;
-            classDir.mkdirs();
-        }
 
         for (String e: files) {
             boolean optional;
@@ -192,29 +201,31 @@ public class ExtraPropDefns {
                 optional = false;
             }
 
-            File f = new File(srcDir, e);
-            if (!f.exists()) {
+            Path f = srcDir.resolve(e);
+            if (!Files.exists(f)) {
                 if (!optional) {
                     System.err.println("Cannot find file " + e + " for extra property definitions");
                 }
                 continue;
             }
 
-            for (File sf: expandJavaFiles(f, allowDirs)) {
-                javacArgs.add(sf.getPath());
+            for (Path sf: expandJavaFiles(f, allowDirs)) {
+                javacArgs.add(sf.toString());
                 String cn = getClassNameFromFile(sf);
                 classNames.add(cn);
 
-                File cf = new File(classDir, cn.replace(".", File.separator) + ".class");
-                if (!cf.exists() || sf.lastModified() > cf.lastModified()) {
-                    needCompilation = true;
+                if (!needCompilation) {
+                    Path cf = classDir.resolve(cn.replace(".", File.separator) + ".class");
+                    if (!Files.exists(cf) || FileUtils.compareLastModifiedTimes(sf, cf) > 0) {
+                        needCompilation = true;
+                    }
                 }
             }
         }
 
         if (needCompilation) {
             List<String> pArgs = new ArrayList<>();
-            pArgs.add(jdk.getJavacProg().getPath());
+            pArgs.add(jdk.getJavacProg().toString());
             pArgs.addAll(javacArgs);
             try {
                 Process p = new ProcessBuilder(pArgs)
@@ -252,8 +263,8 @@ public class ExtraPropDefns {
      * @return a list of java source files
      * @throws Fault if a bad file is found
      */
-    private List<File> expandJavaFiles(File file, boolean allowDirs) throws Fault {
-        List<File> results = new ArrayList<>();
+    private List<Path> expandJavaFiles(Path file, boolean allowDirs) throws Fault {
+        List<Path> results = new ArrayList<>();
         expandJavaFiles(file, allowDirs, true, results);
         return results;
     }
@@ -267,22 +278,19 @@ public class ExtraPropDefns {
      * @param results a list of java source files
      * @throws Fault if a bad file is found
      */
-    private void expandJavaFiles(File file, boolean allowDirs, boolean rejectBadFiles, List<File> results) throws Fault {
-        if (file.isFile()) {
-            if (file.getName().endsWith(".java")) {
+    private void expandJavaFiles(Path file, boolean allowDirs, boolean rejectBadFiles, List<Path> results) throws Fault {
+        if (Files.isRegularFile(file)) {
+            if (file.getFileName().toString().endsWith(".java")) {
                 results.add(file);
             } else {
                 if (rejectBadFiles) {
                     throw new Fault("unexpected file found in extra property definition files: " + file);
                 }
             }
-        } else if (file.isDirectory()) {
+        } else if (Files.isDirectory(file)) {
             if (allowDirs) {
-                File[] children = file.listFiles();
-                if (children != null) {
-                    for (File child : children) {
-                        expandJavaFiles(child, true, false, results);
-                    }
+                for (Path child : FileUtils.listFiles(file)) {
+                    expandJavaFiles(child, true, false, results);
                 }
             } else {
                 if (rejectBadFiles) {
@@ -292,23 +300,18 @@ public class ExtraPropDefns {
         }
     }
 
-    private String getClassNameFromFile(File file) throws Fault {
-        StringBuilder sb = new StringBuilder();
-        try (BufferedReader in = new BufferedReader(new FileReader(file))) {
-            String line;
-            while ((line = in.readLine()) != null) {
-                sb.append(line).append("\n");
-            }
+    private String getClassNameFromFile(Path file) throws Fault {
+        try {
+            return getClassNameFromSource(Files.readString(file));
         } catch (IOException e) {
             throw new Fault("Problem reading " + file, e);
         }
-        return getClassNameFromSource(sb.toString());
     }
 
     private static Pattern packagePattern =
             Pattern.compile("package\\s+(((?:\\w+\\.)*)(?:\\w+))\\s*;");
     private static Pattern classPattern =
-            Pattern.compile("(?:public\\s+)?(?:class|enum|interface)\\s+(\\w+)");
+            Pattern.compile("(?:public\\s+)?(?:class|enum|interface|record)\\s+(\\w+)");
 
     private String getClassNameFromSource(String source) throws Fault {
         String packageName = null;

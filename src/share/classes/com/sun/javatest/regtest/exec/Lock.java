@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -29,6 +29,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileLock;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.concurrent.locks.ReentrantLock;
@@ -46,8 +47,8 @@ public abstract class Lock {
     public static synchronized Lock get(RegressionParameters params) {
         Lock lock = locks.get(params);
         if (lock == null) {
-            File el = params.getExclusiveLock();
-            lock = (el == null) ? new SimpleLock() : new MultiVMLock(el);
+            Path el = params.getExclusiveLock();
+            lock = (el == null) ? new SimpleLock() : new MultiVMLock(el.toFile());
             locks.put(params, lock);
         }
         return lock;

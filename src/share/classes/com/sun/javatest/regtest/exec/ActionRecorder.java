@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -27,6 +27,7 @@ package com.sun.javatest.regtest.exec;
 
 import java.io.File;
 import java.io.PrintWriter;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
@@ -83,7 +84,7 @@ public class ActionRecorder {
             pw.println(line);
     }
 
-    public void java(Map<String, String> envArgs, String javaCmd, Map<String, String> javaProps, List<String> javaOpts, String className, List<String> classArgs) {
+    public void java(Map<String, String> envArgs, Path javaCmd, Map<String, String> javaProps, List<String> javaOpts, String className, List<String> classArgs) {
         initPW();
         printWorkDir();
         // Env variables
@@ -92,7 +93,7 @@ public class ActionRecorder {
         }
         // Java executable
         String indent = "    ";
-        pw.println(indent + escape(javaCmd) + CONT);
+        pw.println(indent + escape(javaCmd.toString()) + CONT);
         // System properties
         indent += "    ";
         for (Map.Entry<String, String> e: javaProps.entrySet()) {
@@ -122,7 +123,7 @@ public class ActionRecorder {
         pw.println();
     }
 
-    void javac(Map<String, String> envArgs, String javacCmd, List<String> javacVMOpts, Map<String, String> javacProps, List<String> javacArgs) {
+    void javac(Map<String, String> envArgs, Path javacCmd, List<String> javacVMOpts, Map<String, String> javacProps, List<String> javacArgs) {
         initPW();
         printWorkDir();
         // Env variables
@@ -131,7 +132,7 @@ public class ActionRecorder {
         }
         // javac executable
         String indent = "    ";
-        pw.println(indent + escape(javacCmd) + CONT);
+        pw.println(indent + escape(javacCmd.toString()) + CONT);
         indent += "    ";
         // javac VM Options
         for (String o: javacVMOpts) {

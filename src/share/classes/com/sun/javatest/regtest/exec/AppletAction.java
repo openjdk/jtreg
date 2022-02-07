@@ -160,7 +160,7 @@ public class AppletAction extends Action
 
     @Override
     public Set<File> getSourceFiles() {
-        return Collections.singleton(new File(script.absTestSrcDir(), htmlFN));
+        return Set.of(script.absTestSrcDir().resolve(htmlFN).toFile());
     }
 
     /**
@@ -238,7 +238,7 @@ public class AppletAction extends Action
         // "test.src" and "test.classes", respectively"
         List<String> command = new ArrayList<>(6);
         Map<String, String> env = new LinkedHashMap<>();
-        command.add(script.getJavaProg());
+        command.add(script.getJavaProg().toString());
         command.add("-classpath");
         command.add(execPaths.get(PathKind.CLASSPATH).toString());
 
@@ -296,7 +296,7 @@ public class AppletAction extends Action
 
             // RUN THE APPLET WRAPPER CLASS
             ProcessCommand cmd = new ProcessCommand();
-            cmd.setExecDir(script.absTestScratchDir());
+            cmd.setExecDir(script.absTestScratchDir().toFile());
 
             // Set the exit codes and their associated strings.  Note that we
             // require the use of a non-zero exit code for a passed test so
@@ -404,7 +404,7 @@ public class AppletAction extends Action
             String line;
             StringBuilder sb = new StringBuilder();
             //String htmlFN = script.relTestSrcDir() + FILESEP + args[0];
-            htmlFN = new File(script.absTestSrcDir(), htmlFN).getPath();
+            htmlFN = script.absTestSrcDir().resolve(htmlFN).toString();
             try (BufferedReader in = new BufferedReader(new FileReader(htmlFN))) {
                 while ((line = in.readLine()) != null) {
                     sb.append(line);

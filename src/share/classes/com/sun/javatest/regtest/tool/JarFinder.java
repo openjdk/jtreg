@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -29,6 +29,7 @@ import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -42,10 +43,10 @@ public class JarFinder {
 
     private List<String> jars;
     private List<String> classes;
-    private File libDir;
+    private Path libDir;
 
     JarFinder(String first, String... rest) {
-        jars = new ArrayList<String>();
+        jars = new ArrayList<>();
         jars.add(first);
         jars.addAll(Arrays.asList(rest));
     }
@@ -56,13 +57,13 @@ public class JarFinder {
     }
 
     JarFinder classes(Class<?>... classes) {
-        this.classes = new ArrayList<String>();
+        this.classes = new ArrayList<>();
         for (Class<?> c : classes)
             this.classes.add(c.getName());
         return this;
     }
 
-    JarFinder libDir(File libDir) {
+    JarFinder libDir(Path libDir) {
         this.libDir = libDir;
         return this;
     }
@@ -80,9 +81,9 @@ public class JarFinder {
 
         String home = System.getProperty("jtreg.home");
         if (home != null) {
-            File lib = new File(home, "lib");
+            Path lib = Path.of(home).resolve("lib");
             for (String jar : jars) {
-                result.append(new File(lib, jar));
+                result.append(lib.resolve(jar));
             }
             if (!result.isEmpty())
                 return result;
@@ -107,7 +108,7 @@ public class JarFinder {
                             uri = new URI("file://" + ssp.substring(0, sep));
                         }
                         if (uri.getScheme().equals("file"))
-                            result.append(new File(uri.getPath()));
+                            result.append(Path.of(uri));
                     }
                 } catch (URISyntaxException ignore) {
                     ignore.printStackTrace(System.err);
@@ -119,17 +120,17 @@ public class JarFinder {
 
         if (libDir != null) {
             for (String jar : jars) {
-                result.append(new File(libDir, jar));
+                result.append(libDir.resolve(jar));
             }
         }
 
         return result;
     }
 
-    File getFile() {
+    Path getFile() {
         SearchPath p = getPath();
         if (p != null) {
-            List<File> files = p.asList();
+            List<Path> files = p.asList();
             if (files.size() == 1)
                 return files.get(0);
         }

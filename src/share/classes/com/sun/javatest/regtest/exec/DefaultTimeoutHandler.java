@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -30,6 +30,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import com.sun.javatest.regtest.TimeoutHandler;
 
@@ -39,7 +41,7 @@ import com.sun.javatest.regtest.TimeoutHandler;
  */
 public class DefaultTimeoutHandler extends TimeoutHandler {
 
-    public DefaultTimeoutHandler(PrintWriter log, File outputDir, File testJdk) {
+    public DefaultTimeoutHandler(PrintWriter log, File outputDir, Path testJdk) {
         super(log, outputDir, testJdk);
     }
 
@@ -56,14 +58,14 @@ public class DefaultTimeoutHandler extends TimeoutHandler {
         try {
             log.println("Running jstack on process " + pid);
 
-            File jstack = findJstack();
+            Path jstack = findJstack();
             if (jstack == null) {
-                log.println("Warning: Could not find jstack in: " + testJdk.getAbsolutePath());
+                log.println("Warning: Could not find jstack in: " + testJdk.toAbsolutePath());
                 log.println("Will not dump jstack output.");
                 return;
             }
 
-            ProcessBuilder pb = new ProcessBuilder(jstack.getAbsolutePath(), pid + "");
+            ProcessBuilder pb = new ProcessBuilder(jstack.toAbsolutePath().toString(), pid + "");
             pb.redirectErrorStream(true);
 
             Process p = pb.start();
@@ -79,11 +81,11 @@ public class DefaultTimeoutHandler extends TimeoutHandler {
         }
     }
 
-    private File findJstack() {
-        File jstack = new File(new File(testJdk, "bin"), "jstack");
-        if (!jstack.exists()) {
-            jstack = new File(new File(testJdk, "bin"), "jstack.exe");
-            if (!jstack.exists()) {
+    private Path findJstack() {
+        Path jstack = testJdk.resolve("bin").resolve("jstack");
+        if (!Files.exists(jstack)) {
+            jstack = testJdk.resolve("bin").resolve("jstack.exe");
+            if (!Files.exists(jstack)) {
                 return null;
             }
         }

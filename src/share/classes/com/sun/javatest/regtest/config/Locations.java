@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -26,8 +26,10 @@
 package com.sun.javatest.regtest.config;
 
 import java.io.File;
-import java.net.URI;
-import java.net.URISyntaxException;
+import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -39,6 +41,7 @@ import java.util.function.Consumer;
 import com.sun.javatest.TestDescription;
 import com.sun.javatest.regtest.agent.SearchPath;
 import com.sun.javatest.regtest.tool.Version;
+import com.sun.javatest.regtest.util.FileUtils;
 import com.sun.javatest.regtest.util.StringUtils;
 
 /**
@@ -53,6 +56,9 @@ public class Locations {
         public Fault(String msg) {
             super(msg);
         }
+        public Fault(String msg, Throwable cause) {
+            super(msg, cause);
+        }
     }
 
     /**
@@ -66,11 +72,11 @@ public class Locations {
     public static class LibLocn {
         public enum Kind { PACKAGE, PRECOMPILED_JAR, SYS_MODULE, USER_MODULE }
         public final String name;
-        public final File absSrcDir;
-        public final File absClsDir;
+        public final Path absSrcDir;
+        public final Path absClsDir;
         public final Kind kind;
 
-        LibLocn(String name, File absSrcDir, File absClsDir, Kind kind) {
+        LibLocn(String name, Path absSrcDir, Path absClsDir, Kind kind) {
             this.name = name;
             this.absSrcDir = absSrcDir;
             this.absClsDir = absClsDir;
@@ -114,10 +120,10 @@ public class Locations {
         public final LibLocn lib;
         public final String optModule;
         public final String className;
-        public final File absSrcFile;
-        public final File absClsFile;
+        public final Path absSrcFile;
+        public final Path absClsFile;
 
-        ClassLocn(LibLocn lib, String optModule, String className, File absSrcFile, File absClsFile) {
+        ClassLocn(LibLocn lib, String optModule, String className, Path absSrcFile, Path absClsFile) {
             this.lib = lib;
             this.optModule = optModule;
             this.className = className;
@@ -126,9 +132,9 @@ public class Locations {
         }
 
         public boolean isUpToDate() {
-            return absClsFile.exists()
-                    && absClsFile.canRead()
-                    && (absClsFile.lastModified() > absSrcFile.lastModified());
+            return Files.exists(absClsFile)
+                    && Files.isReadable(absClsFile)
+                    && FileUtils.compareLastModifiedTimes(absClsFile, absSrcFile) > 0;
         }
 
         @Override
@@ -143,15 +149,15 @@ public class Locations {
     private final SearchPath jtpath;
     private final JDK testJDK;
 
-    private final File absTestFile;
-    private final File absBaseSrcDir;
-    private final File absTestSrcDir;
-    private final File absBaseClsDir;
-    private final File absTestClsDir;
-    private final File absTestPatchDir;
-    private final File absTestModulesDir;
-    private final File absTestWorkDir;
-    private final String relLibDir;
+    private final Path absTestFile;
+    private final Path absBaseSrcDir;
+    private final Path absTestSrcDir;
+    private final Path absBaseClsDir;
+    private final Path absTestClsDir;
+    private final Path absTestPatchDir;
+    private final Path absTestModulesDir;
+    private final Path absTestWorkDir;
+    private final Path relLibDir;
     private final List<LibLocn> libList;
 
     /**
@@ -174,32 +180,33 @@ public class Locations {
         boolean useUniqueClassDir = (v.version != null)
                 && (v.compareTo(new Version("4.2 b08")) >= 0);
 
-        absTestFile = td.getFile().getAbsoluteFile();
-        File relTestFile = td.getRootRelativeFile();
-        String relTestDir = relTestFile.getParent();
-        if (relTestDir == null)
-            relTestDir = "";
+        absTestFile = td.getFile().toPath().toAbsolutePath();
+        Path relTestFile = td.getRootRelativeFile().toPath();
+        Path relTestDir = relTestFile.getParent();
+        if (relTestDir == null) {
+            relTestDir = Path.of(".");  // use normalize later to eliminate "."
+        }
 
-        String testName = relTestFile.getName();
+        String testName = relTestFile.getFileName().toString();
         String testId = td.getId();
         String uniqueTestSubDir = testName.replaceAll("(?i)\\.[a-z]+$",
                 ((testId == null ? "" : "_" + testId) + ".d"));
 
         String packageRoot = td.getParameter("packageRoot");
-        String relTestSrcDir = relLibDir = (packageRoot != null) ? packageRoot : relTestDir;
+        Path relTestSrcDir = relLibDir = (packageRoot != null) ? Path.of(packageRoot) : relTestDir;
 
-        absBaseSrcDir = params.getTestSuite().getRootDir();
-        absTestSrcDir = new File(absBaseSrcDir, relTestSrcDir);
+        absBaseSrcDir = params.getTestSuite().getRootDir().toPath();
+        absTestSrcDir = absBaseSrcDir.resolve(relTestSrcDir).normalize();
 
-        File relTestWorkDir = new File(relTestDir, uniqueTestSubDir);
-        absTestWorkDir = params.getWorkDirectory().getFile(relTestWorkDir.getPath());
+        Path workDirRoot = params.getWorkDirectory().getRoot().toPath();
+        Path relTestWorkDir = relTestDir.resolve(uniqueTestSubDir);
+        absTestWorkDir = workDirRoot.resolve(relTestWorkDir);
 
-        absBaseClsDir = getThreadSafeDir(params.getWorkDirectory().getFile("classes"),
-                params.getConcurrency());
-        String relTestClsDir = (packageRoot != null) ? packageRoot
-                : useUniqueClassDir ? new File(relTestDir, uniqueTestSubDir).getPath()
+        absBaseClsDir = getThreadSafeDir(workDirRoot.resolve("classes"), params.getConcurrency());
+        Path relTestClsDir = (packageRoot != null) ? Path.of(packageRoot)
+                : useUniqueClassDir ? relTestDir.resolve(uniqueTestSubDir)
                 : relTestDir;
-        absTestClsDir = new File(absBaseClsDir, relTestClsDir);
+        absTestClsDir = absBaseClsDir.resolve(relTestClsDir).normalize();
 
         // The following assumes we will never have test code in a package
         // or subpackage beginning patches or modules when we also have
@@ -207,8 +214,8 @@ public class Locations {
         // we should use another subdir (classes?) for the classes on the
         // classpath, so that classes, modules and patches are sibling
         // directories.
-        absTestPatchDir = new File(absTestClsDir, "patches");
-        absTestModulesDir = new File(absTestClsDir, "modules");
+        absTestPatchDir = absTestClsDir.resolve("patches");
+        absTestModulesDir = absTestClsDir.resolve("modules");
 
         libList = new ArrayList<>();
         String libs = td.getParameter("library");
@@ -231,13 +238,14 @@ public class Locations {
     private LibLocn getLibLocn(TestDescription td, String lib) throws Fault {
         if (lib.startsWith("/")) {
             String libTail = lib.substring(1);
-            checkLibPath(libTail);
-            if (new File(absBaseSrcDir, libTail).exists()) {
+            checkLibPath(Path.of(libTail));
+            if (Files.exists(absBaseSrcDir.resolve(libTail))) {
                 return createLibLocn(lib, absBaseSrcDir, absBaseClsDir);
             } else {
                 try {
-                    for (File extRoot: testSuite.getExternalLibRoots(td)) {
-                        if (new File(extRoot, libTail).exists()) {
+                    for (File extRootFile: testSuite.getExternalLibRoots(td)) {
+                        Path extRoot = extRootFile.toPath();
+                        if (Files.exists(extRoot.resolve(libTail))) {
                             // since absBaseSrcDir/lib does not exist, we can safely
                             // use absBaseClsDir/lib for the compiled classes
                             return createLibLocn(lib, extRoot, absBaseClsDir);
@@ -251,34 +259,31 @@ public class Locations {
             int end = lib.indexOf("}/");
             if (end != -1) {
                 String name = lib.substring(2, end);
-                File dir = null;
+                Path dir = null;
                 if (name.equals("java.home")) {
                     dir = testJDK.getAbsoluteFile();
                 } else if (name.equals("jtreg.home")) {
-                    dir = jtpath.asList().get(0).getParentFile().getParentFile();
+                    dir = jtpath.asList().get(0).getParent().getParent();
                 }
                 if (dir != null) {
                     String libTail = lib.substring(end + 2);
-                    File absLib = new File(dir, libTail);
-                    if (absLib.exists())
+                    Path absLib = dir.resolve(libTail);
+                    if (Files.exists(absLib))
                         return new LibLocn(lib, null, absLib, LibLocn.Kind.PRECOMPILED_JAR);
                 }
             }
         } else {
-            checkLibPath(relLibDir.replace(File.separatorChar, '/') + "/" + lib);
-            if (new File(absTestSrcDir, lib).exists())
-                return createLibLocn(lib, absTestSrcDir, new File(absBaseClsDir, relLibDir));
+            checkLibPath(relLibDir.resolve(lib));
+            if (Files.exists(absTestSrcDir.resolve(lib)))
+                return createLibLocn(lib, absTestSrcDir, absBaseClsDir.resolve(relLibDir));
         }
         throw new Fault(CANT_FIND_LIB + lib);
     }
 
-    private void checkLibPath(String lib) throws Fault {
-        try {
-            String l = new URI(lib).normalize().toString();
-            if (l.equals("..") || l.startsWith("../"))
-                throw new Fault("effective library path is outside the test suite: " + l);
-        } catch (URISyntaxException e) {
-            throw new Fault("invalid library path: " + lib);
+    private void checkLibPath(Path lib) throws Fault {
+        Path l = lib.normalize();
+        if (l.startsWith(Path.of(".."))) {
+            throw new Fault("effective library path is outside the test suite: " + l);
         }
     }
 
@@ -291,16 +296,16 @@ public class Locations {
      * @return a library location
      * @throws Fault if there is an error resolving the library location
      */
-    private LibLocn createLibLocn(String lib, File absBaseSrcDir, File absBaseClsDir) throws Fault {
+    private LibLocn createLibLocn(String lib, Path absBaseSrcDir, Path absBaseClsDir) throws Fault {
         String relLib = (lib.startsWith("/") ? lib.substring(1) : lib);
-        File absLib = normalize(new File(absBaseSrcDir, relLib));
-        if (absLib.isFile() && absLib.getName().endsWith(".jar")) {
+        Path absLib = absBaseSrcDir.resolve(relLib).normalize();
+        if (Files.isRegularFile(absLib) && absLib.getFileName().toString().endsWith(".jar")) {
             return new LibLocn(lib, null, absLib, LibLocn.Kind.PRECOMPILED_JAR);
         } else {
-            if (!absLib.isDirectory())
+            if (!Files.isDirectory(absLib))
                 throw new Fault(BAD_LIB + lib);
-            File absLibSrcDir = absLib;
-            File absLibClsDir = normalize(new File(absBaseClsDir, lib));
+            Path absLibSrcDir = absLib;
+            Path absLibClsDir = absBaseClsDir.resolve(relLib).normalize();
             LibLocn.Kind kind = getDirKind(absLibSrcDir);
             return new LibLocn(lib, absLibSrcDir, absLibClsDir, kind);
         }
@@ -320,13 +325,13 @@ public class Locations {
      * @param absSrcDir the source directory to examine
      * @return the kinds of libraries found in the given source directory
      */
-    public Set<LibLocn.Kind> getDirKinds(File absSrcDir) {
+    public Set<LibLocn.Kind> getDirKinds(Path absSrcDir) {
         Set<LibLocn.Kind> kinds = EnumSet.noneOf(LibLocn.Kind.class);
-        for (File f: absSrcDir.listFiles()) {
-            if (f.isDirectory()) {
-                if (isSystemModule(f.getName())) {
+        for (Path f : FileUtils.listFiles(absSrcDir)) {
+            if (Files.isDirectory(f)) {
+                if (isSystemModule(f.getFileName().toString())) {
                     kinds.add(LibLocn.Kind.SYS_MODULE);
-                } else if (new File(f, "module-info.java").exists()) {
+                } else if (Files.exists((f.resolve("module-info.java")))) {
                     kinds.add(LibLocn.Kind.USER_MODULE);
                 } else {
                     kinds.add(LibLocn.Kind.PACKAGE);
@@ -334,6 +339,7 @@ public class Locations {
             } else {
                 // ignore for now; could categorize as UNNAMED_PACKAGE?
             }
+
         }
         return kinds;
     }
@@ -353,7 +359,7 @@ public class Locations {
      * @return the kind of the source directory
      * @throws Locations.Fault if the directory contains more than one kind of content
      */
-    public LibLocn.Kind getDirKind(File absSrcDir) throws Fault {
+    public LibLocn.Kind getDirKind(Path absSrcDir) throws Fault {
         Set<LibLocn.Kind> kinds = getDirKinds(absSrcDir);
         switch (kinds.size()) {
             case 0:
@@ -373,7 +379,7 @@ public class Locations {
      * Gets the path of the test defining file.
      * @return the path
      */
-    public File absTestFile() {
+    public Path absTestFile() {
         return absTestFile;
     }
 
@@ -381,7 +387,7 @@ public class Locations {
      * Gets the path of the test source directory.
      * @return the path
      */
-    public File absTestSrcDir() {
+    public Path absTestSrcDir() {
         return absTestSrcDir;
     }
 
@@ -390,7 +396,7 @@ public class Locations {
      * @param optModule the name of the module, or null for "no module"
      * @return the path
      */
-    public File absTestSrcDir(String optModule) {
+    public Path absTestSrcDir(String optModule) {
         return getFile(absTestSrcDir, optModule);
     }
 
@@ -401,7 +407,7 @@ public class Locations {
      * @return the path
      * @throws IllegalArgumentException if the path is not a relative path
      */
-    public File absTestSrcFile(String optModule, File srcFile) {
+    public Path absTestSrcFile(String optModule, File srcFile) {
         if (srcFile.isAbsolute())
             throw new IllegalArgumentException();
         return getFile(absTestSrcDir, optModule, srcFile.getPath());
@@ -413,8 +419,8 @@ public class Locations {
      * @return the search path
      */
     // (just) used to set test.src.path or TESTSRCPATH
-    public List<File> absTestSrcPath() {
-        List<File> list = new ArrayList<>();
+    public List<Path> absTestSrcPath() {
+        List<Path> list = new ArrayList<>();
         list.add(absTestSrcDir);
         for (LibLocn l: libList) {
             if (l.kind == LibLocn.Kind.PACKAGE) {
@@ -429,8 +435,8 @@ public class Locations {
      * @param kind the kind
      * @return the directories of the specified kind
      */
-    public List<File> absLibSrcList(LibLocn.Kind kind) {
-        List<File> list = new ArrayList<>();
+    public List<Path> absLibSrcList(LibLocn.Kind kind) {
+        List<Path> list = new ArrayList<>();
         for (LibLocn l: libList) {
             if (l.kind == kind) {
                 list.add(l.absSrcDir);
@@ -443,12 +449,12 @@ public class Locations {
      * Gets a list of all jar-file libraries for the test in the test suite.
      * @return the list of jar-file libraries
      */
-    public List<File> absLibSrcJarList() {
-        List<File> list = new ArrayList<>();
+    public List<Path> absLibSrcJarList() {
+        List<Path> list = new ArrayList<>();
         for (LibLocn l: libList) {
             if (l.kind == LibLocn.Kind.PRECOMPILED_JAR) {
-                File f = l.absClsDir;
-                if (f.isFile() && f.getName().endsWith(".jar") && f.exists())
+                Path f = l.absClsDir;
+                if (Files.isRegularFile(f) && f.getFileName().toString().endsWith(".jar") && Files.exists(f))
                     list.add(f);
             }
         }
@@ -462,7 +468,7 @@ public class Locations {
      * manager, to ensure that a test can read all necessary compiled classes.
      * @return the base directory
      */
-    public File absBaseClsDir() {
+    public Path absBaseClsDir() {
         return absBaseClsDir;
     }
 
@@ -470,7 +476,7 @@ public class Locations {
      * Gets the directory for the compiled classes of a test in the unnamed module.
      * @return the directory
      */
-    public File absTestClsDir() {
+    public Path absTestClsDir() {
         return absTestClsDir;
     }
 
@@ -480,13 +486,13 @@ public class Locations {
      * @param optModule the name of the module, or null for the unnamed module
      * @return the directory
      */
-    public File absTestClsDir(String optModule) {
+    public Path absTestClsDir(String optModule) {
         if (optModule == null) {
             return absTestClsDir;
         } else if (isSystemModule(optModule)) {
-            return new File(absTestPatchDir(), optModule);
+            return absTestPatchDir().resolve(optModule);
         } else {
-            return new File(absTestModulesDir(), optModule);
+            return absTestModulesDir().resolve(optModule);
         }
     }
 
@@ -496,8 +502,8 @@ public class Locations {
      * @return the search path
      */
     // (just) used to set test.class.path or TESTCLASSPATH
-    public List<File> absTestClsPath() {
-        List<File> list = new ArrayList<>();
+    public List<Path> absTestClsPath() {
+        List<Path> list = new ArrayList<>();
         list.add(absTestClsDir);
         for (LibLocn l: libList) {
             switch (l.kind) {
@@ -514,8 +520,8 @@ public class Locations {
      * @param kind the kind
      * @return the list
      */
-    public List<File> absLibClsList(LibLocn.Kind kind) {
-        List<File> list = new ArrayList<>();
+    public List<Path> absLibClsList(LibLocn.Kind kind) {
+        List<Path> list = new ArrayList<>();
         for (LibLocn l: libList) {
             if (l.kind == kind) {
                 list.add(l.absClsDir);
@@ -529,8 +535,8 @@ public class Locations {
      * @param name the name of the subdirectory
      * @return the file
      */
-    public File absTestWorkFile(String name) {
-        return new File(absTestWorkDir, name);
+    public Path absTestWorkFile(String name) {
+        return absTestWorkDir.resolve(name);
     }
 
     /**
@@ -538,7 +544,7 @@ public class Locations {
      * modules for a test.
      * @return the directory
      */
-    public File absTestModulesDir() {
+    public Path absTestModulesDir() {
         return absTestModulesDir;
     }
 
@@ -547,7 +553,7 @@ public class Locations {
      * modules for a test.
      * @return the patch directory
      */
-    public File absTestPatchDir() {
+    public Path absTestPatchDir() {
         return absTestPatchDir;
     }
 
@@ -626,22 +632,22 @@ public class Locations {
             throw new NullPointerException();
         } else if (isSystemModule(moduleName)) {
             List<LibLocn> list = new ArrayList<>();
-            if (getFile(absTestSrcDir, moduleName).exists()) {
+            if (Files.exists(getFile(absTestSrcDir, moduleName))) {
                 list.add(new LibLocn(null, absTestSrcDir, absTestPatchDir(), LibLocn.Kind.SYS_MODULE));
             }
             for (LibLocn l : libList) {
-                if (l.kind == LibLocn.Kind.SYS_MODULE && getFile(l.absSrcDir, moduleName).exists()) {
+                if (l.kind == LibLocn.Kind.SYS_MODULE && Files.exists(getFile(l.absSrcDir, moduleName))) {
                     list.add(l);
                 }
             }
             return list;
         } else {
-            if (getFile(absTestSrcDir, moduleName).exists()) {
+            if (Files.exists(getFile(absTestSrcDir, moduleName))) {
                 return Collections.singletonList(
                         new LibLocn(null, absTestSrcDir, absTestModulesDir(), LibLocn.Kind.USER_MODULE));
             }
             for (LibLocn l : libList) {
-                if (l.kind == LibLocn.Kind.USER_MODULE && getFile(l.absSrcDir, moduleName).exists()) {
+                if (l.kind == LibLocn.Kind.USER_MODULE && Files.exists(getFile(l.absSrcDir, moduleName))) {
                     return Collections.singletonList(l);
                 }
             }
@@ -671,9 +677,9 @@ public class Locations {
         for (String e: extns) {
             String relSrc = className.replace('.', File.separatorChar) + e;
             String relCls = className.replace('.', File.separatorChar) + ".class";
-            File sf, cf;
+            Path sf, cf;
 
-            if ((sf = getFile(locn.absSrcDir, optModule, relSrc)).exists()) {
+            if (Files.exists(sf = getFile(locn.absSrcDir, optModule, relSrc))) {
                 cf = getFile(locn.absClsDir, optModule, relCls);
                 return new ClassLocn(locn, optModule, className, sf, cf);
             }
@@ -683,8 +689,8 @@ public class Locations {
                 int sep = relSrc.lastIndexOf(File.separatorChar);
                 if (sep >= 0) {
                     String baseName = relSrc.substring(sep + 1);
-                    if ((sf = new File(absTestSrcDir, baseName)).exists()) {
-                        cf = new File(absTestClsDir, relCls);
+                    if (Files.exists(sf = absTestSrcDir.resolve(baseName))) {
+                        cf = absTestClsDir.resolve(relCls);
                         return new ClassLocn(locn, null, className, sf, cf);
                     }
                 }
@@ -712,7 +718,7 @@ public class Locations {
     private void locateClassesInPackage(LibLocn l, String optModule, String optPackage,
             boolean recursive, List<ClassLocn> results) throws Fault {
 
-        File pkgSrcDir, pkgClsDir;
+        Path pkgSrcDir, pkgClsDir;
         if (optPackage == null) {
             pkgSrcDir = getFile(l.absSrcDir, optModule);
             pkgClsDir = getFile(l.absClsDir, optModule);
@@ -722,38 +728,50 @@ public class Locations {
             pkgClsDir = getFile(l.absClsDir, optModule, p);
         }
 
-        if (!pkgSrcDir.isDirectory())
+        if (!Files.isDirectory(pkgSrcDir))
             return;
 
-        for (File sf: pkgSrcDir.listFiles()) {
-            String fn = sf.getName();
-            if (sf.isDirectory()) {
-                if (recursive) {
-                    String subpkg = (optPackage == null) ? fn : optPackage + "." + fn;
-                    locateClassesInPackage(l, optModule, subpkg, true, results);
+        try (DirectoryStream<Path> ds = Files.newDirectoryStream(pkgSrcDir)) {
+            for (Path sf : ds) {
+                String fn = sf.getFileName().toString();
+                if (Files.isDirectory(sf)) {
+                    if (recursive) {
+                        String subpkg = (optPackage == null) ? fn : optPackage + "." + fn;
+                        locateClassesInPackage(l, optModule, subpkg, true, results);
+                    }
+                } else if (Files.isReadable(sf) && hasExtn(fn, extns)) {
+                    String cn = fn.substring(0, fn.lastIndexOf("."));
+                    String className = (optPackage == null) ? cn : optPackage + "." + cn;
+                    Path cf = pkgClsDir.resolve(cn + ".class");
+                    results.add(new ClassLocn(l, optModule, className, sf, cf));
                 }
-            } else if (sf.isFile() && hasExtn(fn, extns)) {
-                String cn = fn.substring(0, fn.lastIndexOf("."));
-                String className = (optPackage == null) ? cn : optPackage + "." + cn;
-                File cf = new File(pkgClsDir, cn + ".class");
-                results.add(new ClassLocn(l, optModule, className, sf, cf));
             }
+        } catch (IOException e) {
+            throw new Fault("error reading directory " + pkgSrcDir, e);
         }
     }
 
     private static final String[] extns = { ".java", ".jasm", ".jcod" };
 
-    private File getFile(File absBaseDir, String optModule) {
-        return (optModule == null) ? absBaseDir : new File(absBaseDir, optModule);
+    private Path getFile(Path absBaseDir, String optModule) {
+        return (optModule == null) ? absBaseDir : absBaseDir.resolve(optModule);
     }
 
-    private File getFile(File absBaseDir, String optModule, String relFile) {
-        return new File(getFile(absBaseDir, optModule), relFile);
+//    private File getFile(File absBaseDir, String optModule) {
+//        return (optModule == null) ? absBaseDir : new File(absBaseDir, optModule);
+//    }
+
+    private Path getFile(Path absBaseDir, String optModule, String relFile) {
+        return getFile(absBaseDir, optModule).resolve(relFile);
     }
 
-    private static File normalize(File f) {
-        return new File(f.toURI().normalize());
-    }
+//    private File getFile(File absBaseDir, String optModule, String relFile) {
+//        return new File(getFile(absBaseDir, optModule), relFile);
+//    }
+
+//    private static File normalize(File f) {
+//        return new File(f.toURI().normalize());
+//    }
 
     private boolean hasExtn(String name, String... extns) {
         for (String e: extns) {
@@ -774,10 +792,10 @@ public class Locations {
         }
     };
 
-    private File getThreadSafeDir(File file, int concurrency) {
+    private Path getThreadSafeDir(Path file, int concurrency) {
         return (concurrency == 1)
                 ? file
-                : new File(file, String.valueOf(getCurrentThreadId()));
+                : file.resolve(String.valueOf(getCurrentThreadId()));
     }
 
     private static int getCurrentThreadId() {
