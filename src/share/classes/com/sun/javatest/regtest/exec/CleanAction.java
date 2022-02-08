@@ -71,7 +71,7 @@ public class CleanAction extends Action
      * @param reason Indication of why this action was invoked.
      * @param script The script.
      * @exception  ParseException If the options or arguments are not expected
-     *             for the action or are improperly formated.
+     *             for the action or are improperly formatted.
      */
     @Override
     public void init(Map<String,String> opts, List<String> args, String reason,
@@ -168,7 +168,7 @@ public class CleanAction extends Action
     public Set<File> getSourceFiles() {
         Set<File> files = new LinkedHashSet<File>();
         for (String arg: args) {
-            // the arguments to clean are classnames or package names with wildcards
+            // the arguments to clean are class names or package names with wildcards
             try {
                 for (ClassLocn cl: script.locations.locateClasses(arg)) {
                     if (Files.exists(cl.absSrcFile))
