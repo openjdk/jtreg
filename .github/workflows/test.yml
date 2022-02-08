@@ -40,3 +40,10 @@ jobs:
         HEADLESS: 1
       run: |
         bash make/build.sh --jdk ${JAVA_HOME_11_X64} --skip-download
+
+    - name: 'Upload build artifact'
+      if: always()
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{ github.event.repository.name }}-build-${{ github.sha }}
+        path: build
