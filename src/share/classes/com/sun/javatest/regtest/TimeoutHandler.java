@@ -56,7 +56,7 @@ public abstract class TimeoutHandler {
     /**
      * The JDK being tested.
      */
-    protected final Path testJdk;
+    protected final File testJdk;
 
     private long timeout;
 
@@ -81,7 +81,7 @@ public abstract class TimeoutHandler {
     public TimeoutHandler(PrintWriter log, File outputDir, Path testJdk) {
         this.log = log;
         this.outputDir = outputDir;
-        this.testJdk = testJdk;
+        this.testJdk = testJdk.toFile();
     }
 
     /**

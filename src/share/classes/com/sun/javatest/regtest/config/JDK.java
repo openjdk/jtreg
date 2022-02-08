@@ -147,8 +147,19 @@ public class JDK {
      * Returns the home directory for the JDK, as specified when the object was created.
      *
      * @return the home directory for the JDK
+     *
+     * @see #getHomeDirectory()
      */
-    public Path getFile() {
+    public File getFile() {
+        return jdk.toFile();
+    }
+
+    /**
+     * Returns the home directory for the JDK, as specified when the object was created.
+     *
+     * @return the home directory for the JDK
+     */
+    public Path getHomeDirectory() {
         return jdk;
     }
 
@@ -156,8 +167,19 @@ public class JDK {
      * Returns the absolute path of the home directory for the JDK.
      *
      * @return the absolute path of the home directory for the JDK
+     *
+     * @see #getAbsoluteHomeDirectory()
      */
-    public Path getAbsoluteFile() {
+    public File getAbsoluteFile() {
+        return absJDK.toFile();
+    }
+
+    /**
+     * Returns the absolute path of the home directory for the JDK.
+     *
+     * @return the absolute path of the home directory for the JDK
+     */
+    public Path getAbsoluteHomeDirectory() {
         return absJDK;
     }
 
@@ -213,6 +235,8 @@ public class JDK {
      * Returns the home directory for the JDK as a string, as specified when the object was created.
      *
      * @return the home directory for the JDK
+     *
+     * @see #getHomeDirectory()
      */
     public String getPath() {
         return jdk.toString();
@@ -222,6 +246,8 @@ public class JDK {
      * Returns the absolute path of the home directory for the JDK, as a string.
      *
      * @return the absolute path of the home directory for the JDK
+     *
+     * @see #getAbsoluteHomeDirectory()
      */
     public String getAbsolutePath() {
         return absJDK.toString();

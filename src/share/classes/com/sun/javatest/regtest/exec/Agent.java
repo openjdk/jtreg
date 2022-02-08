@@ -53,7 +53,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Queue;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -887,7 +886,7 @@ public class Agent {
         }
 
         private static String getKey(File dir, JDK jdk, List<String> vmOpts) {
-            return (dir.getAbsolutePath() + " " + jdk.getAbsoluteFile() + " " + StringUtils.join(vmOpts, " "));
+            return (dir.getAbsolutePath() + " " + jdk.getAbsoluteHomeDirectory() + " " + StringUtils.join(vmOpts, " "));
         }
 
         private final Logger logger;

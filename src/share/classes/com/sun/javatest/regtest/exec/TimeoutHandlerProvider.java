@@ -96,7 +96,7 @@ public class TimeoutHandlerProvider {
     public TimeoutHandler createHandler(Class<? extends Action> actionClass, RegressionScript script, Section section) {
         PrintWriter log = section.getMessageWriter();
         File outDir = script.absTestScratchDir().toFile();
-        Path testJDK = script.getTestJDK().getAbsoluteFile();
+        Path testJDK = script.getTestJDK().getAbsoluteHomeDirectory();
 
         if (className != null) {
             try {

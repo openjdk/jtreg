@@ -261,7 +261,7 @@ public class Locations {
                 String name = lib.substring(2, end);
                 Path dir = null;
                 if (name.equals("java.home")) {
-                    dir = testJDK.getAbsoluteFile();
+                    dir = testJDK.getAbsoluteHomeDirectory();
                 } else if (name.equals("jtreg.home")) {
                     dir = jtpath.asList().get(0).getParent().getParent();
                 }

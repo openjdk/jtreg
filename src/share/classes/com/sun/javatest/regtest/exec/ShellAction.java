@@ -30,7 +30,6 @@ import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -237,7 +236,7 @@ public class ShellAction extends Action
 
             List<String> command = new ArrayList<>();
             if (script.useWindowsSubsystemForLinux()) {
-                Path java_exe = script.getTestJDK().getFile().resolve("bin").resolve("java.exe");
+                Path java_exe = script.getTestJDK().getHomeDirectory().resolve("bin").resolve("java.exe");
                 env.put("NULL", "/dev/null");
                 if (Files.exists(java_exe)) {
                     // invoking a Windows binary: use standard Windows separator characters

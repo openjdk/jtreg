@@ -334,7 +334,7 @@ public class RegressionScript extends Script {
     private void printJDKInfo(PrintWriter pw, String label, JDK jdk, List<String> opts) {
         pw.print(label);
         pw.print(": ");
-        pw.println(jdk.getAbsoluteFile());
+        pw.println(jdk.getAbsoluteHomeDirectory());
         String v = jdk.getVersionText(opts, pw::println);
         if (v.length() > 0) {
             pw.println(v);

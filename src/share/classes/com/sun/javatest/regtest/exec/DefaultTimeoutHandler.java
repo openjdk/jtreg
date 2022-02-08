@@ -60,7 +60,7 @@ public class DefaultTimeoutHandler extends TimeoutHandler {
 
             Path jstack = findJstack();
             if (jstack == null) {
-                log.println("Warning: Could not find jstack in: " + testJdk.toAbsolutePath());
+                log.println("Warning: Could not find jstack in: " + testJdk.getAbsolutePath());
                 log.println("Will not dump jstack output.");
                 return;
             }
@@ -82,9 +82,10 @@ public class DefaultTimeoutHandler extends TimeoutHandler {
     }
 
     private Path findJstack() {
-        Path jstack = testJdk.resolve("bin").resolve("jstack");
+        Path p = testJdk.toPath();
+        Path jstack = p.resolve("bin").resolve("jstack");
         if (!Files.exists(jstack)) {
-            jstack = testJdk.resolve("bin").resolve("jstack.exe");
+            jstack = p.resolve("bin").resolve("jstack.exe");
             if (!Files.exists(jstack)) {
                 return null;
             }
