@@ -25,7 +25,6 @@
 
 package com.sun.javatest.regtest.tool;
 
-import java.io.File;
 import java.nio.file.InvalidPathException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -192,10 +191,6 @@ public class OptionDecoder {
             throw new BadArgs(i18n, "opt.bad.path.for.option", arg, e.getInput(), e.getMessage());
         }
     }
-
-//    public void addFile(File file) throws BadArgs {
-//        fileOption.process(null, file.getPath());
-//    }
 
     public void addFile(String path) throws BadArgs {
         fileOption.process(null, path);
