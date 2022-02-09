@@ -757,21 +757,9 @@ public class Locations {
         return (optModule == null) ? absBaseDir : absBaseDir.resolve(optModule);
     }
 
-//    private File getFile(File absBaseDir, String optModule) {
-//        return (optModule == null) ? absBaseDir : new File(absBaseDir, optModule);
-//    }
-
     private Path getFile(Path absBaseDir, String optModule, String relFile) {
         return getFile(absBaseDir, optModule).resolve(relFile);
     }
-
-//    private File getFile(File absBaseDir, String optModule, String relFile) {
-//        return new File(getFile(absBaseDir, optModule), relFile);
-//    }
-
-//    private static File normalize(File f) {
-//        return new File(f.toURI().normalize());
-//    }
 
     private boolean hasExtn(String name, String... extns) {
         for (String e: extns) {
