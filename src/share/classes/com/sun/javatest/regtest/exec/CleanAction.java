@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -26,6 +26,7 @@
 package com.sun.javatest.regtest.exec;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -70,7 +71,7 @@ public class CleanAction extends Action
      * @param reason Indication of why this action was invoked.
      * @param script The script.
      * @exception  ParseException If the options or arguments are not expected
-     *             for the action or are improperly formated.
+     *             for the action or are improperly formatted.
      */
     @Override
     public void init(Map<String,String> opts, List<String> args, String reason,
@@ -124,7 +125,7 @@ public class CleanAction extends Action
                     // clean any package
                     String path = arg.substring(0, arg.length() -2);
                     path = path.replace('.', File.separatorChar);
-                    File dir = script.absTestClsDir();
+                    File dir = script.absTestClsDir().toFile();
                     if (!path.equals(""))
                         dir = new File(dir, path);
 
@@ -150,8 +151,8 @@ public class CleanAction extends Action
                     }
                 } else {
                     // clean class file
-                    File victim = new File(script.absTestClsDir(),
-                                           arg.replace('.', File.separatorChar) + ".class");
+                    File victim = script.absTestClsDir().resolve(
+                                           arg.replace('.', File.separatorChar) + ".class").toFile();
                     recorder.exec("rm -f " + victim);
                     if (victim.exists() && !victim.delete())
                         return error(CLEAN_RM_FAILED + victim);
@@ -167,11 +168,11 @@ public class CleanAction extends Action
     public Set<File> getSourceFiles() {
         Set<File> files = new LinkedHashSet<File>();
         for (String arg: args) {
-            // the arguments to clean are classnames or package names with wildcards
+            // the arguments to clean are class names or package names with wildcards
             try {
                 for (ClassLocn cl: script.locations.locateClasses(arg)) {
-                    if (cl.absSrcFile.exists())
-                        files.add(cl.absSrcFile);
+                    if (Files.exists(cl.absSrcFile))
+                        files.add(cl.absSrcFile.toFile());
                 }
             } catch (Locations.Fault ignore) {
             }

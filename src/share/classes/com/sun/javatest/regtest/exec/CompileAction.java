@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -38,6 +38,8 @@ import java.io.PrintWriter;
 import java.io.StringReader;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -194,9 +196,9 @@ public class CompileAction extends Action {
         // class directories
         Locations locations = script.locations;
         if (libLocn == null) {
-            destDir = multiModule ? locations.absTestModulesDir() : locations.absTestClsDir(module);
+            destDir = multiModule ? locations.absTestModulesDir().toFile() : locations.absTestClsDir(module).toFile();
         } else {
-            destDir = (module == null) ? libLocn.absClsDir : new File(libLocn.absClsDir, module);
+            destDir = ((module == null) ? libLocn.absClsDir : libLocn.absClsDir.resolve(module)).toFile();
         }
         if (!script.isCheck())
             mkdirs(destDir);
@@ -216,10 +218,10 @@ public class CompileAction extends Action {
                     // in the same directory as the defining file.
                     if (multiModule)
                         addModule(currArg);
-                    File absSourceFile = locations.absTestSrcFile(module, sourceFile);
-                    if (!absSourceFile.exists())
+                    Path absSourceFile = locations.absTestSrcFile(module, sourceFile);
+                    if (!Files.exists(absSourceFile))
                         throw new ParseException(CANT_FIND_SRC + currArg);
-                    args.set(i, absSourceFile.getPath());
+                    args.set(i, absSourceFile.toString());
                 }
             } else if (currArg.endsWith(".jasm") || currArg.endsWith("jcod")) {
                 if (module != null) {
@@ -232,10 +234,10 @@ public class CompileAction extends Action {
                     // in the same directory as the defining file.
                     if (multiModule)
                         addModule(currArg);
-                    File absSourceFile = locations.absTestSrcFile(null, sourceFile);
-                    if (!absSourceFile.exists())
+                    Path absSourceFile = locations.absTestSrcFile(null, sourceFile);
+                    if (!Files.exists(absSourceFile))
                         throw new ParseException(CANT_FIND_SRC + currArg);
-                    args.set(i, absSourceFile.getPath());
+                    args.set(i, absSourceFile.toString());
                 }
             }
 
@@ -573,7 +575,7 @@ public class CompileAction extends Action {
         // CONSTRUCT THE COMMAND LINE
         Map<String, String> env = script.getEnvVars();
 
-        String javacCmd = script.getJavacProg();
+        Path javacCmd = script.getJavacProg();
 
         JDKOpts javacVMOpts = new JDKOpts();
         javacVMOpts.addAll(script.getTestVMOptions());
@@ -608,7 +610,7 @@ public class CompileAction extends Action {
         }
 
         List<String> command = new ArrayList<>();
-        command.add(javacCmd);
+        command.add(javacCmd.toString());
         for (String opt: javacVMOpts.toList())
             command.add("-J" + opt);
         for (Map.Entry<String,String> e: javacProps.entrySet())
@@ -644,7 +646,7 @@ public class CompileAction extends Action {
         TimeoutHandler timeoutHandler =
             script.getTimeoutHandlerProvider().createHandler(this.getClass(), script, section);
 
-        cmd.setExecDir(script.absTestScratchDir())
+        cmd.setExecDir(script.absTestScratchDir().toFile())
             .setCommand(command)
             .setEnvironment(env)
             .setStreams(stdOut, stdErr)
@@ -686,7 +688,7 @@ public class CompileAction extends Action {
         if (showCmd)
             showCmd("compile", javacArgs, section);
 
-        String javacProg = script.getJavacProg();
+        Path javacProg = script.getJavacProg();
         List<String> javacVMOpts = script.getTestVMJavaOptions();
         recorder.javac(script.getEnvVars(), javacProg, javacVMOpts, javacProps, javacArgs);
 
@@ -784,7 +786,7 @@ public class CompileAction extends Action {
     private String parseRef(String value) throws ParseException {
         if ((value == null) || (value.equals("")))
             throw new ParseException(COMPILE_NO_REF_NAME);
-        File refFile = new File(script.absTestSrcDir(), value);
+        File refFile = script.absTestSrcDir().resolve(value).toFile();
         if (!refFile.exists())
             throw new ParseException(COMPILE_CANT_FIND_REF + refFile);
         return value;
@@ -823,7 +825,7 @@ public class CompileAction extends Action {
      * @throws TestRunException if the reference file can't be found
      */
     private Status checkGoldenFile(String actual, Status status) throws TestRunException {
-        File refFile = new File(script.absTestSrcDir(), ref);
+        File refFile = script.absTestSrcDir().resolve(ref).toFile();
         try (BufferedReader actualReader = new BufferedReader(new StringReader(actual));
             BufferedReader refReader = new BufferedReader(new FileReader(refFile)) ) {
             int lineNum;
@@ -872,7 +874,7 @@ public class CompileAction extends Action {
                 }
             }
         } catch (IOException e) {
-            File refFile = new File(script.absTestSrcDir(), ref);
+            Path refFile = script.absTestSrcDir().resolve(ref);
             throw new TestRunException(COMPILE_GOLD_READ_PROB + refFile);
         }
     } // compareGoldenFile()

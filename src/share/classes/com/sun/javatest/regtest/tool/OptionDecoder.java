@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2007, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -25,7 +25,7 @@
 
 package com.sun.javatest.regtest.tool;
 
-import java.io.File;
+import java.nio.file.InvalidPathException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -185,11 +185,11 @@ public class OptionDecoder {
         if (debugOptions)
             System.err.println("OptionDecoder.decodeArg: " + name + " " + value);
 
-        o.process(arg, value);
-    }
-
-    public void addFile(File file) throws BadArgs {
-        fileOption.process(null, file.getPath());
+        try {
+            o.process(arg, value);
+        } catch (InvalidPathException e) {
+            throw new BadArgs(i18n, "opt.bad.path.for.option", arg, e.getInput(), e.getMessage());
+        }
     }
 
     public void addFile(String path) throws BadArgs {

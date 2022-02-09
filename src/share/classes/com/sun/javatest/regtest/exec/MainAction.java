@@ -30,6 +30,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -429,7 +430,7 @@ public class MainAction extends Action
             env.put("CLASSPATH", cp.toString());
         }
 
-        String javaCmd = script.getJavaProg();
+        Path javaCmd = script.getJavaProg();
         JDKOpts javaOpts = new JDKOpts();
 
         if (!useCLASSPATH) {
@@ -485,7 +486,7 @@ public class MainAction extends Action
         classArgs.addAll(runClassArgs);
 
         List<String> command = new ArrayList<>();
-        command.add(javaCmd);
+        command.add(javaCmd.toString());
         for (Map.Entry<String,String> e: javaProps.entrySet())
             command.add("-D" + e.getKey() + "=" + e.getValue());
         command.addAll(filterJavaOpts(javaOpts.toList()));
@@ -506,7 +507,7 @@ public class MainAction extends Action
 
             // RUN THE MAIN WRAPPER CLASS
             ProcessCommand cmd = new ProcessCommand();
-            cmd.setExecDir(script.absTestScratchDir());
+            cmd.setExecDir(script.absTestScratchDir().toFile());
 
             // Set the exit codes and their associated strings.  Note that we
             // require the use of a non-zero exit code for a passed test so
@@ -570,7 +571,7 @@ public class MainAction extends Action
                 script.getExecutionPaths(multiModule, runModuleName, useBootClassPath, true);
 
         JDK jdk = script.getTestJDK();
-        List<File> stdLibs = new SearchPath()
+        List<Path> stdLibs = new SearchPath()
                 .append(script.getJavaTestClassPath())
                 .append(jdk.getJDKClassPath())
                 .append(script.getJUnitPath())
@@ -600,7 +601,7 @@ public class MainAction extends Action
         // "test.src" and "test.classes", respectively"
         Map<String, String> javaProps = script.getTestProperties();
 
-        String javaProg = script.getJavaProg();
+        Path javaProg = script.getJavaProg();
         List<String> javaArgs = new ArrayList<>();
         javaArgs.add("-classpath");
         javaArgs.add(classpath.toString());

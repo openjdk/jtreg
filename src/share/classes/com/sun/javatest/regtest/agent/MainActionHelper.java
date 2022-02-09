@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -25,7 +25,6 @@
 
 package com.sun.javatest.regtest.agent;
 
-import java.io.File;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
@@ -33,6 +32,7 @@ import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -146,9 +146,9 @@ public class MainActionHelper extends ActionHelper {
             }
             if (classpath != null && !classpath.isEmpty()) {
                 List<URL> urls = new ArrayList<URL>();
-                for (File f : classpath.asList()) {
+                for (Path f : classpath.asList()) {
                     try {
-                        urls.add(f.toURI().toURL());
+                        urls.add(f.toUri().toURL());
                     } catch (MalformedURLException e) {
                     }
                 }

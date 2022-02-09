@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -34,6 +34,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -53,14 +54,18 @@ import static com.sun.javatest.regtest.tool.Option.ArgType.*;
  * Manager to drive jcov code coverage tool.
  */
 public class JCovManager {
-    public JCovManager(File libDir) {
-        jcov_jar = new JarFinder("jcov.jar").libDir(libDir).getFile();
-        jcov_network_saver_jar = new JarFinder("jcov_network_saver.jar").libDir(libDir).getFile();
+    public JCovManager(Path libDir) {
+        jcov_jar = toFile(new JarFinder("jcov.jar").libDir(libDir).getFile());
+        jcov_network_saver_jar = toFile(new JarFinder("jcov_network_saver.jar").libDir(libDir).getFile());
 
         if (System.getProperty("jcov.port") != null)
             grabberPort = Integer.getInteger("jcov.port");
         if (System.getProperty("jcov.command_port") != null)
             grabberCommandPort = Integer.getInteger("jcov.command_port");
+    }
+
+    private static File toFile(Path p) {
+        return p == null ? null : p.toFile();
     }
 
     public static final String JCOV = "jcov";
@@ -438,7 +443,7 @@ public class JCovManager {
         public void run() {
             try {
                 List<String> args = new ArrayList<String>();
-                args.add(jdk.getJavaProg().getPath());
+                args.add(jdk.getJavaProg().toString());
                 args.add("-jar");
                 args.add(jcov_jar.getPath());
                 args.addAll(opts);

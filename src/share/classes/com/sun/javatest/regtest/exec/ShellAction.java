@@ -27,9 +27,9 @@ package com.sun.javatest.regtest.exec;
 
 import java.io.File;
 import java.io.PrintWriter;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -159,7 +159,7 @@ public class ShellAction extends Action
 
     @Override
     public Set<File> getSourceFiles() {
-        return Collections.singleton(new File(script.absTestSrcDir(), shellFN));
+        return Set.of(script.absTestSrcDir().resolve(shellFN).toFile());
     }
 
     /**
@@ -186,7 +186,7 @@ public class ShellAction extends Action
 
         startAction(false);
 
-        File shellFile = new File(script.absTestSrcDir(), shellFN);
+        File shellFile = script.absTestSrcDir().resolve(shellFN).toFile();
         if (!shellFile.exists())
             throw new TestRunException(CANT_FIND_SRC + shellFile);
 
@@ -196,7 +196,7 @@ public class ShellAction extends Action
         if (script.isCheck()) {
             status = passed(CHECK_PASS);
         } else {
-            mkdirs(script.absTestClsDir());
+            mkdirs(script.absTestClsDir().toFile());
 
             // CONSTRUCT THE COMMAND LINE
 
@@ -226,9 +226,9 @@ public class ShellAction extends Action
             Modules modules = script.getModules();
             if (!modules.isEmpty())
                 env.put("TESTMODULES", modules.toString());
-            File nativeDir = script.getNativeDir();
+            Path nativeDir = script.getNativeDir();
             if (nativeDir != null) {
-                env.put("TESTNATIVEPATH", nativeDir.getAbsolutePath());
+                env.put("TESTNATIVEPATH", nativeDir.toAbsolutePath().toString());
             }
             if (script.enablePreview()) {
                 env.put("TESTENABLEPREVIEW", "true");
@@ -236,9 +236,9 @@ public class ShellAction extends Action
 
             List<String> command = new ArrayList<>();
             if (script.useWindowsSubsystemForLinux()) {
-                File java_exe = new File(new File(script.getTestJDK().getFile(), "bin"), "java.exe");
+                Path java_exe = script.getTestJDK().getHomeDirectory().resolve("bin").resolve("java.exe");
                 env.put("NULL", "/dev/null");
-                if (java_exe.exists()) {
+                if (Files.exists(java_exe)) {
                     // invoking a Windows binary: use standard Windows separator characters
                     env.put("EXE_SUFFIX", ".exe");
                     env.put("FS", "/");
@@ -290,7 +290,7 @@ public class ShellAction extends Action
 
                 // RUN THE SHELL SCRIPT
                 ProcessCommand cmd = new ProcessCommand()
-                    .setExecDir(script.absTestScratchDir())
+                    .setExecDir(script.absTestScratchDir().toFile())
                     .setCommand(command)
                     .setEnvironment(env)
                     .setStreams(sysOut, sysErr)
@@ -334,17 +334,20 @@ public class ShellAction extends Action
         return status;
     } // run()
         // where
-        private String fixupSep(List<File> files) {
+        private String fixupSep(List<Path> files) {
             StringBuilder sb = new StringBuilder();
-            for (File f: files) {
+            for (Path f: files) {
                 if (sb.length() > 0) sb.append(File.pathSeparator);
                 sb.append(fixupSep(f));
             }
             return sb.toString();
         }
-        private String fixupSep(File f) {
-            return fixupSep(f.getPath());
-        }
+    private String fixupSep(Path f) {
+        return fixupSep(f.toString());
+    }
+    private String fixupSep(File f) {
+        return fixupSep(f.getPath());
+    }
         private String fixupSep(String s) {
             return (sep == null ? s : s.replace(File.separator, sep));
         }

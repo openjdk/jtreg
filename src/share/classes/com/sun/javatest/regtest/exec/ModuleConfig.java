@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2016, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -27,6 +27,7 @@ package com.sun.javatest.regtest.exec;
 
 import java.io.File;
 import java.io.PrintWriter;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -237,32 +238,32 @@ public class ModuleConfig {
 
         if (modulePath != null) {
             String label = "module path:";
-            for (File file: modulePath.asList()) {
-                table.addRow(label, file.getPath());
+            for (Path file: modulePath.asList()) {
+                table.addRow(label, file.toString());
                 label = null;
             }
         }
 
         if (sourcePath != null) {
             String label = "source path:";
-            for (File file: sourcePath.asList()) {
-                table.addRow(label, file.getPath());
+            for (Path file: sourcePath.asList()) {
+                table.addRow(label, file.toString());
                 label = null;
             }
         }
 
         if (classPath != null) {
             String label = "class path:";
-            for (File file: classPath.asList()) {
-                table.addRow(label, file.getPath());
+            for (Path file: classPath.asList()) {
+                table.addRow(label, file.toString());
                 label = null;
             }
         }
 
         if (bootClassPathAppend != null) {
             String label = "boot class path (append):";
-            for (File file: bootClassPathAppend.asList()) {
-                table.addRow(label, file.getPath());
+            for (Path file: bootClassPathAppend.asList()) {
+                table.addRow(label, file.toString());
                 label = null;
             }
         }
@@ -271,8 +272,8 @@ public class ModuleConfig {
             String label = "patch:";
             for (Map.Entry<String, SearchPath> e: patch.entrySet()) {
                 String module = e.getKey();
-                for (File file: e.getValue().asList()) {
-                    table.addRow(label, module, file.getPath());
+                for (Path file: e.getValue().asList()) {
+                    table.addRow(label, module, file.toString());
                     label = null;
                     module = null;
                 }

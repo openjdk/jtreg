@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -25,13 +25,13 @@
 
 package com.sun.javatest.regtest.config;
 
-import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -46,6 +46,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.sun.javatest.regtest.util.FileUtils;
 import com.sun.javatest.regtest.util.GraphUtils;
 import com.sun.javatest.regtest.util.GraphUtils.Node;
 import com.sun.javatest.regtest.util.GraphUtils.TarjanNode;
@@ -56,7 +57,7 @@ import com.sun.javatest.util.I18NResourceBundle;
  */
 public class GroupManager {
     public static void main(String... args) throws Exception {
-        File root = new File(args[0]);
+        Path root = Path.of(args[0]);
         List<String> files = new ArrayList<>();
         for (int i = 1; i < args.length; i++)
             files.add(args[i]);
@@ -76,7 +77,7 @@ public class GroupManager {
     public static final String EXCLUDE_PREFIX = "-";
 
     final PrintWriter out;
-    final File root;
+    final Path root;
     final Map<String, Group> groups = new HashMap<>();
     private Collection<String> ignoreDirs = Collections.emptySet();
     private Collection<String> allowExtns = Collections.emptySet();
@@ -85,7 +86,7 @@ public class GroupManager {
         private static final long serialVersionUID = 1L;
     }
 
-    GroupManager(PrintWriter out, File root, List<String> files) throws IOException {
+    GroupManager(PrintWriter out, Path root, List<String> files) throws IOException {
         this.out = out;
         this.root = root;
 
@@ -97,27 +98,21 @@ public class GroupManager {
             } else
                 optional = false;
 
-            File file = new File(root, f);
-            FileInputStream fin;
-            try {
-                fin = new FileInputStream(file);
-            } catch (FileNotFoundException e) {
-                if (optional)
-                    continue;
-                throw e;
+            Path file = root.resolve(f);
+            if (optional && !Files.exists(file)) {
+                continue;
             }
 
-            try {
+
+            try (BufferedReader in = Files.newBufferedReader(file)){
                 Properties p = new Properties();
-                p.load(new BufferedInputStream(fin));
+                p.load(in);
                 for (Map.Entry<Object,Object> e: p.entrySet()) {
                     String groupName = (String) e.getKey();
                     String entryDef = (String) e.getValue();
                     Group g = getGroup(groupName);
                     g.addEntry(new Entry(file, root, entryDef));
                 }
-            } finally {
-                fin.close();
             }
         }
 
@@ -132,7 +127,7 @@ public class GroupManager {
         ignoreDirs = new HashSet<>(names);
     }
 
-    public Set<File> getFiles(String group) throws InvalidGroup {
+    public Set<Path> getFiles(String group) throws InvalidGroup {
         Group g = getGroup(group);
         if (g.invalid)
             throw new InvalidGroup();
@@ -161,11 +156,11 @@ public class GroupManager {
             }
             for (Entry e: g.entries) {
                 @SuppressWarnings("unchecked")
-                List<Set<File>> allFiles = Arrays.asList(e.includeFiles, e.excludeFiles);
-                for (Set<File> files: allFiles) {
-                    for (File f: files) {
-                        if (!f.exists()) {
-                            URI u = root.toURI().relativize(f.toURI());
+                List<Set<Path>> allFiles = Arrays.asList(e.includeFiles, e.excludeFiles);
+                for (Set<Path> files: allFiles) {
+                    for (Path f: files) {
+                        if (!Files.exists(f)) {
+                            URI u = root.toUri().relativize(f.toUri());
                             error(e.origin, g, i18n.getString("gm.file.not.found", u.getPath()));
                         }
                     }
@@ -222,7 +217,7 @@ public class GroupManager {
         }
     }
 
-    private void error(File f, Group g, String message) {
+    private void error(Path f, Group g, String message) {
         out.println(i18n.getString("gm.file.group.prefix", f, g.name, message));
         g.invalid = true;
     }
@@ -230,7 +225,7 @@ public class GroupManager {
     private class Group {
         final String name;
         final List<Entry> entries;
-        private Set<File> files;
+        private Set<Path> files;
         boolean invalid;
 
         Group(String name) {
@@ -246,11 +241,11 @@ public class GroupManager {
             entries.add(e);
         }
 
-        Set<File> getFiles() {
+        Set<Path> getFiles() {
             if (files == null) {
                 files = new LinkedHashSet<>();
-                Set<File> inclFiles = new HashSet<>();
-                Set<File> exclFiles = new HashSet<>();
+                Set<Path> inclFiles = new HashSet<>();
+                Set<Path> exclFiles = new HashSet<>();
                 for (Entry e: entries) {
                     inclFiles.addAll(e.includeFiles);
                     for (Group g: e.includeGroups)
@@ -264,15 +259,15 @@ public class GroupManager {
             return files;
         }
 
-        private void addFiles(Collection<File> files, Collection<File> includes, Collection<File> excludes) {
-            for (File incl: includes) {
+        private void addFiles(Collection<Path> files, Collection<Path> includes, Collection<Path> excludes) {
+            for (Path incl: includes) {
                 if (contains(files, incl) || contains(excludes, incl))
                     continue;
 
-                if (incl.isFile())
+                if (Files.isRegularFile(incl))
                     addFile(files, incl);
-                else if (incl.isDirectory()) {
-                    Set<File> excludesForIncl = filter(incl, excludes);
+                else if (Files.isDirectory(incl)) {
+                    Set<Path> excludesForIncl = filter(incl, excludes);
                     if (excludesForIncl.isEmpty())
                         addFile(files, incl);
                     else
@@ -290,8 +285,26 @@ public class GroupManager {
             files.add(file);
         }
 
+        private void addFile(Collection<Path> files, Path file) {
+            for (Iterator<Path> iter = files.iterator(); iter.hasNext(); ) {
+                Path f = iter.next();
+                if (contains(file, f))
+                    iter.remove();
+            }
+            files.add(file);
+        }
+
         private boolean contains(Collection<File> files, File file) {
             for (File f: files) {
+                if (f.equals(file) || contains(f, file)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private boolean contains(Collection<Path> files, Path file) {
+            for (Path f: files) {
                 if (f.equals(file) || contains(f, file)) {
                     return true;
                 }
@@ -304,6 +317,10 @@ public class GroupManager {
             if (!dirPath.endsWith(File.separator))
                 dirPath += File.separator;
             return file.getPath().startsWith(dirPath);
+        }
+
+        private boolean contains(Path dir, Path file) {
+            return file.startsWith(dir);
         }
 
         private Set<File> filter(File dir, Collection<File> files) {
@@ -321,12 +338,34 @@ public class GroupManager {
             return results == null ? Collections.<File>emptySet() : results;
         }
 
+        private Set<Path> filter(Path dir, Collection<Path> files) {
+            Set<Path> results = null;
+            for (Path f: files) {
+                if (f.startsWith(dir)) {
+                    if (results == null) results = new LinkedHashSet<>();
+                    results.add(f);
+                }
+            }
+            return results == null ? Set.of() : results;
+        }
+
         private List<File> list(File file) {
             List<File> children = new ArrayList<>();
             for (File f: file.listFiles()) {
                 String fn = f.getName();
                 if (f.isDirectory() && !ignoreDirs.contains(fn)
                         || f.isFile() && allowExtns.contains(getExtension(fn)))
+                    children.add(f);
+            }
+            return children;
+        }
+
+        private List<Path> list(Path file) {
+            List<Path> children = new ArrayList<>();
+            for (Path f: FileUtils.listFiles(file)) {
+                String fn = f.getFileName().toString();
+                if (Files.isDirectory(f) && !ignoreDirs.contains(fn)
+                        || Files.isRegularFile(f) && allowExtns.contains(getExtension(fn)))
                     children.add(f);
             }
             return children;
@@ -344,14 +383,14 @@ public class GroupManager {
     }
 
     class Entry {
-        final File origin;
+        final Path origin;
 
-        final Set<File> includeFiles = new LinkedHashSet<>();
-        final Set<File> excludeFiles = new LinkedHashSet<>();
+        final Set<Path> includeFiles = new LinkedHashSet<>();
+        final Set<Path> excludeFiles = new LinkedHashSet<>();
         final Set<Group> includeGroups = new LinkedHashSet<>();
         final Set<Group> excludeGroups = new LinkedHashSet<>();
 
-        Entry(File origin, File root, String def) {
+        Entry(Path origin, Path root, String def) {
             this.origin = origin;
 
             def = def.trim();
@@ -372,7 +411,7 @@ public class GroupManager {
                         name = name.substring(1);
                     if (name.endsWith("/"))
                         name = name.substring(0, name.length() - 1);
-                    File f = name.equals("") ? root : new File(root, name);
+                    Path f = name.equals("") ? root : root.resolve(name);
                     (exclude ? excludeFiles : includeFiles).add(f);
                 }
             }
