@@ -773,7 +773,7 @@ public class Locations {
 
     private static final AtomicInteger uniqueId = new AtomicInteger(0);
 
-    private static final ThreadLocal<Integer> uniqueNum = new ThreadLocal<Integer>() {
+    private static final ThreadLocal<Integer> uniqueNum = new ThreadLocal<>() {
         @Override
         protected Integer initialValue() {
             return uniqueId.getAndIncrement();

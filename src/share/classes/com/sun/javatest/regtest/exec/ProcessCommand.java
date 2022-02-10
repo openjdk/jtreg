@@ -58,7 +58,7 @@ public class ProcessCommand
      */
     public ProcessCommand setStatusForExit(int exitCode, Status status) {
         if (statusTable == null) {
-            statusTable = new HashMap<Integer, Status>();
+            statusTable = new HashMap<>();
             if (defaultStatus == null) {
                 defaultStatus = Status.error("unrecognized exit code");
             }
@@ -81,7 +81,7 @@ public class ProcessCommand
      */
     public ProcessCommand setDefaultStatus(Status status) {
         if (statusTable == null) {
-            statusTable = new HashMap<Integer, Status>();
+            statusTable = new HashMap<>();
         }
         defaultStatus = status;
         return this;

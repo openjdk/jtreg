@@ -175,7 +175,7 @@ public class JCovManager {
     }
 
     void instrumentClasses() {
-        List<String> opts = new ArrayList<String>();
+        List<String> opts = new ArrayList<>();
         opts.add("instr");
 
         delete(instrClasses);
@@ -248,7 +248,7 @@ public class JCovManager {
 
         results.delete();
 
-        List<String> opts = new ArrayList<String>();
+        List<String> opts = new ArrayList<>();
         opts.add("grabber");
         opts.add("-port");
         opts.add("0");
@@ -309,7 +309,7 @@ public class JCovManager {
     }
 
     void stopGrabber() {
-        List<String> opts = new ArrayList<String>();
+        List<String> opts = new ArrayList<>();
         opts.add("grabberManager");
 
         if (printEnv)
@@ -333,7 +333,7 @@ public class JCovManager {
     }
 
     void writeReport() {
-        List<String> opts = new ArrayList<String>();
+        List<String> opts = new ArrayList<>();
         opts.add("repgen");
 
         opts.add("-source");
@@ -364,7 +364,7 @@ public class JCovManager {
     }
 
     void writePatchReport() {
-        List<String> opts = new ArrayList<String>();
+        List<String> opts = new ArrayList<>();
         opts.add("diffcoverage");
 
         opts.add("-replaceDiff");
@@ -412,7 +412,7 @@ public class JCovManager {
     }
 
     List<String> splitLines(File f) throws IOException {
-        List<String> lines = new ArrayList<String>();
+        List<String> lines = new ArrayList<>();
         BufferedReader in = new BufferedReader(new FileReader(f));
         String line;
         try {
@@ -442,7 +442,7 @@ public class JCovManager {
 
         public void run() {
             try {
-                List<String> args = new ArrayList<String>();
+                List<String> args = new ArrayList<>();
                 args.add(jdk.getJavaProg().toString());
                 args.add("-jar");
                 args.add(jcov_jar.getPath());
@@ -484,8 +484,8 @@ public class JCovManager {
     private SearchPath source;
     private String verbose;
     private boolean printEnv;
-    private List<String> includeOpts = new ArrayList<String>();
-    private List<String> excludeOpts = new ArrayList<String>();
+    private List<String> includeOpts = new ArrayList<>();
+    private List<String> excludeOpts = new ArrayList<>();
 
     JDK testJDK;
     File instrClasses;

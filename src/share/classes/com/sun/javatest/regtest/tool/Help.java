@@ -354,7 +354,7 @@ public class Help {
             groups.add(o.group);
         Map<String, SortedMap<String, Option>> map = new LinkedHashMap<>();
         for (String g: groups)
-            map.put(g, new TreeMap<String, Option>(new CaseInsensitiveStringComparator()));
+            map.put(g, new TreeMap<>(new CaseInsensitiveStringComparator()));
         for (Option o: options) {
             if (o.names.length > 0)
                 map.get(o.group).put(o.names[0], o);

@@ -166,7 +166,7 @@ public class CleanAction extends Action
 
     @Override
     public Set<File> getSourceFiles() {
-        Set<File> files = new LinkedHashSet<File>();
+        Set<File> files = new LinkedHashSet<>();
         for (String arg: args) {
             // the arguments to clean are class names or package names with wildcards
             try {

@@ -33,7 +33,7 @@ import com.sun.javatest.TestEnvironment;
 public class RegressionEnvironment extends TestEnvironment
 {
     RegressionEnvironment(RegressionParameters params) throws Fault {
-        super("regtest", new ArrayList<Map<String, String>>(), new String[] { });
+        super("regtest", new ArrayList<>(), new String[] { });
         this.params = params;
     }
 

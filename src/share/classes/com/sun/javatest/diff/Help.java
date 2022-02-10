@@ -67,7 +67,7 @@ public class Help {
 
     void setCommandLineHelpQuery(String query) {
         if (commandLineHelpQuery == null)
-            commandLineHelpQuery = new ArrayList<String>();
+            commandLineHelpQuery = new ArrayList<>();
         if (query != null)
             commandLineHelpQuery.addAll(Arrays.asList(query.trim().split("\\s+")));
     }
@@ -224,13 +224,13 @@ public class Help {
 
         // first, group the options by their group, and sort within group
         // by their first name
-        Set<String> groups = new LinkedHashSet<String>();
+        Set<String> groups = new LinkedHashSet<>();
         for (Option o: options)
             groups.add(o.group);
         Map<String, SortedMap<String, Option>> map =
-                new LinkedHashMap<String, SortedMap<String, Option>>();
+            new LinkedHashMap<>();
         for (String g: groups)
-            map.put(g, new TreeMap<String, Option>(new CaseInsensitiveStringComparator()));
+            map.put(g, new TreeMap<>(new CaseInsensitiveStringComparator()));
         for (Option o: options) {
             if (o.names.length > 0)
                 map.get(o.group).put(o.names[0], o);
@@ -240,7 +240,7 @@ public class Help {
         for (String g: groups) {
             SortedMap<String, Option> optionsForGroup = map.get(g);
 //                continue;
-            List<HelpTree.Node> nodesForGroup = new ArrayList<HelpTree.Node>();
+            List<HelpTree.Node> nodesForGroup = new ArrayList<>();
             for (Option o: optionsForGroup.values())
                 nodesForGroup.add(createOptionHelpNode(o));
             HelpTree.Node groupNode = new HelpTree.Node(i18n, "help." + g.toLowerCase(),
