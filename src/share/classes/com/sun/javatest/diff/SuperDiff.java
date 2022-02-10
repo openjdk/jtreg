@@ -85,7 +85,7 @@ class SuperDiff extends Diff {
 
     private boolean diffPlatforms(YearDay yearDay, File outDir) throws Fault, InterruptedException {
         Map<String, File> pMap = table.get(yearDay);
-        List<File> pDirs = new ArrayList<File>();
+        List<File> pDirs = new ArrayList<>();
         for (String platform : table.platforms) {
             File dir = pMap.get(platform);
             if (dir != null) {
@@ -99,7 +99,7 @@ class SuperDiff extends Diff {
     }
 
     private boolean diffHistory(String platform, File outDir) throws Fault, InterruptedException {
-        List<File> pDirs = new ArrayList<File>();
+        List<File> pDirs = new ArrayList<>();
         for (YearDay yearDay: table.getRecentKeys(historySize, platform)) {
             pDirs.add(table.get(yearDay).get(platform));
         }
@@ -132,8 +132,8 @@ class SuperDiff extends Diff {
 
     private SuperTable table;
     private String baseTitle;
-    private Map<String, File> historyIndex = new LinkedHashMap<String, File>();
-    private Map<String, File> platformIndex = new LinkedHashMap<String, File>();
+    private Map<String, File> historyIndex = new LinkedHashMap<>();
+    private Map<String, File> platformIndex = new LinkedHashMap<>();
 
     private static DateFormat monthDayFormat = new SimpleDateFormat("MMM d");
     private static DateFormat mediumDateFormat = DateFormat.getDateInstance(DateFormat.MEDIUM);
@@ -244,7 +244,7 @@ class SuperDiff extends Diff {
             YearDay yd = new YearDay(year, day);
             Map<String, File> pMap = get(yd);
             if (pMap == null) {
-                pMap = new HashMap<String, File>();
+                pMap = new HashMap<>();
                 put(yd, pMap);
             }
             pMap.put(platform, dir);
@@ -267,8 +267,8 @@ class SuperDiff extends Diff {
         }
 
         List<YearDay> getRecentKeys(int n, String platform) {
-            LinkedList<YearDay> results = new LinkedList<YearDay>();
-            List<YearDay> keys = new ArrayList<YearDay>(keySet());
+            LinkedList<YearDay> results = new LinkedList<>();
+            List<YearDay> keys = new ArrayList<>(keySet());
             for (ListIterator<YearDay> iter = keys.listIterator(keys.size());
                     iter.hasPrevious() && results.size() < n; ) {
                 YearDay key = iter.previous();
@@ -282,8 +282,8 @@ class SuperDiff extends Diff {
             return infoTable.get(path);
         }
 
-        final Set<String> platforms = new TreeSet<String>();
-        final Map<String, Info> infoTable = new HashMap<String, Info>();
+        final Set<String> platforms = new TreeSet<>();
+        final Map<String, Info> infoTable = new HashMap<>();
     }
 
     static class YearDay implements Comparable<YearDay> {

@@ -69,7 +69,7 @@ public abstract class Reporter {
     abstract void write(MultiMap<String, TestResult> table) throws IOException;
 
     protected List<DiffReader> readers;
-    protected List<int[]> testCounts = new ArrayList<int[]>();
+    protected List<int[]> testCounts = new ArrayList<>();
     protected Comparator<TestResult> comparator;
     protected String title;
     protected int diffs;

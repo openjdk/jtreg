@@ -176,12 +176,12 @@ public class GroupManager {
 
         final Map<Group, TarjanNode<Group>> nodes = new HashMap<>();
         for (Group g: groups.values()) {
-            nodes.put(g, new TarjanNode<Group>(g) {
+            nodes.put(g, new TarjanNode<>(g) {
                 @Override
                 public Iterable<? extends TarjanNode<Group>> getDependencies() {
-                    List<TarjanNode<Group>> deps = new ArrayList<> ();
-                    for (Entry e: data.entries) {
-                        for (Group g: e.includeGroups) {
+                    List<TarjanNode<Group>> deps = new ArrayList<>();
+                    for (Entry e : data.entries) {
+                        for (Group g : e.includeGroups) {
                             deps.add(nodes.get(g));
                         }
                     }

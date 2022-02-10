@@ -67,7 +67,7 @@ public class RegressionContext implements Expr.Context {
         this.params = params;
         validPropNames = null;
 
-        values = new HashMap<String, String>();
+        values = new HashMap<>();
         values.put("null", "null");
 
         JDK_Version jdkVersion;
@@ -149,8 +149,8 @@ public class RegressionContext implements Expr.Context {
     private void processVMOptions(List<String> vmOptions) {
         String gc = null;
         String compMode = null;
-        Map<String, Boolean> vmBools = new HashMap<String, Boolean>();
-        Map<String, String> vmProps = new HashMap<String, String>();
+        Map<String, Boolean> vmBools = new HashMap<>();
+        Map<String, String> vmProps = new HashMap<>();
 
         for (String opt: vmOptions) {
             if (opt.equals("-" + MODE_MIXED)) {

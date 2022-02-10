@@ -84,12 +84,9 @@ public class ActionHelper {
             // Do this first, to ensure we reset permissions
             try {
                 if (System.getSecurityManager() != secMgr) {
-                    AccessController.doPrivileged(new PrivilegedAction<Object>() {
-                        @Override
-                        public Object run() {
-                            System.setSecurityManager(secMgr);
-                            return null;
-                        }
+                    AccessController.doPrivileged((PrivilegedAction<Object>) () -> {
+                        System.setSecurityManager(secMgr);
+                        return null;
                     });
                     //System.setSecurityManager(secMgr);
                 }
@@ -110,17 +107,14 @@ public class ActionHelper {
             try {
                 final Provider[] sp = Security.getProviders();
                 if (!equal(securityProviders, sp)) {
-                    AccessController.doPrivileged(new PrivilegedAction<Object>() {
-                        @Override
-                        public Object run() {
-                            for (Provider p : sp) {
-                                Security.removeProvider(p.getName());
-                            }
-                            for (Provider p : securityProviders) {
-                                Security.addProvider(p);
-                            }
-                            return null;
+                    AccessController.doPrivileged((PrivilegedAction<Object>) () -> {
+                        for (Provider p : sp) {
+                            Security.removeProvider(p.getName());
                         }
+                        for (Provider p : securityProviders) {
+                            Security.addProvider(p);
+                        }
+                        return null;
                     });
                 }
             } catch (SecurityException e) {
@@ -192,7 +186,7 @@ public class ActionHelper {
     //----------for saving/restoring properties---------------------------------
 
     private static Map<?, ?> copyProperties(Properties p) {
-        Map<Object, Object> h = new HashMap<Object, Object>();
+        Map<Object, Object> h = new HashMap<>();
         for (Enumeration<?> e = p.propertyNames(); e.hasMoreElements(); ) {
             Object key = e.nextElement();
             h.put(key, p.get(key));

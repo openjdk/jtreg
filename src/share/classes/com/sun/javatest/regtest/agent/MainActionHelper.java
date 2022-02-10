@@ -145,7 +145,7 @@ public class MainActionHelper extends ActionHelper {
                 loader = ModuleHelper.addModules(modulepath.asList(), addMods);
             }
             if (classpath != null && !classpath.isEmpty()) {
-                List<URL> urls = new ArrayList<URL>();
+                List<URL> urls = new ArrayList<>();
                 for (Path f : classpath.asList()) {
                     try {
                         urls.add(f.toUri().toURL());
@@ -423,7 +423,7 @@ public class MainActionHelper extends ActionHelper {
                 Thread[] threads = new Thread[estSize];
                 int num = enumerate(threads);
                 if (num < threads.length) {
-                    ArrayList<Thread> list = new ArrayList<Thread>(num);
+                    ArrayList<Thread> list = new ArrayList<>(num);
                     for (int i = 0; i < num; i++) {
                         Thread t = threads[i];
                         if (t.isAlive()

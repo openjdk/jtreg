@@ -47,7 +47,7 @@ public abstract class Diff {
     protected boolean diff(List<File> files, File outFile)
             throws Fault, InterruptedException {
         this.outFile = outFile;
-        List<DiffReader> list = new ArrayList<DiffReader>();
+        List<DiffReader> list = new ArrayList<>();
         for (File f: files)
             list.add(open(f));
 
@@ -68,8 +68,8 @@ public abstract class Diff {
             reporter.setComparator(comparator);
             reporter.setReaders(list);
 
-            List<int[]> testCounts = new ArrayList<int[]>();
-            MultiMap<String, TestResult> table = new MultiMap<String, TestResult>();
+            List<int[]> testCounts = new ArrayList<>();
+            MultiMap<String, TestResult> table = new MultiMap<>();
             for (DiffReader r: list) {
                 int index = table.addColumn(r.getFile().getPath());
                 int[] counts = new int[Status.NUM_STATES];

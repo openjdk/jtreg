@@ -88,7 +88,7 @@ public class ReportReader implements DiffReader {
     }
 
     private List<TestResult> readSummary() {
-        List<TestResult> list = new ArrayList<TestResult>();
+        List<TestResult> list = new ArrayList<>();
         File root = getRoot();
         File f;
         if (file.isFile() && file.getName().equals(SUMMARY_TXT))

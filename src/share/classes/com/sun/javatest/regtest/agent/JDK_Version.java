@@ -31,7 +31,7 @@ import java.util.Map;
 
 public class JDK_Version implements Comparable<JDK_Version> {
     private static final Map<String, JDK_Version> values
-            = new HashMap<String,JDK_Version>();
+            = new HashMap<>();
 
     public static JDK_Version V1_1 = JDK_Version.forName("1.1");
     public static JDK_Version V1_5 = JDK_Version.forName("1.5");

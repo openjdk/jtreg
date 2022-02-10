@@ -303,7 +303,7 @@ public class TestProperties {
             private Set<File> initFileSet(Set<File> parent, String propertyName, File baseDir) {
                 String[] values = StringUtils.splitWS(properties.getProperty(propertyName));
                 if (parent == null || values.length > 0) {
-                    Set<File> set = (parent == null) ? new LinkedHashSet<File>() : new LinkedHashSet<>(parent);
+                    Set<File> set = (parent == null) ? new LinkedHashSet<>() : new LinkedHashSet<>(parent);
                     //set.addAll(Arrays.asList(values));
                     for (String v: values) {
                         File f = toFile(baseDir, v);
@@ -319,7 +319,7 @@ public class TestProperties {
             private Set<String> initLibDirSet(Set<String> parent, String propertyName, File baseDir) {
                 String[] values = StringUtils.splitWS(properties.getProperty(propertyName));
                 if (parent == null || values.length > 0) {
-                    Set<String> set = (parent == null) ? new LinkedHashSet<String>() : new LinkedHashSet<>(parent);
+                    Set<String> set = (parent == null) ? new LinkedHashSet<>() : new LinkedHashSet<>(parent);
                     for (String v: values) {
                         if (v.startsWith("/")) {
                             set.add(v);
@@ -342,7 +342,7 @@ public class TestProperties {
             private Set<String> initKeywordSet(Set<String> parent, String propertyName) {
                 String[] values = StringUtils.splitWS(properties.getProperty(propertyName));
                 if (parent == null || values.length > 0) {
-                    Set<String> set = (parent == null) ? new LinkedHashSet<String>() : new LinkedHashSet<>(parent);
+                    Set<String> set = (parent == null) ? new LinkedHashSet<>() : new LinkedHashSet<>(parent);
                     for (String v: values) {
                         try {
                             RegressionKeywords.validateKey(v);
@@ -361,7 +361,7 @@ public class TestProperties {
             private Set<String> initSimpleSet(Set<String> parent, String propertyName) {
                 String[] values = StringUtils.splitWS(properties.getProperty(propertyName));
                 if (parent == null || values.length > 0) {
-                    Set<String> set = (parent == null) ? new LinkedHashSet<String>() : new LinkedHashSet<>(parent);
+                    Set<String> set = (parent == null) ? new LinkedHashSet<>() : new LinkedHashSet<>(parent);
                     set.addAll(Arrays.asList(values));
                     return Collections.unmodifiableSet(set);
                 } else {
