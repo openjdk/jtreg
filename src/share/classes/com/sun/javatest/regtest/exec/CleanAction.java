@@ -89,12 +89,15 @@ public class CleanAction extends Action
             throw new ParseException(CLEAN_NO_CLASSNAME);
 
         for (String arg : args) {
-            if ("*".equals(arg)) // allow "clean default package" marker
+            // allow "clean default package" marker
+            if ("*".equals(arg))
                 continue;
-            // allow "clean any package" pattern
+            // allow qualified class name with optional "clean any package" pattern
             String name = arg.endsWith(".*") ? arg.substring(0, arg.length() - 2) : arg;
-            if (!SourceVersion.isName(name))
-                throw new ParseException(CLEAN_BAD_CLASSNAME + arg);
+            if (SourceVersion.isName(name))
+                continue;
+            // detected a syntactically invalid class name
+            throw new ParseException(CLEAN_BAD_CLASSNAME + arg);
         }
     } // init()
 
