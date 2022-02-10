@@ -37,6 +37,8 @@ import com.sun.javatest.regtest.config.Locations;
 import com.sun.javatest.regtest.config.Locations.ClassLocn;
 import com.sun.javatest.regtest.config.ParseException;
 
+import javax.lang.model.SourceVersion;
+
 import static com.sun.javatest.regtest.RStatus.error;
 import static com.sun.javatest.regtest.RStatus.passed;
 
@@ -87,8 +89,7 @@ public class CleanAction extends Action
             throw new ParseException(CLEAN_NO_CLASSNAME);
 
         for (String currArg : args) {
-            if ((currArg.indexOf(File.separatorChar) != -1)
-                    || (currArg.indexOf('/') != -1))
+            if (!SourceVersion.isName(currArg))
                 throw new ParseException(CLEAN_BAD_CLASSNAME + currArg);
         }
     } // init()
