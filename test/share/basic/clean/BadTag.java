@@ -45,3 +45,8 @@
  * @summary Error: Parse Exception: Bad classname provided for `clean': dir/Test
  * @clean dir/Test
  */
+
+/* @test
+ * @summary Error: Parse Exception: Bad classname provided for `clean': JARandom.class
+ * @run clean JARandom.class
+ */
