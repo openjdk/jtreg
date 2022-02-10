@@ -88,9 +88,13 @@ public class CleanAction extends Action
         if (args.isEmpty())
             throw new ParseException(CLEAN_NO_CLASSNAME);
 
-        for (String currArg : args) {
-            if (!SourceVersion.isName(currArg))
-                throw new ParseException(CLEAN_BAD_CLASSNAME + currArg);
+        for (String arg : args) {
+            if ("*".equals(arg)) // allow "clean default package" marker
+                continue;
+            // allow "clean any package" pattern
+            String name = arg.endsWith(".*") ? arg.substring(0, arg.length() - 2) : arg;
+            if (!SourceVersion.isName(name))
+                throw new ParseException(CLEAN_BAD_CLASSNAME + arg);
         }
     } // init()
 
