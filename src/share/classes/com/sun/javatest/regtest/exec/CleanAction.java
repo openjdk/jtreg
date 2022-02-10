@@ -37,6 +37,8 @@ import com.sun.javatest.regtest.config.Locations;
 import com.sun.javatest.regtest.config.Locations.ClassLocn;
 import com.sun.javatest.regtest.config.ParseException;
 
+import javax.lang.model.SourceVersion;
+
 import static com.sun.javatest.regtest.RStatus.error;
 import static com.sun.javatest.regtest.RStatus.passed;
 
@@ -86,10 +88,16 @@ public class CleanAction extends Action
         if (args.isEmpty())
             throw new ParseException(CLEAN_NO_CLASSNAME);
 
-        for (String currArg : args) {
-            if ((currArg.indexOf(File.separatorChar) != -1)
-                    || (currArg.indexOf('/') != -1))
-                throw new ParseException(CLEAN_BAD_CLASSNAME + currArg);
+        for (String arg : args) {
+            // allow "clean default package" marker
+            if ("*".equals(arg))
+                continue;
+            // allow qualified class name with optional "clean any package" pattern
+            String name = arg.endsWith(".*") ? arg.substring(0, arg.length() - 2) : arg;
+            if (SourceVersion.isName(name))
+                continue;
+            // detected a syntactically invalid class name
+            throw new ParseException(CLEAN_BAD_CLASSNAME + arg);
         }
     } // init()
 

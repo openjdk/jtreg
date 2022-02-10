@@ -63,7 +63,7 @@ $(BUILDDIR)/Basic.check.ok: \
 		$(TESTDIR)/share/basic \
 		> $(@:%.ok=%/log) 2>&1|| \
 	    true "non-zero exit code from JavaTest intentionally ignored"
-	$(GREP) -s 'Test results: passed: 155; error: 83' $(@:%.ok=%/log)  > /dev/null
+	$(GREP) -s 'Test results: passed: 156; error: 84' $(@:%.ok=%/log)  > /dev/null
 	echo $@ passed at `date` > $@
 
 INITIAL_TESTS += \
