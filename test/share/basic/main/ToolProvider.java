@@ -28,8 +28,7 @@
 public class ToolProvider
 {
     public static void main(String [] args) {
-        java.util.spi.ToolProvider.findFirst("jtreg").orElseThrow(
-            () -> new AssertionError("`jtreg` not found by name");
-        );
+        java.util.spi.ToolProvider.findFirst("jtreg")
+            .orElseThrow(() -> new AssertionError("`jtreg` not found by name"));
     }
 }
