@@ -33,8 +33,6 @@ import java.util.List;
  * an append method and several methods to split strings based on separators,
  * terminators, whitespace, etc.
  * Limited to -target 1.1, so no generics.
- *
- * @author Iris A Garcia
  */
 public class StringArray {
 

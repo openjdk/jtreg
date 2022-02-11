@@ -78,7 +78,6 @@ import static com.sun.javatest.regtest.RStatus.passed;
  * specification. It is also invoked implicitly as needed by the "build"
  * action.
  *
- * @author Iris A Garcia
  * @see Action
  * @see com.sun.javatest.regtest.agent.MainActionHelper
  */

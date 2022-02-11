@@ -32,8 +32,6 @@ import java.lang.reflect.Method;
 
 /**
   * This class is the wrapper for all main/othervm tests.
-  *
-  * @author Iris A Garcia
   */
 public class MainWrapper
 {

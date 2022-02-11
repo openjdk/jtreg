@@ -60,8 +60,6 @@ import java.util.HashMap;
 
 /**
   * This class is the wrapper for all applet tests.
-  *
-  * @author Iris A Garcia
   */
 @SuppressWarnings("removal") // Applet and related APIs
 public class AppletWrapper

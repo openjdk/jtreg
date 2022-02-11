@@ -36,9 +36,7 @@ import java.util.function.Consumer;
 import com.sun.javatest.regtest.agent.JDK_Version;
 
 /**
- *
- * @author Dmitry Fazunenko
- * @author jjg
+ * The set of named values used for evaluating expressions in test descriptions.
  */
 public class RegressionContext implements Expr.Context {
     /**
@@ -56,7 +54,7 @@ public class RegressionContext implements Expr.Context {
     }
 
     /**
-     * Creates a context for used with nteh specified parameters.
+     * Creates a context for used with the specified parameters.
      *
      * @param params the parameters
      * @param logger an object to which to write logging messages
