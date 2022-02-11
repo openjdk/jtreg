@@ -167,8 +167,8 @@ public class Basic
         numMain   += 1;
 
         // clean
-        numPassed += 4; numFailed += 0; numError  += 6;
-        numClean  += 10;
+        numPassed += 5; numFailed += 0; numError  += 7;
+        numClean  += 12;
         numShell  += 1;
 
         // compile
