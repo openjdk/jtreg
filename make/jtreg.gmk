@@ -81,6 +81,7 @@ TARGETS.com.sun.javatest.regtest += $(BUILDDIR)/classes.java.lang.ok
 # resources required for com.sun.javatest.regtest
 
 RESOURCES.com.sun.javatest.regtest = \
+	$(CLASSDIR)/META-INF/services/java.util.spi.ToolProvider \
 	$(CLASSDIR)/com/sun/javatest/regtest/i18n.properties \
 	$(CLASSDIR)/com/sun/javatest/regtest/config/i18n.properties \
 	$(CLASSDIR)/com/sun/javatest/regtest/report/i18n.properties \
