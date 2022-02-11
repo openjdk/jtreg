@@ -23,10 +23,11 @@
  * questions.
  */
 
-package com.sun.javatest.regtest;
+package com.sun.javatest.regtest.tool;
 
 import com.sun.javatest.Harness;
-import com.sun.javatest.regtest.tool.Tool;
+import com.sun.javatest.regtest.BadArgs;
+import com.sun.javatest.regtest.Main;
 import com.sun.javatest.util.I18NResourceBundle;
 
 import java.io.PrintWriter;
