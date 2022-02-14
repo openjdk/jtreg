@@ -32,7 +32,7 @@ public class Pass
         var jtreg = ToolProvider.findFirst("jtreg")
             .orElseThrow(() -> new AssertionError("`jtreg` not found by name"));
 
-        int code = jtreg.run(System.out, System.err, "--version");
+        int code = jtreg.run(System.out, System.err, "-help");
 
         if (code != 0) throw new AssertionError("non-zero exit code: " + code);
     }
