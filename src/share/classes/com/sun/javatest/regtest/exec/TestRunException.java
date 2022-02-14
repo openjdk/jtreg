@@ -27,8 +27,6 @@ package com.sun.javatest.regtest.exec;
 
 /**
  * This class defines any exception thrown by the Regression extensions.
- *
- * @author Iris A Garcia
  */
 public class TestRunException extends Exception
 {
