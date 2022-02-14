@@ -57,9 +57,9 @@ $(BUILDDIR)/StatsTxt.1.ok: \
 		$(TESTDIR)/share/basic/main   \
 			> $(@:%.ok=%/jt.log) 2>&1  || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
-	$(GREP) -s '^TEST-STATS: StatsTxt run=45 failed=33 excluded=0$$' \
+	$(GREP) -s '^TEST-STATS: StatsTxt run=44 failed=32 excluded=0$$' \
 		$(@:%.ok=%/jt.log)  > /dev/null
-	$(GREP) -s '^TEST-STATS: StatsTxt run=45 failed=33 excluded=0$$' \
+	$(GREP) -s '^TEST-STATS: StatsTxt run=44 failed=32 excluded=0$$' \
 		$(@:%.ok=%/report/text/stats.txt)  > /dev/null
 	echo "test passed at `date`" > $@
 
@@ -82,9 +82,9 @@ $(BUILDDIR)/StatsTxt.2.ok: \
 		$(TESTDIR)/share/basic/ignore   \
 			> $(@:%.ok=%/jt.log) 2>&1  || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
-	$(GREP) -s '^TEST-STATS: StatsTxt passed=12 failed=33 ignored=2$$' \
+	$(GREP) -s '^TEST-STATS: StatsTxt passed=12 failed=32 ignored=2$$' \
 		$(@:%.ok=%/jt.log)  > /dev/null
-	$(GREP) -s '^TEST-STATS: StatsTxt passed=12 failed=33 ignored=2$$' \
+	$(GREP) -s '^TEST-STATS: StatsTxt passed=12 failed=32 ignored=2$$' \
 		$(@:%.ok=%/report/text/stats.txt)  > /dev/null
 	echo "test passed at `date`" > $@
 		    			

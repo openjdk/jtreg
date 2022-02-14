@@ -21,14 +21,19 @@
  * questions.
  */
 
-/* @test
- * @summary Passed: Execution successful
- */
+import java.util.spi.ToolProvider;
 
-public class ToolProvider
+/*
+ * @test
+ */
+public class Pass
 {
-    public static void main(String [] args) {
-        java.util.spi.ToolProvider.findFirst("jtreg")
+    public static void main(String... args) {
+        var jtreg = ToolProvider.findFirst("jtreg")
             .orElseThrow(() -> new AssertionError("`jtreg` not found by name"));
+
+        int code = jtreg.run(System.out, System.err, "--version");
+
+        if (code != 0) throw new AssertionError("non-zero exit code: " + code);
     }
 }

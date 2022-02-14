@@ -211,6 +211,8 @@ PKGS.JAR.jtreg += \
 	java.lang
 TARGETS.JAR.jtreg += $(TARGETS.com.sun.javatest.regtest)
 
+FILES.JAR.jtreg=$(CLASSDIR)/META-INF/services/java.util.spi.ToolProvider
+
 $(JTREG_IMAGEDIR)/lib/jtreg.jar: JAR_MAINCLASS = com.sun.javatest.regtest.Main
 
 $(JTREG_IMAGEDIR)/lib/jtreg.jar: JAR_CLASSPATH = javatest.jar asmtools.jar
