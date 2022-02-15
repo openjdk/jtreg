@@ -27,8 +27,8 @@ $(BUILDDIR)/ToolProviderTest.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(TESTDIR)/toolprovider/ToolProviderTest.java
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
-	$(JDKHOME) \
-	    -classpath $(JTREG_IMAGEDIR)/lib/jtreg.jar
+	$(JDKHOME)/bin/java \
+	    -classpath $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(TESTDIR)/toolprovider/ToolProviderTest.java \
 			> $(@:%.ok=%/jt.log) 2>&1 ; rc=$$? ; \
         if [ "$$rc" != 0 ]; then echo "unexpected exit code: " $$rc ; exit 1 ; fi
