@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
- Copyright (c) 2007, 2017, Oracle and/or its affiliates. All rights reserved.
+ Copyright (c) 2007, 2022, Oracle and/or its affiliates. All rights reserved.
  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 
  This code is free software; you can redistribute it and/or modify it
@@ -144,7 +144,7 @@
             <manifest>
                 <attribute name="Built-By" value="${user.name}"/>
                 <attribute name="Main-Class" value="com.sun.javatest.regtest.Main"/>
-                <attribute name="Class-Path" value="javatest.jar jh.jar junit.jar"/>
+                <attribute name="Class-Path" value="javatest.jar junit.jar"/>
                 <attribute name="jtreg-Name" value="jtreg"/>
                 <attribute name="jtreg-Version" value="${build.version}"/>
                 <attribute name="jtreg-Milestone" value="${build.milestone}"/>
@@ -188,7 +188,7 @@
         <!-- have to set fork=true because otherwise output redirection gets screwed up -->
         <mkdir dir="${build.dir}/jtreg"/>
         <java fork="true" failonerror="true"
-            classname="com.sun.javatest.regtest.Main" classpath="${build.classes.dir}:${javatest.jar}:${junit.jar}:${jh.jar}"
+            classname="com.sun.javatest.regtest.Main" classpath="${build.classes.dir}:${javatest.jar}:${junit.jar}"
             output="${build.dir}/jtreg/usage.txt">
             <jvmarg value="-Dprogram=jtreg"/>
             <arg value="-help"/>
@@ -209,7 +209,7 @@
 
     <!-- ********** imports ************************************************ -->
 
-    <target name="import-javatest" depends="-init,import-javahelp" if="javatest.ok">
+    <target name="import-javatest" depends="-init" if="javatest.ok">
         <copy todir="${dist.jtreg.dir}/doc/javatest" file="${javatest.home}/doc/javatest/javatestGUI.pdf"/>
         <copy tofile="${dist.jtreg.dir}/legal/javatest/copyright.html" file="${javatest.home}/COPYRIGHT-javatest.html"/>
         <copy file="${javatest.jar}" tofile="${dist.jtreg.dir}/lib/javatest.jar"/>
@@ -236,14 +236,10 @@
         <copy file="${jcov.home}/lib/jcov_network_saver.jar" tofile="${dist.jtreg.dir}/lib/jcov_network_saver.jar"/>
     </target>
 
-    <target name="import-jtharness" depends="-init,import-javahelp" if="jtharness.ok">
+    <target name="import-jtharness" depends="-init" if="jtharness.ok">
         <copy todir="${dist.jtreg.dir}/legal/jtharness" file="${javatest.home}/legal/copyright.txt"/>
         <copy todir="${dist.jtreg.dir}/legal/jtharness" file="${javatest.home}/legal/license.txt"/>
         <copy file="${javatest.jar}" tofile="${dist.jtreg.dir}/lib/javatest.jar"/>
-    </target>
-
-    <target name="import-javahelp" unless="javatest.includes.javahelp.ok">
-        <copy file="${jh.jar}" tofile="${dist.jtreg.dir}/lib/jh.jar"/>
     </target>
 
     <!-- ********** jct-utils ********************************************** -->
