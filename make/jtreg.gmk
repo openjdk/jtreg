@@ -218,11 +218,6 @@ $(JTREG_IMAGEJARDIR)/jtreg.jar: \
 	$(JTREG_IMAGEDIR)/lib/javatest.jar \
 	$(TARGETS.JAR.jtreg)
 
-ifdef JAVAHELP_JAR
-$(JTREG_IMAGEJARDIR)/jtreg.jar: \
-	$(JTREG_IMAGEJARDIR)/jh.jar 
-endif
-
 TARGETS.ZIP.jtreg += $(JTREG_IMAGEJARDIR)/jtreg.jar
 
 #----------------------------------------------------------------------

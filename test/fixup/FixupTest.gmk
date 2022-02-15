@@ -27,7 +27,6 @@
 
 $(BUILDDIR)/fixupSingle.ok: \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
-	    $(JTREG_IMAGE_JAVAHELP_JAR) \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)

@@ -113,7 +113,7 @@
         <java-data xmlns="http://www.netbeans.org/ns/freeform-project-java/4">
             <compilation-unit>
                 <package-root>${root}/src/share/classes</package-root>
-                <classpath mode="compile">${javatest.jar}:${jh.jar}:${ant.jar}:${junit.jar}:${testng.jar}</classpath>
+                <classpath mode="compile">${javatest.jar}:$${ant.jar}:${junit.jar}:${testng.jar}</classpath>
                 <source-level>1.7</source-level>
             </compilation-unit>
         </java-data>

@@ -44,8 +44,7 @@ endif
 
 $(BUILDDIR)/StatsTxt.1.ok: \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
-	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	    $(JTREG_IMAGE_JAVAHELP_JAR)
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	$(JDKJAVA) \
 	    -Djtreg.stats.format="TEST-STATS: StatsTxt run=%r failed=%F excluded=%x" \
@@ -67,8 +66,7 @@ TESTS.jtreg += $(BUILDDIR)/StatsTxt.1.ok
 
 $(BUILDDIR)/StatsTxt.2.ok: \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
-	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	    $(JTREG_IMAGE_JAVAHELP_JAR)
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	$(JDKJAVA) \
 	    -Djtreg.stats.format="TEST-STATS: StatsTxt passed=%p failed=%F ignored=%i" \

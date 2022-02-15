@@ -47,7 +47,6 @@ endif
 $(BUILDDIR)/Basic.check.ok: \
                 $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(JTREG_IMAGEDIR)/lib/javatest.jar \
-	    	$(JTREG_IMAGE_JAVAHELP_JAR) \
 		$(JTREG_IMAGEDIR)/lib/junit.jar \
 		$(JTREG_IMAGEDIR)/lib/testng.jar \
 		$(BUILDDIR)/i18n.com.sun.javatest.regtest.ok \
@@ -101,7 +100,6 @@ $(BUILDDIR)/Basic.othervm.ok \
 $(BUILDDIR)/Basic.agentvm.ok: \
                 $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(JTREG_IMAGEDIR)/lib/javatest.jar \
-	    	$(JTREG_IMAGE_JAVAHELP_JAR) \
 		$(JTREG_IMAGEDIR)/lib/junit.jar \
 		$(JTREG_IMAGEDIR)/lib/testng.jar \
 		$(TESTDIR)/basic/Basic.java \

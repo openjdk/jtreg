@@ -27,8 +27,7 @@
 
 $(BUILDDIR)/TestVersionCheck.match.ok: \
                 $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-		$(JTREG_IMAGEDIR)/lib/javatest.jar \
-	    	$(JTREG_IMAGE_JAVAHELP_JAR)
+		$(JTREG_IMAGEDIR)/lib/javatest.jar
 	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
 	$(MKDIR) -p $(@:%.ok=%)
 	$(JDKHOME)/bin/java \
@@ -54,8 +53,7 @@ endif
 
 $(BUILDDIR)/TestVersionCheck.mismatch.ok: \
                 $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-		$(JTREG_IMAGEDIR)/lib/javatest.jar \
-	    	$(JTREG_IMAGE_JAVAHELP_JAR)
+		$(JTREG_IMAGEDIR)/lib/javatest.jar
 	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
 	$(MKDIR) -p $(@:%.ok=%)
 	$(JDKHOME)/bin/java \

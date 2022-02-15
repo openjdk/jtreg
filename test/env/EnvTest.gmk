@@ -27,8 +27,7 @@ ENV.files := $(shell find $(TESTDIR)/env -type f)
 
 $(BUILDDIR)/EnvTest.simple.ok: $(ENV.files) \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
-	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	    $(JTREG_IMAGE_JAVAHELP_JAR) \
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%)
 	$(MKDIR) $(@:%.ok=%)
@@ -52,8 +51,7 @@ $(BUILDDIR)/EnvTest.simple.ok: $(ENV.files) \
 
 $(BUILDDIR)/EnvTest.full.ok: $(ENV.files) \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
-	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	    $(JTREG_IMAGE_JAVAHELP_JAR) \
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%)
 	$(MKDIR) $(@:%.ok=%)

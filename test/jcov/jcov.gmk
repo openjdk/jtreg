@@ -29,7 +29,6 @@ $(BUILDDIR)/jcov.othervm.ok \
 $(BUILDDIR)/jcov.agentvm.ok: \
                 $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(JTREG_IMAGEDIR)/lib/javatest.jar \
-	    	$(JTREG_IMAGE_JAVAHELP_JAR) \
 		$(JTREG_IMAGEDIR)/lib/jcov.jar \
 		$(JTREG_IMAGEDIR)/lib/jcov_network_saver.jar 
 	$(RM) $(@:%.ok=%/lib) $(@:%.ok=%/work) $(@:%.ok=%/report)
