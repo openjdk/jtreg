@@ -23,18 +23,17 @@
 # questions.
 #
 
-$(BUILDDIR)/ToolProviderTest.OK.ok: \
+$(BUILDDIR)/ToolProviderTest.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	$(JTREG_IMAGEDIR)/bin/jtreg
+	$(TESTDIR)/toolprovider/ToolProviderTest.java
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
-	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
-		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(JDKHOME) \
-		$(TESTDIR)/toolprovider/Pass.java \
+	$(JDKHOME) \
+	    -classpath $(JTREG_IMAGEDIR)/lib/jtreg.jar
+		$(TESTDIR)/toolprovider/ToolProviderTest.java \
 			> $(@:%.ok=%/jt.log) 2>&1 ; rc=$$? ; \
         if [ "$$rc" != 0 ]; then echo "unexpected exit code: " $$rc ; exit 1 ; fi
 	echo "test passed at `date`" > $@
 
 
 TESTS.jtreg += \
-	$(BUILDDIR)/ToolProviderTest.OK.ok
+	$(BUILDDIR)/ToolProviderTest.ok

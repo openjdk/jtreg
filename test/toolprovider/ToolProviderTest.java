@@ -21,19 +21,23 @@
  * questions.
  */
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.spi.ToolProvider;
 
-/*
- * @test
- */
-public class Pass
-{
+public class ToolProviderTest{
     public static void main(String... args) {
         var jtreg = ToolProvider.findFirst("jtreg")
             .orElseThrow(() -> new AssertionError("`jtreg` not found by name"));
 
-        int code = jtreg.run(System.out, System.err, "-help");
+        var out = new StringWriter();
+        var err = new StringWriter();
+        int code = jtreg.run(new PrintWriter(out), new PrintWriter(err), "-help");
 
-        if (code != 0) throw new AssertionError("non-zero exit code: " + code);
+        if (code != 0)
+            throw new AssertionError("non-zero exit code: " + code);
+
+        if (!out.toString().contains("Usage:"))
+            throw new AssertionError("No help text printed?\nout=" + out + "\nerr=" + err);
     }
 }
