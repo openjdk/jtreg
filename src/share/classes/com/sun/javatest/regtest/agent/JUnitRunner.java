@@ -32,8 +32,6 @@ import java.lang.reflect.Method;
 
 /**
  * TestRunner to run JUnit tests.
- *
- * @author John R. Rose
  */
 public class JUnitRunner implements MainActionHelper.TestRunner {
     private static final String

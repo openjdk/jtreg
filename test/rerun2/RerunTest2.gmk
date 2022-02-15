@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2013, 2017, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2013, 2022, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -33,14 +33,15 @@ $(BUILDDIR)/RerunTest2.ok: \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	$(MKDIR) $(@:%.ok=%)/classes
-	$(JDK8HOME)/bin/javac \
+	$(JDKHOME)/bin/javac \
 		-d $(@:%.ok=%)/classes \
 		-cp $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		-Xlint -Werror \
 		$(TESTDIR)/rerun2/RerunTest2.java
-	cd $(@:%.ok=%) && $(JDK8HOME)/bin/java \
+	cd $(@:%.ok=%) && $(JDKJAVA) \
 		-classpath classes$(PS)$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		RerunTest2 \
+		$(JDK8HOME) \
 		../$(TESTDIR)/rerun2/test
 	echo "test passed at `date`" > $@
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -27,6 +27,7 @@ package com.sun.javatest.regtest;
 
 import java.io.File;
 import java.io.PrintWriter;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -282,7 +283,7 @@ public class Main {
                         && tool.testGroupArgs.isEmpty()
                         && dir != null) {
                     DirectoryScanner s = getDirectoryScanner(dir);
-                    addPaths(dir, s.getIncludedFiles());
+                    addPaths(dir.toPath(), s.getIncludedFiles());
                 }
 
                 int rc = tool.run();
@@ -309,10 +310,10 @@ public class Main {
             }
         }
 
-        private void addPaths(File dir, String[] paths) {
+        private void addPaths(Path dir, String[] paths) {
             if (paths != null) {
                 for (String p: paths)
-                    tool.antFileArgs.add(new File(dir, p));
+                    tool.antFileArgs.add(dir.resolve(p));
             }
         }
     }

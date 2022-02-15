@@ -42,6 +42,7 @@ import java.util.PropertyPermission;
  * by JDK1.0.2.
  */
 
+@SuppressWarnings("removal") // Security Manager and related APIs
 public class JavaTestSecurityManager extends SecurityManager
 {
     /**

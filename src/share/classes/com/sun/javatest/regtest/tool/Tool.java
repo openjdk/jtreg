@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2021, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -38,6 +38,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.Reader;
@@ -46,6 +47,8 @@ import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.DateFormat;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -64,6 +67,7 @@ import java.util.TreeSet;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javax.swing.Timer;
 
@@ -131,6 +135,7 @@ import static com.sun.javatest.regtest.tool.Option.ArgType.*;
 /**
  * Main entry point to be used to access jtreg.
  */
+@SuppressWarnings("removal") // Security Manager and related APIs
 public class Tool {
 
     /**
@@ -139,6 +144,8 @@ public class Tool {
      * @param args An array of args, such as might be supplied on the command line.
      */
     public static void main(String[] args) {
+        checkJavaOSVersion();
+
         PrintWriter out = new PrintWriter(System.out, true);
         PrintWriter err = new PrintWriter(System.err, true);
         Tool m = new Tool(out, err);
@@ -180,6 +187,41 @@ public class Tool {
             exit(EXIT_EXCEPTION);
         }
     } // main()
+
+    private static void checkJavaOSVersion() {
+        String osName = System.getProperty("os.name");
+        if (osName != null && osName.equals("Mac OS X")) {
+            try {
+                String expectVersion;
+                Process p = new ProcessBuilder("defaults", "read", "loginwindow", "SystemVersionStampAsString")
+                        .redirectErrorStream(true)
+                        .start();
+                try (InputStream in = p.getInputStream();
+                    BufferedReader r = new BufferedReader(new InputStreamReader(in))) {
+                    expectVersion = r.lines().collect(Collectors.joining());
+                }
+                p.waitFor();
+
+                checkJavaOSVersion(expectVersion);
+
+            } catch (IOException | InterruptedException e) {
+                System.err.println("Error getting OS version: " + e);
+                System.exit(99);
+            }
+        }
+    }
+
+    private static void checkJavaOSVersion(String expectVersion) {
+        String osVersion = System.getProperty("os.version");
+        if (!osVersion.equals(expectVersion)) {
+            System.err.println("The version of JDK you are using to run jtreg does not report the OS version correctly.");
+            System.err.println("    java.home:    " + System.getProperty("java.home"));
+            System.err.println("    java.version: " + System.getProperty("java.version"));
+            System.err.println("    os.version:   " + osVersion + "  (expected: " + expectVersion + ")");
+            System.err.println("Use a more recent update of this version of JDK, or a newer version of JDK.");
+            System.exit(1);
+        }
+    }
 
     /**
      * Call System.exit, taking care to get permission from the
@@ -295,7 +337,7 @@ public class Tool {
         new Option(OLD, MAIN, "", "-w", "-workDir") {
             @Override
             public void process(String opt, String arg) {
-                workDirArg = new File(arg);
+                workDirArg = Path.of(arg);
             }
         },
 
@@ -324,7 +366,7 @@ public class Tool {
         new Option(OLD, MAIN, "", "-r", "-reportDir") {
             @Override
             public void process(String opt, String arg) {
-                reportDirArg = new File(arg);
+                reportDirArg = Path.of(arg);
             }
         },
 
@@ -439,7 +481,7 @@ public class Tool {
         new Option(STD, MAIN, "", "-dir") {
             @Override
             public void process(String opt, String arg) {
-                baseDirArg = new File(arg);
+                baseDirArg = Path.of(arg);
             }
         },
 
@@ -470,7 +512,7 @@ public class Tool {
             @Override
             public void process(String opt, String arg) {
                 File f = getNormalizedFile(new File(arg));
-                excludeListArgs.add(f);
+                excludeListArgs.add(f.toPath());
             }
         },
 
@@ -478,7 +520,7 @@ public class Tool {
             @Override
             public void process(String opt, String arg) {
                 File f = getNormalizedFile(new File(arg));
-                matchListArgs.add(f);
+                matchListArgs.add(f.toPath());
             }
         },
 
@@ -506,7 +548,7 @@ public class Tool {
                 for (String f: arg.split(File.pathSeparator)) {
                     if (f.length() == 0)
                         continue;
-                    observerPathArg.add(new File(f));
+                    observerPathArg.add(Path.of(f));
                 }
             }
         },
@@ -528,7 +570,7 @@ public class Tool {
                 for (String f: arg.split(File.pathSeparator)) {
                     if (f.length() == 0)
                         continue;
-                    timeoutHandlerPathArg.add(new File(f));
+                    timeoutHandlerPathArg.add(Path.of(f));
                 }
             }
         },
@@ -623,7 +665,7 @@ public class Tool {
                 } catch (IOException e) {
                     throw new BadArgs(i18n, "main.cantCreateLockFile", arg);
                 }
-                exclusiveLockArg = f;
+                exclusiveLockArg = f.toPath();
             }
         },
 
@@ -637,7 +679,7 @@ public class Tool {
                     throw new BadArgs(i18n, "main.nativePathNotExist", arg);
                 if (!f.isDirectory())
                     throw new BadArgs(i18n, "main.nativePathNotDir", arg);
-                nativeDirArg = f;
+                nativeDirArg = f.toPath();
             }
         },
 
@@ -746,7 +788,7 @@ public class Tool {
                 for (String f: arg.split(File.pathSeparator)) {
                     if (f.length() == 0)
                         continue;
-                    classPathAppendArg.add(new File(f));
+                    classPathAppendArg.add(Path.of(f));
                 }
             }
         },
@@ -982,11 +1024,11 @@ public class Tool {
                     testGroupArgs.add(arg);
                 } else if (fileIdPtn.matcher(arg).matches()) {
                     int sep = arg.lastIndexOf("#");
-                    File file = new File(arg.substring(0, sep));
+                    Path file = Path.of(arg.substring(0, sep));
                     String id = arg.substring(sep + 1);
                     testFileIdArgs.add(new TestManager.FileId(file, id));
                 } else {
-                    testFileArgs.add(new File(arg));
+                    testFileArgs.add(Path.of(arg));
                 }
             }
 
@@ -1013,14 +1055,14 @@ public class Tool {
                 .classes(Harness.class)
                 .getFile();
         if (javatest_jar != null) {
-            System.setProperty("javatestClassDir", javatest_jar.getPath());
+            System.setProperty("javatestClassDir", javatest_jar.toString());
         }
 
         jtreg_jar = new JarFinder("jtreg.jar")
                 .classes(getClass())
                 .getFile();
         if (jtreg_jar != null) {
-            jcovManager = new JCovManager(jtreg_jar.getParentFile());
+            jcovManager = new JCovManager(jtreg_jar.getParent());
             if (jcovManager.isJCovInstalled()) {
                 options = new ArrayList<>(options);
                 options.addAll(jcovManager.options);
@@ -1030,7 +1072,7 @@ public class Tool {
         help = new Help(options);
         if (javatest_jar != null) {
             help.addVersionHelper(o -> {
-                try (JarFile jf = new JarFile(javatest_jar)) {
+                try (JarFile jf = new JarFile(javatest_jar.toFile())) {
                     JarEntry e = jf.getJarEntry("META-INF/buildInfo.txt");
                     if (e != null) {
                         try (InputStream in = jf.getInputStream(e)) {
@@ -1096,18 +1138,18 @@ public class Tool {
             }
         }
 
-        File baseDir;
+        Path baseDir;
         if (baseDirArg == null) {
-            baseDir = new File(System.getProperty("user.dir"));
+            baseDir = Path.of(System.getProperty("user.dir"));
         } else {
-            if (!baseDirArg.exists())
+            if (!Files.exists(baseDirArg))
                 throw new Fault(i18n, "main.cantFindFile", baseDirArg);
-            baseDir = baseDirArg.getAbsoluteFile();
+            baseDir = baseDirArg.toAbsolutePath();
         }
 
         String antFileList = System.getProperty(JAVATEST_ANT_FILE_LIST);
         if (antFileList != null)
-            antFileArgs.addAll(readFileList(new File(antFileList)));
+            antFileArgs.addAll(readFileList(Path.of(antFileList)));
 
         final TestManager testManager = new TestManager(out, baseDir, new TestFinder.ErrorHandler() {
             @Override
@@ -1167,7 +1209,7 @@ public class Tool {
                     && f.getName().toLowerCase().equals("jre")
                     && f.getParentFile() != null)
                 f = f.getParentFile();
-            testJDK = com.sun.javatest.regtest.config.JDK.of(f);
+            testJDK = com.sun.javatest.regtest.config.JDK.of(f.toPath());
         }
 
         JDK_Version testJDK_version = checkJDK(testJDK);
@@ -1211,11 +1253,11 @@ public class Tool {
         }
 
         if (workDirArg == null) {
-            workDirArg = new File("JTwork");
+            workDirArg = Path.of("JTwork");
         }
 
         if (reportDirArg == null && reportMode != ReportMode.NONE) {
-            reportDirArg = new File("JTreport");
+            reportDirArg = Path.of("JTreport");
         }
 
         makeDir(workDirArg, false);
@@ -1246,18 +1288,18 @@ public class Tool {
             return EXIT_OK;
         }
 
-        makeDir(new File(workDirArg, "scratch"), true);
+        makeDir(workDirArg.resolve("scratch"), true);
 
         if (reportMode != ReportMode.NONE) {
             makeDir(reportDirArg, false);
             testManager.setReportDirectory(reportDirArg);
 
             if (expandedArgs != null) {
-                File reportTextDir = new File(reportDirArg, "text");
+                Path reportTextDir = reportDirArg.resolve("text");
                 makeDir(reportTextDir, true);
-                File cmdArgsFile = new File(reportTextDir, "cmdArgs.txt");
+                Path cmdArgsFile = reportTextDir.resolve("cmdArgs.txt");
                 // update to use try-with-resources and lambda
-                try (BufferedWriter cmdArgsWriter = new BufferedWriter(new FileWriter(cmdArgsFile))) {
+                try (BufferedWriter cmdArgsWriter = Files.newBufferedWriter(cmdArgsFile)) {
                     for (String arg: expandedArgs) {
                         cmdArgsWriter.append(arg);
                         cmdArgsWriter.newLine();
@@ -1270,8 +1312,8 @@ public class Tool {
 
         if (jcovManager.isEnabled()) {
             jcovManager.setTestJDK(testJDK);
-            jcovManager.setWorkDir(getNormalizedFile(workDirArg));
-            jcovManager.setReportDir(getNormalizedFile(reportDirArg));
+            jcovManager.setWorkDir(getNormalizedFile(workDirArg.toFile()));
+            jcovManager.setReportDir(getNormalizedFile(reportDirArg.toFile()));
             jcovManager.instrumentClasses();
             final String XBOOTCLASSPATH_P = "-Xbootclasspath/p:";
             final String XMS = "-Xms";
@@ -1341,7 +1383,7 @@ public class Tool {
                         Agent.Pool p = Agent.Pool.instance(params);
                         if (allowSetSecurityManagerFlag) {
                             initPolicyFile();
-                            p.setSecurityPolicy(policyFile);
+                            p.setSecurityPolicy(policyFile.toFile());
                         }
                         if (timeoutFactorArg != null) {
                             p.setTimeoutFactor(timeoutFactorArg);
@@ -1393,7 +1435,7 @@ public class Tool {
                     r.report(testManager);
                 }
                 if (!reportOnlyFlag) {
-                    out.println("Results written to " + canon(workDirArg));
+                    out.println("Results written to " + canon(workDirArg.toFile()));
                 }
             }
 
@@ -1456,9 +1498,9 @@ public class Tool {
         // Check that we're not trying to use a Linux JDK when running on a Windows JDK,
         // and vice versa.
         JDK jtregJDK = com.sun.javatest.regtest.config.JDK.of(System.getProperty("java.home"));
-        File jtregJava = jtregJDK.getProg("java", true);
-        File jdkJava = jdk.getProg("java", true);
-        if (!jdkJava.getName().equals(jtregJava.getName())) {
+        Path jtregJava = jtregJDK.getProg("java", true);
+        Path jdkJava = jdk.getProg("java", true);
+        if (!jdkJava.getFileName().equals(jtregJava.getFileName())) {
             throw new Fault(i18n, "main.incompatibleJDK", jdk, jtregJDK);
         }
 
@@ -1497,12 +1539,12 @@ public class Tool {
                 } else {
                     for (String g: gset) {
                         try {
-                            Set<File> files = gm.getFiles(g);
+                            Set<Path> files = gm.getFiles(g);
                             out.print(g);
                             out.print(":");
                             Set<String> fset = new TreeSet<>(new NaturalComparator(false));
-                            for (File f : files)
-                                fset.add(ts.getRootDir().toURI().relativize(f.toURI()).getPath());
+                            for (Path f : files)
+                                fset.add(ts.getRootDir().toURI().relativize(f.toUri()).getPath());
                             for (String f: fset) {
                                 out.print(" ");
                                 out.print(f);
@@ -1598,27 +1640,13 @@ public class Tool {
         }
     }
 
-    private static List<File> readFileList(File file) throws Fault {
-        BufferedReader r;
+    private static List<Path> readFileList(Path file) throws Fault {
         try {
-            r = new BufferedReader(new FileReader(file));
-        } catch (FileNotFoundException e) {
-            throw new Fault(i18n, "main.cantOpenFile", file);
-        }
-        try {
-            List<File> list = new ArrayList<>();
-            String line;
-            while ((line = r.readLine()) != null)
-                list.add(new File(line));
-            return list;
+            List<String> lines = Files.readAllLines(file);
+            return lines.stream().map(Path::of).collect(Collectors.toList());
         } catch (IOException e) {
             throw new Fault(i18n, "main.cantRead", file, e);
-        } finally {
-            try {
-                r.close();
-            } catch (IOException e) {
-                // ignore
-            }
+
         }
     }
 
@@ -1637,15 +1665,15 @@ public class Tool {
             throw new Fault(i18n, "main.cantFind.jtreg.jar");
         }
 
-        File libDir = jtreg_jar.getParentFile();
+        Path libDir = jtreg_jar.getParent();
 
         asmtoolsPath = new JarFinder("asmtools.jar")
                 .classes("org.openjdk.asmtools.Main")
                 .libDir(libDir)
                 .getPath();
         help.addVersionHelper(out -> {
-            for (File f : asmtoolsPath.asList()) {
-                try (JarFile jf = new JarFile(f)) {
+            for (Path f : asmtoolsPath.asList()) {
+                try (JarFile jf = new JarFile(f.toFile())) {
                     JarEntry e = jf.getJarEntry("org/openjdk/asmtools/util/productinfo.properties");
                     if (e != null) {
                         try (InputStream in = jf.getInputStream(e)) {
@@ -1671,9 +1699,9 @@ public class Tool {
         // handle TestNG specially
         help.addVersionHelper(out -> {
             List<URL> urls = new ArrayList<>();
-            for (File f : testngPath.asList()) {
+            for (Path f : testngPath.asList()) {
                 try {
-                    urls.add(f.toURI().toURL());
+                    urls.add(f.toUri().toURL());
                 } catch (MalformedURLException e) {
                     // ignore
                 }
@@ -1689,8 +1717,8 @@ public class Tool {
             out.println("TestNG (testng.jar): version " + (v == null ? "unknown" : v)); // need i18n
         });
         SearchPath notTestNGPath = new SearchPath();
-        for (File f : testngPath.asList()) {
-            if (!f.getName().equals("testng.jar")) {
+        for (Path f : testngPath.asList()) {
+            if (!f.getFileName().toString().equals("testng.jar")) {
                 notTestNGPath.append(f);
             }
         }
@@ -1709,11 +1737,11 @@ public class Tool {
         // Write a policy file into the work directory granting all permissions
         // to jtreg.
         // Note: don't use scratch directory, which is cleared before tests run
-        File pfile = new File(workDirArg, "jtreg.policy");
-        try (BufferedWriter pout = new BufferedWriter(new FileWriter(pfile))) {
+        Path pfile = workDirArg.resolve("jtreg.policy");
+        try (BufferedWriter pout = Files.newBufferedWriter(pfile)) {
             String LINESEP = System.getProperty("line.separator");
-            for (File f: Arrays.asList(jtreg_jar, javatest_jar)) {
-                pout.write("grant codebase \"" + f.toURI().toURL() + "\" {" + LINESEP);
+            for (Path f: Arrays.asList(jtreg_jar, javatest_jar)) {
+                pout.write("grant codebase \"" + f.toUri().toURL() + "\" {" + LINESEP);
                 pout.write("    permission java.security.AllPermission;" + LINESEP);
                 pout.write("};" + LINESEP);
             }
@@ -1721,6 +1749,21 @@ public class Tool {
             throw new Fault(i18n, "main.cantWritePolicyFile", e);
         }
         policyFile = pfile;
+    }
+
+    private void makeDir(Path dir, boolean quiet) throws Fault {
+        // FIXME: I18N
+        if (Files.isDirectory(dir))
+            return;
+        if (!quiet)
+            out.println("Directory \"" + dir + "\" not found: creating");
+        try {
+            Files.createDirectories(dir);
+        } catch (IOException e) {
+            Fault f = new Fault(i18n, "main.cantCreateDir", dir);
+            f.initCause(e);
+            throw f;
+        }
     }
 
     private void makeDir(File dir, boolean quiet) throws Fault {
@@ -1735,19 +1778,19 @@ public class Tool {
         }
     }
 
-    private static List<File> pathToFiles(String path) {
-        List<File> files = new ArrayList<>();
+    private static List<Path> pathToFiles(String path) {
+        List<Path> files = new ArrayList<>();
         for (String f: path.split(File.pathSeparator)) {
             if (f.length() > 0)
-                files.add(new File(f));
+                files.add(Path.of(f));
         }
         return files;
     }
 
-    private static SearchPath filesToAbsolutePath(List<File> files) {
+    private static SearchPath filesToAbsolutePath(List<Path> files) {
         SearchPath p = new SearchPath();
-        for (File f: files) {
-            p.append(getNormalizedFile(f));
+        for (Path f: files) {
+            p.append(getNormalizedFile(f.toFile()).toPath());
         }
         return p;
     }
@@ -1784,8 +1827,8 @@ public class Tool {
                 rp.setKeywordsExpr(expr);
             }
 
-            rp.setExcludeLists(excludeListArgs.toArray(new File[excludeListArgs.size()]));
-            rp.setMatchLists(matchListArgs.toArray(new File[matchListArgs.size()]));
+            rp.setExcludeLists(excludeListArgs.toArray(new Path[0]));
+            rp.setMatchLists(matchListArgs.toArray(new Path[0]));
 
             if (priorStatusValuesArg == null || priorStatusValuesArg.length() == 0)
                 rp.setPriorStatusValues(null);
@@ -1831,7 +1874,7 @@ public class Tool {
                 rp.setTimeoutHandlerTimeout(timeoutHandlerTimeoutArg);
             }
 
-            File rd = testManager.getReportDirectory(testSuite);
+            Path rd = testManager.getReportDirectory(testSuite);
             if (rd != null)
                 rp.setReportDir(rd);
 
@@ -1910,7 +1953,7 @@ public class Tool {
         }
     }
 
-    private static Harness.Observer getObserver(List<File> observerPath, String observerClassName)
+    private static Harness.Observer getObserver(List<Path> observerPath, String observerClassName)
             throws Fault {
         try {
             Class<?> observerClass;
@@ -1919,9 +1962,9 @@ public class Tool {
             else {
                 URL[] urls = new URL[observerPath.size()];
                 int u = 0;
-                for (File f: observerPath) {
+                for (Path f: observerPath) {
                     try {
-                        urls[u++] = f.toURI().toURL();
+                        urls[u++] = f.toUri().toURL();
                     } catch (MalformedURLException ignore) {
                     }
                 }
@@ -2358,8 +2401,8 @@ public class Tool {
         if (isWindows()) {
             String PATH = System.getenv("PATH");
             if (PATH != null) {
-                for (File f : new SearchPath(PATH).asList()) {
-                    if (new File(f, "wsl.exe").exists()) {
+                for (Path f : new SearchPath(PATH).asList()) {
+                    if (Files.exists(f.resolve("wsl.exe"))) {
                         return true;
                     }
                 }
@@ -2399,24 +2442,24 @@ public class Tool {
     private List<String> expandedArgs;
 
     // this first group of args are the "standard" JavaTest args
-    private File workDirArg;
+    private Path workDirArg;
     private List<String> retainArgs;
-    private List<File> excludeListArgs = new ArrayList<>();
+    private List<Path> excludeListArgs = new ArrayList<>();
     private String userKeywordExpr;
     private String extraKeywordExpr;
     private String concurrencyArg;
     private Float timeoutFactorArg;
     private String priorStatusValuesArg;
-    private File reportDirArg;
+    private Path reportDirArg;
     public List<String> testGroupArgs = new ArrayList<>();
-    public List<File> testFileArgs = new ArrayList<>();
+    public List<Path> testFileArgs = new ArrayList<>();
     public List<TestManager.FileId> testFileIdArgs = new ArrayList<>();
     // TODO: consider making this a "pathset" to detect redundant specification
     // of directories and paths within them.
-    public final List<File> antFileArgs = new ArrayList<>();
+    public final List<Path> antFileArgs = new ArrayList<>();
 
     // these args are jtreg extras
-    private File baseDirArg;
+    private Path baseDirArg;
     private ExecMode execMode;
     private JDK compileJDK;
     private JDK testJDK;
@@ -2430,9 +2473,9 @@ public class Tool {
     private boolean httpdFlag;
     private String timeLimitArg;
     private String observerClassName;
-    private List<File> observerPathArg;
+    private List<Path> observerPathArg;
     private String timeoutHandlerClassName;
-    private List<File> timeoutHandlerPathArg;
+    private List<Path> timeoutHandlerPathArg;
     private long timeoutHandlerTimeoutArg = -1; // -1: default; 0: no timeout; >0: timeout in seconds
     private int maxPoolSize = -1;
     private Duration poolIdleTimeout = Duration.ofSeconds(30);
@@ -2445,22 +2488,22 @@ public class Tool {
     private boolean showGroupsFlag;
     private List<String> envVarArgs = new ArrayList<>();
     private IgnoreKind ignoreKind;
-    private List<File> classPathAppendArg = new ArrayList<>();
-    private File nativeDirArg;
+    private List<Path> classPathAppendArg = new ArrayList<>();
+    private Path nativeDirArg;
     private Boolean useWindowsSubsystemForLinux;
     private boolean jitFlag = true;
     private Help help;
     private boolean xmlFlag;
     private boolean xmlVerifyFlag;
-    private File exclusiveLockArg;
-    private List<File> matchListArgs = new ArrayList<>();
+    private Path exclusiveLockArg;
+    private List<Path> matchListArgs = new ArrayList<>();
 
-    private File javatest_jar;
-    private File jtreg_jar;
+    private Path javatest_jar;
+    private Path jtreg_jar;
     private SearchPath junitPath;
     private SearchPath testngPath;
     private SearchPath asmtoolsPath;
-    private File policyFile;
+    private Path policyFile;
 
     JCovManager jcovManager;
 

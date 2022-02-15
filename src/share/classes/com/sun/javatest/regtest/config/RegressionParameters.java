@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2001, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -29,6 +29,9 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -38,6 +41,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -60,7 +64,9 @@ import com.sun.javatest.interview.BasicInterviewParameters;
 import com.sun.javatest.regtest.agent.JDK_Version;
 import com.sun.javatest.regtest.agent.SearchPath;
 import com.sun.javatest.regtest.exec.TimeoutHandlerProvider;
+import com.sun.javatest.regtest.util.FileUtils;
 import com.sun.javatest.regtest.util.StringUtils;
+import com.sun.javatest.util.I18NResourceBundle;
 
 import static com.sun.javatest.regtest.util.StringUtils.join;
 
@@ -137,10 +143,10 @@ public class RegressionParameters
         mtfp.setTimeoutFactor(tfac);
     }
 
-    public void setExcludeLists(File[] files) {
+    public void setExcludeLists(Path[] files) {
         MutableExcludeListParameters mep =
             (MutableExcludeListParameters) getExcludeListParameters();
-        mep.setExcludeFiles(files);
+        mep.setExcludeFiles(FileUtils.toFiles(files));
     }
 
     public void setPriorStatusValues(boolean[] b) {
@@ -463,13 +469,16 @@ public class RegressionParameters
 
     private TestFilter getMatchListFilter() {
         if (matchListFilter == UNSET) {
-            List<File> matchList = getMatchLists();
+            List<Path> matchList = getMatchLists();
             if (matchList.isEmpty()) {
                 matchListFilter = null;
             } else {
                 final ExcludeList el;
                 try {
-                    el = new ExcludeList(matchList.toArray(new File[]{}));
+                    el = new ExcludeList(matchList.stream()
+                            .map(Path::toFile)
+                            .collect(Collectors.toList())
+                            .toArray(new File[0]));
                 } catch (ExcludeList.Fault | IOException e) {
                     throw new Error(e);
                 }
@@ -630,87 +639,95 @@ public class RegressionParameters
     private void load0(Map<String,String> data, boolean checkChecksum) throws Interview.Fault {
         String prefix = getTag();
 
-        String v;
+        try {
+            String v;
 
-        v = data.get(prefix + ENVVARS);
-        if (v != null)
-            setEnvVars(deserializeEnv(v, "\n"));
+            v = data.get(prefix + ENVVARS);
+            if (v != null)
+                setEnvVars(deserializeEnv(v, "\n"));
 
-        v = data.get(prefix + CHECK);
-        if (v != null)
-            setCheck(v.equals("true"));
+            v = data.get(prefix + CHECK);
+            if (v != null)
+                setCheck(v.equals("true"));
 
-        v = data.get(prefix + EXEC_MODE);
-        if (v != null)
-            setExecMode(ExecMode.valueOf(v));
+            v = data.get(prefix + EXEC_MODE);
+            if (v != null)
+                setExecMode(ExecMode.valueOf(v));
 
-        v = data.get(prefix + IGNORE);
-        if (v != null)
-            setIgnoreKind(IgnoreKind.valueOf(v));
+            v = data.get(prefix + IGNORE);
+            if (v != null)
+                setIgnoreKind(IgnoreKind.valueOf(v));
 
-        v = data.get(prefix + COMPILE_JDK);
-        if (v != null)
-            setCompileJDK(JDK.of(v));
+            v = data.get(prefix + COMPILE_JDK);
+            if (v != null)
+                setCompileJDK(JDK.of(v));
 
-        v = data.get(prefix + TEST_JDK);
-        if (v != null)
-            setTestJDK(JDK.of(v));
+            v = data.get(prefix + TEST_JDK);
+            if (v != null)
+                setTestJDK(JDK.of(v));
 
-        v = data.get(prefix + TEST_VM_OPTIONS);
-        if (v != null && v.length() > 0)
-            setTestVMOptions(Arrays.asList(StringUtils.splitSeparator("\n", v)));
+            v = data.get(prefix + TEST_VM_OPTIONS);
+            if (v != null && v.length() > 0)
+                setTestVMOptions(Arrays.asList(StringUtils.splitSeparator("\n", v)));
 
-        v = data.get(prefix + TEST_COMPILER_OPTIONS);
-        if (v != null && v.length() > 0)
-            setTestCompilerOptions(Arrays.asList(StringUtils.splitSeparator("\n", v)));
+            v = data.get(prefix + TEST_COMPILER_OPTIONS);
+            if (v != null && v.length() > 0)
+                setTestCompilerOptions(Arrays.asList(StringUtils.splitSeparator("\n", v)));
 
-        v = data.get(prefix + TEST_JAVA_OPTIONS);
-        if (v != null && v.length() > 0)
-            setTestJavaOptions(Arrays.asList(StringUtils.splitSeparator("\n", v)));
+            v = data.get(prefix + TEST_JAVA_OPTIONS);
+            if (v != null && v.length() > 0)
+                setTestJavaOptions(Arrays.asList(StringUtils.splitSeparator("\n", v)));
 
-        v = data.get(prefix + RETAIN_ARGS);
-        if (v != null && v.length() > 0)
-            setRetainArgs(Arrays.asList(StringUtils.splitSeparator("\n", v)));
+            v = data.get(prefix + RETAIN_ARGS);
+            if (v != null && v.length() > 0)
+                setRetainArgs(Arrays.asList(StringUtils.splitSeparator("\n", v)));
 
-        v = data.get(prefix + JUNIT);
-        if (v != null)
-            setJUnitPath(new SearchPath(v));
+            v = data.get(prefix + JUNIT);
+            if (v != null)
+                setJUnitPath(new SearchPath(v));
 
-        v = data.get(prefix + TESTNG);
-        if (v != null)
-            setTestNGPath(new SearchPath(v));
+            v = data.get(prefix + TESTNG);
+            if (v != null)
+                setTestNGPath(new SearchPath(v));
 
-        v = data.get(prefix + ASMTOOLS);
-        if (v != null)
-            setAsmToolsPath(new SearchPath(v));
+            v = data.get(prefix + ASMTOOLS);
+            if (v != null)
+                setAsmToolsPath(new SearchPath(v));
 
-        v = data.get(prefix + TIMELIMIT);
-        if (v != null)
-            setTimeLimit(Integer.parseInt(v));
+            v = data.get(prefix + TIMELIMIT);
+            if (v != null)
+                setTimeLimit(Integer.parseInt(v));
 
-        v = data.get(prefix + REPORTDIR);
-        if (v != null)
-            setReportDir(new File(v));
+            v = data.get(prefix + REPORTDIR);
+            if (v != null)
+                setReportDir(Path.of(v));
 
-        v = data.get(prefix + EXCLUSIVE_LOCK);
-        if (v != null)
-            setExclusiveLock(new File(v));
+            v = data.get(prefix + EXCLUSIVE_LOCK);
+            if (v != null)
+                setExclusiveLock(Path.of(v));
 
-        v = data.get(prefix + NATIVEDIR);
-        if (v != null)
-            setNativeDir(new File(v));
+            v = data.get(prefix + NATIVEDIR);
+            if (v != null)
+                setNativeDir(Path.of(v));
 
-        v = data.get(prefix + TIMEOUT_HANDLER);
-        if (v != null)
-            setTimeoutHandler(v);
+            v = data.get(prefix + TIMEOUT_HANDLER);
+            if (v != null)
+                setTimeoutHandler(v);
 
-        v = data.get(prefix + TIMEOUT_HANDLER_PATH);
-        if (v != null)
-            setTimeoutHandlerPath(v);
+            v = data.get(prefix + TIMEOUT_HANDLER_PATH);
+            if (v != null)
+                setTimeoutHandlerPath(v);
 
-        v = data.get(prefix + TIMEOUT_HANDLER_TIMEOUT);
-        if (v != null)
-            setTimeoutHandlerTimeout(v);
+            v = data.get(prefix + TIMEOUT_HANDLER_TIMEOUT);
+            if (v != null)
+                setTimeoutHandlerTimeout(v);
+
+        } catch (InvalidPathException e) {
+            // This is unlikely to happen, but pretty serious if it does.
+            // Since we only put valid paths into the parameters, there should be
+            // no issue retrieving them after the save-load sequence.
+            throw new Interview.Fault(i18n, "rp.badPath", e.getInput(), e.getMessage());
+        }
     }
 
     @Override @SuppressWarnings({"unchecked", "rawtypes"})
@@ -760,13 +777,13 @@ public class RegressionParameters
             data.put(prefix + TIMELIMIT, String.valueOf(timeLimit));
 
         if (reportDir != null)
-            data.put(prefix + REPORTDIR, reportDir.getPath());
+            data.put(prefix + REPORTDIR, reportDir.toString());
 
         if (exclusiveLock != null)
-            data.put(prefix + EXCLUSIVE_LOCK, exclusiveLock.getPath());
+            data.put(prefix + EXCLUSIVE_LOCK, exclusiveLock.toString());
 
         if (nativeDir != null)
-            data.put(prefix + NATIVEDIR, nativeDir.getPath());
+            data.put(prefix + NATIVEDIR, nativeDir.toString());
 
         if (timeoutHandlerClassName != null)
             data.put(prefix + TIMEOUT_HANDLER, timeoutHandlerClassName);
@@ -774,7 +791,7 @@ public class RegressionParameters
         if (timeoutHandlerPath != null) {
             StringBuilder sb = new StringBuilder();
             String sep = "";
-            for (File file: timeoutHandlerPath) {
+            for (Path file: timeoutHandlerPath) {
                 sb.append(sep).append(file);
                 sep = File.pathSeparator;
             }
@@ -963,19 +980,19 @@ public class RegressionParameters
 
     public SearchPath getJavaTestClassPath() {
         if (javaTestClassPath == null) {
-            File jtClsDir = ProductInfo.getJavaTestClassDir();
+            Path jtClsDir = ProductInfo.getJavaTestClassDir().toPath();
             javaTestClassPath = new SearchPath(jtClsDir);
 
-            if (jtClsDir.getName().equals("javatest.jar")) {
-                File installDir = jtClsDir.getParentFile();
+            if (jtClsDir.getFileName().toString().equals("javatest.jar")) {
+                Path installDir = jtClsDir.getParent();
                 // append jtreg.jar or exploded directory to the search path
-                File jtreg = new File(installDir, "jtreg.jar");
-                if (jtreg.exists()) {
+                Path jtreg = installDir.resolve("jtreg.jar");
+                if (Files.exists(jtreg)) {
                     javaTestClassPath.append(jtreg);
                 } else try {
                     // use code source location of this class instead
                     URL location = getClass().getProtectionDomain().getCodeSource().getLocation();
-                    javaTestClassPath.append(new File(location.toURI()));
+                    javaTestClassPath.append(Path.of(location.toURI()));
                 } catch (Exception e) { // including NullPointerException and URISyntaxException
                     throw new RuntimeException("Computation of Java test class-path failed", e);
                 }
@@ -1024,7 +1041,7 @@ public class RegressionParameters
         opts.addAll(getTestVMOptions());
         opts.addAll(getTestJavaOptions());
         if (nativeDir != null)
-            opts.add("-Djava.library.path=" + nativeDir.getAbsolutePath());
+            opts.add("-Djava.library.path=" + nativeDir.toAbsolutePath());
 
         return Collections.unmodifiableList(opts);
     }
@@ -1149,41 +1166,39 @@ public class RegressionParameters
 
     //---------------------------------------------------------------------
 
-    public void setReportDir(File reportDir) {
-        reportDir.getClass(); // null check
-        this.reportDir = reportDir;
+    public void setReportDir(Path reportDir) {
+        this.reportDir = Objects.requireNonNull(reportDir);
     }
 
-    public File getReportDir() {
+    public Path getReportDir() {
         return reportDir;
     }
 
-    private File reportDir;
+    private Path reportDir;
 
     //---------------------------------------------------------------------
 
-    public void setExclusiveLock(File exclusiveLock) {
-        exclusiveLock.getClass(); // null check
-        this.exclusiveLock = exclusiveLock;
+    public void setExclusiveLock(Path exclusiveLock) {
+        this.exclusiveLock = Objects.requireNonNull(exclusiveLock);
     }
 
-    public File getExclusiveLock() {
+    public Path getExclusiveLock() {
         return exclusiveLock;
     }
 
-    private File exclusiveLock;
+    private Path exclusiveLock;
 
     //---------------------------------------------------------------------
 
-    public void setNativeDir(File nativeDir) {
+    public void setNativeDir(Path nativeDir) {
         this.nativeDir = nativeDir;
     }
 
-    public File getNativeDir() {
+    public Path getNativeDir() {
         return nativeDir;
     }
 
-    private File nativeDir;
+    private Path nativeDir;
 
     //---------------------------------------------------------------------
 
@@ -1205,21 +1220,20 @@ public class RegressionParameters
         this.timeoutHandlerPath = new ArrayList<>();
         for (String f: timeoutHandlerPath.split(File.pathSeparator)) {
             if (f.length() > 0) {
-                this.timeoutHandlerPath.add(new File(f));
+                this.timeoutHandlerPath.add(Path.of(f));
             }
         }
     }
 
-    public void setTimeoutHandlerPath(List<File> timeoutHandlerPath) {
-        timeoutHandlerPath.getClass(); // null check
-        this.timeoutHandlerPath = timeoutHandlerPath;
+    public void setTimeoutHandlerPath(List<Path> timeoutHandlerPath) {
+        this.timeoutHandlerPath = Objects.requireNonNull(timeoutHandlerPath);
     }
 
-    List<File> getTimeoutHandlerPath() {
+    List<Path> getTimeoutHandlerPath() {
         return timeoutHandlerPath;
     }
 
-    private List<File> timeoutHandlerPath;
+    private List<Path> timeoutHandlerPath;
 
     //---------------------------------------------------------------------
 
@@ -1239,15 +1253,15 @@ public class RegressionParameters
 
     //---------------------------------------------------------------------
 
-    public void setMatchLists(File[] files) {
+    public void setMatchLists(Path[] files) {
         this.matchLists = Arrays.asList(files);
     }
 
-    List<File> getMatchLists() {
+    List<Path> getMatchLists() {
         return Collections.unmodifiableList(matchLists);
     }
 
-    private List<File> matchLists;
+    private List<Path> matchLists;
 
     //---------------------------------------------------------------------
 
@@ -1331,7 +1345,7 @@ public class RegressionParameters
             put(map, "test.jdk", getTestJDK(), JDK::getAbsolutePath);
             put(map, "compile.jdk", getCompileJDK(), JDK::getAbsolutePath);
             put(map, "test.timeout.factor", getTimeoutFactor(), String::valueOf);
-            put(map, "test.nativepath", getNativeDir(), File::getAbsolutePath);
+            put(map, "test.nativepath", getNativeDir(), p -> p.toAbsolutePath().toString());
             put(map, "test.root", getTestSuite().getRootDir(), File::getAbsolutePath);
             basicTestProperties = map;
         }
@@ -1348,7 +1362,7 @@ public class RegressionParameters
 
     //---------------------------------------------------------------------
 
-    private OS getTestOS() {
+    public OS getTestOS() {
         // In general, and particularly when running tests, the testJDK should always be set.
         // But in some testing and reporting situations, it may not be. In these cases,
         // we default to the current platform.
@@ -1372,4 +1386,6 @@ public class RegressionParameters
     private List<String> retainArgs;
     private final Set<Integer> retainStatusSet = new HashSet<>(4);
     private Pattern retainFilesPattern;
+
+    private static final I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(RegressionParameters.class);
 }

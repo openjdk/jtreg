@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1996, 2018, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1996, 2022, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -141,40 +141,19 @@ JDKJAVA = $(JDKHOME)/bin/java
 JDKJAVAC = $(JDKHOME)/bin/javac
 JAR = $(JDKHOME)/bin/jar
 
-# Only use -source -target, to support legacy platforms, when building with JDK 8
-# Otherwise, use default values for $JDKHOME/bin/javac
-SUPPORT_OLD_SOURCE_TARGET = $(shell $(JDKJAVAC) -version 2>&1 | grep '[8]' > /dev/null && echo true )
-ifneq ($(SUPPORT_OLD_SOURCE_TARGET),)
-    OLD_JAVAC_SOURCE_TARGET = -source 1.2 -target 1.1
-    AGENT_JAVAC_SOURCE_TARGET = -source 5 -target 5
-    TOOL_JAVAC_SOURCE_TARGET = -source 8 -target 8
-    REGTEST_TOOL_PATCH_JAVA_BASE_OPTIONS =
-else
-    EXTRA_LINT_OPTS = -rawtypes,-unchecked
-    REGTEST_TOOL_PATCH_JAVA_BASE_OPTIONS = --patch-module java.base=$(JAVADIR)
-endif 
+AGENT_JAVAC_SOURCE_TARGET = --release 8
+TOOL_JAVAC_SOURCE_TARGET = --release 11
+REGTEST_TOOL_PATCH_JAVA_BASE_OPTIONS = --patch-module java.base=$(JAVADIR)
 
-ifdef JDK5HOME
-    JDK5_BOOTCLASSPATH = -bootclasspath $(JDK5HOME)/jre/lib/rt.jar
-endif
-ifdef JDK8HOME
-    JDK8_BOOTCLASSPATH = -bootclasspath $(JDK8HOME)/jre/lib/rt.jar
-endif
-
-# for files needed to run othervm tests on oldest supported platforms
-REGTEST_OLD_JAVAC = $(JDKHOME)/bin/javac
-REGTEST_OLD_JAVAC_OPTIONS = \
-	$(OLD_JAVAC_SOURCE_TARGET) $(JDK5_BOOTCLASSPATH) -Xlint:all,-options,-deprecation,$(EXTRA_LINT_OPTS) -Werror
-
-# for files needed to run agentvm tests (on platforms back to JDK 1.5)
+# for files needed to run agentvm and othervm tests (on platforms back to JDK 8)
 REGTEST_AGENT_JAVAC = $(JDKHOME)/bin/javac
 REGTEST_AGENT_JAVAC_OPTIONS = \
-	$(AGENT_JAVAC_SOURCE_TARGET) $(JDK5_BOOTCLASSPATH) -Xlint:all,-options,-deprecation,$(EXTRA_LINT_OPTS) -Werror
+	$(AGENT_JAVAC_SOURCE_TARGET) -Xlint:all,-options,-deprecation -Werror
 
 # for files needed for jtreg tool
 REGTEST_TOOL_JAVAC = $(JDKHOME)/bin/javac
 REGTEST_TOOL_JAVAC_OPTIONS = \
-	$(TOOL_JAVAC_SOURCE_TARGET) $(JDK8_BOOTCLASSPATH) -Xlint:all,-options,-deprecation -Werror
+	$(TOOL_JAVAC_SOURCE_TARGET) -Xlint:all,-options,-deprecation -Werror
 
 #----- JavaTest: https://wiki.openjdk.java.net/display/CodeTools/JT+Harness
 #

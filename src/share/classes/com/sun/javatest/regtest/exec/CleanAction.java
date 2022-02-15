@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -26,6 +26,7 @@
 package com.sun.javatest.regtest.exec;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +37,8 @@ import com.sun.javatest.regtest.config.Locations;
 import com.sun.javatest.regtest.config.Locations.ClassLocn;
 import com.sun.javatest.regtest.config.ParseException;
 
+import javax.lang.model.SourceVersion;
+
 import static com.sun.javatest.regtest.RStatus.error;
 import static com.sun.javatest.regtest.RStatus.passed;
 
@@ -43,7 +46,6 @@ import static com.sun.javatest.regtest.RStatus.passed;
  * This class implements the "clean" action as described by the JDK tag
  * specification.
  *
- * @author Iris A Garcia
  * @see Action
  */
 public class CleanAction extends Action
@@ -70,7 +72,7 @@ public class CleanAction extends Action
      * @param reason Indication of why this action was invoked.
      * @param script The script.
      * @exception  ParseException If the options or arguments are not expected
-     *             for the action or are improperly formated.
+     *             for the action or are improperly formatted.
      */
     @Override
     public void init(Map<String,String> opts, List<String> args, String reason,
@@ -85,10 +87,16 @@ public class CleanAction extends Action
         if (args.isEmpty())
             throw new ParseException(CLEAN_NO_CLASSNAME);
 
-        for (String currArg : args) {
-            if ((currArg.indexOf(File.separatorChar) != -1)
-                    || (currArg.indexOf('/') != -1))
-                throw new ParseException(CLEAN_BAD_CLASSNAME + currArg);
+        for (String arg : args) {
+            // allow "clean default package" marker
+            if ("*".equals(arg))
+                continue;
+            // allow qualified class name with optional "clean any package" pattern
+            String name = arg.endsWith(".*") ? arg.substring(0, arg.length() - 2) : arg;
+            if (SourceVersion.isName(name))
+                continue;
+            // detected a syntactically invalid class name
+            throw new ParseException(CLEAN_BAD_CLASSNAME + arg);
         }
     } // init()
 
@@ -124,7 +132,7 @@ public class CleanAction extends Action
                     // clean any package
                     String path = arg.substring(0, arg.length() -2);
                     path = path.replace('.', File.separatorChar);
-                    File dir = script.absTestClsDir();
+                    File dir = script.absTestClsDir().toFile();
                     if (!path.equals(""))
                         dir = new File(dir, path);
 
@@ -150,8 +158,8 @@ public class CleanAction extends Action
                     }
                 } else {
                     // clean class file
-                    File victim = new File(script.absTestClsDir(),
-                                           arg.replace('.', File.separatorChar) + ".class");
+                    File victim = script.absTestClsDir().resolve(
+                                           arg.replace('.', File.separatorChar) + ".class").toFile();
                     recorder.exec("rm -f " + victim);
                     if (victim.exists() && !victim.delete())
                         return error(CLEAN_RM_FAILED + victim);
@@ -165,13 +173,13 @@ public class CleanAction extends Action
 
     @Override
     public Set<File> getSourceFiles() {
-        Set<File> files = new LinkedHashSet<File>();
+        Set<File> files = new LinkedHashSet<>();
         for (String arg: args) {
-            // the arguments to clean are classnames or package names with wildcards
+            // the arguments to clean are class names or package names with wildcards
             try {
                 for (ClassLocn cl: script.locations.locateClasses(arg)) {
-                    if (cl.absSrcFile.exists())
-                        files.add(cl.absSrcFile);
+                    if (Files.exists(cl.absSrcFile))
+                        files.add(cl.absSrcFile.toFile());
                 }
             } catch (Locations.Fault ignore) {
             }

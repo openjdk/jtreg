@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -26,6 +26,8 @@
 package com.sun.javatest.regtest.config;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -38,6 +40,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.sun.javatest.regtest.agent.SearchPath;
+import com.sun.javatest.regtest.util.FileUtils;
 import com.sun.javatest.regtest.util.StringUtils;
 
 /**
@@ -174,13 +177,14 @@ public class JDKOpts {
      */
     public void addAllPatchModules(SearchPath patchPath) {
         if (patchPath != null) {
-            for (File dir : patchPath.asList()) {
-                File[] subdirs = dir.listFiles();
+            for (Path dir : patchPath.asList()) {
+                List<Path> subdirs = FileUtils.listFiles(dir);
                 if (subdirs != null) {
-                    Arrays.sort(subdirs); // for repeatability; good enough for now
-                    for (File subdir: subdirs) {
-                        if (subdir.isDirectory()) {
-                            mergeHandler.handleOption(Option.PATCH_MODULE, "--patch-module", subdir.getName() + "=" + subdir);
+                    Collections.sort(subdirs); // for repeatability; good enough for now
+                    for (Path subdir: subdirs) {
+                        if (Files.isDirectory(subdir)) {
+                            String moduleName = subdir.getFileName().toString();
+                            mergeHandler.handleOption(Option.PATCH_MODULE, "--patch-module",  moduleName + "=" + subdir);
                         }
                     }
                 }
@@ -322,7 +326,7 @@ public class JDKOpts {
          * specified separator. If a key is provided, it will be followed by the
          * key separator character in the result.
          * @param key the key, or null if none
-         * @param keySet the separator to follow the key if one is specified
+         * @param keySep the separator to follow the key if one is specified
          * @param values the values
          * @param valSep the separator to use if more than one key
          * @return the composite string

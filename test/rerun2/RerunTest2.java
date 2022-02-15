@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2016, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -35,20 +35,21 @@ public class RerunTest2 {
     }
 
     void run(String... args) throws Exception {
-        File testSuite = new File(args[0]);
+        File jdk = new File(args[0]);
+        File testSuite = new File(args[1]);
         for (String mode: new String[] { "othervm", "agentvm" }) {
-            test(testSuite, mode);
+            test(jdk, testSuite, mode);
         }
         if (errors > 0)
             throw new Exception(errors + " errors found");
     }
 
-    void test(File testSuite, String mode) throws Exception {
+    void test(File jdk, File testSuite, String mode) throws Exception {
         System.out.println("test " + mode);
 
         File initialWorkDir = new File(mode, "work");
         File initialReportDir = new File(mode, "report");
-        runTests(testSuite, initialWorkDir, initialReportDir, mode);
+        runTests(jdk, testSuite, initialWorkDir, initialReportDir, mode);
 
         for (String test: getTests(initialReportDir)) {
             File testWorkDir = new File(mode,
@@ -59,8 +60,9 @@ public class RerunTest2 {
         System.out.println();
     }
 
-    void runTests(File ts, File wd, File rd, String mode) throws Exception {
+    void runTests(File jdk, File ts, File wd, File rd, String mode) throws Exception {
         String[] args = {
+            "-jdk:" + jdk,
             "-w", wd.getPath(),
             "-r", rd.getPath(),
             "-" + mode,

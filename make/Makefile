@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1999, 2018, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1999, 2022, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -42,11 +42,11 @@ include Rules.gmk
 
 build: $(BUILDFILES)
 
-test: $(INITIAL_TESTS) $(TESTS) $(FINAL_TESTS)
+test: checkJavaOSVersion $(INITIAL_TESTS) $(TESTS) $(FINAL_TESTS)
 	count=`echo $+ | wc -w` ; \
 	echo "All ($${count}) selected tests completed successfully"
 
-quick-test: $(INITIAL_TESTS)
+quick-test: checkJavaOSVersion $(INITIAL_TESTS)
 	count=`echo $+ | wc -w` ; \
 	echo "All ($${count}) selected tests completed successfully"
 
@@ -107,6 +107,13 @@ endif
 	@echo "BUILD_VERSION       = $(BUILD_VERSION)"
 	@echo "BUILD_MILESTONE     = $(BUILD_MILESTONE)"
 	@echo "BUILD_NUMBER        = $(BUILD_NUMBER)"
+
+#----------------------------------------------------------------------
+
+checkJavaOSVersion:
+ifeq ($(OS_NAME), macosx)
+	$(JDKJAVA) CheckJavaOSVersion.java $(OS_VERSION)
+endif
 
 #----------------------------------------------------------------------
 

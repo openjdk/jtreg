@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2014, 2018, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2014, 2022, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -34,7 +34,7 @@ $(BUILDDIR)/TimeoutHandlerTestDefault.othervm.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
-	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+	JTREG_JAVA=$(JDKJAVA) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDK8HOME) \
 		-va \
@@ -50,7 +50,7 @@ $(BUILDDIR)/TimeoutHandlerTestDefault.shell.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
-	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+	JTREG_JAVA=$(JDKJAVA) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDK8HOME) \
 		-va \
@@ -76,10 +76,10 @@ $(BUILDDIR)/TimeoutHandlerTestExternal.othervm.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
-	$(JDK8HOME)/bin/javac -cp $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	$(JDKHOME)/bin/javac -cp $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		-d $(@:%.ok=%) \
 		$(TESTDIR)/timeouthandlers/MyHandler.java
-	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+	JTREG_JAVA=$(JDKJAVA) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDK8HOME) \
 		-va \
@@ -97,10 +97,10 @@ $(BUILDDIR)/TimeoutHandlerTestExternal.shell.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
-	$(JDK8HOME)/bin/javac -cp $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	$(JDKHOME)/bin/javac -cp $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		-d $(@:%.ok=%) \
 		$(TESTDIR)/timeouthandlers/MyHandler.java
-	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+	JTREG_JAVA=$(JDKJAVA) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDK8HOME) \
 		-va \

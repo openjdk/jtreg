@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -24,6 +24,7 @@
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Hashtable;
 import java.util.Iterator;
 
@@ -166,8 +167,8 @@ public class Basic
         numMain   += 1;
 
         // clean
-        numPassed += 4; numFailed += 0; numError  += 6;
-        numClean  += 10;
+        numPassed += 5; numFailed += 0; numError  += 7;
+        numClean  += 12;
         numShell  += 1;
 
         // compile
@@ -354,7 +355,7 @@ public class Basic
 
             rp.setWorkDirectory(workDir);
             rp.setTests((String[])null);
-            rp.setExcludeLists(new File[0]);
+            rp.setExcludeLists(new Path[0]);
             rp.setKeywordsExpr("!manual");
             rp.setPriorStatusValues(null);
         }

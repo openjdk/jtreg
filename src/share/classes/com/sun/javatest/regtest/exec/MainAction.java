@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -30,6 +30,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -66,7 +67,6 @@ import static com.sun.javatest.regtest.RStatus.passed;
  * This class implements the "main" action as described by the JDK tag
  * specification.
  *
- * @author Iris A Garcia
  * @see Action
  * @see com.sun.javatest.regtest.agent.MainActionHelper
  */
@@ -429,7 +429,7 @@ public class MainAction extends Action
             env.put("CLASSPATH", cp.toString());
         }
 
-        String javaCmd = script.getJavaProg();
+        Path javaCmd = script.getJavaProg();
         JDKOpts javaOpts = new JDKOpts();
 
         if (!useCLASSPATH) {
@@ -485,7 +485,7 @@ public class MainAction extends Action
         classArgs.addAll(runClassArgs);
 
         List<String> command = new ArrayList<>();
-        command.add(javaCmd);
+        command.add(javaCmd.toString());
         for (Map.Entry<String,String> e: javaProps.entrySet())
             command.add("-D" + e.getKey() + "=" + e.getValue());
         command.addAll(filterJavaOpts(javaOpts.toList()));
@@ -506,7 +506,7 @@ public class MainAction extends Action
 
             // RUN THE MAIN WRAPPER CLASS
             ProcessCommand cmd = new ProcessCommand();
-            cmd.setExecDir(script.absTestScratchDir());
+            cmd.setExecDir(script.absTestScratchDir().toFile());
 
             // Set the exit codes and their associated strings.  Note that we
             // require the use of a non-zero exit code for a passed test so
@@ -570,7 +570,7 @@ public class MainAction extends Action
                 script.getExecutionPaths(multiModule, runModuleName, useBootClassPath, true);
 
         JDK jdk = script.getTestJDK();
-        List<File> stdLibs = new SearchPath()
+        List<Path> stdLibs = new SearchPath()
                 .append(script.getJavaTestClassPath())
                 .append(jdk.getJDKClassPath())
                 .append(script.getJUnitPath())
@@ -600,7 +600,7 @@ public class MainAction extends Action
         // "test.src" and "test.classes", respectively"
         Map<String, String> javaProps = script.getTestProperties();
 
-        String javaProg = script.getJavaProg();
+        Path javaProg = script.getJavaProg();
         List<String> javaArgs = new ArrayList<>();
         javaArgs.add("-classpath");
         javaArgs.add(classpath.toString());
@@ -787,5 +787,5 @@ public class MainAction extends Action
     protected Set<String> othervmOverrideReasons = new LinkedHashSet<>();
     protected boolean nativeCode = false;
     private int     timeout = -1;
-    private String  manual  = "unset";
+    private String  manual  = "unset"; // or "novalue"
 }

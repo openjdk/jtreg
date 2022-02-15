@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -34,6 +34,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -53,14 +54,18 @@ import static com.sun.javatest.regtest.tool.Option.ArgType.*;
  * Manager to drive jcov code coverage tool.
  */
 public class JCovManager {
-    public JCovManager(File libDir) {
-        jcov_jar = new JarFinder("jcov.jar").libDir(libDir).getFile();
-        jcov_network_saver_jar = new JarFinder("jcov_network_saver.jar").libDir(libDir).getFile();
+    public JCovManager(Path libDir) {
+        jcov_jar = toFile(new JarFinder("jcov.jar").libDir(libDir).getFile());
+        jcov_network_saver_jar = toFile(new JarFinder("jcov_network_saver.jar").libDir(libDir).getFile());
 
         if (System.getProperty("jcov.port") != null)
             grabberPort = Integer.getInteger("jcov.port");
         if (System.getProperty("jcov.command_port") != null)
             grabberCommandPort = Integer.getInteger("jcov.command_port");
+    }
+
+    private static File toFile(Path p) {
+        return p == null ? null : p.toFile();
     }
 
     public static final String JCOV = "jcov";
@@ -170,7 +175,7 @@ public class JCovManager {
     }
 
     void instrumentClasses() {
-        List<String> opts = new ArrayList<String>();
+        List<String> opts = new ArrayList<>();
         opts.add("instr");
 
         delete(instrClasses);
@@ -243,7 +248,7 @@ public class JCovManager {
 
         results.delete();
 
-        List<String> opts = new ArrayList<String>();
+        List<String> opts = new ArrayList<>();
         opts.add("grabber");
         opts.add("-port");
         opts.add("0");
@@ -304,7 +309,7 @@ public class JCovManager {
     }
 
     void stopGrabber() {
-        List<String> opts = new ArrayList<String>();
+        List<String> opts = new ArrayList<>();
         opts.add("grabberManager");
 
         if (printEnv)
@@ -328,7 +333,7 @@ public class JCovManager {
     }
 
     void writeReport() {
-        List<String> opts = new ArrayList<String>();
+        List<String> opts = new ArrayList<>();
         opts.add("repgen");
 
         opts.add("-source");
@@ -359,7 +364,7 @@ public class JCovManager {
     }
 
     void writePatchReport() {
-        List<String> opts = new ArrayList<String>();
+        List<String> opts = new ArrayList<>();
         opts.add("diffcoverage");
 
         opts.add("-replaceDiff");
@@ -407,7 +412,7 @@ public class JCovManager {
     }
 
     List<String> splitLines(File f) throws IOException {
-        List<String> lines = new ArrayList<String>();
+        List<String> lines = new ArrayList<>();
         BufferedReader in = new BufferedReader(new FileReader(f));
         String line;
         try {
@@ -437,8 +442,8 @@ public class JCovManager {
 
         public void run() {
             try {
-                List<String> args = new ArrayList<String>();
-                args.add(jdk.getJavaProg().getPath());
+                List<String> args = new ArrayList<>();
+                args.add(jdk.getJavaProg().toString());
                 args.add("-jar");
                 args.add(jcov_jar.getPath());
                 args.addAll(opts);
@@ -479,8 +484,8 @@ public class JCovManager {
     private SearchPath source;
     private String verbose;
     private boolean printEnv;
-    private List<String> includeOpts = new ArrayList<String>();
-    private List<String> excludeOpts = new ArrayList<String>();
+    private List<String> includeOpts = new ArrayList<>();
+    private List<String> excludeOpts = new ArrayList<>();
 
     JDK testJDK;
     File instrClasses;

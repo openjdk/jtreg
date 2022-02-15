@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -27,6 +27,7 @@ package com.sun.javatest.regtest.exec;
 
 import java.io.File;
 import java.io.PrintWriter;
+import java.nio.file.Path;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -42,6 +43,7 @@ import com.sun.javatest.regtest.config.Locations;
 import com.sun.javatest.regtest.config.Locations.ClassLocn;
 import com.sun.javatest.regtest.config.Locations.LibLocn;
 import com.sun.javatest.regtest.config.ParseException;
+import com.sun.javatest.regtest.util.FileUtils;
 
 import static com.sun.javatest.regtest.RStatus.passed;
 
@@ -49,7 +51,6 @@ import static com.sun.javatest.regtest.RStatus.passed;
  * This class implements the "build" action as described by the JDK tag
  * specification.
  *
- * @author Iris A Garcia
  * @see Action
  */
 public class BuildAction extends Action
@@ -139,7 +140,7 @@ public class BuildAction extends Action
             // the arguments to build are classnames or package names with wildcards
             try {
                 for (ClassLocn cl: script.locations.locateClasses(arg)) {
-                    files.add(cl.absSrcFile);
+                    files.add(cl.absSrcFile.toFile());
                 }
             } catch (Locations.Fault ignore) {
             }
@@ -190,9 +191,10 @@ public class BuildAction extends Action
         for (String arg: args) {
             try {
                 for (ClassLocn cl: script.locations.locateClasses(arg)) {
-                    if (cl.absSrcFile.lastModified() > now) {
+                    long sfMillis = FileUtils.getLastModifiedTime(cl.absSrcFile).toMillis();
+                    if (sfMillis > now) {
                         pw.println(String.format(BUILD_FUTURE_SOURCE, cl.absSrcFile,
-                                DateFormat.getDateTimeInstance().format(new Date(cl.absSrcFile.lastModified()))));
+                                DateFormat.getDateTimeInstance().format(new Date(sfMillis))));
                         pw.println(BUILD_FUTURE_SOURCE_2);
                     }
                     if (!cl.isUpToDate()) {
@@ -216,8 +218,8 @@ public class BuildAction extends Action
         } else {
             status = null;
             // ensure that all directories are created for any library classes
-            for (File dir: script.locations.absLibClsList(LibLocn.Kind.PACKAGE)) {
-                dir.mkdirs();
+            for (Path dir: script.locations.absLibClsList(LibLocn.Kind.PACKAGE)) {
+                FileUtils.createDirectories(dir);
             }
 
             // compile libraries first
@@ -269,7 +271,7 @@ public class BuildAction extends Action
                     if (files == null) {
                         filesForModule.put(cl.optModule, files = new ArrayList<>());
                     }
-                    files.add(cl.absSrcFile);
+                    files.add(cl.absSrcFile.toFile());
                 }
                 for (Map.Entry<String, List<File>> e: filesForModule.entrySet()) {
                     Status s = compileFiles(libLocn, false, e.getKey(), e.getValue());
@@ -309,7 +311,7 @@ public class BuildAction extends Action
     private List<File> getSrcFiles(List<ClassLocn> classLocns) {
         List<File> files = new ArrayList<>();
         for (ClassLocn cl: classLocns) {
-            files.add(cl.absSrcFile);
+            files.add(cl.absSrcFile.toFile());
         }
         return files;
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2006, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -36,6 +36,7 @@ import java.io.PrintWriter;
 import java.lang.reflect.Field;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.Path;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -109,15 +110,15 @@ public class Help {
             @Override
             public void showVersion(PrintWriter out) {
                 try {
-                    for (File jar: path.asList()) {
-                        try (JarFile j = new JarFile(jar)) {
+                    for (Path jar: path.asList()) {
+                        try (JarFile j = new JarFile(jar.toFile())) {
                             Attributes attrs = j.getManifest().getMainAttributes();
                             String v = attrs.getValue(Attributes.Name.IMPLEMENTATION_VERSION);
                             if (v == null) {
                                 v = attrs.getValue("Bundle-Version");
                             }
                             String suffix = (path.asList().size() == 1)
-                                    ? "" : " (" + jar.getName() + ")";
+                                    ? "" : " (" + jar.getFileName() + ")";
                             out.println(name + suffix + ": version " + (v == null ? "unknown" : v)); // need i18n
                         }
                     }
@@ -353,7 +354,7 @@ public class Help {
             groups.add(o.group);
         Map<String, SortedMap<String, Option>> map = new LinkedHashMap<>();
         for (String g: groups)
-            map.put(g, new TreeMap<String, Option>(new CaseInsensitiveStringComparator()));
+            map.put(g, new TreeMap<>(new CaseInsensitiveStringComparator()));
         for (Option o: options) {
             if (o.names.length > 0)
                 map.get(o.group).put(o.names[0], o);
@@ -476,8 +477,8 @@ public class Help {
         if (p != null)
             return p;
 
-        List<File> cp = new SearchPath(System.getProperty("java.class.path")).asList();
-        if (cp.size() == 1 && cp.get(0).getName().equals("jtreg.jar")) {
+        List<Path> cp = new SearchPath(System.getProperty("java.class.path")).asList();
+        if (cp.size() == 1 && cp.get(0).getFileName().toString().equals("jtreg.jar")) {
             return "java -jar jtreg.jar ";
         }
 
