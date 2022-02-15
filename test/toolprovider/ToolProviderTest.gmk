@@ -28,10 +28,10 @@ $(BUILDDIR)/ToolProviderTest.ok: \
 	$(TESTDIR)/toolprovider/ToolProviderTest.java
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	$(JDKHOME)/bin/java \
-	    -classpath $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+		-classpath $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(TESTDIR)/toolprovider/ToolProviderTest.java \
 			> $(@:%.ok=%/jt.log) 2>&1 ; rc=$$? ; \
-        if [ "$$rc" != 0 ]; then echo "unexpected exit code: " $$rc ; exit 1 ; fi
+		if [ "$$rc" != 0 ]; then echo "unexpected exit code: " $$rc ; exit 1 ; fi
 	echo "test passed at `date`" > $@
 
 
