@@ -143,37 +143,6 @@ complete.
 
 The logic for using VNC is encapsulated within the script _make/display.sh_.
 
-## Building jtreg with Ant
-
-It is possible to build jtreg with Ant, but this is primarily intended as a
-convenience while working on the jtreg source code. If you are building jtreg
-to run OpenJDK tests, it is recommended that you build jtreg using the Makefile,
-perhaps via the _build.sh_ wrapper script.
-
-The build file is in _make/build.xml_; it creates intermediate files in the _build/_
-directory and deliverables in the dist/ directory. By default, the build file
-just builds jtreg, but does not run any tests. You can build jtreg from a
-Unix-like command shell with the following commands:
-
-    % cd jtreg-root-directory
-    % ant -f make/build.xml
-
-You can also use this build file when creating a NetBeans free form project with
-an existing build file.
-
-### Dependencies
-
-Some of the tasks that are used are listed as _Optional Tasks_ in the Ant
-manual. You may need to make sure that these tasks are available for use by Ant.
-For example, on Ubuntu Linux these tasks are in the `ant-optional` package.
-
-### Running Tests
-
-Some of the tests can be invoked with individual targets beginning
-`-jtreg-test-`, or collectively via the `jtreg-test` target. (The use of
-`jtreg-test` rather than `test` is to protect against interactions with JUnit in
-older versions of NetBeans.)
-
 ## Using the IntelliJ IDE
 
 The jtreg repo also contains a plugin for the IntelliJ IDE.
