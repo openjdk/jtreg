@@ -49,7 +49,9 @@ $(BUILDDIR)/Basic.check.ok: \
 		$(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(JTREG_IMAGEDIR)/lib/junit.jar \
 		$(JTREG_IMAGEDIR)/lib/testng.jar \
-		$(BUILDDIR)/i18n.com.sun.javatest.regtest.ok \
+		$(BUILDDIR)/i18n.com.sun.javatest.regtest.config.ok \
+		$(BUILDDIR)/i18n.com.sun.javatest.regtest.report.ok \
+		$(BUILDDIR)/i18n.com.sun.javatest.regtest.tool.ok \
 	        $(BASIC.files)
 	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
 	$(MKDIR) -p $(@:%.ok=%/work/scratch) $(@:%.ok=%/report)
@@ -103,7 +105,9 @@ $(BUILDDIR)/Basic.agentvm.ok: \
 		$(JTREG_IMAGEDIR)/lib/junit.jar \
 		$(JTREG_IMAGEDIR)/lib/testng.jar \
 		$(TESTDIR)/basic/Basic.java \
-		$(BUILDDIR)/i18n.com.sun.javatest.regtest.ok \
+		$(BUILDDIR)/i18n.com.sun.javatest.regtest.config.ok \
+		$(BUILDDIR)/i18n.com.sun.javatest.regtest.report.ok \
+		$(BUILDDIR)/i18n.com.sun.javatest.regtest.tool.ok \
 	        $(BASIC.files)
 	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
 	$(MKDIR) -p $(@:%.ok=%/work/scratch) $(@:%.ok=%/report) $(BUILDDIR)/basic/classes

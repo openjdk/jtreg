@@ -50,7 +50,7 @@ JAVAFILES.com.sun.javatest.regtest-tools := \
 $(BUILDDIR)/classes.com.sun.javatest.regtest.ok: \
 		$(JAVAFILES.com.sun.javatest.regtest-tools) \
 		$(BUILDDIR)/classes.com.sun.javatest.regtest.agent.ok
-	CLASSPATH="$(CLASSDIR)$(PS)$(ANT_JAR)$(PS)$(JAVATEST_JAR)$(PS)$(JUNIT_JAR)$(PS)$(TESTNG_JAR)" \
+	CLASSPATH="$(CLASSDIR)$(PS)$(JAVATEST_JAR)$(PS)$(JUNIT_JAR)$(PS)$(TESTNG_JAR)" \
 	    $(REGTEST_TOOL_JAVAC) $(REGTEST_TOOL_JAVAC_OPTIONS) \
 		-d $(CLASSDIR) \
 		-encoding ISO8859-1 \
@@ -81,7 +81,6 @@ TARGETS.com.sun.javatest.regtest += $(BUILDDIR)/classes.java.lang.ok
 # resources required for com.sun.javatest.regtest
 
 RESOURCES.com.sun.javatest.regtest = \
-	$(CLASSDIR)/com/sun/javatest/regtest/i18n.properties \
 	$(CLASSDIR)/com/sun/javatest/regtest/config/i18n.properties \
 	$(CLASSDIR)/com/sun/javatest/regtest/report/i18n.properties \
 	$(CLASSDIR)/com/sun/javatest/regtest/tool/i18n.properties \
@@ -179,7 +178,7 @@ $(JTREG_IMAGEDIR)/doc/api/index.html: \
 	$(JDKHOME)/bin/javadoc -d $(@D) \
                 -encoding iso-8859-1 \
 		-sourcepath "$(JAVADIR)$(PS)$(JAVATEST_SRCDIR)" \
-		-classpath "$(ANT_JAR)$(PS)$(JAVATEST_JAR)$(PS)$(JUNIT_JAR)$(PS)$(TESTNG_JAR)" \
+		-classpath "$(JAVATEST_JAR)$(PS)$(JUNIT_JAR)$(PS)$(TESTNG_JAR)" \
 		com.sun.javatest.regtest \
                 $(JAVATEST_SRCFILES)
 
@@ -189,7 +188,7 @@ $(JTREG_IMAGEDIR)/doc/devapi/index.html: \
 	$(JDKHOME)/bin/javadoc -d $(@D) \
                 -encoding iso-8859-1 \
 		-sourcepath "$(JAVADIR)$(PS)$(JAVATEST_SRCDIR)" \
-		-classpath "$(ANT_JAR)$(PS)$(JAVATEST_JAR)$(PS)$(JUNIT_JAR)$(PS)$(TESTNG_JAR)" \
+		-classpath "$(JAVATEST_JAR)$(PS)$(JUNIT_JAR)$(PS)$(TESTNG_JAR)" \
 		-subpackages com.sun.javatest.regtest \
                 -tag "implNote:a:Implementation Note:" \
                 $(JAVATEST_SRCFILES)

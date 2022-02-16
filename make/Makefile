@@ -95,8 +95,6 @@ endif
 	@echo "JCOV_LICENSE        = $(JCOV_LICENSE)"
 	@echo "ASMTOOLS_JAR        = $(ASMTOOLS_JAR)"
 	@echo "ASMTOOLS_LICENSE    = $(ASMTOOLS_LICENSE)"
-	@echo "ANTHOME             = $(ANTHOME)"
-	@echo "ANT_JAR             = $(ANT_JAR)"
 	@echo "JUNIT_JAR           = $(JUNIT_JAR)"
 	@echo "JUNIT_LICENSE       = $(JUNIT_LICENSE)"
 	@echo "TESTNG_HOME         = $(TESTNG_HOME)"
