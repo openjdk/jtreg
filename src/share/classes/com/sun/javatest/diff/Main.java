@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2007, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -38,12 +38,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.tools.ant.BuildException;
-import org.apache.tools.ant.Project;
-import org.apache.tools.ant.taskdefs.MatchingTask;
-import org.apache.tools.ant.types.Commandline;
-
-import com.sun.javatest.regtest.tool.AntOptionDecoder;
 import com.sun.javatest.regtest.BadArgs;
 import com.sun.javatest.regtest.tool.Option;
 import com.sun.javatest.regtest.tool.OptionDecoder;
@@ -118,74 +112,6 @@ public class Main {
             }
         }
     );
-
-    //---------- Ant Invovation ------------------------------------------------
-
-    public static class Ant extends MatchingTask {
-        private final Main m = new Main();
-        private final List<Commandline.Argument> args = new ArrayList<>();
-        private String format;
-        private File outFile;
-        private String title;
-        private boolean failOnError = true;
-        private String resultProperty;
-
-        public void setFormat(String format) {
-            this.format = format;
-        }
-
-        public void setOutFile(File outFile) {
-            this.outFile = outFile;
-        }
-
-        public void setTitle(String title) {
-            this.title = title;
-        }
-
-        public void setResultProperty(String name) {
-            this.resultProperty = name;
-        }
-
-        public void setFailOnError(boolean yes) {
-            this.failOnError = yes;
-        }
-
-        public void addArg(Commandline.Argument arg) {
-            args.add(arg);
-        }
-
-        @Override
-        public void execute() {
-            try {
-                AntOptionDecoder decoder = new AntOptionDecoder(m.options);
-                decoder.process("format", format);
-                decoder.process("outFile", outFile);
-                decoder.process("title", title);
-
-                if (args.size() > 0) {
-                    List<String> allArgs = new ArrayList<>();
-                    for (Commandline.Argument a: args)
-                        allArgs.addAll(Arrays.asList(a.getParts()));
-                    decoder.decodeArgs(allArgs);
-                }
-
-                boolean ok = m.run();
-
-                if (resultProperty != null) {
-                    Project p = getProject();
-                    p.setProperty(resultProperty, String.valueOf(ok ? 0 : 1));
-                }
-
-                if (failOnError && !ok)
-                    throw new BuildException(i18n.getString("main.diffsFound"));
-
-            } catch (BadArgs | Fault e) {
-                throw new BuildException(e.getMessage(), e);
-            } catch (InterruptedException e) {
-                throw new BuildException(i18n.getString("main.interrupted"), e);
-            }
-        }
-    }
 
     //---------- Command line invocation support -------------------------------
 

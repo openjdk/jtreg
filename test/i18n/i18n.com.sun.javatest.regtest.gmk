@@ -32,13 +32,6 @@ else
 	$(GREP) help.jcov $(JAVADIR)/com/sun/javatest/regtest/tool/i18n.properties | $(SED) -e 's/\(.*\)=.*/i18n: \1/' >> $(@:%.ok=%.log)
 endif
 
-$(BUILDDIR)/i18n.com.sun.javatest.regtest.ok: \
-		$(JAVADIR)/com/sun/javatest/regtest/i18n.properties \
-		$(BUILDDIR)/classes.com.sun.javatest.regtest.ok \
-		$(TESTDIR)/i18n/checkI18NProps.sh
-	$(SH) $(TESTDIR)/i18n/checkI18NProps.sh $(JAVADIR)/com/sun/javatest/regtest
-	echo $@ passed at `date` > $@
-
 $(BUILDDIR)/i18n.com.sun.javatest.regtest.config.ok: \
 		$(JAVADIR)/com/sun/javatest/regtest/config/i18n.properties \
 		$(BUILDDIR)/classes.com.sun.javatest.regtest.ok \
@@ -68,13 +61,11 @@ $(BUILDDIR)/i18n.com.sun.javatest.regtest.tool.ok: \
 
 # convenience target
 i18n.com.sun.javatest.regtest: \
-    $(BUILDDIR)/i18n.com.sun.javatest.regtest.ok \
     $(BUILDDIR)/i18n.com.sun.javatest.regtest.config.ok \
     $(BUILDDIR)/i18n.com.sun.javatest.regtest.report.ok \
     $(BUILDDIR)/i18n.com.sun.javatest.regtest.tool.ok
 
 INITIAL_TESTS += \
-    $(BUILDDIR)/i18n.com.sun.javatest.regtest.ok \
     $(BUILDDIR)/i18n.com.sun.javatest.regtest.config.ok \
     $(BUILDDIR)/i18n.com.sun.javatest.regtest.report.ok \
     $(BUILDDIR)/i18n.com.sun.javatest.regtest.tool.ok

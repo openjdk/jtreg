@@ -27,7 +27,7 @@
 
 # This script will download/build the dependencies for jtreg and then
 # build jtreg. Downloaded files are verified against known/specified
-# specified checksums.
+# checksums.
 
 # The default version to use when building jtreg can be found in the
 # make/version-numbers file, where the default versions and
@@ -117,7 +117,7 @@
 # handled. For each dependency the steps are tried in order and the
 # first successful one will be used.
 #
-# Ant
+# Ant (required to build AsmTools, JCov and JT Harness)
 #     Checksum variables:
 #         ANT_ARCHIVE_CHECKSUM: checksum of binary archive
 #
@@ -126,17 +126,6 @@
 #     2a. ANT_ARCHIVE_URL
 #         The full URL for the archive.
 #     2b. ANT_ARCHIVE_URL_BASE + ANT_VERSION
-#         The individual URL components used to construct the full URL.
-#
-# Ant jar
-#     Checksum variables:
-#         ANT_JAR_CHECKSUM: checksum of binary archive
-#
-#     1. ANT_JAR
-#         The path to ant.jar.
-#     2a. ANT_JAR_URL
-#         The full URL for the jar.
-#     2b. ANT_JAR_URL_BASE + ANT_JAR_VERSION
 #         The individual URL components used to construct the full URL.
 #
 # AsmTools
@@ -321,11 +310,6 @@ JTREG_VERSION="${JTREG_VERSION:-}"
 ANT_VERSION="${ANT_VERSION:-${DEFAULT_ANT_VERSION}}"
 ANT_ARCHIVE_CHECKSUM="${ANT_ARCHIVE_CHECKSUM:-${DEFAULT_ANT_ARCHIVE_CHECKSUM}}"
 
-ANT_JAR_VERSION="${ANT_JAR_VERSION:-${ANT_VERSION}}"
-ANT_JAR_URL_BASE="${ANT_JAR_URL_BASE:-${MAVEN_REPO_URL_BASE}}"
-ANT_JAR_VERSION="${ANT_JAR_VERSION:-${DEFAULT_ANT_JAR_VERSION:-${ANT_VERSION}}}"
-ANT_JAR_CHECKSUM="${ANT_JAR_CHECKSUM:-${DEFAULT_ANT_JAR_CHECKSUM}}"
-
 # Not available in Maven
 ASMTOOLS_SRC_TAG="${ASMTOOLS_SRC_TAG:-${DEFAULT_ASMTOOLS_SRC_TAG}}"
 ASMTOOLS_SRC_ARCHIVE_CHECKSUM="${ASMTOOLS_SRC_ARCHIVE_CHECKSUM:-${DEFAULT_ASMTOOLS_SRC_ARCHIVE_CHECKSUM}}"
@@ -468,38 +452,6 @@ info "JAVA_HOME: ${JAVA_HOME}"
 #----- Ant -----
 setup_ant
 info "ANT: ${ANT}"
-
-#----- Ant jar -----
-setup_ant_jar() {
-    check_arguments "${FUNCNAME}" 0 $#
-
-    if [ -n "${ANT_JAR:-}" ]; then
-        return
-    fi
-
-    if [ -z "${ANT_JAR_URL:-}" ]; then
-        if [ -n "${ANT_JAR_URL_BASE:-}" ]; then
-            if [ -z "${ANT_JAR_VERSION:-}" ]; then
-                error "ANT_JAR_VERSION not set"
-                exit 1
-            fi
-            ANT_JAR_URL="${ANT_JAR_URL_BASE}/org/apache/ant/ant/${ANT_JAR_VERSION}/ant-${ANT_JAR_VERSION}.jar"
-        fi
-    fi
-
-    local ANT_JAR_DEPS_DIR="${DEPS_DIR}/ant-jar"
-
-    if [ -n "${ANT_JAR_URL:-}" ]; then
-        ANT_JAR="${ANT_JAR_DEPS_DIR}/$(basename ${ANT_JAR_URL})"
-        download_and_checksum "${ANT_JAR_URL}" "${ANT_JAR}" "${ANT_JAR_CHECKSUM}"
-        return
-    fi
-
-    error "None of ANT_JAR, ANT_JAR_URL or ANT_JAR_URL_BASE are set"
-    exit 1
-}
-setup_ant_jar
-info "ANT_JAR: ${ANT_JAR}"
 
 #----- JT Harness -----
 setup_jtharness_javatest_jar() {
@@ -900,7 +852,6 @@ check_dir() {
 }
 
 check_file "${ANT}"
-check_file "${ANT_JAR}"
 check_file "${ASMTOOLS_JAR}"
 check_file "${ASMTOOLS_LICENSE}"
 check_file "${GOOGLE_GUICE_JAR}"
@@ -924,9 +875,7 @@ fi
 
 # Build jtreg
 cd "${ROOT}/make"
-make ANT="${ANT}"                                             \
-     ANT_JAR="$(mixed_path "${ANT_JAR}")"                     \
-     ASMTOOLS_JAR="${ASMTOOLS_JAR}"                           \
+make ASMTOOLS_JAR="${ASMTOOLS_JAR}"                           \
      ASMTOOLS_LICENSE="${ASMTOOLS_LICENSE}"                   \
      BUILDDIR="${BUILD_DIR}"                                  \
      BUILD_MILESTONE="${JTREG_BUILD_MILESTONE}"               \
