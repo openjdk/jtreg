@@ -28,9 +28,7 @@
 
 $(BUILDDIR)/TestNGJUnitTest.agentvm.ok \
 $(BUILDDIR)/TestNGJUnitTest.othervm.ok: \
-		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
-		$(JTREG_IMAGEDIR)/lib/junit.jar \
-		$(JTREG_IMAGEDIR)/lib/testng.jar \
+		$(ALL_JTREG_JARS) \
 		$(JTREG_IMAGEDIR)/bin/jtreg
 	$(MKDIR) -p $(@:%.ok=%)
 	JTREG_JAVA=$(JDKJAVA) $(JTREG_IMAGEDIR)/bin/jtreg \

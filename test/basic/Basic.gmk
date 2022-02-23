@@ -29,26 +29,9 @@
 
 BASIC.files := $(shell find $(TESTDIR)/share/basic -type f)
 
-ifdef JCOMMANDER_JAR
-$(BUILDDIR)/Basic.check.ok: \
-	$(JTREG_IMAGEDIR)/lib/jcommander.jar
-endif
-
-ifdef GOOGLE_GUICE_JAR
-$(BUILDDIR)/Basic.check.ok: \
-	$(JTREG_IMAGEDIR)/lib/guice.jar
-endif
-
-ifdef HAMCREST_JAR
-$(BUILDDIR)/Basic.check.ok: \
-	$(JTREG_IMAGEDIR)/lib/hamcrest.jar
-endif
 
 $(BUILDDIR)/Basic.check.ok: \
-                $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-		$(JTREG_IMAGEDIR)/lib/javatest.jar \
-		$(JTREG_IMAGEDIR)/lib/junit.jar \
-		$(JTREG_IMAGEDIR)/lib/testng.jar \
+                $(ALL_JTREG_JARS) \
 		$(BUILDDIR)/i18n.com.sun.javatest.regtest.config.ok \
 		$(BUILDDIR)/i18n.com.sun.javatest.regtest.report.ok \
 		$(BUILDDIR)/i18n.com.sun.javatest.regtest.tool.ok \
@@ -80,30 +63,9 @@ else
   BASIC_TESTS := $(abspath $(TESTDIR)/share/basic)
 endif
 
-ifdef JCOMMANDER_JAR
 $(BUILDDIR)/Basic.othervm.ok \
 $(BUILDDIR)/Basic.agentvm.ok: \
-	$(JTREG_IMAGEDIR)/lib/jcommander.jar
-endif
-
-ifdef GOOGLE_GUICE_JAR
-$(BUILDDIR)/Basic.othervm.ok \
-$(BUILDDIR)/Basic.agentvm.ok: \
-	$(JTREG_IMAGEDIR)/lib/guice.jar
-endif
-
-ifdef HAMCREST_JAR
-$(BUILDDIR)/Basic.othervm.ok \
-$(BUILDDIR)/Basic.agentvm.ok: \
-	$(JTREG_IMAGEDIR)/lib/hamcrest.jar
-endif
-
-$(BUILDDIR)/Basic.othervm.ok \
-$(BUILDDIR)/Basic.agentvm.ok: \
-                $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-		$(JTREG_IMAGEDIR)/lib/javatest.jar \
-		$(JTREG_IMAGEDIR)/lib/junit.jar \
-		$(JTREG_IMAGEDIR)/lib/testng.jar \
+                $(ALL_JTREG_JARS) \
 		$(TESTDIR)/basic/Basic.java \
 		$(BUILDDIR)/i18n.com.sun.javatest.regtest.config.ok \
 		$(BUILDDIR)/i18n.com.sun.javatest.regtest.report.ok \

@@ -54,9 +54,9 @@ import static com.sun.javatest.regtest.tool.Option.ArgType.*;
  * Manager to drive jcov code coverage tool.
  */
 public class JCovManager {
-    public JCovManager(Path libDir) {
-        jcov_jar = toFile(new JarFinder("jcov.jar").libDir(libDir).getFile());
-        jcov_network_saver_jar = toFile(new JarFinder("jcov_network_saver.jar").libDir(libDir).getFile());
+    public JCovManager(JarManager jarManager) {
+        jcov_jar = toFile(jarManager.getFile("jcov"));
+        jcov_network_saver_jar = toFile(jarManager.getFile("jcov-network-saver"));
 
         if (System.getProperty("jcov.port") != null)
             grabberPort = Integer.getInteger("jcov.port");
