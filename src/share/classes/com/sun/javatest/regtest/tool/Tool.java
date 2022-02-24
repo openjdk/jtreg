@@ -238,16 +238,6 @@ public class Tool {
         System.exit(exitCode);
     }
 
-//    /**
-//     * Exception to report a problem while executing in Main.
-//     */
-//    public static class Fault extends Exception {
-//        static final long serialVersionUID = -6780999176737139046L;
-//        public Fault(I18NResourceBundle i18n, String s, Object... args) {
-//            super(i18n.getString(s, args));
-//        }
-//    }
-
     public static final String MAIN = "main";           // main set of options
     public static final String SELECT = "select";       // test selection options
     public static final String JDK = "jdk";             // specify JDK to use
@@ -1050,23 +1040,15 @@ public class Tool {
         this.out = out;
         this.err = err;
 
-        // FIXME: work around bug CODETOOLS-6466752
-        javatest_jar = new JarFinder("javatest.jar")
-                .classes(Harness.class)
-                .getFile();
-        if (javatest_jar != null) {
-            System.setProperty("javatestClassDir", javatest_jar.toString());
-        }
+        javatest_jar = JarManager.forClass(Harness.class);
 
-        jtreg_jar = new JarFinder("jtreg.jar")
-                .classes(getClass())
-                .getFile();
-        if (jtreg_jar != null) {
-            jcovManager = new JCovManager(jtreg_jar.getParent());
-            if (jcovManager.isJCovInstalled()) {
-                options = new ArrayList<>(options);
-                options.addAll(jcovManager.options);
-            }
+        jtreg_jar = JarManager.forClass(getClass());
+        jarManager = new JarManager(jtreg_jar.getParent());
+
+        jcovManager = new JCovManager(jarManager);
+        if (jcovManager.isJCovInstalled()) {
+            options = new ArrayList<>(options);
+            options.addAll(jcovManager.options);
         }
 
         help = new Help(options);
@@ -1667,10 +1649,9 @@ public class Tool {
 
         Path libDir = jtreg_jar.getParent();
 
-        asmtoolsPath = new JarFinder("asmtools.jar")
-                .classes("org.openjdk.asmtools.Main")
-                .libDir(libDir)
-                .getPath();
+        JarManager jarManager = new JarManager(libDir);
+
+        asmtoolsPath = jarManager.getPath("asmtools");
         help.addVersionHelper(out -> {
             for (Path f : asmtoolsPath.asList()) {
                 try (JarFile jf = new JarFile(f.toFile())) {
@@ -1692,44 +1673,10 @@ public class Tool {
             }
         });
 
-        testngPath = new JarFinder("testng.jar", "jcommander.jar", "guice.jar")
-                .classes("org.testng.annotations.Test", "com.beust.jcommander.JCommander", "com.google.inject.Stage")
-                .libDir(libDir)
-                .getPath();
-        // handle TestNG specially
-        help.addVersionHelper(out -> {
-            List<URL> urls = new ArrayList<>();
-            for (Path f : testngPath.asList()) {
-                try {
-                    urls.add(f.toUri().toURL());
-                } catch (MalformedURLException e) {
-                    // ignore
-                }
-            }
-            String v = null;
-            try (URLClassLoader cl = new URLClassLoader(urls.toArray(new URL[0]))) {
-                Class<?> c = cl.loadClass("org.testng.internal.Version");
-                Method m = c.getMethod("getVersionString");
-                v = (String) m.invoke(null);
-            } catch (ReflectiveOperationException | IOException e) {
-                // ignore
-            }
-            out.println("TestNG (testng.jar): version " + (v == null ? "unknown" : v)); // need i18n
-        });
-        SearchPath notTestNGPath = new SearchPath();
-        for (Path f : testngPath.asList()) {
-            if (!f.getFileName().toString().equals("testng.jar")) {
-                notTestNGPath.append(f);
-            }
-        }
-        // jcommander really does have no obvious version info, so leave it as "unknown"
-        help.addPathVersionHelper("TestNG", notTestNGPath);
+        testngPath = jarManager.getPath("testng");
+        help.addPathVersionHelper("TestNG", testngPath);
 
-        junitPath = new JarFinder("junit.jar", "hamcrest.jar")
-                .classes("org.junit.runner.JUnitCore", "org.hamcrest.SelfDescribing")
-                .libDir(libDir)
-                .getPath();
-        // no convenient version info for junit.jar
+        junitPath = jarManager.getPath("junit");
         help.addPathVersionHelper("JUnit", junitPath);
     }
 
@@ -2498,6 +2445,7 @@ public class Tool {
     private Path exclusiveLockArg;
     private List<Path> matchListArgs = new ArrayList<>();
 
+    private final JarManager jarManager;
     private Path javatest_jar;
     private Path jtreg_jar;
     private SearchPath junitPath;

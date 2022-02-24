@@ -52,6 +52,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
+import java.util.stream.Collectors;
 
 import com.sun.javatest.regtest.agent.SearchPath;
 import com.sun.javatest.util.HelpTree;
@@ -109,17 +110,27 @@ public class Help {
         addVersionHelper(new Help.VersionHelper() {
             @Override
             public void showVersion(PrintWriter out) {
+                // print list of jar files in path
+                out.println(name + ": " + path.asList().stream()
+                        .map(Path::getFileName)
+                        .map(Object::toString)
+                        .collect(Collectors.joining(", ")));
                 try {
+                    // look inside jar metadata for details for those jar files that do
+                    // not seem to have a version in their filename
                     for (Path jar: path.asList()) {
-                        try (JarFile j = new JarFile(jar.toFile())) {
-                            Attributes attrs = j.getManifest().getMainAttributes();
-                            String v = attrs.getValue(Attributes.Name.IMPLEMENTATION_VERSION);
-                            if (v == null) {
-                                v = attrs.getValue("Bundle-Version");
+                        String fn = jar.getFileName().toString();
+                        if (!fn.matches("(?i)[a-z0-9-_]+-[0-9](\\.[0-9]+)+\\.jar")) {
+                            try (JarFile j = new JarFile(jar.toFile())) {
+                                Attributes attrs = j.getManifest().getMainAttributes();
+                                String v = attrs.getValue(Attributes.Name.IMPLEMENTATION_VERSION);
+                                if (v == null) {
+                                    v = attrs.getValue("Bundle-Version");
+                                }
+                                String suffix = (path.asList().size() == 1)
+                                        ? "" : " (" + jar.getFileName() + ")";
+                                out.println(name + suffix + ": version " + (v == null ? "unknown" : v)); // need i18n
                             }
-                            String suffix = (path.asList().size() == 1)
-                                    ? "" : " (" + jar.getFileName() + ")";
-                            out.println(name + suffix + ": version " + (v == null ? "unknown" : v)); // need i18n
                         }
                     }
                 } catch (IOException e) {

@@ -808,6 +808,28 @@ setup_hamcrest() {
 setup_hamcrest
 info "HAMCREST_JAR: ${HAMCREST_JAR}"
 
+#-----
+# Create aggregate settings
+
+ASMTOOLS_NOTICES="$(mixed_path "${ASMTOOLS_LICENSE}")"
+info "ASMTOOLS_NOTICES: ${ASMTOOLS_NOTICES}"
+
+JCOV_NOTICES="$(mixed_path "${JCOV_LICENSE}")"
+info "JCOV_NOTICES: ${JCOV_NOTICES}"
+
+JTHARNESS_NOTICES="$(mixed_path "${JTHARNESS_COPYRIGHT}") $(mixed_path "${JTHARNESS_LICENSE}")"
+info "JTHARNESS_NOTICES: ${JTHARNESS_NOTICES}"
+
+TESTNG_JARS="$(mixed_path "${TESTNG_JAR}") $(mixed_path "${GOOGLE_GUICE_JAR}") $(mixed_path "${JCOMMANDER_JAR}")"
+info "TESTNG_JARS: ${TESTNG_JARS}"
+TESTNG_NOTICES="$(mixed_path "${TESTNG_LICENSE}")"
+info "TESTNG_NOTICES: ${TESTNG_NOTICES}"
+
+JUNIT_JARS="$(mixed_path "${JUNIT_JAR}") $(mixed_path "${HAMCREST_JAR}")"
+info "JUNIT_JARS: ${JUNIT_JARS}"
+JUNIT_NOTICES="$(mixed_path "${JUNIT_LICENSE}")"
+info "JUNIT_NOTICES: ${JUNIT_NOTICES}"
+
 ##
 # The build version typically comes from the version-numbers file;
 # It is expected that the build number will typically come from an external CI system.
@@ -831,6 +853,12 @@ info "JTREG_VERSION: ${JTREG_VERSION}"
 info "JTREG_BUILD_NUMBER: ${JTREG_BUILD_NUMBER}"
 info "JTREG_BUILD_MILESTONE: ${JTREG_BUILD_MILESTONE}"
 
+check_files() {
+    for i in "$@" ; do
+        check_file "$i"
+    done
+}
+
 check_file() {
     check_arguments "${FUNCNAME}" 1 $#
 
@@ -851,23 +879,19 @@ check_dir() {
     fi
 }
 
-check_file "${ANT}"
-check_file "${ASMTOOLS_JAR}"
-check_file "${ASMTOOLS_LICENSE}"
-check_file "${GOOGLE_GUICE_JAR}"
-check_file "${HAMCREST_JAR}"
-check_dir  "${JAVA_HOME}"
-check_file "${JCOMMANDER_JAR}"
-check_file "${JCOV_JAR}"
-check_file "${JCOV_LICENSE}"
-check_file "${JCOV_NETWORK_SAVER_JAR}"
-check_file "${JTHARNESS_COPYRIGHT}"
-check_file "${JTHARNESS_JAVATEST_JAR}"
-check_file "${JTHARNESS_LICENSE}"
-check_file "${JUNIT_JAR}"
-check_file "${JUNIT_LICENSE}"
-check_file "${TESTNG_JAR}"
-check_file "${TESTNG_LICENSE}"
+check_file  "${ANT}"
+check_file  "${ASMTOOLS_JAR}"
+check_files  ${ASMTOOLS_NOTICES}
+check_dir   "${JAVA_HOME}"
+check_file  "${JCOV_JAR}"
+check_files  ${JCOV_NOTICES}
+check_file  "${JCOV_NETWORK_SAVER_JAR}"
+check_file  "${JTHARNESS_JAVATEST_JAR}"
+check_files  ${JTHARNESS_NOTICES}
+check_files  ${JUNIT_JARS}
+check_files  ${JUNIT_NOTICES}
+check_files  ${TESTNG_JARS}
+check_files  ${TESTNG_NOTICES}
 
 if [ -n "${SKIP_MAKE:-}" ]; then
     exit
@@ -876,24 +900,20 @@ fi
 # Build jtreg
 cd "${ROOT}/make"
 make ASMTOOLS_JAR="${ASMTOOLS_JAR}"                           \
-     ASMTOOLS_LICENSE="${ASMTOOLS_LICENSE}"                   \
+     ASMTOOLS_NOTICES="${ASMTOOLS_NOTICES}"                   \
      BUILDDIR="${BUILD_DIR}"                                  \
      BUILD_MILESTONE="${JTREG_BUILD_MILESTONE}"               \
      BUILD_NUMBER="${JTREG_BUILD_NUMBER}"                     \
      BUILD_VERSION="${JTREG_VERSION}"                         \
      BUILD_VERSION_STRING="${JTREG_VERSION_STRING}"           \
-     GOOGLE_GUICE_JAR="${GOOGLE_GUICE_JAR}"                   \
-     HAMCREST_JAR="${HAMCREST_JAR}"                           \
      JAVATEST_JAR="$(mixed_path "${JTHARNESS_JAVATEST_JAR}")" \
-     JCOMMANDER_JAR="${JCOMMANDER_JAR}"                       \
      JCOV_JAR="${JCOV_JAR}"                                   \
-     JCOV_LICENSE="${JCOV_LICENSE}"                           \
      JCOV_NETWORK_SAVER_JAR="${JCOV_NETWORK_SAVER_JAR}"       \
+     JCOV_NOTICES="${JCOV_NOTICES}"                           \
      JDKHOME="${JAVA_HOME}"                                   \
-     JTHARNESS_COPYRIGHT="${JTHARNESS_COPYRIGHT}"             \
-     JTHARNESS_LICENSE="${JTHARNESS_LICENSE}"                 \
-     JUNIT_JAR="$(mixed_path "${JUNIT_JAR}")"                 \
-     JUNIT_LICENSE="${JUNIT_LICENSE}"                         \
-     TESTNG_JAR="$(mixed_path "${TESTNG_JAR}")"               \
-     TESTNG_LICENSE="${TESTNG_LICENSE}"                       \
+     JTHARNESS_NOTICES="${JTHARNESS_NOTICES}"                 \
+     JUNIT_JARS="${JUNIT_JARS}"                               \
+     JUNIT_NOTICES="${JUNIT_NOTICES}"                         \
+     TESTNG_JARS="${TESTNG_JARS}"                             \
+     TESTNG_NOTICES="${TESTNG_NOTICES}"                       \
    ${MAKE_ARGS:-}
