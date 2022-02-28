@@ -797,13 +797,6 @@ public class Tool {
             }
         },
 
-        new Option(WILDCARD, JDK, null, "-Xrunjcov") {
-            @Override
-            public void process(String opt, String arg) {
-                testVMOpts.add(opt);
-            }
-        },
-
         new Option(NONE, JDK, null, "-classic", "-green", "-native", "-hotspot", "-client", "-server", "-d32", "-d64") {
             @Override
             public void process(String opt, String arg) {
@@ -1045,12 +1038,6 @@ public class Tool {
         jtreg_jar = JarManager.forClass(getClass());
         jarManager = new JarManager(jtreg_jar.getParent());
 
-        jcovManager = new JCovManager(jarManager);
-        if (jcovManager.isJCovInstalled()) {
-            options = new ArrayList<>(options);
-            options.addAll(jcovManager.options);
-        }
-
         help = new Help(options);
         if (javatest_jar != null) {
             help.addVersionHelper(o -> {
@@ -1069,14 +1056,6 @@ public class Tool {
                         }
                     }
                 } catch (IOException e) {
-                }
-            });
-        }
-        if (jcovManager != null && jcovManager.isJCovInstalled()) {
-            help.addVersionHelper(new VersionHelper() {
-                @Override
-                public void showVersion(PrintWriter out) {
-                    out.println(jcovManager.version());
                 }
             });
         }
@@ -1292,185 +1271,98 @@ public class Tool {
             }
         }
 
-        if (jcovManager.isEnabled()) {
-            jcovManager.setTestJDK(testJDK);
-            jcovManager.setWorkDir(getNormalizedFile(workDirArg.toFile()));
-            jcovManager.setReportDir(getNormalizedFile(reportDirArg.toFile()));
-            jcovManager.instrumentClasses();
-            final String XBOOTCLASSPATH_P = "-Xbootclasspath/p:";
-            final String XMS = "-Xms";
-            final String defaultInitialHeap = "64m";
-            String insert = jcovManager.instrClasses + File.pathSeparator
-                    + jcovManager.jcov_network_saver_jar;
-            boolean found_Xbootclasspath_p = false;
-            boolean found_Xms = false;
-            for (int i = 0; i < testVMOpts.size(); i++) {
-                String opt = testVMOpts.get(i);
-                if (opt.startsWith(XBOOTCLASSPATH_P)) {
-                    opt = opt.substring(0, XBOOTCLASSPATH_P.length())
-                            + insert + File.pathSeparator
-                            + opt.substring(XBOOTCLASSPATH_P.length());
-                    testVMOpts.set(i, opt);
-                    found_Xbootclasspath_p = true;
+        Harness.setClassDir(ProductInfo.getJavaTestClassDir());
+
+        // Allow keywords to begin with a numeric
+        Keywords.setAllowNumericKeywords(RegressionKeywords.allowNumericKeywords);
+
+        if (httpdFlag)
+            startHttpServer();
+
+        if (multiRun && guiFlag)
+            throw new Fault(i18n, "main.onlyOneTestSuiteInGuiMode");
+
+        testStats = new TestStats();
+        boolean foundEmptyGroup = false;
+
+        for (RegressionTestSuite ts: testManager.getTestSuites()) {
+
+            if (multiRun && (verbose != null && verbose.multiRun))
+                out.println("Running tests in " + ts.getRootDir());
+
+            RegressionParameters params = createParameters(testManager, ts);
+            String[] tests = params.getTests();
+            if (tests != null && tests.length == 0)
+                foundEmptyGroup = true;
+
+            checkLockFiles(params.getWorkDirectory().getRoot(), "start");
+
+            switch (execMode) {
+                case AGENTVM:
+                    Agent.Pool p = Agent.Pool.instance(params);
+                    if (allowSetSecurityManagerFlag) {
+                        initPolicyFile();
+                        p.setSecurityPolicy(policyFile.toFile());
+                    }
+                    if (timeoutFactorArg != null) {
+                        p.setTimeoutFactor(timeoutFactorArg);
+                    }
+                    if (maxPoolSize == -1) {
+                        // The default max pool size depends on the concurrency
+                        // and whether there are additional VM options to be set
+                        // when executing tests, as compared to when compiling tests.
+                        // Also, the classpath for compile actions is typically
+                        // different for compile actions and main actions.
+                        int factor = 2; // (testJavaOpts.isEmpty() ? 1 : 2);
+                        maxPoolSize = params.getConcurrency() * factor;
+                    }
+                    p.setMaxPoolSize(maxPoolSize);
+                    p.setIdleTimeout(poolIdleTimeout);
                     break;
-                } else if (opt.startsWith(XMS))
-                    found_Xms = true;
+                case OTHERVM:
+                    break;
+                default:
+                    throw new AssertionError();
             }
-            if (!found_Xbootclasspath_p) {
-                if (jcovManager.instrModules.exists()) {
-                    patchModulesInVMOpts(jcovManager.instrModules);
-                } else {
-                    testVMOpts.add(XBOOTCLASSPATH_P + insert);
+
+            // Before we install our own security manager (which will restrict access
+            // to the system properties), take a copy of the system properties.
+            TestEnvironment.addDefaultPropTable("(system properties)", System.getProperties());
+
+            if (guiFlag) {
+                showTool(params);
+                return EXIT_OK;
+            } else {
+                try {
+                    boolean quiet = (multiRun && !(verbose != null && verbose.multiRun));
+                    testStats.addAll(batchHarness(params, quiet));
+                } finally {
+                    checkLockFiles(params.getWorkDirectory().getRoot(), "done");
                 }
-
             }
-            if (!found_Xms)
-                testVMOpts.add(XMS + defaultInitialHeap);
-            jcovManager.startGrabber();
-            testVMOpts.add("-Djcov.port=" + jcovManager.grabberPort);
-
-            if (JCovManager.showJCov)
-                System.err.println("Modified VM opts: " + testVMOpts);
+            if (verbose != null && verbose.multiRun)
+                out.println();
         }
 
-        try {
-            Harness.setClassDir(ProductInfo.getJavaTestClassDir());
-
-            // Allow keywords to begin with a numeric
-            Keywords.setAllowNumericKeywords(RegressionKeywords.allowNumericKeywords);
-
-            if (httpdFlag)
-                startHttpServer();
-
-            if (multiRun && guiFlag)
-                throw new Fault(i18n, "main.onlyOneTestSuiteInGuiMode");
-
-            testStats = new TestStats();
-            boolean foundEmptyGroup = false;
-
-            for (RegressionTestSuite ts: testManager.getTestSuites()) {
-
-                if (multiRun && (verbose != null && verbose.multiRun))
-                    out.println("Running tests in " + ts.getRootDir());
-
-                RegressionParameters params = createParameters(testManager, ts);
-                String[] tests = params.getTests();
-                if (tests != null && tests.length == 0)
-                    foundEmptyGroup = true;
-
-                checkLockFiles(params.getWorkDirectory().getRoot(), "start");
-
-                switch (execMode) {
-                    case AGENTVM:
-                        Agent.Pool p = Agent.Pool.instance(params);
-                        if (allowSetSecurityManagerFlag) {
-                            initPolicyFile();
-                            p.setSecurityPolicy(policyFile.toFile());
-                        }
-                        if (timeoutFactorArg != null) {
-                            p.setTimeoutFactor(timeoutFactorArg);
-                        }
-                        if (maxPoolSize == -1) {
-                            // The default max pool size depends on the concurrency
-                            // and whether there are additional VM options to be set
-                            // when executing tests, as compared to when compiling tests.
-                            // Also, the classpath for compile actions is typically
-                            // different for compile actions and main actions.
-                            int factor = 2; // (testJavaOpts.isEmpty() ? 1 : 2);
-                            maxPoolSize = params.getConcurrency() * factor;
-                        }
-                        p.setMaxPoolSize(maxPoolSize);
-                        p.setIdleTimeout(poolIdleTimeout);
-                        break;
-                    case OTHERVM:
-                        break;
-                    default:
-                        throw new AssertionError();
-                }
-
-                // Before we install our own security manager (which will restrict access
-                // to the system properties), take a copy of the system properties.
-                TestEnvironment.addDefaultPropTable("(system properties)", System.getProperties());
-
-                if (guiFlag) {
-                    showTool(params);
-                    return EXIT_OK;
-                } else {
-                    try {
-                        boolean quiet = (multiRun && !(verbose != null && verbose.multiRun));
-                        testStats.addAll(batchHarness(params, quiet));
-                    } finally {
-                        checkLockFiles(params.getWorkDirectory().getRoot(), "done");
-                    }
-                }
-                if (verbose != null && verbose.multiRun)
-                    out.println();
+        if (multiRun) {
+            if (verbose != null && verbose.multiRun) {
+                out.println("Overall summary:");
             }
-
-            if (multiRun) {
-                if (verbose != null && verbose.multiRun) {
-                    out.println("Overall summary:");
-                }
-                testStats.showResultStats(out);
-                if (reportMode != ReportMode.NONE) {
-                    RegressionReporter r = new RegressionReporter(out);
-                    r.report(testManager);
-                }
-                if (!reportOnlyFlag) {
-                    out.println("Results written to " + canon(workDirArg.toFile()));
-                }
+            testStats.showResultStats(out);
+            if (reportMode != ReportMode.NONE) {
+                RegressionReporter r = new RegressionReporter(out);
+                r.report(testManager);
             }
-
-            return (testStats.counts[Status.ERROR] > 0 ? EXIT_TEST_ERROR
-                    : testStats.counts[Status.FAILED] > 0 ? EXIT_TEST_FAILED
-                    : testStats.counts[Status.PASSED] == 0 && !foundEmptyGroup ? EXIT_NO_TESTS
-                    : errors != 0 ? EXIT_FAULT
-                    : EXIT_OK);
-
-        } finally {
-
-            if (jcovManager.isEnabled()) {
-                jcovManager.stopGrabber();
-                if (jcovManager.results.exists()) {
-                    jcovManager.writeReport();
-                    out.println("JCov report written to " + canon(new File(jcovManager.report, "index.html")));
-                } else {
-                    out.println("Note: no jcov results found; no report generated");
-                }
-            }
-
-        }
-    }
-
-    private void patchModulesInVMOpts(File modules) {
-        if (modules.exists()) {
-            List<String> instrMods = new ArrayList<>();
-            for (File module : modules.listFiles()) {
-                if (module.isDirectory() && !module.getName().equals("java.base")) {
-                    instrMods.add(module.getName());
-                }
-            }
-            for (File module : modules.listFiles()) {
-                if (module.isDirectory()) {
-                    String patchOption = module.getName() + "=" + module.getAbsolutePath();
-                    if (module.getName().equals("java.base")) {
-                        patchOption += File.pathSeparator + jcovManager.jcov_network_saver_jar;
-
-                        // export jcov package to instrumented modules
-                        if (!instrMods.isEmpty()) {
-                            testVMOpts.add("--add-exports");
-                            String exportOption = "java.base/"
-                                    + JCovManager.JCOV_EXPORT_PACKAGE
-                                    + "="
-                                    + StringUtils.join(instrMods, ",");
-                            testVMOpts.add(exportOption);
-                        }
-                    }
-                    testVMOpts.add("--patch-module");
-                    testVMOpts.add(patchOption);
-                }
+            if (!reportOnlyFlag) {
+                out.println("Results written to " + canon(workDirArg.toFile()));
             }
         }
+
+        return (testStats.counts[Status.ERROR] > 0 ? EXIT_TEST_ERROR
+                : testStats.counts[Status.FAILED] > 0 ? EXIT_TEST_FAILED
+                : testStats.counts[Status.PASSED] == 0 && !foundEmptyGroup ? EXIT_NO_TESTS
+                : errors != 0 ? EXIT_FAULT
+                : EXIT_OK);
     }
 
     JDK_Version checkJDK(JDK jdk) throws Fault {
@@ -1830,14 +1722,6 @@ public class Tool {
 
             if (!rp.isValid())
                 throw new Fault(i18n, "main.badParams", rp.getErrorMessage());
-
-            for (String o: testVMOpts) {
-                if (o.startsWith("-Xrunjcov")) {
-                    if (!testVMOpts.contains("-XX:+EnableJVMPIInstructionStartEvent"))
-                        testVMOpts.add("-XX:+EnableJVMPIInstructionStartEvent");
-                    break;
-                }
-            }
 
             if (testVMOpts.size() > 0)
                 rp.setTestVMOptions(testVMOpts);
@@ -2452,8 +2336,6 @@ public class Tool {
     private SearchPath testngPath;
     private SearchPath asmtoolsPath;
     private Path policyFile;
-
-    JCovManager jcovManager;
 
     private TestStats testStats;
 

@@ -82,7 +82,6 @@ override BUILDDIR := $(call FullPath, $(BUILDDIR))
 # Parameters to control what to build and test with.
 
 # Notices are optional or may be empty
-# JCov is optional
 # The following are not optional ...
 
 ifndef JDKHOME
