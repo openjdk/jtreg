@@ -92,13 +92,10 @@ RESOURCES.com.sun.javatest.regtest = \
 
 $(BUILDDIR)/classes/com/sun/javatest/regtest/tool/jars.properties: \
 	$(ASMTOOLS_JAR) \
-	$(JCOV_JAR) $(JCOV_NETWORK_SAVER_JAR) \
 	$(TESTNG_JARS) \
 	$(JUNIT_JARS)
 	( \
 	    echo "asmtools=$(notdir $(ASMTOOLS_JAR))" ; \
-	    echo "jcov=$(notdir $(JCOV_JAR))" ; \
-	    echo "jcov-network-saver=$(notdir $(JCOV_NETWORK_SAVER_JAR))" ; \
 	    echo "testng=$(notdir $(TESTNG_JARS))" ; \
 	    echo "junit=$(notdir $(JUNIT_JARS))" \
 	) > $@
@@ -286,16 +283,6 @@ $(foreach file,$(TESTNG_NOTICES),$(eval $(call IMPORT_FILE,$(file),$(JTREG_IMAGE
 
 #----------------------------------------------------------------------
 #
-# import JCov
-
-$(eval $(call IMPORT_FILE,$(JCOV_JAR),$(JTREG_IMAGEDIR)/lib))
-
-$(eval $(call IMPORT_FILE,$(JCOV_NETWORK_SAVER_JAR),$(JTREG_IMAGEDIR)/lib))
-
-$(foreach file,$(JCOV_NOTICES),$(eval $(call IMPORT_FILE,$(file),$(JTREG_IMAGEDIR)/legal/jcov)))
-
-#----------------------------------------------------------------------
-#
 # import AsmTools
 
 $(eval $(call IMPORT_FILE,$(ASMTOOLS_JAR),$(JTREG_IMAGEDIR)/lib))
@@ -312,8 +299,6 @@ ALL_JTREG_JARS = \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/lib/javatest.jar \
 	$(addprefix $(JTREG_IMAGEDIR)/lib/,$(notdir $(ASMTOOL_JAR))) \
-	$(addprefix $(JTREG_IMAGEDIR)/lib/,$(notdir $(JCOV_JAR))) \
-	$(addprefix $(JTREG_IMAGEDIR)/lib/,$(notdir $(JCOV_NETWORK_SAVER_JAR))) \
 	$(addprefix $(JTREG_IMAGEDIR)/lib/,$(notdir $(ASMTOOL_JAR))) \
 	$(addprefix $(JTREG_IMAGEDIR)/lib/,$(notdir $(JUNIT_JARS))) \
 	$(addprefix $(JTREG_IMAGEDIR)/lib/,$(notdir $(TESTNG_JARS))) \

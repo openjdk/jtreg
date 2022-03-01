@@ -78,9 +78,6 @@ ifneq ($(JTHARNESS_HOME), $(JAVATEST_HOME))
 	@echo "JTHARNESS_HOME      = $(JTHARNESS_HOME)"
 endif
 	@echo "JTHARNESS_NOTICES   = $(JTHARNESS_NOTICES)"
-	@echo "JCOV_JAR            = $(JCOV_JAR)"
-	@echo "JCOV_NETWORK_SAVER_JAR = $(JCOV_NETWORK_SAVER_JAR)"
-	@echo "JCOV_NOTICES        = $(JCOV_NOTICES)"
 	@echo "ASMTOOLS_JAR        = $(ASMTOOLS_JAR)"
 	@echo "ASMTOOLS_NOTICES    = $(ASMTOOLS_NOTICES)"
 	@echo "JUNIT_JARS          = $(JUNIT_JARS)"

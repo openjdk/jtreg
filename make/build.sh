@@ -48,8 +48,7 @@
 #
 # * JUnit, TestNG, JCommander, and Ant jar are by default
 #   downloaded from Maven central.
-# * JT Harness, JCov, and AsmTools are downloaded or built from
-#   source.
+# * JT Harness and AsmTools are downloaded or built from source.
 # * The JDK dependency is downloaded. No default URL is set.
 #
 
@@ -117,7 +116,7 @@
 # handled. For each dependency the steps are tried in order and the
 # first successful one will be used.
 #
-# Ant (required to build AsmTools, JCov and JT Harness)
+# Ant (required to build AsmTools and JT Harness)
 #     Checksum variables:
 #         ANT_ARCHIVE_CHECKSUM: checksum of binary archive
 #
@@ -174,20 +173,6 @@
 #         The full URL for the jar.
 #     2b. JCOMMANDER_JAR_URL_BASE + JCOMMANDER_VERSION
 #         The individual URL components used to construct the full URL.
-#
-# JCov
-#     Checksum variables:
-#         JCOV_ARCHIVE_CHECKSUM: checksum of binary archive
-#         JCOV_SRC_ARCHIVE_CHECKSUM: checksum of source archive
-#
-#     1. JCOV_JAR + JCOV_NETWORK_SAVER_JAR + JCOV_LICENSE
-#         The path to jcov.jar, jcov_network_saver.jar, and LICENSE respectively.
-#     2a. JCOV_ARCHIVE_URL
-#         The full URL for the archive.
-#     2b. JCOV_ARCHIVE_URL_BASE + JCOV_VERSION + JCOV_BUILD_NUMBER + JCOV_FILE
-#         The individual URL components used to construct the full URL.
-#     3. JCOV_SRC_TAG
-#         The SCM repository tag to use when building from source.
 #
 # JDK
 #     Checksum variables:
@@ -327,10 +312,6 @@ JCOMMANDER_JAR_URL_BASE="${JCOMMANDER_JAR_URL_BASE:-${MAVEN_REPO_URL_BASE}}"
 JCOMMANDER_JAR_CHECKSUM="${JCOMMANDER_JAR_CHECKSUM:-${DEFAULT_JCOMMANDER_JAR_CHECKSUM}}"
 
 # Not available in Maven
-JCOV_SRC_TAG="${JCOV_SRC_TAG:-${DEFAULT_JCOV_SRC_TAG}}"
-JCOV_SRC_ARCHIVE_CHECKSUM="${JCOV_SRC_ARCHIVE_CHECKSUM:-${DEFAULT_JCOV_SRC_ARCHIVE_CHECKSUM}}"
-
-# Not available in Maven
 JTHARNESS_SRC_TAG="${JTHARNESS_SRC_TAG:-${DEFAULT_JTHARNESS_SRC_TAG}}"
 JTHARNESS_SRC_ARCHIVE_CHECKSUM="${JTHARNESS_SRC_ARCHIVE_CHECKSUM:-${DEFAULT_JTHARNESS_SRC_ARCHIVE_CHECKSUM}}"
 
@@ -356,7 +337,7 @@ fi
 
 if [ "${SHOW_CONFIG_DETAILS:-}" != "" ]; then
     ( set -o posix ; set ) | \
-        grep -E '^(ANT|ASM|ASMTOOLS|GOOGLE_GUICE|HAMCREST|JCOMMANDER|JCOV|JTHARNESS|JUNIT|TESTNG)_[A-Z_]*=' | \
+        grep -E '^(ANT|ASM|ASMTOOLS|GOOGLE_GUICE|HAMCREST|JCOMMANDER|JTHARNESS|JUNIT|TESTNG)_[A-Z_]*=' | \
         sort -u
     exit
 fi
@@ -517,71 +498,6 @@ setup_jtharness_license_and_copyright() {
 setup_jtharness_license_and_copyright
 info "JTHARNESS_LICENSE: ${JTHARNESS_LICENSE}"
 info "JTHARNESS_COPYRIGHT: ${JTHARNESS_COPYRIGHT}"
-
-#----- JCov -----
-setup_jcov() {
-    check_arguments "${FUNCNAME}" 0 $#
-
-    if [ -n "${JCOV_JAR:-}" -a -n "${JCOV_NETWORK_SAVER_JAR:-}" ]; then
-        return
-    fi
-
-    if [ -z "${JCOV_ARCHIVE_URL:-}" ]; then
-        if [ -n "${JCOV_ARCHIVE_URL_BASE:-}" ]; then
-            JCOV_ARCHIVE_URL="${JCOV_ARCHIVE_URL_BASE}/${JCOV_VERSION}/${JCOV_BUILD_NUMBER}/${JCOV_FILE}"
-        fi
-    fi
-
-    local JCOV_DEPS_DIR="${DEPS_DIR}/jcov"
-
-    if [ -n "${JTHARNESS_ARCHIVE_URL:-}" ]; then
-        local JCOV_LOCAL_ARCHIVE_FILE="${DEPS_DIR}/$(basename "${JCOV_ARCHIVE_URL}")"
-        get_archive "${JCOV_ARCHIVE_URL}" "${JCOV_LOCAL_ARCHIVE_FILE}" "${JCOV_DEPS_DIR}" "${JCOV_ARCHIVE_CHECKSUM}"
-        JCOV_JAR="${JCOV_DEPS_DIR}/jcov_${JCOV_VERSION}/lib/jcov.jar"
-        JCOV_NETWORK_SAVER_JAR="${JCOV_DEPS_DIR}/jcov_${JCOV_VERSION}/lib/jcov_network_saver.jar"
-        return
-    fi
-
-    info "None of JCOV_JAR, JCOV_ARCHIVE_URL or JCOV_ARCHIVE_URL_BASE are set; building from source"
-    export JCOV_BUILD_RESULTS_FILE="${DEPS_DIR}/jcov.results"
-    (
-        export BUILD_DIR="${JCOV_DEPS_DIR}"
-        export BUILD_RESULTS_FILE="${JCOV_BUILD_RESULTS_FILE}"
-        export JCOV_SRC_TAG="${JCOV_SRC_TAG}"
-        export JCOV_SRC_ARCHIVE_CHECKSUM="${JCOV_SRC_ARCHIVE_CHECKSUM}"
-        export ANT="${ANT}"
-        export JTHARNESS_JAVATEST_JAR="${JTHARNESS_JAVATEST_JAR}"
-        bash "${mydir}/build-support/jcov/build.sh"
-    )
-    ret=$?
-    if [ ! $ret = 0 ]; then
-        exit ${ret}
-    fi
-    . "${JCOV_BUILD_RESULTS_FILE}"
-}
-setup_jcov
-info "JCOV_JAR: ${JCOV_JAR}"
-info "JCOV_NETWORK_SAVER_JAR: ${JCOV_NETWORK_SAVER_JAR}"
-
-#----- JCov License -----
-# TODO: File issue to include LICENSE in the jcov binary bundle
-setup_jcov_license() {
-    check_arguments "${FUNCNAME}" 0 $#
-
-    if [ -n "${JCOV_LICENSE:-}" ]; then
-        return
-    fi
-
-    if [ -z "${JCOV_SRC:-}" ]; then
-        local JCOV_SRC_DEPS_DIR="${DEPS_DIR}/jcov-src"
-        local JCOV_LOCAL_SRC_ARCHIVE_FILE="${JCOV_SRC_DEPS_DIR}/source.zip"
-        get_archive "${CODE_TOOLS_URL_BASE}/jcov/archive/${JCOV_SRC_TAG}.zip" "${JCOV_LOCAL_SRC_ARCHIVE_FILE}" "${JCOV_SRC_DEPS_DIR}" "${JCOV_SRC_ARCHIVE_CHECKSUM}"
-        JCOV_SRC="${JCOV_SRC_DEPS_DIR}/jcov-${JCOV_SRC_TAG}"
-    fi
-    JCOV_LICENSE="${JCOV_SRC}/LICENSE"
-}
-setup_jcov_license
-info "JCOV_LICENSE: ${JCOV_LICENSE}"
 
 #----- AsmTools -----
 setup_asmtools() {
@@ -814,9 +730,6 @@ info "HAMCREST_JAR: ${HAMCREST_JAR}"
 ASMTOOLS_NOTICES="$(mixed_path "${ASMTOOLS_LICENSE}")"
 info "ASMTOOLS_NOTICES: ${ASMTOOLS_NOTICES}"
 
-JCOV_NOTICES="$(mixed_path "${JCOV_LICENSE}")"
-info "JCOV_NOTICES: ${JCOV_NOTICES}"
-
 JTHARNESS_NOTICES="$(mixed_path "${JTHARNESS_COPYRIGHT}") $(mixed_path "${JTHARNESS_LICENSE}")"
 info "JTHARNESS_NOTICES: ${JTHARNESS_NOTICES}"
 
@@ -883,9 +796,6 @@ check_file  "${ANT}"
 check_file  "${ASMTOOLS_JAR}"
 check_files  ${ASMTOOLS_NOTICES}
 check_dir   "${JAVA_HOME}"
-check_file  "${JCOV_JAR}"
-check_files  ${JCOV_NOTICES}
-check_file  "${JCOV_NETWORK_SAVER_JAR}"
 check_file  "${JTHARNESS_JAVATEST_JAR}"
 check_files  ${JTHARNESS_NOTICES}
 check_files  ${JUNIT_JARS}
@@ -907,9 +817,6 @@ make ASMTOOLS_JAR="${ASMTOOLS_JAR}"                           \
      BUILD_VERSION="${JTREG_VERSION}"                         \
      BUILD_VERSION_STRING="${JTREG_VERSION_STRING}"           \
      JAVATEST_JAR="$(mixed_path "${JTHARNESS_JAVATEST_JAR}")" \
-     JCOV_JAR="${JCOV_JAR}"                                   \
-     JCOV_NETWORK_SAVER_JAR="${JCOV_NETWORK_SAVER_JAR}"       \
-     JCOV_NOTICES="${JCOV_NOTICES}"                           \
      JDKHOME="${JAVA_HOME}"                                   \
      JTHARNESS_NOTICES="${JTHARNESS_NOTICES}"                 \
      JUNIT_JARS="${JUNIT_JARS}"                               \
