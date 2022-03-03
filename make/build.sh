@@ -188,6 +188,17 @@
 #     3. JTHARNESS_SRC_TAG
 #         The SCM repository tag to use when building from source.
 #
+# JUnit (includes HamCrest)
+#     Checksum variables:
+#         JUNIT_JAR_CHECKSUM: checksum of binary archive
+#
+#     1. JUNIT_JAR + JUNIT_LICENSE
+#         The path to junit.jar and LICENSE respectively.
+#     2a. JUNIT_JAR_URL
+#         The full URL for the jar.
+#     2b. JUNIT_JAR_URL_BASE + JUNIT_VERSION + JUNIT_FILE
+#         The individual URL components used to construct the full URL.
+#
 # TestNG (requires JCommander, Google Guice)
 #     Checksum variables:
 #         TESTNG_JAR_CHECKSUM: checksum of binary archive
