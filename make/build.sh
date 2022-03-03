@@ -556,7 +556,7 @@ setup_junit() {
     local JUNIT_DEPS_DIR="${DEPS_DIR}/junit"
 
     if [ -n "${JUNIT_JAR_URL:-}" ]; then
-        JUNIT_JAR="${JUNIT_DEPS_DIR}/junit.jar"
+        JUNIT_JAR="${JUNIT_DEPS_DIR}/$(basename ${JUNIT_JAR_URL})"
         download_and_checksum "${JUNIT_JAR_URL}" "${JUNIT_JAR}" "${JUNIT_JAR_CHECKSUM}"
         return
     fi
