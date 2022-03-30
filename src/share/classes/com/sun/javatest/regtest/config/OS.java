@@ -96,7 +96,7 @@ public class OS {
     //
     // The JPRT source code also lists the following values for os.arch
     //    sparc, sparcv9, ia64, ppc64, ppc, powerpc,
-    //    ppcv2, ppcsflt, arm, armsflt, armvfp, riscv
+    //    ppcv2, ppcsflt, arm, armsflt, armvfp
 
     public OS(String name, String arch, String version) {
         this.name = name;
