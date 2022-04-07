@@ -84,6 +84,7 @@ TARGETS.com.sun.javatest.regtest += $(BUILDDIR)/classes.java.lang.ok
 # resources required for com.sun.javatest.regtest
 
 RESOURCES.com.sun.javatest.regtest = \
+	$(CLASSDIR)/META-INF/services/java.util.spi.ToolProvider \
 	$(CLASSDIR)/com/sun/javatest/regtest/config/i18n.properties \
 	$(CLASSDIR)/com/sun/javatest/regtest/report/i18n.properties \
 	$(CLASSDIR)/com/sun/javatest/regtest/tool/i18n.properties \
@@ -223,6 +224,8 @@ PKGS.JAR.jtreg += \
 	com.sun.javatest.regtest.util \
 	java.lang
 TARGETS.JAR.jtreg += $(TARGETS.com.sun.javatest.regtest)
+
+FILES.JAR.jtreg=$(CLASSDIR)/META-INF/services/java.util.spi.ToolProvider
 
 $(JTREG_IMAGEDIR)/lib/jtreg.jar: JAR_MAINCLASS = com.sun.javatest.regtest.Main
 
