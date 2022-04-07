@@ -45,8 +45,7 @@ import static org.testng.ITestResult.SUCCESS;
 import static org.testng.ITestResult.SUCCESS_PERCENTAGE_FAILURE;
 
 /**
- *
- * @author jjg
+ * TestRunner to run TestNG tests.
  */
 public class TestNGRunner implements MainActionHelper.TestRunner {
 

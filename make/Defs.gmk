@@ -48,7 +48,7 @@ SYSTEM_UNAME := $(shell uname)
 ifeq ($(SYSTEM_UNAME), Windows_NT)
 DEV_NULL = NUL
 else
-DEV_NULL = /dev/null 
+DEV_NULL = /dev/null
 endif
 
 ifneq (,$(findstring CYGWIN,$(SYSTEM_UNAME)))
@@ -81,59 +81,27 @@ override BUILDDIR := $(call FullPath, $(BUILDDIR))
 #
 # Parameters to control what to build and test with.
 
-#----- Java:  http://openjdk.java.net/  http://jdk.java.net/
-#
-# Explicit JDK versions, for use as needed by tests, all optional for build.
-# At a minimum, JDKHOME must be set, either directly or indirectly. (See below).
-
-ifndef JDK5HOME
-  ifdef SLASHJAVA
-    JDK5HOME = $(SLASHJAVA)/re/jdk/1.5.0/archive/fcs/binaries/linux-i586
-  endif
-endif
-JDK5HOME := $(call FullPath,$(JDK5HOME))
-
-ifndef JDK6HOME
-  ifdef SLASHJAVA
-    JDK6HOME = $(SLASHJAVA)/re/jdk/1.6.0/archive/fcs/binaries/linux-i586
-  endif
-endif
-JDK6HOME := $(call FullPath,$(JDK6HOME))
-
-ifndef JDK7HOME
-  ifdef SLASHJAVA
-    JDK7HOME = $(SLASHJAVA)/re/jdk/1.7.0/archive/fcs/binaries/linux-i586
-  endif
-endif
-JDK7HOME := $(call FullPath,$(JDK7HOME))
-
-ifndef JDK8HOME
-  ifdef SLASHJAVA
-    JDK8HOME = $(SLASHJAVA)/re/jdk/1.8.0/promoted/latest/binaries/linux-i586
-  endif
-endif
-JDK8HOME := $(call FullPath,$(JDK8HOME))
-
-ifndef JDK9HOME
-  ifdef SLASHJAVA
-    JDK9HOME = $(SLASHJAVA)/re/jdk/9/promoted/latest/binaries/linux-i586
-  endif
-endif
-JDK9HOME := $(call FullPath,$(JDK9HOME))
-
-# The JDK used to build jtreg and to run most tests.
-# It should be set to JDK 8 or later.
-# If not set, it defaults to $(JDK8HOME), or to $(J2SEHOME) for backwards
-# compatibility
+# Notices are optional or may be empty
+# The following are not optional ...
 
 ifndef JDKHOME
-  ifdef JDK8HOME
-    JDKHOME = $(JDK8HOME)
-  else
-    ifdef J2SEHOME
-      JDKHOME = $(J2SEHOME)
-    endif
-  endif
+$(error JDKHOME not set)
+endif
+
+ifndef JAVATEST_JAR
+$(error JAVATEST_JAR not set)
+endif
+
+ifndef ASMTOOLS_JAR
+$(error ASMTOOLS_JAR not set)
+endif
+
+ifndef JUNIT_JARS
+$(error JUNIT_JARS not set)
+endif
+
+ifndef TESTNG_JARS
+$(error TESTNG_JARS not set)
 endif
 
 # derived values
@@ -155,226 +123,6 @@ REGTEST_TOOL_JAVAC = $(JDKHOME)/bin/javac
 REGTEST_TOOL_JAVAC_OPTIONS = \
 	$(TOOL_JAVAC_SOURCE_TARGET) -Xlint:all,-options,-deprecation -Werror
 
-#----- JavaTest: https://wiki.openjdk.java.net/display/CodeTools/JT+Harness
-#
-# At a minimum, JAVATEST_JAR must be set, either directly or indirectly.
-# If not set explicitly, it defaults to values derived from JAVATEST_HOME,
-# JTHARNESS_HOME or SLASH_JAVA.
-# Set JTHARNESS_LICENSE and JTHARNESS_COPYRIGHT to include license and
-# copyright files in the product image. If not set explicitly, these 
-# default to values derived from JAVATEST_HOME, JTHARNESS_HOME or SLASH_JAVA.
-
-ifndef JTHARNESS_HOME
-  ifdef SLASHJAVA
-    JTHARNESS_HOME = $(SLASHJAVA)/re/jtharness/6.0/promoted/ea/b11/binaries/
-  endif
-endif 
-
-ifndef JAVATEST_HOME
-  ifdef JTHARNESS_HOME
-    JAVATEST_HOME = $(JTHARNESS_HOME)
-  else
-    ifdef SLASHJAVA
-      JAVATEST_HOME = $(SLASHJAVA)/re/javatest/6.0/promoted/latest/binaries/javatest/
-    endif
-  endif
-endif
-
-ifndef JAVATEST_JAR
-  ifdef JAVATEST_HOME
-    JAVATEST_JAR = $(JAVATEST_HOME)/lib/javatest.jar
-  endif
-endif
-JAVATEST_JAR := $(call FullPath,$(JAVATEST_JAR))
-
-ifndef JTHARNESS_LICENSE
-  JTHARNESS_LICENSE = $(wildcard $(JTHARNESS_HOME)/legal/license.txt)
-endif
-JTHARNESS_LICENSE := $(call FullPath,$(JTHARNESS_LICENSE))
-
-ifndef JTHARNESS_COPYRIGHT
-  JTHARNESS_COPYRIGHT = $(wildcard $(JTHARNESS_HOME)/legal/copyright.txt)
-endif
-JTHARNESS_COPYRIGHT := $(call FullPath,$(JTHARNESS_COPYRIGHT))
-
-#----- JCov 3.0:  https://wiki.openjdk.java.net/display/CodeTools/jcov
-#
-# JCov is optional. 
-# If provided, coverage-collection features in jtreg will be enabled.
-#
-# To include support for JCov, JCOV_JAR and JCOV_NETWORK_SAVER_JAR
-# must be set. If not set explicitly, these default to values derived
-# from JCOV_HOME or SLASH_JAVA.
-# Set JCOV_LICENSE to include the license file in the product image.
-# If not set explicitly, this defaults to a value derived from JCOV_HOME 
-# or SLASH_JAVA.
-
-ifndef JCOV_HOME
-  ifdef SLASHJAVA
-    JCOV_HOME = $(SLASHJAVA)/re/jcov/3.0/promoted/fcs/latest/binaries/jcov_3.0/
-  endif
-endif
-
-ifndef JCOV_JAR
-  ifdef JCOV_HOME
-    JCOV_JAR = $(JCOV_HOME)/lib/jcov.jar
-  endif
-endif
-JCOV_JAR := $(call FullPath,$(JCOV_JAR))
-
-ifndef JCOV_NETWORK_SAVER_JAR
-  ifdef JCOV_HOME
-    JCOV_NETWORK_SAVER_JAR = $(JCOV_HOME)/lib/jcov_network_saver.jar
-  endif
-endif
-JCOV_NETWORK_SAVER_JAR := $(call FullPath,$(JCOV_NETWORK_SAVER_JAR))
-
-ifndef JCOV_LICENSE
-  ifdef JCOV_HOME
-    JCOV_LICENSE = $(wildcard $(JCOV_HOME)/LICENSE)
-  endif
-endif
-JCOV_LICENSE := $(call FullPath,$(JCOV_LICENSE))
-
-JCOV = $(JDK6HOME)/bin/java -jar $(JCOV_JAR)
-
-#----- AsmTools 7.0:  https://wiki.openjdk.java.net/display/CodeTools/asmtools
-#
-# AsmTools is required, to support the execution of tests using
-# *.jasm and *.jcod files.
-#
-# ASMTOOLS_JAR must be set, either directly or indirectly.
-# If not set explicitly, it defaults to a value derived from
-# ASMTOOLS_HOME or SLASHJAVA.
-# Set ASMTOOLS_LICENSE to include the license file in the product image.
-# If not set explicitly, this defaults to a value derived from 
-# ASMTOOLS_HOME or SLASH_JAVA.
-
-ifndef ASMTOOLS_HOME
-  ifdef SLASHJAVA
-    ASMTOOLS_HOME = $(SLASHJAVA)/re/asmtools/7.0/promoted/opensource/ea/b08/binaries/asmtools-7.0/
-  endif
-endif
-
-ifndef ASMTOOLS_JAR
-  ASMTOOLS_JAR = $(ASMTOOLS_HOME)/lib/asmtools.jar
-endif
-ASMTOOLS_JAR := $(call FullPath,$(ASMTOOLS_JAR))
-
-ifndef ASMTOOLS_LICENSE
-  ASMTOOLS_LICENSE = $(wildcard $(ASMTOOLS_HOME)/LICENSE)
-endif
-ASMTOOLS_LICENSE := $(call FullPath,$(ASMTOOLS_LICENSE))
-
-#----- JUnit 4.10: http://www.junit.org/
-# https://sourceforge.net/projects/junit/files/junit/4.10/junit-4.10.jar/download
-#
-# JUnit is required, to support the execution of tests using JUnit
-#
-# JUNIT_JAR must be set, either directly or indirectly.
-# If not set explicitly, it defaults to a value derived from
-# JUNIT_HOME or SLASHJAVA.
-# Set JUNIT_LICENSE to include the license file in the product image.
-# If not set explicitly, this defaults to a value derived from 
-# JUNIT_HOME or SLASH_JAVA.
-
-ifndef JUNIT_HOME
-  ifdef SLASHJAVA
-    JUNIT_HOME = $(SLASHJAVA)/devtools/share/junit/junit-4.10/
-  endif
-endif
-
-ifndef JUNIT_JAR
-  ifdef JUNIT_HOME
-    JUNIT_JAR = $(JUNIT_HOME)/junit-4.10.jar
-  endif
-endif
-JUNIT_JAR := $(call FullPath,$(JUNIT_JAR))
-
-ifndef JUNIT_LICENSE
-  ifdef JUNIT_HOME
-    JUNIT_LICENSE = $(wildcard $(JUNIT_HOME)/LICENSE.txt)
-  endif
-endif
-JUNIT_LICENSE := $(call FullPath,$(JUNIT_LICENSE))
-
-#----- TestNG 6.9.5: see http://www.testng.org/
-# http://testng.org/doc/download.html
-#
-# TestNG is required, to support the execution of tests using TestNG
-#
-# TESTNG_JAR must be set, either directly or indirectly.
-# If not set explicitly, it defaults to a value derived from
-# TESTNG_HOME or SLASHJAVA.
-# Set TESTNG_LICENSE to include the license file in the product image.
-# If not set explicitly, this defaults to a value derived from 
-# TESTNG_HOME or SLASH_JAVA.
-
-ifndef TESTNG_HOME
-  ifdef SLASHJAVA
-    TESTNG_HOME = $(SLASHJAVA)/devtools/share/testng/testng-6.9.5
-  endif
-endif
-TESTNG_HOME := $(call FullPath,$(TESTNG_HOME))
-
-ifndef TESTNG_JAR
-  ifdef TESTNG_HOME
-    TESTNG_JAR = $(TESTNG_HOME)/testng-6.9.5.jar
-  endif
-endif
-TESTNG_JAR := $(call FullPath,$(TESTNG_JAR))
-
-ifndef TESTNG_LICENSE
-  TESTNG_LICENSE = $(wildcard $(TESTNG_HOME)/LICENSE.txt)
-endif
-TESTNG_LICENSE := $(call FullPath,$(JUNIT_LICENSE))
-
-# TestNG requires jcommander, which may or may not be bundled with TESTNG_JAR.
-# If it is not, set JCOMMANDER_JAR to an appropriate version
-ifndef JCOMMANDER_JAR
-  ifdef TESTNG_HOME
-    JCOMMANDER_JAR = $(wildcard $(TESTNG_HOME)/jcommander-1.48.jar)
-  endif
-endif
-ifdef JCOMMANDER_JAR
-    JCOMMANDER_JAR := $(call FullPath,$(JCOMMANDER_JAR))
-endif
-
-# Newer versions of TestNG require Google Guice
-ifdef GOOGLE_GUICE_JAR
-    GOOGLE_GUICE_JAR := $(call FullPath,$(GOOGLE_GUICE_JAR))
-endif
-
-# Newer versions of JUnit require Hamcrest
-ifdef HAMCREST_JAR
-    HAMCREST_JAR := $(call FullPath,$(HAMCREST_JAR))
-endif
-
-#----- Ant:  http://ant.apache.org/
-#
-# Ant is required, to support the provision of a <jtreg> Ant task
-#
-# ANT_JAR must be set, either directly or indirectly.
-# If not set explicitly, it defaults to a value derived from
-# ANTHOME or SLASHJAVA. The jar file is just used when building
-# jtreg, and is not included in the product image.
-
-ifndef ANTHOME
-  ifdef SLASHJAVA
-    ANTHOME = $(SLASHJAVA)/devtools/share/ant/1.9.4
-  endif
-endif
-
-ifndef ANT_JAR
-  ifdef ANTHOME
-    ANT_JAR = $(ANTHOME)/lib/ant.jar
-  endif
-endif
-ANT_JAR := $(call FullPath,$(ANT_JAR))
-
-ifdef ANTHOME
-  ANT = $(ANTHOME)/bin/ant
-endif
 
 #----- Unix commands
 
@@ -448,8 +196,8 @@ BUILD_NUMBER = b00
 BUILD_YEAR_CMD = /bin/date '+%Y'
 #BUILD_DOCDATE:sh = /bin/date +"%B %d, %Y"
 BUILD_DOCDATE_CMD = /bin/date  +'%B %d, %Y'
-#BUILD_ZIPDATE:sh = /bin/date '+%d %h %Y' 
-BUILD_ZIPDATE_CMD = /bin/date  '+%d %h %Y' 
+#BUILD_ZIPDATE:sh = /bin/date '+%d %h %Y'
+BUILD_ZIPDATE_CMD = /bin/date  '+%d %h %Y'
 BUILD_NONFCS_MILESTONE_sh = echo $(BUILD_MILESTONE) | sed -e 's/[fF][cC][sS]//'
 BUILD_NONFCS_MILESTONE = $(BUILD_NONFCS_MILESTONE_sh:sh)
 

@@ -87,7 +87,6 @@ import static com.sun.javatest.regtest.RStatus.passed;
   * This class interprets the TestDescription as specified by the JDK tag
   * specification.
   *
-  * @author Iris A Garcia
   * @see com.sun.javatest.Script
   */
 public class RegressionScript extends Script {

@@ -50,7 +50,6 @@ import static com.sun.javatest.regtest.RStatus.*;
  * This class implements the "shell" action as described by the JDK tag
  * specification.
  *
- * @author Iris A Garcia
  * @see Action
  */
 public class ShellAction extends Action

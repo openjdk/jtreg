@@ -39,7 +39,6 @@ import static com.sun.javatest.regtest.RStatus.passed;
  * This class implements the "ignore" action as described by the JDK tag
  * specification.
  *
- * @author Iris A Garcia
  * @see Action
  */
 public class IgnoreAction extends Action

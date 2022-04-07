@@ -59,7 +59,6 @@ import static com.sun.javatest.regtest.RStatus.*;
  * This class implements the "applet" action as described by the JDK tag
  * specification.
  *
- * @author Iris A Garcia
  * @see Action
  */
 public class AppletAction extends Action

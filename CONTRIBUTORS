@@ -6,13 +6,18 @@ Original Author:
 Tag Specification:
     Mark Reinhold
 
-Currently Maintained By:
-    Jonathan Gibbons
+Currently Maintained As Part Of:
+    OpenJDK CodeTools Project
 
-Other Contributors:
+Other Early Contributors:
     Brian Kurotsuchi
     Dawn Phillips
     Jessica Mauvais
+    John Rose
     Maurizio Cimadamore
     Kumar Srinivasan
+
+Since open-sourcing the code in 2006, and the use of first Mercurial and
+subsequently Git, the Contributors are tracked in the SCM metadata.
+For all recent contributors and contributions, see `git shortlog` or `git log`.
 

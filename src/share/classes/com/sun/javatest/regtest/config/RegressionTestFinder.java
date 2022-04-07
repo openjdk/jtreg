@@ -62,7 +62,6 @@ import com.sun.javatest.util.I18NResourceBundle;
   * A test description consists of a single block comment in either Java files
   * or shell-script files.  A file may contain multiple test descriptions.
   *
-  * @author Iris A Garcia
   * @see com.sun.javatest.TestFinder
   * @see com.sun.javatest.finder.TagTestFinder
   */

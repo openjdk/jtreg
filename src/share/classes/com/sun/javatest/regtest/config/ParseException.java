@@ -31,8 +31,6 @@ import com.sun.javatest.regtest.exec.TestRunException;
  * This class defines any error in parsing the provided test description. A
  * parsing error may occur either during initial examination of the tags in
  * the finder or during more extensive verification of the run action.
- *
- * @author Iris A Garcia
  */
 public class ParseException extends TestRunException
 {

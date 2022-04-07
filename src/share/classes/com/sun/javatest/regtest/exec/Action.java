@@ -71,8 +71,6 @@ import com.sun.javatest.regtest.util.StringUtils;
  * Action abstract class contains a variety of protected methods for parsing and
  * logging.  All static strings used in Action implementations are also defined
  * here.
- *
- * @author Iris A Garcia
  */
 public abstract class Action extends ActionHelper {
     /**
