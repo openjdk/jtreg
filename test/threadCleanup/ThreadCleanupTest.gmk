@@ -23,7 +23,7 @@
 # questions.
 #
 
-$(BUILDDIR)/threadCleanupTest.ok: \
+$(BUILDTESTDIR)/threadCleanupTest.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -41,4 +41,4 @@ $(BUILDDIR)/threadCleanupTest.ok: \
 	$(GREP) -s 'Problem cleaning up the following threads:' $(@:%.ok=%)/work/Test_id1.jtr
 	echo "test passed at `date`" > $@
 
-TESTS.jtreg += $(BUILDDIR)/threadCleanupTest.ok 
+TESTS.jtreg += $(BUILDTESTDIR)/threadCleanupTest.ok

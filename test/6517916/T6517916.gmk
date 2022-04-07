@@ -31,7 +31,7 @@ T6517916-ENVIRONMENT-NORMALIZATIONS = \
 	-e '/^JAVA_MAIN_CLASS_<pid>=/s|MainWrapper|<mainclass>|' \
 	-e '/^JAVA_MAIN_CLASS_<pid>=/s|AgentServer|<mainclass>|'
 
-$(BUILDDIR)/T6517916.ok: \
+$(BUILDTESTDIR)/T6517916.ok: \
 		$(TESTDIR)/6517916/T6517916.java \
 		$(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar
@@ -63,6 +63,6 @@ $(BUILDDIR)/T6517916.ok: \
 	echo "test passed at `date`" > $@
 
 ifneq ($(OS_NAME), windows)
-TESTS.jtreg += $(BUILDDIR)/T6517916.ok
+TESTS.jtreg += $(BUILDTESTDIR)/T6517916.ok
 endif
 

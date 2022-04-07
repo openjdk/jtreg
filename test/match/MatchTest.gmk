@@ -25,8 +25,8 @@
 
 #----------------------------------------------------------------------
 
-$(BUILDDIR)/match.othervm.ok \
-$(BUILDDIR)/match.agentvm.ok: \
+$(BUILDTESTDIR)/match.othervm.ok \
+$(BUILDTESTDIR)/match.agentvm.ok: \
                 $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(JTREG_IMAGEDIR)/lib/javatest.jar
 	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
@@ -38,7 +38,7 @@ $(BUILDDIR)/match.agentvm.ok: \
 		-jar $(ABS_JTREG_IMAGEJARDIR)/jtreg.jar \
 		-w:$(@:%.ok=%/work) \
 		-r:$(@:%.ok=%/report) \
-		$(@:$(BUILDDIR)/match.%.ok=-%) \
+		$(@:$(BUILDTESTDIR)/match.%.ok=-%) \
 		-match:$(TESTDIR)/match/ProblemList.txt \
 		$(TESTDIR)/match \
 		> $(@:%.ok=%/log 2>&1) \
@@ -46,5 +46,5 @@ $(BUILDDIR)/match.agentvm.ok: \
 	echo $@ passed at `date` > $@
 
 TESTS.jtreg += \
-	$(BUILDDIR)/match.othervm.ok \
-	$(BUILDDIR)/match.agentvm.ok
+	$(BUILDTESTDIR)/match.othervm.ok \
+	$(BUILDTESTDIR)/match.agentvm.ok

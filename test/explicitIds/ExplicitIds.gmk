@@ -23,8 +23,8 @@
 # questions.
 #
 
-$(BUILDDIR)/ExplicitIds.agentvm.ok \
-$(BUILDDIR)/ExplicitIds.othervm.ok: \
+$(BUILDTESTDIR)/ExplicitIds.agentvm.ok \
+$(BUILDTESTDIR)/ExplicitIds.othervm.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	if [ -d $(@:%.ok=%) ]; then $(CHMOD) -R +w $(@:%.ok=%) && $(RM) $(@:%.ok=%) ; fi
@@ -32,7 +32,7 @@ $(BUILDDIR)/ExplicitIds.othervm.ok: \
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDKHOME) \
-		$(@:$(BUILDDIR)/ExplicitIds.%.ok=-%) \
+		$(@:$(BUILDTESTDIR)/ExplicitIds.%.ok=-%) \
 		$(TESTDIR)/explicitIds \
 			> $(@:%.ok=%/jt.log)  2>&1 || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
@@ -48,5 +48,5 @@ $(BUILDDIR)/ExplicitIds.othervm.ok: \
 
 
 TESTS.jtreg += \
-	$(BUILDDIR)/ExplicitIds.agentvm.ok \
-	$(BUILDDIR)/ExplicitIds.othervm.ok
+	$(BUILDTESTDIR)/ExplicitIds.agentvm.ok \
+	$(BUILDTESTDIR)/ExplicitIds.othervm.ok

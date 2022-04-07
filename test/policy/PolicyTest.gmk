@@ -25,7 +25,7 @@
 
 #----------------------------------------------------------------------
 
-$(BUILDDIR)/PolicyTest.ok: \
+$(BUILDTESTDIR)/PolicyTest.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -44,5 +44,5 @@ $(BUILDDIR)/PolicyTest.ok: \
 	$(GREP) 'grant.*testng[^ ]*.jar' $(@:%.ok=%)/work/TestNG/simple.policy_new
 	echo "test passed at `date`" > $@
 
-TESTS.jtreg += $(BUILDDIR)/PolicyTest.ok
+TESTS.jtreg += $(BUILDTESTDIR)/PolicyTest.ok
 

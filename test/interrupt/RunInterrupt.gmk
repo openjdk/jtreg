@@ -25,7 +25,7 @@
 
 #----------------------------------------------------------------------
 
-$(BUILDDIR)/InterruptTest.ok: \
+$(BUILDTESTDIR)/InterruptTest.ok: \
 	    $(TESTDIR)/interrupt/InterruptTest.java \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
@@ -41,5 +41,5 @@ $(BUILDDIR)/InterruptTest.ok: \
 	echo "test passed at `date`" > $@
 
 # This is a manual GUI test. Do not run it by default.
-# TESTS.jtreg += $(BUILDDIR)/InterruptTest.ok
+# TESTS.jtreg += $(BUILDTESTDIR)/InterruptTest.ok
 

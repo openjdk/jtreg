@@ -23,8 +23,8 @@
 # questions.
 #
 
-$(BUILDDIR)/JavacVMOptions.agentvm.ok \
-$(BUILDDIR)/JavacVMOptions.othervm.ok: \
+$(BUILDTESTDIR)/JavacVMOptions.agentvm.ok \
+$(BUILDTESTDIR)/JavacVMOptions.othervm.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	if [ -d $(@:%.ok=%) ]; then $(CHMOD) -R +w $(@:%.ok=%) && $(RM) $(@:%.ok=%) ; fi
@@ -32,7 +32,7 @@ $(BUILDDIR)/JavacVMOptions.othervm.ok: \
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDKHOME) \
-		$(@:$(BUILDDIR)/JavacVMOptions.%.ok=-%) \
+		$(@:$(BUILDTESTDIR)/JavacVMOptions.%.ok=-%) \
 		$(TESTDIR)/javacVMOptions \
 			> $(@:%.ok=%/jt.log)
 	$(GREP) -s 'Test results: passed: 1' $(@:%.ok=%/jt.log)  > /dev/null
@@ -41,5 +41,5 @@ $(BUILDDIR)/JavacVMOptions.othervm.ok: \
 
 
 TESTS.jtreg += \
-	$(BUILDDIR)/JavacVMOptions.agentvm.ok \
-	$(BUILDDIR)/JavacVMOptions.othervm.ok
+	$(BUILDTESTDIR)/JavacVMOptions.agentvm.ok \
+	$(BUILDTESTDIR)/JavacVMOptions.othervm.ok

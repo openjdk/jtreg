@@ -23,8 +23,8 @@
 # questions.
 #
 
-$(BUILDDIR)/StreamsTest.agentvm.ok \
-$(BUILDDIR)/StreamsTest.othervm.ok: \
+$(BUILDTESTDIR)/StreamsTest.agentvm.ok \
+$(BUILDTESTDIR)/StreamsTest.othervm.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	if [ -d $(@:%.ok=%) ]; then $(CHMOD) -R +w $(@:%.ok=%) && $(RM) $(@:%.ok=%) ; fi
@@ -32,7 +32,7 @@ $(BUILDDIR)/StreamsTest.othervm.ok: \
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDKHOME) \
-		$(@:$(BUILDDIR)/StreamsTest.%.ok=-%) \
+		$(@:$(BUILDTESTDIR)/StreamsTest.%.ok=-%) \
 		$(TESTDIR)/streams \
 			> $(@:%.ok=%/jt.log)
 	#
@@ -50,5 +50,5 @@ $(BUILDDIR)/StreamsTest.othervm.ok: \
 
 
 TESTS.jtreg += \
-	$(BUILDDIR)/StreamsTest.agentvm.ok \
-	$(BUILDDIR)/StreamsTest.othervm.ok
+	$(BUILDTESTDIR)/StreamsTest.agentvm.ok \
+	$(BUILDTESTDIR)/StreamsTest.othervm.ok

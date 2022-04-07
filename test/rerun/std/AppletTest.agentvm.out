@@ -1,5 +1,5 @@
 ### Section compile
-cd %BUILD%/RerunTest.agentvm/work/scratch && \
+cd %BUILDTEST%/RerunTest.agentvm/work/scratch && \
 DISPLAY=%DISPLAY% \
 HOME=%HOME% \
 LANG=en_US.UTF-8 \
@@ -20,17 +20,17 @@ TZ=GMT+0.00 \
         -J-Dtest.file=%WS%/test/rerun/std/AppletTest.java \
         -J-Dtest.src=%WS%/test/rerun/std \
         -J-Dtest.src.path=%WS%/test/rerun/std \
-        -J-Dtest.classes=%BUILD%/RerunTest.agentvm/work/classes/std/AppletTest.d \
-        -J-Dtest.class.path=%BUILD%/RerunTest.agentvm/work/classes/std/AppletTest.d \
-        -J-Dtest.class.path.prefix=%BUILD%/RerunTest.agentvm/work/classes/std/AppletTest.d:%WS%/test/rerun/std \
+        -J-Dtest.classes=%BUILDTEST%/RerunTest.agentvm/work/classes/std/AppletTest.d \
+        -J-Dtest.class.path=%BUILDTEST%/RerunTest.agentvm/work/classes/std/AppletTest.d \
+        -J-Dtest.class.path.prefix=%BUILDTEST%/RerunTest.agentvm/work/classes/std/AppletTest.d:%WS%/test/rerun/std \
         -XDmy.javac.option=x \
-        -d %BUILD%/RerunTest.agentvm/work/classes/std/AppletTest.d \
+        -d %BUILDTEST%/RerunTest.agentvm/work/classes/std/AppletTest.d \
         -sourcepath %WS%/test/rerun/std \
-        -classpath %WS%/test/rerun/std:%BUILD%/RerunTest.agentvm/work/classes/std/AppletTest.d:%JDKHOME%/lib/tools.jar \
+        -classpath %WS%/test/rerun/std:%BUILDTEST%/RerunTest.agentvm/work/classes/std/AppletTest.d:%JDKHOME%/lib/tools.jar \
         -XDignore.symbol.file=true %WS%/test/rerun/std/AppletTest.java
 
 ### Section applet
-cd %BUILD%/RerunTest.agentvm/work/scratch && \
+cd %BUILDTEST%/RerunTest.agentvm/work/scratch && \
 DISPLAY=%DISPLAY% \
 HOME=%HOME% \
 LANG=en_US.UTF-8 \
@@ -38,7 +38,7 @@ MY_ENV_VAR=x \
 PATH=/bin:/usr/bin:/usr/sbin \
 TZ=GMT+0.00 \
     %JDKHOME%/bin/java \
-        -classpath %BUILD%/RerunTest.agentvm/work/classes/std/AppletTest.d:%WS%/test/rerun/std:%JDKHOME%/lib/tools.jar:%BUILD%/images/jtreg/lib/javatest.jar:%BUILD%/images/jtreg/lib/jtreg.jar \
+        -classpath %BUILDTEST%/RerunTest.agentvm/work/classes/std/AppletTest.d:%WS%/test/rerun/std:%JDKHOME%/lib/tools.jar:%BUILD%/images/jtreg/lib/javatest.jar:%BUILD%/images/jtreg/lib/jtreg.jar \
         -Dmy.vm.option=x \
         -Dmy.java.option=x \
         -Dtest.vm.opts=-Dmy.vm.option=x \
@@ -53,8 +53,8 @@ TZ=GMT+0.00 \
         -Dtest.file=%WS%/test/rerun/std/AppletTest.java \
         -Dtest.src=%WS%/test/rerun/std \
         -Dtest.src.path=%WS%/test/rerun/std \
-        -Dtest.classes=%BUILD%/RerunTest.agentvm/work/classes/std/AppletTest.d \
-        -Dtest.class.path=%BUILD%/RerunTest.agentvm/work/classes/std/AppletTest.d \
-        -Dtest.class.path.prefix=%BUILD%/RerunTest.agentvm/work/classes/std/AppletTest.d:%WS%/test/rerun/std \
-        -mx128m com.sun.javatest.regtest.agent.AppletWrapper %BUILD%/RerunTest.agentvm/work/std/AppletTest.d/applet.0.jta
+        -Dtest.classes=%BUILDTEST%/RerunTest.agentvm/work/classes/std/AppletTest.d \
+        -Dtest.class.path=%BUILDTEST%/RerunTest.agentvm/work/classes/std/AppletTest.d \
+        -Dtest.class.path.prefix=%BUILDTEST%/RerunTest.agentvm/work/classes/std/AppletTest.d:%WS%/test/rerun/std \
+        -mx128m com.sun.javatest.regtest.agent.AppletWrapper %BUILDTEST%/RerunTest.agentvm/work/std/AppletTest.d/applet.0.jta
 

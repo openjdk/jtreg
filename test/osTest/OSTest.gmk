@@ -25,7 +25,7 @@
 
 #----------------------------------------------------------------------
 
-$(BUILDDIR)/OSTest.ok: \
+$(BUILDTESTDIR)/OSTest.ok: \
 	    $(TESTDIR)/osTest/OSTest.java \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
@@ -39,5 +39,5 @@ $(BUILDDIR)/OSTest.ok: \
 	$(JDKJAVA) -cp "$(@:%.ok=%)/classes$(PS)$(JTREG_IMAGEDIR)/lib/jtreg.jar" OSTest
 	echo "test passed at `date`" > $@
 
-TESTS.jtreg += $(BUILDDIR)/OSTest.ok
+TESTS.jtreg += $(BUILDTESTDIR)/OSTest.ok
 

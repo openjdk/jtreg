@@ -30,8 +30,8 @@
 # In agentvm and othervm mode, jtreg should successfully run each test
 # by moving to a new scratch directory when it can't clear the previous one.
 
-$(BUILDDIR)/CleanupDirsTests.agentvm.ok \
-$(BUILDDIR)/CleanupDirsTests.othervm.ok: \
+$(BUILDTESTDIR)/CleanupDirsTests.agentvm.ok \
+$(BUILDTESTDIR)/CleanupDirsTests.othervm.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	if [ -d $(@:%.ok=%) ]; then $(CHMOD) -R +w $(@:%.ok=%) && $(RM) $(@:%.ok=%) ; fi
@@ -40,7 +40,7 @@ $(BUILDDIR)/CleanupDirsTests.othervm.ok: \
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDKHOME) \
-		$(@:$(BUILDDIR)/CleanupDirsTests.%.ok=-%) \
+		$(@:$(BUILDTESTDIR)/CleanupDirsTests.%.ok=-%) \
 		$(TESTDIR)/cleanupDirs \
 			> $(@:%.ok=%/jt.log) 2>&1 || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
@@ -61,8 +61,8 @@ $(BUILDDIR)/CleanupDirsTests.othervm.ok: \
 # test executed last in each scratch directory. Therefore, we just count
 # and check the number of scratch directories that were created.
 
-$(BUILDDIR)/CleanupDirsTests.agentvm.conc.ok \
-$(BUILDDIR)/CleanupDirsTests.othervm.conc.ok: \
+$(BUILDTESTDIR)/CleanupDirsTests.agentvm.conc.ok \
+$(BUILDTESTDIR)/CleanupDirsTests.othervm.conc.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	if [ -d $(@:%.ok=%) ]; then $(CHMOD) -R +w $(@:%.ok=%) && $(RM) $(@:%.ok=%) ; fi
@@ -71,7 +71,7 @@ $(BUILDDIR)/CleanupDirsTests.othervm.conc.ok: \
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDKHOME) \
-		$(@:$(BUILDDIR)/CleanupDirsTests.%.conc.ok=-%) \
+		$(@:$(BUILDTESTDIR)/CleanupDirsTests.%.conc.ok=-%) \
 		-conc:2 \
 		$(TESTDIR)/cleanupDirs \
 			> $(@:%.ok=%/jt.log) 2>&1 || \
@@ -87,7 +87,7 @@ $(BUILDDIR)/CleanupDirsTests.othervm.conc.ok: \
 # In agent mode with -retain, the tests all return error
 # because the selected files cannot be retained
 
-$(BUILDDIR)/CleanupDirsTests.agentvm.retain.ok: \
+$(BUILDTESTDIR)/CleanupDirsTests.agentvm.retain.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	if [ -d $(@:%.ok=%) ]; then $(CHMOD) -R +w $(@:%.ok=%) && $(RM) $(@:%.ok=%) ; fi
@@ -96,7 +96,7 @@ $(BUILDDIR)/CleanupDirsTests.agentvm.retain.ok: \
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDKHOME) \
-		$(@:$(BUILDDIR)/CleanupDirsTests.%.retain.ok=-%) \
+		$(@:$(BUILDTESTDIR)/CleanupDirsTests.%.retain.ok=-%) \
 		-retain:readonly.txt \
 		$(TESTDIR)/cleanupDirs \
 			> $(@:%.ok=%/jt.log) 2>&1 || \
@@ -113,7 +113,7 @@ $(BUILDDIR)/CleanupDirsTests.agentvm.retain.ok: \
 # problem tests are written directly to the correct location 
 # and do not need to be moved.
 
-$(BUILDDIR)/CleanupDirsTests.othervm.retain.ok: \
+$(BUILDTESTDIR)/CleanupDirsTests.othervm.retain.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	if [ -d $(@:%.ok=%) ]; then $(CHMOD) -R +w $(@:%.ok=%) && $(RM) $(@:%.ok=%) ; fi
@@ -122,7 +122,7 @@ $(BUILDDIR)/CleanupDirsTests.othervm.retain.ok: \
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDKHOME) \
-		$(@:$(BUILDDIR)/CleanupDirsTests.%.retain.ok=-%) \
+		$(@:$(BUILDTESTDIR)/CleanupDirsTests.%.retain.ok=-%) \
 		-retain:readonly.txt \
 		$(TESTDIR)/cleanupDirs \
 			> $(@:%.ok=%/jt.log) 2>&1 || \
@@ -137,10 +137,10 @@ $(BUILDDIR)/CleanupDirsTests.othervm.retain.ok: \
 
 ifneq ($(OS_NAME), windows)
 TESTS.jtreg += \
-	$(BUILDDIR)/CleanupDirsTests.agentvm.ok \
-	$(BUILDDIR)/CleanupDirsTests.agentvm.conc.ok \
-	$(BUILDDIR)/CleanupDirsTests.agentvm.retain.ok \
-	$(BUILDDIR)/CleanupDirsTests.othervm.ok \
-	$(BUILDDIR)/CleanupDirsTests.othervm.conc.ok \
-	$(BUILDDIR)/CleanupDirsTests.othervm.retain.ok
+	$(BUILDTESTDIR)/CleanupDirsTests.agentvm.ok \
+	$(BUILDTESTDIR)/CleanupDirsTests.agentvm.conc.ok \
+	$(BUILDTESTDIR)/CleanupDirsTests.agentvm.retain.ok \
+	$(BUILDTESTDIR)/CleanupDirsTests.othervm.ok \
+	$(BUILDTESTDIR)/CleanupDirsTests.othervm.conc.ok \
+	$(BUILDTESTDIR)/CleanupDirsTests.othervm.retain.ok
 endif

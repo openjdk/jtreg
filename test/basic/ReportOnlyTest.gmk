@@ -26,15 +26,15 @@
 #----------------------------------------------------------------------
 
 # for full JavaTest gui, add "-gui" to jtreg call
-$(BUILDDIR)/ReportOnlyTest.ok: $(BUILDDIR)/Basic.othervm.ok \
+$(BUILDTESTDIR)/ReportOnlyTest.ok: $(BUILDTESTDIR)/Basic.othervm.ok \
 		   $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		   $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		   $(JTREG_IMAGEDIR)/bin/jtreg
 	JAVA_HOME=$(JDKHOME) CLASSPATH=$(ABSCLASSDIR) \
 	    $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-reportOnly  -automatic -v \
-		-workDir:$(BUILDDIR)/Basic.othervm/work \
-		-reportDir:$(BUILDDIR)/$(@:%.ok=%) \
+		-workDir:$(BUILDTESTDIR)/Basic.othervm/work \
+		-reportDir:$(BUILDTESTDIR)/$(@:%.ok=%) \
 		$(TESTDIR)/share/basic \
 			> $(@:%.ok=%.jt.log) 2>&1 || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
@@ -42,6 +42,6 @@ $(BUILDDIR)/ReportOnlyTest.ok: $(BUILDDIR)/Basic.othervm.ok \
 	echo $@ passed at `date` > $@
 
 ifndef HEADLESS
-TESTS.jtreg += $(BUILDDIR)/ReportOnlyTest.ok
+TESTS.jtreg += $(BUILDTESTDIR)/ReportOnlyTest.ok
 endif
 

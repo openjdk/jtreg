@@ -23,13 +23,13 @@
 # questions.
 #
 
-$(BUILDDIR)/ExclusiveAccessTest.ref:
+$(BUILDTESTDIR)/ExclusiveAccessTest.ref:
 	( for t in 1 2 3 4 ; do for i in 1 2 3 4 5 ; do echo "Test: $$i" ; done ; done ) > $@
 
-$(BUILDDIR)/ExclusiveAccessTest.single.ok: \
+$(BUILDTESTDIR)/ExclusiveAccessTest.single.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg \
-	$(BUILDDIR)/ExclusiveAccessTest.ref
+	$(BUILDTESTDIR)/ExclusiveAccessTest.ref
 	$(RM) $(@:%.ok=%) && $(MKDIR) $(@:%.ok=%)
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
@@ -39,13 +39,13 @@ $(BUILDDIR)/ExclusiveAccessTest.single.ok: \
 			> $(@:%.ok=%/jt.log) 2>&1 || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
 	$(GREP) -s 'Test results: passed: 4' $(@:%.ok=%/jt.log)  > /dev/null
-	$(DIFF) $(BUILDDIR)/ExclusiveAccessTest.ref $(@:%.ok=%)/Test.log
+	$(DIFF) $(BUILDTESTDIR)/ExclusiveAccessTest.ref $(@:%.ok=%)/Test.log
 	echo "test passed at `date`" > $@
 
-$(BUILDDIR)/ExclusiveAccessTest.multi.ok: \
+$(BUILDTESTDIR)/ExclusiveAccessTest.multi.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg \
-	$(BUILDDIR)/ExclusiveAccessTest.ref
+	$(BUILDTESTDIR)/ExclusiveAccessTest.ref
 	$(RM) $(@:%.ok=%) && $(MKDIR) $(@:%.ok=%)
 	for i in 1 2 3 4 ; do \
 	    $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
@@ -59,4 +59,4 @@ $(BUILDDIR)/ExclusiveAccessTest.multi.ok: \
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += \
-	$(BUILDDIR)/ExclusiveAccessTest.single.ok
+	$(BUILDTESTDIR)/ExclusiveAccessTest.single.ok

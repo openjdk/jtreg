@@ -25,7 +25,7 @@
 
 #----------------------------------------------------------------------
 
-$(BUILDDIR)/fixupSingle.ok: \
+$(BUILDTESTDIR)/fixupSingle.ok: \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
@@ -41,11 +41,11 @@ $(BUILDDIR)/fixupSingle.ok: \
 	if [ -n "$$g" ]; then echo "Error: Unexpected references:" ; echo "$$g" ; exit 1 ; fi
 	echo "test passed at `date`" > $@
 
-TESTS.jtreg += $(BUILDDIR)/fixupSingle.ok
+TESTS.jtreg += $(BUILDTESTDIR)/fixupSingle.ok
 
 #----------------------------------------------------------------------
 
-$(BUILDDIR)/fixupMulti.ok: \
+$(BUILDTESTDIR)/fixupMulti.ok: \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
@@ -62,4 +62,4 @@ $(BUILDDIR)/fixupMulti.ok: \
 	if [ -n "$$g" ]; then echo "Error: Unexpected references:" ; echo "$$g" ; exit 1 ; fi
 	echo "test passed at `date`" > $@
 
-TESTS.jtreg += $(BUILDDIR)/fixupMulti.ok
+TESTS.jtreg += $(BUILDTESTDIR)/fixupMulti.ok

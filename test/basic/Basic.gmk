@@ -30,11 +30,11 @@
 BASIC.files := $(shell find $(TESTDIR)/share/basic -type f)
 
 
-$(BUILDDIR)/Basic.check.ok: \
+$(BUILDTESTDIR)/Basic.check.ok: \
                 $(ALL_JTREG_JARS) \
-		$(BUILDDIR)/i18n.com.sun.javatest.regtest.config.ok \
-		$(BUILDDIR)/i18n.com.sun.javatest.regtest.report.ok \
-		$(BUILDDIR)/i18n.com.sun.javatest.regtest.tool.ok \
+		$(BUILDTESTDIR)/i18n.com.sun.javatest.regtest.config.ok \
+		$(BUILDTESTDIR)/i18n.com.sun.javatest.regtest.report.ok \
+		$(BUILDTESTDIR)/i18n.com.sun.javatest.regtest.tool.ok \
 	        $(BASIC.files)
 	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
 	$(MKDIR) -p $(@:%.ok=%/work/scratch) $(@:%.ok=%/report)
@@ -51,7 +51,7 @@ $(BUILDDIR)/Basic.check.ok: \
 	echo $@ passed at `date` > $@
 
 INITIAL_TESTS += \
-	$(BUILDDIR)/Basic.check.ok
+	$(BUILDTESTDIR)/Basic.check.ok
 
 #----------------------------------------------------------------------
 
@@ -63,18 +63,18 @@ else
   BASIC_TESTS := $(abspath $(TESTDIR)/share/basic)
 endif
 
-$(BUILDDIR)/Basic.othervm.ok \
-$(BUILDDIR)/Basic.agentvm.ok: \
+$(BUILDTESTDIR)/Basic.othervm.ok \
+$(BUILDTESTDIR)/Basic.agentvm.ok: \
                 $(ALL_JTREG_JARS) \
 		$(TESTDIR)/basic/Basic.java \
-		$(BUILDDIR)/i18n.com.sun.javatest.regtest.config.ok \
-		$(BUILDDIR)/i18n.com.sun.javatest.regtest.report.ok \
-		$(BUILDDIR)/i18n.com.sun.javatest.regtest.tool.ok \
+		$(BUILDTESTDIR)/i18n.com.sun.javatest.regtest.config.ok \
+		$(BUILDTESTDIR)/i18n.com.sun.javatest.regtest.report.ok \
+		$(BUILDTESTDIR)/i18n.com.sun.javatest.regtest.tool.ok \
 	        $(BASIC.files)
 	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
-	$(MKDIR) -p $(@:%.ok=%/work/scratch) $(@:%.ok=%/report) $(BUILDDIR)/basic/classes
+	$(MKDIR) -p $(@:%.ok=%/work/scratch) $(@:%.ok=%/report) $(BUILDTESTDIR)/basic/classes
 	CLASSPATH="$(CLASSDIR)$(PS)$(JAVADIR)$(PS)$(JAVATEST_JAR)" \
-		$(JDKJAVAC) -Xlint -Werror -encoding ISO8859-1 -d $(BUILDDIR)/basic/classes $(TESTDIR)/basic/Basic.java
+		$(JDKJAVAC) -Xlint -Werror -encoding ISO8859-1 -d $(BUILDTESTDIR)/basic/classes $(TESTDIR)/basic/Basic.java
 	cd $(@:%.ok=%/work/scratch) ; \
 	    $(JDKJAVA) \
 		-cp "../../../basic/classes$(PS)$(ABS_JTREG_IMAGEJARDIR)/jtreg.jar" \
@@ -90,14 +90,14 @@ $(BUILDDIR)/Basic.agentvm.ok: \
 		    ../../work \
 		    $(JDKHOME) \
 		    $(ENVVARS) \
-		    $(@:$(BUILDDIR)/Basic.%.ok=-%) \
+		    $(@:$(BUILDTESTDIR)/Basic.%.ok=-%) \
 		> ../../log 2>&1 \
 	    || (cat ../../log ; exit 1)
 	echo $@ passed at `date` > $@
 
 ifndef HEADLESS
 INITIAL_TESTS += \
-	$(BUILDDIR)/Basic.othervm.ok \
-	$(BUILDDIR)/Basic.agentvm.ok
+	$(BUILDTESTDIR)/Basic.othervm.ok \
+	$(BUILDTESTDIR)/Basic.agentvm.ok
 endif
 

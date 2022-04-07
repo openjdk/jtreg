@@ -23,7 +23,7 @@
 # questions.
 #
 
-$(BUILDDIR)/DupTest.ok: \
+$(BUILDTESTDIR)/DupTest.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -35,5 +35,5 @@ $(BUILDDIR)/DupTest.ok: \
         if [ "$$rc" != 5 ]; then echo "unexpected exit code: " $$rc ; exit 1 ; fi
 	echo "test passed at `date`" > $@
 
-TESTS.jtreg += $(BUILDDIR)/DupTest.ok
+TESTS.jtreg += $(BUILDTESTDIR)/DupTest.ok
 

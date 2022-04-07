@@ -25,7 +25,7 @@
 
 #----------------------------------------------------------------------
 
-$(BUILDDIR)/i18n.com.sun.javatest.diff.ok: \
+$(BUILDTESTDIR)/i18n.com.sun.javatest.diff.ok: \
 		$(JAVAFILES.com.sun.javatest.diff) \
 		$(JAVADIR)/com/sun/javatest/diff/i18n.properties \
 		$(BUILDDIR)/classes.com.sun.javatest.diff.ok \
@@ -38,4 +38,4 @@ $(BUILDDIR)/i18n.com.sun.javatest.diff.ok: \
 	$(SH) $(TESTDIR)/i18n/checkI18NProps.sh $(@:%.ok=%) $(JAVADIR)/com/sun/javatest/diff $(@:%.ok=%/i18n-log.txt)
 	echo $@ passed at `date` > $@
 
-TESTS.jtdiff += $(BUILDDIR)/i18n.com.sun.javatest.diff.ok
+TESTS.jtdiff += $(BUILDTESTDIR)/i18n.com.sun.javatest.diff.ok

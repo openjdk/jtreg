@@ -28,7 +28,7 @@
 # only run the ...A test case by default, because the ...B test cases
 # checks the default when the test times out
 
-$(BUILDDIR)/T6517728.ok: \
+$(BUILDTESTDIR)/T6517728.ok: \
 		$(TESTDIR)/6517728/T6517728A.java \
 		$(TESTDIR)/6517728/T6517728B.java \
 		$(JTREG_IMAGEDIR)/lib/javatest.jar \
@@ -46,5 +46,5 @@ $(BUILDDIR)/T6517728.ok: \
 		$(TESTDIR)/6517728/T6517728A.java
 	echo "test passed at `date`" > $@
 
-TESTS.jtreg += $(BUILDDIR)/T6517728.ok
+TESTS.jtreg += $(BUILDTESTDIR)/T6517728.ok
 

@@ -23,7 +23,7 @@
 # questions.
 #
 
-$(BUILDDIR)/ExitCodeTest.OK.ok: \
+$(BUILDTESTDIR)/ExitCodeTest.OK.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -35,7 +35,7 @@ $(BUILDDIR)/ExitCodeTest.OK.ok: \
         if [ "$$rc" != 0 ]; then echo "unexpected exit code: " $$rc ; exit 1 ; fi
 	echo "test passed at `date`" > $@
 
-$(BUILDDIR)/ExitCodeTest.NoTest.ok: \
+$(BUILDTESTDIR)/ExitCodeTest.NoTest.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -48,7 +48,7 @@ $(BUILDDIR)/ExitCodeTest.NoTest.ok: \
         if [ "$$rc" != 1 ]; then echo "unexpected exit code: " $$rc ; exit 1 ; fi
 	echo "test passed at `date`" > $@
 
-$(BUILDDIR)/ExitCodeTest.Fail.ok: \
+$(BUILDTESTDIR)/ExitCodeTest.Fail.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -60,7 +60,7 @@ $(BUILDDIR)/ExitCodeTest.Fail.ok: \
         if [ "$$rc" != 2 ]; then echo "unexpected exit code: " $$rc ; exit 1 ; fi
 	echo "test passed at `date`" > $@
 
-$(BUILDDIR)/ExitCodeTest.Error.ok: \
+$(BUILDTESTDIR)/ExitCodeTest.Error.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -72,7 +72,7 @@ $(BUILDDIR)/ExitCodeTest.Error.ok: \
         if [ "$$rc" != 3 ]; then echo "unexpected exit code: " $$rc ; exit 1 ; fi
 	echo "test passed at `date`" > $@
 
-$(BUILDDIR)/ExitCodeTest.BadArgs.ok: \
+$(BUILDTESTDIR)/ExitCodeTest.BadArgs.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -85,7 +85,7 @@ $(BUILDDIR)/ExitCodeTest.BadArgs.ok: \
         if [ "$$rc" != 4 ]; then echo "unexpected exit code: " $$rc ; exit 1 ; fi
 	echo "test passed at `date`" > $@
 
-$(BUILDDIR)/ExitCodeTest.Fault.ok: \
+$(BUILDTESTDIR)/ExitCodeTest.Fault.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -98,9 +98,9 @@ $(BUILDDIR)/ExitCodeTest.Fault.ok: \
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += \
-	$(BUILDDIR)/ExitCodeTest.OK.ok \
-	$(BUILDDIR)/ExitCodeTest.NoTest.ok \
-	$(BUILDDIR)/ExitCodeTest.Fail.ok \
-	$(BUILDDIR)/ExitCodeTest.Error.ok \
-	$(BUILDDIR)/ExitCodeTest.BadArgs.ok \
-	$(BUILDDIR)/ExitCodeTest.Fault.ok
+	$(BUILDTESTDIR)/ExitCodeTest.OK.ok \
+	$(BUILDTESTDIR)/ExitCodeTest.NoTest.ok \
+	$(BUILDTESTDIR)/ExitCodeTest.Fail.ok \
+	$(BUILDTESTDIR)/ExitCodeTest.Error.ok \
+	$(BUILDTESTDIR)/ExitCodeTest.BadArgs.ok \
+	$(BUILDTESTDIR)/ExitCodeTest.Fault.ok

@@ -57,7 +57,21 @@ new-images: $(NEWVERBOSEZIPFILES)
 clean:
 	$(RM) $(BUILDDIR)
 
-.NO_PARALLEL: clean
+clean-except-deps:
+	for i in $(BUILDDIR)/* ; do \
+	    case $$i in \
+		*/deps ) ;; \
+		* ) $(RM) $$i ;; \
+	    esac \
+	done
+
+clean-deps:
+	$(RM) $(BUILDDIR)/deps
+
+clean-tests:
+	$(RM) $(BUILDTESTDIR)
+
+.NO_PARALLEL: clean clean-except-deps clean-deps clean-tests
 
 sanity:
 ifdef JDK8HOME

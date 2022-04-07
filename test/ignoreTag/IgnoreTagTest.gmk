@@ -25,7 +25,7 @@
 
 #----------------------------------------------------------------------
 
-$(BUILDDIR)/IgnoreTagTest.default.ok: \
+$(BUILDTESTDIR)/IgnoreTagTest.default.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	$(MKDIR) -p $(@:%.ok=%)
@@ -38,9 +38,9 @@ $(BUILDDIR)/IgnoreTagTest.default.ok: \
 	$(GREP) -s 'Test results: passed: 1; error: 4' $(@:%.ok=%/jt.log)  > /dev/null
 	echo $@ passed at `date` > $@
 
-TESTS.jtreg += $(BUILDDIR)/IgnoreTagTest.default.ok
+TESTS.jtreg += $(BUILDTESTDIR)/IgnoreTagTest.default.ok
 
-$(BUILDDIR)/IgnoreTagTest.run.ok: \
+$(BUILDTESTDIR)/IgnoreTagTest.run.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	$(MKDIR) -p $(@:%.ok=%)
@@ -54,9 +54,9 @@ $(BUILDDIR)/IgnoreTagTest.run.ok: \
 	$(GREP) -s 'Test results: passed: 5' $(@:%.ok=%/jt.log)  > /dev/null
 	echo $@ passed at `date` > $@
 
-TESTS.jtreg += $(BUILDDIR)/IgnoreTagTest.run.ok
+TESTS.jtreg += $(BUILDTESTDIR)/IgnoreTagTest.run.ok
 
-$(BUILDDIR)/IgnoreTagTest.quiet.ok: \
+$(BUILDTESTDIR)/IgnoreTagTest.quiet.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	$(MKDIR) -p $(@:%.ok=%)
@@ -70,5 +70,5 @@ $(BUILDDIR)/IgnoreTagTest.quiet.ok: \
 	$(GREP) -s 'Test results: passed: 1' $(@:%.ok=%/jt.log)  > /dev/null
 	echo $@ passed at `date` > $@
 
-TESTS.jtreg += $(BUILDDIR)/IgnoreTagTest.quiet.ok
+TESTS.jtreg += $(BUILDTESTDIR)/IgnoreTagTest.quiet.ok
 

@@ -26,39 +26,39 @@
 #----------------------------------------------------------------------
 
 
-$(BUILDDIR)/TestRequiredVersion.ok: \
+$(BUILDTESTDIR)/TestRequiredVersion.ok: \
                 $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(JTREG_IMAGEDIR)/bin/jtreg
 
   # test that a previous version is accepted
-	mkdir -p $(BUILDDIR)/requiredversion.previous/suite
-	echo "requiredVersion = 1.0 b01" > $(BUILDDIR)/requiredversion.previous/suite/TEST.ROOT
+	mkdir -p $(BUILDTESTDIR)/requiredversion.previous/suite
+	echo "requiredVersion = 1.0 b01" > $(BUILDTESTDIR)/requiredversion.previous/suite/TEST.ROOT
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-jdk:$(JDKHOME) \
-		-w:$(BUILDDIR)/requiredversion.previous/work \
-		-r:$(BUILDDIR)/requiredversion.previous/report \
+		-w:$(BUILDTESTDIR)/requiredversion.previous/work \
+		-r:$(BUILDTESTDIR)/requiredversion.previous/report \
 		-verbose:fail \
-		$(BUILDDIR)/requiredversion.previous/suite/ \
-		2>&1 | tee $(BUILDDIR)/requiredversion.previous/log.txt
-	grep -q "no tests selected" $(BUILDDIR)/requiredversion.previous/log.txt
+		$(BUILDTESTDIR)/requiredversion.previous/suite/ \
+		2>&1 | tee $(BUILDTESTDIR)/requiredversion.previous/log.txt
+	grep -q "no tests selected" $(BUILDTESTDIR)/requiredversion.previous/log.txt
 
   # test that a future version is not accepted
-	mkdir -p $(BUILDDIR)/requiredversion.future/suite
-	echo "requiredVersion = 99.9 b01" > $(BUILDDIR)/requiredversion.future/suite/TEST.ROOT
+	mkdir -p $(BUILDTESTDIR)/requiredversion.future/suite
+	echo "requiredVersion = 99.9 b01" > $(BUILDTESTDIR)/requiredversion.future/suite/TEST.ROOT
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-jdk:$(JDKHOME) \
-		-w:$(BUILDDIR)/requiredversion.future/work \
-		-r:$(BUILDDIR)/requiredversion.future/report \
+		-w:$(BUILDTESTDIR)/requiredversion.future/work \
+		-r:$(BUILDTESTDIR)/requiredversion.future/report \
 		-verbose:fail \
-		$(BUILDDIR)/requiredversion.future/suite/ \
-		2>&1 | tee $(BUILDDIR)/requiredversion.future/log.txt
-	grep -q "requires jtreg version 99.9 b01 or higher" $(BUILDDIR)/requiredversion.future/log.txt 
+		$(BUILDTESTDIR)/requiredversion.future/suite/ \
+		2>&1 | tee $(BUILDTESTDIR)/requiredversion.future/log.txt
+	grep -q "requires jtreg version 99.9 b01 or higher" $(BUILDTESTDIR)/requiredversion.future/log.txt
 
 	echo "$@ test passed at `date`" > $@
 
 TESTS.jtreg += \
-    $(BUILDDIR)/TestRequiredVersion.ok
+    $(BUILDTESTDIR)/TestRequiredVersion.ok
     
 testrequiredversion: \
-    $(BUILDDIR)/TestRequiredVersion.ok
+    $(BUILDTESTDIR)/TestRequiredVersion.ok

@@ -76,6 +76,7 @@ ifndef BUILDDIR
 endif
 override BUILDDIR := $(call FullPath, $(BUILDDIR))
 
+BUILDTESTDIR=$(BUILDDIR)/test
 
 #----------------------------------------------------------------------
 #

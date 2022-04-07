@@ -26,7 +26,7 @@
 #----------------------------------------------------------------------
 
 
-$(BUILDDIR)/StatusFilter.ok: \
+$(BUILDTESTDIR)/StatusFilter.ok: \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(JTREG_IMAGEDIR)/lib/javatest.jar
 	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
@@ -144,7 +144,7 @@ $(BUILDDIR)/StatusFilter.ok: \
 
 
 TESTS.jtreg += \
-    $(BUILDDIR)/StatusFilter.ok
+    $(BUILDTESTDIR)/StatusFilter.ok
 
 #----------------------------------------------------------------------
 

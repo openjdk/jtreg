@@ -24,7 +24,7 @@
 #
 
 
-$(BUILDDIR)/ExtLibTest.ok: \
+$(BUILDTESTDIR)/ExtLibTest.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -37,5 +37,5 @@ $(BUILDDIR)/ExtLibTest.ok: \
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += \
-	$(BUILDDIR)/ExtLibTest.ok
+	$(BUILDTESTDIR)/ExtLibTest.ok
 

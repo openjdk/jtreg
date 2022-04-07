@@ -26,7 +26,7 @@
 
 #----------------------------------------------------------------------
 
-$(BUILDDIR)/TestPropsTest.ok: \
+$(BUILDTESTDIR)/TestPropsTest.ok: \
                 $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(JTREG_IMAGEDIR)/lib/javatest.jar
 	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
@@ -41,5 +41,5 @@ $(BUILDDIR)/TestPropsTest.ok: \
 	echo $@ passed at `date` > $@
 
 TESTS.jtreg += \
-	$(BUILDDIR)/TestPropsTest.ok
+	$(BUILDTESTDIR)/TestPropsTest.ok
 

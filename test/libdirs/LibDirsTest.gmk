@@ -26,7 +26,7 @@
 
 #----------------------------------------------------------------------
 
-$(BUILDDIR)/LibDirsTest.ok: \
+$(BUILDTESTDIR)/LibDirsTest.ok: \
                 $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(JTREG_IMAGEDIR)/lib/javatest.jar
 	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
@@ -52,4 +52,4 @@ $(BUILDDIR)/LibDirsTest.ok: \
 	echo $@ passed at `date` > $@
 
 TESTS.jtreg += \
-	$(BUILDDIR)/LibDirsTest.ok
+	$(BUILDTESTDIR)/LibDirsTest.ok

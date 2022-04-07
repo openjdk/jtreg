@@ -27,7 +27,7 @@
 #
 # Verify @library tag works for absolute paths (i.e. rel to TEST.ROOT dir).
 
-$(BUILDDIR)/TestAbsLib.ok: \
+$(BUILDTESTDIR)/TestAbsLib.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
@@ -38,5 +38,5 @@ $(BUILDDIR)/TestAbsLib.ok: \
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += \
-	$(BUILDDIR)/TestAbsLib.ok
+	$(BUILDTESTDIR)/TestAbsLib.ok
 

@@ -1,9 +1,9 @@
 ### Section clean
-cd %BUILD%/RerunTest.othervm/work/scratch && \
-rm -f %BUILD%/RerunTest.othervm/work/classes/std/BuildTest.d/BuildTest.class
+cd %BUILDTEST%/RerunTest.othervm/work/scratch && \
+rm -f %BUILDTEST%/RerunTest.othervm/work/classes/std/BuildTest.d/BuildTest.class
 
 ### Section compile
-cd %BUILD%/RerunTest.othervm/work/scratch && \
+cd %BUILDTEST%/RerunTest.othervm/work/scratch && \
 DISPLAY=%DISPLAY% \
 HOME=%HOME% \
 LANG=en_US.UTF-8 \
@@ -24,11 +24,11 @@ TZ=GMT+0.00 \
         -J-Dtest.file=%WS%/test/rerun/std/BuildTest.java \
         -J-Dtest.src=%WS%/test/rerun/std \
         -J-Dtest.src.path=%WS%/test/rerun/std \
-        -J-Dtest.classes=%BUILD%/RerunTest.othervm/work/classes/std/BuildTest.d \
-        -J-Dtest.class.path=%BUILD%/RerunTest.othervm/work/classes/std/BuildTest.d \
+        -J-Dtest.classes=%BUILDTEST%/RerunTest.othervm/work/classes/std/BuildTest.d \
+        -J-Dtest.class.path=%BUILDTEST%/RerunTest.othervm/work/classes/std/BuildTest.d \
         -XDmy.javac.option=x \
-        -d %BUILD%/RerunTest.othervm/work/classes/std/BuildTest.d \
+        -d %BUILDTEST%/RerunTest.othervm/work/classes/std/BuildTest.d \
         -sourcepath %WS%/test/rerun/std \
-        -classpath %WS%/test/rerun/std:%BUILD%/RerunTest.othervm/work/classes/std/BuildTest.d:%JDKHOME%/lib/tools.jar \
+        -classpath %WS%/test/rerun/std:%BUILDTEST%/RerunTest.othervm/work/classes/std/BuildTest.d:%JDKHOME%/lib/tools.jar \
         -XDignore.symbol.file=true %WS%/test/rerun/std/BuildTest.java
 

@@ -30,8 +30,8 @@
 # In agentvm and othervm mode, jtreg should successfully run each test
 # by moving to a new scratch directory when it can't clear the previous one.
 
-$(BUILDDIR)/CleanupTests.agentvm.ok \
-$(BUILDDIR)/CleanupTests.othervm.ok: \
+$(BUILDTESTDIR)/CleanupTests.agentvm.ok \
+$(BUILDTESTDIR)/CleanupTests.othervm.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	if [ -d $(@:%.ok=%) ]; then $(CHMOD) -R +w $(@:%.ok=%) && $(RM) $(@:%.ok=%) ; fi
@@ -40,7 +40,7 @@ $(BUILDDIR)/CleanupTests.othervm.ok: \
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDKHOME) \
-		$(@:$(BUILDDIR)/CleanupTests.%.ok=-%) \
+		$(@:$(BUILDTESTDIR)/CleanupTests.%.ok=-%) \
 		$(TESTDIR)/cleanup \
 			> $(@:%.ok=%/jt.log) 2>&1 || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
@@ -57,8 +57,8 @@ $(BUILDDIR)/CleanupTests.othervm.ok: \
 # run each test by moving to a new scratch directory when it can't clear 
 # the previous one.
 
-$(BUILDDIR)/CleanupTests.agentvm.conc.ok \
-$(BUILDDIR)/CleanupTests.othervm.conc.ok: \
+$(BUILDTESTDIR)/CleanupTests.agentvm.conc.ok \
+$(BUILDTESTDIR)/CleanupTests.othervm.conc.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	if [ -d $(@:%.ok=%) ]; then $(CHMOD) -R +w $(@:%.ok=%) && $(RM) $(@:%.ok=%) ; fi
@@ -67,7 +67,7 @@ $(BUILDDIR)/CleanupTests.othervm.conc.ok: \
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDKHOME) \
-		$(@:$(BUILDDIR)/CleanupTests.%.conc.ok=-%) \
+		$(@:$(BUILDTESTDIR)/CleanupTests.%.conc.ok=-%) \
 		-conc:2 \
 		$(TESTDIR)/cleanup \
 			> $(@:%.ok=%/jt.log) 2>&1 || \
@@ -83,7 +83,7 @@ $(BUILDDIR)/CleanupTests.othervm.conc.ok: \
 # In agent mode with -retain, the tests all pass
 # even if the selected files cannot be retained
 
-$(BUILDDIR)/CleanupTests.agentvm.retain.ok: \
+$(BUILDTESTDIR)/CleanupTests.agentvm.retain.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	if [ -d $(@:%.ok=%) ]; then $(CHMOD) -R +w $(@:%.ok=%) && $(RM) $(@:%.ok=%) ; fi
@@ -92,7 +92,7 @@ $(BUILDDIR)/CleanupTests.agentvm.retain.ok: \
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDKHOME) \
-		$(@:$(BUILDDIR)/CleanupTests.%.retain.ok=-%) \
+		$(@:$(BUILDTESTDIR)/CleanupTests.%.retain.ok=-%) \
 		-retain:readonly.txt \
 		$(TESTDIR)/cleanup \
 			> $(@:%.ok=%/jt.log) 2>&1 || \
@@ -109,7 +109,7 @@ $(BUILDDIR)/CleanupTests.agentvm.retain.ok: \
 # problem tests are written directly to the correct location 
 # and do not need to be moved.
 
-$(BUILDDIR)/CleanupTests.othervm.retain.ok: \
+$(BUILDTESTDIR)/CleanupTests.othervm.retain.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	if [ -d $(@:%.ok=%) ]; then $(CHMOD) -R +w $(@:%.ok=%) && $(RM) $(@:%.ok=%) ; fi
@@ -118,7 +118,7 @@ $(BUILDDIR)/CleanupTests.othervm.retain.ok: \
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDKHOME) \
-		$(@:$(BUILDDIR)/CleanupTests.%.retain.ok=-%) \
+		$(@:$(BUILDTESTDIR)/CleanupTests.%.retain.ok=-%) \
 		-retain:readonly.txt \
 		$(TESTDIR)/cleanup \
 			> $(@:%.ok=%/jt.log) 2>&1 || \
@@ -133,10 +133,10 @@ $(BUILDDIR)/CleanupTests.othervm.retain.ok: \
 
 ifneq ($(OS_NAME), windows)
 TESTS.jtreg += \
-	$(BUILDDIR)/CleanupTests.agentvm.ok \
-	$(BUILDDIR)/CleanupTests.agentvm.conc.ok \
-	$(BUILDDIR)/CleanupTests.agentvm.retain.ok \
-	$(BUILDDIR)/CleanupTests.othervm.ok \
-	$(BUILDDIR)/CleanupTests.othervm.conc.ok \
-	$(BUILDDIR)/CleanupTests.othervm.retain.ok
+	$(BUILDTESTDIR)/CleanupTests.agentvm.ok \
+	$(BUILDTESTDIR)/CleanupTests.agentvm.conc.ok \
+	$(BUILDTESTDIR)/CleanupTests.agentvm.retain.ok \
+	$(BUILDTESTDIR)/CleanupTests.othervm.ok \
+	$(BUILDTESTDIR)/CleanupTests.othervm.conc.ok \
+	$(BUILDTESTDIR)/CleanupTests.othervm.retain.ok
 endif
