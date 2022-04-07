@@ -25,7 +25,7 @@
 
 #----------------------------------------------------------------------
 
-$(BUILDDIR)/GoodSecurityManagerTest.ok: \
+$(BUILDTESTDIR)/GoodSecurityManagerTest.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
@@ -36,11 +36,11 @@ $(BUILDDIR)/GoodSecurityManagerTest.ok: \
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += \
-	$(BUILDDIR)/GoodSecurityManagerTest.ok
+	$(BUILDTESTDIR)/GoodSecurityManagerTest.ok
 
 #----------------------------------------------------------------------
 
-$(BUILDDIR)/BadSecurityManagerTest.ok: \
+$(BUILDTESTDIR)/BadSecurityManagerTest.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	$(MKDIR) -p $(@:%.ok=%)/
@@ -54,11 +54,11 @@ $(BUILDDIR)/BadSecurityManagerTest.ok: \
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += \
-	$(BUILDDIR)/BadSecurityManagerTest.ok
+	$(BUILDTESTDIR)/BadSecurityManagerTest.ok
 
 #----------------------------------------------------------------------
 
-$(BUILDDIR)/SecurityManagerTest_agentvm_forbid.ok: \
+$(BUILDTESTDIR)/SecurityManagerTest_agentvm_forbid.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	$(MKDIR) -p $(@:%.ok=%)/
@@ -73,11 +73,11 @@ $(BUILDDIR)/SecurityManagerTest_agentvm_forbid.ok: \
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += \
-	$(BUILDDIR)/SecurityManagerTest_agentvm_forbid.ok
+	$(BUILDTESTDIR)/SecurityManagerTest_agentvm_forbid.ok
 
 #----------------------------------------------------------------------
 
-$(BUILDDIR)/SecurityManagerTest_othervm.ok: \
+$(BUILDTESTDIR)/SecurityManagerTest_othervm.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
@@ -88,21 +88,21 @@ $(BUILDDIR)/SecurityManagerTest_othervm.ok: \
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += \
-	$(BUILDDIR)/SecurityManagerTest_othervm.ok
+	$(BUILDTESTDIR)/SecurityManagerTest_othervm.ok
 
 #----------------------------------------------------------------------
 
-$(BUILDDIR)/SecurityManagerTest_8.ok \
-$(BUILDDIR)/SecurityManagerTest_14.ok \
-$(BUILDDIR)/SecurityManagerTest_18.ok: \
+$(BUILDTESTDIR)/SecurityManagerTest_8.ok \
+$(BUILDTESTDIR)/SecurityManagerTest_14.ok \
+$(BUILDTESTDIR)/SecurityManagerTest_18.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	JTREG_JAVA=$(JDKJAVA) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(JDK$(@:$(BUILDDIR)/SecurityManagerTest_%.ok=%)HOME) \
+		-jdk:$(JDK$(@:$(BUILDTESTDIR)/SecurityManagerTest_%.ok=%)HOME) \
 		-agentvm \
 		$(TESTDIR)/SecurityManager/ShowSecurityManager.java
-	case "$(@:$(BUILDDIR)/SecurityManagerTest_%.ok=%)" in \
+	case "$(@:$(BUILDTESTDIR)/SecurityManagerTest_%.ok=%)" in \
 		18 ) $(GREP) "SM=null" \
 			$(@:%.ok=%)/work/ShowSecurityManager.jtr ;; \
 		*  ) $(GREP) "SM=com.sun.javatest.regtest.agent.RegressionSecurityManager" \
@@ -116,15 +116,15 @@ $(BUILDDIR)/SecurityManagerTest_18.ok: \
 
 ifdef JDK8HOME
 TESTS.jtreg += \
-	$(BUILDDIR)/SecurityManagerTest_8.ok
+	$(BUILDTESTDIR)/SecurityManagerTest_8.ok
 endif
 
 ifdef JDK14HOME
 TESTS.jtreg += \
-	$(BUILDDIR)/SecurityManagerTest_14.ok
+	$(BUILDTESTDIR)/SecurityManagerTest_14.ok
 endif
 
 ifdef JDK18HOME
 TESTS.jtreg += \
-	$(BUILDDIR)/SecurityManagerTest_18.ok
+	$(BUILDTESTDIR)/SecurityManagerTest_18.ok
 endif

@@ -23,7 +23,7 @@
 # questions.
 #
 
-$(BUILDDIR)/BugIdTests.ok: \
+$(BUILDTESTDIR)/BugIdTests.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -44,18 +44,18 @@ $(BUILDDIR)/BugIdTests.ok: \
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += \
-	$(BUILDDIR)/BugIdTests.ok
+	$(BUILDTESTDIR)/BugIdTests.ok
 
 
-$(BUILDDIR)/BugIdTests.1001111.ok \
-$(BUILDDIR)/BugIdTests.1002222.ok: \
+$(BUILDTESTDIR)/BugIdTests.1001111.ok \
+$(BUILDTESTDIR)/BugIdTests.1002222.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDKHOME) \
-		-bug:$(@:$(BUILDDIR)/BugIdTests.%.ok=%) \
+		-bug:$(@:$(BUILDTESTDIR)/BugIdTests.%.ok=%) \
 		$(TESTDIR)/bugidtests \
 			> $(@:%.ok=%/jt.log) 2>&1 || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
@@ -67,18 +67,18 @@ $(BUILDDIR)/BugIdTests.1002222.ok: \
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += \
-	$(BUILDDIR)/BugIdTests.1001111.ok \
-	$(BUILDDIR)/BugIdTests.1002222.ok
+	$(BUILDTESTDIR)/BugIdTests.1001111.ok \
+	$(BUILDTESTDIR)/BugIdTests.1002222.ok
 
-$(BUILDDIR)/BugIdTests.1003333.ok \
-$(BUILDDIR)/BugIdTests.1004444.ok: \
+$(BUILDTESTDIR)/BugIdTests.1003333.ok \
+$(BUILDTESTDIR)/BugIdTests.1004444.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDKHOME) \
-		-bug:$(@:$(BUILDDIR)/BugIdTests.%.ok=%) \
+		-bug:$(@:$(BUILDTESTDIR)/BugIdTests.%.ok=%) \
 		$(TESTDIR)/bugidtests \
 			> $(@:%.ok=%/jt.log) 2>&1 || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
@@ -90,6 +90,6 @@ $(BUILDDIR)/BugIdTests.1004444.ok: \
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += \
-	$(BUILDDIR)/BugIdTests.1003333.ok \
-	$(BUILDDIR)/BugIdTests.1004444.ok
+	$(BUILDTESTDIR)/BugIdTests.1003333.ok \
+	$(BUILDTESTDIR)/BugIdTests.1004444.ok
 

@@ -26,7 +26,7 @@
 
 #----------------------------------------------------------------------
 
-$(BUILDDIR)/LibBuildArgsTest.good.ok: \
+$(BUILDTESTDIR)/LibBuildArgsTest.good.ok: \
                 $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(JTREG_IMAGEDIR)/lib/javatest.jar
 	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
@@ -40,7 +40,7 @@ $(BUILDDIR)/LibBuildArgsTest.good.ok: \
 	    || (cat $(@:%.ok=%/log) ; exit 1)
 	echo $@ passed at `date` > $@
 
-$(BUILDDIR)/LibBuildArgsTest.bad.ok: \
+$(BUILDTESTDIR)/LibBuildArgsTest.bad.ok: \
                 $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(JTREG_IMAGEDIR)/lib/javatest.jar
 	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
@@ -56,5 +56,5 @@ $(BUILDDIR)/LibBuildArgsTest.bad.ok: \
 	echo $@ passed at `date` > $@
 
 TESTS.jtreg += \
-	$(BUILDDIR)/LibBuildArgsTest.good.ok \
-	$(BUILDDIR)/LibBuildArgsTest.bad.ok
+	$(BUILDTESTDIR)/LibBuildArgsTest.good.ok \
+	$(BUILDTESTDIR)/LibBuildArgsTest.bad.ok

@@ -26,7 +26,7 @@
 # No Args:  
 #   not allowed, exit code 1, Error: No tests selected
 #
-$(BUILDDIR)/EmptyTest_NoArgs.ok: \
+$(BUILDTESTDIR)/EmptyTest_NoArgs.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -39,14 +39,14 @@ $(BUILDDIR)/EmptyTest_NoArgs.ok: \
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += \
-	$(BUILDDIR)/EmptyTest_NoArgs.ok
+	$(BUILDTESTDIR)/EmptyTest_NoArgs.ok
 
 #-------------------------------------------------------------------------------
 
 # Empty Group:  
 #   allowed, exit code 0; Test results: No tests selected
 #
-$(BUILDDIR)/EmptyTest_EmptyGroup.ok: \
+$(BUILDTESTDIR)/EmptyTest_EmptyGroup.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -60,14 +60,14 @@ $(BUILDDIR)/EmptyTest_EmptyGroup.ok: \
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += \
-	$(BUILDDIR)/EmptyTest_EmptyGroup.ok
+	$(BUILDTESTDIR)/EmptyTest_EmptyGroup.ok
 
 #-------------------------------------------------------------------------------
 
 # Empty Folder:
 #   not allowed, exit code 1; Test results: No tests selected
 #
-$(BUILDDIR)/EmptyTest_EmptyFolder.ok: \
+$(BUILDTESTDIR)/EmptyTest_EmptyFolder.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -82,14 +82,14 @@ $(BUILDDIR)/EmptyTest_EmptyFolder.ok: \
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += \
-	$(BUILDDIR)/EmptyTest_EmptyFolder.ok
+	$(BUILDTESTDIR)/EmptyTest_EmptyFolder.ok
 
 #-------------------------------------------------------------------------------
 
 # Empty File:
 #   not allowed, exit code 5; Error: Not a test or directory containing tests: empty/Empty.java
 #
-$(BUILDDIR)/EmptyTest_EmptyFile.ok: \
+$(BUILDTESTDIR)/EmptyTest_EmptyFile.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -104,14 +104,14 @@ $(BUILDDIR)/EmptyTest_EmptyFile.ok: \
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += \
-	$(BUILDDIR)/EmptyTest_EmptyFile.ok
+	$(BUILDTESTDIR)/EmptyTest_EmptyFile.ok
 
 #-------------------------------------------------------------------------------
 
 # Empty Group and a Test:  
 #   allowed, exit code 0; Test results: passed: 1
 #
-$(BUILDDIR)/EmptyTest_EmptyGroup_Test.ok: \
+$(BUILDTESTDIR)/EmptyTest_EmptyGroup_Test.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -125,14 +125,14 @@ $(BUILDDIR)/EmptyTest_EmptyGroup_Test.ok: \
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += \
-	$(BUILDDIR)/EmptyTest_EmptyGroup_Test.ok
+	$(BUILDTESTDIR)/EmptyTest_EmptyGroup_Test.ok
 
 #-------------------------------------------------------------------------------
 
 # Empty Group and an empty folder:
 #   not allowed, exit code 1; Test results: No tests selected
 #
-$(BUILDDIR)/EmptyTest_EmptyGroup_EmptyFolder.ok: \
+$(BUILDTESTDIR)/EmptyTest_EmptyGroup_EmptyFolder.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -147,14 +147,14 @@ $(BUILDDIR)/EmptyTest_EmptyGroup_EmptyFolder.ok: \
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += \
-	$(BUILDDIR)/EmptyTest_EmptyGroup_EmptyFolder.ok
+	$(BUILDTESTDIR)/EmptyTest_EmptyGroup_EmptyFolder.ok
 
 #-------------------------------------------------------------------------------
 
 # Multiple Empty Group in same test suite:  
 #   allowed, exit code 0; Test results: No tests selected
 #
-$(BUILDDIR)/EmptyTest_MultiEmptyGroup_1.ok: \
+$(BUILDTESTDIR)/EmptyTest_MultiEmptyGroup_1.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -168,14 +168,14 @@ $(BUILDDIR)/EmptyTest_MultiEmptyGroup_1.ok: \
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += \
-	$(BUILDDIR)/EmptyTest_MultiEmptyGroup_1.ok
+	$(BUILDTESTDIR)/EmptyTest_MultiEmptyGroup_1.ok
 
 #-------------------------------------------------------------------------------
 
 # Multiple Empty Group in separate test suites:  
 #   allowed, exit code 0; Test results: No tests selected
 #
-$(BUILDDIR)/EmptyTest_MultiEmptyGroup_2.ok: \
+$(BUILDTESTDIR)/EmptyTest_MultiEmptyGroup_2.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -189,5 +189,5 @@ $(BUILDDIR)/EmptyTest_MultiEmptyGroup_2.ok: \
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += \
-	$(BUILDDIR)/EmptyTest_MultiEmptyGroup_2.ok
+	$(BUILDTESTDIR)/EmptyTest_MultiEmptyGroup_2.ok
 

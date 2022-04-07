@@ -24,7 +24,7 @@
 #
 
 
-$(BUILDDIR)/i18n.com.sun.javatest.regtest.config.ok: \
+$(BUILDTESTDIR)/i18n.com.sun.javatest.regtest.config.ok: \
 		$(JAVADIR)/com/sun/javatest/regtest/config/i18n.properties \
 		$(BUILDDIR)/classes.com.sun.javatest.regtest.ok \
 		$(TESTDIR)/i18n/checkI18NProps.sh
@@ -32,7 +32,7 @@ $(BUILDDIR)/i18n.com.sun.javatest.regtest.config.ok: \
 	$(SH) $(TESTDIR)/i18n/checkI18NProps.sh $(@:%.ok=%) $(JAVADIR)/com/sun/javatest/regtest/config
 	echo $@ passed at `date` > $@
 
-$(BUILDDIR)/i18n.com.sun.javatest.regtest.report.ok: \
+$(BUILDTESTDIR)/i18n.com.sun.javatest.regtest.report.ok: \
 		$(JAVADIR)/com/sun/javatest/regtest/report/i18n.properties \
 		$(BUILDDIR)/classes.com.sun.javatest.regtest.ok \
 		$(TESTDIR)/i18n/checkI18NProps.sh
@@ -40,7 +40,7 @@ $(BUILDDIR)/i18n.com.sun.javatest.regtest.report.ok: \
 	$(SH) $(TESTDIR)/i18n/checkI18NProps.sh $(@:%.ok=%) $(JAVADIR)/com/sun/javatest/regtest/report
 	echo $@ passed at `date` > $@
 
-$(BUILDDIR)/i18n.com.sun.javatest.regtest.tool.ok: \
+$(BUILDTESTDIR)/i18n.com.sun.javatest.regtest.tool.ok: \
 		$(JAVADIR)/com/sun/javatest/regtest/tool/i18n.properties \
 		$(BUILDDIR)/classes.com.sun.javatest.regtest.ok \
 		$(TESTDIR)/i18n/checkI18NProps.sh
@@ -54,12 +54,12 @@ $(BUILDDIR)/i18n.com.sun.javatest.regtest.tool.ok: \
 
 # convenience target
 i18n.com.sun.javatest.regtest: \
-    $(BUILDDIR)/i18n.com.sun.javatest.regtest.config.ok \
-    $(BUILDDIR)/i18n.com.sun.javatest.regtest.report.ok \
-    $(BUILDDIR)/i18n.com.sun.javatest.regtest.tool.ok
+    $(BUILDTESTDIR)/i18n.com.sun.javatest.regtest.config.ok \
+    $(BUILDTESTDIR)/i18n.com.sun.javatest.regtest.report.ok \
+    $(BUILDTESTDIR)/i18n.com.sun.javatest.regtest.tool.ok
 
 INITIAL_TESTS += \
-    $(BUILDDIR)/i18n.com.sun.javatest.regtest.config.ok \
-    $(BUILDDIR)/i18n.com.sun.javatest.regtest.report.ok \
-    $(BUILDDIR)/i18n.com.sun.javatest.regtest.tool.ok
+    $(BUILDTESTDIR)/i18n.com.sun.javatest.regtest.config.ok \
+    $(BUILDTESTDIR)/i18n.com.sun.javatest.regtest.report.ok \
+    $(BUILDTESTDIR)/i18n.com.sun.javatest.regtest.tool.ok
 

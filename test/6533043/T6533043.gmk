@@ -26,7 +26,7 @@
 #----------------------------------------------------------------------
 
 # 6533043: support failureProperty and errorProperty in <jtreg> task
-$(BUILDDIR)/T6533043.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
+$(BUILDTESTDIR)/T6533043.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(JTREG_IMAGEDIR)/bin/jtreg
 	JAVA_HOME=$(JDKHOME) $(ANT) -f $(TESTDIR)/6533043/build.xml \
@@ -37,6 +37,6 @@ $(BUILDDIR)/T6533043.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 
 ifdef ANT
 ifdef JDK5HOME
-TESTS.jtreg += $(BUILDDIR)/T6533043.ok
+TESTS.jtreg += $(BUILDTESTDIR)/T6533043.ok
 endif
 endif

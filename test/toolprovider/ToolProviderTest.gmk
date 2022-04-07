@@ -23,7 +23,7 @@
 # questions.
 #
 
-$(BUILDDIR)/ToolProviderTest.ok: \
+$(BUILDTESTDIR)/ToolProviderTest.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(TESTDIR)/toolprovider/ToolProviderTest.java
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -36,4 +36,4 @@ $(BUILDDIR)/ToolProviderTest.ok: \
 
 
 TESTS.jtreg += \
-	$(BUILDDIR)/ToolProviderTest.ok
+	$(BUILDTESTDIR)/ToolProviderTest.ok

@@ -28,7 +28,7 @@
 # check for leftover TestResultCache lock files.
 # leftover files may indicate a bug in the cache or its robustness
 
-$(BUILDDIR)/lockCheck.ok: 
+$(BUILDTESTDIR)/lockCheck.ok:
 	@ ( \
 	lckfiles=`$(FIND) $(TOPDIR)/build -name ResultCache.jtw.lck -print` ; \
 	if [ ! -z "$$lckfiles" ] ; then \
@@ -41,4 +41,4 @@ $(BUILDDIR)/lockCheck.ok:
 	)
 	echo $@ passed at `date` > $@
 
-FINAL_TESTS += $(BUILDDIR)/lockCheck.ok
+FINAL_TESTS += $(BUILDTESTDIR)/lockCheck.ok

@@ -36,7 +36,7 @@
 # Create a version of ProblemList.txt to test by editing those values
 # into a template.
 
-$(BUILDDIR)/ProblemList.ok: \
+$(BUILDTESTDIR)/ProblemList.ok: \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
@@ -71,5 +71,5 @@ $(BUILDDIR)/ProblemList.ok: \
 	$(GREP) -s 'Test results: passed: 1' $(@:%.ok=%/2/jt.log)  > /dev/null
 	echo $@ passed at `date` > $@
 
-TESTS.jtreg += $(BUILDDIR)/ProblemList.ok
+TESTS.jtreg += $(BUILDTESTDIR)/ProblemList.ok
 

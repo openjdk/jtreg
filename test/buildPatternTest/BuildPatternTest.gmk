@@ -23,7 +23,7 @@
 # questions.
 #
 
-$(BUILDDIR)/BuildPatternTest.ok: \
+$(BUILDTESTDIR)/BuildPatternTest.ok: \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(TESTDIR)/buildPatternTest/BuildPatternTest.java
 	$(MKDIR) -p $(@:%.ok=%/classes)
@@ -37,4 +37,4 @@ $(BUILDDIR)/BuildPatternTest.ok: \
 	echo $@ passed at `date` > $@
 
 TESTS.jtreg += \
-	$(BUILDDIR)/BuildPatternTest.ok
+	$(BUILDTESTDIR)/BuildPatternTest.ok

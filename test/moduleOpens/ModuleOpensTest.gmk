@@ -23,8 +23,8 @@
 # questions.
 #
 
-$(BUILDDIR)/ModuleOpensTest.agentvm.ok \
-$(BUILDDIR)/ModuleOpensTest.othervm.ok: \
+$(BUILDTESTDIR)/ModuleOpensTest.agentvm.ok \
+$(BUILDTESTDIR)/ModuleOpensTest.othervm.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	if [ -d $(@:%.ok=%) ]; then $(CHMOD) -R +w $(@:%.ok=%) && $(RM) $(@:%.ok=%) ; fi
@@ -34,7 +34,7 @@ $(BUILDDIR)/ModuleOpensTest.othervm.ok: \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDK9HOME) \
 		-vmoption:-Dsun.reflect.enableStrictMode=true \
-		$(@:$(BUILDDIR)/ModuleOpensTest.%.ok=-%) \
+		$(@:$(BUILDTESTDIR)/ModuleOpensTest.%.ok=-%) \
 		$(TESTDIR)/moduleOpens \
 			> $(@:%.ok=%/jt.log) 2>&1 || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
@@ -45,8 +45,8 @@ $(BUILDDIR)/ModuleOpensTest.othervm.ok: \
 ifdef JDK9HOME
 
 TESTS.jtreg += \
-	$(BUILDDIR)/ModuleOpensTest.agentvm.ok \
-	$(BUILDDIR)/ModuleOpensTest.othervm.ok
+	$(BUILDTESTDIR)/ModuleOpensTest.agentvm.ok \
+	$(BUILDTESTDIR)/ModuleOpensTest.othervm.ok
 
 endif #JDK9HOME
 

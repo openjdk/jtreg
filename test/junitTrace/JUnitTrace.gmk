@@ -25,7 +25,7 @@
 
 #----------------------------------------------------------------------
 
-$(BUILDDIR)/JUnitTrace.ok: \
+$(BUILDTESTDIR)/JUnitTrace.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -43,5 +43,5 @@ $(BUILDDIR)/JUnitTrace.ok: \
 	fi
 	echo "test passed at `date`" > $@
 
-TESTS.jtreg += $(BUILDDIR)/JUnitTrace.ok
+TESTS.jtreg += $(BUILDTESTDIR)/JUnitTrace.ok
 

@@ -29,7 +29,7 @@ UCD_FILES := $(shell find $(TESTDIR)/classIsolation -type f )
 # When enabled in jtreg 4.2 b08 or later, class files are placed in an unshared test-specific directory
 # See Locations constructor, local variable useUniqueClassDir
 
-$(BUILDDIR)/ClassIsolation.disable.b07.ok: $(UCD_FILES) \
+$(BUILDTESTDIR)/ClassIsolation.disable.b07.ok: $(UCD_FILES) \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar
 	$(RM) $(@:%.ok=%)
@@ -50,7 +50,7 @@ $(BUILDDIR)/ClassIsolation.disable.b07.ok: $(UCD_FILES) \
 	echo "test passed at `date`" > $@
 	
 
-$(BUILDDIR)/ClassIsolation.disable.b08.ok: $(UCD_FILES) \
+$(BUILDTESTDIR)/ClassIsolation.disable.b08.ok: $(UCD_FILES) \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar
 	$(RM) $(@:%.ok=%)
@@ -70,7 +70,7 @@ $(BUILDDIR)/ClassIsolation.disable.b08.ok: $(UCD_FILES) \
 	fi
 	echo "test passed at `date`" > $@
 
-$(BUILDDIR)/ClassIsolation.default.b08.ok: $(UCD_FILES) \
+$(BUILDTESTDIR)/ClassIsolation.default.b08.ok: $(UCD_FILES) \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar
 	$(RM) $(@:%.ok=%)
@@ -90,7 +90,7 @@ $(BUILDDIR)/ClassIsolation.default.b08.ok: $(UCD_FILES) \
 	fi
 	echo "test passed at `date`" > $@
 
-$(BUILDDIR)/ClassIsolation.enable.b08.ok: $(UCD_FILES) \
+$(BUILDTESTDIR)/ClassIsolation.enable.b08.ok: $(UCD_FILES) \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar
 	$(RM) $(@:%.ok=%)
@@ -111,9 +111,9 @@ $(BUILDDIR)/ClassIsolation.enable.b08.ok: $(UCD_FILES) \
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += \
-	$(BUILDDIR)/ClassIsolation.disable.b07.ok \
-	$(BUILDDIR)/ClassIsolation.disable.b08.ok \
-	$(BUILDDIR)/ClassIsolation.default.b08.ok \
-	$(BUILDDIR)/ClassIsolation.enable.b08.ok 
+	$(BUILDTESTDIR)/ClassIsolation.disable.b07.ok \
+	$(BUILDTESTDIR)/ClassIsolation.disable.b08.ok \
+	$(BUILDTESTDIR)/ClassIsolation.default.b08.ok \
+	$(BUILDTESTDIR)/ClassIsolation.enable.b08.ok
 
 

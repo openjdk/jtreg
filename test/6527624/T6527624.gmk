@@ -25,7 +25,7 @@
 
 #----------------------------------------------------------------------
 
-$(BUILDDIR)/T6527624.ok:\
+$(BUILDTESTDIR)/T6527624.ok:\
 		$(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar
 	$(RM) $(@:%.ok=%)
@@ -38,5 +38,5 @@ $(BUILDDIR)/T6527624.ok:\
 	echo "test passed at `date`" > $@
 
 ifneq ($(OS_NAME), windows)
-TESTS.jtreg += $(BUILDDIR)/T6527624.ok
+TESTS.jtreg += $(BUILDTESTDIR)/T6527624.ok
 endif

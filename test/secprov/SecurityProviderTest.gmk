@@ -23,8 +23,8 @@
 # questions.
 #
 
-$(BUILDDIR)/SecProvTests.agentvm.ok \
-$(BUILDDIR)/SecProvTests.othervm.ok: \
+$(BUILDTESTDIR)/SecProvTests.agentvm.ok \
+$(BUILDTESTDIR)/SecProvTests.othervm.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	if [ -d $(@:%.ok=%) ]; then $(RM) $(@:%.ok=%) ; fi
@@ -32,11 +32,11 @@ $(BUILDDIR)/SecProvTests.othervm.ok: \
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDKHOME) \
-		$(@:$(BUILDDIR)/SecProvTests.%.ok=-%) \
+		$(@:$(BUILDTESTDIR)/SecProvTests.%.ok=-%) \
 		$(TESTDIR)/secprov \
 			> $(@:%.ok=%/jt.log) 2>&1
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += \
-	$(BUILDDIR)/SecProvTests.agentvm.ok \
-	$(BUILDDIR)/SecProvTests.othervm.ok
+	$(BUILDTESTDIR)/SecProvTests.agentvm.ok \
+	$(BUILDTESTDIR)/SecProvTests.othervm.ok

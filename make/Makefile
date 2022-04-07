@@ -42,11 +42,11 @@ include Rules.gmk
 
 build: $(BUILDFILES)
 
-test: checkJavaOSVersion $(INITIAL_TESTS) $(TESTS) $(FINAL_TESTS)
+test: checkJavaOSVersion $(BUILDTESTDIR) $(INITIAL_TESTS) $(TESTS) $(FINAL_TESTS)
 	count=`echo $+ | wc -w` ; \
 	echo "All ($${count}) selected tests completed successfully"
 
-quick-test: checkJavaOSVersion $(INITIAL_TESTS)
+quick-test: checkJavaOSVersion $(BUILDTESTDIR) $(INITIAL_TESTS)
 	count=`echo $+ | wc -w` ; \
 	echo "All ($${count}) selected tests completed successfully"
 
@@ -57,7 +57,21 @@ new-images: $(NEWVERBOSEZIPFILES)
 clean:
 	$(RM) $(BUILDDIR)
 
-.NO_PARALLEL: clean
+clean-except-deps:
+	for i in $(BUILDDIR)/* ; do \
+	    case $$i in \
+		*/deps ) ;; \
+		* ) $(RM) $$i ;; \
+	    esac \
+	done
+
+clean-deps:
+	$(RM) $(BUILDDIR)/deps
+
+clean-tests:
+	$(RM) $(BUILDTESTDIR)
+
+.NO_PARALLEL: clean clean-except-deps clean-deps clean-tests
 
 sanity:
 ifdef JDK8HOME
@@ -87,6 +101,11 @@ endif
 	@echo "BUILD_VERSION       = $(BUILD_VERSION)"
 	@echo "BUILD_MILESTONE     = $(BUILD_MILESTONE)"
 	@echo "BUILD_NUMBER        = $(BUILD_NUMBER)"
+
+#----------------------------------------------------------------------
+
+$(BUILDTESTDIR):
+	$(MKDIR) -p $@
 
 #----------------------------------------------------------------------
 

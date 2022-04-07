@@ -27,7 +27,7 @@
 
 ifdef JDK9HOME
 
-$(BUILDDIR)/AddModulesTest.ok: \
+$(BUILDTESTDIR)/AddModulesTest.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -38,7 +38,7 @@ $(BUILDDIR)/AddModulesTest.ok: \
 			> $(@:%.ok=%/jt.log) 2>&1
 	echo "test passed at `date`" > $@
 
-TESTS.jtreg += $(BUILDDIR)/AddModulesTest.ok
+TESTS.jtreg += $(BUILDTESTDIR)/AddModulesTest.ok
 
 endif
 

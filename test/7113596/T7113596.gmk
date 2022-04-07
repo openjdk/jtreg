@@ -25,14 +25,14 @@
 
 #----------------------------------------------------------------------
 
-$(BUILDDIR)/T7113596.ok: \
+$(BUILDTESTDIR)/T7113596.ok: \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	$(LN) -s $(JDKHOME) $(@:%.ok=%)/jdk
 	cd $(@:%.ok=%) && $(JDKJAVA) -jar $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		-jdk:jdk \
-		../$(TESTDIR)/7113596
+		../../$(TESTDIR)/7113596
 	for i in COMPILEJAVA TESTJAVA ; do \
 	    value=`$(GREP) $$i= $(@:%.ok=%)/JTwork/Test.jtr | $(SED) -e 's/[^=]*=//' | head -n 1` ; \
 	    case $$value in \
@@ -46,6 +46,6 @@ $(BUILDDIR)/T7113596.ok: \
 	echo "test passed at `date`" > $@
 
 ifneq ($(OS_NAME), windows)
-TESTS.jtreg += $(BUILDDIR)/T7113596.ok
+TESTS.jtreg += $(BUILDTESTDIR)/T7113596.ok
 endif
 

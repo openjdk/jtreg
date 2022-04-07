@@ -23,7 +23,7 @@
 # questions.
 #
 
-$(BUILDDIR)/CachingFilter_NoExclude.ok: \
+$(BUILDTESTDIR)/CachingFilter_NoExclude.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -36,9 +36,9 @@ $(BUILDDIR)/CachingFilter_NoExclude.ok: \
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += \
-	$(BUILDDIR)/CachingFilter_NoExclude.ok
+	$(BUILDTESTDIR)/CachingFilter_NoExclude.ok
 
-$(BUILDDIR)/CachingFilter_Exclude.ok: \
+$(BUILDTESTDIR)/CachingFilter_Exclude.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -52,4 +52,4 @@ $(BUILDDIR)/CachingFilter_Exclude.ok: \
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += \
-	$(BUILDDIR)/CachingFilter_Exclude.ok
+	$(BUILDTESTDIR)/CachingFilter_Exclude.ok

@@ -26,7 +26,7 @@
 #----------------------------------------------------------------------
 
 # 6590671: RegressionTestFinder should ignore , files
-$(BUILDDIR)/T6590671.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
+$(BUILDTESTDIR)/T6590671.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(TESTDIR)/6590671/T6590671.java \
 		$(JTREG_IMAGEDIR)/bin/jtreg
@@ -41,5 +41,5 @@ $(BUILDDIR)/T6590671.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(@:%.ok=%)/test
 	echo $@ passed at `date` > $@
 
-TESTS.jtreg += $(BUILDDIR)/T6590671.ok
+TESTS.jtreg += $(BUILDTESTDIR)/T6590671.ok
 

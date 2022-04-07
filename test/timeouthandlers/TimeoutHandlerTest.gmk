@@ -29,8 +29,8 @@
 # Test that the default timeout handler in jtreg works
 #
 
-$(BUILDDIR)/TimeoutHandlerTestDefault.agentvm.ok \
-$(BUILDDIR)/TimeoutHandlerTestDefault.othervm.ok: \
+$(BUILDTESTDIR)/TimeoutHandlerTestDefault.agentvm.ok \
+$(BUILDTESTDIR)/TimeoutHandlerTestDefault.othervm.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -38,7 +38,7 @@ $(BUILDDIR)/TimeoutHandlerTestDefault.othervm.ok: \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDK8HOME) \
 		-va \
-		$(@:$(BUILDDIR)/TimeoutHandlerTestDefault.%.ok=-%) \
+		$(@:$(BUILDTESTDIR)/TimeoutHandlerTestDefault.%.ok=-%) \
 		$(TESTDIR)/timeouthandlers/TestJavaHang.java  \
 			> $(@:%.ok=%/jt.log) 2>&1 || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
@@ -46,7 +46,7 @@ $(BUILDDIR)/TimeoutHandlerTestDefault.othervm.ok: \
 	$(GREP) -s 'Test results: error: 1' $(@:%.ok=%/jt.log) > /dev/null
 	echo "test passed at `date`" > $@
 
-$(BUILDDIR)/TimeoutHandlerTestDefault.shell.ok: \
+$(BUILDTESTDIR)/TimeoutHandlerTestDefault.shell.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -63,16 +63,16 @@ $(BUILDDIR)/TimeoutHandlerTestDefault.shell.ok: \
 	echo "test passed at `date`" > $@
 
 TESTS.timeouthandler += \
-	$(BUILDDIR)/TimeoutHandlerTestDefault.agentvm.ok \
-	$(BUILDDIR)/TimeoutHandlerTestDefault.othervm.ok \
-	$(BUILDDIR)/TimeoutHandlerTestDefault.shell.ok
+	$(BUILDTESTDIR)/TimeoutHandlerTestDefault.agentvm.ok \
+	$(BUILDTESTDIR)/TimeoutHandlerTestDefault.othervm.ok \
+	$(BUILDTESTDIR)/TimeoutHandlerTestDefault.shell.ok
 
 #
 # Test that it is possible to supply an external timeout handler
 #
 
-$(BUILDDIR)/TimeoutHandlerTestExternal.agentvm.ok \
-$(BUILDDIR)/TimeoutHandlerTestExternal.othervm.ok: \
+$(BUILDTESTDIR)/TimeoutHandlerTestExternal.agentvm.ok \
+$(BUILDTESTDIR)/TimeoutHandlerTestExternal.othervm.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -85,7 +85,7 @@ $(BUILDDIR)/TimeoutHandlerTestExternal.othervm.ok: \
 		-va \
 		-timeoutHandler:MyHandler \
 		-timeoutHandlerDir:$(@:%.ok=%) \
-		$(@:$(BUILDDIR)/TimeoutHandlerTestExternal.%.ok=-%) \
+		$(@:$(BUILDTESTDIR)/TimeoutHandlerTestExternal.%.ok=-%) \
 		$(TESTDIR)/timeouthandlers/TestJavaHang.java  \
 			> $(@:%.ok=%/jt.log) 2>&1 || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
@@ -93,7 +93,7 @@ $(BUILDDIR)/TimeoutHandlerTestExternal.othervm.ok: \
 	$(GREP) -s 'Test results: error: 1' $(@:%.ok=%/jt.log) > /dev/null
 	echo "test passed at `date`" > $@
 
-$(BUILDDIR)/TimeoutHandlerTestExternal.shell.ok: \
+$(BUILDTESTDIR)/TimeoutHandlerTestExternal.shell.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -115,9 +115,9 @@ $(BUILDDIR)/TimeoutHandlerTestExternal.shell.ok: \
 	echo "test passed at `date`" > $@
 
 TESTS.timeouthandler += \
-	$(BUILDDIR)/TimeoutHandlerTestExternal.agentvm.ok \
-	$(BUILDDIR)/TimeoutHandlerTestExternal.othervm.ok \
-	$(BUILDDIR)/TimeoutHandlerTestExternal.shell.ok
+	$(BUILDTESTDIR)/TimeoutHandlerTestExternal.agentvm.ok \
+	$(BUILDTESTDIR)/TimeoutHandlerTestExternal.othervm.ok \
+	$(BUILDTESTDIR)/TimeoutHandlerTestExternal.shell.ok
 
 ifdef JDK8HOME
 TESTS.jtreg += ${TESTS.timeouthandler}

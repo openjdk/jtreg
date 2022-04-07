@@ -27,8 +27,8 @@
 #
 # Verify javac etc available on path for @run main in all modes.
 
-$(BUILDDIR)/javac/othervm.ok \
-$(BUILDDIR)/javac/agentvm.ok: \
+$(BUILDTESTDIR)/javac/othervm.ok \
+$(BUILDTESTDIR)/javac/agentvm.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	JTREG_SHOWAGENT=true JTREG_SHOWCMD=true \
@@ -36,14 +36,14 @@ $(BUILDDIR)/javac/agentvm.ok: \
 	JTREG_JAVA=$(JDKJAVA) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDK8HOME) \
-		$(@:$(BUILDDIR)/javac/%.ok=-%) \
+		$(@:$(BUILDTESTDIR)/javac/%.ok=-%) \
 		$(TESTDIR)/javac
 	echo "test passed at `date`" > $@
 
 # test requires access to javac internals, so needs @modules tag to run on JDK 9 or later
 ifdef JDK8HOME
 TESTS.jtreg += \
-	$(BUILDDIR)/javac/othervm.ok \
-	$(BUILDDIR)/javac/agentvm.ok
+	$(BUILDTESTDIR)/javac/othervm.ok \
+	$(BUILDTESTDIR)/javac/agentvm.ok
 endif
 

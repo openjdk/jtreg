@@ -23,14 +23,14 @@
 # questions.
 #
 
-$(BUILDDIR)/RerunTest.agentvm.ok \
-$(BUILDDIR)/RerunTest.othervm.ok:  JAVAOPTION =-javaoption:-Dmy.java.option=x
+$(BUILDTESTDIR)/RerunTest.agentvm.ok \
+$(BUILDTESTDIR)/RerunTest.othervm.ok:  JAVAOPTION =-javaoption:-Dmy.java.option=x
 
-$(BUILDDIR)/RerunTest.agentvm.ok \
-$(BUILDDIR)/RerunTest.othervm.ok:  JAVACOPTION=-javacoption:-XDmy.javac.option=x
+$(BUILDTESTDIR)/RerunTest.agentvm.ok \
+$(BUILDTESTDIR)/RerunTest.othervm.ok:  JAVACOPTION=-javacoption:-XDmy.javac.option=x
 
-$(BUILDDIR)/RerunTest.agentvm.ok \
-$(BUILDDIR)/RerunTest.othervm.ok: \
+$(BUILDTESTDIR)/RerunTest.agentvm.ok \
+$(BUILDTESTDIR)/RerunTest.othervm.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -44,12 +44,12 @@ $(BUILDDIR)/RerunTest.othervm.ok: \
 		-verbose:summary \
 		-e:MY_ENV_VAR=x -vmoption:-Dmy.vm.option=x $(JAVAOPTION) $(JAVACOPTION) \
                 -ignore:run \
-		$(@:$(BUILDDIR)/RerunTest.%.ok=-%) \
+		$(@:$(BUILDTESTDIR)/RerunTest.%.ok=-%) \
 		$(TESTDIR)/rerun  \
 			> $(@:%.ok=%/jt.log) 2>&1
 	$(GREP) -s 'Test results: passed: 10' $(@:%.ok=%/jt.log)  > /dev/null
 	for i in `cd $(TESTDIR)/rerun ; ls */*.sh */*.java` ; do \
-	    echo Checking $(@:$(BUILDDIR)/RerunTest.%.ok=%) $$i ; \
+	    echo Checking $(@:$(BUILDTESTDIR)/RerunTest.%.ok=%) $$i ; \
 	    mkdir -p `dirname $(@:%.ok=%)/out/$$i` ; \
 	    JTREG_JAVA=$(JDKJAVA) $(JTREG_IMAGEDIR)/bin/jtreg \
 		-jdk:$(JDK8HOME) \
@@ -61,6 +61,7 @@ $(BUILDDIR)/RerunTest.othervm.ok: \
 		    -e 's|$(JDK8HOME)|%JDKHOME%|g' \
 		    -e "s|`cd $(JDK8HOME); pwd -P`|%JDKHOME%|g" \
 		    -e '/JTREG_JAVA=/d' \
+		    -e 's|$(BUILDTESTDIR)|%BUILDTEST%|g' \
 		    -e 's|$(BUILDDIR)|%BUILD%|g' \
 		    -e 's|$(ABSTOPDIR)|%WS%|g' \
 		    -e 's|junit-[A-Za-z0-9.-]*\.jar|junit.jar|g' \
@@ -69,7 +70,7 @@ $(BUILDDIR)/RerunTest.othervm.ok: \
 		    -e 's|%BUILD%.images.jtreg.lib.hamcrest[A-Za-z0-9.-]*\.jar.||g' \
 		    -e 's|%BUILD%.images.jtreg.lib.jcommander[A-Za-z0-9.-]*\.jar.||g' \
 		> $(@:%.ok=%)/out/$${i%.*}.out ; \
-	    diff -c $(TESTDIR)/rerun/$${i%.*}.$(@:$(BUILDDIR)/RerunTest.%.ok=%).out \
+	    diff -c $(TESTDIR)/rerun/$${i%.*}.$(@:$(BUILDTESTDIR)/RerunTest.%.ok=%).out \
 		$(@:%.ok=%)/out/$${i%.*}.out || exit 1 ; \
 	done
 	echo "test passed at `date`" > $@
@@ -78,8 +79,8 @@ ifdef JDK8HOME
 ifneq ($(OS_NAME), windows)
 ifndef HEADLESS
 TESTS.jtreg += \
-	$(BUILDDIR)/RerunTest.agentvm.ok \
-	$(BUILDDIR)/RerunTest.othervm.ok
+	$(BUILDTESTDIR)/RerunTest.agentvm.ok \
+	$(BUILDTESTDIR)/RerunTest.othervm.ok
 endif
 endif
 endif

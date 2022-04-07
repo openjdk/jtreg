@@ -25,7 +25,7 @@
 
 #----------------------------------------------------------------------
 
-$(BUILDDIR)/StatsTest.ok: \
+$(BUILDTESTDIR)/StatsTest.ok: \
 	    $(TESTDIR)/statsTests/StatsTest.java \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar
@@ -39,10 +39,10 @@ $(BUILDDIR)/StatsTest.ok: \
 	echo "test passed at `date`" > $@
 
 ifneq ($(OS_NAME), windows)
-TESTS.jtreg += $(BUILDDIR)/StatsTest.ok
+TESTS.jtreg += $(BUILDTESTDIR)/StatsTest.ok
 endif
 
-$(BUILDDIR)/StatsTxt.1.ok: \
+$(BUILDTESTDIR)/StatsTxt.1.ok: \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -62,9 +62,9 @@ $(BUILDDIR)/StatsTxt.1.ok: \
 		$(@:%.ok=%/report/text/stats.txt)  > /dev/null
 	echo "test passed at `date`" > $@
 
-TESTS.jtreg += $(BUILDDIR)/StatsTxt.1.ok
+TESTS.jtreg += $(BUILDTESTDIR)/StatsTxt.1.ok
 
-$(BUILDDIR)/StatsTxt.2.ok: \
+$(BUILDTESTDIR)/StatsTxt.2.ok: \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -86,5 +86,5 @@ $(BUILDDIR)/StatsTxt.2.ok: \
 		$(@:%.ok=%/report/text/stats.txt)  > /dev/null
 	echo "test passed at `date`" > $@
 		    			
-TESTS.jtreg += $(BUILDDIR)/StatsTxt.2.ok
+TESTS.jtreg += $(BUILDTESTDIR)/StatsTxt.2.ok
 

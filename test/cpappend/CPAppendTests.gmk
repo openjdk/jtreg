@@ -25,19 +25,19 @@
 
 #----------------------------------------------------------------------
 
-$(BUILDDIR)/CPAppend/classes/p/Lib.class: \
+$(BUILDTESTDIR)/CPAppend/classes/p/Lib.class: \
 	$(TESTDIR)/cpappend/lib/p/Lib.java
-	$(MKDIR) -p $(BUILDDIR)/CPAppend/classes
-	$(JDKJAVAC) -d $(BUILDDIR)/CPAppend/classes \
+	$(MKDIR) -p $(BUILDTESTDIR)/CPAppend/classes
+	$(JDKJAVAC) -d $(BUILDTESTDIR)/CPAppend/classes \
 		-Xlint -Werror \
 		$(TESTDIR)/cpappend/lib/p/Lib.java
 
 # Control test for -cpa -- verify test fails if option not provided
 #
-$(BUILDDIR)/CPAppend/neg.ok: \
+$(BUILDTESTDIR)/CPAppend/neg.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg \
-	    $(BUILDDIR)/CPAppend/classes/p/Lib.class
+	    $(BUILDTESTDIR)/CPAppend/classes/p/Lib.class
 	    $(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
@@ -51,34 +51,34 @@ $(BUILDDIR)/CPAppend/neg.ok: \
 
 # Run test in -othervm mode
 #
-$(BUILDDIR)/CPAppend/othervm.ok: \
+$(BUILDTESTDIR)/CPAppend/othervm.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg \
-	    $(BUILDDIR)/CPAppend/classes/p/Lib.class
+	    $(BUILDTESTDIR)/CPAppend/classes/p/Lib.class
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDKHOME) \
 		-othervm \
-		-cpa:$(BUILDDIR)/CPAppend/classes \
+		-cpa:$(BUILDTESTDIR)/CPAppend/classes \
 		$(TESTDIR)/cpappend/test
 	echo "test passed at `date`" > $@
 
 # Run test in -agentvm mode
 #
-$(BUILDDIR)/CPAppend/agentvm.ok: \
+$(BUILDTESTDIR)/CPAppend/agentvm.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg \
-	    $(BUILDDIR)/CPAppend/classes/p/Lib.class
+	    $(BUILDTESTDIR)/CPAppend/classes/p/Lib.class
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDKHOME) \
 		-agentvm \
-		-cpa:$(BUILDDIR)/CPAppend/classes \
+		-cpa:$(BUILDTESTDIR)/CPAppend/classes \
 		$(TESTDIR)/cpappend/test
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += \
-	$(BUILDDIR)/CPAppend/neg.ok \
-	$(BUILDDIR)/CPAppend/othervm.ok \
-	$(BUILDDIR)/CPAppend/agentvm.ok
+	$(BUILDTESTDIR)/CPAppend/neg.ok \
+	$(BUILDTESTDIR)/CPAppend/othervm.ok \
+	$(BUILDTESTDIR)/CPAppend/agentvm.ok
 

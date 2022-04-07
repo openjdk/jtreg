@@ -27,15 +27,15 @@
 
 # 7900165: Exception in TestNG DataSource does not result in a reported test failure
 # Test should fail due to exception in @DataSource
-$(BUILDDIR)/T7900165.ok: \
+$(BUILDTESTDIR)/T7900165.ok: \
 	$(JTREG_IMAGEDIR)/lib/javatest.jar \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	$(JDKHOME)/bin/java -jar $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-		-w $(BUILDDIR)/7900165/work/ -r $(BUILDDIR)/7900165/report/ \
+		-w $(@:%.ok=%)/work/ -r $(@:%.ok=%)/report/ \
 		$(TESTDIR)/7900165 > $(@:%.ok=%/jt.log) 2>&1 ; rc=$$? ; \
         if [ "$$rc" != 2 ]; then echo "unexpected exit code: " $$rc ; exit 1 ; fi
 	echo $@ passed at `date` > $@
 
-TESTS.jtreg += $(BUILDDIR)/T7900165.ok
+TESTS.jtreg += $(BUILDTESTDIR)/T7900165.ok
 

@@ -23,8 +23,8 @@
 # questions.
 #
 
-$(BUILDDIR)/AgentOut.agentvm.ok \
-$(BUILDDIR)/AgentOut.othervm.ok: \
+$(BUILDTESTDIR)/AgentOut.agentvm.ok \
+$(BUILDTESTDIR)/AgentOut.othervm.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%)
@@ -32,41 +32,41 @@ $(BUILDDIR)/AgentOut.othervm.ok: \
 	JT_JAVA=$(JDKHOME) \
 		$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		$(@:$(BUILDDIR)/AgentOut.%.ok=-%) \
+		$(@:$(BUILDTESTDIR)/AgentOut.%.ok=-%) \
 		$(TESTDIR)/agentout
 	$(MKDIR) $(@:%.ok=%)/logs
 	- JT_JAVA=$(JDKHOME) \
 		$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work \
-		$(@:$(BUILDDIR)/AgentOut.%.ok=-%) \
+		$(@:$(BUILDTESTDIR)/AgentOut.%.ok=-%) \
 		-show:System.out \
 		$(TESTDIR)/agentout/CompileTest.java \
 		    > $(@:%.ok=%)/logs/CompileTest-System.out.log
 	- JT_JAVA=$(JDKHOME) \
 		$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work \
-		$(@:$(BUILDDIR)/AgentOut.%.ok=-%) \
+		$(@:$(BUILDTESTDIR)/AgentOut.%.ok=-%) \
 		-show:System.err \
 		$(TESTDIR)/agentout/CompileTest.java \
 		    > $(@:%.ok=%)/logs/CompileTest-System.err.log
 	- JT_JAVA=$(JDKHOME) \
 		$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work \
-		$(@:$(BUILDDIR)/AgentOut.%.ok=-%) \
+		$(@:$(BUILDTESTDIR)/AgentOut.%.ok=-%) \
 		-show:direct \
 		$(TESTDIR)/agentout/CompileTest.java \
 		    > $(@:%.ok=%)/logs/CompileTest-direct.log
 	- JT_JAVA=$(JDKHOME) \
 		$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work \
-		$(@:$(BUILDDIR)/AgentOut.%.ok=-%) \
+		$(@:$(BUILDTESTDIR)/AgentOut.%.ok=-%) \
 		-show:System.out \
 		$(TESTDIR)/agentout/MainTest.java \
 		    > $(@:%.ok=%)/logs/MainTest-System.out.log
 	- JT_JAVA=$(JDKHOME) \
 		$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work \
-		$(@:$(BUILDDIR)/AgentOut.%.ok=-%) \
+		$(@:$(BUILDTESTDIR)/AgentOut.%.ok=-%) \
 		-show:System.err \
 		$(TESTDIR)/agentout/MainTest.java \
 		    > $(@:%.ok=%)/logs/MainTest-System.err.log
@@ -79,22 +79,22 @@ $(BUILDDIR)/AgentOut.othervm.ok: \
 		> `dirname $$i`-filtered/`basename $$i` ; \
 	done
 	# merge direct and stderr from agent CompileTest to match stderr from othervm CompileTest
-	$(CAT) $(BUILDDIR)/AgentOut.agentvm/logs-filtered/CompileTest-direct.log \
-		$(BUILDDIR)/AgentOut.agentvm/logs-filtered/CompileTest-System.err.log \
-		> $(BUILDDIR)/AgentOut.agentvm/logs-filtered/tmp.log
-	$(MV) $(BUILDDIR)/AgentOut.agentvm/logs-filtered/tmp.log \
-		$(BUILDDIR)/AgentOut.agentvm/logs-filtered/CompileTest-System.err.log
-	$(CAT) < $(DEV_NULL) > $(BUILDDIR)/AgentOut.agentvm/logs-filtered/CompileTest-direct.log
+	$(CAT) $(BUILDTESTDIR)/AgentOut.agentvm/logs-filtered/CompileTest-direct.log \
+		$(BUILDTESTDIR)/AgentOut.agentvm/logs-filtered/CompileTest-System.err.log \
+		> $(BUILDTESTDIR)/AgentOut.agentvm/logs-filtered/tmp.log
+	$(MV) $(BUILDTESTDIR)/AgentOut.agentvm/logs-filtered/tmp.log \
+		$(BUILDTESTDIR)/AgentOut.agentvm/logs-filtered/CompileTest-System.err.log
+	$(CAT) < $(DEV_NULL) > $(BUILDTESTDIR)/AgentOut.agentvm/logs-filtered/CompileTest-direct.log
 	#
 	echo "run at `date`" > $@
 
-$(BUILDDIR)/AgentOut.ok: \
-	    $(BUILDDIR)/AgentOut.agentvm.ok \
-	    $(BUILDDIR)/AgentOut.othervm.ok
+$(BUILDTESTDIR)/AgentOut.ok: \
+	    $(BUILDTESTDIR)/AgentOut.agentvm.ok \
+	    $(BUILDTESTDIR)/AgentOut.othervm.ok
 	$(DIFF) -r \
-		$(BUILDDIR)/AgentOut.agentvm/logs-filtered \
-		$(BUILDDIR)/AgentOut.othervm/logs-filtered
+		$(BUILDTESTDIR)/AgentOut.agentvm/logs-filtered \
+		$(BUILDTESTDIR)/AgentOut.othervm/logs-filtered
 	echo "passed at `date`" > $@
 
 TESTS.jtreg += \
-	$(BUILDDIR)/AgentOut.ok \
+	$(BUILDTESTDIR)/AgentOut.ok \

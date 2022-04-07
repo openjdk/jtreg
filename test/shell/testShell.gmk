@@ -26,7 +26,7 @@
 
 #----------------------------------------------------------------------
 
-$(BUILDDIR)/TestShell.ok: \
+$(BUILDTESTDIR)/TestShell.ok: \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(JTREG_IMAGEDIR)/bin/jtreg
 	$(MKDIR) -p $(@:%.ok=%)
@@ -42,6 +42,6 @@ $(BUILDDIR)/TestShell.ok: \
 
 ifdef JDK8HOME
 TESTS.jtreg += \
-	$(BUILDDIR)/TestShell.ok
+	$(BUILDTESTDIR)/TestShell.ok
 endif
 

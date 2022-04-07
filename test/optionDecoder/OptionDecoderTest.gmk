@@ -25,7 +25,7 @@
 
 #----------------------------------------------------------------------
 
-$(BUILDDIR)/OptionDecoderTest.ok: \
+$(BUILDTESTDIR)/OptionDecoderTest.ok: \
 	    $(TESTDIR)/optionDecoder/OptionDecoderTest.java \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
@@ -38,5 +38,5 @@ $(BUILDDIR)/OptionDecoderTest.ok: \
 	$(JDKJAVA) -cp "$(@:%.ok=%)/classes$(PS)$(JTREG_IMAGEDIR)/lib/jtreg.jar" OptionDecoderTest 
 	echo "test passed at `date`" > $@
 
-TESTS.jtreg += $(BUILDDIR)/OptionDecoderTest.ok
+TESTS.jtreg += $(BUILDTESTDIR)/OptionDecoderTest.ok
 
