@@ -42,11 +42,11 @@ include Rules.gmk
 
 build: $(BUILDFILES)
 
-test: checkJavaOSVersion $(INITIAL_TESTS) $(TESTS) $(FINAL_TESTS)
+test: checkJavaOSVersion $(BUILDTESTDIR) $(INITIAL_TESTS) $(TESTS) $(FINAL_TESTS)
 	count=`echo $+ | wc -w` ; \
 	echo "All ($${count}) selected tests completed successfully"
 
-quick-test: checkJavaOSVersion $(INITIAL_TESTS)
+quick-test: checkJavaOSVersion $(BUILDTESTDIR) $(INITIAL_TESTS)
 	count=`echo $+ | wc -w` ; \
 	echo "All ($${count}) selected tests completed successfully"
 
@@ -101,6 +101,11 @@ endif
 	@echo "BUILD_VERSION       = $(BUILD_VERSION)"
 	@echo "BUILD_MILESTONE     = $(BUILD_MILESTONE)"
 	@echo "BUILD_NUMBER        = $(BUILD_NUMBER)"
+
+#----------------------------------------------------------------------
+
+$(BUILDTESTDIR):
+	$(MKDIR) -p $@
 
 #----------------------------------------------------------------------
 
