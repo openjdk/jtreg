@@ -241,8 +241,9 @@ public class JTRegUtils {
                                         LOG.debug("Nothing found relative to test suite root.");
                                         Properties testSuiteConfig = testSuiteConfigForRootFile(testRootFile);
                                         if (testSuiteConfig != null) {
-                                            String s = testSuiteConfig.getProperty("external.lib.roots").trim();
+                                            String s = testSuiteConfig.getProperty("external.lib.roots");
                                             if (s != null) {
+                                                s = s.trim();
                                                 LOG.debug("external.lib.roots = \"" + s + "\"");
                                                 // Note: jtreg tag specification for "external.lib.roots" talks about a
                                                 // search path with separate segments; however, all usages I see in our
