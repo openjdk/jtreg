@@ -31,8 +31,9 @@ $(BUILDTESTDIR)/autovm.ok: $(AUTOVM_FILES) \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar
 	for ts in none agentvm othervm; do \
+	    $(RM) $(BUILDTESTDIR)/autovm/tests/default.$$ts ; \
 	    $(MKDIR) -p $(BUILDTESTDIR)/autovm/tests/default.$$ts ; \
-	    rsync --recursive --delete $(TESTDIR)/autovm/ $(BUILDTESTDIR)/autovm/tests/default.$$ts/ ; \
+	    $(CP) -R $(TESTDIR)/autovm/* $(BUILDTESTDIR)/autovm/tests/default.$$ts ; \
 	    if [ $$ts != none ]; then \
 		echo "defaultExecMode=$$ts" >> $(BUILDTESTDIR)/autovm/tests/default.$$ts/TEST.ROOT ; \
 	    fi \
