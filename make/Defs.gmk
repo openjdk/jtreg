@@ -139,7 +139,7 @@ LN	= /bin/ln
 LS	= /bin/ls
 MKDIR 	= /bin/mkdir
 MV 	= /bin/mv
-PANDOC  = $(shell if [ -r /usr/bin/pandoc ]; then \
+PANDOC  := $(shell if [ -r /usr/bin/pandoc ]; then \
 		echo /usr/bin/pandoc ; \
 	elif [ -r /usr/local/bin/pandoc ]; then \
 		echo /usr/local/bin/pandoc ; \
@@ -153,7 +153,17 @@ SED 	:= $(shell if [ -r /bin/sed ]; then echo /bin/sed ; else echo /usr/bin/sed 
 SH 	= /bin/sh
 SORT    = /usr/bin/sort
 TEST 	= /usr/bin/test
-TIDY 	= /usr/bin/tidy
+ifeq ($(SYSTEM_UNAME), Darwin)
+TIDY 	:= $(shell if [ -r /usr/local/bin/tidy ]; then \
+		echo /usr/local/bin/tidy ; \
+	elif [ -r /opt/homebrew/bin/tidy ]; then \
+		echo /opt/homebrew/bin/tidy ; \
+	else \
+		echo/usr/bin/tidy ; \
+	fi )
+else
+TIDY	= /usr/bin/tidy
+endif
 TOUCH 	= /usr/bin/touch
 UNZIP 	= /usr/bin/unzip
 WC 	= /usr/bin/wc
