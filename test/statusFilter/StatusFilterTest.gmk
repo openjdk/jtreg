@@ -59,7 +59,7 @@ $(BUILDTESTDIR)/StatusFilter.ok: \
 		$(TESTDIR)/statusFilter/p1 \
 		> $(@:%.ok=%/rerun-status-fail-report-default.log 2>&1) || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
-	$(GREP) -E -s '^Test results: failed: 1\s+$$' $(@:%.ok=%/rerun-status-fail-report-default.log) > /dev/null
+	$(GREP) -E -s '^Test results: failed: 1\s?$$' $(@:%.ok=%/rerun-status-fail-report-default.log) > /dev/null
 	lines=`$(CAT) $(@:%.ok=%/report)/text/summary.txt | $(WC) -l` ; \
 	if [ "$$lines" -ne "5" ]; then echo "!! bad summary.txt" ; $(CAT) $(@:%.ok=%/report)/text/summary.txt; exit 1 ; fi
 	#
