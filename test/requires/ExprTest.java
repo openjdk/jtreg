@@ -38,7 +38,7 @@
  * @requires 1G == 1024M
  * @requires 1M == 1024K
  * @requires file.separator == "/" | file.separator == "\\"
- * @requires line.separator == "\n" | file.separator == "\r\n"
+ * @requires line.separator == "\n" | line.separator == "\r\n"
  * @requires os.maxMemory > 1M
  * @requires os.maxSwap >= 0
  * @run main ExprTest

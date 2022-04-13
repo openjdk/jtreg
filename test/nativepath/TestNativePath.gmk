@@ -26,7 +26,7 @@
 #----------------------------------------------------------------------
 
 
-NATIVEPATH := $(shell cd $(BUILDDIR); pwd)
+NATIVEPATH := $(call FullPath, $(shell cd $(BUILDDIR); pwd))
 
 $(BUILDTESTDIR)/TestNativePath.agentvm.ok \
 $(BUILDTESTDIR)/TestNativePath.othervm.ok: \
@@ -74,7 +74,7 @@ $(BUILDTESTDIR)/TestNativePath.ok: \
 
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-jdk:$(JDKHOME) \
-		-nativepath:$(JTREG_IMAGEDIR)/bin/jtreg:$(JDK6HOME) \
+		-nativepath:"$(JTREG_IMAGEDIR)/bin/jtreg$(PS)$(JDK6HOME)" \
 		$(TESTDIR)/nativepath \
 		2>&1 | grep -q "The argument to -nativepath cannot be more than one path." 
 

@@ -34,7 +34,7 @@ $(BUILDTESTDIR)/ClassDirsTest.ok: \
 		-Xlint -Werror \
 		$(TESTDIR)/classDirs/ClassDirsTest.java
 	cd $(@:%.ok=%); $(JDKJAVA) \
-		-classpath $(@:%.ok=%)/classes:$(JTREG_IMAGEDIR)/lib/jtreg.jar \
+		-classpath "$(@:%.ok=%)/classes$(PS)$(JTREG_IMAGEDIR)/lib/jtreg.jar" \
 		ClassDirsTest
 	echo $@ passed at `date` > $@
 

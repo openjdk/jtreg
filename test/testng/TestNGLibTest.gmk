@@ -32,7 +32,7 @@ $(BUILDTESTDIR)/TestNGLibTest.ok: \
 	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
 	$(MKDIR) -p $(@:%.ok=%)
 	$(JDKHOME)/bin/java \
-		-jar $(ABS_JTREG_IMAGEJARDIR)/jtreg.jar \
+		-jar $(JTREG_IMAGEJARDIR)/jtreg.jar \
 		-w:$(@:%.ok=%/work) \
 		-r:$(@:%.ok=%/report) \
 		$(TESTDIR)/testng \

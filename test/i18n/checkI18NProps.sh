@@ -62,13 +62,13 @@ defdNotReqd=$baseDir/defined-not-required.txt
 \1.name/' ;
   grep 'new FileType' ${srcDir}/*.java | sed -e 's/.*new FileType("\([^"]*\)");.*/filetype\1/' -e 's/.*new FileType();.*/filetype.allFiles/'
   if [ ! -z "$dynProps" ]; then grep '^i18n:' $dynProps | awk '{print $2}' ; fi
-) | sort -u > $requiredProps
+) | sed 's/\r$//' | sort -u > $requiredProps
 
 # end
 
 sed -e '/^#/d' -e '/^[  ]/d' -e '/^[^=]*$/d' -e 's/^\([A-Za-z0-9/_.-]*\).*/\1/' ${srcDir}/i18n.properties  | sort -u > $definedProps
 
-diff $requiredProps $definedProps > $diffs
+diff --strip-trailing-cr $requiredProps $definedProps > $diffs
 
 grep '^<' $diffs | awk '{print $2}' > $reqdNotDefd
 if [ -s $reqdNotDefd ]; then
