@@ -31,7 +31,7 @@ $(BUILDTESTDIR)/TestVersionCheck.match.ok: \
 	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
 	$(MKDIR) -p $(@:%.ok=%)
 	$(JDKHOME)/bin/java \
-		-jar $(ABS_JTREG_IMAGEJARDIR)/jtreg.jar \
+		-jar $(JTREG_IMAGEJARDIR)/jtreg.jar \
 		-w:$(@:%.ok=%/work) \
 		-r:$(@:%.ok=%/report) \
 		-compileJDK:$(JDK8HOME) \
@@ -57,7 +57,7 @@ $(BUILDTESTDIR)/TestVersionCheck.mismatch.ok: \
 	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
 	$(MKDIR) -p $(@:%.ok=%)
 	$(JDKHOME)/bin/java \
-		-jar $(ABS_JTREG_IMAGEJARDIR)/jtreg.jar \
+		-jar $(JTREG_IMAGEJARDIR)/jtreg.jar \
 		-w:$(@:%.ok=%/work) \
 		-r:$(@:%.ok=%/report) \
 		-compileJDK:$(JDK7HOME) \

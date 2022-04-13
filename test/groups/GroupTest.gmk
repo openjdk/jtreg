@@ -64,7 +64,7 @@ $(BUILDTESTDIR)/ShowGroupTest.ok: \
 	$(GREP) '^g3[0-9]' $(@:%.ok=%)/jt.log > $(@:%.ok=%)/g3.found
 	$(GREP) '^# g3[0-9]*' $(TESTDIR)/groups/TEST.groups3 \
 	        | $(SED) -e 's/# //' > $(@:%.ok=%)/g3.expect
-	$(DIFF) $(@:%.ok=%)/g3.expect $(@:%.ok=%)/g3.found
+	$(DIFF) --strip-trailing-cr $(@:%.ok=%)/g3.expect $(@:%.ok=%)/g3.found
 	echo $@ passed at `date` > $@
 
 TESTS.jtreg += $(BUILDTESTDIR)/ShowGroupTest.ok

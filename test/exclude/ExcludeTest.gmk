@@ -35,7 +35,7 @@ $(BUILDTESTDIR)/exclude.agentvm.ok: \
 		-Djavatest.regtest.showCmd=true \
 		-Djavatest.regtest.debugChild=true \
 		-Djavatest.regtest.traceAgent=true \
-		-jar $(ABS_JTREG_IMAGEJARDIR)/jtreg.jar \
+		-jar $(JTREG_IMAGEJARDIR)/jtreg.jar \
 		-w:$(@:%.ok=%/work) \
 		-r:$(@:%.ok=%/report) \
 		$(@:$(BUILDTESTDIR)/exclude.%.ok=-%) \
