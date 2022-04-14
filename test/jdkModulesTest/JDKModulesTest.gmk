@@ -35,7 +35,7 @@ $(BUILDTESTDIR)/JDKModulesTest.ok: \
 		-d $(@:%.ok=%)/classes \
 		-cp $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		-Xlint -Werror \
-		-encoding ISO8859-1 $(TESTDIR)/jdkModulesTest/JDKModulesTest.java
+		-encoding ASCII $(TESTDIR)/jdkModulesTest/JDKModulesTest.java
 	$(JDKHOME)/bin/java -cp "$(@:%.ok=%)/classes$(PS)$(JTREG_IMAGEDIR)/lib/jtreg.jar" \
 		-Djava.io.tmpdir=$(@:%.ok=%) \
 		JDKModulesTest -Ddummy.vm.option

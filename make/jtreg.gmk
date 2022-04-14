@@ -41,7 +41,7 @@ $(BUILDDIR)/classes.com.sun.javatest.regtest.agent.ok: \
 	CLASSPATH="$(CLASSDIR)$(PS)$(JAVATEST_JAR)$(PS)$(JUNIT_CLASSPATH)$(PS)$(TESTNG_CLASSPATH)" \
 	    $(REGTEST_AGENT_JAVAC) $(REGTEST_AGENT_JAVAC_OPTIONS) \
 		-d $(CLASSDIR) \
-		-encoding ISO8859-1 \
+		-encoding ASCII \
 		$(JAVAFILES.com.sun.javatest.regtest-agentvm)
 	echo "classes built at `date`" > $@
 
@@ -56,7 +56,7 @@ $(BUILDDIR)/classes.com.sun.javatest.regtest.ok: \
 	CLASSPATH="$(CLASSDIR)$(PS)$(JAVATEST_JAR)$(PS)$(JUNIT_CLASSPATH)$(PS)$(TESTNG_CLASSPATH)" \
 	    $(REGTEST_TOOL_JAVAC) $(REGTEST_TOOL_JAVAC_OPTIONS) \
 		-d $(CLASSDIR) \
-		-encoding ISO8859-1 \
+		-encoding ASCII \
 		$(JAVAFILES.com.sun.javatest.regtest-tools)
 	echo "classes built at `date`" > $@
 
@@ -72,7 +72,7 @@ $(BUILDDIR)/classes.java.lang.ok: \
 	CLASSPATH= \
 	    $(REGTEST_TOOL_JAVAC) $(REGTEST_TOOL_JAVAC_OPTIONS) --release 9 $(REGTEST_TOOL_PATCH_JAVA_BASE_OPTIONS) \
 		-d $(CLASSDIR) \
-		-encoding ISO8859-1 \
+		-encoding ASCII \
 		$(JAVAFILES.java.lang)
 	echo "classes built at `date`" > $@
 
@@ -192,7 +192,7 @@ $(JTREG_IMAGEDIR)/doc/api/index.html: \
             $(JAVAFILES.com.sun.javatest.regtest-tools) \
             $(JAVATEST_SRCFILES)
 	$(JDKHOME)/bin/javadoc -d $(@D) \
-                -encoding iso-8859-1 \
+                -encoding ASCII \
 		-sourcepath "$(JAVADIR)$(PS)$(JAVATEST_SRCDIR)" \
 		-classpath "$(JAVATEST_JAR)$(PS)$(JUNIT_JAR)$(PS)$(TESTNG_JAR)" \
 		com.sun.javatest.regtest \
@@ -202,7 +202,7 @@ $(JTREG_IMAGEDIR)/doc/devapi/index.html: \
             $(JAVAFILES.com.sun.javatest.regtest-tools) \
             $(JAVATEST_SRCFILES)
 	$(JDKHOME)/bin/javadoc -d $(@D) \
-                -encoding iso-8859-1 \
+                -encoding ASCII \
 		-sourcepath "$(JAVADIR)$(PS)$(JAVATEST_SRCDIR)" \
 		-classpath "$(JAVATEST_JAR)$(PS)$(JUNIT_JAR)$(PS)$(TESTNG_JAR)" \
 		-subpackages com.sun.javatest.regtest \
