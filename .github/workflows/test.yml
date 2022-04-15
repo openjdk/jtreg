@@ -24,7 +24,10 @@ jobs:
     - name: '[Windows] Install Cygwin'
       if: runner.os == 'Windows'
       uses: cygwin/cygwin-install-action@v2
-
+      with:
+        packages: >-
+          rsync
+          wget
     - name: '[Windows] Configure Git'
       if: runner.os == 'Windows'
       run: git config --global core.autocrlf input
