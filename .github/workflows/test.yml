@@ -31,7 +31,11 @@ jobs:
       with:
        distribution: 'temurin'
        java-version: 11
-
+       
+    - name: 'Install Cygwin on Windows'
+      if: runner.os == 'Windows'
+      uses: cygwin/cygwin-install-action@v2
+      
     - name: 'Build JTReg'
       shell: bash
       run: |
