@@ -42,17 +42,14 @@ jobs:
       
     - name: 'Build JTReg'
       shell: bash
-      run: |
-        java -version
-        bash make/build.sh --jdk ${JAVA_HOME}
+      run: bash make/build.sh --jdk ${JAVA_HOME}
 
     - name: 'Run initial tests (goal: quick-test)'
       shell: bash
       env:
         MAKE_ARGS: quick-test
         HEADLESS: 1
-      run: |
-        bash make/build.sh --jdk ${JAVA_HOME} --skip-download
+      run: bash make/build.sh --jdk ${JAVA_HOME} --skip-download
 
     - name: 'Run all tests (goal: test)'
       if: false
@@ -60,5 +57,4 @@ jobs:
       env:
         MAKE_ARGS: test
         HEADLESS: 1
-      run: |
-        bash make/build.sh --jdk ${JAVA_HOME} --skip-download
+      run: bash make/build.sh --jdk ${JAVA_HOME} --skip-download
