@@ -21,6 +21,14 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
+    - name: '[Windows] Install Cygwin'
+      if: runner.os == 'Windows'
+      uses: cygwin/cygwin-install-action@v2
+
+    - name: '[Windows] Configure Git'
+      if: runner.os == 'Windows'
+      run: git config --global core.autocrlf input
+
     - name: 'Check out repository'
       uses: actions/checkout@v3
       with:
@@ -31,10 +39,6 @@ jobs:
       with:
        distribution: 'temurin'
        java-version: 11
-       
-    - name: 'Install Cygwin on Windows'
-      if: runner.os == 'Windows'
-      uses: cygwin/cygwin-install-action@v2
       
     - name: 'Build JTReg'
       shell: bash
