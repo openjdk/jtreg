@@ -33,6 +33,8 @@ public class CheckJavaOSVersion {
     }
 
     private static void checkJavaOSVersion(String expectVersion) {
+        // The os.version property may be more detailed than the expected value determined in the makefiles.
+        // For example, "11.6.5" is a valid match for an expected "11.6" version.
         String osVersion = System.getProperty("os.version");
         if (!osVersion.startsWith(expectVersion)) {
             System.err.println("The version of JDK you are using does not report the OS version correctly.");
