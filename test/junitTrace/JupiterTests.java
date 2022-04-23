@@ -25,7 +25,7 @@ import org.junit.jupiter.api.Test;
 
 /*
  * @test
- * @run junit Jupiter
+ * @run junit JupiterTests
  */
 class JupiterTests {
     @Test
