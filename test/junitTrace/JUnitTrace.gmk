@@ -36,7 +36,7 @@ $(BUILDTESTDIR)/JUnitTrace.ok: \
 		$(TESTDIR)/junitTrace/  \
 			> $(@:%.ok=%/jt.log) 2>&1 || \
 		true "non-zero exit code from JavaTest intentionally ignored"
-	$(GREP) -s 'Test results: passed: 1; failed: 1' $(@:%.ok=%/jt.log)  > /dev/null
+	$(GREP) -s 'Test results: passed: 2; failed: 1' $(@:%.ok=%/jt.log)  > /dev/null
 	$(GREP) -s "java.lang.NullPointerException: NPE" $(@:%.ok=%/work/NPE.jtr) > /dev/null
 	if $(GREP) -s "^\s\s*at " $(@:%.ok=%/work/Pass.jtr) > /dev/null ; then \
 		echo "unexpected text"; exit 1; \

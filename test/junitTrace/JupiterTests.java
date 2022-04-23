@@ -21,16 +21,15 @@
  * questions.
  */
 
+import org.junit.jupiter.api.Test;
+
 /*
  * @test
- * @run junit Pass
+ * @run junit Jupiter
  */
-
-import org.junit.*;
-
-public class Pass {
+class JupiterTests {
     @Test
-    public void test() {
+    void test() {
         System.out.println("Pass");
     }
 }
