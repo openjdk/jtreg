@@ -122,6 +122,10 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
                 var sw = new StringWriter();
                 try (var pw = new PrintWriter(sw)) {
                     pw.println("JavaTest Message: JUnit Platform Failure(s): " + summary.getTotalFailureCount());
+                    pw.println();
+                    for (var failure : summary.getFailures()) {
+                        failure.getException().printStackTrace(pw);
+                    }
                     summary.printTo(pw);
                 }
                 System.err.println(sw);
