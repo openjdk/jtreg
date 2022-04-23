@@ -26,12 +26,14 @@
  * @run junit Pass
  */
 
-import org.junit.*;
-
 public class Pass {
-    @Test
-    public void test() {
-        System.out.println("Pass");
+    @org.junit.Test
+    public void testJUnit4() {
+        System.out.println("Pass JUnit 4");
+    }
+
+    @org.junit.jupiter.api.Test
+    public void testJUnitJupiter() {
+        System.out.println("Pass JUnit Jupiter");
     }
 }
-
