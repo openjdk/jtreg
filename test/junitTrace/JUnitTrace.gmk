@@ -35,7 +35,7 @@ $(BUILDTESTDIR)/JUnitTrace.ok: \
 		-agentvm \
 		$(TESTDIR)/junitTrace/  \
 			> $(@:%.ok=%/jt.log) 2>&1 || \
-		true "non-zero exit code from JavaTest intentionally ignored"
+			true "non-zero exit code from JavaTest intentionally ignored"
 	$(GREP) -s 'Test results: passed: 2; failed: 1' $(@:%.ok=%/jt.log)  > /dev/null
 	$(GREP) -s "java.lang.NullPointerException: NPE" $(@:%.ok=%/work/NPE.jtr) > /dev/null
 	if $(GREP) -s "^\s\s*at " $(@:%.ok=%/work/Pass.jtr) > /dev/null ; then \
@@ -44,5 +44,3 @@ $(BUILDTESTDIR)/JUnitTrace.ok: \
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += $(BUILDTESTDIR)/JUnitTrace.ok
-
-INITIAL_TESTS += $(BUILDTESTDIR)/JUnitTrace.ok
