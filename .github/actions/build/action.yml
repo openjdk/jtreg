@@ -3,25 +3,24 @@ description: Set up JDK and run build
 runs:
   using: "composite"
   steps:
-    - name: 'Check out repository'
-      uses: actions/checkout@v3
-      with:
-        fetch-depth: 1
     - name: 'Set up JDK'
       uses: actions/setup-java@v3
       with:
        distribution: 'temurin'
        java-version: 11
     - name: 'Build JTReg'
+      shell: bash
       run: bash make/build.sh --jdk ${JAVA_HOME}
     - name: 'Run initial self-tests (goal: quick-test)'
       env:
         MAKE_ARGS: quick-test
         HEADLESS: 1
+      shell: bash
       run: bash make/build.sh --jdk ${JAVA_HOME} --skip-download
     - name: 'Run all self-tests (goal: test)'
       if: false
       env:
         MAKE_ARGS: test
         HEADLESS: 1
+      shell: bash
       run: bash make/build.sh --jdk ${JAVA_HOME} --skip-download
