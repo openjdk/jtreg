@@ -28,32 +28,17 @@ jobs:
 
   windows-test:
     runs-on: windows-latest
-    defaults:
-      run:
-        shell: C:\cygwin\bin\bash.exe --noprofile --norc -o igncr -eo pipefail '{0}'
     steps:
-    - name: 'Install Cygwin'
-      uses: cygwin/cygwin-install-action@v2
-      with:
-        packages: >-
-          wget
     - name: 'Configure Git'
       run: |
         git config --global core.autocrlf false
         git config --global core.eol lf
     - name: 'Check out repository'
       uses: actions/checkout@v3
-    - name: 'Set up JDK'
-      uses: actions/setup-java@v3
+    - name: 'Install Cygwin'
+      uses: cygwin/cygwin-install-action@v2
       with:
-       distribution: 'temurin'
-       java-version: 11
-    - name: 'Build JTReg'
-      shell: bash
-      run: bash make/build.sh --jdk ${JAVA_HOME}
-    - name: 'Run initial self-tests (goal: quick-test)'
-      env:
-        MAKE_ARGS: quick-test
-        HEADLESS: 1
-      shell: bash
-      run: bash make/build.sh --jdk ${JAVA_HOME} --skip-download
+        packages: >-
+          wget      
+    - name: 'Build'
+      uses: ./.github/actions/build
