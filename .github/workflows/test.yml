@@ -13,12 +13,16 @@ jobs:
   linux-test:
     runs-on: ubuntu-latest
     steps:
+    - name: 'Check out repository'
+      uses: actions/checkout@v3
     - name: 'Build'
       uses: ./.github/actions/build
 
   mac-test:
     runs-on: macos-latest
     steps:
+    - name: 'Check out repository'
+      uses: actions/checkout@v3
     - name: 'Build'
       uses: ./.github/actions/build
 
@@ -28,5 +32,14 @@ jobs:
       run:
         shell: C:\cygwin\bin\bash.exe --noprofile --norc -o igncr -eo pipefail '{0}'
     steps:
+    - name: 'Install Cygwin'
+      uses: cygwin/cygwin-install-action@v2
+      with:
+        packages: >-
+          wget
+    - name: 'Configure Git'
+      run: git config --global core.autocrlf input
+    - name: 'Check out repository'
+      uses: actions/checkout@v3
     - name: 'Build'
       uses: ./.github/actions/build
