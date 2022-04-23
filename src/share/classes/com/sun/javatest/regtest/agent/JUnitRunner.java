@@ -25,17 +25,21 @@
 
 package com.sun.javatest.regtest.agent;
 
+import org.junit.platform.engine.discovery.DiscoverySelectors;
+import org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder;
+import org.junit.platform.launcher.core.LauncherFactory;
+import org.junit.platform.launcher.listeners.SummaryGeneratingListener;
+
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
-
 
 /**
  * TestRunner to run JUnit tests.
  */
 public class JUnitRunner implements MainActionHelper.TestRunner {
     private static final String
-        JUNIT_NO_DRIVER        = "No JUnit 4 driver (install junit.jar next to jtreg.jar)";
+        JUNIT_NO_DRIVER        = "No JUnit driver (install junit-platform-console-standalone.jar next to jtreg.jar)";
 
     public static void main(String... args) throws Exception {
         main(null, args);
@@ -69,6 +73,11 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
             cl = JUnitRunner.class.getClassLoader();
         }
         Class<?> mainClass = Class.forName(className, false, cl);
+        // runWithJUnit4(mainClass);
+        runWithJUnitPlatform(mainClass);
+    }
+
+    private static void runWithJUnit4(Class<?> mainClass) throws Exception {
         org.junit.runner.Result result;
         try {
             result = org.junit.runner.JUnitCore.runClasses(mainClass);
@@ -91,4 +100,36 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
         }
     }
 
+    private static void runWithJUnitPlatform(Class<?> mainClass) throws Exception {
+        // https://junit.org/junit5/docs/current/user-guide/#launcher-api-execution
+        Thread.currentThread().setContextClassLoader(mainClass.getClassLoader());
+        try {
+
+            var request = LauncherDiscoveryRequestBuilder.request()
+                .selectors(DiscoverySelectors.selectClass(mainClass))
+                .build();
+
+            var summaryGeneratingListener = new SummaryGeneratingListener();
+
+            try (var session = LauncherFactory.openSession()) {
+                var launcher = session.getLauncher();
+                launcher.registerTestExecutionListeners(summaryGeneratingListener);
+                launcher.execute(request);
+            }
+
+            var summary = summaryGeneratingListener.getSummary();
+            if (summary.getTotalFailureCount() > 0) {
+                var sw = new StringWriter();
+                try (var pw = new PrintWriter(sw)) {
+                    pw.println("JavaTest Message: JUnit Platform Failure(s): " + summary.getTotalFailureCount());
+                    summary.printTo(pw);
+                }
+                System.err.println(sw);
+                throw new Exception("JUnit test failure");
+            }
+
+        } catch (NoClassDefFoundError ex) {
+            throw new Exception(JUNIT_NO_DRIVER, ex);
+        }
+    }
 }
