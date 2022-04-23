@@ -1,0 +1,23 @@
+name: build
+description: Set up JDK and run build
+runs:
+  using: "composite"
+  steps:
+    - name: 'Set up JDK'
+      uses: actions/setup-java@v3
+      with:
+       distribution: 'temurin'
+       java-version: 11
+    - name: 'Build JTReg'
+      run: bash make/build.sh --jdk ${JAVA_HOME}
+    - name: 'Run initial self-tests (goal: quick-test)'
+      env:
+        MAKE_ARGS: quick-test
+        HEADLESS: 1
+      run: bash make/build.sh --jdk ${JAVA_HOME} --skip-download
+    - name: 'Run all self-tests (goal: test)'
+      if: false
+      env:
+        MAKE_ARGS: test
+        HEADLESS: 1
+      run: bash make/build.sh --jdk ${JAVA_HOME} --skip-download
