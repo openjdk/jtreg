@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -21,15 +21,54 @@
  * questions.
  */
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
+import org.junit.jupiter.params.*;
+import org.junit.jupiter.params.provider.*;
 
 /*
  * @test
  * @run junit JupiterTests
  */
 class JupiterTests {
-    @Test
-    void test() {
-        System.out.println("Pass");
+
+    @BeforeAll
+    static void initAll() {
     }
+
+    @BeforeEach
+    void init() {
+    }
+
+    @Test
+    void succeedingTest() {
+    }
+
+    @Test
+    @Disabled("for demonstration purposes")
+    void skippedTest() {
+        Assertions.fail("test should have been executed");
+    }
+
+    @Test
+    void abortedTest() {
+        Assumptions.assumeTrue(false, "abort test execution mid-flight");
+        Assertions.fail("test should have been aborted");
+    }
+
+    @ParameterizedTest(name = "[{index}] test(''{0}'')")
+    @NullSource
+    @EmptySource
+    @ValueSource(strings = {" ", "   ", "\t", "\n", "\r\n"})
+    void nullEmptyAndBlankStrings(String text) {
+        Assertions.assertTrue(text == null || text.isBlank());
+    }
+
+    @AfterEach
+    void tearDown() {
+    }
+
+    @AfterAll
+    static void tearDownAll() {
+    }
+
 }
