@@ -44,6 +44,8 @@ import java.lang.reflect.Method;
 public class JUnitRunner implements MainActionHelper.TestRunner {
     private static final String
         JUNIT_NO_DRIVER        = "No JUnit driver (install junit-platform-console-standalone.jar next to jtreg.jar)";
+    private static final boolean
+        JUNIT_RUN_WITH_JUNIT_4 = Flags.get("runWithJUnit4");
 
     public static void main(String... args) throws Exception {
         main(null, args);
@@ -77,8 +79,11 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
             cl = JUnitRunner.class.getClassLoader();
         }
         Class<?> mainClass = Class.forName(className, false, cl);
-        // runWithJUnit4(mainClass);
-        runWithJUnitPlatform(mainClass);
+        if (JUNIT_RUN_WITH_JUNIT_4) {
+            runWithJUnit4(mainClass);
+        } else {
+            runWithJUnitPlatform(mainClass);
+        }
     }
 
     private static void runWithJUnit4(Class<?> mainClass) throws Exception {
