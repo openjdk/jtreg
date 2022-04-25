@@ -121,7 +121,7 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
                 launcher.execute(request);
             }
 
-            var summary = summaryGeneratingListener.getSummary();
+            TestExecutionSummary summary = summaryGeneratingListener.getSummary();
             if (summary.getTotalFailureCount() > 0) {
                 StringWriter sw = new StringWriter();
                 try (PrintWriter pw = new PrintWriter(sw)) {
