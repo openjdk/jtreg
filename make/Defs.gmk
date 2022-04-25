@@ -111,7 +111,7 @@ JDKJAVA = $(JDKHOME)/bin/java
 JDKJAVAC = $(JDKHOME)/bin/javac
 JAR = $(JDKHOME)/bin/jar
 
-AGENT_JAVAC_SOURCE_TARGET = --release 11
+AGENT_JAVAC_SOURCE_TARGET = --release 8
 TOOL_JAVAC_SOURCE_TARGET = --release 11
 REGTEST_TOOL_PATCH_JAVA_BASE_OPTIONS = --patch-module java.base=$(JAVADIR)
 

@@ -26,9 +26,13 @@
 package com.sun.javatest.regtest.agent;
 
 import org.junit.platform.engine.discovery.DiscoverySelectors;
+import org.junit.platform.launcher.Launcher;
+import org.junit.platform.launcher.LauncherDiscoveryRequest;
+import org.junit.platform.launcher.LauncherSession;
 import org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder;
 import org.junit.platform.launcher.core.LauncherFactory;
 import org.junit.platform.launcher.listeners.SummaryGeneratingListener;
+import org.junit.platform.launcher.listeners.TestExecutionSummary;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -105,25 +109,25 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
         Thread.currentThread().setContextClassLoader(mainClass.getClassLoader());
         try {
 
-            var request = LauncherDiscoveryRequestBuilder.request()
+            LauncherDiscoveryRequest request = LauncherDiscoveryRequestBuilder.request()
                 .selectors(DiscoverySelectors.selectClass(mainClass))
                 .build();
 
-            var summaryGeneratingListener = new SummaryGeneratingListener();
+            SummaryGeneratingListener summaryGeneratingListener = new SummaryGeneratingListener();
 
-            try (var session = LauncherFactory.openSession()) {
-                var launcher = session.getLauncher();
+            try (LauncherSession session = LauncherFactory.openSession()) {
+                Launcher launcher = session.getLauncher();
                 launcher.registerTestExecutionListeners(summaryGeneratingListener);
                 launcher.execute(request);
             }
 
             var summary = summaryGeneratingListener.getSummary();
             if (summary.getTotalFailureCount() > 0) {
-                var sw = new StringWriter();
-                try (var pw = new PrintWriter(sw)) {
+                StringWriter sw = new StringWriter();
+                try (PrintWriter pw = new PrintWriter(sw)) {
                     pw.println("JavaTest Message: JUnit Platform Failure(s): " + summary.getTotalFailureCount());
                     pw.println();
-                    for (var failure : summary.getFailures()) {
+                    for (TestExecutionSummary.Failure failure : summary.getFailures()) {
                         failure.getException().printStackTrace(pw);
                     }
                     summary.printTo(pw);
