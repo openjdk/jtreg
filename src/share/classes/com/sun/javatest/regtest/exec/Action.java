@@ -272,9 +272,9 @@ public abstract class Action extends ActionHelper {
      *
      * The remaining entries in the policy file should remain the same.
      *
-     * @param fileName The absolute name of the original policy file.
-     * @return     A string indicating the absolute name of the modified policy
-     *             file.
+     * @param fileName the absolute name of the original policy file
+     * @param argFile  an additional file to be granted permissions
+     * @return     a string indicating the absolute name of the modified policy file
      * @throws TestRunException if a problem occurred adding this grant entry.
      */
     protected File addGrantEntries(File fileName, File argFile) throws TestRunException {
