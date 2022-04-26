@@ -77,6 +77,7 @@ public abstract class CachingTestFilter extends TestFilter {
      *
      * @param td the test description
      * @return the value
+     * @throws Fault if any error occurred in the filter
      */
     protected abstract boolean getCacheableValue(TestDescription td) throws Fault;
 
