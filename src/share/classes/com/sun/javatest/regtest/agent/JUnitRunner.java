@@ -42,10 +42,10 @@ import java.lang.reflect.Method;
  * TestRunner to run JUnit tests.
  */
 public class JUnitRunner implements MainActionHelper.TestRunner {
-    private static final String
-        JUNIT_NO_DRIVER        = "No JUnit driver (install junit-platform-console-standalone.jar next to jtreg.jar)";
-    private static final boolean
-        JUNIT_RUN_WITH_JUNIT_4 = Flags.get("runWithJUnit4");
+    // error message for when "NoClassDefFoundError" are raised accessing JUnit classes
+    private static final String JUNIT_NO_DRIVER = "No JUnit driver -- install JUnit JAR file(s) next to jtreg.jar";
+    // this is a temporary flag while transitioning from JUnit 4 to 5
+    private static final boolean JUNIT_RUN_WITH_JUNIT_4 = Flags.get("runWithJUnit4");
 
     public static void main(String... args) throws Exception {
         main(null, args);
