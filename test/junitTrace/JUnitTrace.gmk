@@ -25,14 +25,15 @@
 
 #----------------------------------------------------------------------
 
-$(BUILDTESTDIR)/JUnitTrace.ok: \
+$(BUILDTESTDIR)/JUnitTrace.agentvm.ok \
+$(BUILDTESTDIR)/JUnitTrace.othervm.ok: \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDKHOME) \
-		-agentvm \
+		-$(@:$(BUILDTESTDIR)/JUnitTrace.%.ok=%) \
 		$(TESTDIR)/junitTrace/  \
 			> $(@:%.ok=%/jt.log) 2>&1 || \
 			true "non-zero exit code from JavaTest intentionally ignored"
@@ -43,5 +44,7 @@ $(BUILDTESTDIR)/JUnitTrace.ok: \
 	fi
 	echo "test passed at `date`" > $@
 
-TESTS.jtreg += $(BUILDTESTDIR)/JUnitTrace.ok
+TESTS.jtreg += \
+	$(BUILDTESTDIR)/JUnitTrace.agent.ok \
+	$(BUILDTESTDIR)/JUnitTrace.othervm.ok
 
