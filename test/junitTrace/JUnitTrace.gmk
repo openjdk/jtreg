@@ -45,6 +45,6 @@ $(BUILDTESTDIR)/JUnitTrace.othervm.ok: \
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += \
-	$(BUILDTESTDIR)/JUnitTrace.agent.ok \
+	$(BUILDTESTDIR)/JUnitTrace.agentvm.ok \
 	$(BUILDTESTDIR)/JUnitTrace.othervm.ok
 
