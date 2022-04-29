@@ -1,9 +1,10 @@
 name: Build and Test JTReg
 
 on:
-  branches-ignore:
-    - master
-    - pr/*
+  push:
+    branches-ignore:
+      - master
+      - pr/*
 
 jobs:
 
