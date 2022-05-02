@@ -189,26 +189,26 @@ JAVATEST_SRCFILES= \
 endif
 
 $(JTREG_IMAGEDIR)/doc/api/index.html: \
-            $(JAVAFILES.com.sun.javatest.regtest-tools) \
-            $(JAVATEST_SRCFILES)
+	    $(JAVAFILES.com.sun.javatest.regtest-tools) \
+	    $(JAVATEST_SRCFILES)
 	$(JDKHOME)/bin/javadoc -d $(@D) \
-                -encoding iso-8859-1 \
+		-encoding ascii \
 		-sourcepath "$(JAVADIR)$(PS)$(JAVATEST_SRCDIR)" \
 		-classpath "$(JAVATEST_JAR)$(PS)$(JUNIT_JAR)$(PS)$(TESTNG_JAR)" \
 		com.sun.javatest.regtest \
-                $(JAVATEST_SRCFILES)
+		$(JAVATEST_SRCFILES)
 
 $(JTREG_IMAGEDIR)/doc/devapi/index.html: \
-            $(JAVAFILES.com.sun.javatest.regtest-tools) \
-            $(JAVATEST_SRCFILES)
+	    $(JAVAFILES.com.sun.javatest.regtest-tools) \
+	    $(JAVATEST_SRCFILES)
 	$(JDKHOME)/bin/javadoc -d $(@D) \
-                -encoding iso-8859-1 \
+		-encoding ascii \
 		-sourcepath "$(JAVADIR)$(PS)$(JAVATEST_SRCDIR)" \
-		-classpath "$(JAVATEST_JAR)$(PS)$(JUNIT_JAR)$(PS)$(TESTNG_JAR)" \
+		-classpath "$(JAVATEST_JAR)$(PS)$(JUNIT_CLASSPATH)$(PS)$(TESTNG_CLASSPATH)" \
 		-subpackages com.sun.javatest.regtest \
-                -tag "implNote:a:Implementation Note:" \
-                $(JAVATEST_SRCFILES)
-		
+		-tag "implNote:a:Implementation Note:" \
+		$(JAVATEST_SRCFILES)
+
 
 #----------------------------------------------------------------------
 #
