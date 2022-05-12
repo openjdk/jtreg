@@ -66,6 +66,7 @@ $(BUILDTESTDIR)/RerunTest.othervm.ok: \
 		    -e 's|$(ABSTOPDIR)|%WS%|g' \
 		    -e 's|junit-[A-Za-z0-9.-]*\.jar|junit.jar|g' \
 		    -e 's|testng-[A-Za-z0-9.-]*\.jar|testng.jar|g' \
+		    -e 's|%BUILD%.images.jtreg.lib.hamcrest[A-Za-z0-9.-]*\.jar.||g' \
 		    -e 's|%BUILD%.images.jtreg.lib.guice[A-Za-z0-9.-]*\.jar.||g' \
 		    -e 's|%BUILD%.images.jtreg.lib.jcommander[A-Za-z0-9.-]*\.jar.||g' \
 		> $(@:%.ok=%)/out/$${i%.*}.out ; \
