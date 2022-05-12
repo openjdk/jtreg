@@ -389,7 +389,9 @@ public abstract class Action extends ActionHelper {
             configWriter = section.createOutput("configuration");
         }
 
-        startTime = (new Date()).getTime();
+        Date startDate = new Date();
+        startTime = startDate.getTime();
+        pw.println(LOG_STARTED + startDate);
     } // startAction()
 
     /**
@@ -399,8 +401,10 @@ public abstract class Action extends ActionHelper {
      * @param status The final status of the action.
      */
     protected void endAction(Status status) {
-        long elapsedTime = (new Date()).getTime() - startTime;
+        Date endDate = new Date();
+        long elapsedTime = endDate.getTime() - startTime;
         PrintWriter pw = section.getMessageWriter();
+        pw.println(LOG_FINISHED + endDate);
         pw.println(LOG_ELAPSED_TIME + ((double) elapsedTime/1000.0));
         recorder.close();
         section.setStatus(status);
@@ -704,6 +708,8 @@ public abstract class Action extends ActionHelper {
         LOG_JT_COMMAND        = "JavaTest command: ",
         LOG_REASON            = "reason: ",
         LOG_ELAPSED_TIME      = "elapsed time (seconds): ",
+        LOG_STARTED = "started: ",
+        LOG_FINISHED = "finished: ",
         //LOG_JDK               = "JDK under test: ",
 
         // COMMON
