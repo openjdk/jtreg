@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -123,6 +123,7 @@ public class OS {
                  && !arch.equals("ppc64")
                  && !arch.equals("ppc64le")
                  && !arch.equals("zArch_64")
+                 && !arch.equals("loongarch64")
                  && !arch.equals("aarch64"))
             simple_arch = "x64";
         else if (arch.contains("86"))
@@ -131,6 +132,8 @@ public class OS {
             simple_arch = "ppc";
         else if (arch.equals("s390x") || arch.equals("zArch_64"))
             simple_arch = "s390x";
+        else if (arch.equals("mips64") || arch.equals("mips64el"))
+            simple_arch = "mips64";
         else
             simple_arch = arch;
 
