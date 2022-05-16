@@ -35,7 +35,7 @@ $(BUILDTESTDIR)/ignoresymbolfile.agentvm.ok: \
 		-Djavatest.regtest.showCmd=true \
 		-Djavatest.regtest.debugChild=true \
 		-Djavatest.regtest.traceAgent=true \
-		-jar $(ABS_JTREG_IMAGEJARDIR)/jtreg.jar \
+		-jar $(JTREG_IMAGEJARDIR)/jtreg.jar \
 		-jdk:$(JDK8HOME) \
 		-w:$(@:%.ok=%/work) \
 		-r:$(@:%.ok=%/report) \

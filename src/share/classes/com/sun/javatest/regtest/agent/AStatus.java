@@ -27,7 +27,7 @@ package com.sun.javatest.regtest.agent;
 /**
  * A class to embody the result of a test: a status-code and a related message.
  *
- * This is a reduced copy of com.sun.javatest.Status, sufficient to the needs
+ * This is a reduced copy of {@code com.sun.javatest.Status}, sufficient to the needs
  * of returning test results from a test VM. In particular, it implements the
  * same protocol to transfer results across process boundaries, meaning the
  * encoding of the status type and reason.
@@ -166,7 +166,6 @@ public class AStatus
 
     /**
      * Convert a Status to a string.
-     * @see #parse
      */
     public String toString() {
         if (reason == null || reason.length() == 0)
@@ -285,23 +284,23 @@ public class AStatus
 
     /**
      * Exit codes used by Status.exit corresponding to
-     * PASSED, FAILED, ERROR, NOT_RUN.
+     * {@code PASSED}, {@code FAILED}, {@code ERROR}, {@code NOT_RUN}.
      * The only values that should normally be returned from a test
      * are the first three; the other value is provided for completeness.
-     * <font size=-1> Note: The assignment is historical and cannot easily be changed. </font>
+     * <small> Note: The assignment is historical and cannot easily be changed. </small>
      */
     public static final int[] exitCodes = { 95, 97, 98, 99 };
 
     /**
      * Encodes strings containing non-ascii characters, where all characters
-     * are replaced with with their Unicode code. Encoded string will have
+     * are replaced with their Unicode code. Encoded string will have
      * the certain prefix and suffix to be distinguished from non-encode one.
      * Strings of ASCII chars only are encoded into themselves.<br>
      * Example:
-     * <pre>
+     * <pre>{@code
      * System.out.println(Status.encode("X \u01AB")); //<Encoded>58 20 1AB </Encoded>
      * System.out.println(Status.encode("Abc1")); // Abc1
-     * </pre>
+     * }</pre>
      * @param str - string to encode
      * @return Encoded string or the same string if none non-ascii chars were found
      *

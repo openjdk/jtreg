@@ -73,7 +73,7 @@ $(BUILDTESTDIR)/AgentOut.othervm.ok: \
 	# remove noise lines
 	for i in $(@:%.ok=%)/logs/*.log ; do \
 	   $(MKDIR) -p `dirname $$i`-filtered ; \
-	   $(SED) -e '/^$$/d' -e '/^STATUS.*/d' -e '/^JavaTest.*/d' \
+	   $(SED) -e 's/\r$$//' -e '/^$$/d' -e '/^STATUS.*/d' -e '/^JavaTest.*/d' \
 			-e '/^###/d' -e '/.*warning.*/d' \
 		< $$i \
 		> `dirname $$i`-filtered/`basename $$i` ; \
@@ -91,7 +91,7 @@ $(BUILDTESTDIR)/AgentOut.othervm.ok: \
 $(BUILDTESTDIR)/AgentOut.ok: \
 	    $(BUILDTESTDIR)/AgentOut.agentvm.ok \
 	    $(BUILDTESTDIR)/AgentOut.othervm.ok
-	$(DIFF) -r \
+	$(DIFF) --strip-trailing-cr --recursive \
 		$(BUILDTESTDIR)/AgentOut.agentvm/logs-filtered \
 		$(BUILDTESTDIR)/AgentOut.othervm/logs-filtered
 	echo "passed at `date`" > $@

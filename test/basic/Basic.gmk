@@ -77,7 +77,7 @@ $(BUILDTESTDIR)/Basic.agentvm.ok: \
 		$(JDKJAVAC) -Xlint -Werror -encoding ASCII -d $(BUILDTESTDIR)/basic/classes $(TESTDIR)/basic/Basic.java
 	cd $(@:%.ok=%/work/scratch) ; \
 	    $(JDKJAVA) \
-		-cp "../../../basic/classes$(PS)$(ABS_JTREG_IMAGEJARDIR)/jtreg.jar" \
+		-cp "../../../basic/classes$(PS)$(JTREG_IMAGEJARDIR)/jtreg.jar" \
 		-Ddebug.com.sun.javatest.TestResultTable=true \
 		-Ddebug.com.sun.javatest.TRT.TreeIterator=true \
 		-Ddebug.com.sun.javatest.TestRunner=true \

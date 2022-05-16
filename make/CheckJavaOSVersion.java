@@ -34,7 +34,7 @@ public class CheckJavaOSVersion {
 
     private static void checkJavaOSVersion(String expectVersion) {
         String osVersion = System.getProperty("os.version");
-        if (!osVersion.equals(expectVersion)) {
+        if (!osVersion.startsWith(expectVersion)) {
             System.err.println("The version of JDK you are using does not report the OS version correctly.");
             System.err.println("    java.home:    " + System.getProperty("java.home"));
             System.err.println("    java.version: " + System.getProperty("java.version"));
