@@ -27,7 +27,7 @@
 
 # control 1: no special options
 
-$(BUILDDIR)/RefIgnoreLines_std.ok: \
+$(BUILDTESTDIR)/RefIgnoreLines_std.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -39,16 +39,16 @@ $(BUILDDIR)/RefIgnoreLines_std.ok: \
 	echo "test passed at `date`" > $@
 
 ifdef JDK8HOME
-TESTS.jtreg += $(BUILDDIR)/RefIgnoreLines_std.ok
+TESTS.jtreg += $(BUILDTESTDIR)/RefIgnoreLines_std.ok
 endif
 
-testRefIgnoreLines: $(BUILDDIR)/RefIgnoreLines_std.ok
+testRefIgnoreLines: $(BUILDTESTDIR)/RefIgnoreLines_std.ok
 
 #------------------------------------------------------------
 #
 # control 2: set -Xmx directly
 
-$(BUILDDIR)/RefIgnoreLines_Xmx.ok: \
+$(BUILDTESTDIR)/RefIgnoreLines_Xmx.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -61,25 +61,25 @@ $(BUILDDIR)/RefIgnoreLines_Xmx.ok: \
 	echo "test passed at `date`" > $@
 
 ifdef JDK8HOME
-TESTS.jtreg += $(BUILDDIR)/RefIgnoreLines_Xmx.ok
+TESTS.jtreg += $(BUILDTESTDIR)/RefIgnoreLines_Xmx.ok
 endif
 
-testRefIgnoreLines: $(BUILDDIR)/RefIgnoreLines_Xmx.ok
+testRefIgnoreLines: $(BUILDTESTDIR)/RefIgnoreLines_Xmx.ok
 
 #------------------------------------------------------------
 #
 # test 1: set env var and use -e
 
-$(BUILDDIR)/RefIgnoreLines_JAVA_TOOL_OPTIONS_1.ok \
-$(BUILDDIR)/RefIgnoreLines__JAVA_OPTIONS_1.ok: \
+$(BUILDTESTDIR)/RefIgnoreLines_JAVA_TOOL_OPTIONS_1.ok \
+$(BUILDTESTDIR)/RefIgnoreLines__JAVA_OPTIONS_1.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
-	$(@:$(BUILDDIR)/RefIgnoreLines_%_1.ok=%)=-Xmx100m \
+	$(@:$(BUILDTESTDIR)/RefIgnoreLines_%_1.ok=%)=-Xmx100m \
 	JTREG_JAVA=$(JDKJAVA) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDK8HOME) \
-		-e:$(@:$(BUILDDIR)/RefIgnoreLines_%_1.ok=%) \
+		-e:$(@:$(BUILDTESTDIR)/RefIgnoreLines_%_1.ok=%) \
 		$(TESTDIR)/refIgnoreLines \
 			> $(@:%.ok=%/jt.log)
 	$(GREP) 'Ignoring line: Picked up' $(@:%.ok=%)/work/Test.jtr
@@ -87,27 +87,27 @@ $(BUILDDIR)/RefIgnoreLines__JAVA_OPTIONS_1.ok: \
 
 ifdef JDK8HOME
 TESTS.jtreg += \
-	$(BUILDDIR)/RefIgnoreLines_JAVA_TOOL_OPTIONS_1.ok \
-	$(BUILDDIR)/RefIgnoreLines__JAVA_OPTIONS_1.ok
+	$(BUILDTESTDIR)/RefIgnoreLines_JAVA_TOOL_OPTIONS_1.ok \
+	$(BUILDTESTDIR)/RefIgnoreLines__JAVA_OPTIONS_1.ok
 endif
 
 testRefIgnoreLines: \
-	$(BUILDDIR)/RefIgnoreLines_JAVA_TOOL_OPTIONS_1.ok \
-	$(BUILDDIR)/RefIgnoreLines__JAVA_OPTIONS_1.ok
+	$(BUILDTESTDIR)/RefIgnoreLines_JAVA_TOOL_OPTIONS_1.ok \
+	$(BUILDTESTDIR)/RefIgnoreLines__JAVA_OPTIONS_1.ok
 
 #------------------------------------------------------------
 #
 # test 2: use -e
 
-$(BUILDDIR)/RefIgnoreLines_JAVA_TOOL_OPTIONS_2.ok \
-$(BUILDDIR)/RefIgnoreLines__JAVA_OPTIONS_2.ok: \
+$(BUILDTESTDIR)/RefIgnoreLines_JAVA_TOOL_OPTIONS_2.ok \
+$(BUILDTESTDIR)/RefIgnoreLines__JAVA_OPTIONS_2.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	JTREG_JAVA=$(JDKJAVA) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDK8HOME) \
-		-e:$(@:$(BUILDDIR)/RefIgnoreLines_%_2.ok=%)=-Xmx100m \
+		-e:$(@:$(BUILDTESTDIR)/RefIgnoreLines_%_2.ok=%)=-Xmx100m \
 		$(TESTDIR)/refIgnoreLines \
 			> $(@:%.ok=%/jt.log)
 	$(GREP) 'Ignoring line: Picked up' $(@:%.ok=%)/work/Test.jtr
@@ -116,11 +116,11 @@ $(BUILDDIR)/RefIgnoreLines__JAVA_OPTIONS_2.ok: \
 
 ifdef JDK8HOME
 TESTS.jtreg += \
-	$(BUILDDIR)/RefIgnoreLines_JAVA_TOOL_OPTIONS_2.ok \
-	$(BUILDDIR)/RefIgnoreLines__JAVA_OPTIONS_2.ok
+	$(BUILDTESTDIR)/RefIgnoreLines_JAVA_TOOL_OPTIONS_2.ok \
+	$(BUILDTESTDIR)/RefIgnoreLines__JAVA_OPTIONS_2.ok
 endif
 
 testRefIgnoreLines: \
-	$(BUILDDIR)/RefIgnoreLines_JAVA_TOOL_OPTIONS_2.ok \
-	$(BUILDDIR)/RefIgnoreLines__JAVA_OPTIONS_2.ok
+	$(BUILDTESTDIR)/RefIgnoreLines_JAVA_TOOL_OPTIONS_2.ok \
+	$(BUILDTESTDIR)/RefIgnoreLines__JAVA_OPTIONS_2.ok
 

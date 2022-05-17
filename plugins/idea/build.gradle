@@ -26,6 +26,7 @@ dependencies {
 
 // See https://github.com/JetBrains/gradle-intellij-plugin/
 intellij {
+    version = minBuild
     plugins = ['java', 'AntSupport', 'TestNG-J']
 }
 

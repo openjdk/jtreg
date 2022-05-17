@@ -26,7 +26,7 @@
 #----------------------------------------------------------------------
 
 
-$(BUILDDIR)/StatusFilter.ok: \
+$(BUILDTESTDIR)/StatusFilter.ok: \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(JTREG_IMAGEDIR)/lib/javatest.jar
 	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
@@ -34,7 +34,7 @@ $(BUILDDIR)/StatusFilter.ok: \
 	#
 	@echo "*** run p1 tests with 1 failure; expect 4 pass 1 fail"
 	$(JDKHOME)/bin/java \
-		-jar $(ABS_JTREG_IMAGEJARDIR)/jtreg.jar \
+		-jar $(JTREG_IMAGEJARDIR)/jtreg.jar \
 		-w:$(@:%.ok=%/work) \
 		-r:$(@:%.ok=%/report) \
 		-jdk:$(JDKHOME) \
@@ -43,13 +43,13 @@ $(BUILDDIR)/StatusFilter.ok: \
 		$(TESTDIR)/statusFilter/p1 \
 		> $(@:%.ok=%/init.log 2>&1) || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
-	$(GREP) -s '^Test results: passed: 4; failed: 1$$' $(@:%.ok=%/init.log) > /dev/null
+	$(GREP) -E -s '^Test results: passed: 4; failed: 1\s?$$' $(@:%.ok=%/init.log) > /dev/null
 	lines=`$(CAT) $(@:%.ok=%/report)/text/summary.txt | $(WC) -l` ; \
 	if [ "$$lines" -ne "5" ]; then echo "!! bad summary.txt" ; $(CAT) $(@:%.ok=%/report)/text/summary.txt; exit 1 ; fi
 	#
 	@echo "*** rerun failed p1 tests, test fails again; expect 1 fail"
 	$(JDKHOME)/bin/java \
-		-jar $(ABS_JTREG_IMAGEJARDIR)/jtreg.jar \
+		-jar $(JTREG_IMAGEJARDIR)/jtreg.jar \
 		-w:$(@:%.ok=%/work) \
 		-r:$(@:%.ok=%/report) \
 		-jdk:$(JDKHOME) \
@@ -59,13 +59,13 @@ $(BUILDDIR)/StatusFilter.ok: \
 		$(TESTDIR)/statusFilter/p1 \
 		> $(@:%.ok=%/rerun-status-fail-report-default.log 2>&1) || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
-	$(GREP) -s '^Test results: failed: 1$$' $(@:%.ok=%/rerun-status-fail-report-default.log) > /dev/null
+	$(GREP) -E -s '^Test results: failed: 1\s?$$' $(@:%.ok=%/rerun-status-fail-report-default.log) > /dev/null
 	lines=`$(CAT) $(@:%.ok=%/report)/text/summary.txt | $(WC) -l` ; \
 	if [ "$$lines" -ne "5" ]; then echo "!! bad summary.txt" ; $(CAT) $(@:%.ok=%/report)/text/summary.txt; exit 1 ; fi
 	#
 	@echo "*** reportonly run; expect 4 pass 1 fail"
 	$(JDKHOME)/bin/java \
-		-jar $(ABS_JTREG_IMAGEJARDIR)/jtreg.jar \
+		-jar $(JTREG_IMAGEJARDIR)/jtreg.jar \
 		-w:$(@:%.ok=%/work) \
 		-r:$(@:%.ok=%/report) \
 		-jdk:$(JDKHOME) \
@@ -74,13 +74,13 @@ $(BUILDDIR)/StatusFilter.ok: \
 		$(TESTDIR)/statusFilter/p1 \
 		> $(@:%.ok=%/rerun-reportonly.log 2>&1) || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
-	$(GREP) -s '^Test results: passed: 4; failed: 1$$' $(@:%.ok=%/rerun-reportonly.log) > /dev/null
+	$(GREP) -E -s '^Test results: passed: 4; failed: 1\s?$$' $(@:%.ok=%/rerun-reportonly.log) > /dev/null
 	lines=`$(CAT) $(@:%.ok=%/report)/text/summary.txt | $(WC) -l` ; \
 	if [ "$$lines" -ne "5" ]; then echo "!! bad summary.txt" ; $(CAT) $(@:%.ok=%/report)/text/summary.txt; exit 1 ; fi
 	#
 	@echo "*** rerun failed p1 tests, test fails again; report all; expect 1 fail, all in report"
 	$(JDKHOME)/bin/java \
-		-jar $(ABS_JTREG_IMAGEJARDIR)/jtreg.jar \
+		-jar $(JTREG_IMAGEJARDIR)/jtreg.jar \
 		-w:$(@:%.ok=%/work) \
 		-r:$(@:%.ok=%/report) \
 		-jdk:$(JDKHOME) \
@@ -91,13 +91,13 @@ $(BUILDDIR)/StatusFilter.ok: \
 		$(TESTDIR)/statusFilter/p1 \
 		> $(@:%.ok=%/rerun-status-fail-report-all.log 2>&1) || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
-	$(GREP) -s '^Test results: failed: 1$$' $(@:%.ok=%/rerun-status-fail-report-all.log) > /dev/null
+	$(GREP) -E -s '^Test results: failed: 1\s?$$' $(@:%.ok=%/rerun-status-fail-report-all.log) > /dev/null
 	lines=`$(CAT) $(@:%.ok=%/report)/text/summary.txt | $(WC) -l` ; \
 	if [ "$$lines" -ne "10" ]; then echo bad summary.txt ; exit 1 ; fi
 	#
 	@echo "*** rerun failed p1 tests; report all; expect 1 pass, all in report"
 	$(JDKHOME)/bin/java \
-		-jar $(ABS_JTREG_IMAGEJARDIR)/jtreg.jar \
+		-jar $(JTREG_IMAGEJARDIR)/jtreg.jar \
 		-w:$(@:%.ok=%/work) \
 		-r:$(@:%.ok=%/report) \
 		-jdk:$(JDKHOME) \
@@ -107,12 +107,12 @@ $(BUILDDIR)/StatusFilter.ok: \
 		$(TESTDIR)/statusFilter/p1 \
 		> $(@:%.ok=%/rerun-2.log 2>&1) || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
-	$(GREP) -s '^Test results: passed: 1$$' $(@:%.ok=%/rerun-2.log) > /dev/null
+	$(GREP) -E -s '^Test results: passed: 1\s?$$' $(@:%.ok=%/rerun-2.log) > /dev/null
 	lines=`$(CAT) $(@:%.ok=%/report)/text/summary.txt | $(WC) -l` ; \
 	if [ "$$lines" -ne "10" ]; then echo bad summary.txt ; exit 1 ; fi
 	#
 	$(JDKHOME)/bin/java \
-		-jar $(ABS_JTREG_IMAGEJARDIR)/jtreg.jar \
+		-jar $(JTREG_IMAGEJARDIR)/jtreg.jar \
 		-w:$(@:%.ok=%/work) \
 		-r:$(@:%.ok=%/report) \
 		-jdk:$(JDKHOME) \
@@ -121,12 +121,12 @@ $(BUILDDIR)/StatusFilter.ok: \
 		$(TESTDIR)/statusFilter \
 		> $(@:%.ok=%/rerun-all-executed.log 2>&1) || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
-	$(GREP) -s '^Test results: passed: 8; error: 1$$' $(@:%.ok=%/rerun-all-executed.log) > /dev/null
+	$(GREP) -E -s '^Test results: passed: 8; error: 1\s?$$' $(@:%.ok=%/rerun-all-executed.log) > /dev/null
 	lines=`$(CAT) $(@:%.ok=%/report)/text/summary.txt | $(WC) -l` ; \
 	if [ "$$lines" -ne "9" ]; then echo bad summary.txt ; exit 1 ; fi
 	#
 	$(JDKHOME)/bin/java \
-		-jar $(ABS_JTREG_IMAGEJARDIR)/jtreg.jar \
+		-jar $(JTREG_IMAGEJARDIR)/jtreg.jar \
 		-w:$(@:%.ok=%/work) \
 		-r:$(@:%.ok=%/report) \
 		-jdk:$(JDKHOME) \
@@ -136,7 +136,7 @@ $(BUILDDIR)/StatusFilter.ok: \
 		$(TESTDIR)/statusFilter \
 		> $(@:%.ok=%/rerun-all.log 2>&1) || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
-	$(GREP) -s '^Test results: passed: 8; error: 1$$' $(@:%.ok=%/rerun-all.log) > /dev/null
+	$(GREP) -E -s '^Test results: passed: 8; error: 1\s?$$' $(@:%.ok=%/rerun-all.log) > /dev/null
 	lines=`$(CAT) $(@:%.ok=%/report)/text/summary.txt | $(WC) -l` ; \
 	if [ "$$lines" -ne "10" ]; then echo bad summary.txt ; exit 1 ; fi
 	#
@@ -144,7 +144,7 @@ $(BUILDDIR)/StatusFilter.ok: \
 
 
 TESTS.jtreg += \
-    $(BUILDDIR)/StatusFilter.ok
+    $(BUILDTESTDIR)/StatusFilter.ok
 
 #----------------------------------------------------------------------
 

@@ -26,20 +26,20 @@
 # use target-specific variables to specify jtreg option 
 # and the resulting expected timeout
 
-$(BUILDDIR)/TimeoutHandlerTimeoutTest.default.ok: OPTION=
-$(BUILDDIR)/TimeoutHandlerTimeoutTest.default.ok: EXPECT=300
+$(BUILDTESTDIR)/TimeoutHandlerTimeoutTest.default.ok: OPTION=
+$(BUILDTESTDIR)/TimeoutHandlerTimeoutTest.default.ok: EXPECT=300
 
-$(BUILDDIR)/TimeoutHandlerTimeoutTest.noTimeout.ok: OPTION=-timeoutHandlerTimeout:0
-$(BUILDDIR)/TimeoutHandlerTimeoutTest.noTimeout.ok: EXPECT=0
+$(BUILDTESTDIR)/TimeoutHandlerTimeoutTest.noTimeout.ok: OPTION=-timeoutHandlerTimeout:0
+$(BUILDTESTDIR)/TimeoutHandlerTimeoutTest.noTimeout.ok: EXPECT=0
 
-$(BUILDDIR)/TimeoutHandlerTimeoutTest.timeout.ok: OPTION=-timeoutHandlerTimeout:5
-$(BUILDDIR)/TimeoutHandlerTimeoutTest.timeout.ok: EXPECT=5
+$(BUILDTESTDIR)/TimeoutHandlerTimeoutTest.timeout.ok: OPTION=-timeoutHandlerTimeout:5
+$(BUILDTESTDIR)/TimeoutHandlerTimeoutTest.timeout.ok: EXPECT=5
 
 # the tests
 
-$(BUILDDIR)/TimeoutHandlerTimeoutTest.default.ok \
-$(BUILDDIR)/TimeoutHandlerTimeoutTest.noTimeout.ok \
-$(BUILDDIR)/TimeoutHandlerTimeoutTest.timeout.ok: \
+$(BUILDTESTDIR)/TimeoutHandlerTimeoutTest.default.ok \
+$(BUILDTESTDIR)/TimeoutHandlerTimeoutTest.noTimeout.ok \
+$(BUILDTESTDIR)/TimeoutHandlerTimeoutTest.timeout.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg \
 	    $(TESTDIR)/timeoutHandler/TestTimeoutHandler.java
@@ -62,7 +62,7 @@ $(BUILDDIR)/TimeoutHandlerTimeoutTest.timeout.ok: \
 		
 
 TESTS.jtreg += \
-	$(BUILDDIR)/TimeoutHandlerTimeoutTest.default.ok \
-	$(BUILDDIR)/TimeoutHandlerTimeoutTest.noTimeout.ok \
-	$(BUILDDIR)/TimeoutHandlerTimeoutTest.timeout.ok
+	$(BUILDTESTDIR)/TimeoutHandlerTimeoutTest.default.ok \
+	$(BUILDTESTDIR)/TimeoutHandlerTimeoutTest.noTimeout.ok \
+	$(BUILDTESTDIR)/TimeoutHandlerTimeoutTest.timeout.ok
 

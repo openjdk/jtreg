@@ -23,7 +23,7 @@
 # questions.
 #
 
-$(BUILDDIR)/BuildPatternTest.ok: \
+$(BUILDTESTDIR)/BuildPatternTest.ok: \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(TESTDIR)/buildPatternTest/BuildPatternTest.java
 	$(MKDIR) -p $(@:%.ok=%/classes)
@@ -32,9 +32,9 @@ $(BUILDDIR)/BuildPatternTest.ok: \
 		-Xlint -Werror \
 		$(TESTDIR)/buildPatternTest/BuildPatternTest.java
 	$(JDKJAVA) \
-		-cp $(@:%.ok=%/classes):$(JTREG_IMAGEDIR)/lib/jtreg.jar \
+		-cp "$(@:%.ok=%/classes)$(PS)$(JTREG_IMAGEDIR)/lib/jtreg.jar" \
 		com.sun.javatest.regtest.exec.BuildPatternTest
 	echo $@ passed at `date` > $@
 
 TESTS.jtreg += \
-	$(BUILDDIR)/BuildPatternTest.ok
+	$(BUILDTESTDIR)/BuildPatternTest.ok

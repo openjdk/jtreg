@@ -25,24 +25,24 @@
 
 #----------------------------------------------------------------------
 
-$(BUILDDIR)/T6783039.ok: \
+$(BUILDTESTDIR)/T6783039.ok: \
 	$(JTREG_IMAGEDIR)/lib/javatest.jar \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar 
-	$(RM) $(BUILDDIR)/6783039/
+	$(RM) $(BUILDTESTDIR)/6783039/
 	for p in p1 p2 ; do for y in 2007 2008 ; do for d in 1 2 3 ; do \
-	    mkdir -p $(BUILDDIR)/6783039/$$p/$$y/$$d/JTreport/text/ ; touch $(BUILDDIR)/6783039/$$p/$$y/$$d/JTreport/text/summary.txt ; \
+	    mkdir -p $(BUILDTESTDIR)/6783039/$$p/$$y/$$d/JTreport/text/ ; touch $(BUILDTESTDIR)/6783039/$$p/$$y/$$d/JTreport/text/summary.txt ; \
 	done ; done ; done
 	$(JDKJAVA) -cp $(JTREG_IMAGEDIR)/lib/jtreg.jar com.sun.javatest.diff.Main \
-		$(BUILDDIR)/6783039/*/*/*/JTreport/text/summary.txt > $(BUILDDIR)/6783039/stdout
+		$(BUILDTESTDIR)/6783039/*/*/*/JTreport/text/summary.txt > $(BUILDTESTDIR)/6783039/stdout
 	$(JDKJAVA) -cp $(JTREG_IMAGEDIR)/lib/jtreg.jar com.sun.javatest.diff.Main \
-		-o $(BUILDDIR)/6783039/out.txt $(BUILDDIR)/6783039/*/*/*/JTreport/text/summary.txt
-	diff $(BUILDDIR)/6783039/stdout $(BUILDDIR)/6783039/out.txt
-	mkdir $(BUILDDIR)/6783039/super
+		-o $(BUILDTESTDIR)/6783039/out.txt $(BUILDTESTDIR)/6783039/*/*/*/JTreport/text/summary.txt
+	diff $(BUILDTESTDIR)/6783039/stdout $(BUILDTESTDIR)/6783039/out.txt
+	mkdir $(BUILDTESTDIR)/6783039/super
 	$(JDKJAVA) -cp $(JTREG_IMAGEDIR)/lib/jtreg.jar com.sun.javatest.diff.Main \
-		-o $(BUILDDIR)/6783039/super -super $(BUILDDIR)/6783039/
-	if [ `find $(BUILDDIR)/6783039/super -name \*.html | wc -l` != 9 ]; then \
+		-o $(BUILDTESTDIR)/6783039/super -super $(BUILDTESTDIR)/6783039/
+	if [ `find $(BUILDTESTDIR)/6783039/super -name \*.html | wc -l` != 9 ]; then \
 		echo "super output not as expected" ; exit 1 ; \
 	fi
 	echo $@ passed at `date` > $@
 
-TESTS.jtdiff += $(BUILDDIR)/T6783039.ok
+TESTS.jtdiff += $(BUILDTESTDIR)/T6783039.ok

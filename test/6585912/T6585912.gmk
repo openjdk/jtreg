@@ -26,7 +26,7 @@
 #----------------------------------------------------------------------
 
 # 6585912: jtreg should be able to really ignore @ignore tests
-$(BUILDDIR)/T6585912.ok: \
+$(BUILDTESTDIR)/T6585912.ok: \
 		$(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(JTREG_IMAGEDIR)/bin/jtreg
@@ -55,5 +55,5 @@ $(BUILDDIR)/T6585912.ok: \
 		grep "Test results: passed: 2; failed: 1" > /dev/null
 	echo "test passed at `date`" > $@
 
-TESTS.jtreg += $(BUILDDIR)/T6585912.ok
+TESTS.jtreg += $(BUILDTESTDIR)/T6585912.ok
 

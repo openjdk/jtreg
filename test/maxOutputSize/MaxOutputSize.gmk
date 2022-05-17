@@ -39,7 +39,7 @@ define check-not-found
     fi 
 endef
 
-$(BUILDDIR)/MaxOutputSize.ok: \
+$(BUILDTESTDIR)/MaxOutputSize.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -58,5 +58,5 @@ $(BUILDDIR)/MaxOutputSize.ok: \
 	echo "test passed at `date`" > $@
 
 # disabled, waiting for JT Harness update
-#TESTS.jtreg += $(BUILDDIR)/MaxOutputSize.ok
+#TESTS.jtreg += $(BUILDTESTDIR)/MaxOutputSize.ok
 

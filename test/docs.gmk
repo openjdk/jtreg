@@ -23,12 +23,12 @@
 # questions.
 #
 
-$(BUILDDIR)/tidy-docs.ok: \
+$(BUILDTESTDIR)/tidy-docs.ok: \
                 $(JTREG_IMAGEDIR)/doc/jtreg/tag-spec.html
 	if [ ! -x $(TIDY) ]; then exit 0; fi ; \
 	$(TIDY) -e --gnu-emacs true -q $<
 	echo "docs checked at `date`" > $@
 
 INITIAL_TESTS += \
-	$(BUILDDIR)/tidy-docs.ok
+	$(BUILDTESTDIR)/tidy-docs.ok
 

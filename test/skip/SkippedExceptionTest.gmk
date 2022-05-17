@@ -25,7 +25,7 @@
 
 #----------------------------------------------------------------------
 
-$(BUILDDIR)/SkippedExceptionTest.agentvm.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
+$(BUILDTESTDIR)/SkippedExceptionTest.agentvm.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%)
@@ -46,11 +46,11 @@ $(BUILDDIR)/SkippedExceptionTest.agentvm.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar 
 		< $(@:%.ok=%)/report/text/summary.txt > /dev/null
 	echo $@ passed at `date` > $@
 
-TESTS.jtreg += $(BUILDDIR)/SkippedExceptionTest.agentvm.ok
+TESTS.jtreg += $(BUILDTESTDIR)/SkippedExceptionTest.agentvm.ok
 
 #----------------------------------------------------------------------
 
-$(BUILDDIR)/SkippedExceptionTest.othervm.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
+$(BUILDTESTDIR)/SkippedExceptionTest.othervm.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%)
@@ -71,5 +71,5 @@ $(BUILDDIR)/SkippedExceptionTest.othervm.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar 
 		< $(@:%.ok=%)/report/text/summary.txt > /dev/null
 	echo $@ passed at `date` > $@
 
-TESTS.jtreg += $(BUILDDIR)/SkippedExceptionTest.othervm.ok
+TESTS.jtreg += $(BUILDTESTDIR)/SkippedExceptionTest.othervm.ok
 

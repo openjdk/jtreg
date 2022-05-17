@@ -26,8 +26,8 @@
 #----------------------------------------------------------------------
 
 # Test @compile with -compilejdk; use not-a-jdk for -testjdk
-$(BUILDDIR)/CompileTest.1.agentvm.ok \
-$(BUILDDIR)/CompileTest.1.othervm.ok: \
+$(BUILDTESTDIR)/CompileTest.1.agentvm.ok \
+$(BUILDTESTDIR)/CompileTest.1.othervm.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg \
 	    $(BUILDDIR)/not-a-jdk/bin/java
@@ -38,15 +38,15 @@ $(BUILDDIR)/CompileTest.1.othervm.ok: \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-compilejdk:$(JDK5HOME) \
 		-jdk:$(BUILDDIR)/not-a-jdk \
-		$(@:$(BUILDDIR)/CompileTest.1.%.ok=-%) \
+		$(@:$(BUILDTESTDIR)/CompileTest.1.%.ok=-%) \
 		$(TESTDIR)/compilejdk/CompileTest.java
 	grep $(JDK5HOME) $(@:%.ok=%)/work/CompileTest.jtr
 	if grep $(JDKHOME) $(@:%.ok=%)/work/CompileTest.jtr ; then exit 1; fi
 	echo "test passed at `date`" > $@
 
 # Precompile test classes, then test @run main with -testjdk, use not-a-jdk for -compilejdk
-$(BUILDDIR)/CompileTest.2.agentvm.ok \
-$(BUILDDIR)/CompileTest.2.othervm.ok: \
+$(BUILDTESTDIR)/CompileTest.2.agentvm.ok \
+$(BUILDTESTDIR)/CompileTest.2.othervm.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg \
 	    $(BUILDDIR)/not-a-jdk/bin/java
@@ -55,7 +55,7 @@ $(BUILDDIR)/CompileTest.2.othervm.ok: \
 	JT_JAVA=$(JDKHOME) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDK5HOME) \
-		$(@:$(BUILDDIR)/CompileTest.2.%.ok=-%) \
+		$(@:$(BUILDTESTDIR)/CompileTest.2.%.ok=-%) \
 		$(TESTDIR)/compilejdk/ExecuteTest.java
 	JTREG_SHOWAGENT=true JTREG_SHOWCMD=true \
 	JT_JAVA=$(JDKHOME) \
@@ -63,15 +63,15 @@ $(BUILDDIR)/CompileTest.2.othervm.ok: \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-compilejdk:$(BUILDDIR)/not-a-jdk \
 		-jdk:$(JDK5HOME) \
-		$(@:$(BUILDDIR)/CompileTest.2.%.ok=-%) \
+		$(@:$(BUILDTESTDIR)/CompileTest.2.%.ok=-%) \
 		$(TESTDIR)/compilejdk/ExecuteTest.java
 	grep $(JDK5HOME) $(@:%.ok=%)/work/ExecuteTest.jtr
 	if grep $(JDKHOME) $(@:%.ok=%)/work/ExecuteTest.jtr ; then exit 1; fi
 	echo "test passed at `date`" > $@
 
 # Test compilation on JDK, execution on just-java (JRE lookalike)
-$(BUILDDIR)/CompileTest.3.agentvm.ok \
-$(BUILDDIR)/CompileTest.3.othervm.ok: \
+$(BUILDTESTDIR)/CompileTest.3.agentvm.ok \
+$(BUILDTESTDIR)/CompileTest.3.othervm.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg \
 	    $(BUILDDIR)/just-java/bin/java
@@ -82,14 +82,14 @@ $(BUILDDIR)/CompileTest.3.othervm.ok: \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-compilejdk:$(JDK5HOME) \
 		-jdk:$(BUILDDIR)/just-java \
-		$(@:$(BUILDDIR)/CompileTest.3.%.ok=-%) \
+		$(@:$(BUILDTESTDIR)/CompileTest.3.%.ok=-%) \
 		$(TESTDIR)/compilejdk/ExecuteTest.java
 	echo "test passed at `date`" > $@
 
 # Test compilation on one version of JDK, execution on another;
 # Verify tools.jar is on classpath for both
-$(BUILDDIR)/CompileTest.4.agentvm.ok \
-$(BUILDDIR)/CompileTest.4.othervm.ok: \
+$(BUILDTESTDIR)/CompileTest.4.agentvm.ok \
+$(BUILDTESTDIR)/CompileTest.4.othervm.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%)
@@ -99,12 +99,12 @@ $(BUILDDIR)/CompileTest.4.othervm.ok: \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-compilejdk:$(JDK5HOME) \
 		-jdk:$(JDK6HOME) \
-		$(@:$(BUILDDIR)/CompileTest.4.%.ok=-%) \
+		$(@:$(BUILDTESTDIR)/CompileTest.4.%.ok=-%) \
 		$(TESTDIR)/compilejdk/ToolsJarTest.java
 	echo "test passed at `date`" > $@
 
 # Verify shell test gets COMPILEJAVA set as well as TESTJAVA
-$(BUILDDIR)/CompileTest.5.ok: \
+$(BUILDTESTDIR)/CompileTest.5.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%)
@@ -139,14 +139,14 @@ $(BUILDDIR)/just-java/bin/java:
 ifneq ($(OS_NAME), windows)
 ifdef JDK5HOME
 TESTS.jtreg += \
-	$(BUILDDIR)/CompileTest.1.agentvm.ok \
-	$(BUILDDIR)/CompileTest.1.othervm.ok \
-	$(BUILDDIR)/CompileTest.2.agentvm.ok \
-	$(BUILDDIR)/CompileTest.2.othervm.ok \
-	$(BUILDDIR)/CompileTest.3.agentvm.ok \
-	$(BUILDDIR)/CompileTest.3.othervm.ok \
-	$(BUILDDIR)/CompileTest.4.agentvm.ok \
-	$(BUILDDIR)/CompileTest.4.othervm.ok \
-	$(BUILDDIR)/CompileTest.5.ok
+	$(BUILDTESTDIR)/CompileTest.1.agentvm.ok \
+	$(BUILDTESTDIR)/CompileTest.1.othervm.ok \
+	$(BUILDTESTDIR)/CompileTest.2.agentvm.ok \
+	$(BUILDTESTDIR)/CompileTest.2.othervm.ok \
+	$(BUILDTESTDIR)/CompileTest.3.agentvm.ok \
+	$(BUILDTESTDIR)/CompileTest.3.othervm.ok \
+	$(BUILDTESTDIR)/CompileTest.4.agentvm.ok \
+	$(BUILDTESTDIR)/CompileTest.4.othervm.ok \
+	$(BUILDTESTDIR)/CompileTest.5.ok
 endif
 endif

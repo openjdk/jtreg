@@ -25,7 +25,7 @@
 
 #----------------------------------------------------------------------
 
-$(BUILDDIR)/ModulesTest_NoLimitMods.ok: \
+$(BUILDTESTDIR)/ModulesTest_NoLimitMods.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	$(MKDIR) -p $(@:%.ok=%)/classes
@@ -47,21 +47,21 @@ $(BUILDDIR)/ModulesTest_NoLimitMods.ok: \
 	fi
 	echo $@ passed at `date` > $@
 
-$(BUILDDIR)/ModulesTest_LimitMods_java.base.ok \
-$(BUILDDIR)/ModulesTest_LimitMods_java.se.ok: \
+$(BUILDTESTDIR)/ModulesTest_LimitMods_java.base.ok \
+$(BUILDTESTDIR)/ModulesTest_LimitMods_java.se.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	$(MKDIR) -p $(@:%.ok=%)/classes
 	JTREG_JAVA=$(JDKJAVA) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDK9HOME) \
-		-javaoptions:"--limit-modules $(@:$(BUILDDIR)/ModulesTest_LimitMods_%.ok=%)" \
+		-javaoptions:"--limit-modules $(@:$(BUILDTESTDIR)/ModulesTest_LimitMods_%.ok=%)" \
 		$(TESTDIR)/modules \
 			> $(@:%.ok=%/jt.log) 2>&1 
 	$(GREP) '^Test results: passed: 2$$' $(@:%.ok=%/jt.log)  > /dev/null
 	echo $@ passed at `date` > $@
 
-$(BUILDDIR)/ModulesTest_IgnoreAtModules.ok: \
+$(BUILDTESTDIR)/ModulesTest_IgnoreAtModules.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	$(MKDIR) -p $(@:%.ok=%)/classes
@@ -82,16 +82,16 @@ $(BUILDDIR)/ModulesTest_IgnoreAtModules.ok: \
 ifdef JDK9HOME
 
 TESTS.jtreg += \
-	$(BUILDDIR)/ModulesTest_NoLimitMods.ok \
-	$(BUILDDIR)/ModulesTest_LimitMods_java.base.ok \
-	$(BUILDDIR)/ModulesTest_LimitMods_java.se.ok \
+	$(BUILDTESTDIR)/ModulesTest_NoLimitMods.ok \
+	$(BUILDTESTDIR)/ModulesTest_LimitMods_java.base.ok \
+	$(BUILDTESTDIR)/ModulesTest_LimitMods_java.se.ok \
 
 endif #JDK9HOME
 
 ifdef JDK8HOME
 
 TESTS.jtreg += \
-	$(BUILDDIR)/ModulesTest_IgnoreAtModules.ok \
+	$(BUILDTESTDIR)/ModulesTest_IgnoreAtModules.ok \
 
 endif #JDK8HOME
 

@@ -29,7 +29,7 @@
 # different in the two modes. Ideally, the rerun sections should be
 # updated to be more equivalent.
 
-$(BUILDDIR)/DebugTest.othervm.ok: \
+$(BUILDTESTDIR)/DebugTest.othervm.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -46,10 +46,10 @@ $(BUILDDIR)/DebugTest.othervm.ok: \
 	fi
 	echo "test passed at `date`" > $@
 
-TESTS.jtreg += $(BUILDDIR)/DebugTest.othervm.ok
+TESTS.jtreg += $(BUILDTESTDIR)/DebugTest.othervm.ok
 
 
-$(BUILDDIR)/DebugTest.agentvm.ok: \
+$(BUILDTESTDIR)/DebugTest.agentvm.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -70,6 +70,6 @@ $(BUILDDIR)/DebugTest.agentvm.ok: \
 	fi
 	echo "test passed at `date`" > $@
 
-TESTS.jtreg += $(BUILDDIR)/DebugTest.agentvm.ok
+TESTS.jtreg += $(BUILDTESTDIR)/DebugTest.agentvm.ok
 
 

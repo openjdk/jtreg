@@ -33,11 +33,13 @@ public class NativesOK {
     public static void main(String[] args) {
         String j_l_path = System.getProperty("java.library.path");
         String t_native = System.getProperty("test.nativepath");
+        String c_native = System.getProperty("correct.nativepath").replace("/", File.separator);
 
         System.out.println("java.library.path: " + j_l_path);
         System.out.println("test.nativepath: " + t_native);
+        System.out.println("correct.nativepath: " + c_native);
 
-        if (!t_native.equals(System.getProperty("correct.nativepath")))
+        if (!t_native.equals(c_native))
             throw new Error("System property 'test.nativepath' not set correctly");
         if (j_l_path == null)
             throw new Error("System property 'java.library.path' not set");

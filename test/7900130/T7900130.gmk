@@ -27,16 +27,16 @@
 
 # 7900130: Exception in TestNG DataSource does not result in a reported test failure
 # Test should fail due to exception in @DataSource
-$(BUILDDIR)/T7900130.ok: \
+$(BUILDTESTDIR)/T7900130.ok: \
 		$(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	$(JDKHOME)/bin/java -jar $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-		-w $(BUILDDIR)/7900130/work/ -r $(BUILDDIR)/7900130/report/ \
+		-w $(@:%.ok=%)/work/ -r $(@:%.ok=%)/report/ \
 		$(TESTDIR)/7900130 > $(@:%.ok=%/jt.log) 2>&1
-	$(GREP) 'TestArguments.test_data("Thing1", "", 4, true, 2.0)' $(BUILDDIR)/7900130/work/TestArguments.jtr > /dev/null
-	$(GREP) 'TestArguments.test_data("Thing2", null, 8, false, 6.0)' $(BUILDDIR)/7900130/work/TestArguments.jtr > /dev/null
+	$(GREP) 'TestArguments.test_data("Thing1", "", 4, true, 2.0)' $(@:%.ok=%)/work/TestArguments.jtr > /dev/null
+	$(GREP) 'TestArguments.test_data("Thing2", null, 8, false, 6.0)' $(@:%.ok=%)/work/TestArguments.jtr > /dev/null
 	echo $@ passed at `date` > $@
 
-TESTS.jtreg += $(BUILDDIR)/T7900130.ok
+TESTS.jtreg += $(BUILDTESTDIR)/T7900130.ok
 

@@ -1,4 +1,4 @@
 ### Section ignore
-cd %BUILD%/RerunTest.othervm/work/scratch && \
+cd %BUILDTEST%/RerunTest.othervm/work/scratch && \
 # @ignore:  (suppressed)
 

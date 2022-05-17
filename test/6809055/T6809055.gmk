@@ -26,13 +26,13 @@
 #----------------------------------------------------------------------
 
 # 6809055: Set test.src and test.classes information for @compile tasks
-$(BUILDDIR)/T6809055.ok: \
+$(BUILDTESTDIR)/T6809055.ok: \
 	$(JTREG_IMAGEDIR)/lib/javatest.jar \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar
 	$(JDKHOME)/bin/java -jar $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-		-w $(BUILDDIR)/6809055/work/ -r $(BUILDDIR)/6809055/report/ \
+		-w $(BUILDTESTDIR)/6809055/work/ -r $(BUILDTESTDIR)/6809055/report/ \
 		$(TESTDIR)/6809055
 	echo $@ passed at `date` > $@
 
-TESTS.jtreg += $(BUILDDIR)/T6809055.ok
+TESTS.jtreg += $(BUILDTESTDIR)/T6809055.ok
 

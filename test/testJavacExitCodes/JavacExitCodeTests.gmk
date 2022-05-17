@@ -26,7 +26,7 @@
 
 #----------------------------------------------------------------------
 
-$(BUILDDIR)/javacExitCodes.jdk5.othervm.ok: \
+$(BUILDTESTDIR)/javacExitCodes.jdk5.othervm.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -41,7 +41,7 @@ $(BUILDDIR)/javacExitCodes.jdk5.othervm.ok: \
 	$(GREP) -s 'Test results: passed: 4; failed: 4' $(@:%.ok=%/jt.log)  > /dev/null
 	echo "test passed at `date`" > $@
 
-$(BUILDDIR)/javacExitCodes.jdk6.othervm.ok: \
+$(BUILDTESTDIR)/javacExitCodes.jdk6.othervm.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -57,10 +57,10 @@ $(BUILDDIR)/javacExitCodes.jdk6.othervm.ok: \
 	echo "test passed at `date`" > $@
 
 ifdef JDK5HOME
-TESTS.jtreg += $(BUILDDIR)/javacExitCodes.jdk5.othervm.ok 
+TESTS.jtreg += $(BUILDTESTDIR)/javacExitCodes.jdk5.othervm.ok
 endif
 
 ifdef JDK6HOME
-TESTS.jtreg += $(BUILDDIR)/javacExitCodes.jdk6.othervm.ok
+TESTS.jtreg += $(BUILDTESTDIR)/javacExitCodes.jdk6.othervm.ok
 endif
 

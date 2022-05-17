@@ -1,6 +1,6 @@
 #! /bin/sh
 #
-# Copyright (c) 2000, 2007, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2000, 2022, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -30,15 +30,15 @@
 # The message keys are extracted by a combination of static and dynamic
 # analysis.
 
-srcDir=$1
-dynProps=$2
+baseDir=$1  # base directory, for temp files
+srcDir=$2   # source directory, to scan for i18n coding patterns
+dynProps=$3 # optional log with 18n tracing info
 
-base=`basename $0`.$$
-requiredProps=$base.reqd.tmp
-definedProps=$base.defd.tmp
-diffs=$base.diff.tmp
-reqdNotDefd=$base.rqnd.tmp
-defdNotReqd=$base.dfnr.tmp
+requiredProps=$baseDir/required.txt
+definedProps=$baseDir/defined.txt
+diffs=$baseDir/diff.txt
+reqdNotDefd=$baseDir/required-not-defined.txt
+defdNotReqd=$baseDir/defined-not-required.txt
 
 # this is the command to extract the keys from the source files
 # customize as required
@@ -62,13 +62,13 @@ defdNotReqd=$base.dfnr.tmp
 \1.name/' ;
   grep 'new FileType' ${srcDir}/*.java | sed -e 's/.*new FileType("\([^"]*\)");.*/filetype\1/' -e 's/.*new FileType();.*/filetype.allFiles/'
   if [ ! -z "$dynProps" ]; then grep '^i18n:' $dynProps | awk '{print $2}' ; fi
-) | sort -u > $requiredProps
+) | sed 's/\r$//' | sort -u > $requiredProps
 
 # end
 
 sed -e '/^#/d' -e '/^[  ]/d' -e '/^[^=]*$/d' -e 's/^\([A-Za-z0-9/_.-]*\).*/\1/' ${srcDir}/i18n.properties  | sort -u > $definedProps
 
-diff $requiredProps $definedProps > $diffs
+diff --strip-trailing-cr $requiredProps $definedProps > $diffs
 
 grep '^<' $diffs | awk '{print $2}' > $reqdNotDefd
 if [ -s $reqdNotDefd ]; then
@@ -86,5 +86,4 @@ if [ -s $defdNotReqd ]; then
   exitCode=1
 fi
 
-rm -f $requiredProps $definedProps $diffs $reqdNotDefd $defdNotReqd
 exit ${exitCode:-0}

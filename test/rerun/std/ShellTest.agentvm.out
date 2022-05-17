@@ -1,5 +1,5 @@
 ### Section shell
-cd %BUILD%/RerunTest.agentvm/work/scratch && \
+cd %BUILDTEST%/RerunTest.agentvm/work/scratch && \
 DISPLAY=%DISPLAY% \
 HOME=%HOME% \
 LANG=en_US.UTF-8 \
@@ -9,8 +9,8 @@ TZ=GMT+0.00 \
 TESTFILE=%WS%/test/rerun/std/ShellTest.sh \
 TESTSRC=%WS%/test/rerun/std \
 TESTSRCPATH=%WS%/test/rerun/std \
-TESTCLASSES=%BUILD%/RerunTest.agentvm/work/classes/std/ShellTest.d \
-TESTCLASSPATH=%BUILD%/RerunTest.agentvm/work/classes/std/ShellTest.d \
+TESTCLASSES=%BUILDTEST%/RerunTest.agentvm/work/classes/std/ShellTest.d \
+TESTCLASSPATH=%BUILDTEST%/RerunTest.agentvm/work/classes/std/ShellTest.d \
 COMPILEJAVA=%JDKHOME% \
 TESTJAVA=%JDKHOME% \
 TESTVMOPTS=-Dmy.vm.option=x \

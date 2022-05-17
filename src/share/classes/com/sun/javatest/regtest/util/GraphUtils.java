@@ -87,7 +87,7 @@ public class GraphUtils {
      * @param <D> the type of a data object included in each node
      * @param <N> the subtype of {@code TarjanNode<D>}
      * @param nodes the nodes of the graph
-     * @return the set of strongly connected components, each represented by a set of {@coed TarjanNode} objects
+     * @return the set of strongly connected components, each represented by a set of {@code TarjanNode} objects
      */
     public static <D, N extends TarjanNode<D>> Set<? extends Set<? extends N>> tarjan(Iterable<? extends N> nodes) {
         Set<Set<N>> cycles = new LinkedHashSet<>();

@@ -23,7 +23,7 @@
 # questions.
 #
 
-$(BUILDDIR)/ControlTest.ok: \
+$(BUILDTESTDIR)/ControlTest.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -38,5 +38,5 @@ $(BUILDDIR)/ControlTest.ok: \
         fi
 	echo "test passed at `date`" > $@
 
-TESTS.jtreg += $(BUILDDIR)/ControlTest.ok
+TESTS.jtreg += $(BUILDTESTDIR)/ControlTest.ok
 

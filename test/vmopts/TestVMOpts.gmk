@@ -28,19 +28,19 @@
 #JTREG_OPTS += \
 #	-J-Djavatest.regtest.debugOptions=true
 
-$(BUILDDIR)/TestVMOpts.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
+$(BUILDTESTDIR)/TestVMOpts.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(JTREG_IMAGEDIR)/bin/jtreg
 	JTREG_JAVA=$(JDKJAVA) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-jdk:$(JDK8HOME) -Dfoo=bar -Xbootclasspath/p:baz \
-		-w:$(BUILDDIR)/jtreg/cmd.othervm/work \
-		-r:$(BUILDDIR)/jtreg/cmd.othervm/report \
+		-w:$(@:%.ok=%)/cmd.othervm/work \
+		-r:$(@:%.ok=%)/cmd.othervm/report \
 		-verbose:fail \
 		$(TESTDIR)/vmopts
 	echo "test passed at `date`" > $@
 
 ifdef JDK8HOME
-TESTS.jtreg += $(BUILDDIR)/TestVMOpts.ok
+TESTS.jtreg += $(BUILDTESTDIR)/TestVMOpts.ok
 endif
 
 

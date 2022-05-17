@@ -26,8 +26,8 @@
 
 #----------------------------------------------------------------------
 
-$(BUILDDIR)/TestNGJUnitTest.agentvm.ok \
-$(BUILDDIR)/TestNGJUnitTest.othervm.ok: \
+$(BUILDTESTDIR)/TestNGJUnitTest.agentvm.ok \
+$(BUILDTESTDIR)/TestNGJUnitTest.othervm.ok: \
 		$(ALL_JTREG_JARS) \
 		$(JTREG_IMAGEDIR)/bin/jtreg
 	$(MKDIR) -p $(@:%.ok=%)
@@ -35,7 +35,7 @@ $(BUILDDIR)/TestNGJUnitTest.othervm.ok: \
 		-jdk:$(JDK8HOME) \
 		-w:$(@:%.ok=%/work) \
 		-r:$(@:%.ok=%/report) \
-		$(@:$(BUILDDIR)/TestNGJUnitTest.%.ok=-%) \
+		$(@:$(BUILDTESTDIR)/TestNGJUnitTest.%.ok=-%) \
 		$(TESTDIR)/testng-junit \
 		> $(@:%.ok=%/jt.log) 2>&1
 	$(GREP) -s 'Test results: passed: 2' $(@:%.ok=%/jt.log)  > /dev/null
@@ -45,7 +45,7 @@ $(BUILDDIR)/TestNGJUnitTest.othervm.ok: \
 
 ifdef JDK8HOME
 TESTS.jtreg += \
-	$(BUILDDIR)/TestNGJUnitTest.agentvm.ok \
-	$(BUILDDIR)/TestNGJUnitTest.othervm.ok
+	$(BUILDTESTDIR)/TestNGJUnitTest.agentvm.ok \
+	$(BUILDTESTDIR)/TestNGJUnitTest.othervm.ok
 endif
 

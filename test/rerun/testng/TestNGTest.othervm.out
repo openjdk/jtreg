@@ -1,5 +1,5 @@
 ### Section compile
-cd %BUILD%/RerunTest.othervm/work/scratch && \
+cd %BUILDTEST%/RerunTest.othervm/work/scratch && \
 DISPLAY=%DISPLAY% \
 HOME=%HOME% \
 LANG=en_US.UTF-8 \
@@ -20,19 +20,19 @@ TZ=GMT+0.00 \
         -J-Dtest.file=%WS%/test/rerun/testng/TestNGTest.java \
         -J-Dtest.src=%WS%/test/rerun/testng \
         -J-Dtest.src.path=%WS%/test/rerun/testng \
-        -J-Dtest.classes=%BUILD%/RerunTest.othervm/work/classes/testng \
-        -J-Dtest.class.path=%BUILD%/RerunTest.othervm/work/classes/testng \
-        @%BUILD%/RerunTest.othervm/work/testng/TestNGTest.d/compile.0.jta
+        -J-Dtest.classes=%BUILDTEST%/RerunTest.othervm/work/classes/testng \
+        -J-Dtest.class.path=%BUILDTEST%/RerunTest.othervm/work/classes/testng \
+        @%BUILDTEST%/RerunTest.othervm/work/testng/TestNGTest.d/compile.0.jta
 
 ### Section testng
-cd %BUILD%/RerunTest.othervm/work/scratch && \
+cd %BUILDTEST%/RerunTest.othervm/work/scratch && \
 DISPLAY=%DISPLAY% \
 HOME=%HOME% \
 LANG=en_US.UTF-8 \
 MY_ENV_VAR=x \
 PATH=/bin:/usr/bin:/usr/sbin \
 TZ=GMT+0.00 \
-CLASSPATH=%BUILD%/RerunTest.othervm/work/classes/testng:%WS%/test/rerun/testng:%BUILD%/images/jtreg/lib/testng.jar:%JDKHOME%/lib/tools.jar:%BUILD%/images/jtreg/lib/javatest.jar:%BUILD%/images/jtreg/lib/jtreg.jar \
+CLASSPATH=%BUILDTEST%/RerunTest.othervm/work/classes/testng:%WS%/test/rerun/testng:%BUILD%/images/jtreg/lib/testng.jar:%JDKHOME%/lib/tools.jar:%BUILD%/images/jtreg/lib/javatest.jar:%BUILD%/images/jtreg/lib/jtreg.jar \
     %JDKHOME%/bin/java \
         -Dtest.vm.opts=-Dmy.vm.option=x \
         -Dtest.tool.vm.opts=-J-Dmy.vm.option=x \
@@ -46,9 +46,9 @@ CLASSPATH=%BUILD%/RerunTest.othervm/work/classes/testng:%WS%/test/rerun/testng:%
         -Dtest.file=%WS%/test/rerun/testng/TestNGTest.java \
         -Dtest.src=%WS%/test/rerun/testng \
         -Dtest.src.path=%WS%/test/rerun/testng \
-        -Dtest.classes=%BUILD%/RerunTest.othervm/work/classes/testng \
-        -Dtest.class.path=%BUILD%/RerunTest.othervm/work/classes/testng \
+        -Dtest.classes=%BUILDTEST%/RerunTest.othervm/work/classes/testng \
+        -Dtest.class.path=%BUILDTEST%/RerunTest.othervm/work/classes/testng \
         -Dmy.vm.option=x \
         -Dmy.java.option=x \
-        com.sun.javatest.regtest.agent.MainWrapper %BUILD%/RerunTest.othervm/work/testng/TestNGTest.d/testng.1.jta testng/TestNGTest.java false TestNGTest
+        com.sun.javatest.regtest.agent.MainWrapper %BUILDTEST%/RerunTest.othervm/work/testng/TestNGTest.d/testng.1.jta testng/TestNGTest.java false TestNGTest
 

@@ -26,16 +26,16 @@
 #----------------------------------------------------------------------
 
 # 7900112: don't print unnecessary stack traces
-$(BUILDDIR)/T7900112.ok: \
+$(BUILDTESTDIR)/T7900112.ok: \
 	$(JTREG_IMAGEDIR)/lib/javatest.jar \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	$(JDK6HOME)/bin/java -jar $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-		-w $(BUILDDIR)/7900112/work/ -r $(BUILDDIR)/7900112/report/ \
+		-w $(@:%.ok=%)/work/ -r $(@:%.ok=%)/report/ \
 		$(TESTDIR)/7900112 > $(@:%.ok=%/jt.log) 2>&1; \
-        $(GREP) 'java.lang.Exception: thrown exception is success' $(BUILDDIR)/7900112/work/TestExpected.jtr > /dev/null ; rc=$$?; \
+        $(GREP) 'java.lang.Exception: thrown exception is success' $(@:%.ok=%)/work/TestExpected.jtr > /dev/null ; rc=$$?; \
         if [ "$$rc" = 0 ]; then echo "Unexpected stacktrace for successful test in TestExpected.jtr" ; exit 1 ; fi
 	echo $@ passed at `date` > $@
 
-TESTS.jtreg += $(BUILDDIR)/T7900112.ok
+TESTS.jtreg += $(BUILDTESTDIR)/T7900112.ok
 

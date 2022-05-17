@@ -1,10 +1,10 @@
 ### Section clean
-cd %BUILD%/RerunTest.othervm/work/scratch && \
-rm -f %BUILD%/RerunTest.othervm/work/classes/std/CleanTest.d/CleanTest.class
+cd %BUILDTEST%/RerunTest.othervm/work/scratch && \
+rm -f %BUILDTEST%/RerunTest.othervm/work/classes/std/CleanTest.d/CleanTest.class
 
 ### Section clean
-cd %BUILD%/RerunTest.othervm/work/scratch && \
-for f in %BUILD%/RerunTest.othervm/work/classes/std/CleanTest.d/p/*; do
+cd %BUILDTEST%/RerunTest.othervm/work/scratch && \
+for f in %BUILDTEST%/RerunTest.othervm/work/classes/std/CleanTest.d/p/*; do
   if [ -f $f ]; then rm $f ; fi
 done
 

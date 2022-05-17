@@ -25,7 +25,7 @@
 
 #----------------------------------------------------------------------
 
-$(BUILDDIR)/CompileArgFileTest.ok: \
+$(BUILDTESTDIR)/CompileArgFileTest.ok: \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(JTREG_IMAGEDIR)/bin/jtreg
 	$(MKDIR) -p $(@:%.ok=%)/classes
@@ -37,7 +37,7 @@ $(BUILDDIR)/CompileArgFileTest.ok: \
 		-jdk:$(JDKHOME) \
 		$(@:%.ok=%)/tests \
 			> $(@:%.ok=%/jt.log) 2>&1 
-	$(GREP) -s '^Test results: passed: [0-9]*$$' $(@:%.ok=%/jt.log)  > /dev/null
+	$(GREP) -s '^Test results: passed: [0-9]*\s*$$' $(@:%.ok=%/jt.log)  > /dev/null
 	echo $@ passed at `date` > $@
 
-TESTS.jtreg += $(BUILDDIR)/CompileArgFileTest.ok
+TESTS.jtreg += $(BUILDTESTDIR)/CompileArgFileTest.ok

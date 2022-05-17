@@ -364,7 +364,7 @@ public class CompileAction extends Action {
             }
         }
 
-        if (script.enablePreview() && !seenEnablePreview) {
+        if (runJavac && script.enablePreview() && !seenEnablePreview) {
             javacArgs.add(insertPos, "--enable-preview");
             if (!seenSourceOrRelease) {
                 int v = script.getTestJDKVersion().major;
@@ -688,7 +688,7 @@ public class CompileAction extends Action {
             showCmd("compile", javacArgs, section);
 
         Path javacProg = script.getJavacProg();
-        List<String> javacVMOpts = script.getTestVMJavaOptions();
+        List<String> javacVMOpts = script.getTestVMOptions();
         recorder.javac(script.getEnvVars(), javacProg, javacVMOpts, javacProps, javacArgs);
 
         Agent agent;

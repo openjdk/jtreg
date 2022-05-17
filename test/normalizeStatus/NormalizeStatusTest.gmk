@@ -26,7 +26,7 @@
 #----------------------------------------------------------------------
 
 # 7900029: newline in exception message will corrupt jtreg summary.txt output
-$(BUILDDIR)/NormalizeStatusTest.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
+$(BUILDTESTDIR)/NormalizeStatusTest.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(TESTDIR)/normalizeStatus/Test.java \
 		$(JTREG_IMAGEDIR)/bin/jtreg
@@ -42,5 +42,5 @@ $(BUILDDIR)/NormalizeStatusTest.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		< $(@:%.ok=%)/report/text/summary.txt
 	echo $@ passed at `date` > $@
 
-TESTS.jtreg += $(BUILDDIR)/NormalizeStatusTest.ok
+TESTS.jtreg += $(BUILDTESTDIR)/NormalizeStatusTest.ok
 

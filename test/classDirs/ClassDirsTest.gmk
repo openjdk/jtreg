@@ -23,7 +23,7 @@
 # questions.
 #
 
-$(BUILDDIR)/ClassDirsTest.ok: \
+$(BUILDTESTDIR)/ClassDirsTest.ok: \
 	    $(TESTDIR)/classDirs/ClassDirsTest.java \
             $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
@@ -34,9 +34,9 @@ $(BUILDDIR)/ClassDirsTest.ok: \
 		-Xlint -Werror \
 		$(TESTDIR)/classDirs/ClassDirsTest.java
 	cd $(@:%.ok=%); $(JDKJAVA) \
-		-classpath $(@:%.ok=%)/classes:$(JTREG_IMAGEDIR)/lib/jtreg.jar \
+		-classpath "$(@:%.ok=%)/classes$(PS)$(JTREG_IMAGEDIR)/lib/jtreg.jar" \
 		ClassDirsTest
 	echo $@ passed at `date` > $@
 
 
-TESTS.jtreg += $(BUILDDIR)/ClassDirsTest.ok
+TESTS.jtreg += $(BUILDTESTDIR)/ClassDirsTest.ok

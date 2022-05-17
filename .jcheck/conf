@@ -22,6 +22,7 @@ ignore-tabs=.*\.gmk|Makefile
 message=Merge
 
 [checks "reviewers"]
+reviewers=1
 ignore=duke
 
 [checks "committer"]

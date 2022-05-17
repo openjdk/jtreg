@@ -26,6 +26,11 @@
 
 # @test
 
+if [[ "$(uname)" == *"CYGWIN"* ]]; then
+  TESTNATIVEPATH=$(echo $TESTNATIVEPATH | tr '/' '\\')
+  CORRECTNATIVEPATH=$(echo $CORRECTNATIVEPATH | tr '/' '\\')
+fi
+
 echo TESTNATIVEPATH=$TESTNATIVEPATH
 echo CORRECTNATIVEPATH=$CORRECTNATIVEPATH
 

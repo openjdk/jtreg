@@ -26,8 +26,8 @@
 MODLIBS_TEST_FILES := \
 	$(shell $(FIND) $(TESTDIR)/modlibs -type f )
 
-$(BUILDDIR)/ModLibsTest.othervm.ok \
-$(BUILDDIR)/ModLibsTest.agentvm.ok: \
+$(BUILDTESTDIR)/ModLibsTest.othervm.ok \
+$(BUILDTESTDIR)/ModLibsTest.agentvm.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg \
             $(MODLIBS_TEST_FILES)
@@ -36,7 +36,7 @@ $(BUILDDIR)/ModLibsTest.agentvm.ok: \
 		-J-Djavatest.regtest.allowTrailingBuild=true \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDK9HOME) \
-		$(@:$(BUILDDIR)/ModLibsTest.%.ok=-%) \
+		$(@:$(BUILDTESTDIR)/ModLibsTest.%.ok=-%) \
 		$(TESTDIR)/modlibs
 	( cd $(@:%.ok=%)/work ; $(FIND) . -name \*.class ) | \
 		$(SORT) > $(@:%.ok=%)/found-classes.txt
@@ -47,7 +47,7 @@ $(BUILDDIR)/ModLibsTest.agentvm.ok: \
 
 ifdef JDK9HOME
 TESTS.jtreg += \
-	$(BUILDDIR)/ModLibsTest.othervm.ok \
-	$(BUILDDIR)/ModLibsTest.agentvm.ok
+	$(BUILDTESTDIR)/ModLibsTest.othervm.ok \
+	$(BUILDTESTDIR)/ModLibsTest.agentvm.ok
 endif
 

@@ -25,7 +25,7 @@
 
 #----------------------------------------------------------------------
 
-$(BUILDDIR)/TestNGLibsTest.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
+$(BUILDTESTDIR)/TestNGLibsTest.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%)
@@ -37,5 +37,5 @@ $(BUILDDIR)/TestNGLibsTest.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(TESTDIR)/testngLibs/tests
 	echo $@ passed at `date` > $@
 
-TESTS.jtreg += $(BUILDDIR)/TestNGLibsTest.ok
+TESTS.jtreg += $(BUILDTESTDIR)/TestNGLibsTest.ok
 
