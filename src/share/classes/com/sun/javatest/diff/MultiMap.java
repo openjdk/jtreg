@@ -56,7 +56,7 @@ public class MultiMap<K, V> implements Map<K, MultiMap.Entry<V>> {
                 throw new IndexOutOfBoundsException();
 
             if (list == null)
-                list = new ArrayList<V>(index);
+                list = new ArrayList<>(index);
 
             if (index < list.size())
                 list.set(index, value);
@@ -86,8 +86,8 @@ public class MultiMap<K, V> implements Map<K, MultiMap.Entry<V>> {
 
     /** Creates a new instance of MultiMap */
     public MultiMap() {
-        names = new ArrayList<String>();
-        map = new TreeMap<K, Entry<V>>();
+        names = new ArrayList<>();
+        map = new TreeMap<>();
     }
 
     int getColumns() {
@@ -116,7 +116,7 @@ public class MultiMap<K, V> implements Map<K, MultiMap.Entry<V>> {
     void addRow(int index, K k, V v) {
         Entry<V> de = get(k);
         if (de == null)
-            put(k, de = new Entry<V>(this));
+            put(k, de = new Entry<>(this));
         de.put(index, v);
     }
 

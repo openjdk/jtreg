@@ -141,7 +141,7 @@ public class OS {
             if (!Character.isDigit(c) && c != '.')
                 break;
         }
-        List<Integer> v = new ArrayList<Integer>();
+        List<Integer> v = new ArrayList<>();
         for (String s: version.substring(0, index).split("\\.")) {
             if (s.length() > 0)
                 v.add(Integer.valueOf(s));

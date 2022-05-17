@@ -193,8 +193,8 @@ public class Main {
 
     boolean report(Map<String, NameInfo> table) {
         // invert the data structure to get File -> Set<name>
-        Map<File, Set<String>> undefinedNames = new TreeMap<File, Set<String>>();
-        Map<File, Set<String>> unusedNames = new TreeMap<File, Set<String>>();
+        Map<File, Set<String>> undefinedNames = new TreeMap<>();
+        Map<File, Set<String>> unusedNames = new TreeMap<>();
         for (NameInfo e: table.values()) {
             if (e.definitions == null || e.definitions.size() == 0)
                 insert(undefinedNames, e.name, e.references);
@@ -212,7 +212,7 @@ public class Main {
         for (File f: files) {
             Set<String> s = table.get(f);
             if (s == null)
-                table.put(f, s = new TreeSet<String>());
+                table.put(f, s = new TreeSet<>());
             s.add(name);
         }
     }
@@ -235,7 +235,7 @@ public class Main {
             nameTable.put(name, e);
         }
         if (e.definitions == null)
-            e.definitions = new TreeSet<File>();
+            e.definitions = new TreeSet<>();
         e.definitions.add(file);
     }
 
@@ -246,7 +246,7 @@ public class Main {
             nameTable.put(name, e);
         }
         if (e.references == null)
-            e.references = new TreeSet<File>();
+            e.references = new TreeSet<>();
         e.references.add(file);
     }
 
@@ -303,7 +303,7 @@ public class Main {
 
         public void addFileSet(FileSet fs) {
             if (fileSets == null)
-                fileSets = new ArrayList<FileSet>();
+                fileSets = new ArrayList<>();
             fileSets.add(fs);
         }
 
@@ -326,10 +326,10 @@ public class Main {
         }
     }
 
-    List<File> patternFiles = new ArrayList<File>();
-    List<File> argFiles = new ArrayList<File>();
+    List<File> patternFiles = new ArrayList<>();
+    List<File> argFiles = new ArrayList<>();
 
-    Map<String, NameInfo> nameTable = new TreeMap<String, NameInfo>();
-    List<PatternInfo> patterns = new ArrayList<PatternInfo>();
+    Map<String, NameInfo> nameTable = new TreeMap<>();
+    List<PatternInfo> patterns = new ArrayList<>();
     Pattern groupNumber = Pattern.compile("\\\\([0-9]*)");
 }

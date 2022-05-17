@@ -36,9 +36,7 @@ import java.util.function.Consumer;
 import com.sun.javatest.regtest.agent.JDK_Version;
 
 /**
- *
- * @author Dmitry Fazunenko
- * @author jjg
+ * The set of named values used for evaluating expressions in test descriptions.
  */
 public class RegressionContext implements Expr.Context {
     /**
@@ -56,7 +54,7 @@ public class RegressionContext implements Expr.Context {
     }
 
     /**
-     * Creates a context for used with nteh specified parameters.
+     * Creates a context for used with the specified parameters.
      *
      * @param params the parameters
      * @param logger an object to which to write logging messages
@@ -67,7 +65,7 @@ public class RegressionContext implements Expr.Context {
         this.params = params;
         validPropNames = null;
 
-        values = new HashMap<String, String>();
+        values = new HashMap<>();
         values.put("null", "null");
 
         JDK_Version jdkVersion;
@@ -149,8 +147,8 @@ public class RegressionContext implements Expr.Context {
     private void processVMOptions(List<String> vmOptions) {
         String gc = null;
         String compMode = null;
-        Map<String, Boolean> vmBools = new HashMap<String, Boolean>();
-        Map<String, String> vmProps = new HashMap<String, String>();
+        Map<String, Boolean> vmBools = new HashMap<>();
+        Map<String, String> vmProps = new HashMap<>();
 
         for (String opt: vmOptions) {
             if (opt.equals("-" + MODE_MIXED)) {

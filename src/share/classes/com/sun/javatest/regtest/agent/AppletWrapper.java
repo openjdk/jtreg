@@ -47,8 +47,6 @@ import java.awt.TextArea;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.FileReader;
@@ -56,24 +54,23 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
 import java.net.URL;
-import java.util.Dictionary;
-import java.util.Hashtable;
+import java.util.Map;
+import java.util.HashMap;
 
 
 /**
   * This class is the wrapper for all applet tests.
-  *
-  * @author Iris A Garcia
   */
+@SuppressWarnings("removal") // Applet and related APIs
 public class AppletWrapper
 {
-    public static void main(String [] args) {
-        String [] appArgs;
+    public static void main(String[] args) {
+        String[] appArgs;
         try {
             FileReader in = new FileReader(args[0]);
 
             StringWriter out = new StringWriter();
-            char [] buf = new char[1024];
+            char[] buf = new char[1024];
             int howMany;
 
             while ((howMany = in.read(buf)) > 0)
@@ -91,8 +88,8 @@ public class AppletWrapper
             classpath = appArgs[i++];
             manual = appArgs[i++];
             body   = appArgs[i++];
-            appletParams = stringToDictionary(appArgs[i++]);
-            appletAtts   = stringToDictionary(appArgs[i++]);
+            appletParams = stringToMap(appArgs[i++]);
+            appletAtts   = stringToMap(appArgs[i++]);
 
         } catch (IOException e) {
             status = AStatus.failed("JavaTest Error:  Can't read applet args file.");
@@ -105,20 +102,20 @@ public class AppletWrapper
         try {
             t.join();
         } catch (InterruptedException e) {
-            status = AStatus.failed("Thread interrupted: " + t.toString());
+            status = AStatus.failed("Thread interrupted: " + t);
             status.exit();
         }
         // never get here because t.run() always calls Status.exit() in the
         // non-interrupted case
     } // main()
 
-    private static Dictionary stringToDictionary(String s) {
+    private static Map<String,String> stringToMap(String s) {
         String[] pairs = StringArray.splitTerminator("\034", s);
-        Dictionary retVal = new Hashtable(3);
+        Map<String,String> retVal = new HashMap<>(3);
         for (int i = 0; i < pairs.length; i+=2)
             retVal.put(pairs[i], pairs[i+1]);
         return retVal;
-    } // stringToDictionary()
+    } // stringToMap()
 
 //     //  For printing debug messages
 //     private static void Msg(String s) {
@@ -131,8 +128,8 @@ public class AppletWrapper
         public void run() {
             waiter = new AppletWaiter();
 
-            int width  = Integer.parseInt((String) appletAtts.get("width"));
-            int height = Integer.parseInt((String) appletAtts.get("height"));
+            int width  = Integer.parseInt(appletAtts.get("width"));
+            int height = Integer.parseInt(appletAtts.get("height"));
             AppletFrame app = new AppletFrame(className, body, manual, width, height);
             Applet applet = app.getApplet();
             AppletStubImpl stub = new AppletStubImpl();
@@ -165,7 +162,7 @@ public class AppletWrapper
                 try {
                     Thread.sleep(2000);
                 } catch (InterruptedException e) {
-                    status = AStatus.failed("Thread interrupted: " + e.toString());
+                    status = AStatus.failed("Thread interrupted: " + e);
                     status.exit();
                 }
                 // just in case the system is slow, ensure paint is called
@@ -188,15 +185,11 @@ public class AppletWrapper
 
         private void validate(final Component c) {
             try {
-                Class eventQueueClass = EventQueue.class;
-                Method isDispatchThread  = eventQueueClass.getMethod("isDispatchThread", new Class[] {});
-                Method invokeAndWait = eventQueueClass.getMethod("invokeAndWait", new Class[] { Runnable.class });
-                if (!((Boolean) (isDispatchThread.invoke(null, new Object[] { }))).booleanValue()) {
-                    invokeAndWait.invoke(null, new Object[] { new Runnable() {
-                            public void run() {
-                                c.validate();
-                            }
-                        }});
+                Class<?> eventQueueClass = EventQueue.class;
+                Method isDispatchThread  = eventQueueClass.getMethod("isDispatchThread");
+                Method invokeAndWait = eventQueueClass.getMethod("invokeAndWait", Runnable.class );
+                if (!((Boolean) (isDispatchThread.invoke(null)))) {
+                    invokeAndWait.invoke(null, (Runnable) c::validate);
                     return;
                 }
             }
@@ -227,7 +220,7 @@ public class AppletWrapper
         }
 
         public String getParameter(String name) {
-            return (String) appletParams.get(name);
+            return appletParams.get(name);
         }
 
         public AppletContext getAppletContext() {
@@ -259,7 +252,7 @@ public class AppletWrapper
             if (e instanceof ThreadDeath)
                 return;
             e.printStackTrace();
-            status = AStatus.failed("Applet thread threw exception: " + e.toString());
+            status = AStatus.failed("Applet thread threw exception: " + e);
             status.exit();
         } // uncaughtException()
 
@@ -335,7 +328,7 @@ public class AppletWrapper
                     c.gridwidth = 1;
                     c.weightx = 0.0;
                     c.anchor  = GridBagConstraints.WEST;
-                    String [] boxNames = {"fixed", "variable"};
+                    String[] boxNames = {"fixed", "variable"};
                     makeCheckboxPanel(boxNames, gridbag, c);
                 }
 
@@ -412,7 +405,7 @@ public class AppletWrapper
         private void makeApplet(String className, GridBagLayout gridbag, GridBagConstraints c,
                                 int width, int height) {
             try {
-                Class cls = Class.forName(className);
+                Class<?> cls = Class.forName(className);
                 applet = (Applet) cls.newInstance();
             } catch (InstantiationException e) {
                 e.printStackTrace();
@@ -459,7 +452,7 @@ public class AppletWrapper
             add(textArea);
         } // makeTextArea()
 
-        private void makeCheckboxPanel(String [] name, GridBagLayout gridbag, GridBagConstraints c) {
+        private void makeCheckboxPanel(String[] name, GridBagLayout gridbag, GridBagConstraints c) {
             CheckboxPanel p = new CheckboxPanel(appletPanel, name);
             gridbag.setConstraints(p, c);
             add(p);
@@ -483,8 +476,8 @@ public class AppletWrapper
     private static String classpath;
     private static String manual;
     private static String body;
-    private static Dictionary appletParams;
-    private static Dictionary appletAtts;
+    private static Map<String,String> appletParams;
+    private static Map<String,String> appletAtts;
 } // class AppletWrapper
 
 /**
@@ -495,7 +488,7 @@ class CheckboxPanel extends Panel
 {
     private static final long serialVersionUID = 1L;
 
-    public CheckboxPanel(AppletPanel appletPanel, String [] boxNames) {
+    public CheckboxPanel(AppletPanel appletPanel, String[] boxNames) {
         panel = appletPanel;
 
         CheckboxGroup group = new CheckboxGroup();
@@ -509,17 +502,9 @@ class CheckboxPanel extends Panel
         add(b1);
         add(b2);
 
-        b1.addItemListener(new ItemListener() {
-            public void itemStateChanged(ItemEvent event) {
-                panel.setFixedSize();
-            }
-        });
+        b1.addItemListener(event -> panel.setFixedSize());
 
-        b2.addItemListener(new ItemListener() {
-            public void itemStateChanged(ItemEvent event) {
-                panel.setVariableSize();
-            }
-        });
+        b2.addItemListener(event -> panel.setVariableSize());
     } // makeCheckBoxGroup()
 
     private Checkbox b1, b2;
@@ -530,6 +515,7 @@ class CheckboxPanel extends Panel
 /**
  * This is the panel which contains the test applet.
  */
+// @SuppressWarnings("removal") // Applet and related APIs
 class AppletPanel extends Panel
 {
     private static final long serialVersionUID = 1L;
@@ -672,7 +658,7 @@ class AppletWaiter
             try {
                 wait();
             } catch (InterruptedException e) {
-                AStatus.failed("Thread interrupted: " + e.toString()).exit();
+                AStatus.failed("Thread interrupted: " + e).exit();
             }
         }
     } // waitForDone();

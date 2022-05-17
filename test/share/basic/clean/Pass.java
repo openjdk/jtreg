@@ -33,7 +33,12 @@
 
 /* @test
  * @summary Passed: Clean Successful
- * @run clean JARandom.class
+ * @run clean JARandom
+ */
+
+/* @test
+ * @summary Passed: Clean Successful
+ * @run clean abc.def.JARandom
  */
 
 /* @test

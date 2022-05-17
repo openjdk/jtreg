@@ -34,7 +34,6 @@ import com.sun.javatest.regtest.config.ParseException;
 /**
  * This class implements the "junit" action, which is a variation of "main".
  *
- * @author John R. Rose
  * @see MainAction
  */
 public class JUnitAction extends MainAction

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -34,6 +34,7 @@ import java.lang.reflect.Constructor;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Path;
 import java.util.List;
 
 /**
@@ -61,11 +62,11 @@ public class TimeoutHandlerProvider {
      * @throws java.net.MalformedURLException if any of the files on the path cannot be converted
      *      to a URL
      */
-    public void setClassPath(List<File> path) throws MalformedURLException {
+    public void setClassPath(List<Path> path) throws MalformedURLException {
         URL[] urls = new URL[path.size()];
         int u = 0;
-        for (File f: path) {
-            urls[u++] = f.toURI().toURL();
+        for (Path f: path) {
+            urls[u++] = f.toUri().toURL();
         }
         loader = new URLClassLoader(urls);
     }
@@ -94,14 +95,14 @@ public class TimeoutHandlerProvider {
      */
     public TimeoutHandler createHandler(Class<? extends Action> actionClass, RegressionScript script, Section section) {
         PrintWriter log = section.getMessageWriter();
-        File outDir = script.absTestScratchDir();
-        File testJDK = script.getTestJDK().getAbsoluteFile();
+        File outDir = script.absTestScratchDir().toFile();
+        Path testJDK = script.getTestJDK().getAbsoluteHomeDirectory();
 
         if (className != null) {
             try {
                 Class<? extends TimeoutHandler> clz = loadClass();
                 Constructor<? extends TimeoutHandler> ctor = clz.getDeclaredConstructor(PrintWriter.class, File.class, File.class);
-                TimeoutHandler th = ctor.newInstance(log, outDir, testJDK);
+                TimeoutHandler th = ctor.newInstance(log, outDir, testJDK.toFile());
                 th.setTimeout(timeout);
                 return th;
             } catch (Exception ex) {

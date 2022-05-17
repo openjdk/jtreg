@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1999, 2018, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1999, 2022, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -42,11 +42,11 @@ include Rules.gmk
 
 build: $(BUILDFILES)
 
-test: $(INITIAL_TESTS) $(TESTS) $(FINAL_TESTS)
+test: checkJavaOSVersion $(INITIAL_TESTS) $(TESTS) $(FINAL_TESTS)
 	count=`echo $+ | wc -w` ; \
 	echo "All ($${count}) selected tests completed successfully"
 
-quick-test: $(INITIAL_TESTS)
+quick-test: checkJavaOSVersion $(INITIAL_TESTS)
 	count=`echo $+ | wc -w` ; \
 	echo "All ($${count}) selected tests completed successfully"
 
@@ -60,18 +60,6 @@ clean:
 .NO_PARALLEL: clean
 
 sanity:
-ifdef JDK1_1HOME
-	@echo "JDK1_1HOME          = $(JDK1_1HOME)"
-endif
-ifdef JDK5HOME
-	@echo "JDK5HOME            = $(JDK5HOME)"
-endif
-ifdef JDK6HOME
-	@echo "JDK6HOME            = $(JDK6HOME)"
-endif
-ifdef JDK7HOME
-	@echo "JDK7HOME            = $(JDK7HOME)"
-endif
 ifdef JDK8HOME
 	@echo "JDK8HOME            = $(JDK8HOME)"
 endif
@@ -89,25 +77,23 @@ endif
 ifneq ($(JTHARNESS_HOME), $(JAVATEST_HOME))
 	@echo "JTHARNESS_HOME      = $(JTHARNESS_HOME)"
 endif
-	@echo "JTHARNESS_LICENSE   = $(JTHARNESS_LICENSE)"
-	@echo "JTHARNESS_COPYRIGHT = $(JTHARNESS_COPYRIGHT)"
-	@echo "JCOV_JAR            = $(JCOV_JAR)"
-	@echo "JCOV_LICENSE        = $(JCOV_LICENSE)"
+	@echo "JTHARNESS_NOTICES   = $(JTHARNESS_NOTICES)"
 	@echo "ASMTOOLS_JAR        = $(ASMTOOLS_JAR)"
-	@echo "ASMTOOLS_LICENSE    = $(ASMTOOLS_LICENSE)"
-	@echo "ANTHOME             = $(ANTHOME)"
-	@echo "ANT_JAR             = $(ANT_JAR)"
-	@echo "JUNIT_JAR           = $(JUNIT_JAR)"
-	@echo "JUNIT_LICENSE       = $(JUNIT_LICENSE)"
-	@echo "TESTNG_HOME         = $(TESTNG_HOME)"
-	@echo "TESTNG_JAR          = $(TESTNG_JAR)"
-	@echo "TESTNG_LICENSE      = $(TESTNG_LICENSE)"
-	@echo "JCOMMANDER_JAR      = $(JCOMMANDER_JAR)"
-	@echo "GOOGLE_JUICE_JAR    = $(GOOGLE_JUICE_JAR)"
-	@echo "HAMCREST_JAR        = $(HAMCREST_JAR)"
+	@echo "ASMTOOLS_NOTICES    = $(ASMTOOLS_NOTICES)"
+	@echo "JUNIT_JARS          = $(JUNIT_JARS)"
+	@echo "JUNIT_NOTICES       = $(JUNIT_NOTICES)"
+	@echo "TESTNG_JARS         = $(TESTNG_JARS)"
+	@echo "TESTNG_NOTICES      = $(TESTNG_NOTICES)"
 	@echo "BUILD_VERSION       = $(BUILD_VERSION)"
 	@echo "BUILD_MILESTONE     = $(BUILD_MILESTONE)"
 	@echo "BUILD_NUMBER        = $(BUILD_NUMBER)"
+
+#----------------------------------------------------------------------
+
+checkJavaOSVersion:
+ifeq ($(OS_NAME), macosx)
+	$(JDKJAVA) CheckJavaOSVersion.java $(OS_VERSION)
+endif
 
 #----------------------------------------------------------------------
 

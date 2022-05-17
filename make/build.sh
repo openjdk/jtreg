@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #
-# Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2020, 2022, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -27,7 +27,7 @@
 
 # This script will download/build the dependencies for jtreg and then
 # build jtreg. Downloaded files are verified against known/specified
-# specified checksums.
+# checksums.
 
 # The default version to use when building jtreg can be found in the
 # make/version-numbers file, where the default versions and
@@ -48,8 +48,7 @@
 #
 # * JUnit, TestNG, JCommander, and Ant jar are by default
 #   downloaded from Maven central.
-# * JT Harness, JCov, and AsmTools are downloaded or built from
-#   source.
+# * JT Harness and AsmTools are downloaded or built from source.
 # * The JDK dependency is downloaded. No default URL is set.
 #
 
@@ -117,7 +116,7 @@
 # handled. For each dependency the steps are tried in order and the
 # first successful one will be used.
 #
-# Ant
+# Ant (required to build AsmTools and JT Harness)
 #     Checksum variables:
 #         ANT_ARCHIVE_CHECKSUM: checksum of binary archive
 #
@@ -126,17 +125,6 @@
 #     2a. ANT_ARCHIVE_URL
 #         The full URL for the archive.
 #     2b. ANT_ARCHIVE_URL_BASE + ANT_VERSION
-#         The individual URL components used to construct the full URL.
-#
-# Ant jar
-#     Checksum variables:
-#         ANT_JAR_CHECKSUM: checksum of binary archive
-#
-#     1. ANT_JAR
-#         The path to ant.jar.
-#     2a. ANT_JAR_URL
-#         The full URL for the jar.
-#     2b. ANT_JAR_URL_BASE + ANT_JAR_VERSION
 #         The individual URL components used to construct the full URL.
 #
 # AsmTools
@@ -185,20 +173,6 @@
 #         The full URL for the jar.
 #     2b. JCOMMANDER_JAR_URL_BASE + JCOMMANDER_VERSION
 #         The individual URL components used to construct the full URL.
-#
-# JCov
-#     Checksum variables:
-#         JCOV_ARCHIVE_CHECKSUM: checksum of binary archive
-#         JCOV_SRC_ARCHIVE_CHECKSUM: checksum of source archive
-#
-#     1. JCOV_JAR + JCOV_NETWORK_SAVER_JAR + JCOV_LICENSE
-#         The path to jcov.jar, jcov_network_saver.jar, and LICENSE respectively.
-#     2a. JCOV_ARCHIVE_URL
-#         The full URL for the archive.
-#     2b. JCOV_ARCHIVE_URL_BASE + JCOV_VERSION + JCOV_BUILD_NUMBER + JCOV_FILE
-#         The individual URL components used to construct the full URL.
-#     3. JCOV_SRC_TAG
-#         The SCM repository tag to use when building from source.
 #
 # JDK
 #     Checksum variables:
@@ -258,7 +232,7 @@ usage() {
     echo "--help"
     echo "      Show this message"
     echo "--jdk /path/to/jdk"
-    echo "      Path to JDK; must be JDK 8 or higher"
+    echo "      Path to JDK; must be JDK 11 or higher"
     echo "--quiet | -q"
     echo "      Reduce the logging output."
     echo "--show-default-versions"
@@ -321,11 +295,6 @@ JTREG_VERSION="${JTREG_VERSION:-}"
 ANT_VERSION="${ANT_VERSION:-${DEFAULT_ANT_VERSION}}"
 ANT_ARCHIVE_CHECKSUM="${ANT_ARCHIVE_CHECKSUM:-${DEFAULT_ANT_ARCHIVE_CHECKSUM}}"
 
-ANT_JAR_VERSION="${ANT_JAR_VERSION:-${ANT_VERSION}}"
-ANT_JAR_URL_BASE="${ANT_JAR_URL_BASE:-${MAVEN_REPO_URL_BASE}}"
-ANT_JAR_VERSION="${ANT_JAR_VERSION:-${DEFAULT_ANT_JAR_VERSION:-${ANT_VERSION}}}"
-ANT_JAR_CHECKSUM="${ANT_JAR_CHECKSUM:-${DEFAULT_ANT_JAR_CHECKSUM}}"
-
 # Not available in Maven
 ASMTOOLS_SRC_TAG="${ASMTOOLS_SRC_TAG:-${DEFAULT_ASMTOOLS_SRC_TAG}}"
 ASMTOOLS_SRC_ARCHIVE_CHECKSUM="${ASMTOOLS_SRC_ARCHIVE_CHECKSUM:-${DEFAULT_ASMTOOLS_SRC_ARCHIVE_CHECKSUM}}"
@@ -341,10 +310,6 @@ HAMCREST_JAR_CHECKSUM="${HAMCREST_JAR_CHECKSUM:-${DEFAULT_HAMCREST_JAR_CHECKSUM}
 JCOMMANDER_VERSION="${JCOMMANDER_VERSION:-${DEFAULT_JCOMMANDER_VERSION}}"
 JCOMMANDER_JAR_URL_BASE="${JCOMMANDER_JAR_URL_BASE:-${MAVEN_REPO_URL_BASE}}"
 JCOMMANDER_JAR_CHECKSUM="${JCOMMANDER_JAR_CHECKSUM:-${DEFAULT_JCOMMANDER_JAR_CHECKSUM}}"
-
-# Not available in Maven
-JCOV_SRC_TAG="${JCOV_SRC_TAG:-${DEFAULT_JCOV_SRC_TAG}}"
-JCOV_SRC_ARCHIVE_CHECKSUM="${JCOV_SRC_ARCHIVE_CHECKSUM:-${DEFAULT_JCOV_SRC_ARCHIVE_CHECKSUM}}"
 
 # Not available in Maven
 JTHARNESS_SRC_TAG="${JTHARNESS_SRC_TAG:-${DEFAULT_JTHARNESS_SRC_TAG}}"
@@ -372,7 +337,7 @@ fi
 
 if [ "${SHOW_CONFIG_DETAILS:-}" != "" ]; then
     ( set -o posix ; set ) | \
-        grep -E '^(ANT|ASM|ASMTOOLS|GOOGLE_GUICE|HAMCREST|JCOMMANDER|JCOV|JTHARNESS|JUNIT|TESTNG)_[A-Z_]*=' | \
+        grep -E '^(ANT|ASM|ASMTOOLS|GOOGLE_GUICE|HAMCREST|JCOMMANDER|JTHARNESS|JUNIT|TESTNG)_[A-Z_]*=' | \
         sort -u
     exit
 fi
@@ -441,51 +406,33 @@ sanity_check_java_home() {
         grep -e ^java -e ^openjdk |
         head -n 1 | \
         sed -e 's/^[^0-9]*\(1\.\)*\([1-9][0-9]*\).*/\2/' )
-    if [ "${vnum:-0}" -lt "8" ]; then
-        error "JDK 8 or newer is required to build jtreg"
+    if [ "${vnum:-0}" -lt "11" ]; then
+        error "JDK 11 or newer is required to build jtreg"
         exit 1
     fi
 }
+
+checkJavaOSVersion() {
+  # This checks that the value in the Java "os.version" system property
+  # is as expected.  While it is OK to *build* jtreg with a JDK with this bug,
+  # some of the `jtreg` self-tests will fail: notably, test/problemList.
+  # See https://bugs.openjdk.java.net/browse/JDK-8253702
+  case `uname` in
+    Darwin )
+      OS_VERSION=`defaults read loginwindow SystemVersionStampAsString`
+      ${JAVA_HOME}/bin/java ${mydir}/CheckJavaOSVersion.java ${OS_VERSION}
+  esac
+}
+
 setup_java_home
 sanity_check_java_home
+#checkJavaOSVersion   #temp: check for presence of the JDK os.version bug (JDK-8253702)
 export JAVA_HOME
 info "JAVA_HOME: ${JAVA_HOME}"
 
 #----- Ant -----
 setup_ant
 info "ANT: ${ANT}"
-
-#----- Ant jar -----
-setup_ant_jar() {
-    check_arguments "${FUNCNAME}" 0 $#
-
-    if [ -n "${ANT_JAR:-}" ]; then
-        return
-    fi
-
-    if [ -z "${ANT_JAR_URL:-}" ]; then
-        if [ -n "${ANT_JAR_URL_BASE:-}" ]; then
-            if [ -z "${ANT_JAR_VERSION:-}" ]; then
-                error "ANT_JAR_VERSION not set"
-                exit 1
-            fi
-            ANT_JAR_URL="${ANT_JAR_URL_BASE}/org/apache/ant/ant/${ANT_JAR_VERSION}/ant-${ANT_JAR_VERSION}.jar"
-        fi
-    fi
-
-    local ANT_JAR_DEPS_DIR="${DEPS_DIR}/ant-jar"
-
-    if [ -n "${ANT_JAR_URL:-}" ]; then
-        ANT_JAR="${ANT_JAR_DEPS_DIR}/$(basename ${ANT_JAR_URL})"
-        download_and_checksum "${ANT_JAR_URL}" "${ANT_JAR}" "${ANT_JAR_CHECKSUM}"
-        return
-    fi
-
-    error "None of ANT_JAR, ANT_JAR_URL or ANT_JAR_URL_BASE are set"
-    exit 1
-}
-setup_ant_jar
-info "ANT_JAR: ${ANT_JAR}"
 
 #----- JT Harness -----
 setup_jtharness_javatest_jar() {
@@ -551,71 +498,6 @@ setup_jtharness_license_and_copyright() {
 setup_jtharness_license_and_copyright
 info "JTHARNESS_LICENSE: ${JTHARNESS_LICENSE}"
 info "JTHARNESS_COPYRIGHT: ${JTHARNESS_COPYRIGHT}"
-
-#----- JCov -----
-setup_jcov() {
-    check_arguments "${FUNCNAME}" 0 $#
-
-    if [ -n "${JCOV_JAR:-}" -a -n "${JCOV_NETWORK_SAVER_JAR:-}" ]; then
-        return
-    fi
-
-    if [ -z "${JCOV_ARCHIVE_URL:-}" ]; then
-        if [ -n "${JCOV_ARCHIVE_URL_BASE:-}" ]; then
-            JCOV_ARCHIVE_URL="${JCOV_ARCHIVE_URL_BASE}/${JCOV_VERSION}/${JCOV_BUILD_NUMBER}/${JCOV_FILE}"
-        fi
-    fi
-
-    local JCOV_DEPS_DIR="${DEPS_DIR}/jcov"
-
-    if [ -n "${JTHARNESS_ARCHIVE_URL:-}" ]; then
-        local JCOV_LOCAL_ARCHIVE_FILE="${DEPS_DIR}/$(basename "${JCOV_ARCHIVE_URL}")"
-        get_archive "${JCOV_ARCHIVE_URL}" "${JCOV_LOCAL_ARCHIVE_FILE}" "${JCOV_DEPS_DIR}" "${JCOV_ARCHIVE_CHECKSUM}"
-        JCOV_JAR="${JCOV_DEPS_DIR}/jcov_${JCOV_VERSION}/lib/jcov.jar"
-        JCOV_NETWORK_SAVER_JAR="${JCOV_DEPS_DIR}/jcov_${JCOV_VERSION}/lib/jcov_network_saver.jar"
-        return
-    fi
-
-    info "None of JCOV_JAR, JCOV_ARCHIVE_URL or JCOV_ARCHIVE_URL_BASE are set; building from source"
-    export JCOV_BUILD_RESULTS_FILE="${DEPS_DIR}/jcov.results"
-    (
-        export BUILD_DIR="${JCOV_DEPS_DIR}"
-        export BUILD_RESULTS_FILE="${JCOV_BUILD_RESULTS_FILE}"
-        export JCOV_SRC_TAG="${JCOV_SRC_TAG}"
-        export JCOV_SRC_ARCHIVE_CHECKSUM="${JCOV_SRC_ARCHIVE_CHECKSUM}"
-        export ANT="${ANT}"
-        export JTHARNESS_JAVATEST_JAR="${JTHARNESS_JAVATEST_JAR}"
-        bash "${mydir}/build-support/jcov/build.sh"
-    )
-    ret=$?
-    if [ ! $ret = 0 ]; then
-        exit ${ret}
-    fi
-    . "${JCOV_BUILD_RESULTS_FILE}"
-}
-setup_jcov
-info "JCOV_JAR: ${JCOV_JAR}"
-info "JCOV_NETWORK_SAVER_JAR: ${JCOV_NETWORK_SAVER_JAR}"
-
-#----- JCov License -----
-# TODO: File issue to include LICENSE in the jcov binary bundle
-setup_jcov_license() {
-    check_arguments "${FUNCNAME}" 0 $#
-
-    if [ -n "${JCOV_LICENSE:-}" ]; then
-        return
-    fi
-
-    if [ -z "${JCOV_SRC:-}" ]; then
-        local JCOV_SRC_DEPS_DIR="${DEPS_DIR}/jcov-src"
-        local JCOV_LOCAL_SRC_ARCHIVE_FILE="${JCOV_SRC_DEPS_DIR}/source.zip"
-        get_archive "${CODE_TOOLS_URL_BASE}/jcov/archive/${JCOV_SRC_TAG}.zip" "${JCOV_LOCAL_SRC_ARCHIVE_FILE}" "${JCOV_SRC_DEPS_DIR}" "${JCOV_SRC_ARCHIVE_CHECKSUM}"
-        JCOV_SRC="${JCOV_SRC_DEPS_DIR}/jcov-${JCOV_SRC_TAG}"
-    fi
-    JCOV_LICENSE="${JCOV_SRC}/LICENSE"
-}
-setup_jcov_license
-info "JCOV_LICENSE: ${JCOV_LICENSE}"
 
 #----- AsmTools -----
 setup_asmtools() {
@@ -842,6 +724,25 @@ setup_hamcrest() {
 setup_hamcrest
 info "HAMCREST_JAR: ${HAMCREST_JAR}"
 
+#-----
+# Create aggregate settings
+
+ASMTOOLS_NOTICES="$(mixed_path "${ASMTOOLS_LICENSE}")"
+info "ASMTOOLS_NOTICES: ${ASMTOOLS_NOTICES}"
+
+JTHARNESS_NOTICES="$(mixed_path "${JTHARNESS_COPYRIGHT}") $(mixed_path "${JTHARNESS_LICENSE}")"
+info "JTHARNESS_NOTICES: ${JTHARNESS_NOTICES}"
+
+TESTNG_JARS="$(mixed_path "${TESTNG_JAR}") $(mixed_path "${GOOGLE_GUICE_JAR}") $(mixed_path "${JCOMMANDER_JAR}")"
+info "TESTNG_JARS: ${TESTNG_JARS}"
+TESTNG_NOTICES="$(mixed_path "${TESTNG_LICENSE}")"
+info "TESTNG_NOTICES: ${TESTNG_NOTICES}"
+
+JUNIT_JARS="$(mixed_path "${JUNIT_JAR}") $(mixed_path "${HAMCREST_JAR}")"
+info "JUNIT_JARS: ${JUNIT_JARS}"
+JUNIT_NOTICES="$(mixed_path "${JUNIT_LICENSE}")"
+info "JUNIT_NOTICES: ${JUNIT_NOTICES}"
+
 ##
 # The build version typically comes from the version-numbers file;
 # It is expected that the build number will typically come from an external CI system.
@@ -865,6 +766,12 @@ info "JTREG_VERSION: ${JTREG_VERSION}"
 info "JTREG_BUILD_NUMBER: ${JTREG_BUILD_NUMBER}"
 info "JTREG_BUILD_MILESTONE: ${JTREG_BUILD_MILESTONE}"
 
+check_files() {
+    for i in "$@" ; do
+        check_file "$i"
+    done
+}
+
 check_file() {
     check_arguments "${FUNCNAME}" 1 $#
 
@@ -885,24 +792,16 @@ check_dir() {
     fi
 }
 
-check_file "${ANT}"
-check_file "${ANT_JAR}"
-check_file "${ASMTOOLS_JAR}"
-check_file "${ASMTOOLS_LICENSE}"
-check_file "${GOOGLE_GUICE_JAR}"
-check_file "${HAMCREST_JAR}"
-check_dir  "${JAVA_HOME}"
-check_file "${JCOMMANDER_JAR}"
-check_file "${JCOV_JAR}"
-check_file "${JCOV_LICENSE}"
-check_file "${JCOV_NETWORK_SAVER_JAR}"
-check_file "${JTHARNESS_COPYRIGHT}"
-check_file "${JTHARNESS_JAVATEST_JAR}"
-check_file "${JTHARNESS_LICENSE}"
-check_file "${JUNIT_JAR}"
-check_file "${JUNIT_LICENSE}"
-check_file "${TESTNG_JAR}"
-check_file "${TESTNG_LICENSE}"
+check_file  "${ANT}"
+check_file  "${ASMTOOLS_JAR}"
+check_files  ${ASMTOOLS_NOTICES}
+check_dir   "${JAVA_HOME}"
+check_file  "${JTHARNESS_JAVATEST_JAR}"
+check_files  ${JTHARNESS_NOTICES}
+check_files  ${JUNIT_JARS}
+check_files  ${JUNIT_NOTICES}
+check_files  ${TESTNG_JARS}
+check_files  ${TESTNG_NOTICES}
 
 if [ -n "${SKIP_MAKE:-}" ]; then
     exit
@@ -910,27 +809,18 @@ fi
 
 # Build jtreg
 cd "${ROOT}/make"
-make ANT="${ANT}"                                             \
-     ANT_JAR="$(mixed_path "${ANT_JAR}")"                     \
-     ASMTOOLS_JAR="${ASMTOOLS_JAR}"                           \
-     ASMTOOLS_LICENSE="${ASMTOOLS_LICENSE}"                   \
+make ASMTOOLS_JAR="${ASMTOOLS_JAR}"                           \
+     ASMTOOLS_NOTICES="${ASMTOOLS_NOTICES}"                   \
      BUILDDIR="${BUILD_DIR}"                                  \
      BUILD_MILESTONE="${JTREG_BUILD_MILESTONE}"               \
      BUILD_NUMBER="${JTREG_BUILD_NUMBER}"                     \
      BUILD_VERSION="${JTREG_VERSION}"                         \
      BUILD_VERSION_STRING="${JTREG_VERSION_STRING}"           \
-     GOOGLE_GUICE_JAR="${GOOGLE_GUICE_JAR}"                   \
-     HAMCREST_JAR="${HAMCREST_JAR}"                           \
      JAVATEST_JAR="$(mixed_path "${JTHARNESS_JAVATEST_JAR}")" \
-     JCOMMANDER_JAR="${JCOMMANDER_JAR}"                       \
-     JCOV_JAR="${JCOV_JAR}"                                   \
-     JCOV_LICENSE="${JCOV_LICENSE}"                           \
-     JCOV_NETWORK_SAVER_JAR="${JCOV_NETWORK_SAVER_JAR}"       \
      JDKHOME="${JAVA_HOME}"                                   \
-     JTHARNESS_COPYRIGHT="${JTHARNESS_COPYRIGHT}"             \
-     JTHARNESS_LICENSE="${JTHARNESS_LICENSE}"                 \
-     JUNIT_JAR="$(mixed_path "${JUNIT_JAR}")"                 \
-     JUNIT_LICENSE="${JUNIT_LICENSE}"                         \
-     TESTNG_JAR="$(mixed_path "${TESTNG_JAR}")"               \
-     TESTNG_LICENSE="${TESTNG_LICENSE}"                       \
+     JTHARNESS_NOTICES="${JTHARNESS_NOTICES}"                 \
+     JUNIT_JARS="${JUNIT_JARS}"                               \
+     JUNIT_NOTICES="${JUNIT_NOTICES}"                         \
+     TESTNG_JARS="${TESTNG_JARS}"                             \
+     TESTNG_NOTICES="${TESTNG_NOTICES}"                       \
    ${MAKE_ARGS:-}
