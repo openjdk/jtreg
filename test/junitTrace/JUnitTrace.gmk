@@ -25,23 +25,26 @@
 
 #----------------------------------------------------------------------
 
-$(BUILDTESTDIR)/JUnitTrace.ok: \
-	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	    $(JTREG_IMAGEDIR)/bin/jtreg
+$(BUILDTESTDIR)/JUnitTrace.agentvm.ok \
+$(BUILDTESTDIR)/JUnitTrace.othervm.ok: \
+		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
+		$(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDKHOME) \
-		-agentvm \
+		-$(@:$(BUILDTESTDIR)/JUnitTrace.%.ok=%) \
 		$(TESTDIR)/junitTrace/  \
 			> $(@:%.ok=%/jt.log) 2>&1 || \
-	    true "non-zero exit code from JavaTest intentionally ignored"
-	$(GREP) -s 'Test results: passed: 1; failed: 1' $(@:%.ok=%/jt.log)  > /dev/null
+			true "non-zero exit code from JavaTest intentionally ignored"
+	$(GREP) -s 'Test results: passed: 2; failed: 1' $(@:%.ok=%/jt.log)  > /dev/null
 	$(GREP) -s "java.lang.NullPointerException: NPE" $(@:%.ok=%/work/NPE.jtr) > /dev/null
 	if $(GREP) -s "^\s\s*at " $(@:%.ok=%/work/Pass.jtr) > /dev/null ; then \
 		echo "unexpected text"; exit 1; \
 	fi
 	echo "test passed at `date`" > $@
 
-TESTS.jtreg += $(BUILDTESTDIR)/JUnitTrace.ok
+TESTS.jtreg += \
+	$(BUILDTESTDIR)/JUnitTrace.agentvm.ok \
+	$(BUILDTESTDIR)/JUnitTrace.othervm.ok
 
