@@ -87,13 +87,13 @@ setup_shasum() {
 native_path() {
     check_arguments "${FUNCNAME}" 1 $#
 
-    if [ $CYGWIN -eq 1 ]; then echo $(cygpath -w $1); else echo "$1"; fi
+    if [ $CYGWIN_OR_MSYS -eq 1 ]; then echo $(cygpath -w $1); else echo "$1"; fi
 }
 
 mixed_path() {
     check_arguments "${FUNCNAME}" 1 $#
 
-    if [ $CYGWIN -eq 1 ]; then echo $(cygpath -m $1); else echo "$1"; fi
+    if [ $CYGWIN_OR_MSYS -eq 1 ]; then echo $(cygpath -m $1); else echo "$1"; fi
 }
 
 ##
@@ -331,4 +331,7 @@ export ANT_ARCHIVE_URL_BASE="${ANT_ARCHIVE_URL_BASE:-https://archive.apache.org/
 
 setup_shasum
 
-case $(uname) in CYGWIN*) CYGWIN=1 ;; *) CYGWIN=0 ;; esac
+##
+# Support for Cygwin and MSYS2
+#
+case $(uname) in CYGWIN*|MSYS*) CYGWIN_OR_MSYS=1 ;; *) CYGWIN_OR_MSYS=0 ;; esac

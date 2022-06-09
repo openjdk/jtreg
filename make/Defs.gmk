@@ -39,7 +39,7 @@ LD_LIBRARY_PATH=
 
 #----------------------------------------------------------------------
 #
-# Support for Cygwin
+# Support for Cygwin and MSYS2
 
 SYSTEM_UNAME := $(shell uname)
 
@@ -53,9 +53,15 @@ endif
 
 ifneq (,$(findstring CYGWIN,$(SYSTEM_UNAME)))
 USING_CYGWIN = true
+USING_CYGWIN_OR_USING_MSYS = true
 endif
 
-ifdef USING_CYGWIN
+ifneq (,$(findstring MSYS,$(SYSTEM_UNAME)))
+USING_MSYS = true
+USING_CYGWIN_OR_USING_MSYS = true
+endif
+
+ifdef USING_CYGWIN_OR_USING_MSYS
 define FullPath
 $(shell cygpath -a -m $1 2> $(DEV_NULL))
 endef
