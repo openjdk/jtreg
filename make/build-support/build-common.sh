@@ -332,6 +332,6 @@ export ANT_ARCHIVE_URL_BASE="${ANT_ARCHIVE_URL_BASE:-https://archive.apache.org/
 setup_shasum
 
 ##
-# Support for Cygwin and MSYS2
+# Support for Cygwin and MSYS2 (which may identify as MSYS, MINGW32 or MINGW64 (the default))
 #
-case $(uname) in CYGWIN*|MSYS*) CYGWIN_OR_MSYS=1 ;; *) CYGWIN_OR_MSYS=0 ;; esac
+case $(uname) in CYGWIN*|MSYS*|MINGW) CYGWIN_OR_MSYS=1 ;; *) CYGWIN_OR_MSYS=0 ;; esac

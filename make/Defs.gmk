@@ -39,7 +39,7 @@ LD_LIBRARY_PATH=
 
 #----------------------------------------------------------------------
 #
-# Support for Cygwin and MSYS2
+# Support for Cygwin and MSYS2 (which may identify as MSYS, MINGW32 or MINGW64 (the default))
 
 SYSTEM_UNAME := $(shell uname)
 
@@ -56,7 +56,7 @@ USING_CYGWIN = true
 USING_CYGWIN_OR_USING_MSYS = true
 endif
 
-ifneq (,$(findstring MSYS,$(SYSTEM_UNAME)))
+ifneq (,$(findstring MSYS,$(SYSTEM_UNAME))$(findstring MINGW,$(SYSTEM_UNAME)))
 USING_MSYS = true
 USING_CYGWIN_OR_USING_MSYS = true
 endif
