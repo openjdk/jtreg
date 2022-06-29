@@ -333,8 +333,8 @@ $(JTREG_IMAGEDIR)/release:
 	echo "BUILD_DATE=`/bin/date +'%B %d, %Y'`" >> $@
 	if [ -r $(TOPDIR)/.git ]; then \
 	    echo "SOURCE=$$($(ID_COMMAND))" >> $@ ; \
-	elif [ -r $(TOPDIR)/.src-rev ]; then \
-	    echo "SOURCE=\"$$($(CAT) $(TOPDIR)/.src-rev | $(SED) -e 's/:/:git:/' -e 's/  *$$//')\"" >> $@ ; \
+	elif [ -n "$(SRCREV)" -a -r $(SRCREV) ]; then \
+	    echo "SOURCE=\"$$($(CAT) $(SRCREV) | $(SED) -e 's/:/:git:/' -e 's/  *$$//')\"" >> $@ ; \
 	fi
 
 TARGETS.ZIP.jtreg += \
