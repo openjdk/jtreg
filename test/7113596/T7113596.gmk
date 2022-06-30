@@ -30,9 +30,10 @@ $(BUILDTESTDIR)/T7113596.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	$(LN) -s $(JDKHOME) $(@:%.ok=%)/jdk
+	ABS_TESTDIR=`cd $(TESTDIR) ; pwd` ; \
 	cd $(@:%.ok=%) && $(JDKJAVA) -jar $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		-jdk:jdk \
-		../../$(TESTDIR)/7113596
+		$${ABS_TESTDIR}/7113596
 	for i in COMPILEJAVA TESTJAVA ; do \
 	    value=`$(GREP) $$i= $(@:%.ok=%)/JTwork/Test.jtr | $(SED) -e 's/[^=]*=//' | head -n 1` ; \
 	    case $$value in \
