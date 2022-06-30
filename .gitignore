@@ -1,4 +1,5 @@
 /build/
+/.idea/
 /webrev
 .DS_Store
-/.idea/
+.src-rev
