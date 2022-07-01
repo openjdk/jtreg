@@ -25,6 +25,14 @@
 
 #----------------------------------------------------------------------
 
+ifdef HEADLESS
+REPORT_EXPECT_PASS = 91
+REPORT_EXPECT_FAIL = 40
+else
+REPORT_EXPECT_PASS = 93
+REPORT_EXPECT_FAIL = 44
+endif
+
 # for full JavaTest gui, add "-gui" to jtreg call
 $(BUILDTESTDIR)/ReportOnlyTest.ok: $(BUILDTESTDIR)/Basic.othervm.ok \
 		   $(JTREG_IMAGEDIR)/lib/javatest.jar \
@@ -38,10 +46,8 @@ $(BUILDTESTDIR)/ReportOnlyTest.ok: $(BUILDTESTDIR)/Basic.othervm.ok \
 		$(TESTDIR)/share/basic \
 			> $(@:%.ok=%.jt.log) 2>&1 || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
-	$(GREP) -s 'Test results: passed: 93; failed: 44; error: 88' $(@:%.ok=%.jt.log)  > /dev/null
+	$(GREP) -s 'Test results: passed: $(REPORT_EXPECT_PASS); failed: $(REPORT_EXPECT_FAIL); error: 88' $(@:%.ok=%.jt.log)  > /dev/null
 	echo $@ passed at `date` > $@
 
-ifndef HEADLESS
 TESTS.jtreg += $(BUILDTESTDIR)/ReportOnlyTest.ok
-endif
 

@@ -23,10 +23,11 @@
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.List;
 
 import com.sun.javatest.Harness;
 import com.sun.javatest.InterviewParameters;
@@ -39,10 +40,8 @@ import com.sun.javatest.TestResult;
 import com.sun.javatest.TestResultTable;
 import com.sun.javatest.TestSuite;
 import com.sun.javatest.WorkDirectory;
-import com.sun.javatest.regtest.config.RegressionTestFinder;
 import com.sun.javatest.regtest.config.RegressionTestSuite;
 import com.sun.javatest.regtest.config.RegressionParameters;
-import com.sun.javatest.regtest.exec.RegressionScript;
 
 public class Basic
 {
@@ -55,6 +54,9 @@ public class Basic
             System.exit(1);
         }
     }
+
+    public static final String headlessProperty = System.getProperty("java.awt.headless");
+    public static final boolean isHeadless = java.awt.GraphicsEnvironment.isHeadless();
 
     public Basic(String[] args) {
 
@@ -76,6 +78,8 @@ public class Basic
         System.out.println("jdk:       " + jdkPath);
         System.out.println("envVars:   " + envVars);
         System.out.println("mode:      " + modeOpt);
+        System.out.println("headless:  " + isHeadless);
+        System.out.println("java.awt.headless: " + headlessProperty);
 
         try {
             testSuite = new RegressionTestSuite(new File(testSuitePath),
@@ -91,7 +95,8 @@ public class Basic
             else
                 workDir = WorkDirectory.convert(wd, testSuite);
 
-            String[] regtest_args = {
+            List<String> regtest_args = new ArrayList<>();
+            regtest_args.addAll(List.of(
                 "-a",
                 "-e", envVars,
                 "-w", workDir.getPath(),
@@ -99,14 +104,25 @@ public class Basic
                 "-jdk", jdkPath,
                 "-observer", Basic.Observer.class.getName(),
                 "-observerPath", System.getProperty("java.class.path"),
-                modeOpt,
+                modeOpt));
+
+            if (headlessProperty != null) {
+                // propagate system property if set
+                regtest_args.add("-Djava.awt.headless=" + headlessProperty);
+            }
+
+            if (isHeadless) {
+                // deselect tests that need a display
+                regtest_args.add("-k:!needDisplay");
+            }
+            regtest_args.add(
                 testSuite.getPath()
-            };
+            );
 
             System.out.println(INFO_INITIAL_RUN);
             System.setProperty("javatest.regtest.args", "old");
             com.sun.javatest.regtest.Main m = new com.sun.javatest.regtest.Main();
-            m.run(regtest_args);
+            m.run(regtest_args.toArray(new String[0]));
             System.out.println(INFO_OK + "...batch execution");
 
             setExpectedTestStats();
@@ -157,8 +173,8 @@ public class Basic
         int numDriver = 0;
 
         // applet
-        numPassed += 2; numFailed += 4; numError  += 11;
-        numApplet += 17;
+        numPassed += (isHeadless ? 0 : 2); numFailed += (isHeadless ? 0 : 4); numError  += 11;
+        numApplet += 11 + (isHeadless ? 0 : 6);
 
         // build
         numPassed += 6; numFailed += 0; numError  += 5;
@@ -356,7 +372,11 @@ public class Basic
             rp.setWorkDirectory(workDir);
             rp.setTests((String[])null);
             rp.setExcludeLists(new Path[0]);
-            rp.setKeywordsExpr("!manual");
+            if (isHeadless) {
+                rp.setKeywordsExpr("!manual & !needDisplay");
+            } else {
+                rp.setKeywordsExpr("!manual");
+            }
             rp.setPriorStatusValues(null);
         }
         catch (RegressionParameters.Fault e) {

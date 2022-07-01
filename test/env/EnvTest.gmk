@@ -25,6 +25,10 @@
 
 ENV.files := $(shell find $(TESTDIR)/env -type f)
 
+ifdef HEADLESS
+ENV_JTREG_OPT = -k:!needDisplay
+endif
+
 $(BUILDTESTDIR)/EnvTest.simple.ok: $(ENV.files) \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
@@ -37,13 +41,14 @@ $(BUILDTESTDIR)/EnvTest.simple.ok: $(ENV.files) \
 	  echo "test.tool.vm.opts=" ; \
 	  echo "test.compiler.opts=" ; \
 	  echo "test.java.opts="; \
-	  echo "test.jdk=$(JDK6HOME)"; \
-	  echo "compile.jdk=$(JDK6HOME)" ) > $(@:%.ok=%/ref.properties)
+	  echo "test.jdk=$(JDK8HOME)"; \
+	  echo "compile.jdk=$(JDK8HOME)" ) > $(@:%.ok=%/ref.properties)
 	JT_JAVA=$(JDKHOME) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(JDK6HOME) \
+		-jdk:$(JDK8HOME) \
 		-e:refprops=`cd $(@:%.ok=%); pwd`/ref.properties \
 		-va \
+		$(ENV_JTREG_OPT) \
 		$(TESTDIR)/env \
 			> $(@:%.ok=%/jt.log) 2>&1 || \
 	    ( cat $(@:%.ok=%/jt.log) ; exit 1 )
@@ -61,17 +66,18 @@ $(BUILDTESTDIR)/EnvTest.full.ok: $(ENV.files) \
 	  echo "test.tool.vm.opts=-J-DVM_OPT=vm_opt" ; \
 	  echo "test.compiler.opts=-XDJAVAC_OPT=javac_opt" ; \
 	  echo "test.java.opts=-DJAVA_OPT=java_opt"; \
-	  echo "test.jdk=$(JDK7HOME)"; \
-	  echo "compile.jdk=$(JDK6HOME)" ) > $(@:%.ok=%/ref.properties)
+	  echo "test.jdk=$(JDK9HOME)"; \
+	  echo "compile.jdk=$(JDK8HOME)" ) > $(@:%.ok=%/ref.properties)
 	JT_JAVA=$(JDKHOME) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-compilejdk:$(JDK6HOME) \
-		-testjdk:$(JDK7HOME) \
+		-compilejdk:$(JDK8HOME) \
+		-testjdk:$(JDK9HOME) \
 		-vmoption:-DVM_OPT=vm_opt \
 		-javaoption:-DJAVA_OPT=java_opt \
 		-javacoption:-XDJAVAC_OPT=javac_opt \
 		-e:refprops=`cd $(@:%.ok=%); pwd`/ref.properties \
 		-va \
+		$(ENV_JTREG_OPT) \
 		$(TESTDIR)/env \
 			> $(@:%.ok=%/jt.log) 2>&1 || \
 	    ( cat $(@:%.ok=%/jt.log) ; exit 1 )
@@ -79,13 +85,11 @@ $(BUILDTESTDIR)/EnvTest.full.ok: $(ENV.files) \
 
 
 ifneq ($(OS_NAME), windows)
-ifdef JDK6HOME
-ifdef JDK7HOME
-ifndef HEADLESS
+ifdef JDK8HOME
+ifdef JDK9HOME
 TESTS.jtreg += \
 	$(BUILDTESTDIR)/EnvTest.simple.ok \
 	$(BUILDTESTDIR)/EnvTest.full.ok
-endif
 endif
 endif
 endif
