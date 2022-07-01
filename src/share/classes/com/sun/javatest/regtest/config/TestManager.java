@@ -59,7 +59,7 @@ import com.sun.javatest.util.I18NResourceBundle;
  * Manage tests to be run by jtreg.
  */
 public class TestManager {
-    public class NoTests extends Fault {
+    public static class NoTests extends Fault {
         private static final long serialVersionUID = 1L;
 
         public NoTests() {
@@ -76,7 +76,7 @@ public class TestManager {
 
     Map<Path, Entry> map = new TreeMap<>();
 
-    private class Entry {
+    private static class Entry {
         final Path rootDir;
         boolean all = false;
         Map<String, Boolean> files = new LinkedHashMap<>();
@@ -131,7 +131,7 @@ public class TestManager {
             throw new Fault(i18n, "tm.cantDetermineTestSuite", tf);
 
         Entry e = getEntry(rootDir);
-        if (tf.equals(rootDir)) {
+        if (f.equals(rootDir)) {
             e.all = true;
             e.files.clear();
         } else if (!e.all) {
@@ -169,7 +169,7 @@ public class TestManager {
                 if (!e.testSuite.getRootDir().toPath().equals(e.rootDir)) {
                     System.err.println("e.testSuite.getRootDir(): " + e.testSuite.getRootDir());
                     System.err.println("e.rootDir: " + e.rootDir);
-                    System.err.println(e.testSuite.getRootDir().equals(e.rootDir));
+                    System.err.println(e.testSuite.getRootDir().toPath().equals(e.rootDir));
                     throw new AssertionError();
                 }
                 } catch (TestSuite.Fault f) {
@@ -211,9 +211,7 @@ public class TestManager {
                     e.workDir = WorkDirectory.convert(wdf, ts);
                 else
                     e.workDir = WorkDirectory.create(wdf, ts);
-            } catch (WorkDirectory.Fault ex) {
-                throw new Fault(i18n, "tm.cantRead", wd.getFileName().toString(), ex);
-            } catch (FileNotFoundException ex) {
+            } catch (WorkDirectory.Fault | FileNotFoundException ex) {
                 throw new Fault(i18n, "tm.cantRead", wd.getFileName().toString(), ex);
             }
         }
@@ -305,9 +303,9 @@ public class TestManager {
                 File f = new File(rootDir, path);
                 if (f.isDirectory())
                     return true;
-                TreeIterator iter = trt.getIterator(new String[] { path }, new TestFilter[0]);
+                TreeIterator iter = trt.getIterator(new String[] { path });
                 while (iter.hasNext()) {
-                    TestResult tr = (TestResult) iter.next();
+                    TestResult tr = iter.next();
                     String trp = tr.getDescription().getRootRelativePath();
                     if (path.equals(trp))
                         return true;
