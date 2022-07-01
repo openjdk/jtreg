@@ -1124,7 +1124,7 @@ public class Tool {
         testManager.addGroups(testGroupArgs);
 
         if (testManager.isEmpty())
-            throw testManager.new NoTests();
+            throw new TestManager.NoTests();
 
         boolean multiRun = testManager.isMultiRun();
 
