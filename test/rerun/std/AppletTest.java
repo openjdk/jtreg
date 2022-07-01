@@ -22,6 +22,7 @@
  */
 
 /* @test
+ * @key needDisplay
  * @run applet AppletTest.html
  */
 

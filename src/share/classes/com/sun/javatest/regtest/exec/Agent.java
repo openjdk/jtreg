@@ -107,6 +107,9 @@ public class Agent {
             cmd.addAll(vmOpts);
             if (policyFile != null)
                 cmd.add("-Djava.security.policy=" + policyFile.toURI());
+            String headless = System.getProperty("java.awt.headless");
+            if (headless != null)
+                cmd.add("-Djava.awt.headless=" + headless);
             cmd.add(AgentServer.class.getName());
 
             cmd.add(AgentServer.ID);

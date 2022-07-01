@@ -4,7 +4,7 @@
 # Mark Reinhold (mr@eng).
 
 # The list of acceptable keys for this testsuite.
-keys=2d dnd i18n
+keys=2d dnd i18n needDisplay
 
 # TestNG subdirectories
 TestNG.dirs=testng/group
