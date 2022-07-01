@@ -27,22 +27,21 @@
 
 $(BUILDTESTDIR)/RerunTest2.ok: \
 	    $(TESTDIR)/rerun2/RerunTest2.java \
-	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	    $(JTREG_IMAGEDIR)/lib/junit.jar \
-	    $(JTREG_IMAGEDIR)/lib/testng.jar \
+	    $(ALL_JTREG_JARS) \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
-	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	$(RM) $(@:%.ok=%) ; $(MKDIR) -p $(@:%.ok=%)
 	$(MKDIR) $(@:%.ok=%)/classes
 	$(JDKHOME)/bin/javac \
 		-d $(@:%.ok=%)/classes \
 		-cp $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		-Xlint -Werror \
 		$(TESTDIR)/rerun2/RerunTest2.java
+	ABS_TESTDIR=`cd $(TESTDIR) ; pwd` ; \
 	cd $(@:%.ok=%) && $(JDKJAVA) \
 		-classpath classes$(PS)$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		RerunTest2 \
 		$(JDK8HOME) \
-		../../$(TESTDIR)/rerun2/test
+		$${ABS_TESTDIR}/rerun2/test
 	echo "test passed at `date`" > $@
 
 ifdef JDK8HOME
