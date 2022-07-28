@@ -156,7 +156,7 @@ public abstract class TimeoutHandler {
      * @param proc the process
      * @return The process id, or 0 if the process id cannot be found
      */
-    protected long getProcessId(Process proc) {
+    public long getProcessId(Process proc) {
         try {
             try {
                 Method pid = Process.class.getMethod("pid");

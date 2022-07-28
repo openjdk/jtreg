@@ -30,9 +30,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.lang.ProcessHandle;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Stream;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -243,15 +246,41 @@ public class ProcessCommand
             InputStream processErr = process.getErrorStream();
 
             long start = System.currentTimeMillis();
+            Alarm pre_alarm = Alarm.NONE;
             Alarm alarm = Alarm.NONE;
             final CountDownLatch timeoutHandlerDone = new CountDownLatch(1);
+            final long PRE_ALARM_TIME_MS = 5000;
 
             if (timeout > 0) {
                 final Thread victim = Thread.currentThread();
-                alarm = Alarm.schedule(timeout, TimeUnit.MILLISECONDS, out, new Runnable() {
-                    public void run() {
-                        invokeTimeoutHandler(timeoutHandler, timeoutHandlerDone, process, victim);
+                pre_alarm = Alarm.schedule(timeout, TimeUnit.MILLISECONDS, out, new Runnable() {
+                  // at the timeout, as the last resort, we will exit all the (possibly hanging),
+                  // descendants of the process, in the hope that doing so will unstuck the process itself
+                  public void run() {
+                    long pid = getTimeoutHandler().getProcessId(process);
+                    Optional<ProcessHandle> oph = ProcessHandle.of(pid);
+                    if (oph.isPresent()) {
+                      ProcessHandle processHandle = oph.get();
+                      Stream<ProcessHandle> descendants = processHandle.descendants();
+                      long count = descendants.count();
+                      if (count > 0) {
+                        System.err.println("Detected a possibly stuck process (pid:"+pid+") with "+count+" descendants");
+                        System.err.println("Attempting to kill:");
+                        descendants = processHandle.descendants();
+                        descendants.forEachOrdered(child -> System.err.println(" child process with pid:"+child.pid()));
+                        descendants = processHandle.descendants();
+                        descendants.forEachOrdered(child -> child.destroy());
+                        descendants = processHandle.descendants();
+                        descendants.forEachOrdered(child -> child.destroyForcibly());
+                      }
                     }
+                  }
+                });
+                alarm = Alarm.schedule(timeout+PRE_ALARM_TIME_MS, TimeUnit.MILLISECONDS, out, new Runnable() {
+                  // if we reach here, then we tried everything and the only option now is to timeout
+                  public void run() {
+                    invokeTimeoutHandler(timeoutHandler, timeoutHandlerDone, process, victim);
+                  }
                 });
             }
 
@@ -271,12 +300,14 @@ public class ProcessCommand
                 errCopier.join();
                 int exitCode = process.waitFor();
 
+                pre_alarm.cancel();
                 // if the timeout hasn't fired, cancel it as quickly as possible
                 alarm.cancel();
 
                 return getStatus(exitCode, statusScanner.exitStatus());
 
             } catch (InterruptedException e) {
+                pre_alarm.cancel();
                 alarm.cancel();
                 return Status.error("Program `" + cmd.get(0) + "' interrupted");
             } finally {

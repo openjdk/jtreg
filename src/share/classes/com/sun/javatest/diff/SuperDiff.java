@@ -282,8 +282,8 @@ class SuperDiff extends Diff {
             return infoTable.get(path);
         }
 
-        final Set<String> platforms = new TreeSet<>();
-        final Map<String, Info> infoTable = new HashMap<>();
+        final transient Set<String> platforms = new TreeSet<>();
+        final transient Map<String, Info> infoTable = new HashMap<>();
     }
 
     static class YearDay implements Comparable<YearDay> {
