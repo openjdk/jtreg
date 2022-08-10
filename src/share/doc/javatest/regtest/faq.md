@@ -842,7 +842,7 @@ You have several alternatives.
 1.  Use the `-verbose:all` option, or the related result-sensitive
     options `-verbose:pass`, `-verbose:fail`, `-verbose:error`.
 2.  Use the JavaTest (JT Harness) harness GUI.
-3.  View the test's `.jtr` file. 
+3.  View the test's `.jtr` file.
     _Note: some characters in the file may be [encoded](#jtr-encoding)._
 4.  Use the `-show` option to display the unencoded content of a stream. For example,
     * `jtreg -w` _work-dir_ `-show:System.out` _test-name_
@@ -870,7 +870,7 @@ Characters outside that set are represented by `\uXXXX`, and `\` itself as writt
 Anyone viewing the contents of a `.jtr` directly, such as in a plain-text editor, or using
 command-line tools like `grep` need to be aware of that encoding and take it into account.
 
-To view the unencoded output from a test that has been recorded in a `.jtr` file, 
+To view the unencoded output from a test that has been recorded in a `.jtr` file,
 use the `jtreg` `-show:name` option.
 
     $ jtreg -w:/path/to/work-dir -show:System.out /path/to/test
@@ -881,7 +881,7 @@ without the use of the `jtreg` infrastructure.
 
 ### What names can I use with the `-show` option
 
-All recent versions of `jtreg` accept the name of an output stream as the name. 
+All recent versions of `jtreg` accept the name of an output stream as the name.
 
     $ jtreg ...  -show:stream-name ...
 
@@ -890,7 +890,7 @@ in the `.jtr` file.  For example, here is a heading for a stream named `System.o
 
     ----------System.out:(1/501)----------
 
-More recent versions (6.2 onwards) support an optional section name as well. 
+More recent versions (6.2 onwards) support an optional section name as well.
 See the command-line help for specific details in the version you are using.
 
     $ jtreg ... -show:section-name/stream-name
@@ -1025,7 +1025,7 @@ a while in case the files go away in a timely manner.
 
 ### What is the agent pool?
 
-The agent pool is a collection of reusable VMs that can be used to run 
+The agent pool is a collection of reusable VMs that can be used to run
 test actions, like `@compile` and `@run main`, when it is not required to
 run the action in a separate VM. VMs are started automatically as needed,
 and after each use, if they can be reset to a standard state, they are saved
@@ -1041,7 +1041,7 @@ The characteristics used to select a VM from the pool are:
 ### How do I control the agent pool?
 
 There is a limit to the number of VMs in the pool at any one time.
-The default is double the number of tests that may run 
+The default is double the number of tests that may run
 [concurrently](#how-do-i-specify-whether-to-run-tests-concurrently).
 The value can be overridden with the `--max-pool-size` option.
 Setting a larger number will mean more system resources are used
@@ -1306,7 +1306,7 @@ See the [previous entry](#how-much-output).
 TL;DR:  If you're trying to set `javatest.maxOutputSize`, it may be because you have seen a
 message in the middle of some very long output in a `.jtr` file.  You can either
 set the default value with a system property for the JVM running jtreg (_not_ the JVM(s)
-used to run tests), or you can override the default value for some or all tests with the 
+used to run tests), or you can override the default value for some or all tests with the
 `maxOutputSize` property in the `TEST.ROOT` or `TEST.properties` configuration files.
 
 ### How much time can a test take? {#how-much-time}
@@ -1806,7 +1806,7 @@ You can use `@run driver` to run a class that provides more complex logic, if ne
 ### My test uses "preview features": how do I specify the necessary options?
 
 Tests that use preview features must use the `--enable-preview` to compile
-and run the code.  In addition, to compile the code you must also specify the 
+and run the code.  In addition, to compile the code you must also specify the
 appropriate source level.
 
 To provide these options, you can either do so explicitly, in `@compile` and `@run main`
@@ -1815,11 +1815,11 @@ will automatically add any necessary options.
 
 Using explicit options in  `@compile` and `@run main` actions can be inconvenient
 and disruptive to the test description when the test can otherwise be set up to use
-implicit `@build` actions and the ensuing `@compile` actions. 
+implicit `@build` actions and the ensuing `@compile` actions.
 In these situations, the use of `@enablePreview` is generally recommended.
 
 The equivalent of `@enablePreview` can be set on all the tests in a directory
-and its subdirectories by configuring an entry for `enablePreview` in the 
+and its subdirectories by configuring an entry for `enablePreview` in the
 `TEST.properties` file in an enclosing directory. Any value set in a `TEST.properties`
 file can be overriden in individual tests by using `@enablePreview`.
 
@@ -2095,6 +2095,37 @@ Run the command `jtreg -version` to see the version of jtreg and available compo
 
 For OpenJDK, the policy is to use a supported, older version
 and not necessarily the latest and greatest version.
+
+### How do I find the path for the TestNG or JUnit jar files?
+
+It should not be necessary to determine the path for the TestNG or JUnit jar
+files when using the jtreg built-in support to run TestNG or JUnit tests,
+because jtreg will automatically set up all the necessary paths.  But sometimes
+it may be desirable for test code, such as a "driver" test, to run a set of
+TestNG or JUnit tests with some special set of options, perhaps in a separate
+JVM. In such situations, in may be necessary to construct a class path
+containing the paths for the necessary libraries.
+
+The best way to determine the path of the jar file for a library is to use the
+protection domain and code source for a representative class in the  library,
+such as with the following code:
+
+```java
+import java.security.ProtectionDomain;
+import java.security.CodeSource;
+
+...
+
+    public Path getPath(Class<?> libraryClass) {
+        CodeSource cs = libraryClass.getProtectionDomain().getCodeSource();
+        return Path.of(URI.create(cs.getLocation().toString()));
+    }
+```
+
+Note that starting with jtreg version 7, the convention for naming the jar file
+for the library is to use the base name of the jar file that was specified when
+jtreg was built, and that this name may depend on the version of the library.
+For this reason, you should not assume a fixed name for the library jar file.
 
 --------
 
