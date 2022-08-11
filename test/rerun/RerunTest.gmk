@@ -43,7 +43,7 @@ $(BUILDTESTDIR)/RerunTest.othervm.ok: \
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	unset GNOME_DESKTOP_SESSION_ID ; \
 	unset XMODIFIERS ; \
-	LANG=en_US.UTF-8 TZ=GMT+0.00 \
+	LANG=en_US.UTF-8 TZ=GMT+0.00 DISPLAY=$${DISPLAY:-dummy} \
 	JTREG_JAVA=$(JDKJAVA) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-J-Djavatest.regtest.allowTrailingBuild=true \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
