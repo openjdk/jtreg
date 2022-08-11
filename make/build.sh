@@ -764,20 +764,27 @@ if [ -n "${SKIP_MAKE:-}" ]; then
     exit
 fi
 
-# Build jtreg
+# save make command for possible later reuse, bypassing this script
+mkdir -p ${BUILD_DIR}
+cat > ${BUILD_DIR}/make.sh << EOF
+#!/bin/sh
+
 cd "${ROOT}/make"
-make ASMTOOLS_JAR="${ASMTOOLS_JAR}"                           \
-     ASMTOOLS_NOTICES="${ASMTOOLS_NOTICES}"                   \
-     BUILDDIR="${BUILD_DIR}"                                  \
-     BUILD_MILESTONE="${JTREG_BUILD_MILESTONE}"               \
-     BUILD_NUMBER="${JTREG_BUILD_NUMBER}"                     \
-     BUILD_VERSION="${JTREG_VERSION}"                         \
-     BUILD_VERSION_STRING="${JTREG_VERSION_STRING}"           \
-     JAVATEST_JAR="$(mixed_path "${JTHARNESS_JAVATEST_JAR}")" \
-     JDKHOME="$(mixed_path ${JAVA_HOME})"                     \
-     JTHARNESS_NOTICES="${JTHARNESS_NOTICES}"                 \
-     JUNIT_JARS="${JUNIT_JARS}"                               \
-     JUNIT_NOTICES="${JUNIT_NOTICES}"                         \
-     TESTNG_JARS="${TESTNG_JARS}"                             \
-     TESTNG_NOTICES="${TESTNG_NOTICES}"                       \
+make ASMTOOLS_JAR="${ASMTOOLS_JAR}"                           \\
+     ASMTOOLS_NOTICES="${ASMTOOLS_NOTICES}"                   \\
+     BUILDDIR="${BUILD_DIR}"                                  \\
+     BUILD_MILESTONE="${JTREG_BUILD_MILESTONE}"               \\
+     BUILD_NUMBER="${JTREG_BUILD_NUMBER}"                     \\
+     BUILD_VERSION="${JTREG_VERSION}"                         \\
+     BUILD_VERSION_STRING="${JTREG_VERSION_STRING}"           \\
+     JAVATEST_JAR="$(mixed_path "${JTHARNESS_JAVATEST_JAR}")" \\
+     JDKHOME="$(mixed_path ${JAVA_HOME})"                     \\
+     JTHARNESS_NOTICES="${JTHARNESS_NOTICES}"                 \\
+     JUNIT_JARS="${JUNIT_JARS}"                               \\
+     JUNIT_NOTICES="${JUNIT_NOTICES}"                         \\
+     TESTNG_JARS="${TESTNG_JARS}"                             \\
+     TESTNG_NOTICES="${TESTNG_NOTICES}"                       \\
    ${MAKE_ARGS:-}
+EOF
+
+sh ${BUILD_DIR}/make.sh
