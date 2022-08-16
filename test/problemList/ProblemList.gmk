@@ -47,7 +47,7 @@ $(BUILDTESTDIR)/ProblemList.ok: \
 		-jdk:$(JDKHOME) \
 		-agentvm \
 		$(TESTDIR)/problemList/  \
-			> $(@:%.ok=%/1/jt.log) 2>&1 
+			> $(@:%.ok=%/1/jt.log) 2>&1
 	$(GREP) -s 'Test results: passed: 6' $(@:%.ok=%/1/jt.log)  > /dev/null
 	$(MKDIR) $(@:%.ok=%)/2
 	@echo OS_ARCH $(OS_ARCH)
@@ -67,7 +67,7 @@ $(BUILDTESTDIR)/ProblemList.ok: \
 		-agentvm \
 		-exclude:$(@:%.ok=%)/2/ProblemList.txt \
 		$(TESTDIR)/problemList/  \
-			> $(@:%.ok=%/2/jt.log) 2>&1 
+			> $(@:%.ok=%/2/jt.log) 2>&1
 	$(GREP) -s 'Test results: passed: 1' $(@:%.ok=%/2/jt.log)  > /dev/null
 	echo $@ passed at `date` > $@
 

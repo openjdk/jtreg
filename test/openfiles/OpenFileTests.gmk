@@ -30,7 +30,7 @@
 # where open files can be a problem during file cleanup before/after
 # a test. On a non-Windows environment (i.e. Linux, Solaris) all
 # the tests in the openfiles test suite pass.
-# But, for now, these makefiles are not set up to run on Windows. 
+# But, for now, these makefiles are not set up to run on Windows.
 # When the makefiles are upgraded to run on Windows, the rules in this
 # makefile will have to be updated (perhaps by using target-specific
 # variable definitions) to behave correctly on Windows as well as

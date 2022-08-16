@@ -29,7 +29,7 @@
 $(BUILDTESTDIR)/BadGroups_badname.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
-	$(MKDIR) -p $(@:%.ok=%) 
+	$(MKDIR) -p $(@:%.ok=%)
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDKHOME) \
@@ -46,7 +46,7 @@ TESTS.jtreg += $(BUILDTESTDIR)/BadGroups_badname.ok
 $(BUILDTESTDIR)/BadGroups_badname51.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
-	$(MKDIR) -p $(@:%.ok=%) 
+	$(MKDIR) -p $(@:%.ok=%)
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-J-DOVERRIDE-jtreg-Version=5.1 \
 		-J-DOVERRIDE-jtreg-Build=b01 \

@@ -23,7 +23,7 @@
 # questions.
 #
 
-# use target-specific variables to specify jtreg option 
+# use target-specific variables to specify jtreg option
 # and the resulting expected timeout
 
 $(BUILDTESTDIR)/TimeoutHandlerTimeoutTest.default.ok: OPTION=
@@ -43,7 +43,7 @@ $(BUILDTESTDIR)/TimeoutHandlerTimeoutTest.timeout.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg \
 	    $(TESTDIR)/timeoutHandler/TestTimeoutHandler.java
-	$(MKDIR) -p $(@:%.ok=%)/classes 
+	$(MKDIR) -p $(@:%.ok=%)/classes
 	$(JDKJAVAC) -d $(@:%.ok=%)/classes \
 		-classpath $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		-Xlint -Werror \

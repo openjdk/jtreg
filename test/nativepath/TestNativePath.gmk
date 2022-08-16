@@ -64,21 +64,21 @@ $(BUILDTESTDIR)/TestNativePath.ok: \
 		-jdk:$(JDKHOME) \
 		-nativepath:/this/path/does/not/exist \
 		$(TESTDIR)/nativepath \
-		2>&1 | grep -q "The -nativepath path does not exist" 
+		2>&1 | grep -q "The -nativepath path does not exist"
 
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-jdk:$(JDKHOME) \
 		-nativepath:$(JTREG_IMAGEDIR)/bin/jtreg \
 		$(TESTDIR)/nativepath \
-		2>&1 | grep -q "The -nativepath path is not a directory" 
+		2>&1 | grep -q "The -nativepath path is not a directory"
 
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-jdk:$(JDKHOME) \
 		-nativepath:"$(JTREG_IMAGEDIR)/bin/jtreg$(PS)$(JDK6HOME)" \
 		$(TESTDIR)/nativepath \
-		2>&1 | grep -q "The argument to -nativepath cannot be more than one path." 
+		2>&1 | grep -q "The argument to -nativepath cannot be more than one path."
 
-        # Run a test with native code without the -nativepath option 
+        # Run a test with native code without the -nativepath option
         # should yield an error
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-jdk:$(JDKHOME) \

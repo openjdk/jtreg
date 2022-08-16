@@ -37,7 +37,7 @@ $(BUILDTESTDIR)/InterruptTest.ok: \
 		-encoding ASCII $(TESTDIR)/interrupt/InterruptTest.java
 	$(RM) -rf $(@:%.ok=%)/tmp
 	$(MKDIR) -p $(@:%.ok=%)/tmp
-	$(JDKJAVA) -cp "$(@:%.ok=%)/classes$(PS)$(JTREG_IMAGEDIR)/lib/jtreg.jar" -Djava.io.tmpdir=$(@:%.ok=%)/tmp InterruptTest 
+	$(JDKJAVA) -cp "$(@:%.ok=%)/classes$(PS)$(JTREG_IMAGEDIR)/lib/jtreg.jar" -Djava.io.tmpdir=$(@:%.ok=%)/tmp InterruptTest
 	echo "test passed at `date`" > $@
 
 # This is a manual GUI test. Do not run it by default.
