@@ -29,7 +29,7 @@
 # test running jtreg using classes in build/classes
 
 $(BUILDTESTDIR)/TestJDKVersion.classes.ok: \
-		$(JTREG_IMAGEDIR)/lib/jtreg.jar 
+		$(JTREG_IMAGEDIR)/lib/jtreg.jar
 	$(MKDIR) -p $(@:%.ok=%)
 	$(JDKJAVA) -cp "$(CLASSDIR)$(PS)$(JTREG_IMAGEDIR)/lib/javatest.jar" com.sun.javatest.regtest.Main \
 		-jdk:$(JDKHOME) \
@@ -44,7 +44,7 @@ $(BUILDTESTDIR)/TestJDKVersion.classes.ok: \
 # test running jtreg using classes in jtreg.jar on classpath
 
 $(BUILDTESTDIR)/TestJDKVersion.jar.ok: \
-		$(JTREG_IMAGEDIR)/lib/jtreg.jar 
+		$(JTREG_IMAGEDIR)/lib/jtreg.jar
 	$(MKDIR) -p $(@:%.ok=%)
 	$(JDKJAVA) -cp "$(JTREG_IMAGEJARDIR)/jtreg.jar$(PS)$(JTREG_IMAGEDIR)/lib/javatest.jar" com.sun.javatest.regtest.Main \
 		-jdk:$(JDKHOME) \

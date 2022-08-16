@@ -35,7 +35,7 @@ $(BUILDTESTDIR)/OptionDecoderTest.ok: \
 		-cp $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		-Xlint -Werror \
 		-encoding ASCII $(TESTDIR)/optionDecoder/OptionDecoderTest.java
-	$(JDKJAVA) -cp "$(@:%.ok=%)/classes$(PS)$(JTREG_IMAGEDIR)/lib/jtreg.jar" OptionDecoderTest 
+	$(JDKJAVA) -cp "$(@:%.ok=%)/classes$(PS)$(JTREG_IMAGEDIR)/lib/jtreg.jar" OptionDecoderTest
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += $(BUILDTESTDIR)/OptionDecoderTest.ok

@@ -59,6 +59,6 @@ $(BUILDTESTDIR)/TestRequiredVersion.ok: \
 
 TESTS.jtreg += \
     $(BUILDTESTDIR)/TestRequiredVersion.ok
-    
+
 testrequiredversion: \
     $(BUILDTESTDIR)/TestRequiredVersion.ok

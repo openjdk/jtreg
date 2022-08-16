@@ -57,7 +57,7 @@ INITIAL_TESTS += \
 
 ENVVARS="DISPLAY=$${DISPLAY:-`uname -n`:0.0}"
 
-ifeq ($(OS_NAME), windows) 
+ifeq ($(OS_NAME), windows)
   BASIC_TESTS := $(shell cygpath -m $(abspath $(TESTDIR)/share/basic) )
 else
   BASIC_TESTS := $(abspath $(TESTDIR)/share/basic)

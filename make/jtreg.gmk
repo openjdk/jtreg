@@ -104,7 +104,7 @@ $(BUILDDIR)/classes/com/sun/javatest/regtest/tool/jars.properties: \
 TARGETS.com.sun.javatest.regtest += $(RESOURCES.com.sun.javatest.regtest)
 
 #----------------------------------------------------------------------
-# 
+#
 # Misc. doc files
 
 JTREG_COPYRIGHT 	= $(JTREG_IMAGEDIR)/COPYRIGHT
@@ -154,7 +154,7 @@ $(JTREG_README): $(SRCJTREGDOCDIR)/README
 	$(RM) $@
 	$(CP) $< $@
 
-$(JTREG_TAGSPEC): $(JTREG_IMAGEDIR)/doc/jtreg/%: $(SRCJTREGDOCDIR)/% 
+$(JTREG_TAGSPEC): $(JTREG_IMAGEDIR)/doc/jtreg/%: $(SRCJTREGDOCDIR)/%
 	$(RM) $@
 	$(MKDIR) -p $(@D)
 	$(CP) $^ $@
@@ -310,7 +310,7 @@ ALL_JTREG_JARS = \
 #
 # executable scripts
 
-$(JTREG_IMAGEDIR)/bin/jtreg: $(SRCSHAREBINDIR)/jtreg.sh 
+$(JTREG_IMAGEDIR)/bin/jtreg: $(SRCSHAREBINDIR)/jtreg.sh
 	$(MKDIR) -p $(@D)
 	$(RM) $@
 	$(CP) $<  $@
@@ -363,5 +363,5 @@ NEWVERBOSEZIPFILES += $(JTREG_ZIPFILES:%.zip=%-$(NEW_VERBOSE_ZIP_SUFFIX).zip)
 #JTREG_JAVA_OPTS = -Ddebug.com.sun.javatest.TestResultCache=98
 #JTREG_OPTS = 	$(JTREG_JAVA_OPTS:%=-J%)
 
-TESTS += $(TESTS.jtreg) 
+TESTS += $(TESTS.jtreg)
 

@@ -34,7 +34,7 @@ $(BUILDTESTDIR)/BootClassPathTest.ok: \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDK8HOME) \
 		$(TESTDIR)/bootclasspath \
-			> $(@:%.ok=%/jt.log) 2>&1 
+			> $(@:%.ok=%/jt.log) 2>&1
 	echo "test passed at `date`" > $@
 
 ifdef JDK8HOME

@@ -53,8 +53,8 @@ $(BUILDTESTDIR)/CleanupDirsTests.othervm.ok: \
 
 
 #####
-# In agentvm and othervm mode using concurrency, jtreg should successfully 
-# run each test by moving to a new scratch directory when it can't clear 
+# In agentvm and othervm mode using concurrency, jtreg should successfully
+# run each test by moving to a new scratch directory when it can't clear
 # the previous one.
 # Note: without some form of `-retain`, we cannot rely on (and check for)
 # the final contents of the scratch directories, which depends on which
@@ -110,7 +110,7 @@ $(BUILDTESTDIR)/CleanupDirsTests.agentvm.retain.ok: \
 
 #####
 # In othervm mode with -retain, the tests pass because the
-# problem tests are written directly to the correct location 
+# problem tests are written directly to the correct location
 # and do not need to be moved.
 
 $(BUILDTESTDIR)/CleanupDirsTests.othervm.retain.ok: \
