@@ -251,6 +251,8 @@ public class ProcessCommand
             final CountDownLatch timeoutHandlerDone = new CountDownLatch(1);
             final long PRE_ALARM_TIME_MS = 5000;
 
+            cancelledChildren = false;
+
             if (timeout > 0) {
                 final Thread victim = Thread.currentThread();
                 pre_alarm = Alarm.schedule(timeout, TimeUnit.MILLISECONDS, out, new Runnable() {
@@ -264,6 +266,7 @@ public class ProcessCommand
                       Stream<ProcessHandle> descendants = processHandle.descendants();
                       long count = descendants.count();
                       if (count > 0) {
+                        cancelledChildren = true;
                         err.println("Detected a possibly stuck process (pid:"+pid+") with "+count+" descendants");
                         err.println("Attempting to kill:");
                         descendants = processHandle.descendants();
@@ -304,7 +307,11 @@ public class ProcessCommand
                 // if the timeout hasn't fired, cancel it as quickly as possible
                 alarm.cancel();
 
-                return getStatus(exitCode, statusScanner.exitStatus());
+                if (cancelledChildren) {
+                    return Status.error("Program `" + cmd.get(0) + "' had interrupted child processes");
+                } else {
+                    return getStatus(exitCode, statusScanner.exitStatus());
+                }
 
             } catch (InterruptedException e) {
                 pre_alarm.cancel();
@@ -442,5 +449,6 @@ public class ProcessCommand
     private PrintWriter err;
     private long timeout;
     private TimeoutHandler timeoutHandler;
+    private boolean cancelledChildren;
 }
 
