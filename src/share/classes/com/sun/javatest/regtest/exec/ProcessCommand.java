@@ -254,51 +254,33 @@ public class ProcessCommand
             if (timeout > 0) {
                 final Thread victim = Thread.currentThread();
                 pre_alarm = Alarm.schedule(timeout, TimeUnit.MILLISECONDS, out, new Runnable() {
-                    // at the timeout, as the last resort, we will exit all the (possibly hanging),
-                    // descendants of the process, in the hope that doing so will unstuck the process itself
-                    public void run() {
-                        long pid = getTimeoutHandler().getProcessId(process);
-                        Optional<ProcessHandle> oph = ProcessHandle.of(pid);
-                        if (oph.isPresent()) {
-                            ProcessHandle processHandle = oph.get();
-                            Stream<ProcessHandle> descendants = processHandle.descendants();
-                            long count = descendants.count();
-                            if (count > 0) {
-                                OutputStream processOut = process.getOutputStream();  // input stream to process
-                                if (processOut != null) {
-                                    try {
-                                        processOut.write(new String("Detected a possibly stuck process (pid:"+pid+") with "+count+" descendants").getBytes());
-                                        processOut.write(new String("Attempting to kill:").getBytes());
-                                    } catch (IOException e) {
-                                        // ignore
-                                    }
-                                }
-                                descendants = processHandle.descendants();
-                                if (processOut != null) {
-                                    List<Long> pids = new java.util.ArrayList<Long>();
-                                    descendants.forEachOrdered(child -> pids.add(Long.valueOf(child.pid())));
-                                    try {
-                                        for (Long l : pids) {
-                                            processOut.write(new String(" child process with pid:"+l.longValue()).getBytes());
-                                        }
-                                        processOut.flush();
-                                    } catch (IOException e) {
-                                        // ignore
-                                    }
-                                }
-                                descendants = processHandle.descendants();
-                                descendants.forEachOrdered(child -> child.destroy());
-                                descendants = processHandle.descendants();
-                                descendants.forEachOrdered(child -> child.destroyForcibly());
-                            }
-                        }
+                  // at the timeout, as the last resort, we will exit all the (possibly hanging),
+                  // descendants of the process, in the hope that doing so will unstuck the process itself
+                  public void run() {
+                    long pid = getTimeoutHandler().getProcessId(process);
+                    Optional<ProcessHandle> oph = ProcessHandle.of(pid);
+                    if (oph.isPresent()) {
+                      ProcessHandle processHandle = oph.get();
+                      Stream<ProcessHandle> descendants = processHandle.descendants();
+                      long count = descendants.count();
+                      if (count > 0) {
+                        err.println("Detected a possibly stuck process (pid:"+pid+") with "+count+" descendants");
+                        err.println("Attempting to kill:");
+                        descendants = processHandle.descendants();
+                        descendants.forEachOrdered(child -> err.println(" child process with pid:"+child.pid()));
+                        descendants = processHandle.descendants();
+                        descendants.forEachOrdered(child -> child.destroy());
+                        descendants = processHandle.descendants();
+                        descendants.forEachOrdered(child -> child.destroyForcibly());
+                      }
                     }
+                  }
                 });
                 alarm = Alarm.schedule(timeout+PRE_ALARM_TIME_MS, TimeUnit.MILLISECONDS, out, new Runnable() {
-                    // if we reach here, then we tried everything and the only option now is to timeout
-                    public void run() {
-                        invokeTimeoutHandler(timeoutHandler, timeoutHandlerDone, process, victim);
-                    }
+                  // if we reach here, then we tried everything and the only option now is to timeout
+                  public void run() {
+                    invokeTimeoutHandler(timeoutHandler, timeoutHandlerDone, process, victim);
+                  }
                 });
             }
 
