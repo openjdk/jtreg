@@ -201,7 +201,7 @@ Interpretation of this output is as follows:
 
 ### Bleah! That verbose output is so long!  Can I have something shorter?
 
-Yes. Several options provided with `jtreg` influence the output per test.  
+Yes. Several options provided with `jtreg` influence the output per test.
 Here are a few verbose settings in order of decreasing average output per test.
 
 * [`-verbose:fail`](#V.0) (and related `-verbose:pass`, `-verbose:error`, and `-verbose:all`)
@@ -1022,6 +1022,59 @@ cannot be deleted.
 jtreg will try hard to delete files in the scratch directory, and will wait
 awhile in case the files go away in a timely manner.
 
+### My tests take a long time to run: how do I find where the time goes?
+
+The [`.jtr`](#jtr-file) file for each test contains timing information
+for each action executed by the test and for the test as a whole.
+
+* There is a section in each `.jtr` file for each action executed as
+  part of the test, and in each section there is a line of the form:
+
+      elapsed time (seconds): NNNN
+
+  where _NNNN_ is the elapsed time (wall-clock time) taken to execute the
+  action.
+
+* In the _testresult_ data near the top of each `.jtr` file, there is
+  a line of the form:
+
+      elapsed=MILLIS HH:MM:SS.MIL
+
+  giving the time in two forms: first as the total number of milliseconds,
+  and then the same value expressed in hours, minutes, and seconds including
+  fractions of a second.
+
+  This line can easily be extracted by external tools, to aggregate
+  information about any desired set of tests.
+
+jtreg writes a simple summary of test execution times to a file in
+the [report directory](#report-work-dirs), called `text/timeStats.txt`.
+This file contains data to create a histogram giving the number of
+tests taking a given time to execute, rounded to the nearest second.
+These values are then followed by the mean and standard deviation
+of the test execution times.  If there are any tests taking an
+unexpectedly long time to execute, they can be determined by examining
+the `elapsed` entries in the `.jtr` files.
+
+You can also find the slowest tests with a command such as the following:
+
+    grep -r "^elapsed=" DIRS | sed -e 's/\\:/:/g' | sort -t = -k 2 -n -r
+
+where _DIRS_ is one or more directories containing `.jtr` files to be
+examined. The command scans the input files and directories looking for
+the `elapsed` lines, and then sorts the lines by the millisecond value
+in descending order.
+
+You can also use the `head` command to limit the output to the desired
+number of the slowest tests, represented here by _COUNT_:
+
+    grep -r "^elapsed=" DIRS | sed -e 's/\\:/:/g' | sort -t = -k 2 -n -r | head -n COUNT
+
+_Note:_ there is also an entry named `totalTime` in the _testresult_ data in
+each `.jtr` file, giving the execution time in seconds. As such, it is
+approximately equivalent to the value given in the `elapsed` value, after allowing
+for the different units (seconds compared to milliseconds) in the two values.
+
 ### What is the agent pool?
 
 The agent pool is a collection of reusable VMs that can be used to run
@@ -1044,7 +1097,7 @@ The default is double the number of tests that may run
 [concurrently](#how-do-i-specify-whether-to-run-tests-concurrently).
 The value can be overridden with the `--max-pool-size` option.
 Setting a larger number will mean more system resources are used
-to keep idle VMs available for potential reuse;  
+to keep idle VMs available for potential reuse;
 setting a smaller number will save system resources but will reduce
 the chance of being able to reuse a JVM.
 
@@ -1052,7 +1105,7 @@ There is also a time limit on how long an idle VM will remain in the pool,
 The default is 30 seconds.
 The value can be overridden with the `--pool-idle-timeout` option.
 Setting a larger number will mean more system resources are used
-to keep idle VMs available for potential reuse;  
+to keep idle VMs available for potential reuse;
 setting a smaller number will save system resources but will reduce
 the chance of being able to reuse a JVM.
 The value is used as given; it is not subject to the modification
