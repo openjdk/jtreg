@@ -1056,7 +1056,11 @@ of the test execution times.  If there are any tests taking an
 unexpectedly long time to execute, they can be determined by examining
 the `elapsed` entries in the `.jtr` files.
 
-You can also find the slowest tests with a command such as the following:
+### How do I find the tests that took longest to run?
+
+Using the [`elapsed`](#my-tests-take-a-long-time-to-run-how-do-i-find-where-the-time-goes)
+time written into each `.jtr` file, you can find the slowest tests with 
+a command such as the following:
 
     grep -r "^elapsed=" DIRS | sed -e 's/\\:/:/g' | sort -t = -k 2 -n -r
 
