@@ -111,9 +111,13 @@ public class RegressionReporter {
                 if (testStats != null)
                     testStats.report(r);
 
-                TestNGReporter tng = TestNGReporter.instance(params.getWorkDirectory());
-                if (!tng.isEmpty())
-                    tng.writeReport(rd);
+                for (var sr : List.of(
+                        SummaryReporter.forTestNG(params.getWorkDirectory()),
+                        SummaryReporter.forJUnit(params.getWorkDirectory()))) {
+                    if (!sr.isEmpty()) {
+                        sr.writeReport(rd);
+                    }
+                }
             }
             fixupReports(rd, wd);
             if (!quiet)

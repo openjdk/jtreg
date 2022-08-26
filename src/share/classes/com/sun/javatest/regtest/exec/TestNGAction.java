@@ -171,7 +171,7 @@ public class TestNGAction extends MainAction {
         super.endAction(s);
         if (script.isCheck())
             return;
-        script.getTestNGReporter().add(script.getTestResult(), section);
+        script.getTestNGSummaryReporter().add(script.getTestResult(), section);
         String jtrPath = script.getTestResult().getWorkRelativePath();
         String tngPath = jtrPath.replaceAll("\\.jtr$", ".testng-results.xml");
         script.saveScratchFile(TESTNG_RESULTS_XML, Path.of(tngPath));
