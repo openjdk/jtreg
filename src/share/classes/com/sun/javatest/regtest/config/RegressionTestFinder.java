@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -57,7 +57,7 @@ import com.sun.javatest.util.I18NResourceBundle;
 /**
   * This is a specific implementation of the TagTestFinder which is to be used
   * for JDK regression testing.  It follows the test-tag specifications as given
-  * in http://openjdk.java.net/jtreg/tag-spec.txt.
+  * in http://openjdk.org/jtreg/tag-spec.txt.
   *
   * A test description consists of a single block comment in either Java files
   * or shell-script files.  A file may contain multiple test descriptions.
@@ -142,8 +142,13 @@ public class RegressionTestFinder extends TagTestFinder
             if (tngRoot != null) {
                 scanTestNGFile(tngRoot, file);
             } else {
-                //super.scanFile(file);
-                modifiedScanFile(file);
+                File junitRoot = properties.getJUnitRoot(file);
+                if (junitRoot != null) {
+                    scanJUnitFile(junitRoot, file);
+                } else {
+                    //super.scanFile(file);
+                    modifiedScanFile(file);
+                }
             }
         } catch (TestSuite.Fault e) {
             error(i18n, "finder.cant.read.test.properties", e.getMessage());
@@ -297,48 +302,59 @@ public class RegressionTestFinder extends TagTestFinder
     }
 
     protected void scanTestNGFile(File tngRoot, File file) throws TestSuite.Fault {
-        Map<String,String> tagValues;
         if (isTestNGTest(file)) {
-            PackageImportParser p = new PackageImportParser(tngRoot, file);
-            p.parse();
-            String className = p.inferClassName();
-            try (BufferedReader in = new BufferedReader(new FileReader(file))) {
-                tagValues = readTestNGComments(file, in);
-                if (tagValues == null) {
-                    tagValues = new HashMap<>();
-                    // could read more of file looking for annotations like @Test, @Factory
-                    // to guess whether this is really a test file or not
-                }
+            scanFile(tngRoot, file, "testngClass", true);
+        }
+    }
 
-                tagValues.put("packageRoot", getRootDir().toURI().relativize(tngRoot.toURI()).getPath());
-                if (className == null) {
-                    tagValues.put("error", "cannot determine class name");
-                } else {
-                    tagValues.put("testngClass", className);
-                }
-                if (p.importsJUnit)
-                    tagValues.put("importsJUnit", "true");
+    protected void scanJUnitFile(File junitRoot, File file) throws TestSuite.Fault {
+        if (isJUnitTest(file)) {
+            scanFile(junitRoot, file, "junitClass", false);
+        }
+    }
 
-                Set<String> libDirs = properties.getLibDirs(file);
-                if (libDirs != null && !libDirs.isEmpty()) {
-                    tagValues.put("library", StringUtils.join(libDirs, " "));
-                }
-
-                foundTestDescription(tagValues, file, /*line*/0);
-            } catch (IOException e) {
-                error(i18n, "finder.ioError", file);
+    protected void scanFile(File junitRoot, File file, String classPropertyName, boolean setImportsJUnit) throws TestSuite.Fault {
+        Map<String,String> tagValues;
+        PackageImportParser p = new PackageImportParser(junitRoot, file);
+        p.parse();
+        String className = p.inferClassName();
+        try (BufferedReader in = new BufferedReader(new FileReader(file))) {
+            tagValues = readComments(file, in);
+            if (tagValues == null) {
+                tagValues = new HashMap<>();
+                // could read more of file looking for annotations like @Test, @Factory
+                // to guess whether this is really a test file or not
             }
+
+            tagValues.put("packageRoot", getRootDir().toURI().relativize(junitRoot.toURI()).getPath());
+            if (className == null) {
+                tagValues.put("error", "cannot determine class name");
+            } else {
+                tagValues.put(classPropertyName, className);
+            }
+            if (setImportsJUnit &&  p.importsJUnit) {
+                tagValues.put("importsJUnit", "true");
+            }
+
+            Set<String> libDirs = properties.getLibDirs(file);
+            if (libDirs != null && !libDirs.isEmpty()) {
+                tagValues.put("library", StringUtils.join(libDirs, " "));
+            }
+
+            foundTestDescription(tagValues, file, /*line*/0);
+        } catch (IOException e) {
+            error(i18n, "finder.ioError", file);
         }
     }
 
     private class PackageImportParser {
-        private final File tngRoot;
+        private final File rootDir;
         private final File file;
         String packageName;
         boolean importsJUnit;
 
-        PackageImportParser(File tngRoot, File file) {
-            this.tngRoot = tngRoot;
+        PackageImportParser(File rootDir, File file) {
+            this.rootDir = rootDir;
             this.file = file;
         }
 
@@ -394,7 +410,7 @@ public class RegressionTestFinder extends TagTestFinder
         }
 
         String inferClassName() {
-            String path = tngRoot.toURI().relativize(file.toURI()).getPath();
+            String path = rootDir.toURI().relativize(file.toURI()).getPath();
             String fn = file.getName();
             String cn = fn.replace(".java", "");
             String pkg_fn = (packageName == null) ? file.getName() : packageName.replace('.', '/') + "/" + fn;
@@ -409,7 +425,7 @@ public class RegressionTestFinder extends TagTestFinder
         }
     }
 
-    private Map<String,String> readTestNGComments(File file, BufferedReader in) throws IOException {
+    private Map<String,String> readComments(File file, BufferedReader in) throws IOException {
         CommentStream cs = new JavaCommentStream();
         cs.init(in);
         cs.setFastScan(true);
@@ -445,6 +461,16 @@ public class RegressionTestFinder extends TagTestFinder
     protected boolean isTestNGTest(File file) {
         // for now, ignore comments and annotations, and
         // assume *.java is a test
+        return isClassOrInterfaceFile(file);
+    }
+
+    protected boolean isJUnitTest(File file) {
+        // for now, ignore comments and annotations, and
+        // assume *.java is a test
+        return isClassOrInterfaceFile(file);
+    }
+
+    private boolean isClassOrInterfaceFile(File file) {
         String name = file.getName();
         return name.endsWith(".java")
                 && !name.equals("module-info.java")
@@ -468,19 +494,27 @@ public class RegressionTestFinder extends TagTestFinder
         Map<String, String> newTagValues = new HashMap<>();
         String fileName = getCurrentFile().getName();
         String baseName = fileName.substring(0, fileName.lastIndexOf("."));
-        boolean testNG = tagValues.containsKey("testngClass");
+        boolean isTestNG = tagValues.containsKey("testngClass");
+        boolean isJUnit = tagValues.containsKey("junitClass");
 
         // default values
         newTagValues.put("title", " ");
         newTagValues.put("source", fileName);
 
-        if (testNG) {
+        if (isTestNG) {
             if (tagValues.get("run") != null) {
                 tagValues.put("error", PARSE_BAD_RUN);
             }
             String className = tagValues.get("testngClass");
             newTagValues.put("run", Action.REASON_ASSUMED_ACTION + " testng "
                              + className + LINESEP);
+        } else if (isJUnit) {
+            if (tagValues.get("run") != null) {
+                tagValues.put("error", PARSE_BAD_RUN);
+            }
+            String className = tagValues.get("junitClass");
+            newTagValues.put("run", Action.REASON_ASSUMED_ACTION + " junit "
+                    + className + LINESEP);
         } else if (fileName.endsWith(".sh")) {
             newTagValues.put("run", Action.REASON_ASSUMED_ACTION + " shell "
                              + fileName + LINESEP);
@@ -570,10 +604,10 @@ public class RegressionTestFinder extends TagTestFinder
         if (match(value, SHELL_ACTION))
             keywords.add("shell");
 
-        if (match(value, JUNIT_ACTION))
+        if (match(value, JUNIT_ACTION) || isJUnit)
             keywords.add("junit");
 
-        if (match(value, TESTNG_ACTION) || testNG)
+        if (match(value, TESTNG_ACTION) || isTestNG)
             keywords.add("testng");
 
         if (match(value, DRIVER_ACTION))

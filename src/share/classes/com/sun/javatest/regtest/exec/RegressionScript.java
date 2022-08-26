@@ -75,7 +75,7 @@ import com.sun.javatest.regtest.config.ParseException;
 import com.sun.javatest.regtest.config.RegressionEnvironment;
 import com.sun.javatest.regtest.config.RegressionParameters;
 import com.sun.javatest.regtest.config.RegressionTestSuite;
-import com.sun.javatest.regtest.report.TestNGReporter;
+import com.sun.javatest.regtest.report.SummaryReporter;
 import com.sun.javatest.regtest.tool.Version;
 import com.sun.javatest.regtest.util.FileUtils;
 import com.sun.javatest.regtest.util.StringUtils;
@@ -186,15 +186,14 @@ public class RegressionScript extends Script {
             needJUnit = false;
             needTestNG = false;
 
-            if (td.getParameter("importsJUnit") != null) {
-                needJUnit = true;
-                needTestNG = true;
-            } else {
-                for (Action a : actionList) {
-                    if (a instanceof JUnitAction) {
+            for (Action a : actionList) {
+                if (a instanceof JUnitAction) {
+                    needJUnit = true;
+                } else if (a instanceof TestNGAction) {
+                    needTestNG = true;
+                    // check for using mixed-mode
+                    if (td.getParameter("importsJUnit") != null) {
                         needJUnit = true;
-                    } else if (a instanceof TestNGAction) {
-                        needTestNG = true;
                     }
                 }
             }
@@ -1093,8 +1092,12 @@ public class RegressionScript extends Script {
         return params.getAsmToolsPath();
     }
 
-    TestNGReporter getTestNGReporter() {
-        return TestNGReporter.instance(workDir);
+    SummaryReporter getTestNGSummaryReporter() {
+        return SummaryReporter.forTestNG(workDir);
+    }
+
+    SummaryReporter getJUnitSummaryReporter() {
+        return SummaryReporter.forJUnit(workDir);
     }
 
     Lock getLockIfRequired() throws TestRunException {
