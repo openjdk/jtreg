@@ -1015,6 +1015,17 @@ public class Tool {
                 }
             }
 
+            /* A "group" argument is of the form  [path]:id  where the path is a file path
+             * to the root of the test suite. On Windows, we have to be careful about
+             * the ambiguity between an absolute path beginning with a drive letter
+             * and a relative path that is a single letter. Therefore, on Windows,
+             * we accept the following for a path:
+             * - (empty)
+             * - a single non-alphabetic character followed by :id
+             * - two or more characters followed by :id
+             * Thus, letter:id is not accepted as a group spec, and so will be treated
+             * elsewhere as a plain absolute file path instead.
+             */
             Pattern groupPtn = System.getProperty("os.name").matches("(?i)windows.*")
                     ? Pattern.compile("(|[^A-Za-z]|.{2,}):[A-Za-z0-9_,]+")
                     : Pattern.compile(".*:[A-Za-z0-9_,]+");
