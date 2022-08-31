@@ -332,7 +332,7 @@ public class AppletWrapper
                     makeCheckboxPanel(boxNames, gridbag, c);
                 }
 
-                /// TAG-SPEC: If /manual is specified, the the HTML file itself will be
+                /// TAG-SPEC: If /manual is specified, the HTML file itself will be
                 /// displayed.
                 { // "html file instructions:" label
                     GridBagConstraints c  = new GridBagConstraints();

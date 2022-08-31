@@ -35,7 +35,7 @@ $(BUILDTESTDIR)/GroupTest.ok: $(GroupTest.GROUPS:%=$(BUILDTESTDIR)/GroupTest.%.o
 $(GroupTest.GROUPS:%=$(BUILDTESTDIR)/GroupTest.%.ok): \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
-	$(MKDIR) -p $(@:%.ok=%) 
+	$(MKDIR) -p $(@:%.ok=%)
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDKHOME) \
@@ -54,7 +54,7 @@ TESTS.jtreg += $(BUILDTESTDIR)/GroupTest.ok
 $(BUILDTESTDIR)/ShowGroupTest.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
-	$(MKDIR) -p $(@:%.ok=%) 
+	$(MKDIR) -p $(@:%.ok=%)
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDKHOME) \

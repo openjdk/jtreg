@@ -37,7 +37,7 @@ $(BUILDTESTDIR)/JDKOptsTest.ok: \
 		-encoding ASCII $(TESTDIR)/jdkOptsTest/JDKOptsTest.java
 	$(RM) -rf $(@:%.ok=%)/tmp
 	$(MKDIR) -p $(@:%.ok=%)/tmp
-	$(JDKJAVA) -cp "$(@:%.ok=%)/classes$(PS)$(JTREG_IMAGEDIR)/lib/jtreg.jar" -Djava.io.tmpdir=$(@:%.ok=%)/tmp JDKOptsTest 
+	$(JDKJAVA) -cp "$(@:%.ok=%)/classes$(PS)$(JTREG_IMAGEDIR)/lib/jtreg.jar" -Djava.io.tmpdir=$(@:%.ok=%)/tmp JDKOptsTest
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += $(BUILDTESTDIR)/JDKOptsTest.ok

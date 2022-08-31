@@ -455,6 +455,13 @@ public class MainAction extends Action
             }
         }
 
+        if (driverClass != null && testModuleName != null && testClassName.contains(".")) {
+            Module driverModule = driverClass.getModule();
+            String exportTarget = driverModule.isNamed() ? driverModule.getName() : "ALL-UNNAMED";
+            String testPackage = testClassName.substring(0, testClassName.lastIndexOf("."));
+            javaOpts.add("--add-exports=" + testModuleName + "/" + testPackage + "=" + exportTarget);
+        }
+
         javaOpts.addAll(getExtraModuleConfigOptions(Modules.Phase.DYNAMIC));
         javaOpts.addAll(script.getTestVMJavaOptions());
         javaOpts.addAll(script.getTestDebugOptions());
