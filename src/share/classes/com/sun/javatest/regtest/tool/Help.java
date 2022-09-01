@@ -384,9 +384,13 @@ public class Help {
             commandHelpTree.addNode(groupNode);
         }
 
-        HelpTree.Node n = new HelpTree.Node(i18n, "help.tests",
-                new String[] { "at", "groups" });
-        commandHelpTree.addNode(n);
+        HelpTree.Node testsNode = new HelpTree.Node(i18n, "help.tests",
+                //new String[] { "at", "groups", "summary" },
+                new HelpTree.Node(i18n, "help.tests", "at"),
+                new HelpTree.Node(i18n, "help.tests", "groups"),
+                new HelpTree.Node(i18n, "help.tests.summary",
+                        new String[] { "directory", "file", "group", "at-file" }));
+        commandHelpTree.addNode(testsNode);
 
         String progName = getProgramName();
 
