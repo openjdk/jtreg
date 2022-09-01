@@ -435,16 +435,32 @@ the sections containing any of the specified terms. For example:
 The most basic way to specify which tests to run is to give one or more paths
 directly on the command line, for directories and files containing tests.
 If a file contains multiple tests, you can specify the name of a test within
-that file by appending `#id`_N_ to the file path, where N is the number of
-the test within the file, where `0` identifies the first test.
+that file by appending `#`_ID_ to the file path, where _ID_ is either defined
+in the test itself after the `@test` tag, or the string `id`_N_  if no id is 
+explicitly defined, where N is the number of the test within the file, 
+and where `0` identifies the first test. 
 
-If you wish to specify a long list of files, you can put the list in a file
+If you wish to specify a long list of arguments, you can put the list in a file
 and specify that file using the `@`_file_ option.
 
 You may also specify the name of a group of tests. Groups are defined
 in the test suite, and define a collection of tests to be run.
 
-You may also refine the set of tests to be run in various ways:
+To summarise, you can use the following to specify tests to be run:
+
+| Argument                | Description                                         |
+|-------------------------|-----------------------------------------------------|
+| _directory_             | All tests found in files in and under the directory |
+| _file[#id]_             | All tests in a file, or a specific test in a file   |
+| _[directory]_`:`_group_ | All tests in a group defined for a testsuite        |   
+| `@`_file_               | Expand arguments in a file                          |
+
+
+You can further refine the set of tests to be run in various ways.
+
+### How do I refine the set of sets to run?
+
+You can refine the set of tests to be run in various ways:
 
 * You can filter the tests using keywords, using the `-k` option.
   The option can be given multiple times, and are combined conjunctively.
@@ -1078,6 +1094,17 @@ _Note:_ there is also an entry named `totalTime` in the _testresult_ data in
 each `.jtr` file, giving the execution time in seconds. As such, it is
 approximately equivalent to the value given in the `elapsed` value, after allowing
 for the different units (seconds compared to milliseconds) in the two values.
+
+### My system is unusable while I run tests. How do I fix that?
+
+* If you are using the `-conc` or `-concurrency` option to run tests in parallel,
+  try reducing the number of tests to be run at the same time.
+* Use VM options, like `-Xmx`, to limit the amount of memory available to each process.
+* Try reducing the priority used to run `jtreg` and the processes it runs. 
+  On POSIX systems, you can use the `nice` command to control the priority of a process.
+
+The JDK [`make test`](#how-do-i-run-jdk-jtreg-tests-using-make-test-and-the-jdk-makefile-infrastructure)
+framework automatically uses these techniques to reduce the load on a system.  
 
 ### What is the agent pool?
 
