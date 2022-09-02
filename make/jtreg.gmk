@@ -127,7 +127,12 @@ $(JTREG_COPYRIGHT): $(TOPDIR)/COPYRIGHT
 	$(RM) $@
 	$(CP) $< $@
 
-$(JTREG_FAQ):   $(SRCJTREGDOCDIR)/faq.md \
+$(JTREG_FAQ): FAQ_PANDOC_OPTIONS = --to html5
+
+$(BUILDDIR)/alt-faq.html: FAQ_PANDOC_OPTIONS = --to html4 --ascii
+$(BUILDDIR)/alt-faq.html: FAQ_SED_OPTIONS = -e '/max-width: 36em;/d'
+
+$(JTREG_FAQ) $(BUILDDIR)/alt-faq.html:   $(SRCJTREGDOCDIR)/faq.md \
 		$(SRCJTREGDOCDIR)/faq-local-style.html \
 		$(SRCJTREGDOCDIR)/faq-intro.html
 	$(MKDIR) -p $(@D)
@@ -137,7 +142,7 @@ $(JTREG_FAQ):   $(SRCJTREGDOCDIR)/faq.md \
 	    --include-in-header $(SRCJTREGDOCDIR)/faq-local-style.html \
 	    --include-before $(SRCJTREGDOCDIR)/faq-intro.html \
 	    --toc \
-	    --to html5 \
+	    $(FAQ_PANDOC_OPTIONS) \
 	    --number-sections \
 	    $(SRCJTREGDOCDIR)/faq.md | \
 	$(SED) \
@@ -146,7 +151,8 @@ $(JTREG_FAQ):   $(SRCJTREGDOCDIR)/faq.md \
 	    -e 's/…/\&hellip;/g' \
 	    -e 's/™/\&trade;/g' \
 	    -f  $(BUILDDIR)/fixupheader \
-	    > $(JTREG_FAQ)	
+	    $(FAQ_SED_OPTIONS) \
+	    > $@
 
 
 $(JTREG_README): $(SRCJTREGDOCDIR)/README
