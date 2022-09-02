@@ -448,6 +448,8 @@ in the test suite, and define a collection of tests to be run.
 
 To summarise, you can use the following to specify tests to be run:
 
+Table: Kinds of Supported Arguments
+
 | Argument                | Description                                         |
 |-------------------------|-----------------------------------------------------|
 | _directory_             | All tests found in files in and under the directory |
