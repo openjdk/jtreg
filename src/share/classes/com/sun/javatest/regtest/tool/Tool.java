@@ -1119,10 +1119,6 @@ public class Tool {
             baseDir = baseDirArg.toAbsolutePath();
         }
 
-        String antFileList = System.getProperty(JAVATEST_ANT_FILE_LIST);
-        if (antFileList != null)
-            antFileArgs.addAll(readFileList(Path.of(antFileList)));
-
         final TestManager testManager = new TestManager(out, baseDir, new TestFinder.ErrorHandler() {
             @Override
             public void error(String msg) {
@@ -1131,7 +1127,6 @@ public class Tool {
         });
         testManager.addTestFiles(testFileArgs, false);
         testManager.addTestFileIds(testFileIdArgs, false);
-        testManager.addTestFiles(antFileArgs, true);
         testManager.addGroups(testGroupArgs);
 
         if (testManager.isEmpty())
@@ -2296,9 +2291,6 @@ public class Tool {
     public List<String> testGroupArgs = new ArrayList<>();
     public List<Path> testFileArgs = new ArrayList<>();
     public List<TestManager.FileId> testFileIdArgs = new ArrayList<>();
-    // TODO: consider making this a "pathset" to detect redundant specification
-    // of directories and paths within them.
-    public final List<Path> antFileArgs = new ArrayList<>();
 
     // these args are jtreg extras
     private Path baseDirArg;
