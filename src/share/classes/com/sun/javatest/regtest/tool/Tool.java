@@ -1125,8 +1125,8 @@ public class Tool {
                 Tool.this.error(msg);
             }
         });
-        testManager.addTestFiles(testFileArgs, false);
-        testManager.addTestFileIds(testFileIdArgs, false);
+        testManager.addTestFiles(testFileArgs);
+        testManager.addTestFileIds(testFileIdArgs);
         testManager.addGroups(testGroupArgs);
 
         if (testManager.isEmpty())
