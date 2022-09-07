@@ -193,15 +193,11 @@ public class Help {
 
     void showTagSpec(PrintWriter out) {
         File docDir = getDocDir();
-        File tagSpec = new File(docDir, "tag-spec.txt");
-        try (BufferedReader in = new BufferedReader(new FileReader(tagSpec))) {
-            String line;
-            while ((line = in.readLine()) != null)
-                out.println(line);
-        } catch (FileNotFoundException e) {
+        File tagSpec = new File(docDir, "tag-spec.html");
+        if (tagSpec.exists()) {
+            out.println(i18n.getString("help.findSpecSuccessfully", tagSpec.toURI()));
+        } else {
             out.println(i18n.getString("help.cantFindSpec"));
-        } catch (IOException e) {
-            out.println(i18n.getString("help.cantReadSpec", e));
         }
     }
 
