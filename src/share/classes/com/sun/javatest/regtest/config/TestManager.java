@@ -79,7 +79,7 @@ public class TestManager {
     private static class Entry {
         final Path rootDir;
         boolean all = false;
-        Map<String, Boolean> files = new LinkedHashMap<>();
+        Set<String> files = new LinkedHashSet<>();
         Set<String> groups = new LinkedHashSet<>();
 
         RegressionTestSuite testSuite;
@@ -108,21 +108,21 @@ public class TestManager {
         this.errHandler = errHandler;
     }
 
-    public void addTestFiles(Collection<Path> testFiles, boolean ignoreEmptyFiles) throws Fault {
+    public void addTestFiles(Collection<Path> testFiles) throws Fault {
         Map<Path, Path> rootDirCache = new HashMap<>();
         for (Path tf: testFiles) {
-            addTest(rootDirCache, tf, null, ignoreEmptyFiles);
+            addTest(rootDirCache, tf, null);
         }
     }
 
-    public void addTestFileIds(Collection<FileId> testFiles, boolean ignoreEmptyFiles) throws Fault {
+    public void addTestFileIds(Collection<FileId> testFiles) throws Fault {
         Map<Path, Path> rootDirCache = new HashMap<>();
         for (FileId tf: testFiles) {
-            addTest(rootDirCache, tf.file, tf.id, ignoreEmptyFiles);
+            addTest(rootDirCache, tf.file, tf.id);
         }
     }
 
-    private void addTest(Map<Path, Path> rootDirCache, Path tf, String id, boolean ignoreEmptyFiles) throws Fault {
+    private void addTest(Map<Path, Path> rootDirCache, Path tf, String id) throws Fault {
         Path f = canon(tf.toFile()).toPath();
         if (!Files.exists(f))
             throw new Fault(i18n, "tm.cantFindFile", tf);
@@ -135,7 +135,7 @@ public class TestManager {
             e.all = true;
             e.files.clear();
         } else if (!e.all) {
-            e.files.put(getRelativePath(rootDir, f, id), ignoreEmptyFiles);
+            e.files.add(getRelativePath(rootDir, f, id));
         }
     }
 
@@ -265,13 +265,12 @@ public class TestManager {
             return null;
         WorkDirectory wd = getWorkDirectory(ts);
         Set<String> tests = new LinkedHashSet<>();
-        for (Map.Entry<String,Boolean> me: e.files.entrySet()) {
-            String test = me.getKey();
-            boolean ignoreEmptyFiles = me.getValue();
-            if (validatePath(wd, test))
+        for (String test: e.files) {
+            if (validatePath(wd, test)) {
                 tests.add(test);
-            else if (!ignoreEmptyFiles)
+            } else {
                 throw new Fault(i18n, "tm.notATest", test);
+            }
         }
         for (Path f: expandGroups(e)) {
             String test = getRelativePath(e.rootDir, f, null);
