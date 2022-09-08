@@ -193,7 +193,7 @@ public class Tool {
         if (osName != null && osName.equals("Mac OS X")) {
             try {
                 String expectVersion;
-                Process p = new ProcessBuilder("defaults", "read", "loginwindow", "SystemVersionStampAsString")
+                Process p = new ProcessBuilder("sw_vers", "-productVersion")
                         .redirectErrorStream(true)
                         .start();
                 try (InputStream in = p.getInputStream();
