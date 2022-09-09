@@ -1327,6 +1327,15 @@ as indicated by <code>@enablePreview</code> in the test description
 or an <code>enablePreview</code> entry in a TEST.properties file.
 
 <tr>
+<td><code>test.query</code>
+<td><code>TESTQUERY</code>
+<td>Set to the string specified on the command-line for this test,
+or not set if no value was specified. If set, a test may use
+the value to filter the parts of the test to be executed.
+For example, JUnit tests executed by the JUnit Platform, will interpret
+the value as the name of a single method to be executed.
+
+<tr>
 <td><i>Not Applicable</i>
 <td><code>FS</code>
 <td>The file separator character to use.

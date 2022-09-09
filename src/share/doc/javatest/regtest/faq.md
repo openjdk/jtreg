@@ -434,11 +434,17 @@ the sections containing any of the specified terms. For example:
 
 The most basic way to specify which tests to run is to give one or more paths
 directly on the command line, for directories and files containing tests.
+
 If a file contains multiple tests, you can specify the name of a test within
 that file by appending `#`_ID_ to the file path, where _ID_ is either defined
 in the test itself after the `@test` tag, or the string `id`_N_  if no id is 
 explicitly defined, where N is the number of the test within the file, 
 and where `0` identifies the first test. 
+
+If you specify `?`_string_ after the name of a test, the _string_ will be
+passed down to the test, for the test to filter the parts of the test to be
+executed. For any tests executed by JUnit Platform, the string is interpreted
+as the name of a single method in the test to be executed.
 
 If you wish to specify a long list of arguments, you can put the list in a file
 and specify that file using the `@`_file_ option.
@@ -450,12 +456,13 @@ To summarise, you can use the following to specify tests to be run:
 
 Table: Kinds of Supported Arguments
 
-| Argument                | Description                                         |
-|-------------------------|-----------------------------------------------------|
+| Argument                | Description                                        |
+|-------------------------|----------------------------------------------------|
 | _directory_             | All tests found in files in and under the directory |
-| _file[#id]_             | All tests in a file, or a specific test in a file   |
-| _[directory]_`:`_group_ | All tests in a group defined for a testsuite        |   
-| `@`_file_               | Expand arguments in a file                          |
+| _file[#id]_             | All tests in a file, or a specific test in a file  |
+| _file[#id]?string_      | Parts of a test in a file                          |
+| _[directory]_`:`_group_ | All tests in a group defined for a testsuite       |   
+| `@`_file_               | Expand arguments in a file                         |
 
 
 You can further refine the set of tests to be run in various ways.
@@ -481,6 +488,14 @@ You can refine the set of tests to be run in various ways:
 Note that in addition to the command-line options just listed, a test
 may contain tags such as `@requires` and `@modules` that determine whether
 a test should be run on any particular system.
+
+### How do I specify to run a single test method in a JUnit test?
+
+Specify the test and method name on the command-line with the `?` syntax:
+
+    path-to-test?method-name
+
+See [How do I specify which tests to run?](#how-do-i-specify-which-tests-to-run).
 
 ### How do I specify the JDK to use?
 

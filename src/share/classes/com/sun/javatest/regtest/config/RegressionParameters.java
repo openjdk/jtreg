@@ -629,6 +629,7 @@ public class RegressionParameters
     private static final String TIMEOUT_HANDLER = ".timeoutHandler";
     private static final String TIMEOUT_HANDLER_PATH = ".timeoutHandlerPath";
     private static final String TIMEOUT_HANDLER_TIMEOUT = ".timeoutHandlerTimeout";
+    private static final String TEST_QUERIES = ".testQueries";
 
     @Override @SuppressWarnings({"rawtypes", "unchecked"})
     public void load(Map data, boolean checkChecksum) throws Interview.Fault {
@@ -722,6 +723,11 @@ public class RegressionParameters
             if (v != null)
                 setTimeoutHandlerTimeout(v);
 
+            v = data.get(prefix + TEST_QUERIES);
+            if (v != null) {
+                setTestQueries(List.of(StringUtils.splitSeparator("\n", v)));
+            }
+
         } catch (InvalidPathException e) {
             // This is unlikely to happen, but pretty serious if it does.
             // Since we only put valid paths into the parameters, there should be
@@ -800,6 +806,10 @@ public class RegressionParameters
 
         if (timeoutHandlerTimeout != -1) {  // -1: default; 0: no timeout; >0: timeout in seconds
             data.put(prefix + TIMEOUT_HANDLER_TIMEOUT, String.valueOf(timeoutHandlerTimeout));
+        }
+
+        if (testQueries != null) {
+            data.put(prefix + TEST_QUERIES, join(testQueries, "\n"));
         }
     }
 
@@ -1274,6 +1284,41 @@ public class RegressionParameters
     }
 
     private boolean useWindowsSubsystemForLinux;
+
+    //---------------------------------------------------------------------
+
+    public void setTestQueries(List<String> testQueries) {
+        this.testQueries = testQueries;
+    }
+
+    public List<String> getTestQueries() {
+        return testQueries;
+    }
+
+    /**
+     * Returns the query component for a given test, if one was specified,
+     * or null if there is no query component for this test.
+     *
+     * @param test the name of the test
+     * @return the query component associated with this test, or null
+     */
+    public String getTestQuery(String test) {
+        // There are two common cases:
+        // 1. any number of tests are being run, none of which have queries, or
+        // 2. a single test is being run, which has query.
+        // As such, it is probably not worth parsing testQueries into a map.
+        if (testQueries != null) {
+            for (String tq : testQueries) {
+                int sep = tq.indexOf("?");
+                if (test.equals(tq.substring(0, sep))) {
+                    return tq.substring(sep + 1);
+                }
+            }
+        }
+        return null;
+    }
+
+    private List<String> testQueries;
 
     //---------------------------------------------------------------------
 
