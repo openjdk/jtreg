@@ -1304,44 +1304,6 @@ public class Tool {
         boolean foundEmptyGroup = false;
 
         for (RegressionTestSuite ts: testManager.getTestSuites()) {
-            if (multiRun && (verbose != null && verbose.multiRun))
-                out.println("Running tests in " + ts.getRootDir());
-
-            RegressionParameters params = createParameters(testManager, ts);
-            String[] tests = params.getTests();
-            if (tests != null && tests.length == 0)
-                foundEmptyGroup = true;
-
-            checkLockFiles(params.getWorkDirectory().getRoot(), "start");
-
-                switch (execMode) {
-                    case AGENTVM:
-                        Agent.Pool p = Agent.Pool.instance(params);
-                        if (allowSetSecurityManagerFlag) {
-                            initPolicyFile();
-                            p.setSecurityPolicy(policyFile);
-                        }
-                        if (timeoutFactorArg != null) {
-                            p.setTimeoutFactor(timeoutFactorArg);
-                        }
-                        if (maxPoolSize == -1) {
-                            // The default max pool size depends on the concurrency
-                            // and whether there are additional VM options to be set
-                            // when executing tests, as compared to when compiling tests.
-                            // Also, the classpath for compile actions is typically
-                            // different for compile actions and main actions.
-                            int factor = 2; // (testJavaOpts.isEmpty() ? 1 : 2);
-                            maxPoolSize = params.getConcurrency() * factor;
-                        }
-                        p.setMaxPoolSize(maxPoolSize);
-                        p.setIdleTimeout(poolIdleTimeout);
-                        p.setMainWrapper(mainWrapper);
-                        break;
-                    case OTHERVM:
-                        break;
-                    default:
-                        throw new AssertionError();
-                }
 
             if (multiRun && (verbose != null && verbose.multiRun))
                 out.println("Running tests in " + ts.getRootDir());
