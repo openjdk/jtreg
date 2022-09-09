@@ -25,7 +25,7 @@
 
 #----------------------------------------------------------------------
 
-$(BUILDDIR)/JDKOptsTest.ok: \
+$(BUILDTESTDIR)/JDKOptsTest.ok: \
 	    $(TESTDIR)/jdkOptsTest/JDKOptsTest.java \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
@@ -34,11 +34,11 @@ $(BUILDDIR)/JDKOptsTest.ok: \
 		-d $(@:%.ok=%)/classes \
 		-cp $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		-Xlint -Werror \
-		-encoding ISO8859-1 $(TESTDIR)/jdkOptsTest/JDKOptsTest.java
+		-encoding ASCII $(TESTDIR)/jdkOptsTest/JDKOptsTest.java
 	$(RM) -rf $(@:%.ok=%)/tmp
 	$(MKDIR) -p $(@:%.ok=%)/tmp
-	$(JDKJAVA) -cp "$(@:%.ok=%)/classes$(PS)$(JTREG_IMAGEDIR)/lib/jtreg.jar" -Djava.io.tmpdir=$(@:%.ok=%)/tmp JDKOptsTest 
+	$(JDKJAVA) -cp "$(@:%.ok=%)/classes$(PS)$(JTREG_IMAGEDIR)/lib/jtreg.jar" -Djava.io.tmpdir=$(@:%.ok=%)/tmp JDKOptsTest
 	echo "test passed at `date`" > $@
 
-TESTS.jtreg += $(BUILDDIR)/JDKOptsTest.ok
+TESTS.jtreg += $(BUILDTESTDIR)/JDKOptsTest.ok
 

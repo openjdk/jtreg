@@ -23,41 +23,49 @@
 
 /* @test
  * @summary Failed: Execution failed: Applet thread threw exception: java.lang.RuntimeException: I should fail
+ * @key needDisplay
  * @run applet Fail.html
  */
 
 /* @test
  * @summary Failed: Execution failed: Applet thread threw exception: java.lang.RuntimeException: I should fail
+ * @key needDisplay
  * @run applet/manual Fail.html
  */
 
 /* @test
  * @summary Failed: Execution failed: Applet thread threw exception: java.lang.RuntimeException: I should fail
+ * @key needDisplay
  * @run applet/manual=yesno Fail.html
  */
 
 /* @test
  * @summary Failed: Execution failed: Applet thread threw exception: java.lang.RuntimeException: I should fail
+ * @key needDisplay
  * @run applet/manual=done Fail.html
  */
 
 /* @test
  * @summary Passed: Execution failed as expected
+ * @key needDisplay
  * @run applet/fail Fail.html
  */
 
 /* @test
  * @summary Passed: Execution failed as expected
+ * @key needDisplay
  * @run applet/manual/fail Fail.html
  */
 
 /* @test
  * @summary Passed: Execution failed as expected
+ * @key needDisplay
  * @run applet/manual=yesno/fail Fail.html
  */
 
 /* @test
  * @summary Passed: Execution failed as expected
+ * @key needDisplay
  * @run applet/manual=done/fail Fail.html
  */
 import java.applet.Applet;

@@ -74,7 +74,7 @@ public class Test {
             } else if (f.isFile() && f.getName().endsWith(".class")) {
                 String c = base.toURI().relativize(f.toURI()).getPath()
                     .replace(".class", "")
-                    .replace(File.separator, ".");
+                    .replace("/", ".");
                 classes.add(c);
             }
         }

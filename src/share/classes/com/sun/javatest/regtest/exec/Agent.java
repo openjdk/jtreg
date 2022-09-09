@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -53,7 +53,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Queue;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -104,10 +103,13 @@ public class Agent {
             this.logger = logger;
 
             List<String> cmd = new ArrayList<>();
-            cmd.add(jdk.getJavaProg().getPath());
+            cmd.add(jdk.getJavaProg().toString());
             cmd.addAll(vmOpts);
             if (policyFile != null)
                 cmd.add("-Djava.security.policy=" + policyFile.toURI());
+            String headless = System.getProperty("java.awt.headless");
+            if (headless != null)
+                cmd.add("-Djava.awt.headless=" + headless);
             cmd.add(AgentServer.class.getName());
 
             cmd.add(AgentServer.ID);
@@ -895,7 +897,7 @@ public class Agent {
         }
 
         private static String getKey(File dir, JDK jdk, List<String> vmOpts) {
-            return (dir.getAbsolutePath() + " " + jdk.getAbsoluteFile() + " " + StringUtils.join(vmOpts, " "));
+            return (dir.getAbsolutePath() + " " + jdk.getAbsoluteHomeDirectory() + " " + StringUtils.join(vmOpts, " "));
         }
 
         private final Logger logger;

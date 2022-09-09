@@ -32,11 +32,11 @@ JAVAFILES.com.sun.javatest.diff := \
 
 $(BUILDDIR)/classes.com.sun.javatest.diff.ok: \
 		$(JAVAFILES.com.sun.javatest.diff) \
-		$(BUILDDIR)/classes.com.sun.javatest.regtest.ok 
+		$(BUILDDIR)/classes.com.sun.javatest.regtest.ok
 	CLASSPATH="$(CLASSDIR)$(PS)$(JAVATEST_JAR)$(PS)$(ANT_JAR)" \
 	    $(REGTEST_TOOL_JAVAC) $(REGTEST_TOOL_JAVAC_OPTIONS) \
 		-d $(CLASSDIR) \
-		-encoding ISO8859-1 \
+		-encoding ASCII \
 		$(JAVAFILES.com.sun.javatest.diff)
 	echo "classes built at `date`" > $@
 
@@ -62,7 +62,7 @@ TARGETS.JAR.jtreg += $(TARGETS.com.sun.javatest.diff)
 #
 # executable scripts
 
-$(JTREG_IMAGEDIR)/bin/jtdiff: $(SRCSHAREBINDIR)/jtdiff.sh 
+$(JTREG_IMAGEDIR)/bin/jtdiff: $(SRCSHAREBINDIR)/jtdiff.sh
 	$(MKDIR) -p $(@D)
 	$(RM) $@
 	$(CP) $<  $@
@@ -73,6 +73,6 @@ TARGETS.ZIP.jtreg += \
 
 #----------------------------------------------------------------------
 
-TESTS += $(TESTS.jtdiff) 
+TESTS += $(TESTS.jtdiff)
 
 

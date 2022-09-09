@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2020, 2022, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -23,8 +23,8 @@
 # questions.
 #
 
-$(BUILDDIR)/StreamsTest.agentvm.ok \
-$(BUILDDIR)/StreamsTest.othervm.ok: \
+$(BUILDTESTDIR)/StreamsTest.agentvm.ok \
+$(BUILDTESTDIR)/StreamsTest.othervm.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	if [ -d $(@:%.ok=%) ]; then $(CHMOD) -R +w $(@:%.ok=%) && $(RM) $(@:%.ok=%) ; fi
@@ -32,12 +32,16 @@ $(BUILDDIR)/StreamsTest.othervm.ok: \
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDKHOME) \
-		$(@:$(BUILDDIR)/StreamsTest.%.ok=-%) \
+		$(@:$(BUILDTESTDIR)/StreamsTest.%.ok=-%) \
 		$(TESTDIR)/streams \
 			> $(@:%.ok=%/jt.log)
 	#
 	count=`$(GREP) -c 'Hello World' $(@:%.ok=%)/work/StreamsTest.jtr` ; \
-	if [ "$$count" -ne 3 ]; then echo "error: output does not contain expected lines" ; exit 1 ; fi
+	if [ "$$count" -ne 3 ]; then \
+		echo "***" $(@:%.ok=%/jt.log) ; cat $(@:%.ok=%/jt.log) ; \
+		echo "***" $(@:%.ok=%)/work/StreamsTest.jtr ; cat $(@:%.ok=%)/work/StreamsTest.jtr ; \
+		echo "error: output does not contain expected lines" ; exit 1 ; \
+	fi
 	#
 	$(GREP) 'This is being written to stdout' $(@:%.ok=%)/work/FileDescriptorTest.jtr
 	$(GREP) 'This is being written to stderr' $(@:%.ok=%)/work/FileDescriptorTest.jtr
@@ -46,5 +50,5 @@ $(BUILDDIR)/StreamsTest.othervm.ok: \
 
 
 TESTS.jtreg += \
-	$(BUILDDIR)/StreamsTest.agentvm.ok \
-	$(BUILDDIR)/StreamsTest.othervm.ok
+	$(BUILDTESTDIR)/StreamsTest.agentvm.ok \
+	$(BUILDTESTDIR)/StreamsTest.othervm.ok

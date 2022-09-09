@@ -25,7 +25,7 @@
 
 #----------------------------------------------------------------------
 
-$(BUILDDIR)/timelimit.none.ok: \
+$(BUILDTESTDIR)/timelimit.none.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -38,9 +38,9 @@ $(BUILDDIR)/timelimit.none.ok: \
 	$(GREP) -s 'Test results: passed: 3' $(@:%.ok=%/jt.log)  > /dev/null
 	echo "test passed at `date`" > $@
 
-TESTS.jtreg += $(BUILDDIR)/timelimit.none.ok
+TESTS.jtreg += $(BUILDTESTDIR)/timelimit.none.ok
 
-$(BUILDDIR)/timelimit.150.ok: \
+$(BUILDTESTDIR)/timelimit.150.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -54,9 +54,9 @@ $(BUILDDIR)/timelimit.150.ok: \
 	$(GREP) -s 'Test results: passed: 1' $(@:%.ok=%/jt.log)  > /dev/null
 	echo "test passed at `date`" > $@
 
-TESTS.jtreg += $(BUILDDIR)/timelimit.150.ok
+TESTS.jtreg += $(BUILDTESTDIR)/timelimit.150.ok
 
-$(BUILDDIR)/timelimit.300.ok: \
+$(BUILDTESTDIR)/timelimit.300.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -70,9 +70,9 @@ $(BUILDDIR)/timelimit.300.ok: \
 	$(GREP) -s 'Test results: passed: 2' $(@:%.ok=%/jt.log)  > /dev/null
 	echo "test passed at `date`" > $@
 
-TESTS.jtreg += $(BUILDDIR)/timelimit.300.ok
+TESTS.jtreg += $(BUILDTESTDIR)/timelimit.300.ok
 
-$(BUILDDIR)/timelimit.500.ok: \
+$(BUILDTESTDIR)/timelimit.500.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -86,9 +86,9 @@ $(BUILDDIR)/timelimit.500.ok: \
 	$(GREP) -s 'Test results: passed: 3' $(@:%.ok=%/jt.log)  > /dev/null
 	echo "test passed at `date`" > $@
 
-TESTS.jtreg += $(BUILDDIR)/timelimit.500.ok
+TESTS.jtreg += $(BUILDTESTDIR)/timelimit.500.ok
 
-$(BUILDDIR)/timelimit.bad.ok: \
+$(BUILDTESTDIR)/timelimit.bad.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -103,5 +103,5 @@ $(BUILDDIR)/timelimit.bad.ok: \
 	$(GREP) -s 'Error: Bad value for -timeLimit' $(@:%.ok=%/jt.log)  > /dev/null
 	echo "test passed at `date`" > $@
 
-TESTS.jtreg += $(BUILDDIR)/timelimit.bad.ok
+TESTS.jtreg += $(BUILDTESTDIR)/timelimit.bad.ok
 

@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2015, 2020, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2015, 2022, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -26,17 +26,17 @@
 MODLIBS_TEST_FILES := \
 	$(shell $(FIND) $(TESTDIR)/modlibs -type f )
 
-$(BUILDDIR)/ModLibsTest.othervm.ok \
-$(BUILDDIR)/ModLibsTest.agentvm.ok: \
+$(BUILDTESTDIR)/ModLibsTest.othervm.ok \
+$(BUILDTESTDIR)/ModLibsTest.agentvm.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg \
             $(MODLIBS_TEST_FILES)
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
-	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+	JTREG_JAVA=$(JDKJAVA) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-J-Djavatest.regtest.allowTrailingBuild=true \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDK9HOME) \
-		$(@:$(BUILDDIR)/ModLibsTest.%.ok=-%) \
+		$(@:$(BUILDTESTDIR)/ModLibsTest.%.ok=-%) \
 		$(TESTDIR)/modlibs
 	( cd $(@:%.ok=%)/work ; $(FIND) . -name \*.class ) | \
 		$(SORT) > $(@:%.ok=%)/found-classes.txt
@@ -47,7 +47,7 @@ $(BUILDDIR)/ModLibsTest.agentvm.ok: \
 
 ifdef JDK9HOME
 TESTS.jtreg += \
-	$(BUILDDIR)/ModLibsTest.othervm.ok \
-	$(BUILDDIR)/ModLibsTest.agentvm.ok
+	$(BUILDTESTDIR)/ModLibsTest.othervm.ok \
+	$(BUILDTESTDIR)/ModLibsTest.agentvm.ok
 endif
 

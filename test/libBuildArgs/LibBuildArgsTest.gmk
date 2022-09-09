@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2012, 2017, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2012, 2022, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -26,10 +26,9 @@
 
 #----------------------------------------------------------------------
 
-$(BUILDDIR)/LibBuildArgsTest.good.ok: \
+$(BUILDTESTDIR)/LibBuildArgsTest.good.ok: \
                 $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-		$(JTREG_IMAGEDIR)/lib/javatest.jar \
-	    	$(JTREG_IMAGE_JAVAHELP_JAR)
+		$(JTREG_IMAGEDIR)/lib/javatest.jar
 	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
 	$(MKDIR) -p $(@:%.ok=%)
 	$(JDKHOME)/bin/java \
@@ -41,10 +40,9 @@ $(BUILDDIR)/LibBuildArgsTest.good.ok: \
 	    || (cat $(@:%.ok=%/log) ; exit 1)
 	echo $@ passed at `date` > $@
 
-$(BUILDDIR)/LibBuildArgsTest.bad.ok: \
+$(BUILDTESTDIR)/LibBuildArgsTest.bad.ok: \
                 $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-		$(JTREG_IMAGEDIR)/lib/javatest.jar \
-	    	$(JTREG_IMAGE_JAVAHELP_JAR)
+		$(JTREG_IMAGEDIR)/lib/javatest.jar
 	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
 	$(MKDIR) -p $(@:%.ok=%)
 	$(JDKHOME)/bin/java \
@@ -58,5 +56,5 @@ $(BUILDDIR)/LibBuildArgsTest.bad.ok: \
 	echo $@ passed at `date` > $@
 
 TESTS.jtreg += \
-	$(BUILDDIR)/LibBuildArgsTest.good.ok \
-	$(BUILDDIR)/LibBuildArgsTest.bad.ok
+	$(BUILDTESTDIR)/LibBuildArgsTest.good.ok \
+	$(BUILDTESTDIR)/LibBuildArgsTest.bad.ok

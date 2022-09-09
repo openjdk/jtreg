@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2018, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2018, 2022, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -25,9 +25,8 @@
 
 #----------------------------------------------------------------------
 
-$(BUILDDIR)/fixupSingle.ok: \
+$(BUILDTESTDIR)/fixupSingle.ok: \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
-	    $(JTREG_IMAGE_JAVAHELP_JAR) \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -42,11 +41,11 @@ $(BUILDDIR)/fixupSingle.ok: \
 	if [ -n "$$g" ]; then echo "Error: Unexpected references:" ; echo "$$g" ; exit 1 ; fi
 	echo "test passed at `date`" > $@
 
-TESTS.jtreg += $(BUILDDIR)/fixupSingle.ok
+TESTS.jtreg += $(BUILDTESTDIR)/fixupSingle.ok
 
 #----------------------------------------------------------------------
 
-$(BUILDDIR)/fixupMulti.ok: \
+$(BUILDTESTDIR)/fixupMulti.ok: \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
@@ -63,4 +62,4 @@ $(BUILDDIR)/fixupMulti.ok: \
 	if [ -n "$$g" ]; then echo "Error: Unexpected references:" ; echo "$$g" ; exit 1 ; fi
 	echo "test passed at `date`" > $@
 
-TESTS.jtreg += $(BUILDDIR)/fixupMulti.ok
+TESTS.jtreg += $(BUILDTESTDIR)/fixupMulti.ok

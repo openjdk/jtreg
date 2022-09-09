@@ -23,7 +23,7 @@
 # questions.
 #
 
-$(BUILDDIR)/TestSanityTest.ok:
+$(BUILDTESTDIR)/TestSanityTest.ok:
 	$(RM) $(@:%.ok=%)
 	$(MKDIR) -p $(@:%.ok=%)
 	$(FIND) $(TOPDIR)/make $(TOPDIR)/test -name \*.gmk | \
@@ -38,4 +38,6 @@ $(BUILDDIR)/TestSanityTest.ok:
 	fi
 	echo "test passed at `date`" > $@
 
-TESTS.jtreg += $(BUILDDIR)/TestSanityTest.ok
+# Test disabled following cleanup to `make sanity` in $(TOPDIR)/make/Makefile
+# See CODETOOLS-7903111
+# TESTS.jtreg += $(BUILDTESTDIR)/TestSanityTest.ok

@@ -26,7 +26,7 @@
 #----------------------------------------------------------------------
 
 # 6590657: @clean will occasionally fail to delete @clean files
-$(BUILDDIR)/T6590657.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
+$(BUILDTESTDIR)/T6590657.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(TESTDIR)/6590657/T6590657.java \
 		$(JTREG_IMAGEDIR)/bin/jtreg
@@ -40,5 +40,5 @@ $(BUILDDIR)/T6590657.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 	$(GREP) "T6590657.java  Passed. Build successful" < $(@:%.ok=%)/report/text/summary.txt
 	echo $@ passed at `date` > $@
 
-TESTS.jtreg += $(BUILDDIR)/T6590657.ok
+TESTS.jtreg += $(BUILDTESTDIR)/T6590657.ok
 

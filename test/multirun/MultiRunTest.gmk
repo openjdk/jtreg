@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2022, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -25,9 +25,8 @@
 
 #----------------------------------------------------------------------
 
-$(BUILDDIR)/multirun.ok: \
+$(BUILDTESTDIR)/multirun.ok: \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
-	    $(JTREG_IMAGE_JAVAHELP_JAR) \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -62,9 +61,8 @@ $(BUILDDIR)/multirun.ok: \
 			> $(@:%.ok=%/jt.a_b1_b2.log) 2>&1
 	echo "test passed at `date`" > $@
 
-$(BUILDDIR)/multirun.noreport.ok: \
+$(BUILDTESTDIR)/multirun.noreport.ok: \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
-	    $(JTREG_IMAGE_JAVAHELP_JAR) \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -78,5 +76,5 @@ $(BUILDDIR)/multirun.noreport.ok: \
 			> $(@:%.ok=%/jt.a_b1.log) 2>&1
 	echo "test passed at `date`" > $@
 
-TESTS.jtreg += $(BUILDDIR)/multirun.ok $(BUILDDIR)/multirun.noreport.ok
+TESTS.jtreg += $(BUILDTESTDIR)/multirun.ok $(BUILDTESTDIR)/multirun.noreport.ok
 

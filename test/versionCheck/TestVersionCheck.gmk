@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2018, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2018, 2022, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -25,14 +25,13 @@
 
 #----------------------------------------------------------------------
 
-$(BUILDDIR)/TestVersionCheck.match.ok: \
+$(BUILDTESTDIR)/TestVersionCheck.match.ok: \
                 $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-		$(JTREG_IMAGEDIR)/lib/javatest.jar \
-	    	$(JTREG_IMAGE_JAVAHELP_JAR)
+		$(JTREG_IMAGEDIR)/lib/javatest.jar
 	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
 	$(MKDIR) -p $(@:%.ok=%)
 	$(JDKHOME)/bin/java \
-		-jar $(ABS_JTREG_IMAGEJARDIR)/jtreg.jar \
+		-jar $(JTREG_IMAGEJARDIR)/jtreg.jar \
 		-w:$(@:%.ok=%/work) \
 		-r:$(@:%.ok=%/report) \
 		-compileJDK:$(JDK8HOME) \
@@ -47,19 +46,18 @@ $(BUILDDIR)/TestVersionCheck.match.ok: \
 
 ifdef JDK8HOME
 TESTS.jtreg += \
-	$(BUILDDIR)/TestVersionCheck.match.ok
+	$(BUILDTESTDIR)/TestVersionCheck.match.ok
 endif
 
 #----------------------------------------------------------------------
 
-$(BUILDDIR)/TestVersionCheck.mismatch.ok: \
+$(BUILDTESTDIR)/TestVersionCheck.mismatch.ok: \
                 $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-		$(JTREG_IMAGEDIR)/lib/javatest.jar \
-	    	$(JTREG_IMAGE_JAVAHELP_JAR)
+		$(JTREG_IMAGEDIR)/lib/javatest.jar
 	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
 	$(MKDIR) -p $(@:%.ok=%)
 	$(JDKHOME)/bin/java \
-		-jar $(ABS_JTREG_IMAGEJARDIR)/jtreg.jar \
+		-jar $(JTREG_IMAGEJARDIR)/jtreg.jar \
 		-w:$(@:%.ok=%/work) \
 		-r:$(@:%.ok=%/report) \
 		-compileJDK:$(JDK7HOME) \
@@ -77,7 +75,7 @@ $(BUILDDIR)/TestVersionCheck.mismatch.ok: \
 ifdef JDK7HOME
 ifdef JDK8HOME
 TESTS.jtreg += \
-	$(BUILDDIR)/TestVersionCheck.mismatch.ok
+	$(BUILDTESTDIR)/TestVersionCheck.mismatch.ok
 endif
 endif
 

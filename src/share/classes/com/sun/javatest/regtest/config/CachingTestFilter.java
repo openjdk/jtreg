@@ -49,7 +49,7 @@ public abstract class CachingTestFilter extends TestFilter {
             this.value = v;
         }
     }
-    private final Map<String, Entry> cache = new HashMap<String, Entry>();
+    private final Map<String, Entry> cache = new HashMap<>();
 
     /**
      * Creates a CachingTestFilter.
@@ -77,6 +77,7 @@ public abstract class CachingTestFilter extends TestFilter {
      *
      * @param td the test description
      * @return the value
+     * @throws Fault if any error occurred in the filter
      */
     protected abstract boolean getCacheableValue(TestDescription td) throws Fault;
 

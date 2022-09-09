@@ -1,5 +1,5 @@
 ### Section compile
-cd %BUILD%/RerunTest.othervm/work/scratch && \
+cd %BUILDTEST%/RerunTest.othervm/work/scratch && \
 DISPLAY=%DISPLAY% \
 HOME=%HOME% \
 LANG=en_US.UTF-8 \
@@ -20,23 +20,23 @@ TZ=GMT+0.00 \
         -J-Dtest.file=%WS%/test/rerun/std/JUnitTest.java \
         -J-Dtest.src=%WS%/test/rerun/std \
         -J-Dtest.src.path=%WS%/test/rerun/std \
-        -J-Dtest.classes=%BUILD%/RerunTest.othervm/work/classes/std/JUnitTest.d \
-        -J-Dtest.class.path=%BUILD%/RerunTest.othervm/work/classes/std/JUnitTest.d \
+        -J-Dtest.classes=%BUILDTEST%/RerunTest.othervm/work/classes/std/JUnitTest.d \
+        -J-Dtest.class.path=%BUILDTEST%/RerunTest.othervm/work/classes/std/JUnitTest.d \
         -XDmy.javac.option=x \
-        -d %BUILD%/RerunTest.othervm/work/classes/std/JUnitTest.d \
+        -d %BUILDTEST%/RerunTest.othervm/work/classes/std/JUnitTest.d \
         -sourcepath %WS%/test/rerun/std \
-        -classpath %WS%/test/rerun/std:%BUILD%/RerunTest.othervm/work/classes/std/JUnitTest.d:%BUILD%/images/jtreg/lib/junit.jar:%JDKHOME%/lib/tools.jar \
+        -classpath %WS%/test/rerun/std:%BUILDTEST%/RerunTest.othervm/work/classes/std/JUnitTest.d:%BUILD%/images/jtreg/lib/junit.jar:%JDKHOME%/lib/tools.jar \
         -XDignore.symbol.file=true %WS%/test/rerun/std/JUnitTest.java
 
 ### Section junit
-cd %BUILD%/RerunTest.othervm/work/scratch && \
+cd %BUILDTEST%/RerunTest.othervm/work/scratch && \
 DISPLAY=%DISPLAY% \
 HOME=%HOME% \
 LANG=en_US.UTF-8 \
 MY_ENV_VAR=x \
 PATH=/bin:/usr/bin:/usr/sbin \
 TZ=GMT+0.00 \
-CLASSPATH=%BUILD%/RerunTest.othervm/work/classes/std/JUnitTest.d:%WS%/test/rerun/std:%BUILD%/images/jtreg/lib/junit.jar:%JDKHOME%/lib/tools.jar:%BUILD%/images/jtreg/lib/javatest.jar:%BUILD%/images/jtreg/lib/jtreg.jar \
+CLASSPATH=%BUILDTEST%/RerunTest.othervm/work/classes/std/JUnitTest.d:%WS%/test/rerun/std:%BUILD%/images/jtreg/lib/junit.jar:%JDKHOME%/lib/tools.jar:%BUILD%/images/jtreg/lib/javatest.jar:%BUILD%/images/jtreg/lib/jtreg.jar \
     %JDKHOME%/bin/java \
         -Dtest.vm.opts=-Dmy.vm.option=x \
         -Dtest.tool.vm.opts=-J-Dmy.vm.option=x \
@@ -50,9 +50,9 @@ CLASSPATH=%BUILD%/RerunTest.othervm/work/classes/std/JUnitTest.d:%WS%/test/rerun
         -Dtest.file=%WS%/test/rerun/std/JUnitTest.java \
         -Dtest.src=%WS%/test/rerun/std \
         -Dtest.src.path=%WS%/test/rerun/std \
-        -Dtest.classes=%BUILD%/RerunTest.othervm/work/classes/std/JUnitTest.d \
-        -Dtest.class.path=%BUILD%/RerunTest.othervm/work/classes/std/JUnitTest.d \
+        -Dtest.classes=%BUILDTEST%/RerunTest.othervm/work/classes/std/JUnitTest.d \
+        -Dtest.class.path=%BUILDTEST%/RerunTest.othervm/work/classes/std/JUnitTest.d \
         -Dmy.vm.option=x \
         -Dmy.java.option=x \
-        com.sun.javatest.regtest.agent.MainWrapper %BUILD%/RerunTest.othervm/work/std/JUnitTest.d/junit.0.jta std/JUnitTest.java JUnitTest
+        com.sun.javatest.regtest.agent.MainWrapper %BUILDTEST%/RerunTest.othervm/work/std/JUnitTest.d/junit.0.jta std/JUnitTest.java JUnitTest
 

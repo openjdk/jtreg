@@ -25,7 +25,7 @@
 
 #-------------------------------------------------------------------------------
 #
-$(BUILDDIR)/BadLibsTest.ok: \
+$(BUILDTESTDIR)/BadLibsTest.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -43,11 +43,11 @@ $(BUILDDIR)/BadLibsTest.ok: \
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += \
-	$(BUILDDIR)/BadLibsTest.ok
+	$(BUILDTESTDIR)/BadLibsTest.ok
 
 #-------------------------------------------------------------------------------
 #
-$(BUILDDIR)/BadLibsTest.retain.ok: \
+$(BUILDTESTDIR)/BadLibsTest.retain.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -66,4 +66,4 @@ $(BUILDDIR)/BadLibsTest.retain.ok: \
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += \
-	$(BUILDDIR)/BadLibsTest.retain.ok
+	$(BUILDTESTDIR)/BadLibsTest.retain.ok

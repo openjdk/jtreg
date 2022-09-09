@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2022, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -25,29 +25,28 @@
 
 #----------------------------------------------------------------------
 
-$(BUILDDIR)/TestWhiteSpaceFiles.ok: \
+$(BUILDTESTDIR)/TestWhiteSpaceFiles.ok: \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	    $(JTREG_IMAGE_JAVAHELP_JAR) \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
-	$(RM) $(BUILDDIR)/tmp/$(@F:%.ok=%)
-	$(MKDIR) -p $(BUILDDIR)/tmp/$(@F:%.ok=%)
-	ln -s $(JDKHOME) $(BUILDDIR)/tmp/$(@F:%.ok=%)/"j2se home"
-	ln -s $(shell cd $(JTREG_IMAGEDIR); pwd) $(BUILDDIR)/tmp/$(@F:%.ok=%)/"jtreg home"
-	$(BUILDDIR)/tmp/$(@F:%.ok=%)/"jtreg home"/bin/jtreg $(JTREG_OPTS) \
+	$(RM) $(BUILDTESTDIR)/tmp/$(@F:%.ok=%)
+	$(MKDIR) -p $(BUILDTESTDIR)/tmp/$(@F:%.ok=%)
+	ln -s $(JDKHOME) $(BUILDTESTDIR)/tmp/$(@F:%.ok=%)/"j2se home"
+	ln -s $(shell cd $(JTREG_IMAGEDIR); pwd) $(BUILDTESTDIR)/tmp/$(@F:%.ok=%)/"jtreg home"
+	$(BUILDTESTDIR)/tmp/$(@F:%.ok=%)/"jtreg home"/bin/jtreg $(JTREG_OPTS) \
 		-w $(@:%.ok=%/ovm/work) \
 		-r $(@:%.ok=%/ovm/report) \
-		-jdk:$(BUILDDIR)/tmp/$(@F:%.ok=%)/"j2se home" \
+		-jdk:$(BUILDTESTDIR)/tmp/$(@F:%.ok=%)/"j2se home" \
 		$(TESTDIR)/share/simple/Pass.java
-	$(BUILDDIR)/tmp/$(@F:%.ok=%)/"jtreg home"/bin/jtreg $(JTREG_OPTS) \
+	$(BUILDTESTDIR)/tmp/$(@F:%.ok=%)/"jtreg home"/bin/jtreg $(JTREG_OPTS) \
 		-avm \
 		-w $(@:%.ok=%/avm/work) \
 		-r $(@:%.ok=%/avm/report) \
-		-jdk:$(BUILDDIR)/tmp/$(@F:%.ok=%)/"j2se home" \
+		-jdk:$(BUILDTESTDIR)/tmp/$(@F:%.ok=%)/"j2se home" \
 		$(TESTDIR)/share/simple/Pass.java
 	echo "test passed at `date`" > $@
 
 ifneq ($(OS_NAME), windows)
-TESTS.jtreg += $(BUILDDIR)/TestWhiteSpaceFiles.ok
+TESTS.jtreg += $(BUILDTESTDIR)/TestWhiteSpaceFiles.ok
 endif
 

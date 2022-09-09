@@ -25,7 +25,7 @@
 
 #-------------------------------------------------------------------------------
 #
-$(BUILDDIR)/ExtraPropDefnsTest.valid.ok: \
+$(BUILDTESTDIR)/ExtraPropDefnsTest.valid.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -38,11 +38,11 @@ $(BUILDDIR)/ExtraPropDefnsTest.valid.ok: \
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += \
-	$(BUILDDIR)/ExtraPropDefnsTest.valid.ok
+	$(BUILDTESTDIR)/ExtraPropDefnsTest.valid.ok
 
 #-------------------------------------------------------------------------------
 #
-$(BUILDDIR)/ExtraPropDefnsTest.valid.libs.ok: \
+$(BUILDTESTDIR)/ExtraPropDefnsTest.valid.libs.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -55,11 +55,11 @@ $(BUILDDIR)/ExtraPropDefnsTest.valid.libs.ok: \
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += \
-	$(BUILDDIR)/ExtraPropDefnsTest.valid.libs.ok
+	$(BUILDTESTDIR)/ExtraPropDefnsTest.valid.libs.ok
 
 #-------------------------------------------------------------------------------
 #
-$(BUILDDIR)/ExtraPropDefnsTest.bad-compile.ok: \
+$(BUILDTESTDIR)/ExtraPropDefnsTest.bad-compile.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -73,11 +73,11 @@ $(BUILDDIR)/ExtraPropDefnsTest.bad-compile.ok: \
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += \
-	$(BUILDDIR)/ExtraPropDefnsTest.bad-compile.ok
+	$(BUILDTESTDIR)/ExtraPropDefnsTest.bad-compile.ok
 
 #-------------------------------------------------------------------------------
 #
-$(BUILDDIR)/ExtraPropDefnsTest.bad-execute.ok: \
+$(BUILDTESTDIR)/ExtraPropDefnsTest.bad-execute.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -91,11 +91,11 @@ $(BUILDDIR)/ExtraPropDefnsTest.bad-execute.ok: \
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += \
-	$(BUILDDIR)/ExtraPropDefnsTest.bad-execute.ok
+	$(BUILDTESTDIR)/ExtraPropDefnsTest.bad-execute.ok
 
 #-------------------------------------------------------------------------------
 #
-$(BUILDDIR)/ExtraPropDefnsTest.error.ok: \
+$(BUILDTESTDIR)/ExtraPropDefnsTest.error.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -111,4 +111,4 @@ $(BUILDDIR)/ExtraPropDefnsTest.error.ok: \
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += \
-	$(BUILDDIR)/ExtraPropDefnsTest.error.ok
+	$(BUILDTESTDIR)/ExtraPropDefnsTest.error.ok

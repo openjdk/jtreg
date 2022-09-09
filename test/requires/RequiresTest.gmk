@@ -24,7 +24,7 @@
 #
 
 
-$(BUILDDIR)/RequiresTest.ok: \
+$(BUILDTESTDIR)/RequiresTest.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -42,4 +42,4 @@ $(BUILDDIR)/RequiresTest.ok: \
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += \
-	$(BUILDDIR)/RequiresTest.ok
+	$(BUILDTESTDIR)/RequiresTest.ok

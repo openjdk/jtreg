@@ -24,7 +24,7 @@
 #
 
 
-$(BUILDDIR)/BuildWildcards.ok: \
+$(BUILDTESTDIR)/BuildWildcards.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -32,8 +32,8 @@ $(BUILDDIR)/BuildWildcards.ok: \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDKHOME) \
 		$(TESTDIR)/build-wildcards \
-			> $(@:%.ok=%/jt.log) 2>&1 
+			> $(@:%.ok=%/jt.log) 2>&1
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += \
-	$(BUILDDIR)/BuildWildcards.ok
+	$(BUILDTESTDIR)/BuildWildcards.ok

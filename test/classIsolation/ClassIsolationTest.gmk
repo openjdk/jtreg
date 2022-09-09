@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2022, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -29,10 +29,9 @@ UCD_FILES := $(shell find $(TESTDIR)/classIsolation -type f )
 # When enabled in jtreg 4.2 b08 or later, class files are placed in an unshared test-specific directory
 # See Locations constructor, local variable useUniqueClassDir
 
-$(BUILDDIR)/ClassIsolation.disable.b07.ok: $(UCD_FILES) \
+$(BUILDTESTDIR)/ClassIsolation.disable.b07.ok: $(UCD_FILES) \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
-	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	    $(JTREG_IMAGE_JAVAHELP_JAR)
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar
 	$(RM) $(@:%.ok=%)
 	$(MKDIR) -p  $(@:%.ok=%)/jtreg
 	$(CP) -R $(JTREG_IMAGEDIR)/* $(@:%.ok=%)/jtreg
@@ -51,10 +50,9 @@ $(BUILDDIR)/ClassIsolation.disable.b07.ok: $(UCD_FILES) \
 	echo "test passed at `date`" > $@
 	
 
-$(BUILDDIR)/ClassIsolation.disable.b08.ok: $(UCD_FILES) \
+$(BUILDTESTDIR)/ClassIsolation.disable.b08.ok: $(UCD_FILES) \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
-	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	    $(JTREG_IMAGE_JAVAHELP_JAR)
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar
 	$(RM) $(@:%.ok=%)
 	$(MKDIR) -p  $(@:%.ok=%)/jtreg
 	$(CP) -R $(JTREG_IMAGEDIR)/* $(@:%.ok=%)/jtreg
@@ -72,10 +70,9 @@ $(BUILDDIR)/ClassIsolation.disable.b08.ok: $(UCD_FILES) \
 	fi
 	echo "test passed at `date`" > $@
 
-$(BUILDDIR)/ClassIsolation.default.b08.ok: $(UCD_FILES) \
+$(BUILDTESTDIR)/ClassIsolation.default.b08.ok: $(UCD_FILES) \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
-	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	    $(JTREG_IMAGE_JAVAHELP_JAR)
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar
 	$(RM) $(@:%.ok=%)
 	$(MKDIR) -p  $(@:%.ok=%)/jtreg
 	$(CP) -R $(JTREG_IMAGEDIR)/* $(@:%.ok=%)/jtreg
@@ -93,10 +90,9 @@ $(BUILDDIR)/ClassIsolation.default.b08.ok: $(UCD_FILES) \
 	fi
 	echo "test passed at `date`" > $@
 
-$(BUILDDIR)/ClassIsolation.enable.b08.ok: $(UCD_FILES) \
+$(BUILDTESTDIR)/ClassIsolation.enable.b08.ok: $(UCD_FILES) \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
-	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	    $(JTREG_IMAGE_JAVAHELP_JAR)
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar
 	$(RM) $(@:%.ok=%)
 	$(MKDIR) -p  $(@:%.ok=%)/jtreg
 	$(CP) -R $(JTREG_IMAGEDIR)/* $(@:%.ok=%)/jtreg
@@ -115,9 +111,9 @@ $(BUILDDIR)/ClassIsolation.enable.b08.ok: $(UCD_FILES) \
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += \
-	$(BUILDDIR)/ClassIsolation.disable.b07.ok \
-	$(BUILDDIR)/ClassIsolation.disable.b08.ok \
-	$(BUILDDIR)/ClassIsolation.default.b08.ok \
-	$(BUILDDIR)/ClassIsolation.enable.b08.ok 
+	$(BUILDTESTDIR)/ClassIsolation.disable.b07.ok \
+	$(BUILDTESTDIR)/ClassIsolation.disable.b08.ok \
+	$(BUILDTESTDIR)/ClassIsolation.default.b08.ok \
+	$(BUILDTESTDIR)/ClassIsolation.enable.b08.ok
 
 

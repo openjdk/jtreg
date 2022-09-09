@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -31,6 +31,8 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -56,6 +58,7 @@ import com.sun.javatest.regtest.config.ExecMode;
 import com.sun.javatest.regtest.config.Modules;
 import com.sun.javatest.regtest.config.OS;
 import com.sun.javatest.regtest.config.ParseException;
+import com.sun.javatest.regtest.util.FileUtils;
 import com.sun.javatest.regtest.util.StringUtils;
 
 
@@ -68,8 +71,6 @@ import com.sun.javatest.regtest.util.StringUtils;
  * Action abstract class contains a variety of protected methods for parsing and
  * logging.  All static strings used in Action implementations are also defined
  * here.
- *
- * @author Iris A Garcia
  */
 public abstract class Action extends ActionHelper {
     /**
@@ -134,7 +135,7 @@ public abstract class Action extends ActionHelper {
     protected Map<String, String> getEnvVars(boolean nativeCode) {
         Map<String, String> envVars = script.getEnvVars();
         if (nativeCode) {
-            File nativeDir = script.getNativeDir();
+            Path nativeDir = script.getNativeDir();
             if (nativeDir != null) {
                 envVars = new LinkedHashMap<>(envVars);
                 String libPathName;
@@ -156,9 +157,9 @@ public abstract class Action extends ActionHelper {
                 }
                 String libPath = envVars.get(libPathName);
                 if (libPath == null) {
-                    envVars.put(libPathName, nativeDir.getPath());
+                    envVars.put(libPathName, nativeDir.toString());
                 } else {
-                    envVars.put(libPathName, libPath + File.pathSeparator + nativeDir.getPath());
+                    envVars.put(libPathName, libPath + File.pathSeparator + nativeDir);
                 }
                 envVars = Collections.unmodifiableMap(envVars);
             }
@@ -172,9 +173,9 @@ public abstract class Action extends ActionHelper {
     }
 
     public File getArgFile() {
-        File f = script.absTestWorkFile(getName() + "." + script.getNextSerial() + ".jta");
-        f.getParentFile().mkdirs();
-        return f;
+        Path f = script.absTestWorkFile(getName() + "." + script.getNextSerial() + ".jta");
+        FileUtils.createDirectories(f.getParent());
+        return f.toFile();
     }
 
    //------------------- parsing -----------------------------------------------
@@ -271,21 +272,20 @@ public abstract class Action extends ActionHelper {
      *
      * The remaining entries in the policy file should remain the same.
      *
-     * @param fileName The absolute name of the original policy file.
-     * @return     A string indicating the absolute name of the modified policy
-     *             file.
+     * @param fileName the absolute name of the original policy file
+     * @param argFile  an additional file to be granted permissions
+     * @return     a string indicating the absolute name of the modified policy file
      * @throws TestRunException if a problem occurred adding this grant entry.
      */
     protected File addGrantEntries(File fileName, File argFile) throws TestRunException {
-        File newPolicy = new File(script.absTestScratchDir(),
-                                  (fileName.getName()) + "_new");
+        File newPolicy = script.absTestScratchDir().resolve(fileName.getName() + "_new").toFile();
 
         try {
             try (FileWriter fw = new FileWriter(newPolicy)) {
                 fw.write("// The following grant entries were added by jtreg.  Do not edit." + LINESEP);
                 fw.write("grant {" + LINESEP);
                 fw.write("    permission java.io.FilePermission \""
-                        + script.absTestClsTopDir().getPath().replace(FILESEP, "{/}")
+                        + script.absTestClsTopDir().toString().replace(FILESEP, "{/}")
                         + "${/}-\", \"read\";" + LINESEP);
                 if (argFile != null) {
                     fw.write("    permission java.io.FilePermission \""
@@ -294,7 +294,7 @@ public abstract class Action extends ActionHelper {
                 }
                 fw.write("};" + LINESEP);
 
-                List<File> libs = new ArrayList<>();
+                List<Path> libs = new ArrayList<>();
                 libs.addAll(script.getJavaTestClassPath().asList());
                 if (script.isJUnitRequired()) {
                     libs.addAll(script.getJUnitPath().asList());
@@ -302,8 +302,8 @@ public abstract class Action extends ActionHelper {
                 if (script.isTestNGRequired()) {
                     libs.addAll(script.getTestNGPath().asList());
                 }
-                for (File lib : libs) {
-                    fw.write("grant codebase \"" + lib.toURI() + "\" {" + LINESEP);
+                for (Path lib : libs) {
+                    fw.write("grant codebase \"" + lib.toUri() + "\" {" + LINESEP);
                     fw.write("    permission java.security.AllPermission;" + LINESEP);
                     fw.write("};" + LINESEP);
                 }
@@ -320,9 +320,9 @@ public abstract class Action extends ActionHelper {
                 }
             }
         } catch (IOException e) {
-            throw new TestRunException(POLICY_WRITE_PROB + newPolicy.toString());
+            throw new TestRunException(POLICY_WRITE_PROB + newPolicy);
         } catch (SecurityException e) {
-            throw new TestRunException(POLICY_SM_PROB + newPolicy.toString());
+            throw new TestRunException(POLICY_SM_PROB + newPolicy);
         }
 
         return newPolicy;
@@ -342,7 +342,7 @@ public abstract class Action extends ActionHelper {
     protected File parsePolicy(String value) throws ParseException {
         if ((value == null) || value.equals(""))
             throw new ParseException(MAIN_NO_POLICY_NAME);
-        File policyFile = new File(script.absTestSrcDir(), value);
+        File policyFile = script.absTestSrcDir().resolve(value).toFile();
         if (!policyFile.exists())
             throw new ParseException(MAIN_CANT_FIND_POLICY + policyFile);
         return policyFile;
@@ -389,7 +389,9 @@ public abstract class Action extends ActionHelper {
             configWriter = section.createOutput("configuration");
         }
 
-        startTime = (new Date()).getTime();
+        Date startDate = new Date();
+        startTime = startDate.getTime();
+        pw.println(LOG_STARTED + startDate);
     } // startAction()
 
     /**
@@ -399,8 +401,10 @@ public abstract class Action extends ActionHelper {
      * @param status The final status of the action.
      */
     protected void endAction(Status status) {
-        long elapsedTime = (new Date()).getTime() - startTime;
+        Date endDate = new Date();
+        long elapsedTime = endDate.getTime() - startTime;
         PrintWriter pw = section.getMessageWriter();
+        pw.println(LOG_FINISHED + endDate);
         pw.println(LOG_ELAPSED_TIME + ((double) elapsedTime/1000.0));
         recorder.close();
         section.setStatus(status);
@@ -410,7 +414,7 @@ public abstract class Action extends ActionHelper {
 
     /**
      * This method pushes the full, constructed command for the action to the
-     * log.  The constructed command contains the the action and its arguments
+     * log.  The constructed command contains the action and its arguments
      * modified to run in another process.  The command may also contain
      * additional things necessary to run the action according to spec.  This
      * may include things such as a modified classpath, absolute names of files,
@@ -515,41 +519,41 @@ public abstract class Action extends ActionHelper {
             return Collections.emptySet();
 
         Set<String> results = new LinkedHashSet<>();
-        for (File dir: pp.asList()) {
+        for (Path dir: pp.asList()) {
             getModules(dir, results);
         }
         return results;
     }
 
-    private void getModules(File dir, Set<String> results) {
-        for (File f: dir.listFiles()) {
+    private void getModules(Path dir, Set<String> results) {
+        for (Path f: FileUtils.listFiles(dir)) {
             if (isModule(f)) {
-                results.add(f.getName());
-            } else if (f.getName().endsWith(".jar")) {
+                results.add(f.getFileName().toString());
+            } else if (f.getFileName().toString().endsWith(".jar")) {
                 results.add(getAutomaticModuleName(f));
             }
         }
     }
 
-    private boolean isModule(File f) {
-        if (f.isDirectory()) {
-            if (script.systemModules.contains(f.getName())) {
+    private boolean isModule(Path f) {
+        if (Files.isDirectory(f)) {
+            if (script.systemModules.contains(f.getFileName().toString())) {
                 return true;
             }
-            if (new File(f, "module-info.class").exists())
+            if (Files.exists(f.resolve("module-info.class")))
                 return true;
-            if (new File(f, "module-info.java").exists())
+            if (Files.exists(f.resolve("module-info.java")))
                 return true;
         }
         return false;
     }
 
-    private static final Map<File, String> automaticNames = new ConcurrentHashMap<>();
+    private static final Map<Path, String> automaticNames = new ConcurrentHashMap<>();
 
     // see java.lang.module.ModulePath.deriveModuleDescriptor
     // See ModuleFinder.of for info on determining automatic module names
     //    https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/module/ModuleFinder.html#of(java.nio.file.Path...)
-    private String getAutomaticModuleName(File f) {
+    private String getAutomaticModuleName(Path f) {
         // Step 0: see if already cached
         String cached = automaticNames.get(f);
         if (cached != null) {
@@ -557,7 +561,7 @@ public abstract class Action extends ActionHelper {
         }
 
         // Step 1: check for Automatic-Module-Name in thge main jar file manifest
-        try (JarFile jar = new JarFile(f)) {
+        try (JarFile jar = new JarFile(f.toFile())) {
             Manifest mf = jar.getManifest();
             Attributes attrs = mf.getMainAttributes();
             String amn = attrs.getValue("Automatic-Module-Name");
@@ -570,7 +574,7 @@ public abstract class Action extends ActionHelper {
         }
 
         // Step 2: infer the name from the jar file name
-        String fn = f.getName();
+        String fn = f.getFileName().toString();
 
         // drop .jar
         String mn = fn.substring(0, fn.length()-4);
@@ -704,6 +708,8 @@ public abstract class Action extends ActionHelper {
         LOG_JT_COMMAND        = "JavaTest command: ",
         LOG_REASON            = "reason: ",
         LOG_ELAPSED_TIME      = "elapsed time (seconds): ",
+        LOG_STARTED = "started: ",
+        LOG_FINISHED = "finished: ",
         //LOG_JDK               = "JDK under test: ",
 
         // COMMON

@@ -29,19 +29,19 @@ GroupTest.GROUPS := $(shell $(GREP) -h '=' \
 	$(TESTDIR)/groups/TEST.group* | \
 	$(AWK) '{print $$1}' | $(SORT) -unk 1.2 )
 
-$(BUILDDIR)/GroupTest.ok: $(GroupTest.GROUPS:%=$(BUILDDIR)/GroupTest.%.ok)
+$(BUILDTESTDIR)/GroupTest.ok: $(GroupTest.GROUPS:%=$(BUILDTESTDIR)/GroupTest.%.ok)
 	echo $@ passed at `date` > $@
 
-$(GroupTest.GROUPS:%=$(BUILDDIR)/GroupTest.%.ok): \
+$(GroupTest.GROUPS:%=$(BUILDTESTDIR)/GroupTest.%.ok): \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
-	$(MKDIR) -p $(@:%.ok=%) 
+	$(MKDIR) -p $(@:%.ok=%)
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDKHOME) \
-		$(TESTDIR)/groups:$(@:$(BUILDDIR)/GroupTest.%.ok=%) ; \
+		$(TESTDIR)/groups:$(@:$(BUILDTESTDIR)/GroupTest.%.ok=%) ; \
             status=$$? ; echo status=$$status ; \
-            case "$(@:$(BUILDDIR)/GroupTest.%.ok=%)" in \
+            case "$(@:$(BUILDTESTDIR)/GroupTest.%.ok=%)" in \
 		g6 )  expect=1 ;; \
 		g10|g11|g12 ) expect=5 ;; \
                 * ) expect=0 ;; \
@@ -49,12 +49,12 @@ $(GroupTest.GROUPS:%=$(BUILDDIR)/GroupTest.%.ok): \
             if [ "$$status" != "$$expect" ]; then echo "unexpected exit: $$status" ; exit 1; fi
 	echo $@ passed at `date` > $@
 
-TESTS.jtreg += $(BUILDDIR)/GroupTest.ok
+TESTS.jtreg += $(BUILDTESTDIR)/GroupTest.ok
 
-$(BUILDDIR)/ShowGroupTest.ok: \
+$(BUILDTESTDIR)/ShowGroupTest.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
-	$(MKDIR) -p $(@:%.ok=%) 
+	$(MKDIR) -p $(@:%.ok=%)
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDKHOME) \
@@ -64,7 +64,7 @@ $(BUILDDIR)/ShowGroupTest.ok: \
 	$(GREP) '^g3[0-9]' $(@:%.ok=%)/jt.log > $(@:%.ok=%)/g3.found
 	$(GREP) '^# g3[0-9]*' $(TESTDIR)/groups/TEST.groups3 \
 	        | $(SED) -e 's/# //' > $(@:%.ok=%)/g3.expect
-	$(DIFF) $(@:%.ok=%)/g3.expect $(@:%.ok=%)/g3.found
+	$(DIFF) --strip-trailing-cr $(@:%.ok=%)/g3.expect $(@:%.ok=%)/g3.found
 	echo $@ passed at `date` > $@
 
-TESTS.jtreg += $(BUILDDIR)/ShowGroupTest.ok
+TESTS.jtreg += $(BUILDTESTDIR)/ShowGroupTest.ok

@@ -25,8 +25,8 @@
 
 #----------------------------------------------------------------------
 
-$(BUILDDIR)/SysPropsTest_agentvm.ok \
-$(BUILDDIR)/SysPropsTest_othervm.ok: \
+$(BUILDTESTDIR)/SysPropsTest_agentvm.ok \
+$(BUILDTESTDIR)/SysPropsTest_othervm.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
@@ -38,5 +38,5 @@ $(BUILDDIR)/SysPropsTest_othervm.ok: \
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += \
-	$(BUILDDIR)/SysPropsTest_agentvm.ok \
-	$(BUILDDIR)/SysPropsTest_othervm.ok
+	$(BUILDTESTDIR)/SysPropsTest_agentvm.ok \
+	$(BUILDTESTDIR)/SysPropsTest_othervm.ok

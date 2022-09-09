@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -25,9 +25,9 @@
 
 package com.sun.javatest.regtest.exec;
 
-import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -40,6 +40,7 @@ import com.sun.javatest.regtest.agent.TestNGRunner;
 import com.sun.javatest.regtest.config.Locations;
 import com.sun.javatest.regtest.config.Locations.LibLocn;
 import com.sun.javatest.regtest.config.ParseException;
+import com.sun.javatest.regtest.util.FileUtils;
 
 /**
  * This class implements the implicit "testng" action for TestNG tests.
@@ -72,7 +73,7 @@ public class TestNGAction extends MainAction {
      * @param reason Indication of why this action was invoked.
      * @param script The script.
      * @exception  ParseException If the options or arguments are not expected
-     *             for the action or are improperly formated.
+     *             for the action or are improperly formatted.
      */
     @Override
     public void init(Map<String,String> opts, List<String> args, String reason,
@@ -113,14 +114,14 @@ public class TestNGAction extends MainAction {
                 buildArgs.addAll(listClasses(locations.absLibSrcList(LibLocn.Kind.PACKAGE)));
             }
             try {
-                File testSrcDir = locations.absTestSrcDir();
+                Path testSrcDir = locations.absTestSrcDir();
                 switch (locations.getDirKind(testSrcDir)) {
                     case PACKAGE:
-                        buildArgs.addAll(listClasses(Collections.singletonList(testSrcDir)));
+                        buildArgs.addAll(listClasses(List.of(testSrcDir)));
                         break;
                     case SYS_MODULE:
                     case USER_MODULE:
-                        buildArgs.addAll(listModules(Collections.singletonList(testSrcDir)));
+                        buildArgs.addAll(listModules(List.of(testSrcDir)));
                         break;
                 }
             } catch (Locations.Fault e) {
@@ -131,47 +132,49 @@ public class TestNGAction extends MainAction {
         }
     }
 
-    private List<String> listClasses(List<File> roots) {
+    private List<String> listClasses(List<Path> roots) {
         List<String> classes = new ArrayList<>();
-        for (File root: roots)
+        for (Path root: roots)
             listClasses(root, null, classes);
         return classes;
     }
 
-    private void listClasses(File dir, String pkg, List<String> classes) {
-        for (File f: dir.listFiles()) {
-            String f_name = f.getName();
-            if (f.isDirectory())
+    private void listClasses(Path dir, String pkg, List<String> classes) {
+        // candidate for Files.walkFileTree
+        for (Path f : FileUtils.listFiles(dir)) {
+            String f_name = f.getFileName().toString();
+            if (Files.isDirectory(f)) {
                 listClasses(f, pkg == null ? f_name : pkg + "." + f_name, classes);
-            else if (f_name.endsWith(".java")) {
+            } else if (f_name.endsWith(".java")) {
                 String c_name = f_name.substring(0, f_name.length() - 5);
                 classes.add(pkg == null ? c_name : pkg + "." + c_name);
             }
         }
     }
 
-    private Set<String> listModules(List<File> roots) {
+    private Set<String> listModules(List<Path> roots) {
         Set<String> modules = new LinkedHashSet<>();
-        for (File root: roots) {
-            for (File f: root.listFiles()) {
-                if (f.isDirectory())
-                    modules.add(f.getName() + "/*");
+        for (Path root: roots) {
+            for (Path f : FileUtils.listFiles(root)) {
+                if (Files.isDirectory(f)) {
+                    modules.add(f.getFileName() + "/*");
+                }
             }
         }
         return modules;
     }
 
-    private static final File TESTNG_RESULTS_XML = new File("testng-results.xml");
+    private static final Path TESTNG_RESULTS_XML = Path.of("testng-results.xml");
 
     @Override
     public void endAction(Status s) {
         super.endAction(s);
         if (script.isCheck())
             return;
-        script.getTestNGReporter().add(script.getTestResult(), section);
+        script.getTestNGSummaryReporter().add(script.getTestResult(), section);
         String jtrPath = script.getTestResult().getWorkRelativePath();
         String tngPath = jtrPath.replaceAll("\\.jtr$", ".testng-results.xml");
-        script.saveScratchFile(TESTNG_RESULTS_XML, new File(tngPath));
+        script.saveScratchFile(TESTNG_RESULTS_XML, Path.of(tngPath));
     }
 
 

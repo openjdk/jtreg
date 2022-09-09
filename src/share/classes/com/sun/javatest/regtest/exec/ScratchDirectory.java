@@ -107,7 +107,7 @@ abstract class ScratchDirectory {
         }
     }
 
-    private static final Set<File> badDirs = new HashSet<File>();
+    private static final Set<File> badDirs = new HashSet<>();
 
     private static synchronized boolean isBadDir(File dir) {
         return badDirs.contains(dir);
@@ -167,7 +167,7 @@ abstract class ScratchDirectory {
     private void deleteFilesWithRetry(File dir, Pattern p, boolean match, PrintWriter log)
             throws Fault, InterruptedException {
         long startTime = System.currentTimeMillis();
-        Set<File> cantDelete = new LinkedHashSet<File>();
+        Set<File> cantDelete = new LinkedHashSet<>();
 
         do {
             if (deleteFiles(dir, p, match, false, cantDelete, log)) {
@@ -423,7 +423,7 @@ abstract class ScratchDirectory {
             }
         }
 
-        private static ThreadLocal<ThreadInfo> threadInfo = new ThreadLocal<ThreadInfo>() {
+        private static ThreadLocal<ThreadInfo> threadInfo = new ThreadLocal<>() {
             @Override
             public ThreadInfo initialValue() {
                 return new ThreadInfo();

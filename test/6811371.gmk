@@ -26,11 +26,11 @@
 #----------------------------------------------------------------------
 
 # 6811371: recategorize -e option as a general option instead of a JDK one
-$(BUILDDIR)/T6811371.ok: \
+$(BUILDTESTDIR)/T6811371.ok: \
 	$(JTREG_IMAGEDIR)/lib/javatest.jar \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar
 	$(JDKJAVA) -jar $(JTREG_IMAGEDIR)/lib/jtreg.jar -help -e | grep "General Options"
 	echo $@ passed at `date` > $@
 
-TESTS.jtreg += $(BUILDDIR)/T6811371.ok
+TESTS.jtreg += $(BUILDTESTDIR)/T6811371.ok
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -34,6 +34,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URLEncoder;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.DateFormat;
 import java.util.Arrays;
 import java.util.Date;
@@ -64,7 +66,7 @@ public class RegressionReporter {
 
     public void report(RegressionParameters params, ElapsedTimeHandler elapsedTimeHandler,
                        TestStats testStats, TestFilter filter, boolean quiet) {
-        File rd = params.getReportDir();
+        File rd = params.getReportDir().toFile();
         File wd = params.getWorkDirectory().getRoot();
 
         try {
@@ -109,9 +111,13 @@ public class RegressionReporter {
                 if (testStats != null)
                     testStats.report(r);
 
-                TestNGReporter tng = TestNGReporter.instance(params.getWorkDirectory());
-                if (!tng.isEmpty())
-                    tng.writeReport(rd);
+                for (var sr : List.of(
+                        SummaryReporter.forTestNG(params.getWorkDirectory()),
+                        SummaryReporter.forJUnit(params.getWorkDirectory()))) {
+                    if (!sr.isEmpty()) {
+                        sr.writeReport(rd);
+                    }
+                }
             }
             fixupReports(rd, wd);
             if (!quiet)
@@ -125,7 +131,7 @@ public class RegressionReporter {
 
     public void report(TestManager testManager) throws Fault {
         this.testManager = testManager;
-        this.reportDir = testManager.getReportDirectory();
+        this.reportDir = testManager.getReportDirectory().toFile();
 
         parent = getCommonParent(testManager.getTestSuites());
         // ignore the case where the common parent is just the root directory
@@ -143,7 +149,7 @@ public class RegressionReporter {
 
             writeIndex();
 
-            fixupReports(reportDir, testManager.getWorkDirectory());
+            fixupReports(reportDir, testManager.getWorkDirectory().toFile());
 
             logReportWritten(reportDir);
         } catch (IOException e) {
@@ -211,9 +217,9 @@ public class RegressionReporter {
                 html.endTag(HTMLWriter.TD);
                 html.startTag(HTMLWriter.TD);
                 html.startTag(HTMLWriter.A);
-                File rd = testManager.getReportDirectory(testSuite);
-                html.writeAttr(HTMLWriter.HREF, "../" + encode(rd.getName()) + "/index.html");
-                html.write(rd.getName());
+                Path rd = testManager.getReportDirectory(testSuite);
+                html.writeAttr(HTMLWriter.HREF, "../" + encode(rd.getFileName().toString()) + "/index.html");
+                html.write(rd.getFileName().toString());
                 html.endTag(HTMLWriter.A);
                 html.endTag(HTMLWriter.TD);
                 html.endTag(HTMLWriter.TR);
@@ -360,9 +366,9 @@ public class RegressionReporter {
         File report = new File(textDir, "summary.txt");
         try (BufferedWriter summaryOut = new BufferedWriter(new FileWriter(report))) {
             for (RegressionTestSuite ts: testManager.getTestSuites()) {
-                File f = new File(new File(testManager.getReportDirectory(ts), "text"), "summary.txt");
-                if (f.exists()) {
-                    String s = read(f);
+                Path f = testManager.getReportDirectory(ts).resolve("text").resolve("summary.txt");
+                if (Files.exists(f)) {
+                    String s = Files.readString(f);
                     if (!s.endsWith("\n"))
                         s += "\n";
                     summaryOut.write(s);

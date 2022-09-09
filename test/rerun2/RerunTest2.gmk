@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2013, 2017, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2013, 2022, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -25,29 +25,29 @@
 
 # Tests use pre-module features, such as bootclasspath
 
-$(BUILDDIR)/RerunTest2.ok: \
+$(BUILDTESTDIR)/RerunTest2.ok: \
 	    $(TESTDIR)/rerun2/RerunTest2.java \
-	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	    $(JTREG_IMAGEDIR)/lib/junit.jar \
-	    $(JTREG_IMAGEDIR)/lib/testng.jar \
+	    $(ALL_JTREG_JARS) \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
-	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	$(RM) $(@:%.ok=%) ; $(MKDIR) -p $(@:%.ok=%)
 	$(MKDIR) $(@:%.ok=%)/classes
-	$(JDK8HOME)/bin/javac \
+	$(JDKHOME)/bin/javac \
 		-d $(@:%.ok=%)/classes \
 		-cp $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		-Xlint -Werror \
 		$(TESTDIR)/rerun2/RerunTest2.java
-	cd $(@:%.ok=%) && $(JDK8HOME)/bin/java \
+	ABS_TESTDIR=`cd $(TESTDIR) ; pwd` ; \
+	cd $(@:%.ok=%) && $(JDKJAVA) \
 		-classpath classes$(PS)$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		RerunTest2 \
-		../$(TESTDIR)/rerun2/test
+		$(JDK8HOME) \
+		$${ABS_TESTDIR}/rerun2/test
 	echo "test passed at `date`" > $@
 
 ifdef JDK8HOME
 ifneq ($(OS_NAME), windows)
 TESTS.jtreg += \
-	$(BUILDDIR)/RerunTest2.ok
+	$(BUILDTESTDIR)/RerunTest2.ok
 endif
 endif
 

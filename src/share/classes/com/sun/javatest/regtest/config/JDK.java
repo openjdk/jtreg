@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2007, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -31,6 +31,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringReader;
+import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -84,9 +87,11 @@ public class JDK {
      * @param javaHome the "home" directory for the JDK
      *
      * @return the JDK object
+     *
+     * @throws InvalidPathException if the path is invalid
      */
-    public static JDK of(String javaHome) {
-        return of(new File(javaHome));
+    public static JDK of(String javaHome) throws InvalidPathException {
+        return of(Path.of(javaHome));
     }
 
     /**
@@ -96,23 +101,23 @@ public class JDK {
      *
      * @return the JDK object
      */
-    public static synchronized JDK of(File javaHome) {
+    public static synchronized JDK of(Path javaHome) {
         JDK jdk = cache.get(javaHome);
         if (jdk == null)
             cache.put(javaHome, jdk = new JDK(javaHome));
         return jdk;
     }
 
-    private static final Map<File, JDK> cache = new HashMap<>();
+    private static final Map<Path, JDK> cache = new HashMap<>();
 
     /**
      * Creates a JDK object, given its "$JAVA_HOME" path.
      *
      * @param jdk the "home" directory for the JDK
      */
-    private JDK(File jdk) {
+    private JDK(Path jdk) {
         this.jdk = jdk;
-        absJDK = jdk.getAbsoluteFile();
+        absJDK = jdk.toAbsolutePath();
     }
 
     /**
@@ -142,8 +147,19 @@ public class JDK {
      * Returns the home directory for the JDK, as specified when the object was created.
      *
      * @return the home directory for the JDK
+     *
+     * @see #getHomeDirectory()
      */
     public File getFile() {
+        return jdk.toFile();
+    }
+
+    /**
+     * Returns the home directory for the JDK, as specified when the object was created.
+     *
+     * @return the home directory for the JDK
+     */
+    public Path getHomeDirectory() {
         return jdk;
     }
 
@@ -151,8 +167,19 @@ public class JDK {
      * Returns the absolute path of the home directory for the JDK.
      *
      * @return the absolute path of the home directory for the JDK
+     *
+     * @see #getAbsoluteHomeDirectory()
      */
     public File getAbsoluteFile() {
+        return absJDK.toFile();
+    }
+
+    /**
+     * Returns the absolute path of the home directory for the JDK.
+     *
+     * @return the absolute path of the home directory for the JDK
+     */
+    public Path getAbsoluteHomeDirectory() {
         return absJDK;
     }
 
@@ -161,7 +188,7 @@ public class JDK {
      *
      * @return a path for the Java launcher for this JDK
      */
-    public File getJavaProg() {
+    public Path getJavaProg() {
         return getProg("java", false);
     }
 
@@ -170,7 +197,7 @@ public class JDK {
      *
      * @return a path for the Java compiler for this JDK
      */
-    public File getJavacProg() {
+    public Path getJavacProg() {
         return getProg("javac", false);
     }
 
@@ -183,12 +210,12 @@ public class JDK {
      *
      * @return the path
      */
-    public File getProg(String command, boolean checkExe) {
-        File bin = new File(absJDK, "bin");
-        File prog = new File(bin, command);
-        if (!prog.exists() && checkExe) {
-            File prog_exe = new File(bin, command + ".exe");
-            if (prog_exe.exists()) {
+    public Path getProg(String command, boolean checkExe) {
+        Path bin = absJDK.resolve("bin");
+        Path prog = bin.resolve(command);
+        if (!Files.exists(prog) && checkExe) {
+            Path prog_exe = bin.resolve(command + ".exe");
+            if (Files.exists(prog_exe)) {
                 return prog_exe;
             }
         }
@@ -201,25 +228,29 @@ public class JDK {
      * @return whether or not the home directory for this JDK exists
      */
     public boolean exists() {
-        return jdk.exists();
+        return Files.exists(jdk);
     }
 
     /**
      * Returns the home directory for the JDK as a string, as specified when the object was created.
      *
      * @return the home directory for the JDK
+     *
+     * @see #getHomeDirectory()
      */
     public String getPath() {
-        return jdk.getPath();
+        return jdk.toString();
     }
 
     /**
      * Returns the absolute path of the home directory for the JDK, as a string.
      *
      * @return the absolute path of the home directory for the JDK
+     *
+     * @see #getAbsoluteHomeDirectory()
      */
     public String getAbsolutePath() {
-        return absJDK.getPath();
+        return absJDK.toString();
     }
 
     /**
@@ -230,7 +261,7 @@ public class JDK {
      */
     public SearchPath getJDKClassPath() {
         // will return an empty path if tools.jar does not exist
-        return new SearchPath(new File(new File(absJDK, "lib"), "tools.jar"));
+        return new SearchPath(absJDK.resolve("lib").resolve("tools.jar"));
     }
 
     /**
@@ -299,7 +330,7 @@ public class JDK {
         // since we are trying to determine the Java version, we have to assume
         // the worst, and use CLASSPATH.
         pb.environment().put("CLASSPATH", getSysPropClassPath.toString());
-        pb.command(getJavaProg().getPath(), GetSystemProperty.class.getName(), VERSION_PROPERTY);
+        pb.command(getJavaProg().toString(), GetSystemProperty.class.getName(), VERSION_PROPERTY);
         pb.redirectErrorStream(true);
         try {
             Process p = pb.start();
@@ -355,7 +386,7 @@ public class JDK {
         if (fullVersion == null) {
             fullVersion = "";  // default
             List<String> cmdArgs = new ArrayList<>();
-            cmdArgs.add(getJavaProg().getPath());
+            cmdArgs.add(getJavaProg().toString());
             cmdArgs.addAll(vmOpts);
             cmdArgs.add(VERSION_OPTION);
 
@@ -547,9 +578,9 @@ public class JDK {
                     return hasOldSymbolFile;
                 }
             }
-            File ctSym = new File(new File(absJDK, "lib"), "ct.sym");
-            if (ctSym.exists()) {
-                try (JarFile jar = new JarFile(ctSym)) {
+            Path ctSym = absJDK.resolve("lib").resolve("ct.sym");
+            if (Files.exists(ctSym)) {
+                try (JarFile jar = new JarFile(ctSym.toFile())) {
                     JarEntry e = jar.getJarEntry("META-INF/sym/rt.jar/java/lang/Object.class");
                     hasOldSymbolFile = (e != null);
                 } catch (IOException e) {
@@ -607,7 +638,7 @@ public class JDK {
         jdkOpts.addAll(epd.getVMOpts());
 
         List<String> cmdArgs = new ArrayList<>();
-        cmdArgs.add(getJavaProg().getPath());
+        cmdArgs.add(getJavaProg().toString());
         cmdArgs.addAll(jdkOpts.toList());
         cmdArgs.add(GetJDKProperties.class.getName());
 
@@ -631,7 +662,7 @@ public class JDK {
                     logger.accept(line);
                 }
                 String msg = String.format("failed to get JDK properties:%ncmd: \"%s\"%ncwd: \"%s\"%nexit code: %d",
-                        StringUtils.join(cmdArgs, "\" "), scratchDir, rc);
+                        StringUtils.join(cmdArgs, "\" \""), scratchDir, rc);
                 logger.accept(msg);
                 throw new Fault(msg);
             }
@@ -708,8 +739,8 @@ public class JDK {
         return info;
     }
 
-    private final File jdk;
-    private final File absJDK;
+    private final Path jdk;
+    private final Path absJDK;
 
     /** Value of java.specification.version for this JDK. Lazily evaluated as needed. */
     private String javaSpecificationVersion;

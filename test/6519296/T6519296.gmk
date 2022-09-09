@@ -25,7 +25,7 @@
 
 #----------------------------------------------------------------------
 
-$(BUILDDIR)/T6519296.ok: \
+$(BUILDTESTDIR)/T6519296.ok: \
 		$(TESTDIR)/6519296/T6519296.java \
 		$(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar
@@ -37,5 +37,5 @@ $(BUILDDIR)/T6519296.ok: \
 		$(TESTDIR)/6519296
 	echo "test passed at `date`" > $@
 
-TESTS.jtreg += $(BUILDDIR)/T6519296.ok
+TESTS.jtreg += $(BUILDTESTDIR)/T6519296.ok
 

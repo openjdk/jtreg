@@ -25,7 +25,7 @@
 
 #----------------------------------------------------------------------
 
-$(BUILDDIR)/PropertyTest_agentvm.ok: \
+$(BUILDTESTDIR)/PropertyTest_agentvm.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
@@ -35,7 +35,7 @@ $(BUILDDIR)/PropertyTest_agentvm.ok: \
 		$(TESTDIR)/Properties
 	echo "test passed at `date`" > $@
 
-$(BUILDDIR)/PropertyTest_othervm.ok: \
+$(BUILDTESTDIR)/PropertyTest_othervm.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
@@ -46,6 +46,6 @@ $(BUILDDIR)/PropertyTest_othervm.ok: \
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += \
-	$(BUILDDIR)/PropertyTest_agentvm.ok \
-	$(BUILDDIR)/PropertyTest_othervm.ok
+	$(BUILDTESTDIR)/PropertyTest_agentvm.ok \
+	$(BUILDTESTDIR)/PropertyTest_othervm.ok
 

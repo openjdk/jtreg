@@ -63,8 +63,6 @@ import com.sun.javatest.TestResult.Section;
 /**
  * Write out results in JUnit-compatible XML format, for processing by tools
  * that can process such files, such as CI systems like Hudson and Jenkins.
- *
- * @author ksrini
  */
 public class XMLWriter {
     static final String PASSED = "Passed.";

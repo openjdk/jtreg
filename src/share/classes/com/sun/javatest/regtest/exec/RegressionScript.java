@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -25,19 +25,19 @@
 
 package com.sun.javatest.regtest.exec;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.io.UncheckedIOException;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.UnknownHostException;
+import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
@@ -70,12 +70,14 @@ import com.sun.javatest.regtest.config.JDKOpts;
 import com.sun.javatest.regtest.config.Locations;
 import com.sun.javatest.regtest.config.Locations.LibLocn;
 import com.sun.javatest.regtest.config.Modules;
+import com.sun.javatest.regtest.config.OS;
 import com.sun.javatest.regtest.config.ParseException;
 import com.sun.javatest.regtest.config.RegressionEnvironment;
 import com.sun.javatest.regtest.config.RegressionParameters;
 import com.sun.javatest.regtest.config.RegressionTestSuite;
-import com.sun.javatest.regtest.report.TestNGReporter;
+import com.sun.javatest.regtest.report.SummaryReporter;
 import com.sun.javatest.regtest.tool.Version;
+import com.sun.javatest.regtest.util.FileUtils;
 import com.sun.javatest.regtest.util.StringUtils;
 
 import static com.sun.javatest.regtest.RStatus.error;
@@ -85,7 +87,6 @@ import static com.sun.javatest.regtest.RStatus.passed;
   * This class interprets the TestDescription as specified by the JDK tag
   * specification.
   *
-  * @author Iris A Garcia
   * @see com.sun.javatest.Script
   */
 public class RegressionScript extends Script {
@@ -141,6 +142,11 @@ public class RegressionScript extends Script {
         }
         testResult.putProperty("jtregVersion", getVersion());
         testResult.putProperty("testJDK", getTestJDK().getAbsolutePath());
+        OS testOs = params.getTestOS();
+        testResult.putProperty("testJDK_OS", testOs.toString());
+        testResult.putProperty("testJDK_os.name", testOs.name);
+        testResult.putProperty("testJDK_os.version", testOs.version);
+        testResult.putProperty("testJDK_os.arch", testOs.arch);
         if (!getCompileJDK().equals(getTestJDK())) {
             testResult.putProperty("compileJDK", getCompileJDK().getAbsolutePath());
         }
@@ -180,15 +186,14 @@ public class RegressionScript extends Script {
             needJUnit = false;
             needTestNG = false;
 
-            if (td.getParameter("importsJUnit") != null) {
-                needJUnit = true;
-                needTestNG = true;
-            } else {
-                for (Action a: actionList) {
-                    if (a instanceof JUnitAction) {
+            for (Action a : actionList) {
+                if (a instanceof JUnitAction) {
+                    needJUnit = true;
+                } else if (a instanceof TestNGAction) {
+                    needTestNG = true;
+                    // check for using mixed-mode
+                    if (td.getParameter("importsJUnit") != null) {
                         needJUnit = true;
-                    } else if (a instanceof TestNGAction) {
-                        needTestNG = true;
                     }
                 }
             }
@@ -205,8 +210,8 @@ public class RegressionScript extends Script {
             } else {
                 // check actions for test-specific modules
                 actionLoop:
-                for (Action a: actionList) {
-                    for (String m: a.getModules()) {
+                for (Action a : actionList) {
+                    for (String m : a.getModules()) {
                         if (systemModules.contains(m)) {
                             usePatchModules = true;
                             break actionLoop;
@@ -235,7 +240,7 @@ public class RegressionScript extends Script {
                     printJDKInfo(msgPW, "test JDK", getTestJDK(), getTestVMOptions());
                 }
 
-                for (LibLocn lib: locations.getLibs()) {
+                for (LibLocn lib : locations.getLibs()) {
                     String kind;
                     switch (lib.kind) {
                         case PACKAGE:
@@ -257,14 +262,14 @@ public class RegressionScript extends Script {
                     if (lib.absSrcDir != null) {
                         msgPW.println("   source directory: " + lib.absSrcDir);
                     }
-                    if (lib.absClsDir.isFile() && lib.absClsDir.getName().endsWith(".jar")) {
+                    if (Files.isRegularFile(lib.absClsDir) && lib.absClsDir.getFileName().toString().endsWith(".jar")) {
                         msgPW.println("   jar file: " + lib.absClsDir);
                     } else {
                         msgPW.println("   class directory: " + lib.absClsDir);
                     }
                 }
 
-                while (! actionList.isEmpty()) {
+                while (!actionList.isEmpty()) {
                     Action action = actionList.remove();
                     status = action.run();
                     if (status.getType() != Status.PASSED)
@@ -283,8 +288,19 @@ public class RegressionScript extends Script {
                 | Modules.Fault
                 | ParseActionsException
                 | TestRunException
-                | TestSuite.Fault e) {
+                | TestSuite.Fault
+                | FileUtils.NIOFileOperationException e) {
             status = error(e.getMessage());
+        } catch (UncheckedIOException e) {
+            String msg = "IO exception: " + e.getMessage();
+            if (e.getCause() != null)
+                msg += " (" + e.getCause() + ")";
+            status = error(msg);
+        } catch (InvalidPathException e) {
+            String msg = "Invalid path: " + e.getInput() + "; " + e.getMessage();
+            if (e.getCause() != null)
+                msg += " (" + e.getCause() + ")";
+            status = error(msg);
         } finally {
             int elapsed = (int) (System.currentTimeMillis() - started);
             int millis = (elapsed % 1000);
@@ -322,7 +338,7 @@ public class RegressionScript extends Script {
     private void printJDKInfo(PrintWriter pw, String label, JDK jdk, List<String> opts) {
         pw.print(label);
         pw.print(": ");
-        pw.println(jdk.getAbsoluteFile());
+        pw.println(jdk.getAbsoluteHomeDirectory());
         String v = jdk.getVersionText(opts, pw::println);
         if (v.length() > 0) {
             pw.println(v);
@@ -492,7 +508,7 @@ public class RegressionScript extends Script {
 
     /**
      * Get the timeout to be used for a test.  Since the timeout for regression
-     * tests is on a per action basis rather than on a per test basis, this
+     * tests is on a per-action basis rather than on a per-test basis, this
      * method should always return zero which indicates that there is no
      * timeout.
      *
@@ -504,22 +520,22 @@ public class RegressionScript extends Script {
     }
 
     /**
-     * Get the timeout to be used for an action.  The timeout will be scaled by
-     * the timeoutFactor as necessary.  The default timeout for any action as
-     * per the tag-spec is 120 seconds scaled by a value found in the
-     * environment ("javatestTimeoutFactor").
-     * The timeout factor is available as both an integer (for backward
-     * compatibility) and a floating point number
+     * Returns the timeout to be used for an action.
      *
-     * @param time The initial timeout which may need to be scaled according
-     *             to the provided timeoutFactor.  If the initial timeout is
-     *             less than zero, then the default timeout will be returned.
-     * @return     The timeout in seconds.
+     * If no debug options have been set, the result will be the given value,
+     * or a default value if the given value is negative, scaled by the timeout factor.
+     *
+     * If debug options have been set, the result will be 0, meaning "no timeout".
+     *
+     * @param time the value of the timeout specified in the action,
+     *             or -1 if no value was specified
+     * @return     the timeout, in seconds
      */
     protected int getActionTimeout(int time) {
-        if (time < 0)
-            time = 120;
-        return (int) (time * getTimeoutFactor());
+        final int DEFAULT_ACTION_TIMEOUT = 120; // seconds
+        return isTimeoutsEnabled()
+                ? (int) ((time < 0 ? DEFAULT_ACTION_TIMEOUT : time) * getTimeoutFactor())
+                : 0;
     }
 
     protected float getTimeoutFactor() {
@@ -527,7 +543,9 @@ public class RegressionScript extends Script {
             // not synchronized, so in worst case may be set more than once
             float value = 1; // default
             try {
-                // use [1] to get the floating point timeout factor
+                // The timeout factor is available as both an integer (for backward compatibility)
+                // and a floating point number.
+                // Use [1] to get the floating point timeout factor
                 String f = (regEnv == null ? null : regEnv.lookup("javatestTimeoutFactor")[1]);
                 if (f != null)
                     value = Float.parseFloat(f);
@@ -540,6 +558,16 @@ public class RegressionScript extends Script {
     }
 
     private static float cacheJavaTestTimeoutFactor = -1;
+
+    /**
+     * Returns whether timeouts are (generally) enabled.
+     *
+     * @return {@code true} if timeouts are enabled, and {@code false} otherwise
+     */
+    protected boolean isTimeoutsEnabled() {
+        // for now, timeouts are always enabled, unless debug options have been specified for the test
+        return getTestDebugOptions().isEmpty();
+    }
 
     /**
      * Set an alarm that will interrupt the calling thread after a specified
@@ -672,7 +700,7 @@ public class RegressionScript extends Script {
     /**
      * Path to native components.
      */
-    File getNativeDir() {
+    Path getNativeDir() {
         return params.getNativeDir();
     }
 
@@ -709,29 +737,29 @@ public class RegressionScript extends Script {
 
     //----------------------- computing paths ---------------------------------
 
-    File absTestWorkFile(String name) {
+    Path absTestWorkFile(String name) {
         return locations.absTestWorkFile(name);
     }
 
-    File absTestSrcDir() {
+    Path absTestSrcDir() {
         return locations.absTestSrcDir();
     } // absTestSrcDir()
 
-    File absTestClsDir() {
+    Path absTestClsDir() {
         return locations.absTestClsDir();
     } // absTestClsDir()
 
-    File absTestScratchDir() {
-        return scratchDirectory.dir.getAbsoluteFile();
+    Path absTestScratchDir() {
+        return scratchDirectory.dir.toPath().toAbsolutePath();
     } // absTestScratchDir()
 
-    File absTestClsTopDir() {
+    Path absTestClsTopDir() {
         return locations.absBaseClsDir();
     } // absTestClsTopDir()
 
-    private boolean useBootClassPath(File classdir) throws TestClassException {
+    private boolean useBootClassPath(Path classdir) throws TestClassException {
         try {
-            String rel = locations.absBaseClsDir().toURI().relativize(classdir.toURI()).getPath();
+            String rel = locations.absBaseClsDir().toUri().relativize(classdir.toFile().toURI()).getPath();
             return testSuite.useBootClassPath(rel);
         } catch (TestSuite.Fault f) {
             throw new TestClassException(f.toString());
@@ -761,7 +789,7 @@ public class RegressionScript extends Script {
             if (multiModule) {
                 msp.append(locations.absTestSrcDir());
             } else {
-                File testSrcDir = locations.absTestSrcDir(module);
+                Path testSrcDir = locations.absTestSrcDir(module);
                 sp.append(testSrcDir);
                 // Ideally, the source directory need only go on the source path
                 // but some tests rely on precompiled .class files existing in
@@ -789,7 +817,7 @@ public class RegressionScript extends Script {
             if (multiModule)
                 msp.append(libLocn.absSrcDir);
             else if (module != null)
-                sp.append(new File(libLocn.absSrcDir, module));
+                sp.append(libLocn.absSrcDir.resolve(module));
         }
 
         if (module == null) {
@@ -814,7 +842,7 @@ public class RegressionScript extends Script {
                 // Put necessary jar files onto the module path as automatic modules.
                 // We cannot use the ${jtreg.home}/lib directory directly since it contains
                 // other jar files which are not valid as automatic modules.
-                File md = workDir.getFile("modules");
+                Path md = workDir.getFile("modules").toPath();
                 if (needJUnit)
                     install(params.getJUnitPath(), md);
                 if (needTestNG)
@@ -915,7 +943,7 @@ public class RegressionScript extends Script {
                 // Put necessary jar files onto the module path as automatic modules.
                 // We cannot use the ${jtreg.home}/lib directory directly since it contains
                 // other jar files which are not valid as automatic modules.
-                File md = workDir.getFile("modules");
+                Path md = workDir.getFile("modules").toPath();
                 if (needJUnit)
                     install(params.getJUnitPath(), md);
                 if (needTestNG)
@@ -964,26 +992,26 @@ public class RegressionScript extends Script {
         return map;
     }
 
-    private void install(SearchPath path, File dir) throws TestRunException {
+    private void install(SearchPath path, Path dir) throws TestRunException {
         synchronized (params.getWorkDirectory()) { // avoid multiple tests doing simultaneous install
-            if (dir.exists()) {
-                if (!dir.isDirectory())
+            if (Files.exists(dir)) {
+                if (!Files.isDirectory(dir))
                     throw new TestRunException("modules in work directory is not a directory");
             } else {
-                dir.mkdirs();
+                FileUtils.createDirectories(dir);
             }
 
-            for (File jar: path.asList()) {
-                File target = new File(dir, jar.getName());
-                if (target.exists()
-                        && target.length() == jar.length()
-                        && target.lastModified() == jar.lastModified()) {
+            for (Path jar: path.asList()) {
+                Path target = dir.resolve(jar.getFileName());
+                if (Files.exists(target)
+                        && FileUtils.size(target) == FileUtils.size(jar)
+                        && FileUtils.compareLastModifiedTimes(target, jar) == 0) {
                     return;
                 }
 
                 // Eventually replace with java.nio.file.Files::copy
-                try (OutputStream out = new BufferedOutputStream(new FileOutputStream(target));
-                        InputStream in = new BufferedInputStream(new FileInputStream(jar))) {
+                try (OutputStream out = Files.newOutputStream(target);
+                        InputStream in = Files.newInputStream(jar)) {
                     byte[] buf = new byte[8192];
                     int n;
                     while ((n = in.read(buf)) != -1) {
@@ -992,7 +1020,11 @@ public class RegressionScript extends Script {
                 } catch (IOException e) {
                     throw new TestRunException("cannot init modules directory", e);
                 }
-                target.setLastModified(jar.lastModified());
+                try {
+                    Files.setLastModifiedTime(target, FileUtils.getLastModifiedTime(jar));
+                } catch (IOException e) {
+                    throw new TestRunException("cannot set last modified time for " + target, e);
+                }
             }
         }
     }
@@ -1006,10 +1038,10 @@ public class RegressionScript extends Script {
     }
 
     boolean hasTestPatchMods() {
-        File testModulesDir = locations.absTestPatchDir();
-        if (testModulesDir.isDirectory()) {
-            for (File f: testModulesDir.listFiles()) {
-                if (f.isDirectory())
+        Path testModulesDir = locations.absTestPatchDir();
+        if (Files.isDirectory(testModulesDir)) {
+            for (Path f : FileUtils.listFiles(testModulesDir)) {
+                if (Files.isDirectory(f))
                     return true;
             }
         }
@@ -1022,10 +1054,10 @@ public class RegressionScript extends Script {
     }
 
     boolean hasTestUserMods() {
-        File testModulesDir = locations.absTestModulesDir();
-        if (testModulesDir.isDirectory()) {
-            for (File f: testModulesDir.listFiles()) {
-                if (f.isDirectory())
+        Path testModulesDir = locations.absTestModulesDir();
+        if (Files.isDirectory(testModulesDir)) {
+            for (Path f : FileUtils.listFiles(testModulesDir)) {
+                if (Files.isDirectory(f))
                     return true;
             }
         }
@@ -1060,8 +1092,12 @@ public class RegressionScript extends Script {
         return params.getAsmToolsPath();
     }
 
-    TestNGReporter getTestNGReporter() {
-        return TestNGReporter.instance(workDir);
+    SummaryReporter getTestNGSummaryReporter() {
+        return SummaryReporter.forTestNG(workDir);
+    }
+
+    SummaryReporter getJUnitSummaryReporter() {
+        return SummaryReporter.forJUnit(workDir);
     }
 
     Lock getLockIfRequired() throws TestRunException {
@@ -1105,8 +1141,8 @@ public class RegressionScript extends Script {
         return getTestJDK().getVersion(params, msgPW::println);
     }
 
-    String getJavaProg() {
-        return params.getTestJDK().getJavaProg().getPath();
+    Path getJavaProg() {
+        return params.getTestJDK().getJavaProg();
     }
 
     //--------------------------------------------------------------------------
@@ -1119,8 +1155,8 @@ public class RegressionScript extends Script {
         return getCompileJDK().getVersion(params, msgPW::println);
     }
 
-    String getJavacProg() {
-        return params.getCompileJDK().getJavacProg().getPath();
+    Path getJavacProg() {
+        return params.getCompileJDK().getJavacProg();
     }
 
     //--------------------------------------------------------------------------
@@ -1132,10 +1168,10 @@ public class RegressionScript extends Script {
         Map<String, String> p = new LinkedHashMap<>(params.getBasicTestProperties());
         // add test-specific properties
         p.put("test.name", testResult.getTestName());
-        p.put("test.file", locations.absTestFile().getPath());
-        p.put("test.src", locations.absTestSrcDir().getPath());
+        p.put("test.file", locations.absTestFile().toString());
+        p.put("test.src", locations.absTestSrcDir().toString());
         p.put("test.src.path", toString(locations.absTestSrcPath()));
-        p.put("test.classes", locations.absTestClsDir().getPath());
+        p.put("test.classes", locations.absTestClsDir().toString());
         p.put("test.class.path", toString(locations.absTestClsPath()));
         if (getExecMode() == ExecMode.AGENTVM) {
             // The following will be added to javac.class.path on the test VM
@@ -1165,11 +1201,17 @@ public class RegressionScript extends Script {
         return Collections.unmodifiableMap(p);
     }
     // where
-    private String toString(List<File> files) {
+    private String toString(List<Path> files) {
         return files.stream()
-                .map(File::getPath)
+                .map(Path::toString)
                 .collect(Collectors.joining(File.pathSeparator));
     }
+//    // where
+//    private String toString(List<File> files) {
+//        return files.stream()
+//                .map(File::getPath)
+//                .collect(Collectors.joining(File.pathSeparator));
+//    }
 
     File getTestRootDir() {
         return params.getTestSuite().getRootDir();
@@ -1185,7 +1227,7 @@ public class RegressionScript extends Script {
         vmOpts.addAll("-classpath", classpath.toString());
         vmOpts.addAll(testVMOpts);
         if (params.getTestJDK().hasModules()) {
-            vmOpts.addAllPatchModules(new SearchPath(params.getWorkDirectory().getFile("patches")));
+            vmOpts.addAllPatchModules(new SearchPath(params.getWorkDirectory().getFile("patches").toPath()));
         }
 
         /*
@@ -1195,7 +1237,7 @@ public class RegressionScript extends Script {
          * record the agents that the script has already obtained for use.
          */
         for (Agent agent: agents) {
-            if (agent.matches(absTestScratchDir(), jdk, vmOpts.toList())) {
+            if (agent.matches(absTestScratchDir().toFile(), jdk, vmOpts.toList())) {
                 return agent;
             }
         }
@@ -1210,7 +1252,7 @@ public class RegressionScript extends Script {
         envVars.put("CLASSPATH", cp.toString());
 
         Agent.Pool p = Agent.Pool.instance(params);
-        Agent agent = p.getAgent(absTestScratchDir(), jdk, vmOpts.toList(), envVars);
+        Agent agent = p.getAgent(absTestScratchDir().toFile(), jdk, vmOpts.toList(), envVars);
         agents.add(agent);
         return agent;
     }
@@ -1257,8 +1299,8 @@ public class RegressionScript extends Script {
 
     //----------internal classes-----------------------------------------------
 
-    void saveScratchFile(File file, File dest) {
-        scratchDirectory.retainFile(file, dest);
+    void saveScratchFile(Path file, Path dest) {
+        scratchDirectory.retainFile(file.toFile(), dest.toFile());
     }
 
     //----------internal classes-----------------------------------------------

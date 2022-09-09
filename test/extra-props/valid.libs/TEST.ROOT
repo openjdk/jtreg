@@ -21,7 +21,7 @@
  * questions.
  */
 
-requires.extraPropDefns = support/ExtraProps.java 
+requires.extraPropDefns = support/ExtraProps.java
 requires.extraPropDefns.libs = support/lib
 requires.extraPropDefns.bootlibs = support/bootLib
 requires.extraPropDefns.vmOpts = -DhaveVMOpt=true

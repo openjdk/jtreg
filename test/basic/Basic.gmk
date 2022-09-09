@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2022, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -29,28 +29,12 @@
 
 BASIC.files := $(shell find $(TESTDIR)/share/basic -type f)
 
-ifdef JCOMMANDER_JAR
-$(BUILDDIR)/Basic.check.ok: \
-	$(JTREG_IMAGEDIR)/lib/jcommander.jar
-endif
 
-ifdef GOOGLE_GUICE_JAR
-$(BUILDDIR)/Basic.check.ok: \
-	$(JTREG_IMAGEDIR)/lib/guice.jar
-endif
-
-ifdef HAMCREST_JAR
-$(BUILDDIR)/Basic.check.ok: \
-	$(JTREG_IMAGEDIR)/lib/hamcrest.jar
-endif
-
-$(BUILDDIR)/Basic.check.ok: \
-                $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-		$(JTREG_IMAGEDIR)/lib/javatest.jar \
-	    	$(JTREG_IMAGE_JAVAHELP_JAR) \
-		$(JTREG_IMAGEDIR)/lib/junit.jar \
-		$(JTREG_IMAGEDIR)/lib/testng.jar \
-		$(BUILDDIR)/i18n.com.sun.javatest.regtest.ok \
+$(BUILDTESTDIR)/Basic.check.ok: \
+                $(ALL_JTREG_JARS) \
+		$(BUILDTESTDIR)/i18n.com.sun.javatest.regtest.config.ok \
+		$(BUILDTESTDIR)/i18n.com.sun.javatest.regtest.report.ok \
+		$(BUILDTESTDIR)/i18n.com.sun.javatest.regtest.tool.ok \
 	        $(BASIC.files)
 	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
 	$(MKDIR) -p $(@:%.ok=%/work/scratch) $(@:%.ok=%/report)
@@ -63,57 +47,42 @@ $(BUILDDIR)/Basic.check.ok: \
 		$(TESTDIR)/share/basic \
 		> $(@:%.ok=%/log) 2>&1|| \
 	    true "non-zero exit code from JavaTest intentionally ignored"
-	$(GREP) -s 'Test results: passed: 155; error: 83' $(@:%.ok=%/log)  > /dev/null
+	$(GREP) -s 'Test results: passed: 156; error: 84' $(@:%.ok=%/log)  > /dev/null
 	echo $@ passed at `date` > $@
 
 INITIAL_TESTS += \
-	$(BUILDDIR)/Basic.check.ok
+	$(BUILDTESTDIR)/Basic.check.ok
 
 #----------------------------------------------------------------------
 
 ENVVARS="DISPLAY=$${DISPLAY:-`uname -n`:0.0}"
 
-ifeq ($(OS_NAME), windows) 
+ifeq ($(OS_NAME), windows)
   BASIC_TESTS := $(shell cygpath -m $(abspath $(TESTDIR)/share/basic) )
 else
   BASIC_TESTS := $(abspath $(TESTDIR)/share/basic)
 endif
 
-ifdef JCOMMANDER_JAR
-$(BUILDDIR)/Basic.othervm.ok \
-$(BUILDDIR)/Basic.agentvm.ok: \
-	$(JTREG_IMAGEDIR)/lib/jcommander.jar
-endif
+$(BUILDTESTDIR)/Basic.classes.ok: \
+		$(ALL_JTREG_JARS) \
+		$(TESTDIR)/basic/Basic.java
+	$(MKDIR) -p $(BUILDTESTDIR)/basic/classes
+	CLASSPATH="$(CLASSDIR)$(PS)$(JAVADIR)$(PS)$(JAVATEST_JAR)" \
+		$(JDKJAVAC) -Xlint -Werror -encoding ASCII -d $(BUILDTESTDIR)/basic/classes $(TESTDIR)/basic/Basic.java
+	echo Basic.java compiled at `date` > $@
 
-ifdef GOOGLE_GUICE_JAR
-$(BUILDDIR)/Basic.othervm.ok \
-$(BUILDDIR)/Basic.agentvm.ok: \
-	$(JTREG_IMAGEDIR)/lib/guice.jar
-endif
-
-ifdef HAMCREST_JAR
-$(BUILDDIR)/Basic.othervm.ok \
-$(BUILDDIR)/Basic.agentvm.ok: \
-	$(JTREG_IMAGEDIR)/lib/hamcrest.jar
-endif
-
-$(BUILDDIR)/Basic.othervm.ok \
-$(BUILDDIR)/Basic.agentvm.ok: \
-                $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-		$(JTREG_IMAGEDIR)/lib/javatest.jar \
-	    	$(JTREG_IMAGE_JAVAHELP_JAR) \
-		$(JTREG_IMAGEDIR)/lib/junit.jar \
-		$(JTREG_IMAGEDIR)/lib/testng.jar \
-		$(TESTDIR)/basic/Basic.java \
-		$(BUILDDIR)/i18n.com.sun.javatest.regtest.ok \
+$(BUILDTESTDIR)/Basic.othervm.ok \
+$(BUILDTESTDIR)/Basic.agentvm.ok: \
+		$(BUILDTESTDIR)/Basic.classes.ok \
+		$(BUILDTESTDIR)/i18n.com.sun.javatest.regtest.config.ok \
+		$(BUILDTESTDIR)/i18n.com.sun.javatest.regtest.report.ok \
+		$(BUILDTESTDIR)/i18n.com.sun.javatest.regtest.tool.ok \
 	        $(BASIC.files)
 	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
-	$(MKDIR) -p $(@:%.ok=%/work/scratch) $(@:%.ok=%/report) $(BUILDDIR)/basic/classes
-	CLASSPATH="$(CLASSDIR)$(PS)$(JAVADIR)$(PS)$(JAVATEST_JAR)" \
-		$(JDKJAVAC) -Xlint -Werror -encoding ISO8859-1 -d $(BUILDDIR)/basic/classes $(TESTDIR)/basic/Basic.java
+	$(MKDIR) -p $(@:%.ok=%/work/scratch) $(@:%.ok=%/report)
 	cd $(@:%.ok=%/work/scratch) ; \
 	    $(JDKJAVA) \
-		-cp "../../../basic/classes$(PS)$(ABS_JTREG_IMAGEJARDIR)/jtreg.jar" \
+		-cp "../../../basic/classes$(PS)$(JTREG_IMAGEJARDIR)/jtreg.jar" \
 		-Ddebug.com.sun.javatest.TestResultTable=true \
 		-Ddebug.com.sun.javatest.TRT.TreeIterator=true \
 		-Ddebug.com.sun.javatest.TestRunner=true \
@@ -126,14 +95,12 @@ $(BUILDDIR)/Basic.agentvm.ok: \
 		    ../../work \
 		    $(JDKHOME) \
 		    $(ENVVARS) \
-		    $(@:$(BUILDDIR)/Basic.%.ok=-%) \
+		    $(@:$(BUILDTESTDIR)/Basic.%.ok=-%) \
 		> ../../log 2>&1 \
 	    || (cat ../../log ; exit 1)
 	echo $@ passed at `date` > $@
 
-ifndef HEADLESS
 INITIAL_TESTS += \
-	$(BUILDDIR)/Basic.othervm.ok \
-	$(BUILDDIR)/Basic.agentvm.ok
-endif
+	$(BUILDTESTDIR)/Basic.othervm.ok \
+	$(BUILDTESTDIR)/Basic.agentvm.ok
 

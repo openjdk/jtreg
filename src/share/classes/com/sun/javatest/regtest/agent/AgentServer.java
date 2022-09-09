@@ -56,6 +56,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 
+@SuppressWarnings("removal") // Security Manager and related APIs
 public class AgentServer implements ActionHelper.OutputHandler {
 
     /**
@@ -321,7 +322,7 @@ public class AgentServer implements ActionHelper.OutputHandler {
 
     static List<String> readList(DataInputStream in) throws IOException {
         int n = in.readShort();
-        List<String> l = new ArrayList<String>(n);
+        List<String> l = new ArrayList<>(n);
         for (int i = 0; i < n; i++)
             l.add(in.readUTF());
         return l;
@@ -329,7 +330,7 @@ public class AgentServer implements ActionHelper.OutputHandler {
 
     static Set<String> readSet(DataInputStream in) throws IOException {
         int n = in.readShort();
-        Set<String> s = new LinkedHashSet<String>(n);
+        Set<String> s = new LinkedHashSet<>(n);
         for (int i = 0; i < n; i++)
             s.add(in.readUTF());
         return s;
@@ -337,7 +338,7 @@ public class AgentServer implements ActionHelper.OutputHandler {
 
     static Map<String, String> readMap(DataInputStream in) throws IOException {
         int n = in.readShort();
-        Map<String, String> p = new HashMap<String, String>(n, 1.0f);
+        Map<String, String> p = new HashMap<>(n, 1.0f);
         for (int i = 0; i < n; i++) {
             String key = in.readUTF();
             String value = in.readUTF();
@@ -379,7 +380,7 @@ public class AgentServer implements ActionHelper.OutputHandler {
     private final PrintStream traceOut = System.err;
     private final PrintWriter logWriter;
     private final int id;
-    private final Map<OutputKind, Writer> writers = new EnumMap<OutputKind, Writer>(OutputKind.class);
+    private final Map<OutputKind, Writer> writers = new EnumMap<>(OutputKind.class);
 
     /**
      * Create an output stream for output to be sent back to the client via the server connection.

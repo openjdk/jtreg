@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2016, 2017, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2016, 2022, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -25,7 +25,7 @@
 
 #----------------------------------------------------------------------
 
-$(BUILDDIR)/PolicyTest.ok: \
+$(BUILDTESTDIR)/PolicyTest.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -40,9 +40,9 @@ $(BUILDDIR)/PolicyTest.ok: \
 	if $(GREP) -s "(testng|junit)" $(@:%.ok=%)/work/Main/simple.policy_new > /dev/null ; then \
 		echo "unexpected text"; exit 1; \
 	fi
-	$(GREP) 'grant.*junit.jar' $(@:%.ok=%)/work/JUnit/simple.policy_new
-	$(GREP) 'grant.*testng.jar' $(@:%.ok=%)/work/TestNG/simple.policy_new
+	$(GREP) 'grant.*junit[^ ]*.jar' $(@:%.ok=%)/work/JUnit/simple.policy_new
+	$(GREP) 'grant.*testng[^ ]*.jar' $(@:%.ok=%)/work/TestNG/simple.policy_new
 	echo "test passed at `date`" > $@
 
-TESTS.jtreg += $(BUILDDIR)/PolicyTest.ok
+TESTS.jtreg += $(BUILDTESTDIR)/PolicyTest.ok
 

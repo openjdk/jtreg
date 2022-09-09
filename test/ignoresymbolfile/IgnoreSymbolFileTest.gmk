@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2012, 2018, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2012, 2022, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -25,21 +25,21 @@
 
 #----------------------------------------------------------------------
 
-$(BUILDDIR)/ignoresymbolfile.othervm.ok \
-$(BUILDDIR)/ignoresymbolfile.agentvm.ok: \
+$(BUILDTESTDIR)/ignoresymbolfile.othervm.ok \
+$(BUILDTESTDIR)/ignoresymbolfile.agentvm.ok: \
                 $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-		$(JTREG_IMAGEDIR)/lib/javatest.jar \
-	    	$(JTREG_IMAGE_JAVAHELP_JAR) 
+		$(JTREG_IMAGEDIR)/lib/javatest.jar
 	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
 	$(MKDIR) -p $(@:%.ok=%)
-	$(JDK8HOME)/bin/java \
+	$(JDKHOME)/bin/java \
 		-Djavatest.regtest.showCmd=true \
 		-Djavatest.regtest.debugChild=true \
 		-Djavatest.regtest.traceAgent=true \
-		-jar $(ABS_JTREG_IMAGEJARDIR)/jtreg.jar \
+		-jar $(JTREG_IMAGEJARDIR)/jtreg.jar \
+		-jdk:$(JDK8HOME) \
 		-w:$(@:%.ok=%/work) \
 		-r:$(@:%.ok=%/report) \
-		$(@:$(BUILDDIR)/ignoresymbolfile.%.ok=-%) \
+		$(@:$(BUILDTESTDIR)/ignoresymbolfile.%.ok=-%) \
 		$(TESTDIR)/ignoresymbolfile \
 		> $(@:%.ok=%/log 2>&1) \
 	    || (cat $(@:%.ok=%/log) ; exit 1)
@@ -47,6 +47,6 @@ $(BUILDDIR)/ignoresymbolfile.agentvm.ok: \
 
 ifdef JDK8HOME
 TESTS.jtreg += \
-	$(BUILDDIR)/ignoresymbolfile.othervm.ok \
-	$(BUILDDIR)/ignoresymbolfile.agentvm.ok
+	$(BUILDTESTDIR)/ignoresymbolfile.othervm.ok \
+	$(BUILDTESTDIR)/ignoresymbolfile.agentvm.ok
 endif

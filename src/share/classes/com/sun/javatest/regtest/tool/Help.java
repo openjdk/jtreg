@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2006, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -36,6 +36,7 @@ import java.io.PrintWriter;
 import java.lang.reflect.Field;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.Path;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -51,6 +52,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
+import java.util.stream.Collectors;
 
 import com.sun.javatest.regtest.agent.SearchPath;
 import com.sun.javatest.util.HelpTree;
@@ -108,17 +110,27 @@ public class Help {
         addVersionHelper(new Help.VersionHelper() {
             @Override
             public void showVersion(PrintWriter out) {
+                // print list of jar files in path
+                out.println(name + ": " + path.asList().stream()
+                        .map(Path::getFileName)
+                        .map(Object::toString)
+                        .collect(Collectors.joining(", ")));
                 try {
-                    for (File jar: path.asList()) {
-                        try (JarFile j = new JarFile(jar)) {
-                            Attributes attrs = j.getManifest().getMainAttributes();
-                            String v = attrs.getValue(Attributes.Name.IMPLEMENTATION_VERSION);
-                            if (v == null) {
-                                v = attrs.getValue("Bundle-Version");
+                    // look inside jar metadata for details for those jar files that do
+                    // not seem to have a version in their filename
+                    for (Path jar: path.asList()) {
+                        String fn = jar.getFileName().toString();
+                        if (!fn.matches("(?i)[a-z0-9-_]+-[0-9](\\.[0-9]+)+\\.jar")) {
+                            try (JarFile j = new JarFile(jar.toFile())) {
+                                Attributes attrs = j.getManifest().getMainAttributes();
+                                String v = attrs.getValue(Attributes.Name.IMPLEMENTATION_VERSION);
+                                if (v == null) {
+                                    v = attrs.getValue("Bundle-Version");
+                                }
+                                String suffix = (path.asList().size() == 1)
+                                        ? "" : " (" + jar.getFileName() + ")";
+                                out.println(name + suffix + ": version " + (v == null ? "unknown" : v)); // need i18n
                             }
-                            String suffix = (path.asList().size() == 1)
-                                    ? "" : " (" + jar.getName() + ")";
-                            out.println(name + suffix + ": version " + (v == null ? "unknown" : v)); // need i18n
                         }
                     }
                 } catch (IOException e) {
@@ -353,7 +365,7 @@ public class Help {
             groups.add(o.group);
         Map<String, SortedMap<String, Option>> map = new LinkedHashMap<>();
         for (String g: groups)
-            map.put(g, new TreeMap<String, Option>(new CaseInsensitiveStringComparator()));
+            map.put(g, new TreeMap<>(new CaseInsensitiveStringComparator()));
         for (Option o: options) {
             if (o.names.length > 0)
                 map.get(o.group).put(o.names[0], o);
@@ -372,9 +384,13 @@ public class Help {
             commandHelpTree.addNode(groupNode);
         }
 
-        HelpTree.Node n = new HelpTree.Node(i18n, "help.tests",
-                new String[] { "at", "groups" });
-        commandHelpTree.addNode(n);
+        HelpTree.Node testsNode = new HelpTree.Node(i18n, "help.tests",
+                //new String[] { "at", "groups", "summary" },
+                new HelpTree.Node(i18n, "help.tests", "at"),
+                new HelpTree.Node(i18n, "help.tests", "groups"),
+                new HelpTree.Node(i18n, "help.tests.summary",
+                        new String[] { "directory", "file", "group", "at-file" }));
+        commandHelpTree.addNode(testsNode);
 
         String progName = getProgramName();
 
@@ -476,8 +492,8 @@ public class Help {
         if (p != null)
             return p;
 
-        List<File> cp = new SearchPath(System.getProperty("java.class.path")).asList();
-        if (cp.size() == 1 && cp.get(0).getName().equals("jtreg.jar")) {
+        List<Path> cp = new SearchPath(System.getProperty("java.class.path")).asList();
+        if (cp.size() == 1 && cp.get(0).getFileName().toString().equals("jtreg.jar")) {
             return "java -jar jtreg.jar ";
         }
 

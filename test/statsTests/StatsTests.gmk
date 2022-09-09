@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2022, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -25,7 +25,7 @@
 
 #----------------------------------------------------------------------
 
-$(BUILDDIR)/StatsTest.ok: \
+$(BUILDTESTDIR)/StatsTest.ok: \
 	    $(TESTDIR)/statsTests/StatsTest.java \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar
@@ -39,13 +39,12 @@ $(BUILDDIR)/StatsTest.ok: \
 	echo "test passed at `date`" > $@
 
 ifneq ($(OS_NAME), windows)
-TESTS.jtreg += $(BUILDDIR)/StatsTest.ok
+TESTS.jtreg += $(BUILDTESTDIR)/StatsTest.ok
 endif
 
-$(BUILDDIR)/StatsTxt.1.ok: \
+$(BUILDTESTDIR)/StatsTxt.1.ok: \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
-	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	    $(JTREG_IMAGE_JAVAHELP_JAR)
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	$(JDKJAVA) \
 	    -Djtreg.stats.format="TEST-STATS: StatsTxt run=%r failed=%F excluded=%x" \
@@ -57,18 +56,17 @@ $(BUILDDIR)/StatsTxt.1.ok: \
 		$(TESTDIR)/share/basic/main   \
 			> $(@:%.ok=%/jt.log) 2>&1  || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
-	$(GREP) -s '^TEST-STATS: StatsTxt run=44 failed=32 excluded=0$$' \
+	$(GREP) -E -s '^TEST-STATS: StatsTxt run=44 failed=32 excluded=0\s?$$' \
 		$(@:%.ok=%/jt.log)  > /dev/null
-	$(GREP) -s '^TEST-STATS: StatsTxt run=44 failed=32 excluded=0$$' \
+	$(GREP) -E -s '^TEST-STATS: StatsTxt run=44 failed=32 excluded=0\s?$$' \
 		$(@:%.ok=%/report/text/stats.txt)  > /dev/null
 	echo "test passed at `date`" > $@
 
-TESTS.jtreg += $(BUILDDIR)/StatsTxt.1.ok
+TESTS.jtreg += $(BUILDTESTDIR)/StatsTxt.1.ok
 
-$(BUILDDIR)/StatsTxt.2.ok: \
+$(BUILDTESTDIR)/StatsTxt.2.ok: \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
-	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	    $(JTREG_IMAGE_JAVAHELP_JAR)
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	$(JDKJAVA) \
 	    -Djtreg.stats.format="TEST-STATS: StatsTxt passed=%p failed=%F ignored=%i" \
@@ -82,11 +80,11 @@ $(BUILDDIR)/StatsTxt.2.ok: \
 		$(TESTDIR)/share/basic/ignore   \
 			> $(@:%.ok=%/jt.log) 2>&1  || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
-	$(GREP) -s '^TEST-STATS: StatsTxt passed=12 failed=32 ignored=2$$' \
+	$(GREP) -E -s '^TEST-STATS: StatsTxt passed=12 failed=32 ignored=2\s?$$' \
 		$(@:%.ok=%/jt.log)  > /dev/null
-	$(GREP) -s '^TEST-STATS: StatsTxt passed=12 failed=32 ignored=2$$' \
+	$(GREP) -E -s '^TEST-STATS: StatsTxt passed=12 failed=32 ignored=2\s?$$' \
 		$(@:%.ok=%/report/text/stats.txt)  > /dev/null
 	echo "test passed at `date`" > $@
 		    			
-TESTS.jtreg += $(BUILDDIR)/StatsTxt.2.ok
+TESTS.jtreg += $(BUILDTESTDIR)/StatsTxt.2.ok
 

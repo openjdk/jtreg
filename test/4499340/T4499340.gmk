@@ -25,7 +25,7 @@
 
 #----------------------------------------------------------------------
 
-$(BUILDDIR)/T4499340.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
+$(BUILDTESTDIR)/T4499340.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(TESTDIR)/4499340/lib/HelloWorld.java \
 		$(TESTDIR)/4499340/test/dir/Test.java \
@@ -44,5 +44,5 @@ $(BUILDDIR)/T4499340.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report -v:fail -jdk:$(JDKHOME) $(@:%.ok=%)/test
 	echo $@ passed at `date` > $@
 
-TESTS.jtreg += $(BUILDDIR)/T4499340.ok
+TESTS.jtreg += $(BUILDTESTDIR)/T4499340.ok
 

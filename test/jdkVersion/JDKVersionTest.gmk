@@ -28,10 +28,10 @@
 
 # test running jtreg using classes in build/classes
 
-$(BUILDDIR)/TestJDKVersion.classes.ok: \
-		$(JTREG_IMAGEDIR)/lib/jtreg.jar 
+$(BUILDTESTDIR)/TestJDKVersion.classes.ok: \
+		$(JTREG_IMAGEDIR)/lib/jtreg.jar
 	$(MKDIR) -p $(@:%.ok=%)
-	$(JDKJAVA) -cp $(CLASSDIR):$(JTREG_IMAGEDIR)/lib/javatest.jar com.sun.javatest.regtest.Main \
+	$(JDKJAVA) -cp "$(CLASSDIR)$(PS)$(JTREG_IMAGEDIR)/lib/javatest.jar" com.sun.javatest.regtest.Main \
 		-jdk:$(JDKHOME) \
 		-w:$(@:%.ok=%/work) \
 		-r:$(@:%.ok=%/report) \
@@ -43,10 +43,10 @@ $(BUILDDIR)/TestJDKVersion.classes.ok: \
 
 # test running jtreg using classes in jtreg.jar on classpath
 
-$(BUILDDIR)/TestJDKVersion.jar.ok: \
-		$(JTREG_IMAGEDIR)/lib/jtreg.jar 
+$(BUILDTESTDIR)/TestJDKVersion.jar.ok: \
+		$(JTREG_IMAGEDIR)/lib/jtreg.jar
 	$(MKDIR) -p $(@:%.ok=%)
-	$(JDKJAVA) -cp $(JTREG_IMAGEJARDIR)/jtreg.jar:$(JTREG_IMAGEDIR)/lib/javatest.jar com.sun.javatest.regtest.Main \
+	$(JDKJAVA) -cp "$(JTREG_IMAGEJARDIR)/jtreg.jar$(PS)$(JTREG_IMAGEDIR)/lib/javatest.jar" com.sun.javatest.regtest.Main \
 		-jdk:$(JDKHOME) \
 		-w:$(@:%.ok=%/work) \
 		-r:$(@:%.ok=%/report) \
@@ -56,6 +56,6 @@ $(BUILDDIR)/TestJDKVersion.jar.ok: \
 	echo $@ passed at `date` > $@
 
 TESTS.jtreg += \
-	$(BUILDDIR)/TestJDKVersion.classes.ok \
-	$(BUILDDIR)/TestJDKVersion.jar.ok
+	$(BUILDTESTDIR)/TestJDKVersion.classes.ok \
+	$(BUILDTESTDIR)/TestJDKVersion.jar.ok
 

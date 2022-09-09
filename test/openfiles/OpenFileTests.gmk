@@ -30,7 +30,7 @@
 # where open files can be a problem during file cleanup before/after
 # a test. On a non-Windows environment (i.e. Linux, Solaris) all
 # the tests in the openfiles test suite pass.
-# But, for now, these makefiles are not set up to run on Windows. 
+# But, for now, these makefiles are not set up to run on Windows.
 # When the makefiles are upgraded to run on Windows, the rules in this
 # makefile will have to be updated (perhaps by using target-specific
 # variable definitions) to behave correctly on Windows as well as
@@ -40,8 +40,8 @@
 # In agentvm and othervm mode, jtreg should successfully run each test
 # by moving to a new scratch directory when it can't clear the previous one.
 
-$(BUILDDIR)/OpenFileTests.agentvm.ok \
-$(BUILDDIR)/OpenFileTests.othervm.ok: \
+$(BUILDTESTDIR)/OpenFileTests.agentvm.ok \
+$(BUILDTESTDIR)/OpenFileTests.othervm.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	if [ -d $(@:%.ok=%) ]; then $(CHMOD) -R +w $(@:%.ok=%) && $(RM) $(@:%.ok=%) ; fi
@@ -49,7 +49,7 @@ $(BUILDDIR)/OpenFileTests.othervm.ok: \
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDKHOME) \
-		$(@:$(BUILDDIR)/OpenFileTests.%.ok=-%) \
+		$(@:$(BUILDTESTDIR)/OpenFileTests.%.ok=-%) \
 		$(TESTDIR)/openfiles \
 			> $(@:%.ok=%/jt.log) 2>&1 || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
@@ -61,8 +61,8 @@ $(BUILDDIR)/OpenFileTests.othervm.ok: \
 # In agent mode with -retain, the tests all return error
 # because the selected files cannot be retained
 
-$(BUILDDIR)/OpenFileTests.agentvm.retain.ok \
-$(BUILDDIR)/OpenFileTests.othervm.retain.ok: \
+$(BUILDTESTDIR)/OpenFileTests.agentvm.retain.ok \
+$(BUILDTESTDIR)/OpenFileTests.othervm.retain.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	if [ -d $(@:%.ok=%) ]; then $(CHMOD) -R +w $(@:%.ok=%) && $(RM) $(@:%.ok=%) ; fi
@@ -70,7 +70,7 @@ $(BUILDDIR)/OpenFileTests.othervm.retain.ok: \
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDKHOME) \
-		$(@:$(BUILDDIR)/OpenFileTests.%.retain.ok=-%) \
+		$(@:$(BUILDTESTDIR)/OpenFileTests.%.retain.ok=-%) \
 		-retain:none \
 		$(TESTDIR)/openfiles \
 			> $(@:%.ok=%/jt.log) 2>&1 || \
@@ -81,8 +81,8 @@ $(BUILDDIR)/OpenFileTests.othervm.retain.ok: \
 
 ifneq ($(OS_NAME), windows) # TEMP
 TESTS.jtreg += \
-	$(BUILDDIR)/OpenFileTests.agentvm.ok \
-	$(BUILDDIR)/OpenFileTests.agentvm.retain.ok \
-	$(BUILDDIR)/OpenFileTests.othervm.ok \
-	$(BUILDDIR)/OpenFileTests.othervm.retain.ok
+	$(BUILDTESTDIR)/OpenFileTests.agentvm.ok \
+	$(BUILDTESTDIR)/OpenFileTests.agentvm.retain.ok \
+	$(BUILDTESTDIR)/OpenFileTests.othervm.ok \
+	$(BUILDTESTDIR)/OpenFileTests.othervm.retain.ok
 endif

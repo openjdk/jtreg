@@ -26,7 +26,7 @@
 #----------------------------------------------------------------------
 
 # 6622433: support passing opts to java command only (i.e. without passing to javac)
-$(BUILDDIR)/T6622433.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
+$(BUILDTESTDIR)/T6622433.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(TESTDIR)/6622433/TestJava.java \
 		$(TESTDIR)/6622433/TestShell.sh \
@@ -55,5 +55,5 @@ $(BUILDDIR)/T6622433.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 	$(GREP) 'TESTVMOPTION=Y' $(@:%.ok=%)/work/TestCompile2.jtr > /dev/null
 	echo $@ passed at `date` > $@
 
-TESTS.jtreg += $(BUILDDIR)/T6622433.ok
+TESTS.jtreg += $(BUILDTESTDIR)/T6622433.ok
 

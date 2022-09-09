@@ -23,8 +23,8 @@
 # questions.
 #
 
-$(BUILDDIR)/SmartActionArgs.agentvm.ok \
-$(BUILDDIR)/SmartActionArgs.othervm.ok: \
+$(BUILDTESTDIR)/SmartActionArgs.agentvm.ok \
+$(BUILDTESTDIR)/SmartActionArgs.othervm.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	if [ -d $(@:%.ok=%) ]; then $(CHMOD) -R +w $(@:%.ok=%) && $(RM) $(@:%.ok=%) ; fi
@@ -32,7 +32,7 @@ $(BUILDDIR)/SmartActionArgs.othervm.ok: \
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDKHOME) \
-		$(@:$(BUILDDIR)/SmartActionArgs.%.ok=-%) \
+		$(@:$(BUILDTESTDIR)/SmartActionArgs.%.ok=-%) \
 		$(TESTDIR)/smartActionArgs \
 			> $(@:%.ok=%/jt.log)
 	$(GREP) -s 'Test results: passed: 6' $(@:%.ok=%/jt.log)  > /dev/null
@@ -41,5 +41,5 @@ $(BUILDDIR)/SmartActionArgs.othervm.ok: \
 
 
 TESTS.jtreg += \
-	$(BUILDDIR)/SmartActionArgs.agentvm.ok \
-	$(BUILDDIR)/SmartActionArgs.othervm.ok
+	$(BUILDTESTDIR)/SmartActionArgs.agentvm.ok \
+	$(BUILDTESTDIR)/SmartActionArgs.othervm.ok

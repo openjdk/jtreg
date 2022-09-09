@@ -25,11 +25,11 @@
 
 #----------------------------------------------------------------------
 
-$(BUILDDIR)/TimeoutTest.ok: \
+$(BUILDTESTDIR)/TimeoutTest.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(MAKE) -C $(TESTDIR)/timeouts/test \
-		TEST_OUTPUT_DIR=`pwd`/$(BUILDDIR)/$(@:%.ok=%) \
+		TEST_OUTPUT_DIR=`pwd`/$(BUILDTESTDIR)/$(@:%.ok=%) \
 		JT_JAVA=$(JDKHOME) \
 		TESTJAVA=$(JDKHOME) \
 		JTREG_HOME=`cd $(JTREG_IMAGEDIR); pwd`
@@ -37,7 +37,7 @@ $(BUILDDIR)/TimeoutTest.ok: \
 
 # This test is not included by default because it is by its nature so
 # slow to run.
-# TESTS.jtreg += $(BUILDDIR)/TimeoutTest.ok
+# TESTS.jtreg += $(BUILDTESTDIR)/TimeoutTest.ok
 
 #----------------------------------------------------------------------
 
@@ -64,8 +64,8 @@ $(BUILDDIR)/TimeoutTest.ok: \
 # pass: 2, failed: 1, error: 3
 
 
-$(BUILDDIR)/TimeoutTest.agentvm.ok \
-$(BUILDDIR)/TimeoutTest.othervm.ok: \
+$(BUILDTESTDIR)/TimeoutTest.agentvm.ok \
+$(BUILDTESTDIR)/TimeoutTest.othervm.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -73,11 +73,11 @@ $(BUILDDIR)/TimeoutTest.othervm.ok: \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDK6HOME) \
 		-va \
-		$(@:$(BUILDDIR)/TimeoutTest.%.ok=-%) \
+		$(@:$(BUILDTESTDIR)/TimeoutTest.%.ok=-%) \
 		$(TESTDIR)/timeouts/test  \
 			> $(@:%.ok=%/jt.log) 2>&1 || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
-	case $(@:$(BUILDDIR)/TimeoutTest.%.ok=%) in \
+	case $(@:$(BUILDTESTDIR)/TimeoutTest.%.ok=%) in \
 	    othervm ) expect="Test results: passed: 2; failed: 1; error: 3" ;; \
 	    agentvm ) expect="Test results: passed: 3; error: 3" ;; \
 	esac ; \
@@ -87,10 +87,10 @@ $(BUILDDIR)/TimeoutTest.othervm.ok: \
 # These tests are not included by default because by their nature they are so
 # slow to run.
 # TESTS.jtreg += \
-	$(BUILDDIR)/TimeoutTest.agentvm.ok \
-	$(BUILDDIR)/TimeoutTest.othervm.ok
+	$(BUILDTESTDIR)/TimeoutTest.agentvm.ok \
+	$(BUILDTESTDIR)/TimeoutTest.othervm.ok
 
 testtimeouts: \
-	$(BUILDDIR)/TimeoutTest.ok \
-	$(BUILDDIR)/TimeoutTest.agentvm.ok \
-	$(BUILDDIR)/TimeoutTest.othervm.ok
+	$(BUILDTESTDIR)/TimeoutTest.ok \
+	$(BUILDTESTDIR)/TimeoutTest.agentvm.ok \
+	$(BUILDTESTDIR)/TimeoutTest.othervm.ok
