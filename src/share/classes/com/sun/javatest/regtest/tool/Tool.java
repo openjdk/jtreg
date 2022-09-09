@@ -2319,6 +2319,7 @@ public class Tool {
     private boolean httpdFlag;
     private String timeLimitArg;
     private String observerClassName;
+    private String mainWrapper;
     private List<Path> observerPathArg;
     private String timeoutHandlerClassName;
     private List<Path> timeoutHandlerPathArg;

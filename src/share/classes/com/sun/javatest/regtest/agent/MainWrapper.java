@@ -249,9 +249,9 @@ public class MainWrapper
              MethodType getVirtualThreadPerTaskExecutorMT = MethodType.methodType(ExecutorService.class);
              try {
 
-                 Class builderClass =Class.forName("java.lang.Thread$Builder");
-                 Class vbuilderClass =Class.forName("java.lang.Thread$Builder$OfVirtual");
-                 Class pbuilderClass =Class.forName("java.lang.Thread$Builder$OfPlatform");
+                 Class<?> builderClass =Class.forName("java.lang.Thread$Builder");
+                 Class<?> vbuilderClass =Class.forName("java.lang.Thread$Builder$OfVirtual");
+                 Class<?> pbuilderClass =Class.forName("java.lang.Thread$Builder$OfPlatform");
 
 
                  MethodType vofMT = MethodType.methodType(vbuilderClass);
