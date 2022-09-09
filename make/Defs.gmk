@@ -169,7 +169,7 @@ TIDY 	:= $(shell if [ -r /usr/local/bin/tidy ]; then \
 	elif [ -r /opt/homebrew/bin/tidy ]; then \
 		echo /opt/homebrew/bin/tidy ; \
 	else \
-		echo/usr/bin/tidy ; \
+		echo usr/bin/tidy ; \
 	fi )
 else
 TIDY	= /usr/bin/tidy
