@@ -58,12 +58,6 @@ $(BUILDDIR)/classes.com.sun.javatest.regtest.ok: \
 		-d $(CLASSDIR) \
 		-encoding ASCII \
 		$(JAVAFILES.com.sun.javatest.regtest-tools)
-	CLASSPATH="$(CLASSDIR)$(PS)$(ANT_JAR)$(PS)$(JAVATEST_JAR)$(PS)$(JUNIT_JAR)$(PS)$(TESTNG_JAR)" \
-	    $(REGTEST_TOOL_JAVAC) $(REGTEST_TOOL_JAVAC_OPTIONS) \
-		-d $(CLASSDIR) \
-		-encoding ISO8859-1 \
-                --patch-module java.base=../src \
-		$(JAVADIR)/java/lang/JTRegModuleHelper.java
 	echo "classes built at `date`" > $@
 
 TARGETS.com.sun.javatest.regtest += $(BUILDDIR)/classes.com.sun.javatest.regtest.ok
@@ -83,7 +77,6 @@ $(BUILDDIR)/classes.java.lang.ok: \
 	echo "classes built at `date`" > $@
 
 TARGETS.com.sun.javatest.regtest += $(BUILDDIR)/classes.java.lang.ok
-
 
 #----------------------------------------------------------------------
 #
