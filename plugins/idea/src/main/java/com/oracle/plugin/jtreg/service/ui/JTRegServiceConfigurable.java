@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -31,11 +31,11 @@ import com.intellij.execution.ui.JrePathEditor;
 import com.intellij.icons.AllIcons;
 import com.intellij.lang.ant.AntBundle;
 import com.intellij.lang.ant.config.AntBuildTarget;
-import com.intellij.lang.ant.config.AntConfiguration;
 import com.intellij.lang.ant.config.AntConfigurationBase;
 import com.intellij.lang.ant.config.impl.MetaTarget;
 import com.intellij.lang.ant.config.impl.TargetChooserDialog;
 import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.SearchableConfigurable;
@@ -53,6 +53,7 @@ import com.intellij.ui.components.JBList;
 import com.oracle.plugin.jtreg.service.JTRegService;
 import com.oracle.plugin.jtreg.util.JTRegUtils;
 import icons.AntIcons;
+import java.io.File;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -133,6 +134,12 @@ public class JTRegServiceConfigurable implements SearchableConfigurable {
     @Override
     public void apply() throws ConfigurationException {
         JTRegService service = getJTRegService();
+        ApplicationManager.getApplication().runWriteAction(() -> {
+            // Create the project library.
+            String oldDir = "file://" + service.getJTRegDir() + File.separator + "lib";
+            String newDir = "file://" + jtregDir.getText().trim() + File.separator + "lib";
+            JTRegUtils.createJTRegLibrary(project, oldDir, newDir);
+        });
         service.setJTRegOptions(jtregOptions.getText().trim());
         service.setAlternativePathEnabled(jrePathEditor.isAlternativeJreSelected());
         service.setAlternativeJrePath(jrePathEditor.getJrePathOrName());
