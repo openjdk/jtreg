@@ -41,7 +41,6 @@ import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -549,7 +548,7 @@ public class CompileAction extends Action {
                 case "--release":
                     if (iter.hasNext()) {
                         JDK_Version v = JDK_Version.forName(iter.next());
-                        return (v == null) ? false : v.compareTo(JDK_Version.V9) >= 0;
+                        return v != null && v.compareTo(JDK_Version.V9) >= 0;
                     }
                     break;
 
@@ -557,7 +556,7 @@ public class CompileAction extends Action {
                     if (option.startsWith("--release=")) {
                         JDK_Version v = JDK_Version.forName(
                                 option.substring(option.indexOf("=") + 1));
-                        return (v == null) ? false : v.compareTo(JDK_Version.V9) >= 0;
+                        return v != null && v.compareTo(JDK_Version.V9) >= 0;
                     }
                     break;
             }
@@ -605,7 +604,7 @@ public class CompileAction extends Action {
                 // shouldn't happen since JavaTestSecurityManager allows file ops
                 return error(COMPILE_SECMGR_FILEOPS);
             }
-            javacArgs = Arrays.asList("@" + argFile);
+            javacArgs = List.of("@" + argFile);
         }
 
         List<String> command = new ArrayList<>();

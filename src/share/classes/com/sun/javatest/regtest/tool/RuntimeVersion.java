@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1995, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -38,7 +38,6 @@ package com.sun.javatest.regtest.tool;
 
 
 import java.math.BigInteger;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -224,7 +223,7 @@ public final class RuntimeVersion
         // Shortcut to avoid initializing VersionPattern when creating
         // feature-version constants during startup
         if (isSimpleNumber(s)) {
-            return new RuntimeVersion(Arrays.asList(Integer.parseInt(s)),
+            return new RuntimeVersion(List.of(Integer.parseInt(s)),
                     Optional.empty(), Optional.empty(), Optional.empty());
         }
         Matcher m = VersionPattern.VSTR_PATTERN.matcher(s);
@@ -271,7 +270,7 @@ public final class RuntimeVersion
                 }
             }
         }
-        return new RuntimeVersion(Arrays.asList(version), pre, build, optional);
+        return new RuntimeVersion(List.of(version), pre, build, optional);
     }
 
     private static boolean isSimpleNumber(String s) {

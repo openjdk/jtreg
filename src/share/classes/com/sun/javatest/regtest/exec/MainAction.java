@@ -32,7 +32,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
@@ -158,7 +157,7 @@ public class MainAction extends Action
                     String name = optValue;
                     if (optValue.startsWith("=")) {
                         overrideSysPolicy = true;
-                        name = optValue.substring(1, optValue.length());
+                        name = optValue.substring(1);
                     }   policyFN = parsePolicy(name);
                     break;
                 case "secure":
@@ -181,7 +180,7 @@ public class MainAction extends Action
 
         if (driverClass != null) {
             this.driverClass = driverClass;
-            this.driverArgs = Arrays.asList(driverArgs);
+            this.driverArgs = List.of(driverArgs);
         }
 
         if (script.useBootClassPath()) {
@@ -284,7 +283,7 @@ public class MainAction extends Action
         Set<File> files = new LinkedHashSet<>();
         if (testClassName != null) {
             Map<String,String> buildOpts = Collections.emptyMap();
-            List<String> buildArgs = Arrays.asList(join(testModuleName, testClassName));
+            List<String> buildArgs = List.of(join(testModuleName, testClassName));
             try {
                 BuildAction ba = new BuildAction();
                 ba.init(buildOpts, buildArgs, SREASON_ASSUMED_BUILD, script);
@@ -300,7 +299,7 @@ public class MainAction extends Action
     @Override
     public Set<String> getModules() {
         return (testModuleName == null)
-                ? Collections.<String>emptySet()
+                ? Collections.emptySet()
                 : Collections.singleton(testModuleName);
     }
 
@@ -374,7 +373,7 @@ public class MainAction extends Action
         // though an "@run build <class>" action had been inserted before
         // this action."
         Map<String,String> buildOpts = Collections.emptyMap();
-        List<String> buildArgs = Arrays.asList(join(testModuleName, testClassName));
+        List<String> buildArgs = List.of(join(testModuleName, testClassName));
         BuildAction ba = new BuildAction();
         return ba.build(buildOpts, buildArgs, SREASON_ASSUMED_BUILD, script);
     }
@@ -501,9 +500,9 @@ public class MainAction extends Action
 
         // PASS TO PROCESSCOMMAND
         Status status;
-        PrintWriter sysOut = section.createOutput("System.out");
-        PrintWriter sysErr = section.createOutput("System.err");
-        try {
+        try (PrintWriter sysOut = section.createOutput("System.out");
+             PrintWriter sysErr = section.createOutput("System.err")) {
+
             if (showMode)
                 showMode(getName(), ExecMode.OTHERVM, section);
             if (showCmd)
@@ -524,19 +523,16 @@ public class MainAction extends Action
             cmd.setDefaultStatus(failed(UNEXPECT_SYS_EXIT));
 
             TimeoutHandler timeoutHandler =
-                script.getTimeoutHandlerProvider().createHandler(this.getClass(), script, section);
+                    script.getTimeoutHandlerProvider().createHandler(this.getClass(), script, section);
 
             cmd.setCommand(command)
-                .setEnvironment(env)
-                .setStreams(sysOut, sysErr)
-                .setTimeout(timeout, TimeUnit.SECONDS)
-                .setTimeoutHandler(timeoutHandler);
+                    .setEnvironment(env)
+                    .setStreams(sysOut, sysErr)
+                    .setTimeout(timeout, TimeUnit.SECONDS)
+                    .setTimeoutHandler(timeoutHandler);
 
             status = normalize(cmd.exec());
 
-        } finally {
-            sysOut.close();
-            sysErr.close();
         }
 
         // EVALUATE THE RESULTS
