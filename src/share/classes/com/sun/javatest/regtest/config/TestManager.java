@@ -217,7 +217,7 @@ public class TestManager {
          * The form contains the file and id as a relative URL.
          * It does not include the query.
          *
-         * @return
+         * @return the path for a test
          */
         String getTestPath() {
             return id == null ? pathToString(file) : pathToString(file) + "#" + id;

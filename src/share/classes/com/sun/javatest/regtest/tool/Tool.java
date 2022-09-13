@@ -1101,10 +1101,7 @@ public class Tool {
                 Tool.this.error(msg);
             }
         });
-//        testManager.addTestFiles(testFileArgs);
-//        testManager.addTestFileIds(testFileIdArgs);
         testManager.addTestSpecs(testSpecArgs);
-//        testManager.addGroups(testGroupArgs);
         testManager.addGroupSpecs(testGroupSpecArgs);
 
         if (testManager.isEmpty())
@@ -2218,7 +2215,7 @@ public class Tool {
 
     /**
      * Returns whether Windows Subsystem for Linux may be available,
-     * by examining to see whether wsl.exe can be found on the path.
+     * by examining whether wsl.exe can be found on the path.
      */
     private boolean isWindowsSubsystemForLinuxDetected() {
         if (isWindows()) {
@@ -2274,13 +2271,10 @@ public class Tool {
     private Float timeoutFactorArg;
     private String priorStatusValuesArg;
     private Path reportDirArg;
-//    public List<String> testGroupArgs = new ArrayList<>();
-    public List<TestManager.GroupSpec> testGroupSpecArgs = new ArrayList<>();
-//    public List<Path> testFileArgs = new ArrayList<>();
-//    public List<TestManager.FileId> testFileIdArgs = new ArrayList<>();
-    public List<TestManager.TestSpec> testSpecArgs = new ArrayList<>();
 
     // these args are jtreg extras
+    public List<TestManager.GroupSpec> testGroupSpecArgs = new ArrayList<>();
+    public List<TestManager.TestSpec> testSpecArgs = new ArrayList<>();
     private Path baseDirArg;
     private ExecMode execMode;
     private JDK compileJDK;

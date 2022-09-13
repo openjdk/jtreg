@@ -231,6 +231,30 @@ $(BUILDTESTDIR)/JUnitQueryTest.invalidQuery.ok: $(JTREG_IMAGEDIR)/lib/javatest.j
 
 TESTS.jtreg += $(BUILDTESTDIR)/JUnitQueryTest.invalidQuery.ok
 
+
+#----------------------------------------------------------------------
+#
+# Invalid method name
+
+$(BUILDTESTDIR)/JUnitQueryTest.invalidMethod.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
+		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
+		$(JTREG_IMAGEDIR)/bin/jtreg
+	$(RM) $(@:%.ok=%)
+	$(MKDIR) $(@:%.ok=%)
+	JT_JAVA=$(JDKHOME) JTHOME=$(JTREG_IMAGEDIR) \
+		$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(JDKHOME) \
+		-va \
+		$(TESTDIR)/junitQueryTest/a/b/c/Test1.java?m14 \
+			> $(@:%.ok=%)/jt.log 2>&1 || \
+		true "non-zero exit code from jtreg intentionally ignored"
+	$(GREP) -s 'Could not find method with name \[m14] in class \[Test1]' $(@:%.ok=%)/jt.log
+	$(GREP) -s "TEST RESULT: Failed. Execution failed: .*JUnitException: .* failed to discover tests" $(@:%.ok=%)/jt.log
+	echo $@ passed at `date` > $@
+
+TESTS.jtreg += $(BUILDTESTDIR)/JUnitQueryTest.invalidMethod.ok
+
 #----------------------------------------------------------------------
 #
 # Convenience target
@@ -243,4 +267,5 @@ junit-query-tests: \
     $(BUILDTESTDIR)/JUnitQueryTest.m12.m13.ok \
     $(BUILDTESTDIR)/JUnitQueryTest.m13.all.ok \
     $(BUILDTESTDIR)/JUnitQueryTest.all.m13.ok \
-    $(BUILDTESTDIR)/JUnitQueryTest.invalidQuery.ok
+    $(BUILDTESTDIR)/JUnitQueryTest.invalidQuery.ok \
+    $(BUILDTESTDIR)/JUnitQueryTest.invalidMethod.ok

@@ -444,7 +444,9 @@ and where `0` identifies the first test.
 If you specify `?`_string_ after the name of a test, the _string_ will be
 passed down to the test, for the test to filter the parts of the test to be
 executed. For any tests executed by JUnit Platform, the string is interpreted
-as the name of a single method in the test to be executed.
+as the name of a single method in the test to be executed.  If you give
+conflicting values for the string, including not setting any value, the last
+one specified will be used.
 
 If you wish to specify a long list of arguments, you can put the list in a file
 and specify that file using the `@`_file_ option.
@@ -489,7 +491,7 @@ Note that in addition to the command-line options just listed, a test
 may contain tags such as `@requires` and `@modules` that determine whether
 a test should be run on any particular system.
 
-### How do I specify to run a single test method in a JUnit test?
+### How do I run a single test method in a JUnit test?
 
 Specify the test and method name on the command-line with the `?` syntax:
 
