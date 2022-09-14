@@ -60,7 +60,6 @@ public class GroupManager {
         PrintWriter out = new PrintWriter(System.err);
         try {
             GroupManager gm = new GroupManager(out, root, files);
-            gm.setIgnoredDirectories(List.of("SCCS"));
             gm.setAllowedExtensions(List.of(".java", ".sh", ".html"));
             for (Group g: gm.groups.values())
                 System.err.println(g.name + ": " + g.getFiles());
