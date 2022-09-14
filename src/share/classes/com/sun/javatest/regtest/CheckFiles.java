@@ -29,7 +29,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.Set;
 
 import com.sun.javatest.finder.CommentStream;
@@ -174,13 +173,5 @@ public class CheckFiles {
         }
     }
 
-    private static final Set<String> excludes;
-    static {
-        excludes = new HashSet<>();
-        excludes.add("SCCS");
-        excludes.add("Codemgr_wsdata");
-        excludes.add(".hg");
-        excludes.add(".svn");
-        excludes.add("RCS");
-    }
+    private static final Set<String> excludes = Set.of(".hg", ".git");
 }
