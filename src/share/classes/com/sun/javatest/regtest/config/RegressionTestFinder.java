@@ -133,10 +133,6 @@ public class RegressionTestFinder extends TagTestFinder
 
     @Override
     protected void scanFile(File file) {
-        // filter out SCCS leftovers
-        if (file.getName().startsWith(","))
-            return;
-
         try {
             File tngRoot = properties.getTestNGRoot(file);
             if (tngRoot != null) {
@@ -701,11 +697,6 @@ public class RegressionTestFinder extends TagTestFinder
     {
         Map<String, String> tagValues = (Map<String, String>) entries;
 
-        // check for valid tag name, don't produce error message for the
-        // the SCCS sequence '%' 'W' '%'
-        if (name.startsWith("(#)"))
-            return;
-
         // translate the shorthands into run actions
         if (name.startsWith(COMPILE)
             || name.startsWith(CLEAN)
@@ -1041,13 +1032,9 @@ public class RegressionTestFinder extends TagTestFinder
 
     private static final String LINESEP = System.getProperty("line.separator");
 
-    static final String[] excludeNames = {
-        "SCCS", "Codemgr_wsdata", ".hg", "RCS", ".svn",
-        "DeletedFiles", "DELETED-FILES", "deleted_files",
-        "TemporarilyRemoved"
-    };
+    static final String[] excludeNames = { ".hg", ".git" };
 
-    // These are all of the error messages using in the finder.
+    // These are all the error messages used in the finder.
     protected static final String
         PARSE_TAG_BAD         = "Invalid tag: ",
         PARSE_BUG_EMPTY       = "No value provided for `@bug'",

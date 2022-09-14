@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006, 2007, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -21,11 +21,25 @@
  * questions.
  */
 
-/*
- * @test
+import org.junit.jupiter.api.Test;
+
+/**
+ * A collection of test methods, to help exercise the query mechanism.
+ * Each method just prints its name.
  */
+public class Test1 {
+    @Test
+    public void m11() {
+        System.out.println("Test1.m11");
+    }
 
-public class T6590671 {
-    public static void main(String[] args) { }
+    @Test
+    public void m12() {
+        System.out.println("Test1.m12");
+    }
+
+    @Test
+    public void m13() {
+        System.out.println("Test1.m13");
+    }
 }
-

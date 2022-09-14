@@ -43,7 +43,6 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.Reader;
 import java.io.StreamTokenizer;
-import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -66,7 +65,6 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.swing.Timer;
@@ -114,9 +112,7 @@ import com.sun.javatest.regtest.report.TestStats;
 import com.sun.javatest.regtest.report.Verbose;
 import com.sun.javatest.regtest.report.VerboseHandler;
 import com.sun.javatest.regtest.report.XMLWriter;
-import com.sun.javatest.regtest.tool.Help.VersionHelper;
 import com.sun.javatest.regtest.util.NaturalComparator;
-import com.sun.javatest.regtest.util.StringUtils;
 import com.sun.javatest.tool.Desktop;
 import com.sun.javatest.util.BackupPolicy;
 import com.sun.javatest.util.I18NResourceBundle;
@@ -1002,35 +998,15 @@ public class Tool {
 
         new Option(FILE, MAIN, null) {
             @Override
-            public void process(String opt, String arg) {
-                if (groupPtn.matcher(arg).matches()) {
-                    testGroupArgs.add(arg);
-                } else if (fileIdPtn.matcher(arg).matches()) {
-                    int sep = arg.lastIndexOf("#");
-                    Path file = Path.of(arg.substring(0, sep));
-                    String id = arg.substring(sep + 1);
-                    testFileIdArgs.add(new TestManager.FileId(file, id));
+            public void process(String opt, String arg) throws BadArgs {
+                if (TestManager.GroupSpec.isGroupSpec(arg)) {
+                    testGroupSpecArgs.add(TestManager.GroupSpec.of(arg));
+                } else if (TestManager.TestSpec.isTestSpec(arg)) {
+                    testSpecArgs.add(TestManager.TestSpec.of(arg));
                 } else {
-                    testFileArgs.add(Path.of(arg));
+                    throw new BadArgs(i18n, "main.badTestOrGroup", arg);
                 }
             }
-
-            /* A "group" argument is of the form  [path]:id  where the path is a file path
-             * to the root of the test suite. On Windows, we have to be careful about
-             * the ambiguity between an absolute path beginning with a drive letter
-             * and a relative path that is a single letter. Therefore, on Windows,
-             * we accept the following for a path:
-             * - (empty)
-             * - a single non-alphabetic character followed by :id
-             * - two or more characters followed by :id
-             * Thus, letter:id is not accepted as a group spec, and so will be treated
-             * elsewhere as a plain absolute file path instead.
-             */
-            Pattern groupPtn = System.getProperty("os.name").matches("(?i)windows.*")
-                    ? Pattern.compile("(|[^A-Za-z]|.{2,}):[A-Za-z0-9_,]+")
-                    : Pattern.compile(".*:[A-Za-z0-9_,]+");
-
-            Pattern fileIdPtn = Pattern.compile(".*#[A-Za-z0-9-_]+");
         }
     );
 
@@ -1125,9 +1101,8 @@ public class Tool {
                 Tool.this.error(msg);
             }
         });
-        testManager.addTestFiles(testFileArgs);
-        testManager.addTestFileIds(testFileIdArgs);
-        testManager.addGroups(testGroupArgs);
+        testManager.addTestSpecs(testSpecArgs);
+        testManager.addGroupSpecs(testGroupSpecArgs);
 
         if (testManager.isEmpty())
             throw new TestManager.NoTests();
@@ -1397,7 +1372,7 @@ public class Tool {
      * for the test suites on the command line.  If a test suite is given
      * without qualifying with a group, all groups in that test suite are
      * shown.
-     * No filters (like keywords, status, etc) are taken into account.
+     * No filters (like keywords, status, etc.) are taken into account.
      */
     void showGroups(TestManager testManager) throws Fault {
         for (RegressionTestSuite ts : testManager.getTestSuites()) {
@@ -1662,7 +1637,16 @@ public class Tool {
 
             rp.setRetainArgs(retainArgs);
 
+            // the tests are the tests to be executed by the harness, and do not
+            // include the "query" component
             rp.setTests(testManager.getTests(testSuite));
+
+            // the tests that have an associated query component, included in
+            // the string
+            List<String> testQueries = testManager.getTestQueries(testSuite);
+            if (!testQueries.isEmpty()) {
+                rp.setTestQueries(testQueries);
+            }
 
             if (userKeywordExpr != null || extraKeywordExpr != null) {
                 String expr =
@@ -2134,7 +2118,7 @@ public class Tool {
     private void startHttpServer() {
         // start the http server
         // do this as early as possible, since objects may check
-        // HttpdServer.isActive() and decide whether or not to
+        // HttpdServer.isActive() and decide whether to
         // register their handlers
         HttpdServer server = new HttpdServer();
         Thread thr = new Thread(server);
@@ -2230,9 +2214,8 @@ public class Tool {
     }
 
     /**
-     * Returns whether or not Windows Subsystem for Linux may be
-     * available, by examining to see whether wsl.exe can be found on
-     * the path.
+     * Returns whether Windows Subsystem for Linux may be available,
+     * by examining whether wsl.exe can be found on the path.
      */
     private boolean isWindowsSubsystemForLinuxDetected() {
         if (isWindows()) {
@@ -2288,11 +2271,10 @@ public class Tool {
     private Float timeoutFactorArg;
     private String priorStatusValuesArg;
     private Path reportDirArg;
-    public List<String> testGroupArgs = new ArrayList<>();
-    public List<Path> testFileArgs = new ArrayList<>();
-    public List<TestManager.FileId> testFileIdArgs = new ArrayList<>();
 
     // these args are jtreg extras
+    public List<TestManager.GroupSpec> testGroupSpecArgs = new ArrayList<>();
+    public List<TestManager.TestSpec> testSpecArgs = new ArrayList<>();
     private Path baseDirArg;
     private ExecMode execMode;
     private JDK compileJDK;
@@ -2300,7 +2282,7 @@ public class Tool {
     private boolean guiFlag;
     private boolean reportOnlyFlag;
     private String showStream;
-    public enum ReportMode { NONE, EXECUTED, ALL_EXECUTED, ALL };
+    public enum ReportMode { NONE, EXECUTED, ALL_EXECUTED, ALL }
     private ReportMode reportMode;
     private boolean allowSetSecurityManagerFlag = true;
     private static Verbose  verbose;
@@ -2353,8 +2335,6 @@ public class Tool {
     private static final String[] DEFAULT_WINDOWS_ENV_VARS = {
         "SystemDrive", "SystemRoot", "windir", "TMP", "TEMP", "TZ"
     };
-
-    private static final String JAVATEST_ANT_FILE_LIST = "javatest.ant.file.list";
 
     private static I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(Tool.class);
 }
