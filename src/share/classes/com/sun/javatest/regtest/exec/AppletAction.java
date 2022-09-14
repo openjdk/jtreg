@@ -35,7 +35,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -125,7 +124,7 @@ public class AppletAction extends Action
                     String name = optValue;
                     if (optValue.startsWith("=")) {
                         overrideSysPolicy = true;
-                        name = optValue.substring(1, optValue.length());
+                        name = optValue.substring(1);
                     }
                     policyFN = parsePolicy(name);
                     break;
@@ -189,7 +188,7 @@ public class AppletAction extends Action
         if (clsName.endsWith(".class"))
             clsName = clsName.substring(0, clsName.lastIndexOf(".class"));
         Map<String,String> buildOpts = Collections.emptyMap();
-        List<String> buildArgs = Arrays.asList(clsName);
+        List<String> buildArgs = List.of(clsName);
         BuildAction ba = new BuildAction();
         if (!(status = ba.build(buildOpts, buildArgs, SREASON_ASSUMED_BUILD, script)).isPassed())
             return status;
@@ -258,8 +257,10 @@ public class AppletAction extends Action
         // input methods use lots of memory
         boolean mx = false;
         for (String opt: vmOpts.toList()) {
-            if (opt.startsWith("-mx") || opt.startsWith("-Xmx"))
+            if (opt.startsWith("-mx") || opt.startsWith("-Xmx")) {
                 mx = true;
+                break;
+            }
         }
         if (!mx)
             command.add("-mx128m");
@@ -285,9 +286,9 @@ public class AppletAction extends Action
         env.putAll(script.getEnvVars());
 
         Status status;
-        PrintWriter sysOut = section.createOutput("System.out");
-        PrintWriter sysErr = section.createOutput("System.err");
-        try {
+        try (PrintWriter sysOut = section.createOutput("System.out");
+             PrintWriter sysErr = section.createOutput("System.err")) {
+
             if (showCmd)
                 showCmd("applet", command, section);
 
@@ -302,28 +303,25 @@ public class AppletAction extends Action
             // that we have a chance of detecting whether the test itself has
             // illegally called System.exit(0).
             cmd.setStatusForExit(Status.exitCodes[Status.PASSED],
-                                 passed(EXEC_PASS));
+                    passed(EXEC_PASS));
             cmd.setStatusForExit(Status.exitCodes[Status.FAILED],
-                                 failed(EXEC_FAIL));
+                    failed(EXEC_FAIL));
             cmd.setDefaultStatus(failed(UNEXPECT_SYS_EXIT));
 
             TimeoutHandler timeoutHandler =
-                script.getTimeoutHandlerProvider().createHandler(this.getClass(), script, section);
+                    script.getTimeoutHandlerProvider().createHandler(this.getClass(), script, section);
 
             cmd.setCommand(command)
-                .setEnvironment(env)
-                .setStreams(sysOut, sysErr)
-                .setTimeout(timeout, TimeUnit.SECONDS)
-                .setTimeoutHandler(timeoutHandler);
+                    .setEnvironment(env)
+                    .setStreams(sysOut, sysErr)
+                    .setTimeout(timeout, TimeUnit.SECONDS)
+                    .setTimeoutHandler(timeoutHandler);
 
             // allow only one applet to run at a time, we don't want the tester
             // to be inundated with applet tests
-            synchronized(appletLock) {
+            synchronized (appletLock) {
                 status = normalize(cmd.exec());
             }
-        } finally {
-            if (sysOut != null) sysOut.close();
-            if (sysErr != null) sysErr.close();
         }
 
         // EVALUATE RESULTS
@@ -563,8 +561,7 @@ public class AppletAction extends Action
                 if ((nameEnd <= nameStart) || (valEnd <= valStart))
                     return null;
 
-                int[] result = {nameStart, nameEnd, valStart, valEnd};
-                return result;
+                return new int[] { nameStart, nameEnd, valStart, valEnd };
 
             } catch (StringIndexOutOfBoundsException e) {
                 return null; // input string was of invalid format
@@ -598,9 +595,8 @@ public class AppletAction extends Action
             if (tagEnd == -1)
                 return null;
 
-            int[] result = { tagStart, tagStart + tagName.length() + 1,
+            return new int[] { tagStart, tagStart + tagName.length() + 1,
                              tagEnd, tagEnd + 1 };
-            return result;
         } // getTagPositions()
 
         /**

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -25,8 +25,8 @@
 
 package com.sun.javatest.regtest.util;
 
-import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -36,7 +36,7 @@ import java.util.TreeSet;
 public class NaturalComparator implements Comparator<String> {
     public static void main(String... args) {
         Set<String> set = new TreeSet<>(new NaturalComparator(true));
-        set.addAll(Arrays.asList(args));
+        set.addAll(List.of(args));
         System.err.println(set);
     }
 
@@ -67,7 +67,7 @@ public class NaturalComparator implements Comparator<String> {
                     c1 = Character.toLowerCase(c1);
                     c2 = Character.toLowerCase(c2);
                 }
-                int cmp = ((Character) c1).compareTo(c2);
+                int cmp = Character.compare(c1, c2);
                 if (cmp != 0) return cmp;
                 i1++; i2++;
             }

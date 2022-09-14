@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2000, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,15 +22,13 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
+
 package com.sun.javatest.regtest.tool;
 
 import java.awt.Image;
 import java.awt.Toolkit;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import javax.swing.ImageIcon;
@@ -67,12 +65,7 @@ public class RegressionContextManager extends ContextManager {
 
         JMenuItem[] createHelpAboutItems() {
             JMenuItem mi = new JMenuItem("About jtreg");
-            mi.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    showAbout((JComponent) e.getSource());
-                }
-            });
+            mi.addActionListener(e -> showAbout((JComponent) e.getSource()));
             return new JMenuItem[] { mi };
         }
 
@@ -83,7 +76,7 @@ public class RegressionContextManager extends ContextManager {
             String copyright = i18n.getString("help.copyright.txt");
             List<String> content = new ArrayList<>();
             content.add(title);
-            content.addAll(Arrays.asList(copyright.split("\n")));
+            content.addAll(List.of(copyright.split("\n")));
             URL logoURL = getClass().getResource("jtlogo.png");
             Image logoImage = Toolkit.getDefaultToolkit().getImage(logoURL);
             ImageIcon logo = new ImageIcon(logoImage);

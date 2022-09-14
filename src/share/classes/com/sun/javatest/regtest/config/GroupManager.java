@@ -26,19 +26,16 @@
 package com.sun.javatest.regtest.config;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -59,12 +56,11 @@ public class GroupManager {
     public static void main(String... args) throws Exception {
         Path root = Path.of(args[0]);
         List<String> files = new ArrayList<>();
-        for (int i = 1; i < args.length; i++)
-            files.add(args[i]);
+        files.addAll(List.of(args).subList(1, args.length));
         PrintWriter out = new PrintWriter(System.err);
         try {
             GroupManager gm = new GroupManager(out, root, files);
-            gm.setAllowedExtensions(Arrays.asList(".java", ".sh", ".html"));
+            gm.setAllowedExtensions(List.of(".java", ".sh", ".html"));
             for (Group g: gm.groups.values())
                 System.err.println(g.name + ": " + g.getFiles());
         } finally {
@@ -154,8 +150,7 @@ public class GroupManager {
                 error(g, i18n.getString("gm.invalid.name.for.group"));
             }
             for (Entry e: g.entries) {
-                @SuppressWarnings("unchecked")
-                List<Set<Path>> allFiles = Arrays.asList(e.includeFiles, e.excludeFiles);
+                List<Set<Path>> allFiles = List.of(e.includeFiles, e.excludeFiles);
                 for (Set<Path> files: allFiles) {
                     for (Path f: files) {
                         if (!Files.exists(f)) {
@@ -275,31 +270,9 @@ public class GroupManager {
             }
         }
 
-        private void addFile(Collection<File> files, File file) {
-            for (Iterator<File> iter = files.iterator(); iter.hasNext(); ) {
-                File f = iter.next();
-                if (contains(file, f))
-                    iter.remove();
-            }
-            files.add(file);
-        }
-
         private void addFile(Collection<Path> files, Path file) {
-            for (Iterator<Path> iter = files.iterator(); iter.hasNext(); ) {
-                Path f = iter.next();
-                if (contains(file, f))
-                    iter.remove();
-            }
+            files.removeIf(f -> contains(file, f));
             files.add(file);
-        }
-
-        private boolean contains(Collection<File> files, File file) {
-            for (File f: files) {
-                if (f.equals(file) || contains(f, file)) {
-                    return true;
-                }
-            }
-            return false;
         }
 
         private boolean contains(Collection<Path> files, Path file) {
@@ -311,30 +284,8 @@ public class GroupManager {
             return false;
         }
 
-        private boolean contains(File dir, File file) {
-            String dirPath = dir.getPath();
-            if (!dirPath.endsWith(File.separator))
-                dirPath += File.separator;
-            return file.getPath().startsWith(dirPath);
-        }
-
         private boolean contains(Path dir, Path file) {
             return file.startsWith(dir);
-        }
-
-        private Set<File> filter(File dir, Collection<File> files) {
-            Set<File> results = null;
-            String dirPath = dir.getPath();
-            if (!dirPath.endsWith(File.separator))
-                dirPath += File.separator;
-            for (File f: files) {
-                String fp = f.getPath();
-                if (fp.startsWith(dirPath)) {
-                    if (results == null) results = new LinkedHashSet<>();
-                    results.add(f);
-                }
-            }
-            return results == null ? Collections.<File>emptySet() : results;
         }
 
         private Set<Path> filter(Path dir, Collection<Path> files) {
@@ -346,17 +297,6 @@ public class GroupManager {
                 }
             }
             return results == null ? Set.of() : results;
-        }
-
-        private List<File> list(File file) {
-            List<File> children = new ArrayList<>();
-            for (File f: file.listFiles()) {
-                String fn = f.getName();
-                if (f.isDirectory() && !ignoreDirs.contains(fn)
-                        || f.isFile() && allowExtns.contains(getExtension(fn)))
-                    children.add(f);
-            }
-            return children;
         }
 
         private List<Path> list(Path file) {

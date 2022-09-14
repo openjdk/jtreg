@@ -27,15 +27,12 @@ package com.sun.javatest.regtest.config;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
-import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -231,23 +228,19 @@ public class ExtraPropDefns {
                 Process p = new ProcessBuilder(pArgs)
                         .redirectErrorStream(true)
                         .start();
-                // pass thru any output from the compiler
-                BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
-                String line;
-                try {
+                // pass through any output from the compiler
+                try (BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
+                    String line;
                     while ((line = in.readLine()) != null) {
                         log.println(line);
                     }
-                } finally {
-                    in.close();
                 }
                 int rc = p.waitFor();
                 if (rc != 0) {
                     throw new Fault("Compilation of extra property definition files failed. rc=" + rc);
                 }
-            } catch (IOException e) {
-                throw new Fault("Compilation of extra property definition files failed.", e);
-            } catch (InterruptedException e) {
+            } catch (IOException
+                     | InterruptedException e) {
                 throw new Fault("Compilation of extra property definition files failed.", e);
             }
         }
@@ -308,9 +301,9 @@ public class ExtraPropDefns {
         }
     }
 
-    private static Pattern packagePattern =
+    private static final Pattern packagePattern =
             Pattern.compile("package\\s+(((?:\\w+\\.)*)(?:\\w+))\\s*;");
-    private static Pattern classPattern =
+    private static final Pattern classPattern =
             Pattern.compile("(?:public\\s+)?(?:class|enum|interface|record)\\s+(\\w+)");
 
     private String getClassNameFromSource(String source) throws Fault {
@@ -331,6 +324,6 @@ public class ExtraPropDefns {
     }
 
     private List<String> asList(String s) {
-        return (s == null) ? Collections.<String>emptyList() : Arrays.asList(s.split("\\s+"));
+        return (s == null) ? Collections.emptyList() : List.of(s.split("\\s+"));
     }
 }

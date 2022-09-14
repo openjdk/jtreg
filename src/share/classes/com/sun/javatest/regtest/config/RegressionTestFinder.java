@@ -32,11 +32,11 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.StreamTokenizer;
 import java.lang.reflect.Field;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -94,15 +94,15 @@ public class RegressionTestFinder extends TagTestFinder
 
     @SuppressWarnings("unchecked")
     Set<String> getAllowedExtensions() {
-        return ((HashMap) getField("extensionTable")).keySet();
+        return ((Map<String, ?>) getField("extensionTable")).keySet();
     }
 
     @SuppressWarnings("unchecked")
     Set<String> getIgnoredDirectories() {
-        return ((HashMap) getField("excludeList")).keySet();
+        return ((Map<String, ?>) getField("excludeList")).keySet();
     }
 
-    Object getField(String name) {
+    private Object getField(String name) {
         try {
             Field f = TagTestFinder.class.getDeclaredField(name);
             try {
@@ -111,16 +111,10 @@ public class RegressionTestFinder extends TagTestFinder
             } finally {
                 f.setAccessible(false);
             }
-        } catch (NoSuchFieldException e) {
-            e.printStackTrace(System.err);
-            return null;
-        } catch (SecurityException e) {
-            e.printStackTrace(System.err);
-            return null;
-        } catch (IllegalArgumentException e) {
-            e.printStackTrace(System.err);
-            return null;
-        } catch (IllegalAccessException e) {
+        } catch (NoSuchFieldException
+                 | SecurityException
+                 | IllegalArgumentException
+                 | IllegalAccessException e) {
             e.printStackTrace(System.err);
             return null;
         }
@@ -184,8 +178,7 @@ public class RegressionTestFinder extends TagTestFinder
         if (dot == -1)
             return;
         String extn = name.substring(dot);
-        @SuppressWarnings("unchecked")
-        Class<? extends CommentStream> csc = (Class<? extends CommentStream>) getClassForExtension(extn);
+        Class<? extends CommentStream> csc = getClassForExtension(extn);
         if (csc == null) {
             error(super_i18n, "tag.noParser", file, extn);
             return;
@@ -208,8 +201,7 @@ public class RegressionTestFinder extends TagTestFinder
             String comment = cs.readComment();
             int commentLine = r.lineNumber;
             while (comment != null) {
-                @SuppressWarnings({"unchecked", "cast"}) // temporary, to cover transition generifying TestFinder
-                Map<String,String> tagValues = (Map<String,String>) parseComment(comment, file);
+                Map<String,String> tagValues = parseComment(comment, file);
 
                 // Look ahead to see if there are more comments
                 String nextComment = cs.readComment();
@@ -260,7 +252,7 @@ public class RegressionTestFinder extends TagTestFinder
         }
     }
 
-    private class LineCounterBufferedReader extends BufferedReader {
+    private static class LineCounterBufferedReader extends BufferedReader {
         int lineNumber;
 
         LineCounterBufferedReader(FileReader r) {
@@ -430,7 +422,6 @@ public class RegressionTestFinder extends TagTestFinder
         String comment;
         int index = 1;
         while ((comment = cs.readComment()) != null) {
-            @SuppressWarnings("unchecked")
             Map<String, String> tv = parseComment(comment, file);
             if (tv.isEmpty())
                 continue;
@@ -481,12 +472,7 @@ public class RegressionTestFinder extends TagTestFinder
         }
     }
 
-    @Override @SuppressWarnings({"unchecked", "rawtypes"})
-    protected Map<String, String> normalize(Map tv) {
-        return normalize0((Map<String, String>) tv);
-    }
-
-    private Map<String, String> normalize0(Map<String, String> tagValues) {
+    protected Map<String, String> normalize(Map<String, String> tagValues) {
         Map<String, String> newTagValues = new HashMap<>();
         String fileName = getCurrentFile().getName();
         String baseName = fileName.substring(0, fileName.lastIndexOf("."));
@@ -679,24 +665,21 @@ public class RegressionTestFinder extends TagTestFinder
     private Set<String> split(String s, String regex) {
         Set<String> result = new LinkedHashSet<>();
         if (s != null) {
-            result.addAll(Arrays.asList(s.split(regex)));
+            result.addAll(List.of(s.split(regex)));
         }
         return result;
     }
 
     /**
-     * Make sure that the provide name-value pair is of the proper format as
+     * Make sure that the provided name-value pair is of the proper format as
      * described in the tag-spec.
      *
      * @param entries   The map of the entries being read
      * @param name      The name of the entry that has been read
      * @param value     The value of the entry that has been read
      */
-    @Override @SuppressWarnings({"unchecked", "rawtypes"})
-    protected void processEntry(Map entries, String name, String value)
+    protected void processEntry(Map<String, String> entries, String name, String value)
     {
-        Map<String, String> tagValues = (Map<String, String>) entries;
-
         // translate the shorthands into run actions
         if (name.startsWith(COMPILE)
             || name.startsWith(CLEAN)
@@ -709,27 +692,27 @@ public class RegressionTestFinder extends TagTestFinder
         try {
             switch (name) {
                 case RUN:
-                    processRun(tagValues, value);
+                    processRun(entries, value);
                     break;
 
                 case BUG:
-                    processBug(tagValues, value);
+                    processBug(entries, value);
                     break;
 
                 case REQUIRES:
-                    processRequires(tagValues, value);
+                    processRequires(entries, value);
                     break;
 
                 case KEY:
-                    processKey(tagValues, value);
+                    processKey(entries, value);
                     break;
 
                 case MODULES:
-                    processModules(tagValues, value);
+                    processModules(entries, value);
                     break;
 
                 case LIBRARY:
-                    processLibrary(tagValues, value);
+                    processLibrary(entries, value);
                     break;
 
                 case COMMENT:
@@ -737,18 +720,18 @@ public class RegressionTestFinder extends TagTestFinder
                     break;
 
                 case ENABLE_PREVIEW:
-                    processEnablePreview(tagValues, value);
+                    processEnablePreview(entries, value);
                     break;
 
                 default:
                     if (!validTagNames.contains(name)) {
-                        parseError(tagValues, PARSE_TAG_BAD + name);
+                        parseError(entries, PARSE_TAG_BAD + name);
                     } else {
-                        tagValues.put(name, value);
+                        entries.put(name, value);
                     }
             }
         } catch (TestSuite.Fault e) {
-            reportError(tagValues, e.getMessage());
+            reportError(entries, e.getMessage());
         }
     }
 
@@ -780,8 +763,7 @@ public class RegressionTestFinder extends TagTestFinder
 
     private void reportError(Map<String, String> tagValues, String value) {
         // for now, just record first error
-        if (tagValues.get(ERROR) == null)
-            tagValues.put(ERROR, value);
+        tagValues.putIfAbsent(ERROR, value);
     }
 
     /**
@@ -861,12 +843,7 @@ public class RegressionTestFinder extends TagTestFinder
             return;
         }
 
-        String oldValue = tagValues.get(REQUIRES);
-        if (oldValue == null) {
-            tagValues.put(REQUIRES, value);
-        } else {
-            tagValues.put(REQUIRES, "(" + oldValue + ") & (" + value + ")");
-        }
+        tagValues.merge(REQUIRES, value, (a, b) -> "(" + a + ") & (" + b + ")");
     }
 
     /**
@@ -876,7 +853,6 @@ public class RegressionTestFinder extends TagTestFinder
      *
      * @param tagValues The map of all of the current tag values.
      * @param value     The value of the entry currently being processed.
-     * @return    A string which contains the new value for the "key" tag.
      */
     private void processKey(Map<String, String> tagValues, String value)
             throws TestSuite.Fault {
@@ -907,7 +883,6 @@ public class RegressionTestFinder extends TagTestFinder
      * Analyse the contents of @modules.
      * @param tagValues The map of all of the current tag values.
      * @param value     The value of the entry currently being processed.
-     * @return    A string which contains the new value for the "key" tag.
      */
     private void processModules(Map<String, String> tagValues, String value)
             throws TestSuite.Fault {
@@ -916,7 +891,7 @@ public class RegressionTestFinder extends TagTestFinder
             return;
         }
 
-        processModules(tagValues, Arrays.asList(value.trim().split("\\s+")));
+        processModules(tagValues, List.of(value.trim().split("\\s+")));
     }
 
     private void processModules(Map<String, String> tagValues, Collection<String> modules) {
@@ -938,12 +913,11 @@ public class RegressionTestFinder extends TagTestFinder
     }
 
     /**
-     * Create the library-directory list.  Pathnames are prepended left to
+     * Create the library-directory list.  Path names are prepended left to
      * right.
      *
      * @param tagValues The map of all of the current tag values.
      * @param value     The value of the entry currently being processed.
-     * @return    A string which contains the new value for the "library" tag.
      */
     private void processLibrary(Map<String, String> tagValues, String value) {
         String newValue;

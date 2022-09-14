@@ -27,8 +27,6 @@ package com.sun.javatest.regtest.tool;
 
 import java.awt.EventQueue;
 import java.awt.Frame;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -51,7 +49,6 @@ import java.nio.file.Path;
 import java.text.DateFormat;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
@@ -81,7 +78,6 @@ import com.sun.javatest.Status;
 import com.sun.javatest.StatusFilter;
 import com.sun.javatest.TestEnvironment;
 import com.sun.javatest.TestFilter;
-import com.sun.javatest.TestFinder;
 import com.sun.javatest.TestResult;
 import com.sun.javatest.TestResultTable;
 import com.sun.javatest.TestSuite;
@@ -229,7 +225,7 @@ public class Tool {
         // System.exit unless we ask it nicely, pretty please, thank you.
         SecurityManager sc = System.getSecurityManager();
         if (sc instanceof JavaTestSecurityManager) {
-            ((JavaTestSecurityManager) sc).setAllowExit(true);
+            JavaTestSecurityManager.setAllowExit(true);
         }
         System.exit(exitCode);
     }
@@ -243,7 +239,7 @@ public class Tool {
     public static final String TIMEOUT = "timeout";     // timeout-related options
     public static final String AGENT_POOL = "pool";     // agent pool related options
 
-    public List<Option> options = Arrays.asList(new Option(OPT, VERBOSE, "verbose", "-v", "-verbose") {
+    public List<Option> options = List.of(new Option(OPT, VERBOSE, "verbose", "-v", "-verbose") {
             @Override
             public String[] getChoices() {
                 String[] values = new String[Verbose.values().length];
@@ -339,7 +335,7 @@ public class Tool {
                 if (arg == null || arg.length() == 0)
                     retainArgs = Collections.singletonList("all");
                 else
-                    retainArgs = Arrays.asList(arg.split(","));
+                    retainArgs = List.of(arg.split(","));
                 if (retainArgs.contains("none") && retainArgs.size() > 1) {
                     throw new BadArgs(i18n, "main.badRetainNone", arg);
                 }
@@ -389,7 +385,7 @@ public class Tool {
             }
 
             @Override
-            public void process(String opt, String arg) throws BadArgs {
+            public void process(String opt, String arg) {
                 switch (arg) {
                     case "none":
                         reportMode = ReportMode.NONE;
@@ -478,7 +474,7 @@ public class Tool {
             }
             @Override
             public void process(String opt, String arg) {
-                boolean b = (arg == null || Arrays.asList("yes", "on", "true").contains(arg));
+                boolean b = (arg == null || List.of("yes", "on", "true").contains(arg));
                 allowSetSecurityManagerFlag = b;
             }
         },
@@ -548,7 +544,7 @@ public class Tool {
 
         new Option(STD, TIMEOUT, "", "-thd", "-timeoutHandlerDir") {
             @Override
-            public void process(String opt, String arg) throws BadArgs {
+            public void process(String opt, String arg) {
                 arg = arg.trim();
                 if (arg.length() == 0)
                     return;
@@ -637,7 +633,7 @@ public class Tool {
                 arg = arg.trim();
                 if (arg.length() == 0)
                     return;
-                envVarArgs.addAll(Arrays.asList(arg.split(",")));
+                envVarArgs.addAll(List.of(arg.split(",")));
             }
         },
 
@@ -907,7 +903,7 @@ public class Tool {
                 arg = arg.trim();
                 if (arg.length() == 0)
                     return;
-                testVMOpts.addAll(Arrays.asList(arg.split("\\s+")));
+                testVMOpts.addAll(List.of(arg.split("\\s+")));
             }
         },
 
@@ -948,7 +944,7 @@ public class Tool {
                 arg = arg.trim();
                 if (arg.length() == 0)
                     return;
-                testCompilerOpts.addAll(Arrays.asList(arg.split("\\s+")));
+                testCompilerOpts.addAll(List.of(arg.split("\\s+")));
             }
         },
 
@@ -968,7 +964,7 @@ public class Tool {
                 arg = arg.trim();
                 if (arg.length() == 0)
                     return;
-                testJavaOpts.addAll(Arrays.asList(arg.split("\\s+")));
+                testJavaOpts.addAll(List.of(arg.split("\\s+")));
             }
         },
 
@@ -978,7 +974,7 @@ public class Tool {
                 arg = arg.trim();
                 if (arg.length() == 0)
                     return;
-                testDebugOpts.addAll(Arrays.asList(arg.split("\\s+")));
+                testDebugOpts.addAll(List.of(arg.split("\\s+")));
             }
         },
 
@@ -1023,7 +1019,6 @@ public class Tool {
         javatest_jar = JarManager.forClass(Harness.class);
 
         jtreg_jar = JarManager.forClass(getClass());
-        jarManager = new JarManager(jtreg_jar.getParent());
 
         help = new Help(options);
         if (javatest_jar != null) {
@@ -1095,12 +1090,7 @@ public class Tool {
             baseDir = baseDirArg.toAbsolutePath();
         }
 
-        final TestManager testManager = new TestManager(out, baseDir, new TestFinder.ErrorHandler() {
-            @Override
-            public void error(String msg) {
-                Tool.this.error(msg);
-            }
-        });
+        final TestManager testManager = new TestManager(out, baseDir, Tool.this::error);
         testManager.addTestSpecs(testSpecArgs);
         testManager.addGroupSpecs(testGroupSpecArgs);
 
@@ -1148,7 +1138,7 @@ public class Tool {
             }
             File f = new File(s);
             if (compileJDK == null
-                    && f.getName().toLowerCase().equals("jre")
+                    && f.getName().equalsIgnoreCase("jre")
                     && f.getParentFile() != null)
                 f = f.getParentFile();
             testJDK = com.sun.javatest.regtest.config.JDK.of(f.toPath());
@@ -1169,15 +1159,13 @@ public class Tool {
             if (useWindowsSubsystemForLinux == null) {
                 // The test for Cygwin is more specific than the test for WSL,
                 // and so we give priority to Cygwin if both are detected.
-                useWindowsSubsystemForLinux = isCygwinDetected()
-                        ? false
-                        : isWindowsSubsystemForLinuxDetected();
+                useWindowsSubsystemForLinux = !isCygwinDetected() && isWindowsSubsystemForLinuxDetected();
             }
         } else {
             useWindowsSubsystemForLinux = false;
         }
 
-        if (jitFlag == false) {
+        if (!jitFlag) {
             envVarArgs.add("JAVA_COMPILER=");
         }
 
@@ -1207,16 +1195,12 @@ public class Tool {
 
         // register a factory to be used to create the parameters for a test suite,
         // such that all the appropriate command-line args are taken into account
-        RegressionTestSuite.setParametersFactory(new RegressionTestSuite.ParametersFactory() {
-            @Override
-            public RegressionParameters create(RegressionTestSuite ts) throws TestSuite.Fault {
-                try {
-                    return createParameters(testManager, ts);
-                } catch (BadArgs ex) {
-                    throw new TestSuite.Fault(i18n, "main.cantCreateParameters", ex.getMessage());
-                } catch (Fault ex) {
-                    throw new TestSuite.Fault(i18n, "main.cantCreateParameters", ex.getMessage());
-                }
+        RegressionTestSuite.setParametersFactory(ts -> {
+            try {
+                return createParameters(testManager, ts);
+            } catch (BadArgs
+                     | Fault ex) {
+                throw new TestSuite.Fault(i18n, "main.cantCreateParameters", ex.getMessage());
             }
         });
 
@@ -1495,16 +1479,6 @@ public class Tool {
         }
     }
 
-    private static List<Path> readFileList(Path file) throws Fault {
-        try {
-            List<String> lines = Files.readAllLines(file);
-            return lines.stream().map(Path::of).collect(Collectors.toList());
-        } catch (IOException e) {
-            throw new Fault(i18n, "main.cantRead", file, e);
-
-        }
-    }
-
     public int[] getTestStats() {
         return testStats.counts;
     }
@@ -1560,7 +1534,7 @@ public class Tool {
         Path pfile = workDirArg.resolve("jtreg.policy");
         try (BufferedWriter pout = Files.newBufferedWriter(pfile)) {
             String LINESEP = System.getProperty("line.separator");
-            for (Path f: Arrays.asList(jtreg_jar, javatest_jar)) {
+            for (Path f: List.of(jtreg_jar, javatest_jar)) {
                 pout.write("grant codebase \"" + f.toUri().toURL() + "\" {" + LINESEP);
                 pout.write("    permission java.security.AllPermission;" + LINESEP);
                 pout.write("};" + LINESEP);
@@ -1583,18 +1557,6 @@ public class Tool {
             Fault f = new Fault(i18n, "main.cantCreateDir", dir);
             f.initCause(e);
             throw f;
-        }
-    }
-
-    private void makeDir(File dir, boolean quiet) throws Fault {
-        // FIXME: I18N
-        if (dir.isDirectory())
-            return;
-        if (!quiet)
-            out.println("Directory \"" + dir + "\" not found: creating");
-        dir.mkdirs();
-        if (!dir.isDirectory()) {
-            throw new Fault(i18n, "main.cantCreateDir", dir);
         }
     }
 
@@ -2038,7 +2000,6 @@ public class Tool {
         }
     }
 
-    @SuppressWarnings("unchecked")
     private Iterator<TestResult> getResultsIterator(InterviewParameters params) {
         TestResultTable trt = params.getWorkDirectory().getTestResultTable();
         trt.waitUntilReady();
@@ -2048,7 +2009,7 @@ public class Tool {
         if (tests == null)
             return trt.getIterator(filters);
         else if (tests.length == 0)
-            return Collections.<TestResult>emptySet().iterator();
+            return Collections.emptyIterator();
         else
             return trt.getIterator(tests, filters);
     }
@@ -2058,13 +2019,9 @@ public class Tool {
             @Override
             public void run() {
                 final Frame startup = showStartup();
-                Timer t = new Timer(1000, new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        showGUI();
-                        startup.dispose();
-                    }
-
+                Timer t = new Timer(1000, e -> {
+                    showGUI();
+                    startup.dispose();
                 });
                 t.setRepeats(false);
                 t.start();
@@ -2168,7 +2125,7 @@ public class Tool {
     }
 
     private void addEnvVars(Map<String, String> table, String[] list) {
-        addEnvVars(table, Arrays.asList(list));
+        addEnvVars(table, List.of(list));
     }
 
     private void addEnvVars(Map<String, String> table, List<String> list) {
@@ -2256,8 +2213,8 @@ public class Tool {
 
     //----------member variables-----------------------------------------------
 
-    private PrintWriter out;
-    private PrintWriter err;
+    private final PrintWriter out;
+    private final PrintWriter err;
 
     private List<String> expandedArgs;
 
@@ -2314,9 +2271,8 @@ public class Tool {
     private Path exclusiveLockArg;
     private List<Path> matchListArgs = new ArrayList<>();
 
-    private final JarManager jarManager;
-    private Path javatest_jar;
-    private Path jtreg_jar;
+    private final Path javatest_jar;
+    private final Path jtreg_jar;
     private SearchPath junitPath;
     private SearchPath testngPath;
     private SearchPath asmtoolsPath;
@@ -2336,5 +2292,5 @@ public class Tool {
         "SystemDrive", "SystemRoot", "windir", "TMP", "TEMP", "TZ"
     };
 
-    private static I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(Tool.class);
+    private static final I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(Tool.class);
 }

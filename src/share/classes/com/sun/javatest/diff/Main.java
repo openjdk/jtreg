@@ -35,7 +35,6 @@ package com.sun.javatest.diff;
 import java.io.File;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import com.sun.javatest.regtest.BadArgs;
@@ -57,7 +56,7 @@ public class Main {
     private static final String DOC = "doc";
     private static final String FILES = "files";
 
-    List<Option> options = Arrays.asList(
+    List<Option> options = List.of(
         new Option(NONE, COMPARE, "r", "-r", "-reason") {
             @Override
             public void process(String opt, String arg) {
@@ -219,16 +218,16 @@ public class Main {
         System.exit(exitCode);
     }
 
-    private PrintWriter out;
-    private PrintWriter err;
+    private final PrintWriter out;
+    private final PrintWriter err;
 
     private boolean includeReason;
     private String format;
     private String title;
     private File outFile;
-    private List<File> fileArgs = new ArrayList<>();
+    private final List<File> fileArgs = new ArrayList<>();
     private boolean superMode;
     private Help help;
 
-    private static I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(Main.class);
+    private static final I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(Main.class);
 }

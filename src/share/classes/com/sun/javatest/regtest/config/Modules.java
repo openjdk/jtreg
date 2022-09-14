@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2016, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -51,7 +51,7 @@ public class Modules implements Iterable<Modules.Entry> {
         }
     }
 
-    public enum Phase { STATIC, DYNAMIC };
+    public enum Phase { STATIC, DYNAMIC }
 
     /**
      * Simple container for parsed entry in an @modules tag
@@ -221,10 +221,7 @@ public class Modules implements Iterable<Modules.Entry> {
     }
 
     private Entry getEntry(RegressionParameters params, String s) throws Fault {
-        Map<String, Entry> cache = caches.get(params);
-        if (cache == null) {
-            caches.put(params, cache = new HashMap<>());
-        }
+        Map<String, Entry> cache = caches.computeIfAbsent(params, k -> new HashMap<>());
         Entry e = cache.get(s);
         if (e == null) {
             cache.put(s, e = parse(s));
