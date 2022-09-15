@@ -39,6 +39,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.psi.util.PsiUtil;
 import com.intellij.openapi.diagnostic.Logger;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
@@ -349,7 +350,14 @@ public class JTRegUtils {
     /**
      * Create (if not existing) and get the jtreg project library.
      */
-    public static Library createJTRegLibrary(Project project, String oldDir, String newDir) {
+    public static Library createJTRegLibrary(Project project, String jtregDir) {
+        return updateJTRegLibrary(project, null, jtregDir);
+    }
+
+    /**
+     * Update the jtreg project library. The library would be created if it doesn't exist.
+     */
+    public static Library updateJTRegLibrary(Project project, String oldJtregDir, String newJtregDir) {
         LibraryTable libraryTable = LibraryTablesRegistrar.getInstance().getLibraryTable(project);
         final LibraryTable.ModifiableModel tableModel = libraryTable.getModifiableModel();
         Library library = tableModel.getLibraryByName("jtreg-libs");
@@ -357,8 +365,14 @@ public class JTRegUtils {
             library = tableModel.createLibrary("jtreg-libs");
         }
         final Library.ModifiableModel libraryModel = library.getModifiableModel();
-        libraryModel.removeRoot(oldDir, OrderRootType.CLASSES);
-        libraryModel.addJarDirectory(newDir, true);
+        String oldDir = "file://" + oldJtregDir + File.separator + "lib";
+        if (oldJtregDir != null && !oldJtregDir.isBlank() && libraryModel.isJarDirectory(oldDir, OrderRootType.CLASSES)) {
+            libraryModel.removeRoot(oldDir, OrderRootType.CLASSES);
+        }
+        String newDir = "file://" + newJtregDir + File.separator + "lib";
+        if (newJtregDir != null && !newJtregDir.isBlank() && !libraryModel.isJarDirectory(newDir, OrderRootType.CLASSES)) {
+            libraryModel.addJarDirectory(newDir, true);
+        }
         ApplicationManager.getApplication().runWriteAction(() -> {
             libraryModel.commit();
             tableModel.commit();

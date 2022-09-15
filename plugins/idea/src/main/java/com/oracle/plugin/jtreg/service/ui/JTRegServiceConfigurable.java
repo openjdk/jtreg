@@ -135,10 +135,14 @@ public class JTRegServiceConfigurable implements SearchableConfigurable {
     public void apply() throws ConfigurationException {
         JTRegService service = getJTRegService();
         ApplicationManager.getApplication().runWriteAction(() -> {
-            // Create the project library.
-            String oldDir = "file://" + service.getJTRegDir() + File.separator + "lib";
-            String newDir = "file://" + jtregDir.getText().trim() + File.separator + "lib";
-            JTRegUtils.createJTRegLibrary(project, oldDir, newDir);
+            // Create or update the project library.
+            String oldDir = service.getJTRegDir();
+            String newDir = jtregDir.getText().trim();
+            if (oldDir == null || oldDir.isBlank()) {
+                JTRegUtils.createJTRegLibrary(project, newDir);
+            } else {
+                JTRegUtils.updateJTRegLibrary(project, oldDir, newDir);
+            }
         });
         service.setJTRegOptions(jtregOptions.getText().trim());
         service.setAlternativePathEnabled(jrePathEditor.isAlternativeJreSelected());

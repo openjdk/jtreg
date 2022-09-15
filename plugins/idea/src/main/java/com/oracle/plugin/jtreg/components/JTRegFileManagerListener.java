@@ -141,8 +141,8 @@ public class JTRegFileManagerListener implements FileEditorManagerListener {
                     }
                 }
                 if (isTestNg || isJUnit) {
-                    String dir = "file://" + JTRegService.getInstance(project).getJTRegDir() + File.separator + "lib";
-                    Library library = JTRegUtils.createJTRegLibrary(project, dir, dir);
+                    String libDir = JTRegService.getInstance(project).getJTRegDir();
+                    Library library = JTRegUtils.createJTRegLibrary(project, libDir);
                     testInfo.jtregLib = library;
                     rootModel.addLibrary(library);
                 } else if (testInfo.jtregLib != null) {
