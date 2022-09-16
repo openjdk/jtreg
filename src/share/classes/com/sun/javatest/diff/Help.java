@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2007, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -34,7 +34,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.DateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.LinkedHashMap;
@@ -69,7 +68,7 @@ public class Help {
         if (commandLineHelpQuery == null)
             commandLineHelpQuery = new ArrayList<>();
         if (query != null)
-            commandLineHelpQuery.addAll(Arrays.asList(query.trim().split("\\s+")));
+            commandLineHelpQuery.addAll(List.of(query.trim().split("\\s+")));
     }
 
     void show(PrintStream out) {
@@ -244,7 +243,7 @@ public class Help {
             for (Option o: optionsForGroup.values())
                 nodesForGroup.add(createOptionHelpNode(o));
             HelpTree.Node groupNode = new HelpTree.Node(i18n, "help." + g.toLowerCase(),
-                    nodesForGroup.toArray(new HelpTree.Node[nodesForGroup.size()]));
+                    nodesForGroup.toArray(new HelpTree.Node[0]));
             commandHelpTree.addNode(groupNode);
         }
 
@@ -268,7 +267,7 @@ public class Help {
                 ww.write('\n');
                 commandHelpTree.write(ww);
             } else {
-                String[] query = commandLineHelpQuery.toArray(new String[commandLineHelpQuery.size()]);
+                String[] query = commandLineHelpQuery.toArray(new String[0]);
                 HelpTree.Selection s = commandHelpTree.find(query);
                 if (s != null)
                     commandHelpTree.write(ww, s);

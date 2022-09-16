@@ -73,7 +73,7 @@ public class Version implements Comparable<Version> {
             milestone = getManifestProperty("jtreg-Milestone");
             build = getManifestProperty("jtreg-Build");
         } else {
-            RuntimeVersion v = RuntimeVersion.parse(versionString);
+            Runtime.Version v = Runtime.Version.parse(versionString);
             version = v.version().stream()
                     .map(Object::toString)
                     .collect(Collectors.joining("."));

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2006, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -25,15 +25,15 @@
 
 package com.sun.javatest.regtest.report;
 
-import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
  * Values for the -verbose option
  */
 public class Verbose {
-    public static enum Mode { NONE, DEFAULT, SUMMARY, BRIEF, FULL };
+    public enum Mode { NONE, DEFAULT, SUMMARY, BRIEF, FULL }
 
     public static final Verbose DEFAULT  = new Verbose(Mode.DEFAULT);
     public static final Verbose SUMMARY  = new Verbose(Mode.SUMMARY);
@@ -59,7 +59,7 @@ public class Verbose {
 
     public static Verbose decode(String s) {
         // FIXME, check all words are valid?
-        Set<String> opts = new HashSet<>(Arrays.asList(s.split(",")));
+        Set<String> opts = new HashSet<>(List.of(s.split(",")));
         boolean defaultOpt = opts.contains("default");
         boolean summaryOpt = opts.contains("summary");
         boolean allOpt = opts.contains("all");

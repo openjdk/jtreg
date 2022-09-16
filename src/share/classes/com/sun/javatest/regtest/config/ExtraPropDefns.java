@@ -33,7 +33,6 @@ import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -343,6 +342,6 @@ public class ExtraPropDefns {
     }
 
     private List<String> asList(String s) {
-        return (s == null) ? Collections.emptyList() : Arrays.asList(s.split("\\s+"));
+        return (s == null) ? Collections.emptyList() : List.of(s.split("\\s+"));
     }
 }

@@ -1,12 +1,10 @@
 /*
- * Copyright (c) 2005, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Oracle designates this
- * particular file as subject to the "Classpath" exception as provided
- * by Oracle in the LICENSE file that accompanied this code.
+ * published by the Free Software Foundation.
  *
  * This code is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -23,28 +21,25 @@
  * questions.
  */
 
-package com.sun.javatest.regtest.config;
+import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
-
-import com.sun.javatest.TestEnvironment;
-
-public class RegressionEnvironment extends TestEnvironment
-{
-    RegressionEnvironment(RegressionParameters params) throws Fault {
-        super("regtest", new ArrayList<>(), new String[] { });
-        this.params = params;
+/**
+ * A collection of test methods, to help exercise the query mechanism.
+ * Each method just prints its name.
+ */
+public class Test2 {
+    @Test
+    public void m21() {
+        System.out.println("Test2.m21");
     }
 
-    private RegressionEnvironment(RegressionEnvironment other) {
-        super(other);
-        this.params = other.params;
+    @Test
+    public void m22() {
+        System.out.println("Test2.m22");
     }
 
-    @Override
-    public TestEnvironment copy() {
-        return new RegressionEnvironment(this);
+    @Test
+    public void m23() {
+        System.out.println("Test2.m23");
     }
-
-    public final RegressionParameters params;
 }

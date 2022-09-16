@@ -30,7 +30,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.ref.SoftReference;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -68,8 +67,8 @@ public class TestProperties {
 
         String gf = e.properties.getProperty("groups");
         groupFiles = (gf == null)
-                ? Collections.<String>emptyList()
-                : Arrays.asList(gf.split("\\s+"));
+                ? Collections.emptyList()
+                : List.of(gf.split("\\s+"));
 
         String version = e.properties.getProperty("requiredVersion");
         requiredVersion = new Version(version);
@@ -319,7 +318,7 @@ public class TestProperties {
                 String[] values = StringUtils.splitWS(properties.getProperty(propertyName));
                 if (parent == null || values.length > 0) {
                     Set<File> set = (parent == null) ? new LinkedHashSet<>() : new LinkedHashSet<>(parent);
-                    //set.addAll(Arrays.asList(values));
+                    //set.addAll(List.of(values));
                     for (String v: values) {
                         File f = toFile(baseDir, v);
                         if (f != null)
@@ -377,7 +376,7 @@ public class TestProperties {
                 String[] values = StringUtils.splitWS(properties.getProperty(propertyName));
                 if (parent == null || values.length > 0) {
                     Set<String> set = (parent == null) ? new LinkedHashSet<>() : new LinkedHashSet<>(parent);
-                    set.addAll(Arrays.asList(values));
+                    set.addAll(List.of(values));
                     return Collections.unmodifiableSet(set);
                 } else {
                     return parent;

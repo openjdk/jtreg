@@ -232,6 +232,10 @@ public class ShellAction extends Action
             if (script.enablePreview()) {
                 env.put("TESTENABLEPREVIEW", "true");
             }
+            String testQuery = script.getTestQuery();
+            if (testQuery != null) {
+                env.put("TESTQUERY", testQuery);
+            }
 
             List<String> command = new ArrayList<>();
             if (script.useWindowsSubsystemForLinux()) {
