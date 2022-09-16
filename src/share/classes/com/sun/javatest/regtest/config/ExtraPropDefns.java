@@ -27,11 +27,9 @@ package com.sun.javatest.regtest.config;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
-import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -78,7 +76,7 @@ public class ExtraPropDefns {
     /**
      * Source files for additional classes to be put on the application class path.
      * A directory may be given, which will be expanded to all the java source files
-     * it contains (including i in subdirecories.
+     * it contains (including in subdirectories).
      * A file or directory may be marked as "optional" by enclosing the name in '[' ... ']'.
      * No error will be reported if such an item does not exist.
      */
@@ -87,7 +85,7 @@ public class ExtraPropDefns {
     /**
      * Source files for additional classes to be put on the application boot class path.
      * A directory may be given, which will be expanded to all the java source files
-     * it contains (including i in subdirecories.
+     * it contains (including in subdirectories).
      * A file or directory may be marked as "optional" by enclosing the name in '[' ... ']'.
      * No error will be reported if such an item does not exist.
      */
@@ -124,6 +122,8 @@ public class ExtraPropDefns {
      * The list of names of classes to be called, to get extra properties.
      */
     private List<String> classes;
+
+    private static final boolean trace = Boolean.getBoolean("trace.extraPropDefns");
 
     ExtraPropDefns() {
         this(null, null, null, null, null);
@@ -224,6 +224,9 @@ public class ExtraPropDefns {
         }
 
         if (needCompilation) {
+            if (trace) {
+                System.err.println("Compiling extra property definition files: " + javacArgs);
+            }
             List<String> pArgs = new ArrayList<>();
             pArgs.add(jdk.getJavacProg().toString());
             pArgs.addAll(javacArgs);
@@ -231,23 +234,19 @@ public class ExtraPropDefns {
                 Process p = new ProcessBuilder(pArgs)
                         .redirectErrorStream(true)
                         .start();
-                // pass thru any output from the compiler
-                BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
-                String line;
-                try {
+                // pass through any output from the compiler
+                try (BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
+                    String line;
                     while ((line = in.readLine()) != null) {
                         log.println(line);
                     }
-                } finally {
-                    in.close();
                 }
                 int rc = p.waitFor();
                 if (rc != 0) {
                     throw new Fault("Compilation of extra property definition files failed. rc=" + rc);
                 }
-            } catch (IOException e) {
-                throw new Fault("Compilation of extra property definition files failed.", e);
-            } catch (InterruptedException e) {
+            } catch (IOException
+                     | InterruptedException e) {
                 throw new Fault("Compilation of extra property definition files failed.", e);
             }
         }
@@ -308,15 +307,28 @@ public class ExtraPropDefns {
         }
     }
 
-    private static Pattern packagePattern =
-            Pattern.compile("package\\s+(((?:\\w+\\.)*)(?:\\w+))\\s*;");
-    private static Pattern classPattern =
+    private static final Pattern commentPattern =
+            Pattern.compile("(?s)(\\s+//.*?\n|/\\*.*?\\*/)");
+    private static final Pattern packagePattern =
+            Pattern.compile("package\\s+(((?:\\w+\\.)*)\\w+)\\s*;");
+    private static final Pattern classPattern =
             Pattern.compile("(?:public\\s+)?(?:class|enum|interface|record)\\s+(\\w+)");
 
     private String getClassNameFromSource(String source) throws Fault {
+        // strip comments
+        StringBuilder sb = new StringBuilder();
+        Matcher matcher = commentPattern.matcher(source);
+        int start = 0;
+        while (matcher.find()) {
+            sb.append(source, start, matcher.start());
+            start = matcher.end();
+        }
+        sb.append(source.substring(start));
+        source = sb.toString();
+
         String packageName = null;
 
-        Matcher matcher = packagePattern.matcher(source);
+        matcher = packagePattern.matcher(source);
         if (matcher.find())
             packageName = matcher.group(1);
 
@@ -331,6 +343,6 @@ public class ExtraPropDefns {
     }
 
     private List<String> asList(String s) {
-        return (s == null) ? Collections.<String>emptyList() : Arrays.asList(s.split("\\s+"));
+        return (s == null) ? Collections.emptyList() : Arrays.asList(s.split("\\s+"));
     }
 }
