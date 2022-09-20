@@ -1179,7 +1179,7 @@ public class Tool {
         }
 
         if (reportMode == null) {
-            reportMode = ReportMode.ALL_EXECUTED;
+            reportMode = ReportMode.EXECUTED;
         }
 
         if (workDirArg == null) {
