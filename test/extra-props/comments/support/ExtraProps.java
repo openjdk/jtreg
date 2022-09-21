@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2016, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -21,12 +21,23 @@
  * questions.
  */
 
+import java.io.File;
+import java.util.concurrent.Callable;
+import java.util.HashMap;
+import java.util.Map;
+
+// The declaration in this line should be ignored: public class InLineComment
 /*
- * @test
- * @requires !extra
+ * The declaration in this line should be ignored: public class InBlockComment
  */
-public class Test2 {
-    public static void main(String... args) {
-        throw new Error("this test should not be executed");
+public class ExtraProps implements Callable<Map<String, String>> {
+    public Map<String,String> call() {
+        File cwd = new File(".").getAbsoluteFile().getParentFile();
+        if (!cwd.getName().equals("scratch"))
+            throw new Error("unexpected working directory name");
+
+        Map<String,String> map = new HashMap<String,String>();
+        map.put("extra", "true");
+        return map;
     }
 }

@@ -23,4 +23,3 @@
 
 requires.extraPropDefns = support/ExtraProps.java
 requires.properties = extra
-

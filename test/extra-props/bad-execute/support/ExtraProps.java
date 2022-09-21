@@ -31,4 +31,3 @@ public class ExtraProps implements Callable<Map<String, String>> {
         throw new Error("does not execute");
     }
 }
-
