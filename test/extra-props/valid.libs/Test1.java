@@ -30,5 +30,3 @@ public class Test1 {
         // this test should be executed
     }
 }
-
-

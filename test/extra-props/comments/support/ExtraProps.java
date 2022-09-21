@@ -41,4 +41,3 @@ public class ExtraProps implements Callable<Map<String, String>> {
         return map;
     }
 }
-

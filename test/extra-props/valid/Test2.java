@@ -30,5 +30,3 @@ public class Test2 {
         throw new Error("this test should not be executed");
     }
 }
-
-

@@ -27,4 +27,3 @@ requires.extraPropDefns.bootlibs = support/bootLib
 requires.extraPropDefns.vmOpts = -DhaveVMOpt=true
 
 requires.properties = extra inLib inBootLib haveVMOpt
-

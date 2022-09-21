@@ -25,4 +25,3 @@ requires.extraPropDefns = \
 	support/ExtraProps.java
 
 requires.properties = buggyExtra
-
