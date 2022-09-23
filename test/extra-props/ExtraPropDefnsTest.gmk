@@ -127,21 +127,22 @@ $(BUILDTESTDIR)/ExtraPropDefnsTest.comments.ok: \
 		-jdk:$(JDKHOME) \
 		-J-Dtrace.extraPropDefns=true \
 		$(TESTDIR)/extra-props/comments \
-			> $(@:%.ok=%/jt.log) 2>&1
-	$(GREP) -s "Compiling extra property definition files" $(@:%.ok=%/jt.log)
-	$(GREP) -s 'Test results: passed: 1' $(@:%.ok=%/jt.log)  > /dev/null
+			> $(@:%.ok=%/jt.1.log) 2>&1
+	$(GREP) -s "Compiling extra property definition files" $(@:%.ok=%/jt.1.log)
+	$(GREP) -s "Class file not found" $(@:%.ok=%/jt.1.log)
+	$(GREP) -s 'Test results: passed: 1' $(@:%.ok=%/jt.1.log)  > /dev/null
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDKHOME) \
 		-J-Dtrace.extraPropDefns=true \
 		$(TESTDIR)/extra-props/comments \
-			> $(@:%.ok=%/jt.log) 2>&1
-	if $(GREP) -s "Compiling extra property definition files" $(@:%.ok=%/jt.log) ; then \
+			> $(@:%.ok=%/jt.2.log) 2>&1
+	if $(GREP) -s "Compiling extra property definition files" $(@:%.ok=%/jt.2.log) ; then \
 	    echo "error: files compiled unexpectedly" ; exit 1 ; \
 	else \
 	    echo "no files recompiled, as expected" ; \
 	fi
-	$(GREP) -s 'Test results: passed: 1' $(@:%.ok=%/jt.log)  > /dev/null
+	$(GREP) -s 'Test results: passed: 1' $(@:%.ok=%/jt.2.log)  > /dev/null
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += \
