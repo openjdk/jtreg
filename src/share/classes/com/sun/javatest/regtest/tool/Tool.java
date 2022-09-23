@@ -183,9 +183,10 @@ public class Tool {
     private static void checkJavaOSVersion() {
         String osName = System.getProperty("os.name");
         if (osName != null && osName.equals("Mac OS X")) {
+            var command = List.of("sw_vers", "-productVersion");
             try {
                 String expectVersion;
-                Process p = new ProcessBuilder("sw_vers", "-productVersion")
+                Process p = new ProcessBuilder(command)
                         .redirectErrorStream(true)
                         .start();
                 try (InputStream in = p.getInputStream();
@@ -193,11 +194,18 @@ public class Tool {
                     expectVersion = r.lines().collect(Collectors.joining());
                 }
                 p.waitFor();
+                int rc = p.exitValue();
+                if (rc != 0) {
+                    System.err.println("Error getting OS version: "
+                            + String.join(" ", command) + ": rc=" + rc);
+                    System.exit(99);
+                }
 
                 checkJavaOSVersion(expectVersion);
 
             } catch (IOException | InterruptedException e) {
-                System.err.println("Error getting OS version: " + e);
+                System.err.println("Error getting OS version: "
+                        + String.join(" ", command) + ": " + e);
                 System.exit(99);
             }
         }
