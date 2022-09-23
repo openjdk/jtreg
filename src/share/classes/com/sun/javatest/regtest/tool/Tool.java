@@ -385,7 +385,7 @@ public class Tool {
             }
 
             @Override
-            public void process(String opt, String arg) {
+            public void process(String opt, String arg) throws BadArgs {
                 switch (arg) {
                     case "none":
                         reportMode = ReportMode.NONE;
@@ -396,9 +396,14 @@ public class Tool {
                     case "all-executed":
                         reportMode = ReportMode.ALL_EXECUTED;
                         break;
+                    case "files":
+                        reportMode = ReportMode.FILES;
+                        break;
                     case "all":
                         reportMode = ReportMode.ALL;
                         break;
+                    default:
+                        throw new BadArgs(i18n, "main.badReportOption", arg);
                 }
             }
         },
@@ -1920,11 +1925,12 @@ public class Tool {
                         default:
                             throw new IllegalStateException();
 
-                        case EXECUTED:
+                        case EXECUTED: {
                             ParameterFilter pf = new ParameterFilter();
                             pf.update(params);
                             tf = pf;
                             break;
+                        }
 
                         case ALL_EXECUTED:
                             boolean[] statusValues = new boolean[Status.NUM_STATES];
@@ -1938,8 +1944,21 @@ public class Tool {
                         case ALL:
                             tf = new AllTestsFilter();
                             break;
-                    }
 
+                        case FILES: {
+                            try {
+                                RegressionParameters reportParams = new RegressionParameters("regtest", params.getTestSuite(), out::println);
+                                reportParams.setWorkDirectory(params.getWorkDirectory());
+                                reportParams.setTests(params.getTests());
+                                ParameterFilter pf = new ParameterFilter();
+                                pf.update(reportParams);
+                                tf = pf;
+                                break;
+                            } catch (Interview.Fault e) {
+                                throw new Fault(i18n, "main.cantCreateReportParameters", e);
+                            }
+                        }
+                    }
                 }
                 r.report(params, elapsedTimeHandler, stats, tf, quiet);
             }
@@ -2239,7 +2258,7 @@ public class Tool {
     private boolean guiFlag;
     private boolean reportOnlyFlag;
     private String showStream;
-    public enum ReportMode { NONE, EXECUTED, ALL_EXECUTED, ALL }
+    public enum ReportMode { NONE, EXECUTED, FILES, ALL_EXECUTED, ALL }
     private ReportMode reportMode;
     private boolean allowSetSecurityManagerFlag = true;
     private static Verbose  verbose;
