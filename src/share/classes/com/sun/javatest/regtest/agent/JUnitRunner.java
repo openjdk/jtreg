@@ -25,10 +25,14 @@
 
 package com.sun.javatest.regtest.agent;
 
+import org.junit.platform.engine.TestExecutionResult;
 import org.junit.platform.engine.discovery.DiscoverySelectors;
+import org.junit.platform.engine.reporting.ReportEntry;
 import org.junit.platform.launcher.Launcher;
 import org.junit.platform.launcher.LauncherDiscoveryRequest;
 import org.junit.platform.launcher.LauncherSession;
+import org.junit.platform.launcher.TestExecutionListener;
+import org.junit.platform.launcher.TestIdentifier;
 import org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder;
 import org.junit.platform.launcher.core.LauncherFactory;
 import org.junit.platform.launcher.listeners.SummaryGeneratingListener;
@@ -126,6 +130,7 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
             try (LauncherSession session = LauncherFactory.openSession()) {
                 Launcher launcher = session.getLauncher();
                 launcher.registerTestExecutionListeners(summaryGeneratingListener);
+                launcher.registerTestExecutionListeners(new PrintingListener());
                 launcher.execute(request);
             }
 
@@ -168,6 +173,23 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
 
         } catch (NoClassDefFoundError ex) {
             throw new Exception(JUNIT_NO_DRIVER, ex);
+        }
+    }
+
+    public static class PrintingListener implements TestExecutionListener {
+        @Override
+        public void executionFinished(TestIdentifier identifier, TestExecutionResult result) {
+            System.out.println(identifier.getDisplayName() + ": " + result.getStatus());
+        }
+
+        @Override
+        public void executionSkipped(TestIdentifier identifier, String reason) {
+            System.out.println(identifier.getDisplayName() + ": skipped - " + reason);
+        }
+
+        @Override
+        public void reportingEntryPublished(TestIdentifier identifier, ReportEntry entry) {
+            System.out.println(identifier.getDisplayName() + ": " + entry.toString());
         }
     }
 }
