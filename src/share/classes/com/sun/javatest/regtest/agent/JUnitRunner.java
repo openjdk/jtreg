@@ -28,7 +28,7 @@ package com.sun.javatest.regtest.agent;
 import org.junit.platform.engine.TestExecutionResult;
 import org.junit.platform.engine.discovery.DiscoverySelectors;
 import org.junit.platform.engine.reporting.ReportEntry;
-import org.junit.platform.launcher.Launcher;
+import org.junit.platform.launcher.LauncherConstants;
 import org.junit.platform.launcher.LauncherDiscoveryRequest;
 import org.junit.platform.launcher.LauncherSession;
 import org.junit.platform.launcher.TestExecutionListener;
@@ -126,6 +126,10 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
                 .selectors(testQuery == null
                         ? DiscoverySelectors.selectClass(mainClass)
                         : DiscoverySelectors.selectMethod(mainClass, testQuery))
+                // capture messages printed to standard streams by default
+                // converting them into test report entries
+                .configurationParameter(LauncherConstants.CAPTURE_STDOUT_PROPERTY_NAME, "true")
+                .configurationParameter(LauncherConstants.CAPTURE_STDERR_PROPERTY_NAME, "true")
                 .build();
 
             SummaryGeneratingListener summaryGeneratingListener = new SummaryGeneratingListener();
