@@ -38,9 +38,12 @@ import org.junit.platform.launcher.core.LauncherFactory;
 import org.junit.platform.launcher.listeners.SummaryGeneratingListener;
 import org.junit.platform.launcher.listeners.TestExecutionSummary;
 
+import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * TestRunner to run JUnit tests.
@@ -130,7 +133,7 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
             try (LauncherSession session = LauncherFactory.openSession()) {
                 Launcher launcher = session.getLauncher();
                 launcher.registerTestExecutionListeners(summaryGeneratingListener);
-                launcher.registerTestExecutionListeners(new PrintingListener());
+                launcher.registerTestExecutionListeners(new PrintingListener(System.err));
                 launcher.execute(request);
             }
 
@@ -176,20 +179,61 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
         }
     }
 
-    public static class PrintingListener implements TestExecutionListener {
+    static class PrintingListener implements TestExecutionListener {
+
+        final PrintWriter printer;
+        final Lock lock;
+
+        PrintingListener(PrintStream stream) {
+            this(new PrintWriter(stream, true));
+        }
+
+        PrintingListener(PrintWriter printer) {
+            this.printer = printer;
+            this.lock = new ReentrantLock();
+        }
+
         @Override
         public void executionFinished(TestIdentifier identifier, TestExecutionResult result) {
-            System.out.println(identifier.getDisplayName() + ": " + result.getStatus());
+            if (identifier.isTest()) {
+                lock.lock();
+                try {
+                    // always print the status of a test
+                    printer.println(identifier.getDisplayName() + " -> " + result.getStatus());
+                    // additionally print stacktrace for a non-successful test
+                    if (result.getStatus() != TestExecutionResult.Status.SUCCESSFUL) {
+                        result.getThrowable().ifPresent(printer::println);
+                    }
+                }
+                finally {
+                    lock.unlock();
+                }
+            }
         }
 
         @Override
         public void executionSkipped(TestIdentifier identifier, String reason) {
-            System.out.println(identifier.getDisplayName() + ": skipped - " + reason);
+            if (identifier.isTest()) {
+                lock.lock();
+                try {
+                    printer.println(identifier.getDisplayName() + " -> SKIPPED because of: " + reason);
+                }
+                finally {
+                    lock.unlock();
+                }
+            }
         }
 
         @Override
         public void reportingEntryPublished(TestIdentifier identifier, ReportEntry entry) {
-            System.out.println(identifier.getDisplayName() + ": " + entry.toString());
+            lock.lock();
+            try {
+                printer.println(identifier.getDisplayName() + " -> " + entry.getTimestamp());
+                entry.getKeyValuePairs().forEach((key, value) -> printer.println(key + " -> " + value));
+            }
+            finally {
+                lock.unlock();
+            }
         }
     }
 }
