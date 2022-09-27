@@ -33,6 +33,7 @@ import org.junit.platform.launcher.LauncherDiscoveryRequest;
 import org.junit.platform.launcher.LauncherSession;
 import org.junit.platform.launcher.TestExecutionListener;
 import org.junit.platform.launcher.TestIdentifier;
+import org.junit.platform.launcher.core.LauncherConfig;
 import org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder;
 import org.junit.platform.launcher.core.LauncherFactory;
 import org.junit.platform.launcher.listeners.SummaryGeneratingListener;
@@ -121,8 +122,8 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
         Thread.currentThread().setContextClassLoader(mainClass.getClassLoader());
         try {
             String testQuery = System.getProperty("test.query");
-            // if test.query is set, treat it as a method name to be executed
             LauncherDiscoveryRequest request = LauncherDiscoveryRequestBuilder.request()
+                // if test.query is set, treat it as a method name to be executed
                 .selectors(testQuery == null
                         ? DiscoverySelectors.selectClass(mainClass)
                         : DiscoverySelectors.selectMethod(mainClass, testQuery))
@@ -134,53 +135,58 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
 
             SummaryGeneratingListener summaryGeneratingListener = new SummaryGeneratingListener();
 
-            try (LauncherSession session = LauncherFactory.openSession()) {
-                Launcher launcher = session.getLauncher();
-                launcher.registerTestExecutionListeners(summaryGeneratingListener);
-                launcher.registerTestExecutionListeners(new PrintingListener(System.err));
-                launcher.execute(request);
+            LauncherConfig launcherConfig = LauncherConfig.builder()
+                .addTestExecutionListeners(new PrintingListener(System.err))
+                .addTestExecutionListeners(summaryGeneratingListener)
+                .build();
+
+            try (LauncherSession session = LauncherFactory.openSession(launcherConfig)) {
+                session.getLauncher().execute(request);
             }
 
             TestExecutionSummary summary = summaryGeneratingListener.getSummary();
-            StringWriter sw = new StringWriter();
-            try (PrintWriter pw = new PrintWriter(sw)) {
-                if (summary.getTotalFailureCount() > 0) {
-                    pw.println("JavaTest Message: JUnit Platform Failure(s): " + summary.getTotalFailureCount());
-                    pw.println();
-                    for (TestExecutionSummary.Failure failure : summary.getFailures()) {
-                        failure.getException().printStackTrace(pw);
-                    }
-                }
+            System.err.println(summarize(summary));
 
-                // The format of the following output is assumed in the JUnit SummaryReporter
-                pw.println();
-                pw.print("[ JUnit Containers: ");
-                pw.print("found " + summary.getContainersFoundCount());
-                pw.print(", started " + summary.getContainersStartedCount());
-                pw.print(", succeeded " + summary.getContainersSucceededCount());
-                pw.print(", failed " + summary.getContainersFailedCount());
-                pw.print(", aborted " + summary.getContainersAbortedCount());
-                pw.print(", skipped " + summary.getContainersSkippedCount());
-                pw.println("]");
-                pw.print("[ JUnit Tests: ");
-                pw.print("found " + summary.getTestsFoundCount());
-                pw.print(", started " + summary.getTestsStartedCount());
-                pw.print(", succeeded " + summary.getTestsSucceededCount());
-                pw.print(", failed " + summary.getTestsFailedCount());
-                pw.print(", aborted " + summary.getTestsAbortedCount());
-                pw.print(", skipped " + summary.getTestsSkippedCount());
-                pw.println("]");
-
-                System.err.println(sw);
-
-                if (summary.getTotalFailureCount() > 0) {
-                    throw new Exception("JUnit test failure");
-                }
+            if (summary.getTotalFailureCount() > 0) {
+                throw new Exception("JUnit test failure");
             }
 
         } catch (NoClassDefFoundError ex) {
             throw new Exception(JUNIT_NO_DRIVER, ex);
         }
+    }
+
+    static String summarize(TestExecutionSummary summary) {
+        StringWriter sw = new StringWriter();
+        try (PrintWriter pw = new PrintWriter(sw)) {
+            if (summary.getTotalFailureCount() > 0) {
+                pw.println("JavaTest Message: JUnit Platform Failure(s): " + summary.getTotalFailureCount());
+                pw.println();
+                for (TestExecutionSummary.Failure failure : summary.getFailures()) {
+                    failure.getException().printStackTrace(pw);
+                }
+            }
+
+            // The format of the following output is assumed in the JUnit SummaryReporter
+            pw.println();
+            pw.print("[ JUnit Containers: ");
+            pw.print("found " + summary.getContainersFoundCount());
+            pw.print(", started " + summary.getContainersStartedCount());
+            pw.print(", succeeded " + summary.getContainersSucceededCount());
+            pw.print(", failed " + summary.getContainersFailedCount());
+            pw.print(", aborted " + summary.getContainersAbortedCount());
+            pw.print(", skipped " + summary.getContainersSkippedCount());
+            pw.println("]");
+            pw.print("[ JUnit Tests: ");
+            pw.print("found " + summary.getTestsFoundCount());
+            pw.print(", started " + summary.getTestsStartedCount());
+            pw.print(", succeeded " + summary.getTestsSucceededCount());
+            pw.print(", failed " + summary.getTestsFailedCount());
+            pw.print(", aborted " + summary.getTestsAbortedCount());
+            pw.print(", skipped " + summary.getTestsSkippedCount());
+            pw.println("]");
+        }
+        return sw.toString();
     }
 
     static class PrintingListener implements TestExecutionListener {
