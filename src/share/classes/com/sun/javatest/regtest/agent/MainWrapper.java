@@ -27,19 +27,13 @@ package com.sun.javatest.regtest.agent;
 
 import java.io.FileReader;
 import java.io.IOException;
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodType;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ThreadFactory;
 
 /**
   * This class is the wrapper for all main/othervm tests.
   */
-public class MainWrapper
-{
+public class MainWrapper {
 
     public static String MAIN_WRAPPER = "main.wrapper";
 
@@ -65,7 +59,7 @@ public class MainWrapper
             String moduleClassName = fileArgs[i++];
             int sep = moduleClassName.indexOf('/');
             moduleName = (sep == -1) ? null : moduleClassName.substring(0, sep);
-            className  = (sep == -1) ? moduleClassName : moduleClassName.substring(sep + 1);
+            className = (sep == -1) ? moduleClassName : moduleClassName.substring(sep + 1);
             classArgs = StringArray.splitWS(fileArgs[i++]);
         } catch (IOException e) {
             AStatus.failed(MAIN_CANT_READ_ARGS + e).exit();
@@ -73,15 +67,16 @@ public class MainWrapper
         }
 
         // RUN JAVA IN ANOTHER THREADGROUP
-        MainThreadGroup tg = new  MainThreadGroup();
+        MainThreadGroup tg = new MainThreadGroup();
         Runnable task = new MainTask(moduleName, className, classArgs);
         Thread t;
-        if (!"Virtual".equals(System.getProperty(MAIN_WRAPPER))) {
-            t = new Thread(tg, task, "MainThread");
+        String customWrapperName = System.getProperty(MAIN_WRAPPER);
+        if (customWrapperName == null) {
+            t = new Thread(tg, task);
         } else {
-            t = VirtualAPI.instance().factory(true).newThread(task);
-            t.setName("MainThread");
+            t = CustomMainWrapper.getInstance(customWrapperName).createThread(tg, task);
         }
+        t.setName("MainThread");
         t.start();
         try {
             t.join();
@@ -95,7 +90,7 @@ public class MainWrapper
             handleTestException(tg.uncaughtThrowable);
         } else {
             AStatus.passed("")
-                   .exit();
+                    .exit();
         }
 
     } // main()
@@ -103,10 +98,10 @@ public class MainWrapper
     private static void handleTestException(Throwable e) {
         if (SKIP_EXCEPTION.equals(e.getClass().getName())) {
             AStatus.passed(MAIN_SKIPPED + e)
-                   .exit();
+                    .exit();
         } else {
             AStatus.failed(MAIN_THREW_EXCEPT + e)
-                   .exit();
+                    .exit();
         }
     }
 
@@ -177,8 +172,7 @@ public class MainWrapper
         private final String[] args;
     }
 
-    static class MainThreadGroup extends ThreadGroup
-    {
+    static class MainThreadGroup extends ThreadGroup {
         MainThreadGroup() {
             super("MainThreadGroup");
         } // MainThreadGroup()
@@ -189,7 +183,7 @@ public class MainWrapper
             e.printStackTrace(System.err);
             if ((uncaughtThrowable == null) && (!cleanMode)) {
                 uncaughtThrowable = e;
-                uncaughtThread    = t;
+                uncaughtThread = t;
             }
 //          cleanup();
             AStatus.failed(MAIN_THREW_EXCEPT + e).exit();
@@ -219,73 +213,22 @@ public class MainWrapper
 
         //----------member variables--------------------------------------------
 
-        private final boolean cleanMode   = false;
+        private final boolean cleanMode = false;
         Throwable uncaughtThrowable = null;
-        Thread    uncaughtThread    = null;
+        Thread uncaughtThread = null;
 
     }
 
     //----------member variables------------------------------------------------
 
     private static final String
-        MAIN_CANT_READ_ARGS   = "JavaTest Error: Can't read main args file.",
-        MAIN_THREAD_INTR      = "Thread interrupted: ",
-        MAIN_THREW_EXCEPT     = "`main' threw exception: ",
-        MAIN_CANT_LOAD_TEST   = "Can't load test: ",
-        MAIN_CANT_FIND_MAIN   = "Can't find `main' method",
-        MAIN_SKIPPED          = "Skipped: ";
+            MAIN_CANT_READ_ARGS = "JavaTest Error: Can't read main args file.",
+            MAIN_THREAD_INTR = "Thread interrupted: ",
+            MAIN_THREW_EXCEPT = "`main' threw exception: ",
+            MAIN_CANT_LOAD_TEST = "Can't load test: ",
+            MAIN_CANT_FIND_MAIN = "Can't find `main' method",
+            MAIN_SKIPPED = "Skipped: ";
     private static final String SKIP_EXCEPTION = "jtreg.SkippedException";
 
-    public static class VirtualAPI {
-
-
-        private MethodHandles.Lookup publicLookup = MethodHandles.publicLookup();
-
-        ThreadFactory virtualThreadFactory;
-        ThreadFactory platformThreadFactory;
-
-
-        VirtualAPI() {
-             MethodType getVirtualThreadPerTaskExecutorMT = MethodType.methodType(ExecutorService.class);
-             try {
-
-                 Class<?> builderClass =Class.forName("java.lang.Thread$Builder");
-                 Class<?> vbuilderClass =Class.forName("java.lang.Thread$Builder$OfVirtual");
-                 Class<?> pbuilderClass =Class.forName("java.lang.Thread$Builder$OfPlatform");
-
-
-                 MethodType vofMT = MethodType.methodType(vbuilderClass);
-                 MethodType pofMT = MethodType.methodType(pbuilderClass);
-
-                 MethodHandle ofVirtualMH =  publicLookup.findStatic(Thread.class, "ofVirtual", vofMT);
-                 MethodHandle ofPlatformMH =  publicLookup.findStatic(Thread.class, "ofPlatform", pofMT);
-
-                 Object virtualBuilder = ofVirtualMH.invoke();
-                 Object platformBuilder = ofPlatformMH.invoke();
-
-                 MethodType factoryMT = MethodType.methodType(ThreadFactory.class);
-                 MethodHandle vfactoryMH =  publicLookup.findVirtual(vbuilderClass, "factory", factoryMT);
-                 MethodHandle pfactoryMH =  publicLookup.findVirtual(pbuilderClass, "factory", factoryMT);
-
-                 virtualThreadFactory = (ThreadFactory) vfactoryMH.invoke(virtualBuilder);
-                 platformThreadFactory = (ThreadFactory) pfactoryMH.invoke(platformBuilder);
-
-             } catch (Throwable t) {
-                 throw new RuntimeException(t);
-             }
-         }
-
-        private static VirtualAPI instance = new VirtualAPI();
-
-        public static VirtualAPI instance() {
-            return instance;
-        }
-
-        public ThreadFactory factory(boolean isVirtual) {
-            return isVirtual ? virtualThreadFactory : platformThreadFactory;
-        }
-
-
-
-    }
 }
+

@@ -21,16 +21,14 @@
  * questions.
  */
 
-/* @test
- * run main/othervm Test
+/*
+ * @test
+ * @run main/othervm Test
  */
 
-/* @test
- * run main Test
- */
-
-/* @test
- * run driver Test
+/*
+ * @test
+ * @run main Test
  */
 
 public class Test {
@@ -39,8 +37,9 @@ public class Test {
             throw new Exception("this test should fail with wrapper = " + System.getProperty("main.wrapper"));
         }
 
-        if (!Thread.currentThread().isVirtual()) {
-            throw new Exception("Main Thread is not Virtual");
+        String threadClassName = Thread.currentThread().getClass().getName();
+        if (!threadClassName.equals("java.lang.VirtualThread")) {
+            throw new Exception("Main Thread is not Virtual : " + threadClassName);
         }
     }
 }

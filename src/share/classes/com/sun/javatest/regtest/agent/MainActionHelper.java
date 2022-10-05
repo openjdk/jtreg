@@ -195,11 +195,10 @@ public class MainActionHelper extends ActionHelper {
             // RUN JAVA IN ANOTHER THREADGROUP
             AgentVMThreadGroup tg = new AgentVMThreadGroup(err, MSG_PREFIX, timeoutFactor);
             Thread t;
-            if (!("Virtual").equals(mainWrapper)) {
-                t = new Thread(tg, avmr, "AgentVMThread");
+            if (mainWrapper == null) {
+                t = new Thread(tg, avmr);
             } else {
-                t = MainWrapper.VirtualAPI.instance().factory(true).newThread(avmr);
-                t.setName("AgentVMThread");
+                t = CustomMainWrapper.getInstance(mainWrapper).createThread(tg, avmr);
             }
 
             Alarm alarm = null;
@@ -208,6 +207,7 @@ public class MainActionHelper extends ActionHelper {
                 alarm = Alarm.schedulePeriodicInterrupt(timeout, TimeUnit.SECONDS, alarmOut, t);
             }
             Throwable error = null;
+            t.setName("AgentVMThread");
             t.start();
             try {
                 t.join();
