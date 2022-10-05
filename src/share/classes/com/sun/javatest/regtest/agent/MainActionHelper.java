@@ -57,7 +57,7 @@ public class MainActionHelper extends ActionHelper {
     private List<String> classArgs;
     private int timeout;
     private float timeoutFactor;
-    private String mainWrapper;
+    private String customMainWrapper;
     private OutputHandler outputHandler;
 
     MainActionHelper(String testName) {
@@ -114,8 +114,8 @@ public class MainActionHelper extends ActionHelper {
         return this;
     }
 
-     MainActionHelper mainWrapper(String mainWrapper) {
-        this.mainWrapper = mainWrapper;
+     MainActionHelper customMainWrapper(String customMainWrapper) {
+        this.customMainWrapper = customMainWrapper;
         return this;
     }
 
@@ -195,10 +195,10 @@ public class MainActionHelper extends ActionHelper {
             // RUN JAVA IN ANOTHER THREADGROUP
             AgentVMThreadGroup tg = new AgentVMThreadGroup(err, MSG_PREFIX, timeoutFactor);
             Thread t;
-            if (mainWrapper == null) {
+            if (customMainWrapper == null) {
                 t = new Thread(tg, avmr);
             } else {
-                t = CustomMainWrapper.getInstance(mainWrapper).createThread(tg, avmr);
+                t = CustomMainWrapper.getInstance(customMainWrapper).createThread(tg, avmr);
             }
 
             Alarm alarm = null;

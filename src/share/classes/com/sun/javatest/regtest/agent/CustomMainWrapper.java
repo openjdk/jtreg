@@ -7,20 +7,37 @@ import java.util.concurrent.ThreadFactory;
 
 public interface CustomMainWrapper {
     static CustomMainWrapper getInstance(String className) {
-        return new CustomMainWrapper() {
-            @Override
-            public Thread createThread(ThreadGroup tg, Runnable task) {
-                try {
-                    return VirtualAPI.instance().factory(true).newThread(task);
-                } catch (ExceptionInInitializerError e) {
-                    // we are in driver mode
-                    return new Thread(tg, task);
-                }
-            }
-        };
+        try {
+            return (CustomMainWrapper) Class.forName(className).newInstance();
+        } catch (InstantiationException e) {
+            throw new RuntimeException(e);
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     Thread createThread(ThreadGroup tg, Runnable task);
+}
+
+class VirtualMainWrapper  implements CustomMainWrapper {
+    private ThreadFactory factory;
+
+    public VirtualMainWrapper() {
+        try {
+            factory = VirtualAPI.instance().factory(true);
+        } catch (ExceptionInInitializerError e) {
+            // we are in driver mode
+            factory = null;
+        }
+
+    }
+
+    @Override
+    public Thread createThread(ThreadGroup tg, Runnable task) {
+        return factory == null? new Thread(tg, task) : factory.newThread(task);
+    }
 }
 
 class VirtualAPI {

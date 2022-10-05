@@ -94,7 +94,7 @@ public class Agent {
      * Start a JDK with given JVM options.
      */
     private Agent(File dir, JDK jdk, List<String> vmOpts, Map<String, String> envVars,
-            File policyFile, float timeoutFactor, Logger logger, String mainWrapper) throws Fault {
+            File policyFile, float timeoutFactor, Logger logger, String customMainWrapper) throws Fault {
         try {
             id = ++count;
             this.jdk = jdk;
@@ -134,9 +134,9 @@ public class Agent {
                 cmd.add(String.valueOf(timeoutFactor));
             }
 
-            if (!(mainWrapper == null) && !mainWrapper.isEmpty()) {
-                cmd.add(AgentServer.MAINWRAPPER);
-                cmd.add(String.valueOf(mainWrapper));
+            if (!(customMainWrapper == null) && !customMainWrapper.isEmpty()) {
+                cmd.add(AgentServer.CUSTOM_MAIN_WRAPPER);
+                cmd.add(customMainWrapper);
             }
             log("Started " + cmd);
 
@@ -704,8 +704,8 @@ public class Agent {
             this.timeoutFactor = factor;
         }
 
-        public void setMainWrapper(String wrapper) {
-            this.mainWrapper = wrapper;
+        public void setCustomMainWrapper(String wrapper) {
+            this.customMainWrapper = wrapper;
         }
 
         /**
@@ -764,7 +764,7 @@ public class Agent {
                 stats.reuse(a);
             } else {
                 logger.log(null, "POOL: Creating new agent");
-                a = new Agent(dir, jdk, vmOpts, envVars, policyFile, timeoutFactor, logger, mainWrapper);
+                a = new Agent(dir, jdk, vmOpts, envVars, policyFile, timeoutFactor, logger, customMainWrapper);
                 stats.add(a);
             }
 
@@ -920,7 +920,7 @@ public class Agent {
 
         private File policyFile;
         private float timeoutFactor = 1.0f;
-        private String mainWrapper;
+        private String customMainWrapper;
         private int maxPoolSize;
         private Duration idleTimeout;
     }

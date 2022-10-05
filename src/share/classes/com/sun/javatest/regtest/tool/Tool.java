@@ -43,7 +43,6 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.Reader;
 import java.io.StreamTokenizer;
-import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -114,9 +113,7 @@ import com.sun.javatest.regtest.report.TestStats;
 import com.sun.javatest.regtest.report.Verbose;
 import com.sun.javatest.regtest.report.VerboseHandler;
 import com.sun.javatest.regtest.report.XMLWriter;
-import com.sun.javatest.regtest.tool.Help.VersionHelper;
 import com.sun.javatest.regtest.util.NaturalComparator;
-import com.sun.javatest.regtest.util.StringUtils;
 import com.sun.javatest.tool.Desktop;
 import com.sun.javatest.util.BackupPolicy;
 import com.sun.javatest.util.I18NResourceBundle;
@@ -532,7 +529,7 @@ public class Tool {
        new Option(OLD, MAIN, "", "-mw", "-mainWrapper") {
             @Override
             public void process(String opt, String arg) {
-                mainWrapper = arg;
+                customMainWrapper = arg;
             }
         },
 
@@ -1235,8 +1232,8 @@ public class Tool {
             reportDirArg = Path.of("JTreport");
         }
 
-        if (!(mainWrapper == null) && !mainWrapper.isEmpty()) {
-            testVMOpts.add("-D" + MainWrapper.MAIN_WRAPPER + "=" + mainWrapper);
+        if (!(customMainWrapper == null) && !customMainWrapper.isEmpty()) {
+            testVMOpts.add("-D" + MainWrapper.MAIN_WRAPPER + "=" + customMainWrapper);
         }
 
         makeDir(workDirArg, false);
@@ -2319,7 +2316,7 @@ public class Tool {
     private boolean httpdFlag;
     private String timeLimitArg;
     private String observerClassName;
-    private String mainWrapper;
+    private String customMainWrapper;
     private List<Path> observerPathArg;
     private String timeoutHandlerClassName;
     private List<Path> timeoutHandlerPathArg;

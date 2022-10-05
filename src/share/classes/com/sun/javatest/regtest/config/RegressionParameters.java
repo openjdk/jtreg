@@ -1252,15 +1252,15 @@ public class RegressionParameters
     private long timeoutHandlerTimeout;
     //---------------------------------------------------------------------
 
-    public void setMainWrapper(String mainWrapper) {
-        this.mainWrapper = mainWrapper;
+    public void setCustomMainWrapper(String customMainWrapper) {
+        this.customMainWrapper = customMainWrapper;
     }
 
-    String getMainWrapper() {
-        return mainWrapper;
+    String getCustomMainWrapper() {
+        return customMainWrapper;
     }
 
-    private String mainWrapper;
+    private String customMainWrapper;
     //---------------------------------------------------------------------
 
     public void setMatchLists(Path[] files) {
