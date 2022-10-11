@@ -1614,6 +1614,7 @@ public class Tool {
 
             // the tests are the tests to be executed by the harness, and do not
             // include the "query" component
+            // 'null' means "all tests"
             rp.setTests(testManager.getTests(testSuite));
 
             // the tests that have an associated query component, included in
