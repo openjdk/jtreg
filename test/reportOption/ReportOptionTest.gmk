@@ -1,0 +1,322 @@
+#
+# Copyright (c) 2022, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+# These tests first do an initial run of jtreg to set up results in
+# a work directory, and then do a subsequent run with varying options
+# to verify the expected set of tests are reported.
+
+#-------------------------------------------------------------------------------
+#
+# -report:none
+#
+# No report directory should be written.
+# Just the test files and no extra files should be read.
+
+$(BUILDTESTDIR)/ReportOptionTest.none.ok: \
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	    $(JTREG_IMAGEDIR)/bin/jtreg
+	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -nr \
+		-jdk:$(JDKHOME) \
+		$(TESTDIR)/reportOption/also-run $(TESTDIR)/reportOption/to-be-run \
+			> $(@:%.ok=%/setup-jt.log) 2>&1 || \
+	    true "non-zero exit code from jtreg intentionally ignored"
+	JTREG_TRACEFINDER=1 \
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(JDKHOME) \
+		-report:none \
+		$(TESTDIR)/reportOption/to-be-run \
+			> $(@:%.ok=%/jt.log) 2>&1 || \
+	    true "non-zero exit code from jtreg intentionally ignored"
+	$(GREP) -s 'Test results: passed: 1; failed: 1; error: 1' $(@:%.ok=%/jt.log)  > /dev/null
+	if grep 'Report written' $(@:%.ok=%/jt.log) ; then \
+	    echo "error: report written unexpectedly" ; exit 1 ; \
+	fi
+	if [ "`$(GREP) RegressionTestFinder $(@:%.ok=%/jt.log) | $(WC) -l`" -ne "3" ]; then \
+	    echo "error: unexpected number of files read" ; exit 1 ; \
+	fi
+	if $(GREP) "do-not-run" $(@:%.ok=%/jt.log) ; then \
+	    echo "error: do-not-run files were read unexpectedly" ; exit 1 ; \
+	fi
+	echo "test passed at `date`" > $@
+
+TESTS.jtreg += \
+	$(BUILDTESTDIR)/ReportOptionTest.none.ok
+
+
+#-------------------------------------------------------------------------------
+#
+# -report:executed
+#
+# The report directory should be written.
+# The report should just list the executed tests.
+# Just the test files and no extra files should be read.
+
+$(BUILDTESTDIR)/ReportOptionTest.executed.ok: \
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	    $(JTREG_IMAGEDIR)/bin/jtreg
+	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -nr \
+		-jdk:$(JDKHOME) \
+		$(TESTDIR)/reportOption/also-run $(TESTDIR)/reportOption/to-be-run \
+			> $(@:%.ok=%/setup-jt.log) 2>&1 || \
+	    true "non-zero exit code from jtreg intentionally ignored"
+	JTREG_TRACEFINDER=1 \
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(JDKHOME) \
+		-report:executed \
+		$(TESTDIR)/reportOption/to-be-run \
+			> $(@:%.ok=%/jt.log) 2>&1 || \
+	    true "non-zero exit code from jtreg intentionally ignored"
+	$(GREP) -s 'Test results: passed: 1; failed: 1; error: 1' $(@:%.ok=%/jt.log)  > /dev/null
+	if [ ! -d $(@:%.ok=%)/report ]; then \
+	    echo "error: report not found" ; exit 1 ; \
+	fi
+	if [ "`$(CAT) $(@:%.ok=%)/report/text/summary.txt | $(WC) -l`" -ne "3" ]; then \
+	    echo "error: unexpected number of tests in summary report" ; exit 1 ; \
+	fi
+	if $(GREP) "do-not-run" $(@:%.ok=%)/report/text/summary.txt ; then \
+	    echo "error: do-not-run tests in summary report" ; exit 1 ; \
+	fi
+	if [ "`$(GREP) RegressionTestFinder $(@:%.ok=%/jt.log) | $(WC) -l`" -ne "3" ]; then \
+	    echo "error: unexpected number of files read" ; exit 1 ; \
+	fi
+	if $(GREP) "do-not-run" $(@:%.ok=%/jt.log) ; then \
+	    echo "error: do-not-run files were read unexpectedly" ; exit 1 ; \
+	fi
+	echo "test passed at `date`" > $@
+
+TESTS.jtreg += \
+	$(BUILDTESTDIR)/ReportOptionTest.executed.ok
+
+
+#-------------------------------------------------------------------------------
+#
+# -report:all-executed
+#
+# The report directory should be written.
+# The report should just list all the executed tests.
+# All the test files should be read.
+
+$(BUILDTESTDIR)/ReportOptionTest.all-executed.ok: \
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	    $(JTREG_IMAGEDIR)/bin/jtreg
+	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -nr \
+		-jdk:$(JDKHOME) \
+		$(TESTDIR)/reportOption/also-run $(TESTDIR)/reportOption/to-be-run \
+			> $(@:%.ok=%/setup-jt.log) 2>&1 || \
+	    true "non-zero exit code from jtreg intentionally ignored"
+	JTREG_TRACEFINDER=1 \
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(JDKHOME) \
+		-report:all-executed \
+		$(TESTDIR)/reportOption/to-be-run \
+			> $(@:%.ok=%/jt.log) 2>&1 || \
+	    true "non-zero exit code from jtreg intentionally ignored"
+	$(GREP) -s 'Test results: passed: 1; failed: 1; error: 1' $(@:%.ok=%/jt.log)  > /dev/null
+	if [ ! -d $(@:%.ok=%)/report ]; then \
+	    echo "error: report not found" ; exit 1 ; \
+	fi
+	if [ "`$(CAT) $(@:%.ok=%)/report/text/summary.txt | $(WC) -l`" -ne "6" ]; then \
+	    echo "error: unexpected number of tests in summary report" ; exit 1 ; \
+	fi
+	if $(GREP) "do-not-run" $(@:%.ok=%)/report/text/summary.txt ; then \
+	    echo "error: do-not-run tests in summary report" ; exit 1 ; \
+	fi
+	if [ "`$(GREP) RegressionTestFinder $(@:%.ok=%/jt.log) | $(WC) -l`" -ne "9" ]; then \
+	    echo "error: unexpected number of files read" ; exit 1 ; \
+	fi
+	if ! $(GREP) "do-not-run" $(@:%.ok=%/jt.log) ; then \
+	    echo "error: do-not-run files were not read" ; exit 1 ; \
+	fi
+	echo "test passed at `date`" > $@
+
+TESTS.jtreg += \
+	$(BUILDTESTDIR)/ReportOptionTest.all-executed.ok
+
+
+#-------------------------------------------------------------------------------
+#
+# -report:all
+#
+# The report directory should be written.
+# The report should list all the tests.
+# All the test files should be read.
+
+$(BUILDTESTDIR)/ReportOptionTest.all.ok: \
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	    $(JTREG_IMAGEDIR)/bin/jtreg
+	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -nr \
+		-jdk:$(JDKHOME) \
+		$(TESTDIR)/reportOption/also-run $(TESTDIR)/reportOption/to-be-run \
+			> $(@:%.ok=%/setup-jt.log) 2>&1 || \
+	    true "non-zero exit code from jtreg intentionally ignored"
+	JTREG_TRACEFINDER=1 \
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(JDKHOME) \
+		-report:all \
+		$(TESTDIR)/reportOption/to-be-run \
+			> $(@:%.ok=%/jt.log) 2>&1 || \
+	    true "non-zero exit code from jtreg intentionally ignored"
+	$(GREP) -s 'Test results: passed: 1; failed: 1; error: 1' $(@:%.ok=%/jt.log)  > /dev/null
+	if [ ! -d $(@:%.ok=%)/report ]; then \
+	    echo "error: report not found" ; exit 1 ; \
+	fi
+	if [ "`$(CAT) $(@:%.ok=%)/report/text/summary.txt | $(WC) -l`" -ne "9" ]; then \
+	    echo "error: unexpected number of tests in summary report" ; exit 1 ; \
+	fi
+	if ! $(GREP) "do-not-run" $(@:%.ok=%)/report/text/summary.txt ; then \
+	    echo "error: do-not-run tests not found in summary report" ; exit 1 ; \
+	fi
+	if [ "`$(GREP) RegressionTestFinder $(@:%.ok=%/jt.log) | $(WC) -l`" -ne "9" ]; then \
+	    echo "error: unexpected number of files read" ; exit 1 ; \
+	fi
+	if ! $(GREP) "do-not-run" $(@:%.ok=%/jt.log) ; then \
+	    echo "error: do-not-run files were not read" ; exit 1 ; \
+	fi
+	echo "test passed at `date`" > $@
+
+TESTS.jtreg += \
+	$(BUILDTESTDIR)/ReportOptionTest.all.ok
+
+
+#-------------------------------------------------------------------------------
+#
+# -report:files
+#
+# The report directory should be written.
+# The report should just list all the tests given on the command line.
+# Just the test files and no extra files should be read.
+
+$(BUILDTESTDIR)/ReportOptionTest.files.ok: \
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	    $(JTREG_IMAGEDIR)/bin/jtreg
+	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -nr \
+		-jdk:$(JDKHOME) \
+		$(TESTDIR)/reportOption/also-run $(TESTDIR)/reportOption/to-be-run \
+			> $(@:%.ok=%/setup-jt.log) 2>&1 || \
+	    true "non-zero exit code from jtreg intentionally ignored"
+	JTREG_TRACEFINDER=1 \
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(JDKHOME) \
+		-report:files \
+		$(TESTDIR)/reportOption/to-be-run \
+			> $(@:%.ok=%/jt.log) 2>&1 || \
+	    true "non-zero exit code from jtreg intentionally ignored"
+	$(GREP) -s 'Test results: passed: 1; failed: 1; error: 1' $(@:%.ok=%/jt.log)  > /dev/null
+	if [ ! -d $(@:%.ok=%)/report ]; then \
+	    echo "error: report not found" ; exit 1 ; \
+	fi
+	if [ "`$(CAT) $(@:%.ok=%)/report/text/summary.txt | $(WC) -l`" -ne "3" ]; then \
+	    echo "error: unexpected number of tests in summary report" ; exit 1 ; \
+	fi
+	if $(GREP) "do-not-run" $(@:%.ok=%)/report/text/summary.txt ; then \
+	    echo "error: do-not-run tests found in summary report" ; exit 1 ; \
+	fi
+	if [ "`$(GREP) RegressionTestFinder $(@:%.ok=%/jt.log) | $(WC) -l`" -ne "3" ]; then \
+	    echo "error: unexpected number of files read" ; exit 1 ; \
+	fi
+	if $(GREP) "do-not-run" $(@:%.ok=%/jt.log) ; then \
+	    echo "error: do-not-run files were read unexpectedly" ; exit 1 ; \
+	fi
+	echo "test passed at `date`" > $@
+
+TESTS.jtreg += \
+	$(BUILDTESTDIR)/ReportOptionTest.files.ok
+
+
+#-------------------------------------------------------------------------------
+#
+# -report:files -status:fail
+#
+# The report directory should be written.
+# The report should just list all the tests given on the command line.
+# Just the test files and no extra files should be read.
+
+$(BUILDTESTDIR)/ReportOptionTest.files-status.ok: \
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	    $(JTREG_IMAGEDIR)/bin/jtreg
+	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -nr \
+		-jdk:$(JDKHOME) \
+		$(TESTDIR)/reportOption/also-run $(TESTDIR)/reportOption/to-be-run \
+			> $(@:%.ok=%/setup-jt.log) 2>&1 || \
+	    true "non-zero exit code from jtreg intentionally ignored"
+	JTREG_TRACEFINDER=1 \
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(JDKHOME) \
+		-report:files -status:fail \
+		$(TESTDIR)/reportOption/to-be-run \
+			> $(@:%.ok=%/jt.log) 2>&1 || \
+	    true "non-zero exit code from jtreg intentionally ignored"
+	$(GREP) -s 'Test results: failed: 1' $(@:%.ok=%/jt.log)  > /dev/null
+	if [ ! -d $(@:%.ok=%)/report ]; then \
+	    echo "error: report not found" ; exit 1 ; \
+	fi
+	if [ "`$(CAT) $(@:%.ok=%)/report/text/summary.txt | $(WC) -l`" -ne "3" ]; then \
+	    echo "error: unexpected number of tests in summary report" ; exit 1 ; \
+	fi
+	if $(GREP) "do-not-run" $(@:%.ok=%)/report/text/summary.txt ; then \
+	    echo "error: do-not-run tests found in summary report" ; exit 1 ; \
+	fi
+	if [ "`$(GREP) RegressionTestFinder $(@:%.ok=%/jt.log) | $(WC) -l`" -ne "3" ]; then \
+	    echo "error: unexpected number of files read" ; exit 1 ; \
+	fi
+	if $(GREP) "do-not-run" $(@:%.ok=%/jt.log) ; then \
+	    echo "error: do-not-run files were read unexpectedly" ; exit 1 ; \
+	fi
+	echo "test passed at `date`" > $@
+
+TESTS.jtreg += \
+	$(BUILDTESTDIR)/ReportOptionTest.files-status.ok
+
+
+
+#----------------------------------------------------------------------
+#
+# Convenience target
+
+report-option-tests: \
+    $(BUILDTESTDIR)/ReportOptionTest.none.ok \
+    $(BUILDTESTDIR)/ReportOptionTest.executed.ok \
+    $(BUILDTESTDIR)/ReportOptionTest.all-executed.ok \
+    $(BUILDTESTDIR)/ReportOptionTest.all.ok \
+    $(BUILDTESTDIR)/ReportOptionTest.files.ok \
+    $(BUILDTESTDIR)/ReportOptionTest.files-status.ok

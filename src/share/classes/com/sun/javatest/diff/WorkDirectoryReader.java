@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2007, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -34,7 +34,6 @@ import java.io.InputStream;
 import java.util.Iterator;
 import java.util.Properties;
 
-import com.sun.javatest.TestFinder;
 import com.sun.javatest.TestResult;
 import com.sun.javatest.TestResultTable;
 import com.sun.javatest.TestSuite;
@@ -59,11 +58,7 @@ public class WorkDirectoryReader implements DiffReader {
         // files, we can't use the standard WorkDirectory.open call.
         File tsp = getTestSuitePath(file);
         if (tsp != null && new File(tsp, "TEST.ROOT").exists()) {
-            TestSuite ts = new RegressionTestSuite(tsp, new TestFinder.ErrorHandler() {
-                public void error(String msg) {
-                    WorkDirectoryReader.this.error(msg);
-                }
-            });
+            TestSuite ts = new RegressionTestSuite(tsp, WorkDirectoryReader.this::error);
             wd = WorkDirectory.open(file, ts);
         } else
             wd = WorkDirectory.open(file);
@@ -81,7 +76,6 @@ public class WorkDirectoryReader implements DiffReader {
         return wd.getRoot();
     }
 
-    @SuppressWarnings("unchecked")
     public Iterator<TestResult> iterator() {
         TestResultTable trt = wd.getTestResultTable();
         trt.waitUntilReady();
@@ -115,8 +109,8 @@ public class WorkDirectoryReader implements DiffReader {
         System.err.println("Error: " + msg);
     }
 
-    private File file;;
-    private WorkDirectory wd;
+    private final File file;
+    private final WorkDirectory wd;
 
-    private static I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(WorkDirectoryReader.class);
+    private static final I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(WorkDirectoryReader.class);
 }

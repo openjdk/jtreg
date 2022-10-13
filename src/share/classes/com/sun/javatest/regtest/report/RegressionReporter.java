@@ -34,10 +34,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.DateFormat;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -122,9 +122,7 @@ public class RegressionReporter {
             fixupReports(rd, wd);
             if (!quiet)
                 logReportWritten(rd);
-        } catch (IOException e) {
-            log.println("Error while writing report: " + e);
-        } catch (SecurityException e) {
+        } catch (IOException | SecurityException e) {
             log.println("Error while writing report: " + e);
         }
     }
@@ -270,7 +268,7 @@ public class RegressionReporter {
      * Returns the URL encoding of a string.
      */
     private String encode(String s) throws IOException {
-        return URLEncoder.encode(s, "UTF-8");
+        return URLEncoder.encode(s, StandardCharsets.UTF_8);
     }
 
     /* Rewrite html files in the given directory, replacing hrefs to the old path
@@ -346,7 +344,7 @@ public class RegressionReporter {
         for (int i = 0; i < path.length(); i++) {
             char ch = path.charAt(i);
             String encoded = (ch == File.separatorChar) ? "/" :
-                    URLEncoder.encode(String.valueOf(ch), "UTF-8");
+                    URLEncoder.encode(String.valueOf(ch), StandardCharsets.UTF_8);
             sb.append(encoded);
         }
         return sb.toString();
@@ -505,5 +503,5 @@ public class RegressionReporter {
     DateFormat df = DateFormat.getDateTimeInstance();
     String backups = System.getProperty("javatest.report.backups"); // default: none
     List<String> reportKinds =
-            Arrays.asList(System.getProperty("javatest.report.kinds", "html text").split("[ ,]+"));
+            List.of(System.getProperty("javatest.report.kinds", "html text").split("[ ,]+"));
 }

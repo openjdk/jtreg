@@ -735,6 +735,11 @@ public class RegressionScript extends Script {
         }
     }
 
+    String getTestQuery() {
+        String testName = testResult.getTestName();
+        return params.getTestQuery(testName);
+    }
+
     //----------------------- computing paths ---------------------------------
 
     Path absTestWorkFile(String name) {
@@ -1167,7 +1172,12 @@ public class RegressionScript extends Script {
         // initialize the properties with standard properties common to all tests
         Map<String, String> p = new LinkedHashMap<>(params.getBasicTestProperties());
         // add test-specific properties
-        p.put("test.name", testResult.getTestName());
+        String testName = testResult.getTestName();
+        p.put("test.name", testName);
+        String testQuery = params.getTestQuery(testName);
+        if (testQuery != null) {
+            p.put("test.query", testQuery);
+        }
         p.put("test.file", locations.absTestFile().toString());
         p.put("test.src", locations.absTestSrcDir().toString());
         p.put("test.src.path", toString(locations.absTestSrcPath()));

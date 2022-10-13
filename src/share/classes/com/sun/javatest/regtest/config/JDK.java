@@ -35,7 +35,6 @@ import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -352,10 +351,8 @@ public class JDK {
                 logger.accept("Error getting " + VERSION_PROPERTY + " for " + jdk + ": exit code " + rc);
                 lines.forEach(logger::accept);
             }
-        } catch (InterruptedException e) {
-            // ignore, leave version as default
-            logger.accept("Error getting " + VERSION_PROPERTY + " for " + jdk + ": " + e);
-        } catch (IOException e) {
+        } catch (InterruptedException
+                 | IOException e) {
             // ignore, leave version as default
             logger.accept("Error getting " + VERSION_PROPERTY + " for " + jdk + ": " + e);
         }
@@ -402,10 +399,8 @@ public class JDK {
                     logger.accept("Error running 'java " + VERSION_OPTION + "' for " + jdk + ": exit code " + rc);
                     lines.forEach(logger::accept);
                 }
-            } catch (InterruptedException e) {
-                // ignore, leave version as default
-                logger.accept("Error running 'java " + VERSION_OPTION + "' for " + jdk + ": " + e);
-            } catch (IOException e) {
+            } catch (InterruptedException
+                     | IOException e) {
                 // ignore, leave version as default
                 logger.accept("Error running 'java " + VERSION_OPTION + "' for " + jdk + ": " + e);
             }
@@ -440,7 +435,7 @@ public class JDK {
             // get default modules as well
             info.jdkProperties = execGetProperties(params,
                     Collections.emptyList(),
-                    Arrays.asList("--system-properties", "--modules=boot-layer"),
+                    List.of("--system-properties", "--modules=boot-layer"),
                     true,
                     logger);
         }
@@ -489,7 +484,7 @@ public class JDK {
                     info.defaultModules = Collections.emptySet();
                 } else {
                     info.defaultModules = Collections.unmodifiableSet(
-                                new LinkedHashSet<>(Arrays.asList(m.split(" +"))));
+                                new LinkedHashSet<>(List.of(m.split(" +"))));
                 }
             } catch (Fault f) {
                 throw new IllegalStateException(f);
@@ -539,13 +534,13 @@ public class JDK {
                     }
                     Properties props = execGetProperties(params,
                             Collections.emptyList(),    // vm options
-                            Arrays.asList(modulesOpt), false, logger);  // requested info from probe
+                            List.of(modulesOpt), false, logger);  // requested info from probe
                     String m = props.getProperty(GetJDKProperties.JTREG_MODULES);
                     if (m == null) {
                         info.systemModules = Collections.emptySet();
                     } else {
                         info.systemModules = Collections.unmodifiableSet(
-                                new LinkedHashSet<>(Arrays.asList(m.split(" +"))));
+                                new LinkedHashSet<>(List.of(m.split(" +"))));
                     }
                 } catch (Fault f) {
                     throw new IllegalStateException(f);
@@ -669,10 +664,8 @@ public class JDK {
 
             return loadProperties(lines, logger);
 
-        } catch (InterruptedException e) {
-            logger.accept("Error accessing extra property definitions: " + e);
-            throw new Fault("Error accessing extra property definitions: " + e, e);
-        } catch (IOException e) {
+        } catch (InterruptedException
+                 | IOException e) {
             logger.accept("Error accessing extra property definitions: " + e);
             throw new Fault("Error accessing extra property definitions: " + e, e);
         }

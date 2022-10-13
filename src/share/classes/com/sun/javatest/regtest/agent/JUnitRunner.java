@@ -113,9 +113,12 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
         // https://junit.org/junit5/docs/current/user-guide/#launcher-api-execution
         Thread.currentThread().setContextClassLoader(mainClass.getClassLoader());
         try {
-
+            String testQuery = System.getProperty("test.query");
+            // if test.query is set, treat it as a method name to be executed
             LauncherDiscoveryRequest request = LauncherDiscoveryRequestBuilder.request()
-                .selectors(DiscoverySelectors.selectClass(mainClass))
+                .selectors(testQuery == null
+                        ? DiscoverySelectors.selectClass(mainClass)
+                        : DiscoverySelectors.selectMethod(mainClass, testQuery))
                 .build();
 
             SummaryGeneratingListener summaryGeneratingListener = new SummaryGeneratingListener();

@@ -48,6 +48,7 @@ import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.sun.interview.Interview;
 import com.sun.interview.Question;
@@ -105,7 +106,7 @@ public class RegressionParameters
     //---------------------------------------------------------------------
 
     public void setTests(Collection<String> tests) {
-        setTests(tests == null ? null : tests.toArray(new String[tests.size()]));
+        setTests(tests == null ? null : tests.toArray(new String[0]));
     }
 
     public void setTests(String[] tests) {
@@ -219,7 +220,7 @@ public class RegressionParameters
             if (mlf != null)
                 filters.add(mlf);
 
-            final TestFilter f = new CompositeFilter(filters.toArray(new TestFilter[filters.size()]));
+            final TestFilter f = new CompositeFilter(filters.toArray(new TestFilter[0]));
             return new CachingTestFilter(f.getName(), f.getDescription(), f.getReason()) {
                 @Override
                 protected String getCacheKey(TestDescription td) {
@@ -240,7 +241,7 @@ public class RegressionParameters
 
     TestFilter getModulesFilter() {
         JDK jdk = getTestJDK();
-        if (jdk == null || jdk.getVersion(this, logger).compareTo(JDK_Version.V9) == -1)
+        if (jdk == null || jdk.getVersion(this, logger).compareTo(JDK_Version.V9) < 0)
             return null;
 
         final Set<String> availModules = jdk.getSystemModules(this, logger);
@@ -380,9 +381,9 @@ public class RegressionParameters
             //    OSNAME-ARCH   Specific on to one OSNAME and ARCH, e.g. solaris-x64
             //    OSNAME-REV    Specific on to one OSNAME and REV, e.g. solaris-5.8
             Set<String> platforms = new HashSet<>();
-            for (String p: Arrays.asList(os.name, os.name.replaceAll("\\s", ""), os.family, "generic")) {
-                for (String q: Arrays.asList(null, os.arch, os.simple_arch, os.version, os.simple_version, "all")) {
-                    String ep = (q == null) ? p : p + "-" + q;
+            for (String p: List.of(os.name, os.name.replaceAll("\\s", ""), os.family, "generic")) {
+                for (String q: List.of("", os.arch, os.simple_arch, os.version, os.simple_version, "all")) {
+                    String ep = q.isEmpty() ? p : p + "-" + q;
                     platforms.add(ep.toLowerCase());
                 }
             }
@@ -477,8 +478,7 @@ public class RegressionParameters
                 try {
                     el = new ExcludeList(matchList.stream()
                             .map(Path::toFile)
-                            .collect(Collectors.toList())
-                            .toArray(new File[0]));
+                            .toArray(File[]::new));
                 } catch (ExcludeList.Fault | IOException e) {
                     throw new Error(e);
                 }
@@ -570,7 +570,7 @@ public class RegressionParameters
         }
     };
 
-    private static KeywordsTestFilter UNSET_KEYWORDS_FILTER = new KeywordsTestFilter(UNSET);
+    private static final KeywordsTestFilter UNSET_KEYWORDS_FILTER = new KeywordsTestFilter(UNSET);
 
     @Override
     public TestFilter getPriorStatusFilter() {
@@ -629,14 +629,11 @@ public class RegressionParameters
     private static final String TIMEOUT_HANDLER = ".timeoutHandler";
     private static final String TIMEOUT_HANDLER_PATH = ".timeoutHandlerPath";
     private static final String TIMEOUT_HANDLER_TIMEOUT = ".timeoutHandlerTimeout";
+    private static final String TEST_QUERIES = ".testQueries";
 
-    @Override @SuppressWarnings({"rawtypes", "unchecked"})
-    public void load(Map data, boolean checkChecksum) throws Interview.Fault {
+    @Override
+    public void load(Map<String, String> data, boolean checkChecksum) throws Interview.Fault {
         super.load(data, checkChecksum);
-        load0((Map<String,String>) data, checkChecksum);
-    }
-
-    private void load0(Map<String,String> data, boolean checkChecksum) throws Interview.Fault {
         String prefix = getTag();
 
         try {
@@ -668,19 +665,19 @@ public class RegressionParameters
 
             v = data.get(prefix + TEST_VM_OPTIONS);
             if (v != null && v.length() > 0)
-                setTestVMOptions(Arrays.asList(StringUtils.splitSeparator("\n", v)));
+                setTestVMOptions(List.of(StringUtils.splitSeparator("\n", v)));
 
             v = data.get(prefix + TEST_COMPILER_OPTIONS);
             if (v != null && v.length() > 0)
-                setTestCompilerOptions(Arrays.asList(StringUtils.splitSeparator("\n", v)));
+                setTestCompilerOptions(List.of(StringUtils.splitSeparator("\n", v)));
 
             v = data.get(prefix + TEST_JAVA_OPTIONS);
             if (v != null && v.length() > 0)
-                setTestJavaOptions(Arrays.asList(StringUtils.splitSeparator("\n", v)));
+                setTestJavaOptions(List.of(StringUtils.splitSeparator("\n", v)));
 
             v = data.get(prefix + RETAIN_ARGS);
             if (v != null && v.length() > 0)
-                setRetainArgs(Arrays.asList(StringUtils.splitSeparator("\n", v)));
+                setRetainArgs(List.of(StringUtils.splitSeparator("\n", v)));
 
             v = data.get(prefix + JUNIT);
             if (v != null)
@@ -722,6 +719,11 @@ public class RegressionParameters
             if (v != null)
                 setTimeoutHandlerTimeout(v);
 
+            v = data.get(prefix + TEST_QUERIES);
+            if (v != null) {
+                setTestQueries(List.of(StringUtils.splitSeparator("\n", v)));
+            }
+
         } catch (InvalidPathException e) {
             // This is unlikely to happen, but pretty serious if it does.
             // Since we only put valid paths into the parameters, there should be
@@ -730,13 +732,9 @@ public class RegressionParameters
         }
     }
 
-    @Override @SuppressWarnings({"unchecked", "rawtypes"})
-    public void save(Map data) {
-        save0((Map<String, String>) data);
+    public void save(Map<String, String> data) {
         super.save(data);
-    }
 
-    private void save0(Map<String, String> data) {
         String prefix = getTag();
 
         if (envVars != null)
@@ -800,6 +798,10 @@ public class RegressionParameters
 
         if (timeoutHandlerTimeout != -1) {  // -1: default; 0: no timeout; >0: timeout in seconds
             data.put(prefix + TIMEOUT_HANDLER_TIMEOUT, String.valueOf(timeoutHandlerTimeout));
+        }
+
+        if (testQueries != null) {
+            data.put(prefix + TEST_QUERIES, join(testQueries, "\n"));
         }
     }
 
@@ -881,8 +883,7 @@ public class RegressionParameters
     //---------------------------------------------------------------------
 
     public void setIgnoreKind(IgnoreKind ignoreKind) {
-        ignoreKind.getClass(); // null-check
-        this.ignoreKind = ignoreKind;
+        this.ignoreKind = Objects.requireNonNull(ignoreKind);
     }
 
     public IgnoreKind getIgnoreKind() {
@@ -906,8 +907,7 @@ public class RegressionParameters
     //---------------------------------------------------------------------
 
     public void setCompileJDK(JDK compileJDK) {
-        compileJDK.getClass(); // null check
-        this.compileJDK = compileJDK;
+        this.compileJDK = Objects.requireNonNull(compileJDK);
     }
 
     public JDK getCompileJDK() {
@@ -919,8 +919,7 @@ public class RegressionParameters
     //---------------------------------------------------------------------
 
     public void setTestJDK(JDK testJDK) {
-        testJDK.getClass(); // null check
-        this.testJDK = testJDK;
+        this.testJDK = Objects.requireNonNull(testJDK);
     }
 
     public JDK getTestJDK() {
@@ -932,8 +931,7 @@ public class RegressionParameters
     //---------------------------------------------------------------------
 
     public void setJUnitPath(SearchPath junitPath) {
-        junitPath.getClass(); // null check
-        this.junitPath = junitPath;
+        this.junitPath = Objects.requireNonNull(junitPath);
     }
 
     public SearchPath getJUnitPath() {
@@ -949,8 +947,7 @@ public class RegressionParameters
     //---------------------------------------------------------------------
 
     public void setTestNGPath(SearchPath testngPath) {
-        testngPath.getClass(); // null check
-        this.testngPath = testngPath;
+        this.testngPath = Objects.requireNonNull(testngPath);
     }
 
     public SearchPath getTestNGPath() {
@@ -966,8 +963,7 @@ public class RegressionParameters
     //---------------------------------------------------------------------
 
     public void setAsmToolsPath(SearchPath asmToolsPath) {
-        asmToolsPath.getClass(); // null check
-        this.asmToolsPath = asmToolsPath;
+        this.asmToolsPath = Objects.requireNonNull(asmToolsPath);
     }
 
     public SearchPath getAsmToolsPath() {
@@ -1203,8 +1199,7 @@ public class RegressionParameters
     //---------------------------------------------------------------------
 
     public void setTimeoutHandler(String timeoutHandlerClassName) {
-        timeoutHandlerClassName.getClass(); // null check
-        this.timeoutHandlerClassName = timeoutHandlerClassName;
+        this.timeoutHandlerClassName = Objects.requireNonNull(timeoutHandlerClassName);
     }
 
     String getTimeoutHandler() {
@@ -1216,7 +1211,7 @@ public class RegressionParameters
     //---------------------------------------------------------------------
 
     void setTimeoutHandlerPath(String timeoutHandlerPath) {
-        timeoutHandlerPath.getClass(); // null check
+        Objects.requireNonNull(timeoutHandlerPath);
         this.timeoutHandlerPath = new ArrayList<>();
         for (String f: timeoutHandlerPath.split(File.pathSeparator)) {
             if (f.length() > 0) {
@@ -1264,7 +1259,7 @@ public class RegressionParameters
     //---------------------------------------------------------------------
 
     public void setMatchLists(Path[] files) {
-        this.matchLists = Arrays.asList(files);
+        this.matchLists = List.of(files);
     }
 
     List<Path> getMatchLists() {
@@ -1287,20 +1282,55 @@ public class RegressionParameters
 
     //---------------------------------------------------------------------
 
+    public void setTestQueries(List<String> testQueries) {
+        this.testQueries = testQueries;
+    }
+
+    public List<String> getTestQueries() {
+        return testQueries;
+    }
+
+    /**
+     * Returns the query component for a given test, if one was specified,
+     * or null if there is no query component for this test.
+     *
+     * @param test the name of the test
+     * @return the query component associated with this test, or null
+     */
+    public String getTestQuery(String test) {
+        // There are two common cases:
+        // 1. any number of tests are being run, none of which have queries, or
+        // 2. a single test is being run, which has query.
+        // As such, it is probably not worth parsing testQueries into a map.
+        if (testQueries != null) {
+            for (String tq : testQueries) {
+                int sep = tq.indexOf("?");
+                if (test.equals(tq.substring(0, sep))) {
+                    return tq.substring(sep + 1);
+                }
+            }
+        }
+        return null;
+    }
+
+    private List<String> testQueries;
+
+    //---------------------------------------------------------------------
+
     public Pattern getRefIgnoreLinesPattern() {
         if (refIgnoreLinesPattern == UNSET_PATTERN) {
             String refIgnoreLines = System.getenv("JTREG_REF_IGNORE_LINES");
             String re;
             if (refIgnoreLines != null) {
                 // User-specified list of regular expressions for lines to ignore in golden file comparison.
-                re = Arrays.asList(refIgnoreLines.trim().split("\\s+")).stream()
+                re = Arrays.stream(refIgnoreLines.trim().split("\\s+"))
                         .map(s -> "(" + s + ")")
                         .collect(Collectors.joining("|"));
             } else {
                 // Default regular expressions, based on VM warnings when specific powerful VM options are set.
                 // Override these by setting JTREG_REF_IGNORE_LINES to either empty or alternative regex list
                 Map<String, String> envVars = getEnvVars();
-                re = Arrays.asList("JAVA_TOOL_OPTIONS", "_JAVA_OPTIONS").stream()
+                re = Stream.of("JAVA_TOOL_OPTIONS", "_JAVA_OPTIONS")
                         .filter(envVars::containsKey)
                         .map(e -> "(Picked up " + e + ":.*)")
                         .collect(Collectors.joining("|"));
@@ -1316,7 +1346,7 @@ public class RegressionParameters
 
     }
 
-    private static Pattern UNSET_PATTERN = Pattern.compile("");
+    private static final Pattern UNSET_PATTERN = Pattern.compile("");
     private Pattern refIgnoreLinesPattern = UNSET_PATTERN;
 
     //---------------------------------------------------------------------

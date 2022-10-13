@@ -30,4 +30,3 @@ public class Lib {
         map.put("inLib", "true");
     }
 }
-

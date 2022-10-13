@@ -58,7 +58,7 @@ implement this specification, and is an older name for what is now known as
 
 ### What are the system requirements for using the JDK regression extensions?
 
-It is recommended that you run jtreg using JDK 1.8 or later.
+It is recommended that you run jtreg using JDK 11 or later.
 
 ### Where can I find a copy of jtreg?
 
@@ -434,11 +434,19 @@ the sections containing any of the specified terms. For example:
 
 The most basic way to specify which tests to run is to give one or more paths
 directly on the command line, for directories and files containing tests.
+
 If a file contains multiple tests, you can specify the name of a test within
 that file by appending `#`_ID_ to the file path, where _ID_ is either defined
 in the test itself after the `@test` tag, or the string `id`_N_  if no id is 
 explicitly defined, where N is the number of the test within the file, 
 and where `0` identifies the first test. 
+
+If you specify `?`_string_ after the name of a test, the _string_ will be
+passed down to the test, for the test to filter the parts of the test to be
+executed. For any tests executed by JUnit Platform, the string is interpreted
+as the name of a single method in the test to be executed.  If you give
+conflicting values for the string, including not setting any value, the last
+one specified will be used.
 
 If you wish to specify a long list of arguments, you can put the list in a file
 and specify that file using the `@`_file_ option.
@@ -450,12 +458,13 @@ To summarise, you can use the following to specify tests to be run:
 
 Table: Kinds of Supported Arguments
 
-| Argument                | Description                                         |
-|-------------------------|-----------------------------------------------------|
+| Argument                | Description                                        |
+|-------------------------|----------------------------------------------------|
 | _directory_             | All tests found in files in and under the directory |
-| _file[#id]_             | All tests in a file, or a specific test in a file   |
-| _[directory]_`:`_group_ | All tests in a group defined for a testsuite        |   
-| `@`_file_               | Expand arguments in a file                          |
+| _file[#id]_             | All tests in a file, or a specific test in a file  |
+| _file[#id]?string_      | Parts of a test in a file                          |
+| _[directory]_`:`_group_ | All tests in a group defined for a testsuite       |   
+| `@`_file_               | Expand arguments in a file                         |
 
 
 You can further refine the set of tests to be run in various ways.
@@ -481,6 +490,14 @@ You can refine the set of tests to be run in various ways:
 Note that in addition to the command-line options just listed, a test
 may contain tags such as `@requires` and `@modules` that determine whether
 a test should be run on any particular system.
+
+### How do I run a single test method in a JUnit test?
+
+Specify the test and method name on the command-line with the `?` syntax:
+
+    path-to-test?method-name
+
+See [How do I specify which tests to run?](#how-do-i-specify-which-tests-to-run).
 
 ### How do I specify the JDK to use?
 
@@ -542,7 +559,8 @@ The plain text files in the report directory include the following:
 * `summary.txt`: summary of test results: one test per line, suitable for use with `grep`
 * `timeStats.txt`: some statistics regarding test execution times
 
-Reports can be disabled with the `-noreport` option.
+Reports can be disabled with the `-noreport` option; the set of tests included
+in the report can be selected with the `-report:`_value_ option.
 
 It is generally recommended that the work and report directories should _not_ be
 placed anywhere in the test suite itself. Since jtreg may scan the entire test suite
@@ -1073,6 +1091,16 @@ These values are then followed by the mean and standard deviation
 of the test execution times.  If there are any tests taking an
 unexpectedly long time to execute, they can be determined by examining
 the `elapsed` entries in the `.jtr` files.
+
+### Why is there a delay after the tests have been run, before jtreg exits?
+
+By default, jtreg reports on all the tests that have been executed
+and which have results in the work directory. It may take a few seconds
+to find the set of tests for the report. You can use the `-report:`_value_
+option to specify which tests should be in the report. If you are just
+running a single test or a few tests, you may want to use `-report:files`,
+to just report on the tests specified in the files and/or groups given on the
+command line.
 
 ### How do I find the tests that took longest to run?
 

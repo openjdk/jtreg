@@ -29,7 +29,6 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -53,7 +52,7 @@ public class JDKOpts {
      * The JDK options supported by this class.
      * All options in this set take a value.
      * Repeated use of any of these options will be merged.
-     * Options names will be converted their canonical form.
+     * Option names will be converted their canonical form.
      */
     public enum Option {
         ADD_EXPORTS("--add-exports"),
@@ -258,7 +257,7 @@ public class JDKOpts {
         }
 
         /**
-         * Update the list of options with a single-word multi-valued option.
+         * Update the list of options with a single-word multivalued option.
          * This is for options of the form
          * {@code -option:key <keysep> value <valsep> value <valsep> value }
          * implying we assume that {@code keysep} is the first character
@@ -279,8 +278,8 @@ public class JDKOpts {
             } else {
                 Set<String> allValues = new LinkedHashSet<>();
                 String[] oldValues = opts.get(pos).substring(i + 1).split(String.valueOf(valSep));
-                allValues.addAll(Arrays.asList(oldValues));
-                allValues.addAll(Arrays.asList(optValues.split(String.valueOf(valSep))));
+                allValues.addAll(List.of(oldValues));
+                allValues.addAll(List.of(optValues.split(String.valueOf(valSep))));
                 StringBuilder sb = new StringBuilder(key); // includes keySep
                 for (String v: allValues) {
                     if (sb.length() > key.length()) {
@@ -346,11 +345,11 @@ public class JDKOpts {
             }
             return sb.toString();
         }
-    };
+    }
 
     public static abstract class OptionHandler {
         public void handleOptions(String... opts) {
-            handleOptions(Arrays.asList(opts));
+            handleOptions(List.of(opts));
         }
 
         public void handleOptions(List<String> opts) {
@@ -362,7 +361,7 @@ public class JDKOpts {
         }
 
         void handleOption(String opt) {
-            handleOption(opt, Collections.<String>emptyIterator());
+            handleOption(opt, Collections.emptyIterator());
         }
 
         void handleOption(String opt, String arg) {

@@ -25,11 +25,9 @@
 
 package com.sun.javatest.regtest.exec;
 
-import java.io.File;
 import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -216,7 +214,7 @@ public class ModuleConfig {
             String label = "add exports:";
             for (Map.Entry<String, List<String>> e: addExports.entrySet()) {
                 table.addRow(label, e.getKey(), join(e.getValue(), " "));
-                label = null;
+                label = "";
             }
         }
 
@@ -224,7 +222,7 @@ public class ModuleConfig {
             String label = "add opens:";
             for (Map.Entry<String, List<String>> e: addOpens.entrySet()) {
                 table.addRow(label, e.getKey(), join(e.getValue(), " "));
-                label = null;
+                label = "";
             }
         }
 
@@ -232,7 +230,7 @@ public class ModuleConfig {
             String label = "add reads:";
             for (Map.Entry<String, List<String>> e: addReads.entrySet()) {
                 table.addRow(label, e.getKey(), join(e.getValue(), " "));
-                label = null;
+                label = "";
             }
         }
 
@@ -240,7 +238,7 @@ public class ModuleConfig {
             String label = "module path:";
             for (Path file: modulePath.asList()) {
                 table.addRow(label, file.toString());
-                label = null;
+                label = "";
             }
         }
 
@@ -248,7 +246,7 @@ public class ModuleConfig {
             String label = "source path:";
             for (Path file: sourcePath.asList()) {
                 table.addRow(label, file.toString());
-                label = null;
+                label = "";
             }
         }
 
@@ -256,7 +254,7 @@ public class ModuleConfig {
             String label = "class path:";
             for (Path file: classPath.asList()) {
                 table.addRow(label, file.toString());
-                label = null;
+                label = "";
             }
         }
 
@@ -264,7 +262,7 @@ public class ModuleConfig {
             String label = "boot class path (append):";
             for (Path file: bootClassPathAppend.asList()) {
                 table.addRow(label, file.toString());
-                label = null;
+                label = "";
             }
         }
 
@@ -274,8 +272,8 @@ public class ModuleConfig {
                 String module = e.getKey();
                 for (Path file: e.getValue().asList()) {
                     table.addRow(label, module, file.toString());
-                    label = null;
-                    module = null;
+                    label = "";
+                    module = "";
                 }
             }
         }
@@ -292,7 +290,7 @@ public class ModuleConfig {
         List<List<String>> rows = new ArrayList<>();
 
         void addRow(String... items) {
-            rows.add(Arrays.asList(items));
+            rows.add(List.of(items));
         }
 
         void write(PrintWriter pw, int indent) {
@@ -309,7 +307,7 @@ public class ModuleConfig {
                     // so that it can flow into other columns present in other rows.
                     // This helps prevent filenames (always the last entry in a row)
                     // from bloating column widths.
-                    if (item != null && col < row.size() - 1) {
+                    if (col < row.size() - 1) {
                         widths[col] = Math.max(widths[col], item.length());
                     }
                     col++;

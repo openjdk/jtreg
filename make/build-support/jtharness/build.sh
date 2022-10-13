@@ -67,7 +67,7 @@ build_jtharness() {
     "${ANT}" -DBUILD_DIR="$(native_path "${JTHARNESS_DIST}")" -f "$(native_path "${JTHARNESS_SRC_DIR}/build/build.xml")"
 
     JTHARNESS_JAVATEST_JAR="${JTHARNESS_DIST}/binaries/lib/javatest.jar"
-    JTHARNESS_LICENSE="${JTHARNESS_SRC_DIR}/legal/license.txt"
+    JTHARNESS_LICENSE="${JTHARNESS_SRC_DIR}/LICENSE"
     JTHARNESS_COPYRIGHT="${JTHARNESS_SRC_DIR}/legal/copyright.txt"
 }
 build_jtharness
