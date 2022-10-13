@@ -134,7 +134,7 @@ public class Agent {
                 cmd.add(String.valueOf(timeoutFactor));
             }
 
-            if (!(customMainWrapper == null) && !customMainWrapper.isEmpty()) {
+            if (customMainWrapper != null) {
                 cmd.add(AgentServer.CUSTOM_MAIN_WRAPPER);
                 cmd.add(customMainWrapper);
             }

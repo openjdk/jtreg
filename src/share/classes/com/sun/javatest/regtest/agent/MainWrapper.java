@@ -35,7 +35,7 @@ import java.lang.reflect.Method;
   */
 public class MainWrapper {
 
-    public static String MAIN_WRAPPER = "main.wrapper";
+    public static String MAIN_WRAPPER = "jtreg.custom.main.wrapper";
 
     public static void main(String[] args) {
         String moduleName;

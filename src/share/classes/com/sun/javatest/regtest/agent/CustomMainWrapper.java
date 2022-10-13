@@ -3,28 +3,37 @@ package com.sun.javatest.regtest.agent;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ThreadFactory;
 
 public interface CustomMainWrapper {
     static CustomMainWrapper getInstance(String className) {
         try {
-            return (CustomMainWrapper) Class.forName(className).newInstance();
-        } catch (InstantiationException e) {
-            throw new RuntimeException(e);
-        } catch (IllegalAccessException e) {
-            throw new RuntimeException(e);
-        } catch (ClassNotFoundException e) {
+            Class<? extends CustomMainWrapper> clz = Class.forName(className).asSubclass(CustomMainWrapper.class);
+            Constructor<? extends CustomMainWrapper> ctor = clz.getDeclaredConstructor();
+            return ctor.newInstance();
+        } catch (ClassNotFoundException | NoSuchMethodException | InstantiationException | IllegalAccessException |
+                 InvocationTargetException e) {
             throw new RuntimeException(e);
         }
     }
 
     Thread createThread(ThreadGroup tg, Runnable task);
+
+    List<String> getAdditionalVMOpts();
 }
 
 class VirtualMainWrapper  implements CustomMainWrapper {
     private ThreadFactory factory;
 
+    private List<String>vmOpts = new ArrayList<>();
+
     public VirtualMainWrapper() {
+        System.setProperty("main.wrapper", "Virtual");
+        vmOpts.add("--enable-preview");
         try {
             factory = VirtualAPI.instance().factory(true);
         } catch (ExceptionInInitializerError e) {
@@ -36,7 +45,12 @@ class VirtualMainWrapper  implements CustomMainWrapper {
 
     @Override
     public Thread createThread(ThreadGroup tg, Runnable task) {
-        return factory == null? new Thread(tg, task) : factory.newThread(task);
+        return factory == null ? new Thread(tg, task) : factory.newThread(task);
+    }
+
+    @Override
+    public List<String> getAdditionalVMOpts() {
+        return vmOpts;
     }
 }
 

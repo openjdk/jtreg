@@ -93,6 +93,7 @@ import com.sun.javatest.httpd.PageGenerator;
 import com.sun.javatest.regtest.BadArgs;
 import com.sun.javatest.regtest.Main;
 import com.sun.javatest.regtest.Main.Fault;
+import com.sun.javatest.regtest.agent.CustomMainWrapper;
 import com.sun.javatest.regtest.agent.JDK_Version;
 import com.sun.javatest.regtest.agent.SearchPath;
 import com.sun.javatest.regtest.config.ExecMode;
@@ -1233,7 +1234,9 @@ public class Tool {
         }
 
         if (!(customMainWrapper == null) && !customMainWrapper.isEmpty()) {
+            CustomMainWrapper cmw = CustomMainWrapper.getInstance(customMainWrapper);
             testVMOpts.add("-D" + MainWrapper.MAIN_WRAPPER + "=" + customMainWrapper);
+            testVMOpts.addAll(cmw.getAdditionalVMOpts());
         }
 
         makeDir(workDirArg, false);
@@ -1321,6 +1324,9 @@ public class Tool {
                     }
                     if (timeoutFactorArg != null) {
                         p.setTimeoutFactor(timeoutFactorArg);
+                    }
+                    if (customMainWrapper != null) {
+                        p.setCustomMainWrapper(customMainWrapper);
                     }
                     if (maxPoolSize == -1) {
                         // The default max pool size depends on the concurrency
