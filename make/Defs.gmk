@@ -121,7 +121,6 @@ AGENT_JAVAC_SOURCE_TARGET = --release 8
 TOOL_JAVAC_SOURCE_TARGET = --release 11
 REGTEST_TOOL_PATCH_JAVA_BASE_OPTIONS = --patch-module java.base=$(JAVADIR)
 
-
 # for files needed to run agentvm and othervm tests (on platforms back to JDK 8)
 REGTEST_AGENT_JAVAC = $(JDKHOME)/bin/javac
 REGTEST_AGENT_JAVAC_OPTIONS = \

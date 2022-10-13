@@ -78,6 +78,7 @@ $(BUILDDIR)/classes.java.lang.ok: \
 
 TARGETS.com.sun.javatest.regtest += $(BUILDDIR)/classes.java.lang.ok
 
+
 #----------------------------------------------------------------------
 #
 # resources required for com.sun.javatest.regtest
@@ -176,7 +177,7 @@ $(BUILDDIR)/jtreg-usage.txt: \
 		$(BUILDDIR)/classes/com/sun/javatest/regtest/tool/i18n.properties \
 		$(BUILDDIR)/classes/com/sun/javatest/regtest/tool/jars.properties
 	$(JDKJAVA) -cp "$(CLASSDIR)$(PS)$(JAVATEST_JAR)" \
-	    --enable-preview -Dprogram=jtreg com.sun.javatest.regtest.Main -help all > $@
+	    -Dprogram=jtreg com.sun.javatest.regtest.Main -help all > $@
 
 TARGETS.ZIP.jtreg += $(JTREG_DOCS)
 
@@ -289,7 +290,6 @@ $(foreach jar,$(TESTNG_JARS),$(eval $(call IMPORT_FILE,$(jar),$(JTREG_IMAGEDIR)/
 
 $(foreach file,$(TESTNG_NOTICES),$(eval $(call IMPORT_FILE,$(file),$(JTREG_IMAGEDIR)/legal/testng)))
 
-
 #----------------------------------------------------------------------
 #
 # import AsmTools
@@ -370,3 +370,4 @@ NEWVERBOSEZIPFILES += $(JTREG_ZIPFILES:%.zip=%-$(NEW_VERBOSE_ZIP_SUFFIX).zip)
 #JTREG_OPTS = 	$(JTREG_JAVA_OPTS:%=-J%)
 
 TESTS += $(TESTS.jtreg)
+
