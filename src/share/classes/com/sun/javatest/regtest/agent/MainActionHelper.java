@@ -240,6 +240,7 @@ public class MainActionHelper extends ActionHelper {
                     }
                 }
             }
+
             if (((avmr.t != null) || (tg.uncaughtThrowable != null)) && (error == null)) {
                 if (avmr.t == null) {
                     error = tg.uncaughtThrowable;
@@ -252,6 +253,7 @@ public class MainActionHelper extends ActionHelper {
                     status = failed(MAIN_THREW_EXCEPT + error.toString());
                 }
             }
+
             if (status.getReason().contains("java.lang.SecurityException: System.exit() forbidden")) {
                 status = failed(UNEXPECT_SYS_EXIT);
             } else if (!tg.cleanupOK) {
