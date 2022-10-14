@@ -54,6 +54,33 @@ class VirtualMainWrapper  implements CustomMainWrapper {
     }
 }
 
+class TestThread extends Thread {
+    public TestThread(ThreadGroup group, Runnable target) {
+        super(group, target);
+    }
+}
+class TestMainWrapper  implements CustomMainWrapper {
+    private ThreadFactory factory;
+
+    private List<String>vmOpts = new ArrayList<>();
+
+    public TestMainWrapper() {
+        System.setProperty("main.wrapper", "Test");
+        vmOpts.add("-Dtest.property=test");
+        vmOpts.add("--enable-preview");
+    }
+
+    @Override
+    public Thread createThread(ThreadGroup tg, Runnable task) {
+        return new TestThread(tg, task);
+    }
+
+    @Override
+    public List<String> getAdditionalVMOpts() {
+        return vmOpts;
+    }
+}
+
 class VirtualAPI {
 
     private MethodHandles.Lookup publicLookup = MethodHandles.publicLookup();

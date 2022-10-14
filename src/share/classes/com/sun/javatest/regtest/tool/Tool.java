@@ -1212,7 +1212,7 @@ public class Tool {
             reportDirArg = Path.of("JTreport");
         }
 
-        if (!(customMainWrapper == null) && !customMainWrapper.isEmpty()) {
+        if (customMainWrapper != null) {
             CustomMainWrapper cmw = CustomMainWrapper.getInstance(customMainWrapper);
             testVMOpts.add("-D" + MainWrapper.MAIN_WRAPPER + "=" + customMainWrapper);
             testVMOpts.addAll(cmw.getAdditionalVMOpts());

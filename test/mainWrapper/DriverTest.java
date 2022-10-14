@@ -23,23 +23,22 @@
 
 /*
  * @test
- * @run main/othervm Test
+ * @run driver DriverTest
  */
 
-/*
- * @test
- * @run main Test
- */
-
-public class Test {
+public class DriverTest {
     public static void main(String... args) throws Exception {
-        if (!"Virtual".equals(System.getProperty("main.wrapper"))) {
-            throw new Exception("this test should fail with wrapper = " + System.getProperty("main.wrapper"));
+        if (!"Test".equals(System.getProperty("main.wrapper"))) {
+            throw new Exception("Property 'main.wrapper' = " + System.getProperty("main.wrapper"));
+        }
+
+        if (!"test".equals(System.getProperty("test.property"))) {
+            throw new Exception("Property 'test.property'  = " + System.getProperty("test.property"));
         }
 
         String threadClassName = Thread.currentThread().getClass().getName();
-        if (!threadClassName.equals("java.lang.VirtualThread")) {
-            throw new Exception("Main Thread is not Virtual : " + threadClassName);
+        if (!threadClassName.equals("com.sun.javatest.regtest.agent.TestThread")) {
+            throw new Exception("Main Thread is expected : " + threadClassName);
         }
     }
 }
