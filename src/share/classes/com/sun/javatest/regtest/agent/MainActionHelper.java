@@ -239,26 +239,24 @@ public class MainActionHelper extends ActionHelper {
                         status = error(MAIN_THREAD_TIMEOUT);
                     }
                 }
-                if (((avmr.t != null) || (tg.uncaughtThrowable != null)) && (error == null)) {
-                    if (avmr.t == null) {
-                        error = tg.uncaughtThrowable;
-                    } else {
-                        error = avmr.t;
-                    }
-                    if (SKIP_EXCEPTION.equals(error.getClass().getName())) {
-                        status = passed(MAIN_SKIPPED + error.toString());
-                    } else {
-                        status = failed(MAIN_THREW_EXCEPT + error.toString());
-                    }
+            }
+            if (((avmr.t != null) || (tg.uncaughtThrowable != null)) && (error == null)) {
+                if (avmr.t == null) {
+                    error = tg.uncaughtThrowable;
+                } else {
+                    error = avmr.t;
                 }
-                if (status.getReason().contains("java.lang.SecurityException: System.exit() forbidden")) {
-                    status = failed(UNEXPECT_SYS_EXIT);
-                } else if (!tg.cleanupOK) {
-                    status = error(EXEC_ERROR_CLEANUP);
+                if (SKIP_EXCEPTION.equals(error.getClass().getName())) {
+                    status = passed(MAIN_SKIPPED + error.toString());
+                } else {
+                    status = failed(MAIN_THREW_EXCEPT + error.toString());
                 }
             }
-
-
+            if (status.getReason().contains("java.lang.SecurityException: System.exit() forbidden")) {
+                status = failed(UNEXPECT_SYS_EXIT);
+            } else if (!tg.cleanupOK) {
+                status = error(EXEC_ERROR_CLEANUP);
+            }
         } catch (ClassNotFoundException e) {
             e.printStackTrace(err);
             err.println();
