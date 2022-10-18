@@ -40,7 +40,7 @@
 * Support MSYS2 for building jtreg on Windows.
   * [CODETOOLS-7903206](https://bugs.openjdk.org/browse/CODETOOLS-7903206)
 
-* os.simpleArch is x64 for linux-loongarch64/mips64/mips64el in @require context.
+* `os.simpleArch` is `x64` for `linux-loongarch64`/`mips64`/`mips64el` in `@require` context.
   * [CODETOOLS-7903120](https://bugs.openjdk.org/browse/CODETOOLS-7903120)
 
 * Log start time for every action.
@@ -52,7 +52,7 @@
 * Support invocation via ToolProvider.
   * [CODETOOLS-7903097](https://bugs.openjdk.org/browse/CODETOOLS-7903097)
 
-* Report `os.*` system properties in .jtr file.
+* Report `os.*` system properties in `.jtr` file.
   * [CODETOOLS-7903044](https://bugs.openjdk.org/browse/CODETOOLS-7903044)
 
 
@@ -67,7 +67,7 @@
 * Add an FAQ entry for `javatest.maxOutputSize`.
   * [CODETOOLS-7903050](https://bugs.openjdk.org/browse/CODETOOLS-7903050)
 
-* Allow Subtest ids with dashes and underscores.
+* Allow subtest ids with dashes and underscores.
   * [CODETOOLS-7903037](https://bugs.openjdk.org/browse/CODETOOLS-7903037)
 
 * jtreg should print stdout if JVM gathering properties fails.
@@ -76,7 +76,7 @@
 
 ## [6.1+1](https://git.openjdk.org/jtreg/compare/jtreg-6+1...jtreg-6.1+1)
 
-* Elapsed time of MainAction is including serialization wait time
+* Elapsed time of `MainAction` is including serialization wait time
   * [CODETOOLS-7902942](https://bugs.openjdk.org/browse/CODETOOLS-7902942)
 
 * Support building jtreg with recent JDKs.
@@ -86,8 +86,7 @@
 * Update/improve jcheck settings for jtreg repo.
   * [CODETOOLS-7902995](https://bugs.openjdk.org/browse/CODETOOLS-7902995)
 
-* Introduce support for HEADLESS to disable tests that require a display.
-  * 6cd5bbfc7cd302b9de6e2692648f7bd2e57c224b
+* Introduce support for `HEADLESS` to disable tests that require a display.
 
 * jtreg should not set a security manager for JDK 18.
   * [CODETOOLS-7902990](https://bugs.openjdk.org/browse/CODETOOLS-7902990)
@@ -96,7 +95,7 @@
 ## [6+1](https://git.openjdk.org/jtreg/compare/jtreg5.1-b01...jtreg-6+1)
 
 
-* Add support for Automatic-Module-Name in jar files.
+* Add support for `Automatic-Module-Name` in jar files.
   
 * Update versions of jtreg dependencies.
   * [CODETOOLS-7902791](https://bugs.openjdk.org/browse/CODETOOLS-7902791)
@@ -114,9 +113,9 @@
 
 * Move details of environment variables to new appendix.
 
-* Add FAQ reference to doc/testing.md.
+* Add FAQ reference to `doc/testing.md`.
 
-* Add support for explicit -retain:lastRun.
+* Add support for explicit `-retain:lastRun`.
 
 
 
@@ -124,10 +123,10 @@
 
 * Update AsmTools to 7.0 b08; update JT Harness to 6.0-b11.
 
-* Add test.name to properties given to test.
+* Add `test.name` to properties given to test.
   * [CODETOOLS-7902671](https://bugs.openjdk.org/browse/CODETOOLS-7902671)
 
-* Pass test.* to requires.extraPropDefns classes.
+* Pass `test.*` to `requires.extraPropDefns` classes.
   * [CODETOOLS-7902336](https://bugs.openjdk.org/browse/CODETOOLS-7902336)
 
 * Add mean, standard deviation to agent stats.
@@ -149,7 +148,7 @@
 * Propagate client-side "id" to agent server.
   * [CODETOOLS-7902655](https://bugs.openjdk.org/browse/CODETOOLS-7902655)
 
-* Support @enablePreview.
+* Support `@enablePreview`.
   * [CODETOOLS-7902654](https://bugs.openjdk.org/browse/CODETOOLS-7902654)
 
 * Use https://git.openjdk.java.net for CODE_TOOLS_URL.
@@ -164,12 +163,12 @@
 
 ## [5.0-b01](https://git.openjdk.org/jtreg/compare/jtreg4.2-b16...jtreg5.0-b01)
 
-* Improve cygwin detection by relaxing constraints on expected installation directory.
+* Improve Cygwin detection by relaxing constraints on expected installation directory.
 
 * Incorrect handling of paths in smart action args for Windows.
   * [CODETOOLS-7902571](https://bugs.openjdk.org/browse/CODETOOLS-7902571)
 
-* Introduce test.file.
+* Introduce `test.file`.
   * [CODETOOLS-7902545](https://bugs.openjdk.org/browse/CODETOOLS-7902545)
 
 
