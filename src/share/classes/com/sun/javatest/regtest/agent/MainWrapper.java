@@ -33,7 +33,8 @@ import java.lang.reflect.Method;
 /**
   * This class is the wrapper for all main/othervm tests.
   */
-public class MainWrapper {
+public class MainWrapper
+{
 
     public static String MAIN_WRAPPER = "jtreg.custom.main.wrapper";
     public static String MAIN_WRAPPER_PATH = "jtreg.custom.main.wrapper.path";
@@ -60,7 +61,7 @@ public class MainWrapper {
             String moduleClassName = fileArgs[i++];
             int sep = moduleClassName.indexOf('/');
             moduleName = (sep == -1) ? null : moduleClassName.substring(0, sep);
-            className = (sep == -1) ? moduleClassName : moduleClassName.substring(sep + 1);
+            className  = (sep == -1) ? moduleClassName : moduleClassName.substring(sep + 1);
             classArgs = StringArray.splitWS(fileArgs[i++]);
         } catch (IOException e) {
             AStatus.failed(MAIN_CANT_READ_ARGS + e).exit();
@@ -86,7 +87,6 @@ public class MainWrapper {
             AStatus.failed(MAIN_THREAD_INTR + Thread.currentThread().getName()).exit();
         }
 //      tg.cleanup();
-
 
         if (tg.uncaughtThrowable != null) {
             handleTestException(tg.uncaughtThrowable);
@@ -217,8 +217,8 @@ public class MainWrapper {
         //----------member variables--------------------------------------------
 
         private final boolean cleanMode   = false;
-        Throwable uncaughtThrowable       = null;
-        Thread uncaughtThread             = null;
+        Throwable uncaughtThrowable = null;
+        Thread    uncaughtThread    = null;
 
     }
 
@@ -229,8 +229,8 @@ public class MainWrapper {
         MAIN_THREAD_INTR      = "Thread interrupted: ",
         MAIN_THREW_EXCEPT     = "`main' threw exception: ",
         MAIN_CANT_LOAD_TEST   = "Can't load test: ",
-        MAIN_CANT_FIND_MAIN = "Can't find `main' method",
-        MAIN_SKIPPED = "Skipped: ";
+        MAIN_CANT_FIND_MAIN   = "Can't find `main' method",
+        MAIN_SKIPPED          = "Skipped: ";
     private static final String SKIP_EXCEPTION = "jtreg.SkippedException";
 
 }
