@@ -58,6 +58,8 @@ public class MainActionHelper extends ActionHelper {
     private int timeout;
     private float timeoutFactor;
     private String customMainWrapper;
+
+    private String customMainWrapperPath;
     private OutputHandler outputHandler;
 
     MainActionHelper(String testName) {
@@ -114,8 +116,13 @@ public class MainActionHelper extends ActionHelper {
         return this;
     }
 
-     MainActionHelper customMainWrapper(String customMainWrapper) {
+    MainActionHelper customMainWrapper(String customMainWrapper) {
         this.customMainWrapper = customMainWrapper;
+        return this;
+    }
+
+    MainActionHelper customMainWrapperPath(String customMainWrapperPath) {
+        this.customMainWrapperPath = customMainWrapperPath;
         return this;
     }
 
@@ -198,7 +205,7 @@ public class MainActionHelper extends ActionHelper {
             if (customMainWrapper == null) {
                 t = new Thread(tg, avmr);
             } else {
-                t = CustomMainWrapper.getInstance(customMainWrapper).createThread(tg, avmr);
+                t = CustomMainWrapper.getInstance(customMainWrapper, customMainWrapperPath).createThread(tg, avmr);
             }
 
             Alarm alarm = null;

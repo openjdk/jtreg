@@ -1,18 +1,55 @@
+/*
+ * Copyright (c) 2022, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.  Oracle designates this
+ * particular file as subject to the "Classpath" exception as provided
+ * by Oracle in the LICENSE file that accompanied this code.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
 package com.sun.javatest.regtest.agent;
 
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodType;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ThreadFactory;
 
 public interface CustomMainWrapper {
-    static CustomMainWrapper getInstance(String className) {
+    static CustomMainWrapper getInstance(String className, String path) {
+        SearchPath classpath = new SearchPath(path);
+        ClassLoader loader = ClassLoader.getSystemClassLoader();
+        if (classpath != null && !classpath.isEmpty()) {
+            List<URL> urls = new ArrayList<>();
+            for (Path f : classpath.asList()) {
+                try {
+                    urls.add(f.toUri().toURL());
+                } catch (MalformedURLException e) {
+                }
+            }
+            loader = new URLClassLoader(urls.toArray(new URL[urls.size()]), loader);
+        }
         try {
-            Class<? extends CustomMainWrapper> clz = Class.forName(className).asSubclass(CustomMainWrapper.class);
+            Class<? extends CustomMainWrapper> clz = loader.loadClass(className).asSubclass(CustomMainWrapper.class);
             Constructor<? extends CustomMainWrapper> ctor = clz.getDeclaredConstructor();
             return ctor.newInstance();
         } catch (ClassNotFoundException | NoSuchMethodException | InstantiationException | IllegalAccessException |
@@ -26,33 +63,6 @@ public interface CustomMainWrapper {
     List<String> getAdditionalVMOpts();
 }
 
-class VirtualMainWrapper  implements CustomMainWrapper {
-    private ThreadFactory factory;
-
-    private List<String>vmOpts = new ArrayList<>();
-
-    public VirtualMainWrapper() {
-        System.setProperty("main.wrapper", "Virtual");
-        vmOpts.add("--enable-preview");
-        try {
-            factory = VirtualAPI.instance().factory(true);
-        } catch (ExceptionInInitializerError e) {
-            // we are in driver mode
-            factory = null;
-        }
-
-    }
-
-    @Override
-    public Thread createThread(ThreadGroup tg, Runnable task) {
-        return factory == null ? new Thread(tg, task) : factory.newThread(task);
-    }
-
-    @Override
-    public List<String> getAdditionalVMOpts() {
-        return vmOpts;
-    }
-}
 
 class TestThread extends Thread {
     public TestThread(ThreadGroup group, Runnable target) {
@@ -60,14 +70,11 @@ class TestThread extends Thread {
     }
 }
 class TestMainWrapper  implements CustomMainWrapper {
-    private ThreadFactory factory;
-
     private List<String>vmOpts = new ArrayList<>();
 
     public TestMainWrapper() {
         System.setProperty("main.wrapper", "Test");
         vmOpts.add("-Dtest.property=test");
-        vmOpts.add("--enable-preview");
     }
 
     @Override
@@ -78,52 +85,5 @@ class TestMainWrapper  implements CustomMainWrapper {
     @Override
     public List<String> getAdditionalVMOpts() {
         return vmOpts;
-    }
-}
-
-class VirtualAPI {
-
-    private MethodHandles.Lookup publicLookup = MethodHandles.publicLookup();
-
-    private ThreadFactory virtualThreadFactory;
-    private ThreadFactory platformThreadFactory;
-
-
-    VirtualAPI() {
-        try {
-
-            Class<?> vbuilderClass =Class.forName("java.lang.Thread$Builder$OfVirtual");
-            Class<?> pbuilderClass =Class.forName("java.lang.Thread$Builder$OfPlatform");
-
-
-            MethodType vofMT = MethodType.methodType(vbuilderClass);
-            MethodType pofMT = MethodType.methodType(pbuilderClass);
-
-            MethodHandle ofVirtualMH =  publicLookup.findStatic(Thread.class, "ofVirtual", vofMT);
-            MethodHandle ofPlatformMH =  publicLookup.findStatic(Thread.class, "ofPlatform", pofMT);
-
-            Object virtualBuilder = ofVirtualMH.invoke();
-            Object platformBuilder = ofPlatformMH.invoke();
-
-            MethodType factoryMT = MethodType.methodType(ThreadFactory.class);
-            MethodHandle vfactoryMH =  publicLookup.findVirtual(vbuilderClass, "factory", factoryMT);
-            MethodHandle pfactoryMH =  publicLookup.findVirtual(pbuilderClass, "factory", factoryMT);
-
-            virtualThreadFactory = (ThreadFactory) vfactoryMH.invoke(virtualBuilder);
-            platformThreadFactory = (ThreadFactory) pfactoryMH.invoke(platformBuilder);
-
-        } catch (Throwable t) {
-            throw new RuntimeException(t);
-        }
-    }
-
-    private static VirtualAPI instance = new VirtualAPI();
-
-    public static VirtualAPI instance() {
-        return instance;
-    }
-
-    public ThreadFactory factory(boolean isVirtual) {
-        return isVirtual ? virtualThreadFactory : platformThreadFactory;
     }
 }

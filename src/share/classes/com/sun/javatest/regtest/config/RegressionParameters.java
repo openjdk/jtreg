@@ -1256,6 +1256,16 @@ public class RegressionParameters
     }
 
     private String customMainWrapper;
+
+    public void setCustomMainWrapperPath(List<Path>  customMainWrapperPath) {
+        this.customMainWrapperPath = customMainWrapperPath;
+    }
+
+    List<Path>  getCustomMainWrapperPath() {
+        return customMainWrapperPath;
+    }
+
+    private List<Path>  customMainWrapperPath;
     //---------------------------------------------------------------------
 
     public void setMatchLists(Path[] files) {

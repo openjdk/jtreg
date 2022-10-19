@@ -542,6 +542,13 @@ public class Tool {
             }
         },
 
+        new Option(STD, MAIN, "", "-mwp", "-mainWrapperPath") {
+            @Override
+            public void process(String opt, String arg) {
+                customMainWrapperPathArg = arg;
+            }
+        },
+
         new Option(OLD, MAIN, "", "-od", "-observerDir", "-op", "-observerPath") {
             @Override
             public void process(String opt, String arg) {
@@ -1213,10 +1220,15 @@ public class Tool {
         }
 
         if (customMainWrapper != null) {
-            CustomMainWrapper cmw = CustomMainWrapper.getInstance(customMainWrapper);
+            CustomMainWrapper cmw = CustomMainWrapper.getInstance(customMainWrapper, customMainWrapperPathArg);
             testVMOpts.add("-D" + MainWrapper.MAIN_WRAPPER + "=" + customMainWrapper);
             testVMOpts.addAll(cmw.getAdditionalVMOpts());
         }
+
+        if (customMainWrapperPathArg != null) {
+            testVMOpts.add("-D" + MainWrapper.MAIN_WRAPPER_PATH + "=" + customMainWrapperPathArg);
+        }
+
 
         makeDir(workDirArg, false);
         testManager.setWorkDirectory(workDirArg);
@@ -1302,6 +1314,9 @@ public class Tool {
                     }
                     if (customMainWrapper != null) {
                         p.setCustomMainWrapper(customMainWrapper);
+                    }
+                    if (customMainWrapperPathArg != null) {
+                        p.setCustomMainWrapperPath(customMainWrapperPathArg);
                     }
                     if (maxPoolSize == -1) {
                         // The default max pool size depends on the concurrency
@@ -1621,7 +1636,6 @@ public class Tool {
     {
         try {
             RegressionParameters rp = new RegressionParameters("regtest", testSuite, out::println);
-
             WorkDirectory workDir = testManager.getWorkDirectory(testSuite);
             rp.setWorkDirectory(workDir);
 
@@ -2292,11 +2306,12 @@ public class Tool {
     private boolean httpdFlag;
     private String timeLimitArg;
     private String observerClassName;
-    private String customMainWrapper;
     private List<Path> observerPathArg;
     private String timeoutHandlerClassName;
     private List<Path> timeoutHandlerPathArg;
     private long timeoutHandlerTimeoutArg = -1; // -1: default; 0: no timeout; >0: timeout in seconds
+    private String customMainWrapper;
+    private String customMainWrapperPathArg;
     private int maxPoolSize = -1;
     private Duration poolIdleTimeout = Duration.ofSeconds(30);
     private List<String> testCompilerOpts = new ArrayList<>();

@@ -85,6 +85,8 @@ public class AgentServer implements ActionHelper.OutputHandler {
     public static final String TIMEOUTFACTOR = "-timeoutFactor";
     public static final String CUSTOM_MAIN_WRAPPER = "-mainWrapper";
 
+    public static final String CUSTOM_MAIN_WRAPPER_PATH = "-mainWrapperPath";
+
     public static final byte DO_COMPILE = 1;
     public static final byte DO_MAIN = 2;
     public static final byte OUTPUT = 3;
@@ -147,6 +149,8 @@ public class AgentServer implements ActionHelper.OutputHandler {
     private float timeoutFactor = 1.0f;
     private String customMainWrapper;
 
+    private String customMainWrapperPath;
+
     public AgentServer(String... args) throws IOException {
         if (traceServer) {
             traceOut.println("Agent.Server started");
@@ -177,7 +181,9 @@ public class AgentServer implements ActionHelper.OutputHandler {
                 timeoutFactor = Float.valueOf(args[++i]);
             } else if (arg.equals(CUSTOM_MAIN_WRAPPER) && i + 1 < args.length) {
                 customMainWrapper = args[++i];
-            }else {
+            } else if (arg.equals(CUSTOM_MAIN_WRAPPER_PATH) && i + 1 < args.length) {
+                customMainWrapperPath = args[++i];
+        }   else {
                 throw new IllegalArgumentException(arg);
             }
         }
@@ -308,6 +314,7 @@ public class AgentServer implements ActionHelper.OutputHandler {
                     .timeout(0)
                     .timeoutFactor(timeoutFactor)
                     .customMainWrapper(customMainWrapper)
+                    .customMainWrapperPath(customMainWrapperPath)
                     .outputHandler(this)
                     .runClass();
             writeStatus(status);

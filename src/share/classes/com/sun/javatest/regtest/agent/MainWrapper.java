@@ -36,6 +36,7 @@ import java.lang.reflect.Method;
 public class MainWrapper {
 
     public static String MAIN_WRAPPER = "jtreg.custom.main.wrapper";
+    public static String MAIN_WRAPPER_PATH = "jtreg.custom.main.wrapper.path";
 
     public static void main(String[] args) {
         String moduleName;
@@ -71,10 +72,11 @@ public class MainWrapper {
         Runnable task = new MainTask(moduleName, className, classArgs);
         Thread t;
         String customWrapperName = System.getProperty(MAIN_WRAPPER);
+        String customWrapperNamePath = System.getProperty(MAIN_WRAPPER_PATH);
         if (customWrapperName == null) {
             t = new Thread(tg, task);
         } else {
-            t = CustomMainWrapper.getInstance(customWrapperName).createThread(tg, task);
+            t = CustomMainWrapper.getInstance(customWrapperName, customWrapperNamePath).createThread(tg, task);
         }
         t.setName("MainThread");
         t.start();
