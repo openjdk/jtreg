@@ -36,9 +36,9 @@ import java.util.List;
 
 public interface CustomMainWrapper {
     static CustomMainWrapper getInstance(String className, String path) {
-        SearchPath classpath = new SearchPath(path);
         ClassLoader loader = ClassLoader.getSystemClassLoader();
-        if (classpath != null && !classpath.isEmpty()) {
+        if (path != null) {
+            SearchPath classpath = new SearchPath(path);
             List<URL> urls = new ArrayList<>();
             for (Path f : classpath.asList()) {
                 try {
