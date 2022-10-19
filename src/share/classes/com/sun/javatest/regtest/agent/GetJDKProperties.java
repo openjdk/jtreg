@@ -57,7 +57,7 @@ public class GetJDKProperties {
             e.getCause().printStackTrace(System.err);
             System.exit(1);
         } catch (Exception e) {
-            System.err.println("Internal error: please report to jtreg-dev@openjdk.java.net");
+            System.err.println("Internal error: please report to jtreg-dev@openjdk.org");
             e.printStackTrace(System.err);
             System.exit(1);
         }
