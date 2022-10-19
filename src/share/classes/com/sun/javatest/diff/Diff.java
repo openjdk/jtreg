@@ -141,11 +141,9 @@ public abstract class Diff {
 
             throw new Fault(i18n, "main.unrecognizedFile", f);
 
-        } catch (TestSuite.Fault e) {
-            throw new Fault(i18n, "main.cantOpenFile", f, e);
-        } catch (WorkDirectory.Fault e) {
-            throw new Fault(i18n, "main.cantOpenFile", f, e);
-        } catch (IOException e) {
+        } catch (TestSuite.Fault
+                 | WorkDirectory.Fault
+                 | IOException e) {
             throw new Fault(i18n, "main.cantOpenFile", f, e);
         }
 
@@ -158,5 +156,5 @@ public abstract class Diff {
     protected boolean includeReason;
     protected String format;
     protected String title;
-    private static I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(Diff.class);
+    private static final I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(Diff.class);
 }

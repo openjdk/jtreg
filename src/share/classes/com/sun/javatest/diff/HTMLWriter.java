@@ -332,7 +332,7 @@ public class HTMLWriter
      */
     public void writeLink(File file, String body) throws IOException {
         startTag(A);
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         String path = file.getPath().replace(File.separatorChar, '/');
         if (file.isAbsolute() && !path.startsWith("/"))
             sb.append('/');
