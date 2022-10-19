@@ -151,15 +151,11 @@ public class GetJDKProperties {
                 sb.append(getNameMethod.invoke(module));
             }
             return sb.toString();
-        } catch (ClassNotFoundException e) {
-            return null;
-        } catch (IllegalAccessException e) {
-            return null;
-        } catch (IllegalArgumentException e) {
-            return null;
-        } catch (NoSuchMethodException e) {
-            return null;
-        } catch (InvocationTargetException e) {
+        } catch (ClassNotFoundException
+                 | IllegalAccessException
+                 | IllegalArgumentException
+                 | NoSuchMethodException
+                 | InvocationTargetException e) {
             return null;
         }
     }
@@ -194,15 +190,11 @@ public class GetJDKProperties {
                 sb.append(nameMethod.invoke(md));
             }
             return sb.toString();
-        } catch (ClassNotFoundException e) {
-            return null;
-        } catch (IllegalAccessException e) {
-            return null;
-        } catch (IllegalArgumentException e) {
-            return null;
-        } catch (NoSuchMethodException e) {
-            return null;
-        } catch (InvocationTargetException e) {
+        } catch (ClassNotFoundException
+                 | InvocationTargetException
+                 | NoSuchMethodException
+                 | IllegalArgumentException
+                 | IllegalAccessException e) {
             return null;
         }
     }
