@@ -92,7 +92,7 @@ public class MainWrapper {
             handleTestException(tg.uncaughtThrowable);
         } else {
             AStatus.passed("")
-                    .exit();
+                   .exit();
         }
 
     } // main()
@@ -100,10 +100,10 @@ public class MainWrapper {
     private static void handleTestException(Throwable e) {
         if (SKIP_EXCEPTION.equals(e.getClass().getName())) {
             AStatus.passed(MAIN_SKIPPED + e)
-                    .exit();
+                   .exit();
         } else {
             AStatus.failed(MAIN_THREW_EXCEPT + e)
-                    .exit();
+                   .exit();
         }
     }
 
@@ -174,7 +174,8 @@ public class MainWrapper {
         private final String[] args;
     }
 
-    static class MainThreadGroup extends ThreadGroup {
+    static class MainThreadGroup extends ThreadGroup
+    {
         MainThreadGroup() {
             super("MainThreadGroup");
         } // MainThreadGroup()
@@ -185,7 +186,7 @@ public class MainWrapper {
             e.printStackTrace(System.err);
             if ((uncaughtThrowable == null) && (!cleanMode)) {
                 uncaughtThrowable = e;
-                uncaughtThread = t;
+                uncaughtThread    = t;
             }
 //          cleanup();
             AStatus.failed(MAIN_THREW_EXCEPT + e).exit();
@@ -215,21 +216,21 @@ public class MainWrapper {
 
         //----------member variables--------------------------------------------
 
-        private final boolean cleanMode = false;
-        Throwable uncaughtThrowable = null;
-        Thread uncaughtThread = null;
+        private final boolean cleanMode   = false;
+        Throwable uncaughtThrowable       = null;
+        Thread uncaughtThread             = null;
 
     }
 
     //----------member variables------------------------------------------------
 
     private static final String
-            MAIN_CANT_READ_ARGS = "JavaTest Error: Can't read main args file.",
-            MAIN_THREAD_INTR = "Thread interrupted: ",
-            MAIN_THREW_EXCEPT = "`main' threw exception: ",
-            MAIN_CANT_LOAD_TEST = "Can't load test: ",
-            MAIN_CANT_FIND_MAIN = "Can't find `main' method",
-            MAIN_SKIPPED = "Skipped: ";
+        MAIN_CANT_READ_ARGS   = "JavaTest Error: Can't read main args file.",
+        MAIN_THREAD_INTR      = "Thread interrupted: ",
+        MAIN_THREW_EXCEPT     = "`main' threw exception: ",
+        MAIN_CANT_LOAD_TEST   = "Can't load test: ",
+        MAIN_CANT_FIND_MAIN = "Can't find `main' method",
+        MAIN_SKIPPED = "Skipped: ";
     private static final String SKIP_EXCEPTION = "jtreg.SkippedException";
 
 }
