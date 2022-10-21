@@ -930,7 +930,6 @@ public class Agent {
         private File policyFile;
         private float timeoutFactor = 1.0f;
         private String customMainWrapper;
-
         private String customMainWrapperPath;
         private int maxPoolSize;
         private Duration idleTimeout;
