@@ -32,10 +32,14 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public interface CustomMainWrapper {
-    static CustomMainWrapper getInstance(String className, String path) {
+    static CustomMainWrapper getInstance(String mainWrapper, String path) {
+        String[] args = mainWrapper.split("=", 2);
+        String className = args[0];
+        String options = args.length > 1 ? args[1] : "";
         ClassLoader loader = ClassLoader.getSystemClassLoader();
         if (path != null) {
             SearchPath classpath = new SearchPath(path);
@@ -51,30 +55,42 @@ public interface CustomMainWrapper {
         try {
             Class<? extends CustomMainWrapper> clz = loader.loadClass(className).asSubclass(CustomMainWrapper.class);
             Constructor<? extends CustomMainWrapper> ctor = clz.getDeclaredConstructor();
-            return ctor.newInstance();
+            CustomMainWrapper wrapper = ctor.newInstance();
+            wrapper.setOption(options);
+            return wrapper;
         } catch (ClassNotFoundException | NoSuchMethodException | InstantiationException | IllegalAccessException |
                  InvocationTargetException e) {
             throw new RuntimeException(e);
         }
     }
 
-    Thread createThread(ThreadGroup tg, Runnable task);
+    default void setOption(String options) {
+    }
 
-    List<String> getAdditionalVMOpts();
+    default Thread createThread(ThreadGroup tg, Runnable task) {
+        return new Thread(tg, task);
+    }
+
+    default List<String> getAdditionalVMOpts() {
+        return Collections.emptyList();
+    }
 }
-
 
 class TestThread extends Thread {
     public TestThread(ThreadGroup group, Runnable target) {
         super(group, target);
     }
 }
-class TestMainWrapper  implements CustomMainWrapper {
+class TestMainWrapper implements CustomMainWrapper {
     private List<String>vmOpts = new ArrayList<>();
 
     public TestMainWrapper() {
-        System.setProperty("main.wrapper", "Test");
         vmOpts.add("-Dtest.property=test");
+    }
+
+    @Override
+    public void setOption(String options) {
+        System.setProperty("main.wrapper", options);
     }
 
     @Override

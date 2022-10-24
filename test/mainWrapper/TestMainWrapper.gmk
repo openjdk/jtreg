@@ -26,7 +26,7 @@
 #----------------------------------------------------------------------
 
 JTREG_OPTS += \
-	-mainWrapper:com.sun.javatest.regtest.agent.TestMainWrapper
+	-mainWrapper:com.sun.javatest.regtest.agent.TestMainWrapper=Test
 
 $(BUILDTESTDIR)/TestMainWrapper.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar \

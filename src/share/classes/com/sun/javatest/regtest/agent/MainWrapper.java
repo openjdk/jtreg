@@ -72,12 +72,12 @@ public class MainWrapper
         MainThreadGroup tg = new MainThreadGroup();
         Runnable task = new MainTask(moduleName, className, classArgs);
         Thread t;
-        String customWrapperName = System.getProperty(MAIN_WRAPPER);
-        String customWrapperNamePath = System.getProperty(MAIN_WRAPPER_PATH);
-        if (customWrapperName == null) {
+        String customWrapper = System.getProperty(MAIN_WRAPPER);
+        String customWrapperPath = System.getProperty(MAIN_WRAPPER_PATH);
+        if (customWrapper == null) {
             t = new Thread(tg, task);
         } else {
-            t = CustomMainWrapper.getInstance(customWrapperName, customWrapperNamePath).createThread(tg, task);
+            t = CustomMainWrapper.getInstance(customWrapper, customWrapperPath).createThread(tg, task);
         }
         t.setName("MainThread");
         t.start();
