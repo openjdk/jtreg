@@ -46,4 +46,4 @@ $(BUILDTESTDIR)/TestMainWrapper.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(TESTDIR)/mainWrapper
 	echo "test passed at `date`" > $@
 
-INITIAL_TESTS += $(BUILDTESTDIR)/TestMainWrapper.ok
+TESTS.jtreg += $(BUILDTESTDIR)/TestMainWrapper.ok
