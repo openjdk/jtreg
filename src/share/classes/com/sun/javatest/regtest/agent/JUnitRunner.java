@@ -28,6 +28,7 @@ package com.sun.javatest.regtest.agent;
 import org.junit.platform.engine.TestExecutionResult;
 import org.junit.platform.engine.discovery.DiscoverySelectors;
 import org.junit.platform.engine.reporting.ReportEntry;
+import org.junit.platform.engine.support.descriptor.MethodSource;
 import org.junit.platform.launcher.LauncherConstants;
 import org.junit.platform.launcher.LauncherDiscoveryRequest;
 import org.junit.platform.launcher.LauncherSession;
@@ -161,10 +162,6 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
         try (PrintWriter pw = new PrintWriter(sw)) {
             if (summary.getTotalFailureCount() > 0) {
                 pw.println("JavaTest Message: JUnit Platform Failure(s): " + summary.getTotalFailureCount());
-                pw.println();
-                for (TestExecutionSummary.Failure failure : summary.getFailures()) {
-                    failure.getException().printStackTrace(pw);
-                }
             }
 
             // The format of the following output is assumed in the JUnit SummaryReporter
@@ -208,25 +205,22 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
             if (identifier.isTest()) {
                 lock.lock();
                 try {
-                    // always print the status of a test
-                    printer.println(identifier.getDisplayName() + " -> " + result.getStatus());
-                    // additionally print stacktrace for a non-successful test
-                    if (result.getStatus() != TestExecutionResult.Status.SUCCESSFUL) {
-                        result.getThrowable().ifPresent(printer::println);
+                    // always print a status line for a finished test
+                    String name = identifier.getDisplayName(); // or ?
+                    String source = identifier.getSource() instanceof MethodSource
+                        ? (((MethodSource) identifier.getSource()).getClassName() + "::" + ((MethodSource) identifier.getSource()).getMethodName())
+                        : source.toString();
+                    TestExecutionResult.Status status = result.getStatus();
+                    printer.printf("%10s: %s '%s'%n", status, source, name);
+                    // that's all for successful a test
+                    if (status == TestExecutionResult.Status.SUCCESSFUL) {
+                        return;
                     }
-                }
-                finally {
-                    lock.unlock();
-                }
-            }
-        }
-
-        @Override
-        public void executionSkipped(TestIdentifier identifier, String reason) {
-            if (identifier.isTest()) {
-                lock.lock();
-                try {
-                    printer.println(identifier.getDisplayName() + " -> SKIPPED because of: " + reason);
+                    if (status == TestExecutionResult.Status.ABORTED) {
+                        result.getThrowable().ifPresent(printer::println);
+                        return;
+                    }
+                    result.getThrowable().ifPresent(throwable -> throwable.printStackTrace(printer));
                 }
                 finally {
                     lock.unlock();
