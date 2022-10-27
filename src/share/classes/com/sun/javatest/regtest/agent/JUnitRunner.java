@@ -26,6 +26,7 @@
 package com.sun.javatest.regtest.agent;
 
 import org.junit.platform.engine.TestExecutionResult;
+import org.junit.platform.engine.TestSource;
 import org.junit.platform.engine.discovery.DiscoverySelectors;
 import org.junit.platform.engine.reporting.ReportEntry;
 import org.junit.platform.engine.support.descriptor.MethodSource;
@@ -44,6 +45,7 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
+import java.util.Optional;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -206,11 +208,9 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
                 lock.lock();
                 try {
                     // always print a status line for a finished test
-                    String name = identifier.getDisplayName(); // or ?
-                    String source = identifier.getSource() instanceof MethodSource
-                        ? (((MethodSource) identifier.getSource()).getClassName() + "::" + ((MethodSource) identifier.getSource()).getMethodName())
-                        : source.toString();
                     TestExecutionResult.Status status = result.getStatus();
+                    String source = toSourceString(identifier);
+                    String name = identifier.getDisplayName();
                     printer.printf("%10s: %s '%s'%n", status, source, name);
                     // that's all for successful a test
                     if (status == TestExecutionResult.Status.SUCCESSFUL) {
@@ -238,6 +238,17 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
             finally {
                 lock.unlock();
             }
+        }
+
+        private static String toSourceString(TestIdentifier identifier) {
+            Optional<TestSource> optionalTestSource = identifier.getSource();
+            if (!optionalTestSource.isPresent()) return "<no test source>";
+            TestSource testSource = optionalTestSource.get();
+            if (testSource instanceof MethodSource) {
+                MethodSource source = (MethodSource) testSource;
+                return source.getClassName() + "::" + source.getMethodName();
+            }
+            return testSource.toString();
         }
     }
 }
