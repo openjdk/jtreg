@@ -130,10 +130,6 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
                 .selectors(testQuery == null
                         ? DiscoverySelectors.selectClass(mainClass)
                         : DiscoverySelectors.selectMethod(mainClass, testQuery))
-                // capture messages printed to standard streams by default
-                // converting them into test report entries
-                .configurationParameter(LauncherConstants.CAPTURE_STDOUT_PROPERTY_NAME, "true")
-                .configurationParameter(LauncherConstants.CAPTURE_STDERR_PROPERTY_NAME, "true")
                 .build();
 
             SummaryGeneratingListener summaryGeneratingListener = new SummaryGeneratingListener();
@@ -203,24 +199,52 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
         }
 
         @Override
+        public void executionSkipped(TestIdentifier identifier, String reason) {
+            if (identifier.isTest()) {
+                String status = "SKIPPED";
+                String source = toSourceString(identifier);
+                String name = identifier.getDisplayName();
+                lock.lock();
+                try {
+                    printer.printf("%-10s %s '%s' %s%n", status, source, name, reason);
+                }
+                finally {
+                    lock.unlock();
+                }
+            }
+        }
+
+        @Override
+        public void executionStarted(TestIdentifier identifier) {
+            if (identifier.isTest()) {
+                String status = "STARTED";
+                String source = toSourceString(identifier);
+                String name = identifier.getDisplayName();
+                lock.lock();
+                try {
+                    printer.printf("%-10s %s '%s'%n", status, source, name);
+                }
+                finally {
+                    lock.unlock();
+                }
+            }
+        }
+
+        @Override
         public void executionFinished(TestIdentifier identifier, TestExecutionResult result) {
             if (identifier.isTest()) {
                 lock.lock();
                 try {
-                    // always print a status line for a finished test
                     TestExecutionResult.Status status = result.getStatus();
+                    if (status == TestExecutionResult.Status.ABORTED) {
+                        result.getThrowable().ifPresent(printer::println); // not the entire stack trace
+                    }
+                    if (status == TestExecutionResult.Status.FAILED) {
+                        result.getThrowable().ifPresent(throwable -> throwable.printStackTrace(printer));
+                    }
                     String source = toSourceString(identifier);
                     String name = identifier.getDisplayName();
-                    printer.printf("%10s: %s '%s'%n", status, source, name);
-                    // that's all for successful a test
-                    if (status == TestExecutionResult.Status.SUCCESSFUL) {
-                        return;
-                    }
-                    if (status == TestExecutionResult.Status.ABORTED) {
-                        result.getThrowable().ifPresent(printer::println);
-                        return;
-                    }
-                    result.getThrowable().ifPresent(throwable -> throwable.printStackTrace(printer));
+                    printer.printf("%-10s %s '%s'%n", status, source, name);
                 }
                 finally {
                     lock.unlock();

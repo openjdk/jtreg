@@ -46,7 +46,7 @@ class JupiterTests {
     @Test
     @Disabled("for demonstration purposes")
     void skippedTest() {
-        Assertions.fail("test should have been executed");
+        Assertions.fail("test should NOT be executed");
     }
 
     @Test
@@ -58,9 +58,18 @@ class JupiterTests {
     @ParameterizedTest(name = "[{index}] test(''{0}'')")
     @NullSource
     @EmptySource
-    @ValueSource(strings = {" ", "   ", "\t", "\n", "\r\n"})
+    @ValueSource(strings = {" ", "   ", "\t"})
     void nullEmptyAndBlankStrings(String text) {
         Assertions.assertTrue(text == null || text.isBlank());
+    }
+
+    @Disabled
+    @ParameterizedTest
+    @ValueSource(ints = {0, 1, 2})
+    void test(int i) {
+        System.err.println("i=" + i);
+        Assertions.assertNotEquals(1, i);
+        System.err.println(i + " is not 1");
     }
 
     @AfterEach
