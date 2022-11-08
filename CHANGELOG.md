@@ -9,6 +9,8 @@
     [CODETOOLS-7903260](https://bugs.openjdk.org/browse/CODETOOLS-7903260)
   * Support executing a single method. 
     [CODETOOLS-7903267](https://bugs.openjdk.org/browse/CODETOOLS-7903267)
+  * Improve per-class reporting of JUnit tests, in `.jtr` file.
+    [CODETOOLS-7903324](https://bugs.openjdk.org/browse/CODETOOLS-7903324)
 
 * Support a group of "all tests", represented by `.`.
   * [CODETOOLS-7903331](https://bugs.openjdk.org/browse/CODETOOLS-7903331)
