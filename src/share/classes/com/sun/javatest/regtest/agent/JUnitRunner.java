@@ -126,7 +126,7 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
         try {
             // if test.query is set, treat it as a method name to be executed
             String testQuery = System.getProperty("test.query");
-            LauncherDiscoveryRequest request = LauncherDiscoveryRequestBuilder.request()                
+            LauncherDiscoveryRequest request = LauncherDiscoveryRequestBuilder.request()
                 .selectors(testQuery == null
                         ? DiscoverySelectors.selectClass(mainClass)
                         : DiscoverySelectors.selectMethod(mainClass, testQuery))
