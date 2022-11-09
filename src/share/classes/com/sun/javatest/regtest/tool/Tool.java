@@ -1219,17 +1219,6 @@ public class Tool {
             reportDirArg = Path.of("JTreport");
         }
 
-        if (customMainWrapper != null) {
-            CustomMainWrapper cmw = CustomMainWrapper.getInstance(customMainWrapper, customMainWrapperPathArg);
-            testVMOpts.add("-D" + MainWrapper.MAIN_WRAPPER + "=" + customMainWrapper);
-            testVMOpts.addAll(cmw.getAdditionalVMOpts());
-        }
-
-        if (customMainWrapperPathArg != null) {
-            testVMOpts.add("-D" + MainWrapper.MAIN_WRAPPER_PATH + "=" + customMainWrapperPathArg);
-        }
-
-
         makeDir(workDirArg, false);
         testManager.setWorkDirectory(workDirArg);
 
@@ -1311,12 +1300,6 @@ public class Tool {
                     }
                     if (timeoutFactorArg != null) {
                         p.setTimeoutFactor(timeoutFactorArg);
-                    }
-                    if (customMainWrapper != null) {
-                        p.setCustomMainWrapper(customMainWrapper);
-                    }
-                    if (customMainWrapperPathArg != null) {
-                        p.setCustomMainWrapperPath(customMainWrapperPathArg);
                     }
                     if (maxPoolSize == -1) {
                         // The default max pool size depends on the concurrency
@@ -1709,6 +1692,14 @@ public class Tool {
 
             if (timeoutHandlerTimeoutArg != 0) {
                 rp.setTimeoutHandlerTimeout(timeoutHandlerTimeoutArg);
+            }
+
+            if (customMainWrapper != null) {
+                rp.setCustomMainWrapper(customMainWrapper);
+            }
+
+            if (customMainWrapperPathArg != null) {
+                rp.setCustomMainWrapperPath(customMainWrapperPathArg);
             }
 
             Path rd = testManager.getReportDirectory(testSuite);

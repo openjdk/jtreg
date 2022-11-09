@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -25,17 +25,20 @@
 
 #----------------------------------------------------------------------
 
-JTREG_OPTS += \
-	-mainWrapper:com.sun.javatest.regtest.agent.TestMainWrapper=Test
-
 $(BUILDTESTDIR)/TestMainWrapper.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(JTREG_IMAGEDIR)/bin/jtreg
+	$(JDKJAVAC) \
+		-d $(@:%.ok=%)/classes \
+		-cp $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+		$(TESTDIR)/mainWrapper/TestMainWrapper.java
 	JTREG_JAVA=$(JDKJAVA) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-jdk:$(JDKHOME) \
 		-w:$(@:%.ok=%)/cmd.othervm/work \
 		-r:$(@:%.ok=%)/cmd.othervm/report \
 		-verbose:fail \
+		-mainWrapper:TestMainWrapper \
+		-mainWrapperPath:$(@:%.ok=%)/classes \
 		$(TESTDIR)/mainWrapper
 	JTREG_JAVA=$(JDKJAVA) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-jdk:$(JDKHOME) \
@@ -43,6 +46,8 @@ $(BUILDTESTDIR)/TestMainWrapper.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		-w:$(@:%.ok=%)/cmd.agentvm/work \
 		-r:$(@:%.ok=%)/cmd.agentvm/report \
 		-verbose:fail \
+		-mainWrapper:TestMainWrapper \
+		-mainWrapperPath:$(@:%.ok=%)/classes \
 		$(TESTDIR)/mainWrapper
 	echo "test passed at `date`" > $@
 
