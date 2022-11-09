@@ -84,7 +84,6 @@ public class AgentServer implements ActionHelper.OutputHandler {
     public static final String PORT = "-port";
     public static final String TIMEOUTFACTOR = "-timeoutFactor";
     public static final String CUSTOM_MAIN_WRAPPER = "-mainWrapper";
-
     public static final String CUSTOM_MAIN_WRAPPER_PATH = "-mainWrapperPath";
 
     public static final byte DO_COMPILE = 1;
@@ -148,7 +147,6 @@ public class AgentServer implements ActionHelper.OutputHandler {
 
     private float timeoutFactor = 1.0f;
     private String customMainWrapper;
-
     private String customMainWrapperPath;
 
     public AgentServer(String... args) throws IOException {
