@@ -88,7 +88,6 @@ import com.sun.javatest.httpd.PageGenerator;
 import com.sun.javatest.regtest.BadArgs;
 import com.sun.javatest.regtest.Main;
 import com.sun.javatest.regtest.Main.Fault;
-import com.sun.javatest.regtest.agent.CustomMainWrapper;
 import com.sun.javatest.regtest.agent.JDK_Version;
 import com.sun.javatest.regtest.agent.SearchPath;
 import com.sun.javatest.regtest.config.ExecMode;
@@ -122,7 +121,6 @@ import static com.sun.javatest.regtest.Main.EXIT_NO_TESTS;
 import static com.sun.javatest.regtest.Main.EXIT_OK;
 import static com.sun.javatest.regtest.Main.EXIT_TEST_ERROR;
 import static com.sun.javatest.regtest.Main.EXIT_TEST_FAILED;
-import com.sun.javatest.regtest.agent.MainWrapper;
 import static com.sun.javatest.regtest.tool.Option.ArgType.*;
 
 
@@ -1619,6 +1617,7 @@ public class Tool {
     {
         try {
             RegressionParameters rp = new RegressionParameters("regtest", testSuite, out::println);
+
             WorkDirectory workDir = testManager.getWorkDirectory(testSuite);
             rp.setWorkDirectory(workDir);
 
