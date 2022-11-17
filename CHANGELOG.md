@@ -1,6 +1,10 @@
 
 
-## [Unreleased](https://git.openjdk.org/jtreg/compare/jtreg-7+1...master)
+## [Unreleased](https://git.openjdk.org/jtreg/compare/jtreg-7.1+1...master)
+
+_nothing noteworthy, yet_
+
+## [7.1+1](https://git.openjdk.org/jtreg/compare/jtreg-7+1...jtreg-7.1+1)
 
 * Improved support for JUnit Jupiter.
   * Avoid using TestNG mixed mode. 
