@@ -1,6 +1,15 @@
 
 
-## [Unreleased](https://git.openjdk.org/jtreg/compare/jtreg-7+1...master)
+## [Unreleased](https://git.openjdk.org/jtreg/compare/7.1.1+1...master)
+
+_nothing noteworthy, yet_
+
+## [7.1.1+1](https://git.openjdk.org/jtreg/compare/jtreg-7.1+1...7.1.1+1)
+
+* Summary reporter getter is now thread-safe.
+  [CODETOOLS-7903390](https://bugs.openjdk.org/browse/CODETOOLS-7903390)
+
+## [7.1+1](https://git.openjdk.org/jtreg/compare/jtreg-7+1...jtreg-7.1+1)
 
 * Improved support for JUnit Jupiter.
   * Avoid using TestNG mixed mode. 
