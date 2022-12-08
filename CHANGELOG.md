@@ -1,11 +1,11 @@
 
 
-## [Unreleased](https://git.openjdk.org/jtreg/compare/7.1.1+1...master)
+## [Unreleased](https://git.openjdk.org/jtreg/compare/jtreg-7.1.1+1...master)
 
 * Summary reporter getter is now thread-safe.
   * [CODETOOLS-7903390](https://bugs.openjdk.org/browse/CODETOOLS-7903390)
 
-## [7.1.1+1](https://git.openjdk.org/jtreg/compare/jtreg-7.1+1...7.1.1+1)
+## [7.1.1+1](https://git.openjdk.org/jtreg/compare/jtreg-7.1+1...jtreg-7.1.1+1)
 
 * Summary reporter getter is now thread-safe.
   * [CODETOOLS-7903390](https://bugs.openjdk.org/browse/CODETOOLS-7903390)
