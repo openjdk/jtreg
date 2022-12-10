@@ -32,7 +32,7 @@ $(BUILDTESTDIR)/BuildWildcards.ok: \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDKHOME) \
 		$(TESTDIR)/build-wildcards \
-			> $(@:%.ok=%/jt.log) 2>&1 
+			> $(@:%.ok=%/jt.log) 2>&1
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += \

@@ -41,7 +41,7 @@ $(BUILDTESTDIR)/JDKModulesTest.ok: \
 		JDKModulesTest -Ddummy.vm.option
 	$(JDKHOME)/bin/java -cp "$(@:%.ok=%)/classes$(PS)$(JTREG_IMAGEDIR)/lib/jtreg.jar" \
 		-Djava.io.tmpdir=$(@:%.ok=%) \
-		JDKModulesTest 
+		JDKModulesTest
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += $(BUILDTESTDIR)/JDKModulesTest.ok

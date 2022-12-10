@@ -33,7 +33,7 @@ $(BUILDTESTDIR)/ModulesTest_NoLimitMods.ok: \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDK9HOME) \
 		$(TESTDIR)/modules \
-			> $(@:%.ok=%/jt.log) 2>&1 
+			> $(@:%.ok=%/jt.log) 2>&1
 	$(GREP) '^Test results: passed: 6$$' $(@:%.ok=%/jt.log)  > /dev/null
 	if $(GREP) 'TESTMODULES=jdk.compiler' $(@:%.ok=%/work/ModulesTest.jtr) ; then \
 	    true ; \
@@ -57,7 +57,7 @@ $(BUILDTESTDIR)/ModulesTest_LimitMods_java.se.ok: \
 		-jdk:$(JDK9HOME) \
 		-javaoptions:"--limit-modules $(@:$(BUILDTESTDIR)/ModulesTest_LimitMods_%.ok=%)" \
 		$(TESTDIR)/modules \
-			> $(@:%.ok=%/jt.log) 2>&1 
+			> $(@:%.ok=%/jt.log) 2>&1
 	$(GREP) '^Test results: passed: 2$$' $(@:%.ok=%/jt.log)  > /dev/null
 	echo $@ passed at `date` > $@
 
@@ -69,7 +69,7 @@ $(BUILDTESTDIR)/ModulesTest_IgnoreAtModules.ok: \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDK8HOME) \
 		$(TESTDIR)/modules \
-			> $(@:%.ok=%/jt.log) 2>&1 
+			> $(@:%.ok=%/jt.log) 2>&1
 	$(GREP) '^Test results: passed: 6$$' $(@:%.ok=%/jt.log)  > /dev/null
 	if $(GREP) 'TESTMODULES=jdk.compiler' $(@:%.ok=%/work/ModulesTest.jtr) ; then \
 	    echo "TESTMODULES entry found unexpectedly" ; exit 1 ; \

@@ -39,7 +39,7 @@ LD_LIBRARY_PATH=
 
 #----------------------------------------------------------------------
 #
-# Support for Cygwin
+# Support for Cygwin and MSYS2 (which may identify as MSYS, MINGW32 or MINGW64 (the default))
 
 SYSTEM_UNAME := $(shell uname)
 
@@ -53,9 +53,15 @@ endif
 
 ifneq (,$(findstring CYGWIN,$(SYSTEM_UNAME)))
 USING_CYGWIN = true
+USING_CYGWIN_OR_USING_MSYS = true
 endif
 
-ifdef USING_CYGWIN
+ifneq (,$(findstring MSYS,$(SYSTEM_UNAME))$(findstring MINGW,$(SYSTEM_UNAME)))
+USING_MSYS = true
+USING_CYGWIN_OR_USING_MSYS = true
+endif
+
+ifdef USING_CYGWIN_OR_USING_MSYS
 define FullPath
 $(shell cygpath -a -m $1 2> $(DEV_NULL))
 endef
@@ -144,6 +150,8 @@ PANDOC  := $(shell if [ -r /usr/bin/pandoc ]; then \
 		echo /usr/bin/pandoc ; \
 	elif [ -r /usr/local/bin/pandoc ]; then \
 		echo /usr/local/bin/pandoc ; \
+	elif [ -r /opt/homebrew/bin/tidy ]; then \
+		echo /opt/homebrew/bin/pandoc ; \
 	else \
 		echo /bin/echo "pandoc not available" ; \
 	fi )
@@ -160,7 +168,7 @@ TIDY 	:= $(shell if [ -r /usr/local/bin/tidy ]; then \
 	elif [ -r /opt/homebrew/bin/tidy ]; then \
 		echo /opt/homebrew/bin/tidy ; \
 	else \
-		echo/usr/bin/tidy ; \
+		echo /usr/bin/tidy ; \
 	fi )
 else
 TIDY	= /usr/bin/tidy

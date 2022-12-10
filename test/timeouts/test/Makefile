@@ -111,7 +111,7 @@ FATAL_JTREG_EXIT = 4
 # Exit -- used for final "normal" exit from "make". Redefine to "true" to avoid
 # having make exit with non-zero return code.
 EXIT = exit
-# Function to exit shell if exit code of preceding command is greater than or equal 
+# Function to exit shell if exit code of preceding command is greater than or equal
 # to a given level. Redefine function or preceding FATAL_*_EXIT codes as needed.
 EXIT_IF_FATAL = status=$$?; if [ $$status -ge $(1) ]; then exit $$status ; fi
 
@@ -140,7 +140,7 @@ summary: report
 	    exit 1 ; \
 	fi
 	
-	 
+	
 
 JTREG_OUTPUT_DIR = $(ABS_TEST_OUTPUT_DIR)/$(MODE)/$(subst .java,,$(TEST))
 
@@ -160,7 +160,7 @@ CHECK_PASS = \
 # JT_JAVA
 #	Version of java used to run jtreg.  Should normally be the same as TESTJAVA
 # TESTJAVA
-# 	Version of java to be tested.  
+# 	Version of java to be tested.
 # JTREG_OPTIONS
 #	Additional options for jtreg
 # JTREG_TESTDIRS

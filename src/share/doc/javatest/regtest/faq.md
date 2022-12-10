@@ -43,7 +43,7 @@ Among other things, the harness has evolved the ability to execute
 non-JCK testsuites.  The JDK regression test suite is one such suite.
 
 An open source version of the harness is available at
-[http://openjdk.java.net/projects/code-tools/jtharness/](http://openjdk.java.net/projects/code-tools/jtharness/).
+[http://openjdk.org/projects/code-tools/jtharness/](http://openjdk.org/projects/code-tools/jtharness/).
 
 ### What are the JDK regression extensions to the JavaTest harness? What is "regtest"?
 
@@ -58,12 +58,12 @@ implement this specification, and is an older name for what is now known as
 
 ### What are the system requirements for using the JDK regression extensions?
 
-It is recommended that you run jtreg using JDK 1.8 or later.
+It is recommended that you run jtreg using JDK 11 or later.
 
 ### Where can I find a copy of jtreg?
 
 Information on downloading and building the source code, as well as publicly
-available binaries, is given on the [OpenJDK jtreg home page](http://openjdk.java.net/jtreg).
+available binaries, is given on the [OpenJDK jtreg home page](http://openjdk.org/jtreg).
 
 ### Where do I find additional supporting documentation?
 
@@ -76,14 +76,14 @@ relevant documentation resources.
 *   The `-help` option to jtreg offers brief
     documentation for the complete set of currently available options.
 
-### There's functionality missing from the tag specification. I can't write my test or it would vastly improve the life of people writing tests if it was added. What do I need to do?
+### There's functionality missing from the tag specification. I can't write my test, or it would vastly improve the life of people writing tests if it was added. What do I need to do?
 
 See the [OpenJDK jtreg home page](http://openjdk.dev.java.net/jtreg)
 for a suitable forum or mailing list.
 
-### The spec is fine, but there's some functionality that I'd like to get from the regression extensions or I still can't run it on a basic test. Who do I contact?
+### The spec is fine, but there's some functionality that I'd like to get from the regression extensions, or I still can't run it on a basic test. Who do I contact?
 
-Send email to `jtreg-discuss(at)openjdk.java.net`
+Send email to `jtreg-discuss(at)openjdk.org`
 
 ### Why not use JUnit or TestNG?
 
@@ -177,7 +177,7 @@ Interpretation of this output is as follows:
 * line 2 - The name of the test that was run.
 * line 3 - The JDK under test (should be identical to the value passed via
   the `-testjdk` option).
-* line 4-6 - The product version produced when `java [-JVMOptions]` version" is called
+* line 4-6 - The product version produced when `java [-JVMOptions] -version` is called
   for the JDK under test.  Valid `[-JVMOptions]` include `-client`, `-server`, `-hotspot`,
   `-d64`, and `-d32`, as applicable to the current platform and test JDK.
 * lines 8-10, 12-16, 18-24 - The set of actions that were run according to
@@ -201,9 +201,8 @@ Interpretation of this output is as follows:
 
 ### Bleah! That verbose output is so long!  Can I have something shorter?
 
-Yes. Several different options provided with `jtreg`
-influence the output per test.  Here are a few verbose settings in order of
-decreasing average output per test.
+Yes. Several options provided with `jtreg` influence the output per test.
+Here are a few verbose settings in order of decreasing average output per test.
 
 * [`-verbose:fail`](#V.0) (and related `-verbose:pass`, `-verbose:error`, and `-verbose:all`)
 * [`-verbose`](#V.1)
@@ -350,7 +349,7 @@ as to where the problem lies.
 
 The final result string is composed by the harness.  For tests that fail
 because an exception is thrown, the result string will contain some header
-string such as ``main' threw exception: ` followed by the
+string such as `'main' threw exception: ` followed by the
 exception's type and detail message.  This detail message should contain
 sufficient information to provide the test user a starting point to investigate
 the unexpected failure.  It should _not_ contain full debugging
@@ -435,21 +434,48 @@ the sections containing any of the specified terms. For example:
 
 The most basic way to specify which tests to run is to give one or more paths
 directly on the command line, for directories and files containing tests.
-If a file contains multiple tests, you can specify the name of a test within
-that file by appending `#id`_N_ to the file path, where N is the number of
-the test within the file, where `0` identifies the first test.
 
-If you wish to specify a long list of files, you can put the list in a file
+If a file contains multiple tests, you can specify the name of a test within
+that file by appending `#`_ID_ to the file path, where _ID_ is either defined
+in the test itself after the `@test` tag, or the string `id`_N_  if no id is 
+explicitly defined, where N is the number of the test within the file, 
+and where `0` identifies the first test. 
+
+If you specify `?`_string_ after the name of a test, the _string_ will be
+passed down to the test, for the test to filter the parts of the test to be
+executed. For any tests executed by JUnit Platform, the string is interpreted
+as the name of a single method in the test to be executed.  If you give
+conflicting values for the string, including not setting any value, the last
+one specified will be used.
+
+If you wish to specify a long list of arguments, you can put the list in a file
 and specify that file using the `@`_file_ option.
 
 You may also specify the name of a group of tests. Groups are defined
 in the test suite, and define a collection of tests to be run.
 
-You may also refine the set of tests to be run in various ways:
+To summarise, you can use the following to specify tests to be run:
+
+Table: Kinds of Supported Arguments
+
+| Argument                | Description                                        |
+|-------------------------|----------------------------------------------------|
+| _directory_             | All tests found in files in and under the directory |
+| _file[#id]_             | All tests in a file, or a specific test in a file  |
+| _file[#id]?string_      | Parts of a test in a file                          |
+| _[directory]_`:`_group_ | All tests in a group defined for a testsuite       |   
+| `@`_file_               | Expand arguments in a file                         |
+
+
+You can further refine the set of tests to be run in various ways.
+
+### How do I refine the set of sets to run?
+
+You can refine the set of tests to be run in various ways:
 
 * You can filter the tests using keywords, using the `-k` option.
   The option can be given multiple times, and are combined conjunctively.
-  Keywords may be defined explicitly in tests using `@key` or may be
+  Keywords may be defined explicitly in tests using `@key` or may
   be defined implicitly from other properties of the test, such as
   whether it is a "shell" test or a "manual" test.
 
@@ -463,7 +489,15 @@ You may also refine the set of tests to be run in various ways:
 
 Note that in addition to the command-line options just listed, a test
 may contain tags such as `@requires` and `@modules` that determine whether
-or not a test should be run on any particular system.
+a test should be run on any particular system.
+
+### How do I run a single test method in a JUnit test?
+
+Specify the test and method name on the command-line with the `?` syntax:
+
+    path-to-test?method-name
+
+See [How do I specify which tests to run?](#how-do-i-specify-which-tests-to-run).
 
 ### How do I specify the JDK to use?
 
@@ -525,7 +559,8 @@ The plain text files in the report directory include the following:
 * `summary.txt`: summary of test results: one test per line, suitable for use with `grep`
 * `timeStats.txt`: some statistics regarding test execution times
 
-Reports can be disabled with the `-noreport` option.
+Reports can be disabled with the `-noreport` option; the set of tests included
+in the report can be selected with the `-report:`_value_ option.
 
 It is generally recommended that the work and report directories should _not_ be
 placed anywhere in the test suite itself. Since jtreg may scan the entire test suite
@@ -554,7 +589,7 @@ and if `-retain` is specified, the scratch directory for each test
 will be the unique test-specific directory in the work directory
 where the test's files will be retained.  In this situation, if
 any file that is not to be retained cannot be deleted, an error will
-be reported and the will simply be left in place.
+be reported and it will simply be left in place.
 
 ### What is a ProblemList.txt file?
 
@@ -602,7 +637,7 @@ should not be run. Each entry in this list should be in one of the following for
 
 In _otherVM_ mode, jtreg will start a new JVM to perform each action
 (such as `@compile`, `@run main`, and so on) in a test. When the action has
-been completed, the JVM will exit, relying on the system to cleanup
+been completed, the JVM will exit, relying on the system to clean up
 any resources that may have been in use by the action.
 
 In _agentVM_ mode, jtreg will maintain a pool of available JVMs,
@@ -789,7 +824,7 @@ anticipated.  This includes the following:
 
 * The time taken to clean up after each individual action.
   This includes any time that spent waiting for any threads to complete,
-  that may may been started by the code in the action, for which the
+  that may have been started by the code in the action, for which the
   maximum time is 10 seconds.
 
 * The time taken to clean up after a test, when all the actions
@@ -842,7 +877,7 @@ You have several alternatives.
 1.  Use the `-verbose:all` option, or the related result-sensitive
     options `-verbose:pass`, `-verbose:fail`, `-verbose:error`.
 2.  Use the JavaTest (JT Harness) harness GUI.
-3.  View the test's `.jtr` file. 
+3.  View the test's `.jtr` file.
     _Note: some characters in the file may be [encoded](#jtr-encoding)._
 4.  Use the `-show` option to display the unencoded content of a stream. For example,
     * `jtreg -w` _work-dir_ `-show:System.out` _test-name_
@@ -865,12 +900,12 @@ Use the `-listtests` option.
 
 By design, the contents of a `.jtr` file, including any output from tests, is represented in a way
 that can be read back in again by `jtreg` and related tools. To that end, characters that are not
-standard ASCII characters (printable characters, and `CR`, `LF`, `SP`, `HT`) are encoded with escape sequences..
+standard ASCII characters (printable characters, and `CR`, `LF`, `SP`, `HT`) are encoded with escape sequences.
 Characters outside that set are represented by `\uXXXX`, and `\` itself as written as `\\`.
 Anyone viewing the contents of a `.jtr` directly, such as in a plain-text editor, or using
 command-line tools like `grep` need to be aware of that encoding and take it into account.
 
-To view the unencoded output from a test that has been recorded in a `.jtr` file, 
+To view the unencoded output from a test that has been recorded in a `.jtr` file,
 use the `jtreg` `-show:name` option.
 
     $ jtreg -w:/path/to/work-dir -show:System.out /path/to/test
@@ -881,7 +916,7 @@ without the use of the `jtreg` infrastructure.
 
 ### What names can I use with the `-show` option
 
-All recent versions of `jtreg` accept the name of an output stream as the name. 
+All recent versions of `jtreg` accept the name of an output stream as the name.
 
     $ jtreg ...  -show:stream-name ...
 
@@ -890,7 +925,7 @@ in the `.jtr` file.  For example, here is a heading for a stream named `System.o
 
     ----------System.out:(1/501)----------
 
-More recent versions (6.2 onwards) support an optional section name as well. 
+More recent versions (6.2 onwards) support an optional section name as well.
 See the command-line help for specific details in the version you are using.
 
     $ jtreg ... -show:section-name/stream-name
@@ -944,10 +979,10 @@ specified using `-workDir`.
 
 In preparation for running a test, jtreg will ensure that the scratch directory
 to be used for the test is empty. If any files are found, jtreg will attempt to
-delete them; it it cannot, it will report an error and not run the test.
+delete them; if it cannot, it will report an error and not run the test.
 
 _Note:_ it can be difficult for jtreg to identify the test that created
-an undeletable file, which may result in less-than-helpful error messages.
+a file that cannot be deleted, which may result in less-than-helpful error messages.
 See [below](#cleanup-files) for a way around this problem.
 
 Once the scratch directory has been prepared, jtreg will execute each
@@ -987,7 +1022,7 @@ action (@build, @compile, @run, and so on) in order.  For each action:
     Note that jtreg cannot close any files or sockets that may have been left open;
     that is the responsibility of the test itself. Any other significant
     global state that is modified during the course of an action is
-    also the responsibity of the test to clean up.
+    also the responsibility of the test to clean up.
 
 *   If any action does not complete successfully, no subsequent actions
     will be executed.
@@ -1021,11 +1056,89 @@ file have been [closed](https://docs.microsoft.com/en-us/windows/desktop/fileio/
 This will mean that files that have accidentally been left open by a test
 cannot be deleted.
 jtreg will try hard to delete files in the scratch directory, and will wait
-a while in case the files go away in a timely manner.
+awhile in case the files go away in a timely manner.
+
+### My tests take a long time to run: how do I find where the time goes?
+
+The [`.jtr`](#jtr-file) file for each test contains timing information
+for each action executed by the test and for the test as a whole.
+
+* There is a section in each `.jtr` file for each action executed as
+  part of the test, and in each section there is a line of the form:
+
+      elapsed time (seconds): NNNN
+
+  where _NNNN_ is the elapsed time (wall-clock time) taken to execute the
+  action.
+
+* In the _testresult_ data near the top of each `.jtr` file, there is
+  a line of the form:
+
+      elapsed=MILLIS HH:MM:SS.MIL
+
+  giving the time in two forms: first as the total number of milliseconds,
+  and then the same value expressed in hours, minutes, and seconds including
+  fractions of a second.
+
+  This line can easily be extracted by external tools, to aggregate
+  information about any desired set of tests.
+
+jtreg writes a simple summary of test execution times to a file in
+the [report directory](#report-work-dirs), called `text/timeStats.txt`.
+This file contains data to create a histogram giving the number of
+tests taking a given time to execute, rounded to the nearest second.
+These values are then followed by the mean and standard deviation
+of the test execution times.  If there are any tests taking an
+unexpectedly long time to execute, they can be determined by examining
+the `elapsed` entries in the `.jtr` files.
+
+### Why is there a delay after the tests have been run, before jtreg exits?
+
+By default, jtreg reports on all the tests that have been executed
+and which have results in the work directory. It may take a few seconds
+to find the set of tests for the report. You can use the `-report:`_value_
+option to specify which tests should be in the report. If you are just
+running a single test or a few tests, you may want to use `-report:files`,
+to just report on the tests specified in the files and/or groups given on the
+command line.
+
+### How do I find the tests that took longest to run?
+
+Using the [`elapsed`](#my-tests-take-a-long-time-to-run-how-do-i-find-where-the-time-goes)
+time written into each `.jtr` file, you can find the slowest tests with 
+a command such as the following:
+
+    grep -r "^elapsed=" DIRS | sed -e 's/\\:/:/g' | sort -t = -k 2 -n -r
+
+where _DIRS_ is one or more directories containing `.jtr` files to be
+examined. The command scans the input files and directories looking for
+the `elapsed` lines, and then sorts the lines by the millisecond value
+in descending order.
+
+You can also use the `head` command to limit the output to the desired
+number of the slowest tests, represented here by _COUNT_:
+
+    grep -r "^elapsed=" DIRS | sed -e 's/\\:/:/g' | sort -t = -k 2 -n -r | head -n COUNT
+
+_Note:_ there is also an entry named `totalTime` in the _testresult_ data in
+each `.jtr` file, giving the execution time in seconds. As such, it is
+approximately equivalent to the value given in the `elapsed` value, after allowing
+for the different units (seconds compared to milliseconds) in the two values.
+
+### My system is unusable while I run tests. How do I fix that?
+
+* If you are using the `-conc` or `-concurrency` option to run tests in parallel,
+  try reducing the number of tests to be run at the same time.
+* Use VM options, like `-Xmx`, to limit the amount of memory available to each process.
+* Try reducing the priority used to run `jtreg` and the processes it runs. 
+  On POSIX systems, you can use the `nice` command to control the priority of a process.
+
+The JDK [`make test`](#how-do-i-run-jdk-jtreg-tests-using-make-test-and-the-jdk-makefile-infrastructure)
+framework automatically uses these techniques to reduce the load on a system.  
 
 ### What is the agent pool?
 
-The agent pool is a collection of reusable VMs that can be used to run 
+The agent pool is a collection of reusable VMs that can be used to run
 test actions, like `@compile` and `@run main`, when it is not required to
 run the action in a separate VM. VMs are started automatically as needed,
 and after each use, if they can be reset to a standard state, they are saved
@@ -1041,11 +1154,11 @@ The characteristics used to select a VM from the pool are:
 ### How do I control the agent pool?
 
 There is a limit to the number of VMs in the pool at any one time.
-The default is double the number of tests that may run 
+The default is double the number of tests that may run
 [concurrently](#how-do-i-specify-whether-to-run-tests-concurrently).
 The value can be overridden with the `--max-pool-size` option.
 Setting a larger number will mean more system resources are used
-to keep idle VMs available for potential reuse;  
+to keep idle VMs available for potential reuse;
 setting a smaller number will save system resources but will reduce
 the chance of being able to reuse a JVM.
 
@@ -1053,7 +1166,7 @@ There is also a time limit on how long an idle VM will remain in the pool,
 The default is 30 seconds.
 The value can be overridden with the `--pool-idle-timeout` option.
 Setting a larger number will mean more system resources are used
-to keep idle VMs available for potential reuse;  
+to keep idle VMs available for potential reuse;
 setting a smaller number will save system resources but will reduce
 the chance of being able to reuse a JVM.
 The value is used as given; it is not subject to the modification
@@ -1115,11 +1228,11 @@ older than the corresponding source files.  Other files which the test depends
 on must be specified with the `@run build` action.
 
 The arguments to the `@test` tag are ignored by the harness.  For
-identification it may be useful to put information such as SCCS ID keywords after the `@test` tag.
+identification, it may be useful to put information such as SCCS ID keywords after the `@test` tag.
 
 While not part of the tag specification, some tests use the
 string "`/nodynamiccopyright/`" after `@test`
-to indicate that that the file should not be subject to automated
+to indicate that the file should not be subject to automated
 copyright processing that might affect the operation of the test,
 for example, by affecting the line numbers of the test source code.
 
@@ -1129,8 +1242,8 @@ The other tags shown above are optional.
 
 The `@bug` tag should be followed by one or more bug numbers,
 separated by spaces.  The bug number is useful in diagnosing test failures.
-It's OK to write tests that don't have bug numbers, but if you're writing a
-test for a specific bug please include its number in an `@bug` tag.
+It is OK to write tests that don't have bug numbers, but if you're writing a
+test for a specific bug please include the bug number in an `@bug` tag.
 
 The `@summary` tag describes the condition that is checked by the
 test.  It is especially useful for non-regression tests, which by definition
@@ -1185,12 +1298,12 @@ Yes. The harness will capture everything sent to both streams.
 Yes, compiler tests using the `@compile` tag can use
 the `/ref=`_file_ option.
 Such tests are generally not recommended, since the output can be
-sensitive to the locale in which the are run, and may contain
+sensitive to the locale in which they are run, and may contain
 other details which may be hard to maintain, such as line numbers.
 
 While not part of the tag specification, some tests use the
 string "`/nodynamiccopyright/`" after the `@test` tag
-to indicate that that the file should not be subject to automated
+to indicate that the file should not be subject to automated
 copyright processing that might affect the operation of the test.
 
 ### My test opens files and sockets: do I have to close them before the test exits?
@@ -1209,7 +1322,7 @@ if you do not.
 If you want to be able to run the action in agentVM mode, then
 you may need to reset the value before the action is completed.
 When an action is run in agentVM mode, jtreg will try and reset some
-commonly used values to their their state at the beginning of the action.
+commonly used values to their state at the beginning of the action.
 If you modify any other values, you must either reset them in the
 test code before the action exits, or ensure the use of otherVM mode
 for the action.
@@ -1306,7 +1419,7 @@ See the [previous entry](#how-much-output).
 TL;DR:  If you're trying to set `javatest.maxOutputSize`, it may be because you have seen a
 message in the middle of some very long output in a `.jtr` file.  You can either
 set the default value with a system property for the JVM running jtreg (_not_ the JVM(s)
-used to run tests), or you can override the default value for some or all tests with the 
+used to run tests), or you can override the default value for some or all tests with the
 `maxOutputSize` property in the `TEST.ROOT` or `TEST.properties` configuration files.
 
 ### How much time can a test take? {#how-much-time}
@@ -1388,7 +1501,7 @@ If code was changed, but is not exercised by any existing test or the new test,
 then that code is effectively untested. There may be minor exceptions to this
 rule for code that will really difficult to exercise, such as code to detect
 "out of memory" or "disk full" conditions, but the general principle holds.
-If you have access to code coverage tools, check that all of the modified lines
+If you have access to code coverage tools, check that all the modified lines
 of code in the product have been executed: if code has not been executed, it has
 definitely not been tested.
 
@@ -1443,7 +1556,7 @@ when passed a negative count could be named `SkipNegative.java`.
 
 You might find that the name you want to give your test has already been
 taken.  In this case either find a different name or, if you're just not in a
-creative mood, append an underscore and a digit to an existing name.  Thus if
+creative mood, append an underscore and a digit to an existing name.  Thus, if
 there were already a `Skip.java` file, a new test for the skip
 method could be named `Skip_1.java`.
 
@@ -1642,8 +1755,8 @@ known to fail intermittently.
 Extra care should be taken to handle test failures of such tests.
 
 For more details, see these email threads:
-[March 2015](http://mail.openjdk.java.net/pipermail/jdk9-dev/2015-March/001991.html),
-[April 2015](http://mail.openjdk.java.net/pipermail/jdk9-dev/2015-April/002164.html).
+[March 2015](http://mail.openjdk.org/pipermail/jdk9-dev/2015-March/001991.html),
+[April 2015](http://mail.openjdk.org/pipermail/jdk9-dev/2015-April/002164.html).
 
 ### When should I use the `randomnness` keyword in a test?
 
@@ -1655,8 +1768,8 @@ Extra care should be taken to handle test failures of tests using
 random behavior.
 
 For more details, see these email threads:
-[March 2015](http://mail.openjdk.java.net/pipermail/jdk9-dev/2015-March/001991.html),
-[April 2015](http://mail.openjdk.java.net/pipermail/jdk9-dev/2015-April/002164.html).
+[March 2015](http://mail.openjdk.org/pipermail/jdk9-dev/2015-March/001991.html),
+[April 2015](http://mail.openjdk.org/pipermail/jdk9-dev/2015-April/002164.html).
 
 ### What if a test does not apply in a given situation?
 
@@ -1779,7 +1892,7 @@ Example:
 
 _Note:_ It is currently not possible to exclude all the tests in a file
 with a single entry.  See
-[CODETOOLS-7902265](https://bugs.openjdk.java.net/browse/CODETOOLS-7902265).
+[CODETOOLS-7902265](https://bugs.openjdk.org/browse/CODETOOLS-7902265).
 
 ### Can I run tests differently, depending on the circumstances?
 
@@ -1806,7 +1919,7 @@ You can use `@run driver` to run a class that provides more complex logic, if ne
 ### My test uses "preview features": how do I specify the necessary options?
 
 Tests that use preview features must use the `--enable-preview` to compile
-and run the code.  In addition, to compile the code you must also specify the 
+and run the code.  In addition, to compile the code you must also specify the
 appropriate source level.
 
 To provide these options, you can either do so explicitly, in `@compile` and `@run main`
@@ -1815,13 +1928,13 @@ will automatically add any necessary options.
 
 Using explicit options in  `@compile` and `@run main` actions can be inconvenient
 and disruptive to the test description when the test can otherwise be set up to use
-implicit `@build` actions and the ensuing `@compile` actions. 
+implicit `@build` actions and the ensuing `@compile` actions.
 In these situations, the use of `@enablePreview` is generally recommended.
 
 The equivalent of `@enablePreview` can be set on all the tests in a directory
-and its subdirectories by configuring an entry for `enablePreview` in the 
+and its subdirectories by configuring an entry for `enablePreview` in the
 `TEST.properties` file in an enclosing directory. Any value set in a `TEST.properties`
-file can be overriden in individual tests by using `@enablePreview`.
+file can be overridden in individual tests by using `@enablePreview`.
 
 
 --------
@@ -1935,7 +2048,7 @@ Some guidelines follow from this one fundamental guideline:
     a package hierarchy whose root is part of an enclosing package.
   * Don't place one library within another.
   * Don't place tests in a library.
-  * Don't use the anti-pattern in which a test refers to a library
+  * Don't use the antipattern in which a test refers to a library
     in an enclosing directory, such as `@library ../..`.
 
 
@@ -1952,9 +2065,9 @@ implemented as jtreg groups:
    run.
 
 For more details, see these email threads:
-[March 2015](http://mail.openjdk.java.net/pipermail/jdk9-dev/2015-March/001991.html),
-[April 2015](http://mail.openjdk.java.net/pipermail/jdk9-dev/2015-April/002164.html),
-[June 2015](http://mail.openjdk.java.net/pipermail/jdk9-dev/2015-June/002325.html).
+[March 2015](http://mail.openjdk.org/pipermail/jdk9-dev/2015-March/001991.html),
+[April 2015](http://mail.openjdk.org/pipermail/jdk9-dev/2015-April/002164.html),
+[June 2015](http://mail.openjdk.org/pipermail/jdk9-dev/2015-June/002325.html).
 
 --------
 
@@ -2009,7 +2122,7 @@ jtreg supports TestNG and Junit tests in two ways.
    test description if you choose to do so, if you wish to specify
    information tags such as`@bug`, `@summary` and `@keyword`.
    You must not specify any action tags, such as `@run`, `@compile`,
-   etc, since the actions are implicit for every test in the group
+   and so on, since the actions are implicit for every test in the group
    of tests.
 
    At most one such test description may be provided in each file
@@ -2085,7 +2198,7 @@ containing the `TEST.properties` file.
 
 For any particular group of TestNG or JUnit tests, you can only
 specify libraries for the entire group: you cannot specify one
-library for some of the tests and another library for other tests.
+library for some tests and another library for other tests.
 This is because the all the source files in the group are
 compiled together.
 
@@ -2095,6 +2208,37 @@ Run the command `jtreg -version` to see the version of jtreg and available compo
 
 For OpenJDK, the policy is to use a supported, older version
 and not necessarily the latest and greatest version.
+
+### How do I find the path for the TestNG or JUnit jar files?
+
+It should not be necessary to determine the path for the TestNG or JUnit jar
+files when using the jtreg built-in support to run TestNG or JUnit tests,
+because jtreg will automatically set up all the necessary paths.  But sometimes
+it may be desirable for test code, such as a "driver" test, to run a set of
+TestNG or JUnit tests with some special set of options, perhaps in a separate
+JVM. In such situations, in may be necessary to construct a class path
+containing the paths for the necessary libraries.
+
+The best way to determine the path of the jar file for a library is to use the
+protection domain and code source for a representative class in the  library,
+such as with the following code:
+
+```java
+import java.security.ProtectionDomain;
+import java.security.CodeSource;
+
+...
+
+    public Path getPath(Class<?> libraryClass) {
+        CodeSource cs = libraryClass.getProtectionDomain().getCodeSource();
+        return Path.of(URI.create(cs.getLocation().toString()));
+    }
+```
+
+Note that starting with jtreg version 7, the convention for naming the jar file
+for the library is to use the base name of the jar file that was specified when
+jtreg was built, and that this name may depend on the version of the library.
+For this reason, you should not assume a fixed name for the library jar file.
 
 --------
 
@@ -2112,7 +2256,7 @@ automatically propagated into the test's JVM are:
 
 * Linux and Solaris:
     * `PATH` is set to `/bin:/usr/bin:/usr/sbin`
-    * The following are propogated from the user's environment:
+    * The following are propagated from the user's environment:
         `DISPLAY`,
         `HOME`
         `LANG`,
@@ -2126,7 +2270,7 @@ automatically propagated into the test's JVM are:
 * Windows:
 
     * `PATH` is set to the MKS or Cygwin toolkit binary directory
-    * The following are propogated from the user's environment:
+    * The following are propagated from the user's environment:
         `SystemDrive`,
         `SystemRoot`
         `windir`
@@ -2589,7 +2733,7 @@ either for a few seconds or until the user clicks on the `pass`,
 the `stop` and `destroy` methods.
 
 The `main` method of an `applet` action will only be
-used if the test was run outside of the harness.
+used if the test was run directly, outside the harness.
 
 ### If I have an applet test, do I put the test description in the `.html` file or the `.java` file?
 
@@ -2626,7 +2770,7 @@ from the test.
 Tests are not allowed to call `System.exit` because the
 test must have the ability to run in the same JVM as the harness.
 Calling `System.exit` while the test is running in this
-manner whould cause the harness itself to exit!  Instead of calling
+manner would cause the harness itself to exit!  Instead of calling
 `System.exit()`, throw an exception.
 
 Be warned that the AWT event thread does not propagate exceptions,
@@ -2660,7 +2804,7 @@ to invoke the test.
 without the required class name.  Either provide the name of the class
 or remove the line entirely if appropriate.
 
-The line may be removed without impacting the test if all of the following
+The line may be removed without impacting the test if all the following
 criteria are met:
 
 * The file containing the test description has the `.java` extension.

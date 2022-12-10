@@ -23,6 +23,7 @@
 
 /* @test
  * @summary Failed: Unexpected exit from test [exit code: 0]
+ * @key needDisplay
  * @run applet ExitZero.html
  */
 

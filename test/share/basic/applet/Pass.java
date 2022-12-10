@@ -23,41 +23,49 @@
 
 /* @test
  * @summary Passed: Execution successful
+ * @key needDisplay
  * @run applet Pass.html
  */
 
 /* @test
  * @summary Passed: Execution successful
+ * @key needDisplay
  * @run applet/manual Pass.html
  */
 
 /* @test
  * @summary ...Manual test, user evaluated: Result depends on user selection
+ * @key needDisplay
  * @run applet/manual=yesno Pass.html
  */
 
 /* @test
  * @summary Passed: Manual test: Execution successful
+ * @key needDisplay
  * @run applet/manual=done Pass.html
  */
 
 /* @test
  * @summary Failed: Execution passed unexpectedly
+ * @key needDisplay
  * @run applet/fail Pass.html
  */
 
 /* @test
  * @summary Result depends on user selection
+ * @key needDisplay
  * @run applet/manual/fail Pass.html
  */
 
 /* @test
  * @summary ...Manual test, user evaluated: Result depends on user selection
+ * @key needDisplay
  * @run applet/manual=yesno/fail Pass.html
  */
 
 /* @test
  * @summary Failed: Manual test: Execution passed unexpectedly
+ * @key needDisplay
  * @run applet/manual=done/fail Pass.html
  */
 import java.applet.Applet;

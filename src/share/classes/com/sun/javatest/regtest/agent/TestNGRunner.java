@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -58,7 +58,7 @@ public class TestNGRunner implements MainActionHelper.TestRunner {
             throw new Error("wrong number of arguments");
         }
         String testName = args[0];
-        boolean mixedMode = Boolean.valueOf(args[1]);
+        boolean mixedMode = Boolean.parseBoolean(args[1]);
         String moduleClassName = args[2];
         int sep = moduleClassName.indexOf('/');
         String moduleName = (sep == -1) ? null : moduleClassName.substring(0, sep);
@@ -98,7 +98,7 @@ public class TestNGRunner implements MainActionHelper.TestRunner {
 
     public static class RegressionListener
             implements ITestListener, IConfigurationListener {
-        enum InfoKind { CONFIG, TEST };
+        enum InfoKind { CONFIG, TEST }
 
         @Override
         public void onTestStart(ITestResult itr) {
@@ -168,11 +168,8 @@ public class TestNGRunner implements MainActionHelper.TestRunner {
                 // combine in stack trace so we can issue single println
                 // threading may otherwise result in interleaved output
                 StringWriter trace = new StringWriter();
-                PrintWriter pw = new PrintWriter(trace);
-                try {
+                try (PrintWriter pw = new PrintWriter(trace)) {
                     t.printStackTrace(pw);
-                } finally {
-                    pw.close();
                 }
 
                 suffix = "\n" + trace;

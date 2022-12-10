@@ -34,7 +34,6 @@ import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -414,7 +413,7 @@ public abstract class Action extends ActionHelper {
 
     /**
      * This method pushes the full, constructed command for the action to the
-     * log.  The constructed command contains the the action and its arguments
+     * log.  The constructed command contains the action and its arguments
      * modified to run in another process.  The command may also contain
      * additional things necessary to run the action according to spec.  This
      * may include things such as a modified classpath, absolute names of files,
@@ -428,7 +427,7 @@ public abstract class Action extends ActionHelper {
      * @see com.sun.javatest.lib.ProcessCommand#run
      */
     protected void showCmd(String action, String[] cmdArgs, TestResult.Section section) {
-        showCmd(action, Arrays.asList(cmdArgs), section);
+        showCmd(action, List.of(cmdArgs), section);
     }
 
     protected void showCmd(String action, List<String> cmdArgs, TestResult.Section section) {

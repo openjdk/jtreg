@@ -39,7 +39,6 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.text.DateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.LinkedHashMap;
@@ -86,55 +85,32 @@ public class Help {
         versionHelpers.add(h);
     }
 
-    void addJarVersionHelper(final String name, final File jar, final String pomProperties) {
-        addVersionHelper(new Help.VersionHelper() {
-            @Override
-            public void showVersion(PrintWriter out) {
-                try (JarFile j = new JarFile(jar)) {
-                    String v = (String) j.getManifest().getMainAttributes().get(Attributes.Name.IMPLEMENTATION_VERSION);
-                    if (v == null && pomProperties != null) {
-                        Properties p = new Properties();
-                        try (InputStream in = j.getInputStream(j.getEntry(pomProperties))) {
-                            p.load(in);
-                            v = p.getProperty("version");
-                        }
-                    }
-                    out.println(name + ": version " + (v == null ? "unknown" : v)); // need i18n
-                } catch (IOException e) {
-                }
-            }
-        });
-    }
-
     void addPathVersionHelper(final String name, final SearchPath path) {
-        addVersionHelper(new Help.VersionHelper() {
-            @Override
-            public void showVersion(PrintWriter out) {
-                // print list of jar files in path
-                out.println(name + ": " + path.asList().stream()
-                        .map(Path::getFileName)
-                        .map(Object::toString)
-                        .collect(Collectors.joining(", ")));
-                try {
-                    // look inside jar metadata for details for those jar files that do
-                    // not seem to have a version in their filename
-                    for (Path jar: path.asList()) {
-                        String fn = jar.getFileName().toString();
-                        if (!fn.matches("(?i)[a-z0-9-_]+-[0-9](\\.[0-9]+)+\\.jar")) {
-                            try (JarFile j = new JarFile(jar.toFile())) {
-                                Attributes attrs = j.getManifest().getMainAttributes();
-                                String v = attrs.getValue(Attributes.Name.IMPLEMENTATION_VERSION);
-                                if (v == null) {
-                                    v = attrs.getValue("Bundle-Version");
-                                }
-                                String suffix = (path.asList().size() == 1)
-                                        ? "" : " (" + jar.getFileName() + ")";
-                                out.println(name + suffix + ": version " + (v == null ? "unknown" : v)); // need i18n
+        addVersionHelper(out -> {
+            // print list of jar files in path
+            out.println(name + ": " + path.asList().stream()
+                    .map(Path::getFileName)
+                    .map(Object::toString)
+                    .collect(Collectors.joining(", ")));
+            try {
+                // look inside jar metadata for details for those jar files that do
+                // not seem to have a version in their filename
+                for (Path jar: path.asList()) {
+                    String fn = jar.getFileName().toString();
+                    if (!fn.matches("(?i)[a-z0-9-_]+-[0-9](\\.[0-9]+)+\\.jar")) {
+                        try (JarFile j = new JarFile(jar.toFile())) {
+                            Attributes attrs = j.getManifest().getMainAttributes();
+                            String v = attrs.getValue(Attributes.Name.IMPLEMENTATION_VERSION);
+                            if (v == null) {
+                                v = attrs.getValue("Bundle-Version");
                             }
+                            String suffix = (path.asList().size() == 1)
+                                    ? "" : " (" + jar.getFileName() + ")";
+                            out.println(name + suffix + ": version " + (v == null ? "unknown" : v)); // need i18n
                         }
                     }
-                } catch (IOException e) {
                 }
+            } catch (IOException e) {
             }
         });
     }
@@ -155,7 +131,7 @@ public class Help {
         if (commandLineHelpQuery == null)
             commandLineHelpQuery = new ArrayList<>();
         if (query != null && query.trim().length() > 0)
-            commandLineHelpQuery.addAll(Arrays.asList(query.trim().split("\\s+")));
+            commandLineHelpQuery.addAll(List.of(query.trim().split("\\s+")));
     }
 
     void show(PrintStream out) {
@@ -380,13 +356,17 @@ public class Help {
             for (Option o: optionsForGroup.values())
                 nodesForGroup.add(createOptionHelpNode(o));
             HelpTree.Node groupNode = new HelpTree.Node(i18n, "help." + g.toLowerCase(),
-                    nodesForGroup.toArray(new HelpTree.Node[nodesForGroup.size()]));
+                    nodesForGroup.toArray(new HelpTree.Node[0]));
             commandHelpTree.addNode(groupNode);
         }
 
-        HelpTree.Node n = new HelpTree.Node(i18n, "help.tests",
-                new String[] { "at", "groups" });
-        commandHelpTree.addNode(n);
+        HelpTree.Node testsNode = new HelpTree.Node(i18n, "help.tests",
+                //new String[] { "at", "groups", "summary" },
+                new HelpTree.Node(i18n, "help.tests", "at"),
+                new HelpTree.Node(i18n, "help.tests", "groups"),
+                new HelpTree.Node(i18n, "help.tests.summary",
+                        "directory", "file", "group", "at-file"));
+        commandHelpTree.addNode(testsNode);
 
         String progName = getProgramName();
 
@@ -408,7 +388,7 @@ public class Help {
                 ww.write('\n');
                 commandHelpTree.write(ww);
             } else {
-                String[] query = commandLineHelpQuery.toArray(new String[commandLineHelpQuery.size()]);
+                String[] query = commandLineHelpQuery.toArray(new String[0]);
                 HelpTree.Selection s = commandHelpTree.find(query);
                 if (s != null)
                     commandHelpTree.write(ww, s);

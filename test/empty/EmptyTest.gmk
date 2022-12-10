@@ -23,7 +23,7 @@
 # questions.
 #
 
-# No Args:  
+# No Args:
 #   not allowed, exit code 1, Error: No tests selected
 #
 $(BUILDTESTDIR)/EmptyTest_NoArgs.ok: \
@@ -43,7 +43,7 @@ TESTS.jtreg += \
 
 #-------------------------------------------------------------------------------
 
-# Empty Group:  
+# Empty Group:
 #   allowed, exit code 0; Test results: No tests selected
 #
 $(BUILDTESTDIR)/EmptyTest_EmptyGroup.ok: \
@@ -55,7 +55,7 @@ $(BUILDTESTDIR)/EmptyTest_EmptyGroup.ok: \
 		-jdk:$(JDKHOME) \
 			> $(@:%.ok=%/jt.log) 2>&1 \
 		-dir:$(TESTDIR)/empty/ts1 \
-		:empty 
+		:empty
 	$(GREP) -s 'Test results: no tests selected' $(@:%.ok=%/jt.log)  > /dev/null
 	echo "test passed at `date`" > $@
 
@@ -108,7 +108,7 @@ TESTS.jtreg += \
 
 #-------------------------------------------------------------------------------
 
-# Empty Group and a Test:  
+# Empty Group and a Test:
 #   allowed, exit code 0; Test results: passed: 1
 #
 $(BUILDTESTDIR)/EmptyTest_EmptyGroup_Test.ok: \
@@ -151,7 +151,7 @@ TESTS.jtreg += \
 
 #-------------------------------------------------------------------------------
 
-# Multiple Empty Group in same test suite:  
+# Multiple Empty Group in same test suite:
 #   allowed, exit code 0; Test results: No tests selected
 #
 $(BUILDTESTDIR)/EmptyTest_MultiEmptyGroup_1.ok: \
@@ -172,7 +172,7 @@ TESTS.jtreg += \
 
 #-------------------------------------------------------------------------------
 
-# Multiple Empty Group in separate test suites:  
+# Multiple Empty Group in separate test suites:
 #   allowed, exit code 0; Test results: No tests selected
 #
 $(BUILDTESTDIR)/EmptyTest_MultiEmptyGroup_2.ok: \

@@ -180,7 +180,7 @@
 #         JTHARNESS_SRC_ARCHIVE_CHECKSUM: checksum of source archive
 #
 #     1. JTHARNESS_JAVATEST_JAR + JTHARNESS_LICENSE + JTHARNESS_COPYRIGHT
-#         The path to javatest.jar, license.txt, and copyright.txt respectively.
+#         The path to javatest.jar, LICENSE, and copyright.txt respectively.
 #     2a. JTHARNESS_ARCHIVE_URL
 #         The full URL for the archive.
 #     2b. JTHARNESS_ARCHIVE_URL_BASE + JTHARNESS_VERSION + JTHARNESS_BUILD_NUMBER + JTHARNESS_FILE
@@ -439,7 +439,7 @@ setup_jtharness_javatest_jar() {
         local JTHARNESS_LOCAL_ARCHIVE_FILE="${DEPS_DIR}/$(basename "${JTHARNESS_ARCHIVE_URL}")"
         get_archive "${JTHARNESS_ARCHIVE_URL}" "${JTHARNESS_LOCAL_ARCHIVE_FILE}" "${JTHARNESS_DEPS_DIR}" "${JTHARNESS_ARCHIVE_CHECKSUM}"
         JTHARNESS_JAVATEST_JAR="$(find "${JTHARNESS_DEPS_DIR}" -path '*/lib/javatest.jar')"
-        JTHARNESS_LICENSE="$(dirname "${JTHARNESS_JAVATEST_JAR}")/../legal/license.txt"
+        JTHARNESS_LICENSE="$(dirname "${JTHARNESS_JAVATEST_JAR}")/../LICENSE"
         JTHARNESS_COPYRIGHT="$(dirname "${JTHARNESS_JAVATEST_JAR}")/../legal/copyright.txt"
         return
     fi
@@ -477,7 +477,7 @@ setup_jtharness_license_and_copyright() {
         get_archive "${CODE_TOOLS_URL_BASE}/jtharness/archive/${JTHARNESS_SRC_VERSION}.zip" "${JTHARNESS_LOCAL_SRC_ARCHIVE}" "${JTHARNESS_SRC_DEPS_DIR}" "${JTHARNESS_SRC_ARCHIVE_CHECKSUM}"
         JTHARNESS_SRC="${JTHARNESS_SRC_DEPS_DIR}/jtharness-${JTHARNESS_SRC_VERSION}"
     fi
-    JTHARNESS_LICENSE="${JTHARNESS_SRC}/legal/license.txt"
+    JTHARNESS_LICENSE="${JTHARNESS_SRC}/LICENSE"
     JTHARNESS_COPYRIGHT="${JTHARNESS_SRC}/legal/copyright.txt"
 }
 setup_jtharness_license_and_copyright
@@ -764,20 +764,27 @@ if [ -n "${SKIP_MAKE:-}" ]; then
     exit
 fi
 
-# Build jtreg
+# save make command for possible later reuse, bypassing this script
+mkdir -p ${BUILD_DIR}
+cat > ${BUILD_DIR}/make.sh << EOF
+#!/bin/sh
+
 cd "${ROOT}/make"
-make ASMTOOLS_JAR="${ASMTOOLS_JAR}"                           \
-     ASMTOOLS_NOTICES="${ASMTOOLS_NOTICES}"                   \
-     BUILDDIR="${BUILD_DIR}"                                  \
-     BUILD_MILESTONE="${JTREG_BUILD_MILESTONE}"               \
-     BUILD_NUMBER="${JTREG_BUILD_NUMBER}"                     \
-     BUILD_VERSION="${JTREG_VERSION}"                         \
-     BUILD_VERSION_STRING="${JTREG_VERSION_STRING}"           \
-     JAVATEST_JAR="$(mixed_path "${JTHARNESS_JAVATEST_JAR}")" \
-     JDKHOME="${JAVA_HOME}"                                   \
-     JTHARNESS_NOTICES="${JTHARNESS_NOTICES}"                 \
-     JUNIT_JARS="${JUNIT_JARS}"                               \
-     JUNIT_NOTICES="${JUNIT_NOTICES}"                         \
-     TESTNG_JARS="${TESTNG_JARS}"                             \
-     TESTNG_NOTICES="${TESTNG_NOTICES}"                       \
+make ASMTOOLS_JAR="${ASMTOOLS_JAR}"                           \\
+     ASMTOOLS_NOTICES="${ASMTOOLS_NOTICES}"                   \\
+     BUILDDIR="${BUILD_DIR}"                                  \\
+     BUILD_MILESTONE="${JTREG_BUILD_MILESTONE}"               \\
+     BUILD_NUMBER="${JTREG_BUILD_NUMBER}"                     \\
+     BUILD_VERSION="${JTREG_VERSION}"                         \\
+     BUILD_VERSION_STRING="${JTREG_VERSION_STRING}"           \\
+     JAVATEST_JAR="$(mixed_path "${JTHARNESS_JAVATEST_JAR}")" \\
+     JDKHOME="$(mixed_path ${JAVA_HOME})"                     \\
+     JTHARNESS_NOTICES="${JTHARNESS_NOTICES}"                 \\
+     JUNIT_JARS="${JUNIT_JARS}"                               \\
+     JUNIT_NOTICES="${JUNIT_NOTICES}"                         \\
+     TESTNG_JARS="${TESTNG_JARS}"                             \\
+     TESTNG_NOTICES="${TESTNG_NOTICES}"                       \\
    ${MAKE_ARGS:-}
+EOF
+
+sh ${BUILD_DIR}/make.sh

@@ -27,7 +27,6 @@ package com.sun.javatest.regtest.tool;
 
 import java.nio.file.InvalidPathException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -70,7 +69,7 @@ public class OptionDecoder {
     }
 
     public void decodeArgs(String[] args) throws BadArgs {
-        decodeArgs(Arrays.asList(args));
+        decodeArgs(List.of(args));
     }
 
     public void decodeArgs(List<String> args) throws BadArgs {
@@ -234,13 +233,13 @@ public class OptionDecoder {
     }
 
 
-    private Map<String, Option> simpleOptions = new HashMap<>();
-    private List<Option> matchOptions = new ArrayList<>();
+    private final Map<String, Option> simpleOptions = new HashMap<>();
+    private final List<Option> matchOptions = new ArrayList<>();
     private Option fileOption;
 
-    private Map<String, String> locks = new HashMap<>();
+    private final Map<String, String> locks = new HashMap<>();
     private boolean inFiles;
 
     protected static boolean debugOptions = Boolean.getBoolean("javatest.regtest.debugOptions");
-    private static I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(Tool.class);
+    private static final I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(Tool.class);
 }

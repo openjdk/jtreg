@@ -17,8 +17,8 @@ basic way to build `jtreg`.
 *Note:* The _build.sh_ script supersedes the earlier _build-all.sh_ script.
 
 The script is intended to be run in a Unix-like shell, such as `bash` on Linux or
-Mac OS X, or with Cygwin or WSL on Windows. At a minimum, you must either set
-the `JAVA_HOME` environment variable or specify the location of the JDK to be
+Mac OS X, or with Cygwin, MSYS2, or WSL on Windows. At a minimum, you must either
+set the `JAVA_HOME` environment variable or specify the location of the JDK to be
 used to build `jtreg` with the `--jdk` command-line option. It must be a
 recent build of JDK 11 or later.
 

@@ -31,6 +31,9 @@
  * @run junit/othervm BadTestClass
  */
 
-class BadTestClass
-{
+import org.junit.*;
+
+public class BadTestClass {
+    @Test
+    private void m() { }
 }

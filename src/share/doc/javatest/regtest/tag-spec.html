@@ -50,14 +50,14 @@
 <div style="text-align:center">
 <h1>The JDK Test Framework: Tag Language Specification</h1>
 <p>Comments and questions to:
-<a href="mailto:jtreg-use@openjdk.java.net">jtreg-use@openjdk.java.net</a>.
+<a href="mailto:jtreg-use@openjdk.org">jtreg-use@openjdk.org</a>.
 <br>
 1.47, 7 July, 2020
 </div>
 
 <p>This is a specification document, not a tutorial.  For more basic information
 please consult the jtreg FAQ at
-<a href="http://openjdk.java.net/jtreg">http://openjdk.java.net/jtreg</a>.
+<a href="http://openjdk.org/jtreg">http://openjdk.org/jtreg</a>.
 
 <p style="margin: 10pt 15pt"><b>Contents:</b>
 <a href="#LEADING_COMMENTS">Leading comments and defining files</a> &middot;
@@ -297,8 +297,8 @@ from the <code>modules</code> entry in test suite <a href="#config">configuratio
 
 <p>The dependencies will be ignored if the version of JDK used to run the tests
 does not support the use of modules. Otherwise,
-a test will not be run if the system being tested does not contain all of the
-specified modules. All of the specified modules will be present in the configuration
+a test will not be run if the system being tested does not contain all the
+specified modules. All the specified modules will be present in the configuration
 when the test is run.
 
 <p>A flag may be specified to indicate the desired access to a specified
@@ -328,7 +328,7 @@ The expression may be composed of the following elements:
         test-suite <a href="#config">configuration files</a> for information on
         how to extend the set with additional names specific to the test-suite.
     <li>Numeric values. Values must be decimal integers, optionally followed a
-        suffix '<code>K</code>', '<code>M</code>' or '<code>G</code>', which as a
+        suffix '<code>K</code>', '<code>M</code>' or '<code>G</code>', which is
         a multiplier of 1024, 1024*1024 and 1024*1024*1024 respectively.
         The resulting value must fit in a <code>long</code> variable.
     <li>String values, enclosed in double quotes '"'.
@@ -356,7 +356,7 @@ be enclosed in parentheses and combined with '&amp;'.</p>
 
 <dt>@enablePreview <var>[true|false]</var>
 <dd>
-<p>Declares whether or not the test code uses "preview features".
+<p>Declares whether the test code uses "preview features".
 Code that uses preview features must be compiled and executed
 with additional compile-time and run-time options.
 If a test declares that it uses preview features, these additional
@@ -712,8 +712,8 @@ is specified with a value of "<code>yesno</code>", the user indicates that the t
 
 <p>The class named in the <code>&lt;applet&gt;</code> tag will be compiled on demand, just as though
 an "<code>@run</code> build <var>&lt;class&gt;</var>" action had been inserted before this action.  If this
-action requires classes other the class named in the <code>&lt;applet&gt;</code> tag to be up to
-date, insert an appropriate build action before this action.
+action requires classes other the class named in the <code>&lt;applet&gt;</code> tag to be
+up to date, insert an appropriate build action before this action.
 
 <p>If <code>/manual</code> is not specified, then the applet will be run by invoking its <code>init</code>,
 <code>start</code>, and <code>setVisible(true)</code> methods (in that order), delaying for a few
@@ -813,8 +813,8 @@ the same as the working directory.
 <dt>
 Class directory
 <dd>The directory into which class files compiled from source
-files in the source directory are compiled.  May be the source directory,
-or may be some other directory.
+files in the source directory are compiled.  It may be the source directory,
+or it may be some other directory.
 <dt>
 Java home directory
 <dd>The directory containing the JDK build or release
@@ -1008,15 +1008,15 @@ by setting the system property <code>javatest.maxOutputSize</code>.
 on the command line, use <code>-J-D<i>&lt;name&gt;</i>=<i>&lt;value&gt;</i></code>.
 
 <dt id="allowSmartActionArgs"><code>allowSmartActionArgs <var>&lt;true|false&gt;</var></code>
-<dd>Specify whether or not to permit the use of <code>${<var>&lt;name&gt;</var></code>
+<dd>Specify whether to permit the use of <code>${<var>&lt;name&gt;</var></code>
 in the arguments for an action. The set of names is the same as the set that
 may be used in an <code>@requires</code> expression.
 See <a href="#requires_names">Appendix 1</a>.
 
 <dt id="enablePreview"><code>enablePreview <var>&lt;true|false&gt;</var></code>
-<dd>Specify whether or not the tests in this directory and any subdirectories use preview
+<dd>Specify whether the tests in this directory and any subdirectories use preview
 features and that the necessary compile-time and run-time options should be provided automatically.
-The default value can be overriden in individual tests using the <code>@enablePreview</code>
+The default value can be overridden in individual tests using the <code>@enablePreview</code>
 declarative tag.
 </dl>
 
@@ -1154,7 +1154,7 @@ for information on how to extend the set of supported names for a particular tes
     <td>
 
 <tr><td><code>os.family</code>
-    <td>The operation system family, derived from the operating sytsem name.
+    <td>The operating system family, derived from the operating system name.
     <td>One of <code>linux</code> <code>mac</code> <code>solaris</code> <code>windows</code>
     <td>first word of <code>os.name</code>
 
@@ -1327,6 +1327,15 @@ as indicated by <code>@enablePreview</code> in the test description
 or an <code>enablePreview</code> entry in a TEST.properties file.
 
 <tr>
+<td><code>test.query</code>
+<td><code>TESTQUERY</code>
+<td>Set to the string specified on the command-line for this test,
+or not set if no value was specified. If set, a test may use
+the value to filter the parts of the test to be executed.
+For example, JUnit tests executed by the JUnit Platform, will interpret
+the value as the name of a single method to be executed.
+
+<tr>
 <td><i>Not Applicable</i>
 <td><code>FS</code>
 <td>The file separator character to use.
@@ -1342,7 +1351,7 @@ or an <code>enablePreview</code> entry in a TEST.properties file.
 <td><i>Not Applicable</i>
 <td><code>NULL</code>
 <td>The "null sink" to use.
-    (<code>NUL</code> in a WIndows environment; <code>/dev/null</code> otherwise.)
+    (<code>NUL</code> in a Windows environment; <code>/dev/null</code> otherwise.)
 
 </tbody>
 </table>

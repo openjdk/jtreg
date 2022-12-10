@@ -152,9 +152,9 @@ TESTS.jtreg += \
 
 #3310  ./build/images/jtreg/bin/jtreg -jdk:/opt/jdk/1.8.0 -w build/w -r build/r -e mode=fail test/statusFilter/
 # 3311  ./build/images/jtreg/bin/jtreg -jdk:/opt/jdk/1.8.0 -w build/w -r build/r -e mode=fail -status:fail test/statusFilter/
-# 3312  more build/r/text/summary.txt 
+# 3312  more build/r/text/summary.txt
 # 3313  ./build/images/jtreg/bin/jtreg -jdk:/opt/jdk/1.8.0 -w build/w -r build/r -ro test/statusFilter/
-# 3314  more build/r/text/summary.txt 
+# 3314  more build/r/text/summary.txt
 # 3315  ./build/images/jtreg/bin/jtreg -jdk:/opt/jdk/1.8.0 -w build/w -r build/r -status:fail -report:all test/statusFilter/
-# 3316  more build/r/text/summary.txt 
+# 3316  more build/r/text/summary.txt
 

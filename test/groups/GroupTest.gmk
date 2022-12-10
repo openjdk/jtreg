@@ -35,18 +35,18 @@ $(BUILDTESTDIR)/GroupTest.ok: $(GroupTest.GROUPS:%=$(BUILDTESTDIR)/GroupTest.%.o
 $(GroupTest.GROUPS:%=$(BUILDTESTDIR)/GroupTest.%.ok): \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
-	$(MKDIR) -p $(@:%.ok=%) 
+	$(MKDIR) -p $(@:%.ok=%)
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDKHOME) \
 		$(TESTDIR)/groups:$(@:$(BUILDTESTDIR)/GroupTest.%.ok=%) ; \
-            status=$$? ; echo status=$$status ; \
-            case "$(@:$(BUILDTESTDIR)/GroupTest.%.ok=%)" in \
+	status=$$? ; echo status=$$status ; \
+	case "$(@:$(BUILDTESTDIR)/GroupTest.%.ok=%)" in \
 		g6 )  expect=1 ;; \
 		g10|g11|g12 ) expect=5 ;; \
-                * ) expect=0 ;; \
-            esac ; \
-            if [ "$$status" != "$$expect" ]; then echo "unexpected exit: $$status" ; exit 1; fi
+		* ) expect=0 ;; \
+	esac ; \
+	if [ "$$status" != "$$expect" ]; then echo "unexpected exit: $$status" ; exit 1; fi
 	echo $@ passed at `date` > $@
 
 TESTS.jtreg += $(BUILDTESTDIR)/GroupTest.ok
@@ -54,7 +54,7 @@ TESTS.jtreg += $(BUILDTESTDIR)/GroupTest.ok
 $(BUILDTESTDIR)/ShowGroupTest.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
-	$(MKDIR) -p $(@:%.ok=%) 
+	$(MKDIR) -p $(@:%.ok=%)
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDKHOME) \

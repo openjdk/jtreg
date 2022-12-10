@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -25,21 +25,36 @@
 
 #----------------------------------------------------------------------
 
-# 6590671: RegressionTestFinder should ignore , files
-$(BUILDTESTDIR)/T6590671.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
-		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
-		$(TESTDIR)/6590671/T6590671.java \
-		$(JTREG_IMAGEDIR)/bin/jtreg
-	$(RM) $(@:%.ok=%)
-	$(MKDIR) -p $(@:%.ok=%)/test
-	$(CP) $(TESTDIR)/6590671/T6590671.java \
-		$(TESTDIR)/6590671/TEST.ROOT $(@:%.ok=%)/test
-	$(CP) $(@:%.ok=%)/test/T6590671.java $(@:%.ok=%)/test/,T6590671.java
-	JTHOME=$(JTREG_IMAGEDIR) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
-		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-v -jdk:$(JDKHOME) \
-		$(@:%.ok=%)/test
+Group2Test.GROUPS = all indirectAll allWithExtra
+
+$(BUILDTESTDIR)/Group2Test.ok: \
+		$(Group2Test.GROUPS:%=$(BUILDTESTDIR)/Group2Test.%.ok) \
+		$(Group2Test.GROUPS:%=$(BUILDTESTDIR)/Group2Test.report-files.%.ok)
 	echo $@ passed at `date` > $@
 
-TESTS.jtreg += $(BUILDTESTDIR)/T6590671.ok
+$(Group2Test.GROUPS:%=$(BUILDTESTDIR)/Group2Test.%.ok): \
+	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	$(JTREG_IMAGEDIR)/bin/jtreg
+	$(MKDIR) -p $(@:%.ok=%)
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(JDKHOME) \
+		$(TESTDIR)/groups2:$(@:$(BUILDTESTDIR)/Group2Test.%.ok=%) \
+		1>$(@:%.ok=%)/jt.log 2>&1
+	$(GREP) '^Test results: passed: 3$$' $(@:%.ok=%)/jt.log
+	echo $@ passed at `date` > $@
 
+$(Group2Test.GROUPS:%=$(BUILDTESTDIR)/Group2Test.report-files.%.ok): \
+	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	$(JTREG_IMAGEDIR)/bin/jtreg
+	$(MKDIR) -p $(@:%.ok=%)
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(JDKHOME) \
+		-report:files \
+		$(TESTDIR)/groups2:$(@:$(BUILDTESTDIR)/Group2Test.report-files.%.ok=%) \
+		1>$(@:%.ok=%)/jt.log 2>&1
+	$(GREP) '^Test results: passed: 3$$' $(@:%.ok=%)/jt.log
+	echo $@ passed at `date` > $@
+
+TESTS.jtreg += $(BUILDTESTDIR)/Group2Test.ok

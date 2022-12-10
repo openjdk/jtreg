@@ -25,7 +25,7 @@
 
 #----------------------------------------------------------------------
 
-define check-found 
+define check-found
     if $(GREP) '$1' $2 > /dev/null ; then \
 	true; \
     else \
@@ -33,10 +33,10 @@ define check-found
     fi
 endef
 
-define check-not-found 
+define check-not-found
     if $(GREP) '$1' $2 > /dev/null ; then \
 	echo '$1' unexpectedly found in $2 ; exit 1 ; \
-    fi 
+    fi
 endef
 
 $(BUILDTESTDIR)/MaxOutputSize.ok: \

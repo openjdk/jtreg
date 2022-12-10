@@ -27,8 +27,6 @@ package com.sun.javatest.regtest.tool;
 
 import java.awt.EventQueue;
 import java.awt.Frame;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -43,7 +41,6 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.Reader;
 import java.io.StreamTokenizer;
-import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -52,7 +49,6 @@ import java.nio.file.Path;
 import java.text.DateFormat;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
@@ -66,7 +62,6 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.swing.Timer;
@@ -83,7 +78,6 @@ import com.sun.javatest.Status;
 import com.sun.javatest.StatusFilter;
 import com.sun.javatest.TestEnvironment;
 import com.sun.javatest.TestFilter;
-import com.sun.javatest.TestFinder;
 import com.sun.javatest.TestResult;
 import com.sun.javatest.TestResultTable;
 import com.sun.javatest.TestSuite;
@@ -114,9 +108,7 @@ import com.sun.javatest.regtest.report.TestStats;
 import com.sun.javatest.regtest.report.Verbose;
 import com.sun.javatest.regtest.report.VerboseHandler;
 import com.sun.javatest.regtest.report.XMLWriter;
-import com.sun.javatest.regtest.tool.Help.VersionHelper;
 import com.sun.javatest.regtest.util.NaturalComparator;
-import com.sun.javatest.regtest.util.StringUtils;
 import com.sun.javatest.tool.Desktop;
 import com.sun.javatest.util.BackupPolicy;
 import com.sun.javatest.util.I18NResourceBundle;
@@ -191,9 +183,10 @@ public class Tool {
     private static void checkJavaOSVersion() {
         String osName = System.getProperty("os.name");
         if (osName != null && osName.equals("Mac OS X")) {
+            var command = List.of("sw_vers", "-productVersion");
             try {
                 String expectVersion;
-                Process p = new ProcessBuilder("defaults", "read", "loginwindow", "SystemVersionStampAsString")
+                Process p = new ProcessBuilder(command)
                         .redirectErrorStream(true)
                         .start();
                 try (InputStream in = p.getInputStream();
@@ -201,11 +194,18 @@ public class Tool {
                     expectVersion = r.lines().collect(Collectors.joining());
                 }
                 p.waitFor();
+                int rc = p.exitValue();
+                if (rc != 0) {
+                    System.err.println("Error getting OS version: "
+                            + String.join(" ", command) + ": rc=" + rc);
+                    System.exit(99);
+                }
 
                 checkJavaOSVersion(expectVersion);
 
             } catch (IOException | InterruptedException e) {
-                System.err.println("Error getting OS version: " + e);
+                System.err.println("Error getting OS version: "
+                        + String.join(" ", command) + ": " + e);
                 System.exit(99);
             }
         }
@@ -233,7 +233,7 @@ public class Tool {
         // System.exit unless we ask it nicely, pretty please, thank you.
         SecurityManager sc = System.getSecurityManager();
         if (sc instanceof JavaTestSecurityManager) {
-            ((JavaTestSecurityManager) sc).setAllowExit(true);
+            JavaTestSecurityManager.setAllowExit(true);
         }
         System.exit(exitCode);
     }
@@ -247,7 +247,7 @@ public class Tool {
     public static final String TIMEOUT = "timeout";     // timeout-related options
     public static final String AGENT_POOL = "pool";     // agent pool related options
 
-    public List<Option> options = Arrays.asList(new Option(OPT, VERBOSE, "verbose", "-v", "-verbose") {
+    public List<Option> options = List.of(new Option(OPT, VERBOSE, "verbose", "-v", "-verbose") {
             @Override
             public String[] getChoices() {
                 String[] values = new String[Verbose.values().length];
@@ -343,7 +343,7 @@ public class Tool {
                 if (arg == null || arg.length() == 0)
                     retainArgs = Collections.singletonList("all");
                 else
-                    retainArgs = Arrays.asList(arg.split(","));
+                    retainArgs = List.of(arg.split(","));
                 if (retainArgs.contains("none") && retainArgs.size() > 1) {
                     throw new BadArgs(i18n, "main.badRetainNone", arg);
                 }
@@ -404,9 +404,14 @@ public class Tool {
                     case "all-executed":
                         reportMode = ReportMode.ALL_EXECUTED;
                         break;
+                    case "files":
+                        reportMode = ReportMode.FILES;
+                        break;
                     case "all":
                         reportMode = ReportMode.ALL;
                         break;
+                    default:
+                        throw new BadArgs(i18n, "main.badReportOption", arg);
                 }
             }
         },
@@ -482,7 +487,7 @@ public class Tool {
             }
             @Override
             public void process(String opt, String arg) {
-                boolean b = (arg == null || Arrays.asList("yes", "on", "true").contains(arg));
+                boolean b = (arg == null || List.of("yes", "on", "true").contains(arg));
                 allowSetSecurityManagerFlag = b;
             }
         },
@@ -552,7 +557,7 @@ public class Tool {
 
         new Option(STD, TIMEOUT, "", "-thd", "-timeoutHandlerDir") {
             @Override
-            public void process(String opt, String arg) throws BadArgs {
+            public void process(String opt, String arg) {
                 arg = arg.trim();
                 if (arg.length() == 0)
                     return;
@@ -641,7 +646,7 @@ public class Tool {
                 arg = arg.trim();
                 if (arg.length() == 0)
                     return;
-                envVarArgs.addAll(Arrays.asList(arg.split(",")));
+                envVarArgs.addAll(List.of(arg.split(",")));
             }
         },
 
@@ -911,7 +916,7 @@ public class Tool {
                 arg = arg.trim();
                 if (arg.length() == 0)
                     return;
-                testVMOpts.addAll(Arrays.asList(arg.split("\\s+")));
+                testVMOpts.addAll(List.of(arg.split("\\s+")));
             }
         },
 
@@ -952,7 +957,7 @@ public class Tool {
                 arg = arg.trim();
                 if (arg.length() == 0)
                     return;
-                testCompilerOpts.addAll(Arrays.asList(arg.split("\\s+")));
+                testCompilerOpts.addAll(List.of(arg.split("\\s+")));
             }
         },
 
@@ -972,7 +977,7 @@ public class Tool {
                 arg = arg.trim();
                 if (arg.length() == 0)
                     return;
-                testJavaOpts.addAll(Arrays.asList(arg.split("\\s+")));
+                testJavaOpts.addAll(List.of(arg.split("\\s+")));
             }
         },
 
@@ -982,7 +987,7 @@ public class Tool {
                 arg = arg.trim();
                 if (arg.length() == 0)
                     return;
-                testDebugOpts.addAll(Arrays.asList(arg.split("\\s+")));
+                testDebugOpts.addAll(List.of(arg.split("\\s+")));
             }
         },
 
@@ -1002,24 +1007,15 @@ public class Tool {
 
         new Option(FILE, MAIN, null) {
             @Override
-            public void process(String opt, String arg) {
-                if (groupPtn.matcher(arg).matches()) {
-                    testGroupArgs.add(arg);
-                } else if (fileIdPtn.matcher(arg).matches()) {
-                    int sep = arg.lastIndexOf("#");
-                    Path file = Path.of(arg.substring(0, sep));
-                    String id = arg.substring(sep + 1);
-                    testFileIdArgs.add(new TestManager.FileId(file, id));
+            public void process(String opt, String arg) throws BadArgs {
+                if (TestManager.GroupSpec.isGroupSpec(arg)) {
+                    testGroupSpecArgs.add(TestManager.GroupSpec.of(arg));
+                } else if (TestManager.TestSpec.isTestSpec(arg)) {
+                    testSpecArgs.add(TestManager.TestSpec.of(arg));
                 } else {
-                    testFileArgs.add(Path.of(arg));
+                    throw new BadArgs(i18n, "main.badTestOrGroup", arg);
                 }
             }
-
-            Pattern groupPtn = System.getProperty("os.name").matches("(?i)windows.*")
-                    ? Pattern.compile("(|[^A-Za-z]|.{2,}):[A-Za-z0-9_,]+")
-                    : Pattern.compile(".*:[A-Za-z0-9_,]+");
-
-            Pattern fileIdPtn = Pattern.compile(".*#[A-Za-z0-9-_]+");
         }
     );
 
@@ -1036,7 +1032,6 @@ public class Tool {
         javatest_jar = JarManager.forClass(Harness.class);
 
         jtreg_jar = JarManager.forClass(getClass());
-        jarManager = new JarManager(jtreg_jar.getParent());
 
         help = new Help(options);
         if (javatest_jar != null) {
@@ -1108,23 +1103,12 @@ public class Tool {
             baseDir = baseDirArg.toAbsolutePath();
         }
 
-        String antFileList = System.getProperty(JAVATEST_ANT_FILE_LIST);
-        if (antFileList != null)
-            antFileArgs.addAll(readFileList(Path.of(antFileList)));
-
-        final TestManager testManager = new TestManager(out, baseDir, new TestFinder.ErrorHandler() {
-            @Override
-            public void error(String msg) {
-                Tool.this.error(msg);
-            }
-        });
-        testManager.addTestFiles(testFileArgs, false);
-        testManager.addTestFileIds(testFileIdArgs, false);
-        testManager.addTestFiles(antFileArgs, true);
-        testManager.addGroups(testGroupArgs);
+        final TestManager testManager = new TestManager(out, baseDir, Tool.this::error);
+        testManager.addTestSpecs(testSpecArgs);
+        testManager.addGroupSpecs(testGroupSpecArgs);
 
         if (testManager.isEmpty())
-            throw testManager.new NoTests();
+            throw new TestManager.NoTests();
 
         boolean multiRun = testManager.isMultiRun();
 
@@ -1167,7 +1151,7 @@ public class Tool {
             }
             File f = new File(s);
             if (compileJDK == null
-                    && f.getName().toLowerCase().equals("jre")
+                    && f.getName().equalsIgnoreCase("jre")
                     && f.getParentFile() != null)
                 f = f.getParentFile();
             testJDK = com.sun.javatest.regtest.config.JDK.of(f.toPath());
@@ -1188,15 +1172,13 @@ public class Tool {
             if (useWindowsSubsystemForLinux == null) {
                 // The test for Cygwin is more specific than the test for WSL,
                 // and so we give priority to Cygwin if both are detected.
-                useWindowsSubsystemForLinux = isCygwinDetected()
-                        ? false
-                        : isWindowsSubsystemForLinuxDetected();
+                useWindowsSubsystemForLinux = !isCygwinDetected() && isWindowsSubsystemForLinuxDetected();
             }
         } else {
             useWindowsSubsystemForLinux = false;
         }
 
-        if (jitFlag == false) {
+        if (!jitFlag) {
             envVarArgs.add("JAVA_COMPILER=");
         }
 
@@ -1226,16 +1208,12 @@ public class Tool {
 
         // register a factory to be used to create the parameters for a test suite,
         // such that all the appropriate command-line args are taken into account
-        RegressionTestSuite.setParametersFactory(new RegressionTestSuite.ParametersFactory() {
-            @Override
-            public RegressionParameters create(RegressionTestSuite ts) throws TestSuite.Fault {
-                try {
-                    return createParameters(testManager, ts);
-                } catch (BadArgs ex) {
-                    throw new TestSuite.Fault(i18n, "main.cantCreateParameters", ex.getMessage());
-                } catch (Fault ex) {
-                    throw new TestSuite.Fault(i18n, "main.cantCreateParameters", ex.getMessage());
-                }
+        RegressionTestSuite.setParametersFactory(ts -> {
+            try {
+                return createParameters(testManager, ts);
+            } catch (BadArgs
+                     | Fault ex) {
+                throw new TestSuite.Fault(i18n, "main.cantCreateParameters", ex.getMessage());
             }
         });
 
@@ -1391,7 +1369,7 @@ public class Tool {
      * for the test suites on the command line.  If a test suite is given
      * without qualifying with a group, all groups in that test suite are
      * shown.
-     * No filters (like keywords, status, etc) are taken into account.
+     * No filters (like keywords, status, etc.) are taken into account.
      */
     void showGroups(TestManager testManager) throws Fault {
         for (RegressionTestSuite ts : testManager.getTestSuites()) {
@@ -1514,16 +1492,6 @@ public class Tool {
         }
     }
 
-    private static List<Path> readFileList(Path file) throws Fault {
-        try {
-            List<String> lines = Files.readAllLines(file);
-            return lines.stream().map(Path::of).collect(Collectors.toList());
-        } catch (IOException e) {
-            throw new Fault(i18n, "main.cantRead", file, e);
-
-        }
-    }
-
     public int[] getTestStats() {
         return testStats.counts;
     }
@@ -1579,7 +1547,7 @@ public class Tool {
         Path pfile = workDirArg.resolve("jtreg.policy");
         try (BufferedWriter pout = Files.newBufferedWriter(pfile)) {
             String LINESEP = System.getProperty("line.separator");
-            for (Path f: Arrays.asList(jtreg_jar, javatest_jar)) {
+            for (Path f: List.of(jtreg_jar, javatest_jar)) {
                 pout.write("grant codebase \"" + f.toUri().toURL() + "\" {" + LINESEP);
                 pout.write("    permission java.security.AllPermission;" + LINESEP);
                 pout.write("};" + LINESEP);
@@ -1602,18 +1570,6 @@ public class Tool {
             Fault f = new Fault(i18n, "main.cantCreateDir", dir);
             f.initCause(e);
             throw f;
-        }
-    }
-
-    private void makeDir(File dir, boolean quiet) throws Fault {
-        // FIXME: I18N
-        if (dir.isDirectory())
-            return;
-        if (!quiet)
-            out.println("Directory \"" + dir + "\" not found: creating");
-        dir.mkdirs();
-        if (!dir.isDirectory()) {
-            throw new Fault(i18n, "main.cantCreateDir", dir);
         }
     }
 
@@ -1656,7 +1612,17 @@ public class Tool {
 
             rp.setRetainArgs(retainArgs);
 
+            // the tests are the tests to be executed by the harness, and do not
+            // include the "query" component
+            // 'null' means "all tests"
             rp.setTests(testManager.getTests(testSuite));
+
+            // the tests that have an associated query component, included in
+            // the string
+            List<String> testQueries = testManager.getTestQueries(testSuite);
+            if (!testQueries.isEmpty()) {
+                rp.setTestQueries(testQueries);
+            }
 
             if (userKeywordExpr != null || extraKeywordExpr != null) {
                 String expr =
@@ -1968,11 +1934,12 @@ public class Tool {
                         default:
                             throw new IllegalStateException();
 
-                        case EXECUTED:
+                        case EXECUTED: {
                             ParameterFilter pf = new ParameterFilter();
                             pf.update(params);
                             tf = pf;
                             break;
+                        }
 
                         case ALL_EXECUTED:
                             boolean[] statusValues = new boolean[Status.NUM_STATES];
@@ -1986,8 +1953,21 @@ public class Tool {
                         case ALL:
                             tf = new AllTestsFilter();
                             break;
-                    }
 
+                        case FILES: {
+                            try {
+                                RegressionParameters reportParams = new RegressionParameters("regtest", params.getTestSuite(), out::println);
+                                reportParams.setWorkDirectory(params.getWorkDirectory());
+                                reportParams.setTests(params.getTests());
+                                ParameterFilter pf = new ParameterFilter();
+                                pf.update(reportParams);
+                                tf = pf;
+                                break;
+                            } catch (Interview.Fault e) {
+                                throw new Fault(i18n, "main.cantCreateReportParameters", e);
+                            }
+                        }
+                    }
                 }
                 r.report(params, elapsedTimeHandler, stats, tf, quiet);
             }
@@ -2048,7 +2028,6 @@ public class Tool {
         }
     }
 
-    @SuppressWarnings("unchecked")
     private Iterator<TestResult> getResultsIterator(InterviewParameters params) {
         TestResultTable trt = params.getWorkDirectory().getTestResultTable();
         trt.waitUntilReady();
@@ -2058,7 +2037,7 @@ public class Tool {
         if (tests == null)
             return trt.getIterator(filters);
         else if (tests.length == 0)
-            return Collections.<TestResult>emptySet().iterator();
+            return Collections.emptyIterator();
         else
             return trt.getIterator(tests, filters);
     }
@@ -2068,13 +2047,9 @@ public class Tool {
             @Override
             public void run() {
                 final Frame startup = showStartup();
-                Timer t = new Timer(1000, new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        showGUI();
-                        startup.dispose();
-                    }
-
+                Timer t = new Timer(1000, e -> {
+                    showGUI();
+                    startup.dispose();
                 });
                 t.setRepeats(false);
                 t.start();
@@ -2128,7 +2103,7 @@ public class Tool {
     private void startHttpServer() {
         // start the http server
         // do this as early as possible, since objects may check
-        // HttpdServer.isActive() and decide whether or not to
+        // HttpdServer.isActive() and decide whether to
         // register their handlers
         HttpdServer server = new HttpdServer();
         Thread thr = new Thread(server);
@@ -2178,7 +2153,7 @@ public class Tool {
     }
 
     private void addEnvVars(Map<String, String> table, String[] list) {
-        addEnvVars(table, Arrays.asList(list));
+        addEnvVars(table, List.of(list));
     }
 
     private void addEnvVars(Map<String, String> table, List<String> list) {
@@ -2224,9 +2199,8 @@ public class Tool {
     }
 
     /**
-     * Returns whether or not Windows Subsystem for Linux may be
-     * available, by examining to see whether wsl.exe can be found on
-     * the path.
+     * Returns whether Windows Subsystem for Linux may be available,
+     * by examining whether wsl.exe can be found on the path.
      */
     private boolean isWindowsSubsystemForLinuxDetected() {
         if (isWindows()) {
@@ -2267,8 +2241,8 @@ public class Tool {
 
     //----------member variables-----------------------------------------------
 
-    private PrintWriter out;
-    private PrintWriter err;
+    private final PrintWriter out;
+    private final PrintWriter err;
 
     private List<String> expandedArgs;
 
@@ -2282,14 +2256,10 @@ public class Tool {
     private Float timeoutFactorArg;
     private String priorStatusValuesArg;
     private Path reportDirArg;
-    public List<String> testGroupArgs = new ArrayList<>();
-    public List<Path> testFileArgs = new ArrayList<>();
-    public List<TestManager.FileId> testFileIdArgs = new ArrayList<>();
-    // TODO: consider making this a "pathset" to detect redundant specification
-    // of directories and paths within them.
-    public final List<Path> antFileArgs = new ArrayList<>();
 
     // these args are jtreg extras
+    public List<TestManager.GroupSpec> testGroupSpecArgs = new ArrayList<>();
+    public List<TestManager.TestSpec> testSpecArgs = new ArrayList<>();
     private Path baseDirArg;
     private ExecMode execMode;
     private JDK compileJDK;
@@ -2297,7 +2267,7 @@ public class Tool {
     private boolean guiFlag;
     private boolean reportOnlyFlag;
     private String showStream;
-    public enum ReportMode { NONE, EXECUTED, ALL_EXECUTED, ALL };
+    public enum ReportMode { NONE, EXECUTED, FILES, ALL_EXECUTED, ALL }
     private ReportMode reportMode;
     private boolean allowSetSecurityManagerFlag = true;
     private static Verbose  verbose;
@@ -2329,9 +2299,8 @@ public class Tool {
     private Path exclusiveLockArg;
     private List<Path> matchListArgs = new ArrayList<>();
 
-    private final JarManager jarManager;
-    private Path javatest_jar;
-    private Path jtreg_jar;
+    private final Path javatest_jar;
+    private final Path jtreg_jar;
     private SearchPath junitPath;
     private SearchPath testngPath;
     private SearchPath asmtoolsPath;
@@ -2351,7 +2320,5 @@ public class Tool {
         "SystemDrive", "SystemRoot", "windir", "TMP", "TEMP", "TZ"
     };
 
-    private static final String JAVATEST_ANT_FILE_LIST = "javatest.ant.file.list";
-
-    private static I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(Tool.class);
+    private static final I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(Tool.class);
 }

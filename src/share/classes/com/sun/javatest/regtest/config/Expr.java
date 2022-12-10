@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2002, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -37,7 +37,7 @@ public abstract class Expr {
         Fault(String msg) {
             super(msg);
         }
-    };
+    }
 
     public interface Context {
         boolean isValidName(String name);
@@ -293,7 +293,7 @@ public abstract class Expr {
                         return;
 
                     case '\"':
-                        StringBuffer sb = new StringBuffer();
+                        StringBuilder sb = new StringBuilder();
                         if (index < text.length()) {
                             c = text.charAt(index);
                             index++;
@@ -394,7 +394,7 @@ public abstract class Expr {
         private String idValue;
     }
 
-    static enum Token {
+    enum Token {
         ADD("+"),
         AND("&"),
         DIV("/"),
@@ -426,7 +426,7 @@ public abstract class Expr {
             return text.startsWith("<") ? text : "'" + text + "'";
         }
         final String text;
-    };
+    }
 
     protected static final int PREC_LIT = 6;
     protected static final int PREC_NOT = 6;
@@ -502,7 +502,7 @@ public abstract class Expr {
         }
 
         public String eval(Context c) throws Fault {
-            return String.valueOf(left.evalBoolean(c) ? right.evalBoolean(c) : false);
+            return String.valueOf(left.evalBoolean(c) && right.evalBoolean(c));
         }
 
         int precedence() {
@@ -811,7 +811,7 @@ public abstract class Expr {
         }
 
         public String eval(Context c) throws Fault {
-            return String.valueOf(left.evalBoolean(c) ? true : right.evalBoolean(c));
+            return String.valueOf(left.evalBoolean(c) || right.evalBoolean(c));
         }
 
         int precedence() {

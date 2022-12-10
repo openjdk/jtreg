@@ -212,9 +212,8 @@ class SuperDiff extends Diff {
         }
     }
 
+    @SuppressWarnings("serial")
     static class SuperTable extends TreeMap<YearDay, Map<String, File>> {
-
-        static final long serialVersionUID = 5933594140534747584L;
 
         SuperTable(File inDir, String resultPath) {
             super();

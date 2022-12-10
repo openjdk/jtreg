@@ -21,6 +21,5 @@
  * questions.
  */
 
-requires.extraPropDefns = support/ExtraProps.java 
+requires.extraPropDefns = support/ExtraProps.java
 requires.properties = extra
-

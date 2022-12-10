@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -85,7 +85,7 @@ public class XMLWriter {
             throws ParseException, UnsupportedEncodingException, TestResult.Fault {
         String encoding = Charset.defaultCharset().name();
         defDateFmt = new SimpleDateFormat("EEE MMM dd hh:mm:ss z yyyy", Locale.US);
-        isoDateFmt = new SimpleDateFormat("yyyy-MM-DD'T'HH:mm:ssZ");
+        isoDateFmt = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
         harnessOut = out;
         harnessErr = err;
         xps = new XPrintStream(harnessOut, harnessErr, encoding);
@@ -107,7 +107,7 @@ public class XMLWriter {
         if (elapsedTime == null) {
             return 0.0;
         }
-        String f[] = elapsedTime.split("\\s");
+        String[] f = elapsedTime.split("\\s");
         double elapsed = Double.parseDouble(f[0]);
         return elapsed/1000;
     }
@@ -148,7 +148,6 @@ public class XMLWriter {
         xps.indent();
         xps.println("<properties>");
         TestDescription td = tr.getDescription();
-        @SuppressWarnings("unchecked")
         Iterator<String> iterator = td.getParameterKeys();
         while (iterator.hasNext()) {
             String key = iterator.next();
@@ -161,7 +160,6 @@ public class XMLWriter {
             xps.println("\" />");
         }
 
-        @SuppressWarnings("unchecked")
         Enumeration<String> e = tr.getPropertyNames();
         while (e.hasMoreElements()) {
             String x = e.nextElement();
@@ -237,7 +235,7 @@ public class XMLWriter {
         xps.println("</testcase>");
     }
 
-    private void process(String encoding) throws ParseException, TestResult.Fault {
+    private void process(String encoding) throws TestResult.Fault {
         createHeader(encoding);
         startTestSuite();
         insertProperties();
@@ -279,19 +277,13 @@ public class XMLWriter {
     }
 
     private static List<File> fileToList(String arg) throws Exception {
-        BufferedReader br = null;
         List<File> outList = new ArrayList<>();
-        String in = arg.replaceFirst("^\\-@|^@", "");
-        try {
-            br = new BufferedReader(new FileReader(in));
+        String in = arg.replaceFirst("^-@|^@", "");
+        try (BufferedReader br = new BufferedReader(new FileReader(in))) {
             String line = br.readLine();
             while (line != null) {
                 outList.add(new File(line));
                 line = br.readLine();
-            }
-        } finally {
-            if (br != null) {
-                br.close();
             }
         }
         return outList;
@@ -364,12 +356,6 @@ public class XMLWriter {
         private final PrintWriter harnessOut;
         private final PrintWriter harnessErr;
 
-        private XMLHarnessObserver() {
-            harnessOut = null;
-            harnessErr = null;
-            mustVerify = false;
-        }
-
         public XMLHarnessObserver(boolean mustVerify,
                 PrintWriter out, PrintWriter err) {
             harnessOut = out;
@@ -382,11 +368,9 @@ public class XMLWriter {
             try {
                 super.finishedTest(tr);
                 new XMLWriter(tr, mustVerify, harnessOut, harnessErr).toXML();
-            } catch (IOException ex) {
-                ex.printStackTrace(harnessOut);
-            } catch (ParseException ex) {
-                ex.printStackTrace(harnessOut);
-            } catch (TestResult.Fault ex) {
+            } catch (IOException
+                     | ParseException
+                     | TestResult.Fault ex) {
                 ex.printStackTrace(harnessOut);
             }
         }
@@ -468,7 +452,7 @@ class XPrintStream {
                         // Ideally, we'd print control characters as numeric
                         // character entities, but a validating SAX parser
                         // rejects that, so we encode them as Unicode instead.
-                        ps.print(String.format("\\u%04x", (int) ch));
+                        ps.printf("\\u%04x", (int) ch);
                     } else {
                         ps.print(ch);
                     }
@@ -499,13 +483,7 @@ class XPrintStream {
             XMLReader xmlreader = parser.getXMLReader();
             xmlreader.parse(new InputSource(new ByteArrayInputStream(bstream.toByteArray())));
             //out.println("File: " + xmlFile + ": verified");
-        } catch (IOException ex) {
-            err.println("File: " + xmlFile + ":" + ex);
-            err.println(toString());
-        } catch (ParserConfigurationException ex) {
-            err.println("File: " + xmlFile + ":" + ex);
-            err.println(toString());
-        } catch (SAXException ex) {
+        } catch (IOException | ParserConfigurationException | SAXException ex) {
             err.println("File: " + xmlFile + ":" + ex);
             err.println(toString());
         }

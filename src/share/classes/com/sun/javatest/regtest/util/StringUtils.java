@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2008, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -25,7 +25,6 @@
 
 package com.sun.javatest.regtest.util;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -69,7 +68,7 @@ public class StringUtils extends StringArray {
      *  matches of the given separator character
      */
     public static List<String> split(String s, char sep) {
-        return Arrays.asList(s.split("\\Q" + sep + "\\E"));
+        return List.of(s.split("\\Q" + sep + "\\E"));
     }
 
     public static String join(Collection<?> list) {

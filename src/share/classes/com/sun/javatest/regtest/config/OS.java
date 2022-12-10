@@ -88,6 +88,7 @@ public class OS {
     //
     // On a Mac, we see the following types of values
     //    os.arch              x86_64
+    //    os.arch              aarch64
     //    os.arch              universal
     //    os.name              Darwin
     //    os.name              Mac OS X

@@ -29,11 +29,11 @@
 $(BUILDTESTDIR)/BadGroups_badname.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
-	$(MKDIR) -p $(@:%.ok=%) 
+	$(MKDIR) -p $(@:%.ok=%)
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDKHOME) \
-		$(TESTDIR)/badgroups/$(@:$(BUILDTESTDIR)/BadGroups_%.ok=%) \
+		$(TESTDIR)/badgroups/$(@:$(BUILDTESTDIR)/BadGroups_%.ok=%)/Test.java \
                 > $(@:%.ok=%)/jt.log 2>&1 ; \
             status=$$? ; echo status=$$status ; \
             if [ "$$status" != "0" ]; then echo "unexpected exit: $$status" ; exit 1; fi
@@ -46,13 +46,13 @@ TESTS.jtreg += $(BUILDTESTDIR)/BadGroups_badname.ok
 $(BUILDTESTDIR)/BadGroups_badname51.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
-	$(MKDIR) -p $(@:%.ok=%) 
+	$(MKDIR) -p $(@:%.ok=%)
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-J-DOVERRIDE-jtreg-Version=5.1 \
 		-J-DOVERRIDE-jtreg-Build=b01 \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDKHOME) \
-		$(TESTDIR)/badgroups/$(@:$(BUILDTESTDIR)/BadGroups_%.ok=%) \
+		$(TESTDIR)/badgroups/$(@:$(BUILDTESTDIR)/BadGroups_%.ok=%)/Test.java \
                 > $(@:%.ok=%)/jt.log 2>&1 ; \
             status=$$? ; echo status=$$status ; \
             if [ "$$status" != "5" ]; then echo "unexpected exit: $$status" ; exit 1; fi
@@ -60,4 +60,4 @@ $(BUILDTESTDIR)/BadGroups_badname51.ok: \
 	$(GREP) "Error: One or more groups are invalid" $(@:%.ok=%)/jt.log
 	echo $@ passed at `date` > $@
 
-TESTS.jtreg += $(BUILDTESTDIR)/BadGroups_badname.ok
+TESTS.jtreg += $(BUILDTESTDIR)/BadGroups_badname51.ok

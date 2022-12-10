@@ -32,4 +32,3 @@ public class OptExtraProps implements Callable<Map<String, String>> {
         return map;
     }
 }
-

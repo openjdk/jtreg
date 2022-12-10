@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -30,7 +30,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.ref.SoftReference;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -68,8 +67,8 @@ public class TestProperties {
 
         String gf = e.properties.getProperty("groups");
         groupFiles = (gf == null)
-                ? Collections.<String>emptyList()
-                : Arrays.asList(gf.split("\\s+"));
+                ? Collections.emptyList()
+                : List.of(gf.split("\\s+"));
 
         String version = e.properties.getProperty("requiredVersion");
         requiredVersion = new Version(version);
@@ -121,6 +120,14 @@ public class TestProperties {
 
     File getTestNGRoot(File file) throws TestSuite.Fault {
         return getEntry(file).testNGRoot;
+    }
+
+    boolean isJUnit(File file) throws TestSuite.Fault {
+        return getEntry(file).junitRoot != null;
+    }
+
+    File getJUnitRoot(File file) throws TestSuite.Fault {
+        return getEntry(file).junitRoot;
     }
 
     boolean needsExclusiveAccess(File file) throws TestSuite.Fault {
@@ -204,6 +211,8 @@ public class TestProperties {
             private final Set<File> exclusiveAccessDirs;
             final File testNGRoot;
             private final Set<File> testNGDirs;
+            final File junitRoot;
+            private final Set<File> junitDirs;
             final Set<String> libDirs;
             final Set<String> libBuildArgs;
             final Set<File> extLibRoots;
@@ -243,6 +252,9 @@ public class TestProperties {
                     // add the list of TestNG dirs
                     testNGDirs = initFileSet(parent == null ? null : parent.testNGDirs, "TestNG.dirs", dir);
 
+                    // add the list of JUnit dirs
+                    junitDirs = initFileSet(parent == null ? null : parent.junitDirs, "JUnit.dirs", dir);
+
                     // add the list of library dirs for TestNG tests
                     libDirs = initLibDirSet(parent == null ? null : parent.libDirs, "lib.dirs", dir);
 
@@ -273,6 +285,7 @@ public class TestProperties {
                     otherVMDirs = parent.otherVMDirs;
                     exclusiveAccessDirs = parent.exclusiveAccessDirs;
                     testNGDirs = parent.testNGDirs;
+                    junitDirs = parent.junitDirs;
                     libDirs = parent.libDirs;
                     libBuildArgs = parent.libBuildArgs;
                     extLibRoots = parent.extLibRoots;
@@ -286,6 +299,7 @@ public class TestProperties {
                 useOtherVM = initUseOtherVM(parent, dir);
                 needsExclusiveAccess = initNeedsExclusiveAccess(parent, dir);
                 testNGRoot = initTestNGRoot(parent, dir);
+                junitRoot = initJUnitRoot(parent, dir);
             }
 
             private int getInt(String propertyName, int defaultValue) {
@@ -304,7 +318,7 @@ public class TestProperties {
                 String[] values = StringUtils.splitWS(properties.getProperty(propertyName));
                 if (parent == null || values.length > 0) {
                     Set<File> set = (parent == null) ? new LinkedHashSet<>() : new LinkedHashSet<>(parent);
-                    //set.addAll(Arrays.asList(values));
+                    //set.addAll(List.of(values));
                     for (String v: values) {
                         File f = toFile(baseDir, v);
                         if (f != null)
@@ -362,7 +376,7 @@ public class TestProperties {
                 String[] values = StringUtils.splitWS(properties.getProperty(propertyName));
                 if (parent == null || values.length > 0) {
                     Set<String> set = (parent == null) ? new LinkedHashSet<>() : new LinkedHashSet<>(parent);
-                    set.addAll(Arrays.asList(values));
+                    set.addAll(List.of(values));
                     return Collections.unmodifiableSet(set);
                 } else {
                     return parent;
@@ -424,6 +438,21 @@ public class TestProperties {
                 for (File testNGDir: testNGDirs) {
                     if (includes(testNGDir, dir))
                         return testNGDir;
+                }
+
+                return null;
+            }
+
+            private File initJUnitRoot(Entry parent, File dir) {
+                if (parent == null)
+                    return null;
+
+                if (parent.junitRoot != null)
+                    return parent.junitRoot;
+
+                for (File junitDir: junitDirs) {
+                    if (includes(junitDir, dir))
+                        return junitDir;
                 }
 
                 return null;

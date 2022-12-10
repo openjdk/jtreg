@@ -57,24 +57,29 @@ INITIAL_TESTS += \
 
 ENVVARS="DISPLAY=$${DISPLAY:-`uname -n`:0.0}"
 
-ifeq ($(OS_NAME), windows) 
+ifeq ($(OS_NAME), windows)
   BASIC_TESTS := $(shell cygpath -m $(abspath $(TESTDIR)/share/basic) )
 else
   BASIC_TESTS := $(abspath $(TESTDIR)/share/basic)
 endif
 
+$(BUILDTESTDIR)/Basic.classes.ok: \
+		$(ALL_JTREG_JARS) \
+		$(TESTDIR)/basic/Basic.java
+	$(MKDIR) -p $(BUILDTESTDIR)/basic/classes
+	CLASSPATH="$(CLASSDIR)$(PS)$(JAVADIR)$(PS)$(JAVATEST_JAR)" \
+		$(JDKJAVAC) -Xlint -Werror -encoding ASCII -d $(BUILDTESTDIR)/basic/classes $(TESTDIR)/basic/Basic.java
+	echo Basic.java compiled at `date` > $@
+
 $(BUILDTESTDIR)/Basic.othervm.ok \
 $(BUILDTESTDIR)/Basic.agentvm.ok: \
-                $(ALL_JTREG_JARS) \
-		$(TESTDIR)/basic/Basic.java \
+		$(BUILDTESTDIR)/Basic.classes.ok \
 		$(BUILDTESTDIR)/i18n.com.sun.javatest.regtest.config.ok \
 		$(BUILDTESTDIR)/i18n.com.sun.javatest.regtest.report.ok \
 		$(BUILDTESTDIR)/i18n.com.sun.javatest.regtest.tool.ok \
 	        $(BASIC.files)
 	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
-	$(MKDIR) -p $(@:%.ok=%/work/scratch) $(@:%.ok=%/report) $(BUILDTESTDIR)/basic/classes
-	CLASSPATH="$(CLASSDIR)$(PS)$(JAVADIR)$(PS)$(JAVATEST_JAR)" \
-		$(JDKJAVAC) -Xlint -Werror -encoding ASCII -d $(BUILDTESTDIR)/basic/classes $(TESTDIR)/basic/Basic.java
+	$(MKDIR) -p $(@:%.ok=%/work/scratch) $(@:%.ok=%/report)
 	cd $(@:%.ok=%/work/scratch) ; \
 	    $(JDKJAVA) \
 		-cp "../../../basic/classes$(PS)$(JTREG_IMAGEJARDIR)/jtreg.jar" \
@@ -95,9 +100,7 @@ $(BUILDTESTDIR)/Basic.agentvm.ok: \
 	    || (cat ../../log ; exit 1)
 	echo $@ passed at `date` > $@
 
-ifndef HEADLESS
 INITIAL_TESTS += \
 	$(BUILDTESTDIR)/Basic.othervm.ok \
 	$(BUILDTESTDIR)/Basic.agentvm.ok
-endif
 
