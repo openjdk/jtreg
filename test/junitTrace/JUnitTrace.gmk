@@ -48,3 +48,5 @@ TESTS.jtreg += \
 	$(BUILDTESTDIR)/JUnitTrace.agentvm.ok \
 	$(BUILDTESTDIR)/JUnitTrace.othervm.ok
 
+INITIAL_TESTS += \
+	$(BUILDTESTDIR)/JUnitTrace.agentvm.ok

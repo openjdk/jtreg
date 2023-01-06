@@ -1,6 +1,10 @@
 
 
-## [Unreleased](https://git.openjdk.org/jtreg/compare/jtreg-7+1...master)
+## [Unreleased](https://git.openjdk.org/jtreg/compare/jtreg-7.1+1...master)
+
+_nothing noteworthy, yet_
+
+## [7.1+1](https://git.openjdk.org/jtreg/compare/jtreg-7+1...jtreg-7.1+1)
 
 * Improved support for JUnit Jupiter.
   * Avoid using TestNG mixed mode. 
@@ -9,6 +13,8 @@
     [CODETOOLS-7903260](https://bugs.openjdk.org/browse/CODETOOLS-7903260)
   * Support executing a single method. 
     [CODETOOLS-7903267](https://bugs.openjdk.org/browse/CODETOOLS-7903267)
+  * Improve per-class reporting of JUnit tests, in `.jtr` file.
+    [CODETOOLS-7903324](https://bugs.openjdk.org/browse/CODETOOLS-7903324)
 
 * Support a group of "all tests", represented by `.`.
   * [CODETOOLS-7903331](https://bugs.openjdk.org/browse/CODETOOLS-7903331)

@@ -56,7 +56,7 @@ public abstract class SummaryReporter {
      * @param wd the work directory for the test run
      * @return the summary reporter
      */
-    public static SummaryReporter forTestNG(WorkDirectory wd) {
+    public static synchronized SummaryReporter forTestNG(WorkDirectory wd) {
         return instanceMap.computeIfAbsent(wd, wd_ -> new HashMap<>())
                 .computeIfAbsent(TestNGSummaryReporter.class, c_ -> new TestNGSummaryReporter());
     }
@@ -68,7 +68,7 @@ public abstract class SummaryReporter {
      * @param wd the work directory for the test run
      * @return the summary reporter
      */
-    public static SummaryReporter forJUnit(WorkDirectory wd) {
+    public static synchronized SummaryReporter forJUnit(WorkDirectory wd) {
         return instanceMap.computeIfAbsent(wd, wd_ -> new HashMap<>())
                 .computeIfAbsent(JUnitSummaryReporter.class, c_ -> new JUnitSummaryReporter());
     }

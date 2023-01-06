@@ -27,6 +27,11 @@
 #
 # compile com.sun.javatest.regtest
 
+DEFAULT_DEBUG_FLAGS = -g
+AGENT_DEBUG_FLAGS = $(DEFAULT_DEBUG_FLAGS)
+TOOL_DEBUG_FLAGS = $(DEFAULT_DEBUG_FLAGS)
+JAVA_LANG_DEBUG_FLAGS = $(DEFAULT_DEBUG_FLAGS)
+
 ### The following files are required to run agentvm and othervm tests, as far back as JDK 8
 
 JUNIT_CLASSPATH = $(call AS_CLASSPATH,$(JUNIT_JARS))
@@ -42,6 +47,7 @@ $(BUILDDIR)/classes.com.sun.javatest.regtest.agent.ok: \
 	    $(REGTEST_AGENT_JAVAC) $(REGTEST_AGENT_JAVAC_OPTIONS) \
 		-d $(CLASSDIR) \
 		-encoding ASCII \
+		$(AGENT_DEBUG_FLAGS) \
 		$(JAVAFILES.com.sun.javatest.regtest-agentvm)
 	echo "classes built at `date`" > $@
 
@@ -57,6 +63,7 @@ $(BUILDDIR)/classes.com.sun.javatest.regtest.ok: \
 	    $(REGTEST_TOOL_JAVAC) $(REGTEST_TOOL_JAVAC_OPTIONS) \
 		-d $(CLASSDIR) \
 		-encoding ASCII \
+		$(TOOL_DEBUG_FLAGS) \
 		$(JAVAFILES.com.sun.javatest.regtest-tools)
 	echo "classes built at `date`" > $@
 
@@ -73,6 +80,7 @@ $(BUILDDIR)/classes.java.lang.ok: \
 	    $(REGTEST_TOOL_JAVAC) $(REGTEST_TOOL_JAVAC_OPTIONS) --release 9 $(REGTEST_TOOL_PATCH_JAVA_BASE_OPTIONS) \
 		-d $(CLASSDIR) \
 		-encoding ASCII \
+		$(JAVA_LANG_DEBUG_FLAGS) \
 		$(JAVAFILES.java.lang)
 	echo "classes built at `date`" > $@
 
