@@ -2,7 +2,8 @@
 
 ## [Unreleased](https://git.openjdk.org/jtreg/compare/jtreg-7.1+1...master)
 
-_nothing noteworthy, yet_
+* Improved support for JUnit Jupiter.
+  * Update jtreg to bundle JUnit 5.9.2 [CODETOOLS-7903406](https://bugs.openjdk.org/browse/CODETOOLS-7903406)
 
 ## [7.1+1](https://git.openjdk.org/jtreg/compare/jtreg-7+1...jtreg-7.1+1)
 
