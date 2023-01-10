@@ -43,7 +43,7 @@ $(BUILDTESTDIR)/JUnitQueryTest.all.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 	if [ "$$OUT" != "Test1.m11 Test1.m12 Test1.m13 Test2.m21 Test2.m22 Test2.m23" ]; then \
 	    echo "unexpected set of tests run: $$OUT"; exit 1 ; \
 	fi
-	$(GREP) "a/b/c/ containers: 6, .* started: 6, succeeded: 6" $(@:%.ok=%)/report/text/junit.txt
+	$(GREP) "a/b/c/ .* tests: 6, skipped: 0, started: 6, succeeded: 6, failed: 0, aborted: 0" $(@:%.ok=%)/report/text/junit.txt
 	echo $@ passed at `date` > $@
 
 TESTS.jtreg += $(BUILDTESTDIR)/JUnitQueryTest.all.ok
@@ -68,7 +68,7 @@ $(BUILDTESTDIR)/JUnitQueryTest.m12.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 	if [ "$$OUT" != "Test1.m12" ]; then \
 	    echo "unexpected set of tests run: $$OUT"; exit 1 ; \
 	fi
-	$(GREP) "a/b/c/ containers: 3, .* started: 1, succeeded: 1" $(@:%.ok=%)/report/text/junit.txt
+	$(GREP) "a/b/c/ .* tests: 1, skipped: 0, started: 1, succeeded: 1, failed: 0, aborted: 0" $(@:%.ok=%)/report/text/junit.txt
 	echo $@ passed at `date` > $@
 
 TESTS.jtreg += $(BUILDTESTDIR)/JUnitQueryTest.m12.ok
@@ -96,7 +96,7 @@ $(BUILDTESTDIR)/JUnitQueryTest.m12.Test2.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar 
 	if [ "$$OUT" != "Test1.m12 Test2.m21 Test2.m22 Test2.m23" ]; then \
 	    echo "unexpected set of tests run: $$OUT"; exit 1 ; \
 	fi
-	$(GREP) "a/b/c/ containers: 6, .* started: 4, succeeded: 4" $(@:%.ok=%)/report/text/junit.txt
+	$(GREP) "a/b/c/ .* tests: 4, skipped: 0, started: 4, succeeded: 4, failed: 0, aborted: 0" $(@:%.ok=%)/report/text/junit.txt
 	echo $@ passed at `date` > $@
 
 TESTS.jtreg += $(BUILDTESTDIR)/JUnitQueryTest.m12.Test2.ok
@@ -123,7 +123,7 @@ $(BUILDTESTDIR)/JUnitQueryTest.m13.m12.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 	if [ "$$OUT" != "Test1.m12" ]; then \
 	    echo "unexpected set of tests run: $$OUT"; exit 1 ; \
 	fi
-	$(GREP) "a/b/c/ containers: 3, .* started: 1, succeeded: 1" $(@:%.ok=%)/report/text/junit.txt
+	$(GREP) "a/b/c/ .* tests: 1, skipped: 0, started: 1, succeeded: 1, failed: 0, aborted: 0" $(@:%.ok=%)/report/text/junit.txt
 	echo $@ passed at `date` > $@
 
 TESTS.jtreg += $(BUILDTESTDIR)/JUnitQueryTest.m13.m12.ok
@@ -150,7 +150,7 @@ $(BUILDTESTDIR)/JUnitQueryTest.m12.m13.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 	if [ "$$OUT" != "Test1.m13" ]; then \
 	    echo "unexpected set of tests run: $$OUT"; exit 1 ; \
 	fi
-	$(GREP) "a/b/c/ containers: 3, .* started: 1, succeeded: 1" $(@:%.ok=%)/report/text/junit.txt
+	$(GREP) "a/b/c/ .* tests: 1, skipped: 0, started: 1, succeeded: 1, failed: 0, aborted: 0" $(@:%.ok=%)/report/text/junit.txt
 	echo $@ passed at `date` > $@
 
 TESTS.jtreg += $(BUILDTESTDIR)/JUnitQueryTest.m12.m13.ok
@@ -177,7 +177,7 @@ $(BUILDTESTDIR)/JUnitQueryTest.m13.all.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 	if [ "$$OUT" != "Test1.m11 Test1.m12 Test1.m13" ]; then \
 	    echo "unexpected set of tests run: $$OUT"; exit 1 ; \
 	fi
-	$(GREP) "a/b/c/ containers: 3, .* started: 3, succeeded: 3" $(@:%.ok=%)/report/text/junit.txt
+	$(GREP) "a/b/c/ .* tests: 3, skipped: 0, started: 3, succeeded: 3, failed: 0, aborted: 0" $(@:%.ok=%)/report/text/junit.txt
 	echo $@ passed at `date` > $@
 
 TESTS.jtreg += $(BUILDTESTDIR)/JUnitQueryTest.m13.all.ok
@@ -204,7 +204,7 @@ $(BUILDTESTDIR)/JUnitQueryTest.all.m13.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 	if [ "$$OUT" != "Test1.m13" ]; then \
 	    echo "unexpected set of tests run: $$OUT"; exit 1 ; \
 	fi
-	$(GREP) "a/b/c/ containers: 3, .* started: 1, succeeded: 1" $(@:%.ok=%)/report/text/junit.txt
+	$(GREP) "a/b/c/ .* tests: 1, skipped: 0, started: 1, succeeded: 1, failed: 0, aborted: 0" $(@:%.ok=%)/report/text/junit.txt
 	echo $@ passed at `date` > $@
 
 TESTS.jtreg += $(BUILDTESTDIR)/JUnitQueryTest.all.m13.ok
