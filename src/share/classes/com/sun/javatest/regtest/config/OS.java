@@ -125,6 +125,7 @@ public class OS {
                  && !arch.equals("ppc64le")
                  && !arch.equals("zArch_64")
                  && !arch.equals("loongarch64")
+                 && !arch.equals("riscv64")
                  && !arch.equals("aarch64"))
             simple_arch = "x64";
         else if (arch.contains("86"))
