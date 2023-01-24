@@ -480,6 +480,13 @@ public class MainAction extends Action
         else if (policyFN != null) {
             javaProps.put("java.security.manager", "default");
         }
+
+        if (script.getCustomWrapper() != null) {
+            javaProps.put(MainWrapper.MAIN_WRAPPER, script.getCustomWrapper() + ":" + "action=" + this.getName());
+        }
+        if (script.getCustomWrapperPath() != null) {
+            javaProps.put(MainWrapper.MAIN_WRAPPER_PATH, script.getCustomWrapperPath());
+        }
 //      javaProps.put("java.security.debug", "all");
 
         javaOpts.addAll(testJavaArgs);
@@ -620,8 +627,11 @@ public class MainAction extends Action
 
         Agent agent;
         try {
+            String wrapper = script.getCustomWrapper() == null ? null : script.getCustomWrapper() + ":" + "action=" + this.getName();
             agent = script.getAgent(jdk, agentClasspath,
-                    filterJavaOpts(join(script.getTestVMJavaOptions(), script.getTestDebugOptions())));
+                    filterJavaOpts(join(script.getTestVMJavaOptions(), script.getTestDebugOptions())),
+                    wrapper,
+                    script.getCustomWrapperPath());
             section.getMessageWriter().println("Agent id: " + agent.getId());
             new ModuleConfig("Boot Layer").setFromOpts(agent.vmOpts).write(configWriter);
         } catch (Agent.Fault e) {

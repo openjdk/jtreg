@@ -629,6 +629,11 @@ public class RegressionParameters
     private static final String TIMEOUT_HANDLER = ".timeoutHandler";
     private static final String TIMEOUT_HANDLER_PATH = ".timeoutHandlerPath";
     private static final String TIMEOUT_HANDLER_TIMEOUT = ".timeoutHandlerTimeout";
+
+    private static final String CUSTOM_MAIN_WRAPPER = ".customMainWrapper";
+
+    private static final String CUSTOM_MAIN_WRAPPER_PATH = ".customMainWrapperPath";
+
     private static final String TEST_QUERIES = ".testQueries";
 
     @Override
@@ -719,6 +724,14 @@ public class RegressionParameters
             if (v != null)
                 setTimeoutHandlerTimeout(v);
 
+            v = data.get(prefix + CUSTOM_MAIN_WRAPPER);
+            if (v != null)
+                setCustomMainWrapper(v);
+
+            v = data.get(prefix + CUSTOM_MAIN_WRAPPER_PATH);
+            if (v != null)
+                setCustomMainWrapperPath(v);
+
             v = data.get(prefix + TEST_QUERIES);
             if (v != null) {
                 setTestQueries(List.of(StringUtils.splitSeparator("\n", v)));
@@ -798,6 +811,14 @@ public class RegressionParameters
 
         if (timeoutHandlerTimeout != -1) {  // -1: default; 0: no timeout; >0: timeout in seconds
             data.put(prefix + TIMEOUT_HANDLER_TIMEOUT, String.valueOf(timeoutHandlerTimeout));
+        }
+
+        if (customMainWrapper != null) {
+            data.put(prefix + CUSTOM_MAIN_WRAPPER, customMainWrapper);
+        }
+
+        if (customMainWrapperPath != null) {
+            data.put(prefix + CUSTOM_MAIN_WRAPPER_PATH, customMainWrapperPath);
         }
 
         if (testQueries != null) {
@@ -1251,21 +1272,21 @@ public class RegressionParameters
         this.customMainWrapper = customMainWrapper;
     }
 
-    String getCustomMainWrapper() {
+    public String getCustomMainWrapper() {
         return customMainWrapper;
     }
 
     private String customMainWrapper;
 
-    public void setCustomMainWrapperPath(List<Path>  customMainWrapperPath) {
+    public void setCustomMainWrapperPath(String customMainWrapperPath) {
         this.customMainWrapperPath = customMainWrapperPath;
     }
 
-    List<Path>  getCustomMainWrapperPath() {
+    public String getCustomMainWrapperPath() {
         return customMainWrapperPath;
     }
 
-    private List<Path>  customMainWrapperPath;
+    private String customMainWrapperPath;
     //---------------------------------------------------------------------
 
     public void setMatchLists(Path[] files) {

@@ -21,29 +21,29 @@
  * questions.
  */
 
-/*
- * @test
- * @run main/othervm Test
- */
+import com.sun.javatest.regtest.agent.CustomMainWrapper;
 
-/*
- * @test
- * @run main Test
- */
+public class TestMainWrapper implements CustomMainWrapper {
 
-public class Test {
-    public static void main(String... args) throws Exception {
-        if (!"Test".equals(System.getProperty("main.wrapper"))) {
-            throw new Exception("Property 'main.wrapper' = " + System.getProperty("main.wrapper"));
-        }
+    public TestMainWrapper() {
+        System.setProperty("main.wrapper", "Test");
+    }
 
-        if (!"main".equals(System.getProperty("jtreg.action"))) {
-            throw new Exception("Property 'jtreg.action'  = " + System.getProperty("jtreg.action"));
-        }
+    @Override
+    public void setAction(String actionName) {
+        System.setProperty("jtreg.action", actionName);
+    }
 
-        String threadClassName = Thread.currentThread().getClass().getName();
-        if (!threadClassName.equals("TestThread")) {
-            throw new Exception("Main Thread name = " + threadClassName);
-        }
+    @Override
+    public Thread createThread(ThreadGroup tg, Runnable task) {
+
+        return new TestThread(tg, task);
+    }
+
+}
+
+class TestThread extends Thread {
+    public TestThread(ThreadGroup group, Runnable target) {
+        super(group, target);
     }
 }

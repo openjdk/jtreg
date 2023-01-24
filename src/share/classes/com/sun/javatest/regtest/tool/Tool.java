@@ -88,7 +88,6 @@ import com.sun.javatest.httpd.PageGenerator;
 import com.sun.javatest.regtest.BadArgs;
 import com.sun.javatest.regtest.Main;
 import com.sun.javatest.regtest.Main.Fault;
-import com.sun.javatest.regtest.agent.CustomMainWrapper;
 import com.sun.javatest.regtest.agent.JDK_Version;
 import com.sun.javatest.regtest.agent.SearchPath;
 import com.sun.javatest.regtest.config.ExecMode;
@@ -122,7 +121,6 @@ import static com.sun.javatest.regtest.Main.EXIT_NO_TESTS;
 import static com.sun.javatest.regtest.Main.EXIT_OK;
 import static com.sun.javatest.regtest.Main.EXIT_TEST_ERROR;
 import static com.sun.javatest.regtest.Main.EXIT_TEST_FAILED;
-import com.sun.javatest.regtest.agent.MainWrapper;
 import static com.sun.javatest.regtest.tool.Option.ArgType.*;
 
 
@@ -1219,17 +1217,6 @@ public class Tool {
             reportDirArg = Path.of("JTreport");
         }
 
-        if (customMainWrapper != null) {
-            CustomMainWrapper cmw = CustomMainWrapper.getInstance(customMainWrapper, customMainWrapperPathArg);
-            testVMOpts.add("-D" + MainWrapper.MAIN_WRAPPER + "=" + customMainWrapper);
-            testVMOpts.addAll(cmw.getAdditionalVMOpts());
-        }
-
-        if (customMainWrapperPathArg != null) {
-            testVMOpts.add("-D" + MainWrapper.MAIN_WRAPPER_PATH + "=" + customMainWrapperPathArg);
-        }
-
-
         makeDir(workDirArg, false);
         testManager.setWorkDirectory(workDirArg);
 
@@ -1311,12 +1298,6 @@ public class Tool {
                     }
                     if (timeoutFactorArg != null) {
                         p.setTimeoutFactor(timeoutFactorArg);
-                    }
-                    if (customMainWrapper != null) {
-                        p.setCustomMainWrapper(customMainWrapper);
-                    }
-                    if (customMainWrapperPathArg != null) {
-                        p.setCustomMainWrapperPath(customMainWrapperPathArg);
                     }
                     if (maxPoolSize == -1) {
                         // The default max pool size depends on the concurrency
@@ -1636,6 +1617,7 @@ public class Tool {
     {
         try {
             RegressionParameters rp = new RegressionParameters("regtest", testSuite, out::println);
+
             WorkDirectory workDir = testManager.getWorkDirectory(testSuite);
             rp.setWorkDirectory(workDir);
 
@@ -1709,6 +1691,14 @@ public class Tool {
 
             if (timeoutHandlerTimeoutArg != 0) {
                 rp.setTimeoutHandlerTimeout(timeoutHandlerTimeoutArg);
+            }
+
+            if (customMainWrapper != null) {
+                rp.setCustomMainWrapper(customMainWrapper);
+            }
+
+            if (customMainWrapperPathArg != null) {
+                rp.setCustomMainWrapperPath(customMainWrapperPathArg);
             }
 
             Path rd = testManager.getReportDirectory(testSuite);

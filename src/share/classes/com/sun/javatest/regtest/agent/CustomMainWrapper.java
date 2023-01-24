@@ -26,20 +26,22 @@
 package com.sun.javatest.regtest.agent;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
+/**
+ * Interface which should be implemented to customize execution of test.
+ * It is used by main and driver actions to execute test.
+ */
 public interface CustomMainWrapper {
     static CustomMainWrapper getInstance(String mainWrapper, String path) {
-        String[] args = mainWrapper.split("=", 2);
+        String[] args = mainWrapper.split(":", 2);
         String className = args[0];
-        String options = args.length > 1 ? args[1] : "";
+        String actionName = args[1].split("=")[1];
         ClassLoader loader = ClassLoader.getSystemClassLoader();
         if (path != null) {
             SearchPath classpath = new SearchPath(path);
@@ -56,50 +58,25 @@ public interface CustomMainWrapper {
             Class<? extends CustomMainWrapper> clz = loader.loadClass(className).asSubclass(CustomMainWrapper.class);
             Constructor<? extends CustomMainWrapper> ctor = clz.getDeclaredConstructor();
             CustomMainWrapper wrapper = ctor.newInstance();
-            wrapper.setOption(options);
+            wrapper.setAction(actionName);
             return wrapper;
-        } catch (ClassNotFoundException | NoSuchMethodException | InstantiationException | IllegalAccessException |
-                 InvocationTargetException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    default void setOption(String options) {
-    }
+    /**
+     * This method should be implemented to run test task.
+     * Default jtreg implementation is return new Thread(tg, task);
+     * @param tg ThreadGroup to run test
+     * @param task The task which executes test
+     */
+    Thread createThread(ThreadGroup tg, Runnable task);
 
-    default Thread createThread(ThreadGroup tg, Runnable task) {
-        return new Thread(tg, task);
-    }
-
-    default List<String> getAdditionalVMOpts() {
-        return Collections.emptyList();
-    }
-}
-
-class TestThread extends Thread {
-    public TestThread(ThreadGroup group, Runnable target) {
-        super(group, target);
-    }
-}
-class TestMainWrapper implements CustomMainWrapper {
-    private List<String>vmOpts = new ArrayList<>();
-
-    public TestMainWrapper() {
-        vmOpts.add("-Dtest.property=test");
-    }
-
-    @Override
-    public void setOption(String options) {
-        System.setProperty("main.wrapper", options);
-    }
-
-    @Override
-    public Thread createThread(ThreadGroup tg, Runnable task) {
-        return new TestThread(tg, task);
-    }
-
-    @Override
-    public List<String> getAdditionalVMOpts() {
-        return vmOpts;
+    /**
+     * This method is used to get information about current action.
+     * @param actionName name of action
+     */
+    default void setAction(String actionName) {
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -32,13 +32,13 @@ public class DriverTest {
             throw new Exception("Property 'main.wrapper' = " + System.getProperty("main.wrapper"));
         }
 
-        if (!"test".equals(System.getProperty("test.property"))) {
-            throw new Exception("Property 'test.property'  = " + System.getProperty("test.property"));
+        if (!"driver".equals(System.getProperty("jtreg.action"))) {
+            throw new Exception("Property 'jtreg.action'  = " + System.getProperty("jtreg.action"));
         }
 
         String threadClassName = Thread.currentThread().getClass().getName();
-        if (!threadClassName.equals("com.sun.javatest.regtest.agent.TestThread")) {
-            throw new Exception("Main Thread is expected : " + threadClassName);
+        if (!threadClassName.equals("TestThread")) {
+            throw new Exception("Main Thread name = " + threadClassName);
         }
     }
 }
