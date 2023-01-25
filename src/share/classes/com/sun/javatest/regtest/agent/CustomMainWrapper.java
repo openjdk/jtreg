@@ -39,10 +39,7 @@ import java.util.List;
  * It is used by main and driver actions to execute test.
  */
 public interface CustomMainWrapper {
-    static CustomMainWrapper getInstance(String mainWrapper, String path) {
-        String[] args = mainWrapper.split(":", 2);
-        String className = args[0];
-        String actionName = args[1].split("=")[1];
+    static CustomMainWrapper getInstance(String className, String path) {
         ClassLoader loader = ClassLoader.getSystemClassLoader();
         if (path != null) {
             SearchPath classpath = new SearchPath(path);
@@ -59,7 +56,6 @@ public interface CustomMainWrapper {
             Class<? extends CustomMainWrapper> clz = loader.loadClass(className).asSubclass(CustomMainWrapper.class);
             Constructor<? extends CustomMainWrapper> ctor = clz.getDeclaredConstructor();
             CustomMainWrapper wrapper = ctor.newInstance();
-            wrapper.setAction(actionName);
             return wrapper;
         } catch (ClassNotFoundException | InvocationTargetException | NoSuchMethodException
                  | InstantiationException | IllegalAccessException e) {
@@ -75,10 +71,4 @@ public interface CustomMainWrapper {
      */
     Thread createThread(ThreadGroup tg, Runnable task);
 
-    /**
-     * This method is used to get information about current action.
-     * @param actionName name of action
-     */
-    default void setAction(String actionName) {
-    }
 }

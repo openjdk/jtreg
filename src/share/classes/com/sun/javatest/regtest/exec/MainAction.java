@@ -482,7 +482,7 @@ public class MainAction extends Action
         }
 
         if (script.getCustomWrapper() != null) {
-            javaProps.put(MainWrapper.MAIN_WRAPPER, script.getCustomWrapper() + ":" + "action=" + this.getName());
+            javaProps.put(MainWrapper.MAIN_WRAPPER, script.getCustomWrapper());
         }
         if (script.getCustomWrapperPath() != null) {
             javaProps.put(MainWrapper.MAIN_WRAPPER_PATH, script.getCustomWrapperPath());
@@ -627,7 +627,7 @@ public class MainAction extends Action
 
         Agent agent;
         try {
-            String wrapper = script.getCustomWrapper() == null ? null : script.getCustomWrapper() + ":" + "action=" + this.getName();
+            String wrapper = script.getCustomWrapper() == null ? null : script.getCustomWrapper();
             agent = script.getAgent(jdk, agentClasspath,
                     filterJavaOpts(join(script.getTestVMJavaOptions(), script.getTestDebugOptions())),
                     wrapper,
