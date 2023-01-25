@@ -26,6 +26,7 @@
 package com.sun.javatest.regtest.agent;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -60,7 +61,8 @@ public interface CustomMainWrapper {
             CustomMainWrapper wrapper = ctor.newInstance();
             wrapper.setAction(actionName);
             return wrapper;
-        } catch (Exception e) {
+        } catch (ClassNotFoundException | InvocationTargetException | NoSuchMethodException
+                 | InstantiationException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
     }
