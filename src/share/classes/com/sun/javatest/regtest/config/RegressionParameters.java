@@ -629,11 +629,8 @@ public class RegressionParameters
     private static final String TIMEOUT_HANDLER = ".timeoutHandler";
     private static final String TIMEOUT_HANDLER_PATH = ".timeoutHandlerPath";
     private static final String TIMEOUT_HANDLER_TIMEOUT = ".timeoutHandlerTimeout";
-
     private static final String CUSTOM_MAIN_WRAPPER = ".customMainWrapper";
-
     private static final String CUSTOM_MAIN_WRAPPER_PATH = ".customMainWrapperPath";
-
     private static final String TEST_QUERIES = ".testQueries";
 
     @Override

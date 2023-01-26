@@ -35,8 +35,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Interface which should be implemented to customize execution of test.
- * It is used by main and driver actions to execute test.
+ * {@code CustomMainWrapper} allows some customization of test execution.
+ * The jtreg creates new thread for each test using {@code new Thread(ThreadGroup tg, Runnable task);}.
+ * The implementation of this interface might provide user-defined threads for test execution.
+ * <p>
+ * Example:
+ * <pre>
+ * new Thread(tg, () -> { ....; task.run(); ....; });
+ * or
+ * new VirtualThread(task);
+ * </pre>
+ * Implementation may be specified on the {@code jtreg} command line
+ * using {@code -mainWrapper} and {@code -mainWrapperPath} arguments.
+ * It is executed by tested JDK in {@code agentvm} and {@code othervm} modes.
  */
 public interface CustomMainWrapper {
     static CustomMainWrapper getInstance(String className, String path) {
@@ -64,10 +75,9 @@ public interface CustomMainWrapper {
     }
 
     /**
-     * This method should be implemented to run test task.
-     * Default jtreg implementation is return new Thread(tg, task);
+     * This method should return unstarted thread which executes test task.
      * @param tg ThreadGroup to run test
-     * @param task The task which executes test
+     * @param task The test task
      */
     Thread createThread(ThreadGroup tg, Runnable task);
 
