@@ -30,13 +30,7 @@ public class TestMainWrapper implements CustomMainWrapper {
     }
 
     @Override
-    public void setAction(String actionName) {
-        System.setProperty("jtreg.action", actionName);
-    }
-
-    @Override
     public Thread createThread(ThreadGroup tg, Runnable task) {
-
         return new TestThread(tg, task);
     }
 

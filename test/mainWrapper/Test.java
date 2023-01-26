@@ -31,14 +31,15 @@
  * @run main Test
  */
 
+/*
+ * @test
+ * @run driver Test
+ */
+
 public class Test {
     public static void main(String... args) throws Exception {
         if (!"Test".equals(System.getProperty("main.wrapper"))) {
             throw new Exception("Property 'main.wrapper' = " + System.getProperty("main.wrapper"));
-        }
-
-        if (!"main".equals(System.getProperty("jtreg.action"))) {
-            throw new Exception("Property 'jtreg.action'  = " + System.getProperty("jtreg.action"));
         }
 
         String threadClassName = Thread.currentThread().getClass().getName();
