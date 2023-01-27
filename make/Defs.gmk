@@ -149,7 +149,7 @@ JAR = $(JDKHOME)/bin/jar
 
 # Only use -source -target, to support legacy platforms, when building with JDK 8
 # Otherwise, use default values for $JDKHOME/bin/javac
-SUPPORT_OLD_SOURCE_TARGET = $(shell $(JDKJAVAC) -version 2>&1 | grep '[8]' > /dev/null && echo true )
+SUPPORT_OLD_SOURCE_TARGET = $(shell $(JDKJAVAC) -version 2>&1 | grep '1\.8\.' > /dev/null && echo true )
 ifneq ($(SUPPORT_OLD_SOURCE_TARGET),)
     OLD_JAVAC_SOURCE_TARGET = -source 1.2 -target 1.1
     AGENT_JAVAC_SOURCE_TARGET = -source 5 -target 5
