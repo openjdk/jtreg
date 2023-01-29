@@ -629,8 +629,8 @@ public class RegressionParameters
     private static final String TIMEOUT_HANDLER = ".timeoutHandler";
     private static final String TIMEOUT_HANDLER_PATH = ".timeoutHandlerPath";
     private static final String TIMEOUT_HANDLER_TIMEOUT = ".timeoutHandlerTimeout";
-    private static final String CUSTOM_MAIN_WRAPPER = ".customMainWrapper";
-    private static final String CUSTOM_MAIN_WRAPPER_PATH = ".customMainWrapperPath";
+    private static final String CUSTOM_TEST_THREAD_FACTORY = ".testThreadFactory";
+    private static final String CUSTOM_TEST_THREAD_FACTORY_PATH = ".testThreadFactoryPath";
     private static final String TEST_QUERIES = ".testQueries";
 
     @Override
@@ -721,13 +721,13 @@ public class RegressionParameters
             if (v != null)
                 setTimeoutHandlerTimeout(v);
 
-            v = data.get(prefix + CUSTOM_MAIN_WRAPPER);
+            v = data.get(prefix + CUSTOM_TEST_THREAD_FACTORY);
             if (v != null)
-                setCustomMainWrapper(v);
+                setTestThreadFactory(v);
 
-            v = data.get(prefix + CUSTOM_MAIN_WRAPPER_PATH);
+            v = data.get(prefix + CUSTOM_TEST_THREAD_FACTORY_PATH);
             if (v != null)
-                setCustomMainWrapperPath(v);
+                setTestThreadFactoryPath(v);
 
             v = data.get(prefix + TEST_QUERIES);
             if (v != null) {
@@ -810,12 +810,12 @@ public class RegressionParameters
             data.put(prefix + TIMEOUT_HANDLER_TIMEOUT, String.valueOf(timeoutHandlerTimeout));
         }
 
-        if (customMainWrapper != null) {
-            data.put(prefix + CUSTOM_MAIN_WRAPPER, customMainWrapper);
+        if (testThreadFactory != null) {
+            data.put(prefix + CUSTOM_TEST_THREAD_FACTORY, testThreadFactory);
         }
 
-        if (customMainWrapperPath != null) {
-            data.put(prefix + CUSTOM_MAIN_WRAPPER_PATH, customMainWrapperPath);
+        if (testThreadFactoryPath != null) {
+            data.put(prefix + CUSTOM_TEST_THREAD_FACTORY_PATH, testThreadFactoryPath);
         }
 
         if (testQueries != null) {
@@ -1265,25 +1265,25 @@ public class RegressionParameters
     private long timeoutHandlerTimeout;
     //---------------------------------------------------------------------
 
-    public void setCustomMainWrapper(String customMainWrapper) {
-        this.customMainWrapper = customMainWrapper;
+    public void setTestThreadFactory(String testThreadFactory) {
+        this.testThreadFactory = testThreadFactory;
     }
 
-    public String getCustomMainWrapper() {
-        return customMainWrapper;
+    public String getTestThreadFactory() {
+        return testThreadFactory;
     }
 
-    private String customMainWrapper;
+    private String testThreadFactory;
 
-    public void setCustomMainWrapperPath(String customMainWrapperPath) {
-        this.customMainWrapperPath = customMainWrapperPath;
+    public void setTestThreadFactoryPath(String testThreadFactoryPath) {
+        this.testThreadFactoryPath = testThreadFactoryPath;
     }
 
-    public String getCustomMainWrapperPath() {
-        return customMainWrapperPath;
+    public String getTestThreadFactoryPath() {
+        return testThreadFactoryPath;
     }
 
-    private String customMainWrapperPath;
+    private String testThreadFactoryPath;
     //---------------------------------------------------------------------
 
     public void setMatchLists(Path[] files) {

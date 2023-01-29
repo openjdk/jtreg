@@ -533,17 +533,17 @@ public class Tool {
             }
         },
 
-       new Option(OLD, MAIN, "", "-mw", "-mainWrapper") {
+       new Option(OLD, MAIN, "", "-ttf", "-testThreadFactory") {
             @Override
             public void process(String opt, String arg) {
-                customMainWrapper = arg;
+                testThreadFactory = arg;
             }
         },
 
-        new Option(STD, MAIN, "", "-mwp", "-mainWrapperPath") {
+        new Option(STD, MAIN, "", "-ttfp", "-testThreadFactoryPath") {
             @Override
             public void process(String opt, String arg) {
-                customMainWrapperPathArg = arg;
+                testThreadFactoryPathArg = arg;
             }
         },
 
@@ -1693,12 +1693,12 @@ public class Tool {
                 rp.setTimeoutHandlerTimeout(timeoutHandlerTimeoutArg);
             }
 
-            if (customMainWrapper != null) {
-                rp.setCustomMainWrapper(customMainWrapper);
+            if (testThreadFactory != null) {
+                rp.setTestThreadFactory(testThreadFactory);
             }
 
-            if (customMainWrapperPathArg != null) {
-                rp.setCustomMainWrapperPath(customMainWrapperPathArg);
+            if (testThreadFactoryPathArg != null) {
+                rp.setTestThreadFactoryPath(testThreadFactoryPathArg);
             }
 
             Path rd = testManager.getReportDirectory(testSuite);
@@ -2300,8 +2300,8 @@ public class Tool {
     private String timeoutHandlerClassName;
     private List<Path> timeoutHandlerPathArg;
     private long timeoutHandlerTimeoutArg = -1; // -1: default; 0: no timeout; >0: timeout in seconds
-    private String customMainWrapper;
-    private String customMainWrapperPathArg;
+    private String testThreadFactory;
+    private String testThreadFactoryPathArg;
     private int maxPoolSize = -1;
     private Duration poolIdleTimeout = Duration.ofSeconds(30);
     private List<String> testCompilerOpts = new ArrayList<>();

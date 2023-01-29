@@ -1137,12 +1137,12 @@ public class RegressionScript extends Script {
         }
     }
 
-    String getCustomWrapper() {
-        return params.getCustomMainWrapper();
+    String getTestThreadFactory() {
+        return params.getTestThreadFactory();
     }
 
-    String getCustomWrapperPath() {
-        return params.getCustomMainWrapperPath();
+    String getTestThreadFactoryPath() {
+        return params.getTestThreadFactoryPath();
     }
 
     //--------------------------------------------------------------------------
@@ -1242,14 +1242,14 @@ public class RegressionScript extends Script {
      * Get an agent for a VM with the given VM options.
      */
     Agent getAgent(JDK jdk, SearchPath classpath, List<String> testVMOpts,
-                   String customMainWrapper, String customMainWrapperPath) throws Agent.Fault {
+                   String testThreadFactory, String testThreadFactoryPath) throws Agent.Fault {
         JDKOpts vmOpts = new JDKOpts();
         vmOpts.addAll("-classpath", classpath.toString());
         vmOpts.addAll(testVMOpts);
 
-        if (customMainWrapper != null) {
+        if (testThreadFactory != null) {
             // Add property to differ agents with and without MainWrapper
-            vmOpts.add("-D" + MainWrapper.MAIN_WRAPPER + "=" + customMainWrapper);
+            vmOpts.add("-D" + MainWrapper.TEST_THREAD_FACTORY + "=" + testThreadFactory);
         }
 
         if (params.getTestJDK().hasModules()) {
@@ -1278,7 +1278,7 @@ public class RegressionScript extends Script {
 
         Agent.Pool p = Agent.Pool.instance(params);
         Agent agent = p.getAgent(absTestScratchDir().toFile(), jdk, vmOpts.toList(), envVars,
-                customMainWrapper, customMainWrapperPath);
+                testThreadFactory, testThreadFactoryPath);
         agents.add(agent);
         return agent;
     }

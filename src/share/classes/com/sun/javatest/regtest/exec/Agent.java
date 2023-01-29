@@ -95,7 +95,7 @@ public class Agent {
      */
     private Agent(File dir, JDK jdk, List<String> vmOpts, Map<String, String> envVars,
             File policyFile, float timeoutFactor, Logger logger,
-            String customMainWrapper, String customMainWrapperPath) throws Fault {
+            String testThreadFactory, String testThreadFactoryPath) throws Fault {
         try {
             id = ++count;
             this.jdk = jdk;
@@ -135,14 +135,14 @@ public class Agent {
                 cmd.add(String.valueOf(timeoutFactor));
             }
 
-            if (customMainWrapper != null) {
-                cmd.add(AgentServer.CUSTOM_MAIN_WRAPPER);
-                cmd.add(customMainWrapper);
+            if (testThreadFactory != null) {
+                cmd.add(AgentServer.CUSTOM_TEST_THREAD_FACTORY);
+                cmd.add(testThreadFactory);
             }
 
-            if (customMainWrapperPath != null) {
-                cmd.add(CUSTOM_MAIN_WRAPPER_PATH);
-                cmd.add(customMainWrapperPath);
+            if (testThreadFactoryPath != null) {
+                cmd.add(CUSTOM_TEST_THREAD_FACTORY_PATH);
+                cmd.add(testThreadFactoryPath);
             }
             log("Started " + cmd);
 
@@ -749,8 +749,8 @@ public class Agent {
                                     JDK jdk,
                                     List<String> vmOpts,
                                     Map<String, String> envVars,
-                                    String customMainWrapper,
-                                    String customMainWrapperPath)
+                                    String testThreadFactory,
+                                    String testThreadFactoryPath)
                 throws Fault {
             logger.log(null,
                     "POOL: get agent for:\n"
@@ -769,7 +769,7 @@ public class Agent {
             } else {
                 logger.log(null, "POOL: Creating new agent");
                 a = new Agent(dir, jdk, vmOpts, envVars, policyFile, timeoutFactor, logger,
-                        customMainWrapper, customMainWrapperPath);
+                        testThreadFactory, testThreadFactoryPath);
                 stats.add(a);
             }
 

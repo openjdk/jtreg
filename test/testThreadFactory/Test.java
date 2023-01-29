@@ -21,23 +21,30 @@
  * questions.
  */
 
-import com.sun.javatest.regtest.agent.CustomMainWrapper;
+/*
+ * @test
+ * @run main/othervm Test
+ */
 
-public class TestMainWrapper implements CustomMainWrapper {
+/*
+ * @test
+ * @run main Test
+ */
 
-    public TestMainWrapper() {
-        System.setProperty("main.wrapper", "Test");
-    }
+/*
+ * @test
+ * @run driver Test
+ */
 
-    @Override
-    public Thread createThread(ThreadGroup tg, Runnable task) {
-        return new TestThread(tg, task);
-    }
+public class Test {
+    public static void main(String... args) throws Exception {
+        if (!"Test".equals(System.getProperty("test.thread.factory"))) {
+            throw new Exception("Property 'test.thread.factory' = " + System.getProperty("test.thread.factory"));
+        }
 
-}
-
-class TestThread extends Thread {
-    public TestThread(ThreadGroup group, Runnable target) {
-        super(group, target);
+        String threadClassName = Thread.currentThread().getClass().getName();
+        if (!threadClassName.equals("TestThread")) {
+            throw new Exception("Main Thread name = " + threadClassName);
+        }
     }
 }

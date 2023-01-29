@@ -25,30 +25,30 @@
 
 #----------------------------------------------------------------------
 
-$(BUILDTESTDIR)/TestMainWrapper.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
+$(BUILDTESTDIR)/TestTestThreadFactory.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(JTREG_IMAGEDIR)/bin/jtreg
 	$(JDKJAVAC) \
 		-d $(@:%.ok=%)/classes \
 		-cp $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-		$(TESTDIR)/mainWrapper/TestMainWrapper.java
+		$(TESTDIR)/testThreadFactory/TestTestThreadFactory.java
 	JTREG_JAVA=$(JDKJAVA) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-jdk:$(JDKHOME) \
 		-w:$(@:%.ok=%)/cmd.othervm/work \
 		-r:$(@:%.ok=%)/cmd.othervm/report \
 		-verbose:fail \
-		-mainWrapper:TestMainWrapper \
-		-mainWrapperPath:$(@:%.ok=%)/classes \
-		$(TESTDIR)/mainWrapper
+		-testThreadFactory:TestTestThreadFactory \
+		-testThreadFactoryPath:$(@:%.ok=%)/classes \
+		$(TESTDIR)/testThreadFactory
 	JTREG_JAVA=$(JDKJAVA) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-jdk:$(JDKHOME) \
                 -agentvm \
 		-w:$(@:%.ok=%)/cmd.agentvm/work \
 		-r:$(@:%.ok=%)/cmd.agentvm/report \
 		-verbose:fail \
-		-mainWrapper:TestMainWrapper \
-		-mainWrapperPath:$(@:%.ok=%)/classes \
-		$(TESTDIR)/mainWrapper
+		-testThreadFactory:TestTestThreadFactory \
+		-testThreadFactoryPath:$(@:%.ok=%)/classes \
+		$(TESTDIR)/testThreadFactory
 	echo "test passed at `date`" > $@
 
-TESTS.jtreg += $(BUILDTESTDIR)/TestMainWrapper.ok
+TESTS.jtreg += $(BUILDTESTDIR)/TestTestThreadFactory.ok

@@ -83,8 +83,8 @@ public class AgentServer implements ActionHelper.OutputHandler {
     public static final String HOST = "-host";
     public static final String PORT = "-port";
     public static final String TIMEOUTFACTOR = "-timeoutFactor";
-    public static final String CUSTOM_MAIN_WRAPPER = "-mainWrapper";
-    public static final String CUSTOM_MAIN_WRAPPER_PATH = "-mainWrapperPath";
+    public static final String CUSTOM_TEST_THREAD_FACTORY = "-testThreadFactory";
+    public static final String CUSTOM_TEST_THREAD_FACTORY_PATH = "-testThreadFactoryPath";
 
     public static final byte DO_COMPILE = 1;
     public static final byte DO_MAIN = 2;
@@ -146,8 +146,8 @@ public class AgentServer implements ActionHelper.OutputHandler {
     }
 
     private float timeoutFactor = 1.0f;
-    private String customMainWrapper;
-    private String customMainWrapperPath;
+    private String testThreadFactory;
+    private String testThreadFactoryPath;
 
     public AgentServer(String... args) throws IOException {
         if (traceServer) {
@@ -177,10 +177,10 @@ public class AgentServer implements ActionHelper.OutputHandler {
                 host = InetAddress.getByName(args[++i]);
             } else if (arg.equals(TIMEOUTFACTOR) && i + 1 < args.length) {
                 timeoutFactor = Float.valueOf(args[++i]);
-            } else if (arg.equals(CUSTOM_MAIN_WRAPPER) && i + 1 < args.length) {
-                customMainWrapper = args[++i];
-            } else if (arg.equals(CUSTOM_MAIN_WRAPPER_PATH) && i + 1 < args.length) {
-                customMainWrapperPath = args[++i];
+            } else if (arg.equals(CUSTOM_TEST_THREAD_FACTORY) && i + 1 < args.length) {
+                testThreadFactory = args[++i];
+            } else if (arg.equals(CUSTOM_TEST_THREAD_FACTORY_PATH) && i + 1 < args.length) {
+                testThreadFactoryPath = args[++i];
         }   else {
                 throw new IllegalArgumentException(arg);
             }
@@ -311,8 +311,8 @@ public class AgentServer implements ActionHelper.OutputHandler {
                     .classArgs(classArgs)
                     .timeout(0)
                     .timeoutFactor(timeoutFactor)
-                    .customMainWrapper(customMainWrapper)
-                    .customMainWrapperPath(customMainWrapperPath)
+                    .testThreadFactory(testThreadFactory)
+                    .testThreadFactoryPath(testThreadFactoryPath)
                     .outputHandler(this)
                     .runClass();
             writeStatus(status);

@@ -481,11 +481,11 @@ public class MainAction extends Action
             javaProps.put("java.security.manager", "default");
         }
 
-        if (script.getCustomWrapper() != null) {
-            javaProps.put(MainWrapper.MAIN_WRAPPER, script.getCustomWrapper());
+        if (script.getTestThreadFactory() != null) {
+            javaProps.put(MainWrapper.TEST_THREAD_FACTORY, script.getTestThreadFactory());
         }
-        if (script.getCustomWrapperPath() != null) {
-            javaProps.put(MainWrapper.MAIN_WRAPPER_PATH, script.getCustomWrapperPath());
+        if (script.getTestThreadFactoryPath() != null) {
+            javaProps.put(MainWrapper.TEST_THREAD_FACTORY_PATH, script.getTestThreadFactoryPath());
         }
 //      javaProps.put("java.security.debug", "all");
 
@@ -627,11 +627,11 @@ public class MainAction extends Action
 
         Agent agent;
         try {
-            String wrapper = script.getCustomWrapper() == null ? null : script.getCustomWrapper();
+            String factory = script.getTestThreadFactory() == null ? null : script.getTestThreadFactory();
             agent = script.getAgent(jdk, agentClasspath,
                     filterJavaOpts(join(script.getTestVMJavaOptions(), script.getTestDebugOptions())),
-                    wrapper,
-                    script.getCustomWrapperPath());
+                    factory,
+                    script.getTestThreadFactoryPath());
             section.getMessageWriter().println("Agent id: " + agent.getId());
             new ModuleConfig("Boot Layer").setFromOpts(agent.vmOpts).write(configWriter);
         } catch (Agent.Fault e) {

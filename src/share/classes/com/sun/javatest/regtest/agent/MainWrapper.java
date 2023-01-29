@@ -36,8 +36,8 @@ import java.lang.reflect.Method;
 public class MainWrapper
 {
 
-    public static String MAIN_WRAPPER = "jtreg.custom.main.wrapper";
-    public static String MAIN_WRAPPER_PATH = "jtreg.custom.main.wrapper.path";
+    public static String TEST_THREAD_FACTORY = "jtreg.test.thread.factory";
+    public static String TEST_THREAD_FACTORY_PATH = "jtreg.test.thread.factory.path";
 
     public static void main(String[] args) {
         String moduleName;
@@ -72,12 +72,12 @@ public class MainWrapper
         MainThreadGroup tg = new MainThreadGroup();
         Runnable task = new MainTask(moduleName, className, classArgs);
         Thread t;
-        String customWrapper = System.getProperty(MAIN_WRAPPER);
-        String customWrapperPath = System.getProperty(MAIN_WRAPPER_PATH);
-        if (customWrapper == null) {
+        String testThreadFactory = System.getProperty(TEST_THREAD_FACTORY);
+        String testThreadFactoryPath = System.getProperty(TEST_THREAD_FACTORY_PATH);
+        if (testThreadFactory == null) {
             t = new Thread(tg, task);
         } else {
-            t = CustomMainWrapper.getInstance(customWrapper, customWrapperPath).createThread(tg, task);
+            t = TestThreadFactory.getInstance(testThreadFactory, testThreadFactoryPath).newThread(tg, task);
         }
         t.setName("MainThread");
         t.start();

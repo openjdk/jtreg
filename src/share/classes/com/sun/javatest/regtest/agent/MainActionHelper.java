@@ -57,9 +57,9 @@ public class MainActionHelper extends ActionHelper {
     private List<String> classArgs;
     private int timeout;
     private float timeoutFactor;
-    private String customMainWrapper;
+    private String testThreadFactory;
 
-    private String customMainWrapperPath;
+    private String testThreadFactoryPath;
     private OutputHandler outputHandler;
 
     MainActionHelper(String testName) {
@@ -116,13 +116,13 @@ public class MainActionHelper extends ActionHelper {
         return this;
     }
 
-    MainActionHelper customMainWrapper(String customMainWrapper) {
-        this.customMainWrapper = customMainWrapper;
+    MainActionHelper testThreadFactory(String testThreadFactory) {
+        this.testThreadFactory = testThreadFactory;
         return this;
     }
 
-    MainActionHelper customMainWrapperPath(String customMainWrapperPath) {
-        this.customMainWrapperPath = customMainWrapperPath;
+    MainActionHelper testThreadFactoryPath(String testThreadFactoryPath) {
+        this.testThreadFactoryPath = testThreadFactoryPath;
         return this;
     }
 
@@ -202,10 +202,10 @@ public class MainActionHelper extends ActionHelper {
             // RUN JAVA IN ANOTHER THREADGROUP
             AgentVMThreadGroup tg = new AgentVMThreadGroup(err, MSG_PREFIX, timeoutFactor);
             Thread t;
-            if (customMainWrapper == null) {
+            if (testThreadFactory == null) {
                 t = new Thread(tg, avmr);
             } else {
-                t = CustomMainWrapper.getInstance(customMainWrapper, customMainWrapperPath).createThread(tg, avmr);
+                t = TestThreadFactory.getInstance(testThreadFactory, testThreadFactoryPath).newThread(tg, avmr);
             }
 
             Alarm alarm = null;
