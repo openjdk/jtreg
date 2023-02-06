@@ -223,7 +223,7 @@ public class Version implements Comparable<Version> {
     String getVersionBuildString() {
         return versionString != null
                 ? versionString
-                : String.format("%s b%s", version, build);
+                : String.format("%s+%s", version, build.replaceAll("^0+", ""));
     }
 
     @Override

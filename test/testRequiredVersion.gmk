@@ -53,7 +53,7 @@ $(BUILDTESTDIR)/TestRequiredVersion.ok: \
 		-verbose:fail \
 		$(BUILDTESTDIR)/requiredversion.future/suite/ \
 		2>&1 | tee $(BUILDTESTDIR)/requiredversion.future/log.txt
-	grep -q "requires jtreg version 99.9 b01 or higher" $(BUILDTESTDIR)/requiredversion.future/log.txt
+	grep -q "requires jtreg version 99.9+1 or higher" $(BUILDTESTDIR)/requiredversion.future/log.txt
 
 	echo "$@ test passed at `date`" > $@
 
