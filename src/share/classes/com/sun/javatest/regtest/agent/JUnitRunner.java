@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2023, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -232,7 +232,7 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
 
         @Override
         public void executionFinished(TestIdentifier identifier, TestExecutionResult result) {
-            if (identifier.isTest()) {
+            /* if (identifier.isTest()) */ {
                 lock.lock();
                 try {
                     TestExecutionResult.Status status = result.getStatus();
@@ -242,9 +242,11 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
                     if (status == TestExecutionResult.Status.FAILED) {
                         result.getThrowable().ifPresent(throwable -> throwable.printStackTrace(printer));
                     }
-                    String source = toSourceString(identifier);
-                    String name = identifier.getDisplayName();
-                    printer.printf("%-10s %s '%s'%n", status, source, name);
+                    if (identifier.isTest()) {
+                        String source = toSourceString(identifier);
+                        String name = identifier.getDisplayName();
+                        printer.printf("%-10s %s '%s'%n", status, source, name);
+                    }
                 }
                 finally {
                     lock.unlock();
