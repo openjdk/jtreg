@@ -30,7 +30,6 @@ import org.junit.platform.engine.TestSource;
 import org.junit.platform.engine.discovery.DiscoverySelectors;
 import org.junit.platform.engine.reporting.ReportEntry;
 import org.junit.platform.engine.support.descriptor.MethodSource;
-import org.junit.platform.launcher.LauncherConstants;
 import org.junit.platform.launcher.LauncherDiscoveryRequest;
 import org.junit.platform.launcher.LauncherSession;
 import org.junit.platform.launcher.TestExecutionListener;
@@ -232,25 +231,23 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
 
         @Override
         public void executionFinished(TestIdentifier identifier, TestExecutionResult result) {
-            /* if (identifier.isTest()) */ {
-                lock.lock();
-                try {
-                    TestExecutionResult.Status status = result.getStatus();
-                    if (status == TestExecutionResult.Status.ABORTED) {
-                        result.getThrowable().ifPresent(printer::println); // not the entire stack trace
-                    }
-                    if (status == TestExecutionResult.Status.FAILED) {
-                        result.getThrowable().ifPresent(throwable -> throwable.printStackTrace(printer));
-                    }
-                    if (identifier.isTest()) {
-                        String source = toSourceString(identifier);
-                        String name = identifier.getDisplayName();
-                        printer.printf("%-10s %s '%s'%n", status, source, name);
-                    }
+            lock.lock();
+            try {
+                TestExecutionResult.Status status = result.getStatus();
+                if (status == TestExecutionResult.Status.ABORTED) {
+                    result.getThrowable().ifPresent(printer::println); // not the entire stack trace
                 }
-                finally {
-                    lock.unlock();
+                if (status == TestExecutionResult.Status.FAILED) {
+                    result.getThrowable().ifPresent(throwable -> throwable.printStackTrace(printer));
                 }
+                if (identifier.isTest()) {
+                    String source = toSourceString(identifier);
+                    String name = identifier.getDisplayName();
+                    printer.printf("%-10s %s '%s'%n", status, source, name);
+                }
+            }
+            finally {
+                lock.unlock();
             }
         }
 
