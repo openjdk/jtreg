@@ -29,5 +29,5 @@ $(BUILDTESTDIR)/tidy-docs.ok: \
 	$(TIDY) -e --gnu-emacs true -q $<
 	echo "docs checked at `date`" > $@
 
-#INITIAL_TESTS += \
-#	$(BUILDTESTDIR)/tidy-docs.ok
+INITIAL_TESTS += \
+	$(BUILDTESTDIR)/tidy-docs.ok

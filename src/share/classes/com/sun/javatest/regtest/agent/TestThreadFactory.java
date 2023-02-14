@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2022, 2023, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -35,9 +35,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * {@code TestThreadFactory} allows some customization of test execution.
- * The jtreg creates new thread for each test using {@code new Thread(ThreadGroup tg, Runnable task);}.
- * The implementation of this interface might provide user-defined threads for test execution.
+ * A factory for threads used to run tests.
+ * By default, jtreg creates a new thread for each test using {@code new Thread(ThreadGroup tg, Runnable task);},
+ * but this may be overridden by providing an implementation of this interface,
+ * which might provide user-defined threads for test execution.
+ * An implementation of this interface might provide user-defined threads for test execution.
  * <p>
  * Example:
  * <pre>
