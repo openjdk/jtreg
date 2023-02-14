@@ -58,7 +58,6 @@ public class MainActionHelper extends ActionHelper {
     private int timeout;
     private float timeoutFactor;
     private String testThreadFactory;
-
     private String testThreadFactoryPath;
     private OutputHandler outputHandler;
 
