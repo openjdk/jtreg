@@ -33,17 +33,18 @@ import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ThreadFactory;
 
 /**
- * A factory for threads used to run tests.
+ * A provider which loads thread factory for threads used to run tests.
  * By default, jtreg creates a new thread for each test using {@code new Thread(ThreadGroup tg, Runnable task);},
- * but this may be overridden by providing an implementation of this interface,
+ * but this may be overridden by providing an implementation of {@link java.util.concurrent.ThreadFactory},
  * which might provide user-defined threads for test execution.
- * An implementation of this interface might provide user-defined threads for test execution.
+ * An implementation might provide user-defined threads for test execution.
  * <p>
  * Example:
  * <pre>
- * new Thread(tg, () -> { ....; task.run(); ....; });
+ * new Thread(() -> { ....; task.run(); ....; });
  * or
  * new VirtualThread(task);
  * </pre>
@@ -51,8 +52,8 @@ import java.util.List;
  * using {@code -testThreadFactory} and {@code -testThreadFactoryPath} arguments.
  * It is executed by tested JDK in {@code agentvm} and {@code othervm} modes.
  */
-public interface TestThreadFactory {
-    static TestThreadFactory getInstance(String className, String path) {
+public final class TestThreadFactoryProvider {
+    static ThreadFactory loadThreadFactory(String className, String path) {
         ClassLoader loader = ClassLoader.getSystemClassLoader();
         if (path != null) {
             SearchPath classpath = new SearchPath(path);
@@ -66,21 +67,14 @@ public interface TestThreadFactory {
             loader = new URLClassLoader(urls.toArray(new URL[urls.size()]), loader);
         }
         try {
-            Class<? extends TestThreadFactory> clz = loader.loadClass(className).asSubclass(TestThreadFactory.class);
-            Constructor<? extends TestThreadFactory> ctor = clz.getDeclaredConstructor();
-            TestThreadFactory factory = ctor.newInstance();
+            Class<? extends ThreadFactory> clz = loader.loadClass(className).asSubclass(ThreadFactory.class);
+            Constructor<? extends ThreadFactory> ctor = clz.getDeclaredConstructor();
+            ThreadFactory factory = ctor.newInstance();
             return factory;
         } catch (ClassNotFoundException | InvocationTargetException | NoSuchMethodException
                  | InstantiationException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
     }
-
-    /**
-     * This method should return unstarted thread which executes test task.
-     * @param tg ThreadGroup to run test
-     * @param task The test task
-     */
-    Thread newThread(ThreadGroup tg, Runnable task);
 
 }

@@ -77,7 +77,7 @@ public class MainWrapper
         if (testThreadFactory == null) {
             t = new Thread(tg, task);
         } else {
-            t = TestThreadFactory.getInstance(testThreadFactory, testThreadFactoryPath).newThread(tg, task);
+            t = TestThreadFactoryProvider.loadThreadFactory(testThreadFactory, testThreadFactoryPath).newThread(task);
         }
         t.setName("MainThread");
         t.start();

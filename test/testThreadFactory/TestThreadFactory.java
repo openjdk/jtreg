@@ -21,23 +21,23 @@
  * questions.
  */
 
-import com.sun.javatest.regtest.agent.TestThreadFactory;
+import java.util.concurrent.ThreadFactory;
 
-public class TestTestThreadFactory implements TestThreadFactory {
+public class TestThreadFactory implements ThreadFactory {
 
-    public TestTestThreadFactory() {
+    public TestThreadFactory() {
         System.setProperty("test.thread.factory", "Test");
     }
 
     @Override
-    public Thread newThread(ThreadGroup tg, Runnable task) {
-        return new TestThread(tg, task);
+    public Thread newThread(Runnable task) {
+        return new TestThread(task);
     }
 
 }
 
 class TestThread extends Thread {
-    public TestThread(ThreadGroup group, Runnable target) {
-        super(group, target);
+    public TestThread(Runnable target) {
+        super(target);
     }
 }
