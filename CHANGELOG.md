@@ -2,13 +2,25 @@
 
 ## [Unreleased](https://git.openjdk.org/jtreg/compare/jtreg-7.1.1+1...master)
 
-* Summary reporter getter is now thread-safe.
-  * [CODETOOLS-7903390](https://bugs.openjdk.org/browse/CODETOOLS-7903390)
+* Improved support for JUnit Jupiter.
+  * Update jtreg to bundle JUnit 5.9.2 [CODETOOLS-7903406](https://bugs.openjdk.org/browse/CODETOOLS-7903406)
+  * Improve reporting for errors in JUnit's lifecycle methods [CODETOOLS-7903430](https://bugs.openjdk.org/browse/CODETOOLS-7903430)
+
+* Improved support TestNG.
+  * Support `test.query` for TestNG tests [CODETOOLS-7903414](https://bugs.openjdk.org/browse/CODETOOLS-7903414)
+
+* Generate all debugging info when compiling `jtreg` [CODETOOLS-7903393](https://bugs.openjdk.org/browse/CODETOOLS-7903393)
+
+* RISC-V Port has been integrated into JDK mainline
+  * Set `simpleArch` to `riscv64` when `os.arch` is `riscv64` [CODETOOLS-7903138](https://bugs.openjdk.org/browse/CODETOOLS-7903138)
+
+* Fix incorrect format for version in error message [CODETOOLS-7903398](https://bugs.openjdk.org/browse/CODETOOLS-7903398)
 
 ## [7.1.1+1](https://git.openjdk.org/jtreg/compare/jtreg-7.1+1...jtreg-7.1.1+1)
 
 * Summary reporter getter is now thread-safe.
   * [CODETOOLS-7903390](https://bugs.openjdk.org/browse/CODETOOLS-7903390)
+
 
 ## [7.1+1](https://git.openjdk.org/jtreg/compare/jtreg-7+1...jtreg-7.1+1)
 
