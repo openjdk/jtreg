@@ -13,15 +13,21 @@ jobs:
 
     steps:
     - name: 'Check out repository'
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         fetch-depth: 1
+
+    - name: 'Set up Java Development Kit'
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'oracle'
+        java-version: '17'
 
     - name: 'Build JTReg'
       shell: bash
       run: |
         java --version
-        bash make/build.sh --jdk ${JAVA_HOME_11_X64}
+        bash make/build.sh
 
     - name: 'Run initial tests (goal: quick-test)'
       shell: bash
@@ -29,7 +35,7 @@ jobs:
         MAKE_ARGS: quick-test
         HEADLESS: 1
       run: |
-        bash make/build.sh --jdk ${JAVA_HOME_11_X64} --skip-download
+        bash make/build.sh --skip-download
 
     - name: 'Run all tests (goal: test)'
       shell: bash
@@ -37,4 +43,4 @@ jobs:
         MAKE_ARGS: test
         HEADLESS: 1
       run: |
-        bash make/build.sh --jdk ${JAVA_HOME_11_X64} --skip-download
+        bash make/build.sh --skip-download
