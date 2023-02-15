@@ -6,7 +6,7 @@
   * Update jtreg to bundle JUnit 5.9.2 [CODETOOLS-7903406](https://bugs.openjdk.org/browse/CODETOOLS-7903406)
   * Improve reporting for errors in JUnit's lifecycle methods [CODETOOLS-7903430](https://bugs.openjdk.org/browse/CODETOOLS-7903430)
 
-* Improved support TestNG.
+* Improved support for TestNG.
   * Support `test.query` for TestNG tests [CODETOOLS-7903414](https://bugs.openjdk.org/browse/CODETOOLS-7903414)
 
 * Generate all debugging info when compiling `jtreg` [CODETOOLS-7903393](https://bugs.openjdk.org/browse/CODETOOLS-7903393)
