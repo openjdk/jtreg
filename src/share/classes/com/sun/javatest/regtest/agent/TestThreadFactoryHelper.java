@@ -36,11 +36,11 @@ import java.util.List;
 import java.util.concurrent.ThreadFactory;
 
 /**
- * A provider which loads thread factory for threads used to run tests.
+ * A class which loads thread factory for threads used to run test by jtreg.
  * By default, jtreg creates a new thread for each test using {@code new Thread(ThreadGroup tg, Runnable task);},
  * but this may be overridden by providing an implementation of {@link java.util.concurrent.ThreadFactory},
  * which might provide user-defined threads for test execution.
- * An implementation might provide user-defined threads for test execution.
+ * Please note, that additional threads started by tests don't use this factory and remain the same.
  * <p>
  * Example:
  * <pre>
@@ -52,7 +52,7 @@ import java.util.concurrent.ThreadFactory;
  * using {@code -testThreadFactory} and {@code -testThreadFactoryPath} arguments.
  * It is executed by tested JDK in {@code agentvm} and {@code othervm} modes.
  */
-public final class TestThreadFactoryProvider {
+public final class TestThreadFactoryHelper {
     static ThreadFactory loadThreadFactory(String className, String path) {
         ClassLoader loader = ClassLoader.getSystemClassLoader();
         if (path != null) {

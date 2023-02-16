@@ -204,7 +204,7 @@ public class MainActionHelper extends ActionHelper {
             if (testThreadFactory == null) {
                 t = new Thread(tg, avmr);
             } else {
-                t = TestThreadFactoryProvider.loadThreadFactory(testThreadFactory, testThreadFactoryPath).newThread(avmr);
+                t = TestThreadFactoryHelper.loadThreadFactory(testThreadFactory, testThreadFactoryPath).newThread(avmr);
             }
 
             Alarm alarm = null;
