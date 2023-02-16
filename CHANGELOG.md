@@ -1,19 +1,38 @@
 
 
-## [Unreleased](https://git.openjdk.org/jtreg/compare/jtreg-7.1+1...master)
+## [Unreleased](https://git.openjdk.org/jtreg/compare/jtreg-7.1.1+1...master)
+
+* Improved support for JUnit Jupiter.
+  * Update jtreg to bundle JUnit 5.9.2 [CODETOOLS-7903406](https://bugs.openjdk.org/browse/CODETOOLS-7903406)
+  * Improve reporting for errors in JUnit's lifecycle methods [CODETOOLS-7903430](https://bugs.openjdk.org/browse/CODETOOLS-7903430)
+
+* Improved support for TestNG.
+  * Support `test.query` for TestNG tests [CODETOOLS-7903414](https://bugs.openjdk.org/browse/CODETOOLS-7903414)
+
+* Generate all debugging info when compiling `jtreg` [CODETOOLS-7903393](https://bugs.openjdk.org/browse/CODETOOLS-7903393)
+
+* RISC-V Port has been integrated into JDK mainline
+  * Set `simpleArch` to `riscv64` when `os.arch` is `riscv64` [CODETOOLS-7903138](https://bugs.openjdk.org/browse/CODETOOLS-7903138)
+
+* Fix incorrect format for version in error message [CODETOOLS-7903398](https://bugs.openjdk.org/browse/CODETOOLS-7903398)
 
 * Add options -testThreadFactory and -testThreadFactoryPath to allow
   the use of a custom thread factory, to be used to create the thread to run a test.
   * [CODETOOLS-7903373](https://bugs.openjdk.org/browse/CODETOOLS-79033734)
 
+## [7.1.1+1](https://git.openjdk.org/jtreg/compare/jtreg-7.1+1...jtreg-7.1.1+1)
+
+* Summary reporter getter is now thread-safe.
+  * [CODETOOLS-7903390](https://bugs.openjdk.org/browse/CODETOOLS-7903390)
+
 ## [7.1+1](https://git.openjdk.org/jtreg/compare/jtreg-7+1...jtreg-7.1+1)
 
 * Improved support for JUnit Jupiter.
-  * Avoid using TestNG mixed mode. 
+  * Avoid using TestNG mixed mode.
     [CODETOOLS-7903264](https://bugs.openjdk.org/browse/CODETOOLS-7903264)
-  * Support JUnit tests in a system module. 
+  * Support JUnit tests in a system module.
     [CODETOOLS-7903260](https://bugs.openjdk.org/browse/CODETOOLS-7903260)
-  * Support executing a single method. 
+  * Support executing a single method.
     [CODETOOLS-7903267](https://bugs.openjdk.org/browse/CODETOOLS-7903267)
   * Improve per-class reporting of JUnit tests, in `.jtr` file.
     [CODETOOLS-7903324](https://bugs.openjdk.org/browse/CODETOOLS-7903324)
@@ -104,7 +123,7 @@
 
 
 * Add support for `Automatic-Module-Name` in jar files.
-  
+
 * Update versions of jtreg dependencies.
   * [CODETOOLS-7902791](https://bugs.openjdk.org/browse/CODETOOLS-7902791)
 
@@ -178,5 +197,3 @@
 
 * Introduce `test.file`.
   * [CODETOOLS-7902545](https://bugs.openjdk.org/browse/CODETOOLS-7902545)
-
-

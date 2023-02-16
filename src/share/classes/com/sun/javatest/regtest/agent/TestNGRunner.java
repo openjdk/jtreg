@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012, 2023, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -29,14 +29,19 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.testng.IConfigurationListener;
+import org.testng.IMethodInstance;
+import org.testng.IMethodInterceptor;
 import org.testng.ITestContext;
 import org.testng.ITestListener;
 import org.testng.ITestNGListener;
 import org.testng.ITestResult;
 import org.testng.SkipException;
 import org.testng.TestNG;
+import org.testng.TestNGException;
 import org.testng.reporters.XMLReporter;
 
 import static org.testng.ITestResult.FAILURE;
@@ -82,11 +87,15 @@ public class TestNGRunner implements MainActionHelper.TestRunner {
             cl = TestNGRunner.class.getClassLoader();
         }
         Class<?> mainClass = Class.forName(className, false, cl);
+        String testQuery = System.getProperty("test.query");
         RegressionListener listener = new RegressionListener();
         TestNG testng = new TestNG(false);
         testng.setMixed(mixedMode);
         testng.setDefaultSuiteName(testName);
         testng.setTestClasses(new Class<?>[]{mainClass});
+        if (testQuery != null) {
+            testng.setMethodInterceptor(new FilterMethods(className, testQuery));
+        }
         testng.addListener((ITestNGListener) listener); // recognizes both ITestListener and IConfigurationListener
         testng.addListener(new XMLReporter());
         testng.setOutputDirectory(new File(".").getPath()); // current dir, i.e. scratch dir
@@ -238,5 +247,31 @@ public class TestNGRunner implements MainActionHelper.TestRunner {
         int configFailureCount;
         int configSkippedCount;
         int failedButWithinSuccessPercentageCount;
+    }
+
+    private static class FilterMethods implements IMethodInterceptor {
+
+        private final String testClass;
+        private final String testQuery;
+
+        public FilterMethods(String testClass, String testQuery) {
+            this.testClass = testClass;
+            this.testQuery = testQuery;
+        }
+
+        @Override
+        public List<IMethodInstance> intercept(List<IMethodInstance> ms, ITestContext c) {
+            List<IMethodInstance> result =
+                    ms.stream()
+                      .filter(mi -> testQuery.equals(mi.getMethod()
+                                                       .getMethodName()))
+                      .collect(Collectors.toList());
+
+            if (result.isEmpty()) {
+                throw new TestNGException("Could not find method with name [" + testQuery + "] in class [" + testClass + "]");
+            }
+
+            return result;
+        }
     }
 }

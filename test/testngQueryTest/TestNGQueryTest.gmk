@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -27,7 +27,7 @@
 #
 # Execute all (6) test methods in the test suite
 
-$(BUILDTESTDIR)/JUnitQueryTest.all.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
+$(BUILDTESTDIR)/TestNGQueryTest.all.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%)
@@ -37,22 +37,21 @@ $(BUILDTESTDIR)/JUnitQueryTest.all.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDKHOME) \
 		-va \
-		$(TESTDIR)/junitQueryTest/ \
+		$(TESTDIR)/testngQueryTest/ \
 		 > $(@:%.ok=%)/jt.log 2>&1
-	OUT=$$( $(ECHO) $$( $(AWK) '/STDOUT:/,/STDERR:/{ print $0; } { }' $(@:%.ok=%)/jt.log | $(GREP) -v STD ) ) ; \
-	if [ "$$OUT" != "Test1.m11 Test1.m12 Test1.m13 Test2.m21 Test2.m22 Test2.m23" ]; then \
+	OUT=$$( $(ECHO) $$( $(AWK) '/STDOUT:/,/STDERR:/{ print $0; } { }' $(@:%.ok=%)/jt.log | $(GREP) -v STD  | $(GREP) "^test") ) ; \
+	if [ "$$OUT" != "test Test1.m11(): success test Test1.m12(): success test Test1.m13(): success test Test2.m21(): success test Test2.m22(): success test Test2.m23(): success" ]; then \
 	    echo "unexpected set of tests run: $$OUT"; exit 1 ; \
 	fi
-	$(GREP) "a/b/c/ .* tests: 6, skipped: 0, started: 6, succeeded: 6, failed: 0, aborted: 0" $(@:%.ok=%)/report/text/junit.txt
 	echo $@ passed at `date` > $@
 
-TESTS.jtreg += $(BUILDTESTDIR)/JUnitQueryTest.all.ok
+TESTS.jtreg += $(BUILDTESTDIR)/TestNGQueryTest.all.ok
 
 #----------------------------------------------------------------------
 #
 # Execute a single specific method (Test1.m12) using the query syntax  Test1.java?m12
 
-$(BUILDTESTDIR)/JUnitQueryTest.m12.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
+$(BUILDTESTDIR)/TestNGQueryTest.m12.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%)
@@ -62,16 +61,15 @@ $(BUILDTESTDIR)/JUnitQueryTest.m12.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDKHOME) \
 		-va \
-		$(TESTDIR)/junitQueryTest/a/b/c/Test1.java?m12 \
+		$(TESTDIR)/testngQueryTest/a/b/c/Test1.java?m12 \
 		 > $(@:%.ok=%)/jt.log 2>&1
-	OUT=$$( $(ECHO) $$( $(AWK) '/STDOUT:/,/STDERR:/{ print $0; } { }' $(@:%.ok=%)/jt.log | $(GREP) -v STD ) ) ; \
-	if [ "$$OUT" != "Test1.m12" ]; then \
+	OUT=$$( $(ECHO) $$( $(AWK) '/STDOUT:/,/STDERR:/{ print $0; } { }' $(@:%.ok=%)/jt.log | $(GREP) -v STD  | $(GREP) "^test") ) ; \
+	if [ "$$OUT" != "test Test1.m12(): success" ]; then \
 	    echo "unexpected set of tests run: $$OUT"; exit 1 ; \
 	fi
-	$(GREP) "a/b/c/ .* tests: 1, skipped: 0, started: 1, succeeded: 1, failed: 0, aborted: 0" $(@:%.ok=%)/report/text/junit.txt
 	echo $@ passed at `date` > $@
 
-TESTS.jtreg += $(BUILDTESTDIR)/JUnitQueryTest.m12.ok
+TESTS.jtreg += $(BUILDTESTDIR)/TestNGQueryTest.m12.ok
 
 #----------------------------------------------------------------------
 #
@@ -79,7 +77,7 @@ TESTS.jtreg += $(BUILDTESTDIR)/JUnitQueryTest.m12.ok
 # - a single specific method (Test1.m12) using the query syntax  Test1.java?m12
 # - all (3) test methods in Test2.java
 
-$(BUILDTESTDIR)/JUnitQueryTest.m12.Test2.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
+$(BUILDTESTDIR)/TestNGQueryTest.m12.Test2.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%)
@@ -89,24 +87,23 @@ $(BUILDTESTDIR)/JUnitQueryTest.m12.Test2.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar 
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDKHOME) \
 		-va \
-		$(TESTDIR)/junitQueryTest/a/b/c/Test1.java?m12 \
-		$(TESTDIR)/junitQueryTest/a/b/c/Test2.java \
+		$(TESTDIR)/testngQueryTest/a/b/c/Test1.java?m12 \
+		$(TESTDIR)/testngQueryTest/a/b/c/Test2.java \
 		 > $(@:%.ok=%)/jt.log 2>&1
-	OUT=$$( $(ECHO) $$( $(AWK) '/STDOUT:/,/STDERR:/{ print $0; } { }' $(@:%.ok=%)/jt.log | $(GREP) -v STD ) ) ; \
-	if [ "$$OUT" != "Test1.m12 Test2.m21 Test2.m22 Test2.m23" ]; then \
+	OUT=$$( $(ECHO) $$( $(AWK) '/STDOUT:/,/STDERR:/{ print $0; } { }' $(@:%.ok=%)/jt.log | $(GREP) -v STD  | $(GREP) "^test") ) ; \
+	if [ "$$OUT" != "test Test1.m12(): success test Test2.m21(): success test Test2.m22(): success test Test2.m23(): success" ]; then \
 	    echo "unexpected set of tests run: $$OUT"; exit 1 ; \
 	fi
-	$(GREP) "a/b/c/ .* tests: 4, skipped: 0, started: 4, succeeded: 4, failed: 0, aborted: 0" $(@:%.ok=%)/report/text/junit.txt
 	echo $@ passed at `date` > $@
 
-TESTS.jtreg += $(BUILDTESTDIR)/JUnitQueryTest.m12.Test2.ok
+TESTS.jtreg += $(BUILDTESTDIR)/TestNGQueryTest.m12.Test2.ok
 
 #----------------------------------------------------------------------
 #
 # Execute tests when duplicates are given: last one wins (m13, m12)
 # See related test for the reverse order
 
-$(BUILDTESTDIR)/JUnitQueryTest.m13.m12.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
+$(BUILDTESTDIR)/TestNGQueryTest.m13.m12.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%)
@@ -116,24 +113,23 @@ $(BUILDTESTDIR)/JUnitQueryTest.m13.m12.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDKHOME) \
 		-va \
-		$(TESTDIR)/junitQueryTest/a/b/c/Test1.java?m13 \
-		$(TESTDIR)/junitQueryTest/a/b/c/Test1.java?m12 \
+		$(TESTDIR)/testngQueryTest/a/b/c/Test1.java?m13 \
+		$(TESTDIR)/testngQueryTest/a/b/c/Test1.java?m12 \
 		 > $(@:%.ok=%)/jt.log 2>&1
-	OUT=$$( $(ECHO) $$( $(AWK) '/STDOUT:/,/STDERR:/{ print $0; } { }' $(@:%.ok=%)/jt.log | $(GREP) -v STD ) ) ; \
-	if [ "$$OUT" != "Test1.m12" ]; then \
+	OUT=$$( $(ECHO) $$( $(AWK) '/STDOUT:/,/STDERR:/{ print $0; } { }' $(@:%.ok=%)/jt.log | $(GREP) -v STD  | $(GREP) "^test") ) ; \
+	if [ "$$OUT" != "test Test1.m12(): success" ]; then \
 	    echo "unexpected set of tests run: $$OUT"; exit 1 ; \
 	fi
-	$(GREP) "a/b/c/ .* tests: 1, skipped: 0, started: 1, succeeded: 1, failed: 0, aborted: 0" $(@:%.ok=%)/report/text/junit.txt
 	echo $@ passed at `date` > $@
 
-TESTS.jtreg += $(BUILDTESTDIR)/JUnitQueryTest.m13.m12.ok
+TESTS.jtreg += $(BUILDTESTDIR)/TestNGQueryTest.m13.m12.ok
 
 #----------------------------------------------------------------------
 #
 # Execute tests when duplicates are given: last one wins (m12, m13)
 # See related test for the reverse order
 
-$(BUILDTESTDIR)/JUnitQueryTest.m12.m13.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
+$(BUILDTESTDIR)/TestNGQueryTest.m12.m13.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%)
@@ -143,24 +139,23 @@ $(BUILDTESTDIR)/JUnitQueryTest.m12.m13.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDKHOME) \
 		-va \
-		$(TESTDIR)/junitQueryTest/a/b/c/Test1.java?m12 \
-		$(TESTDIR)/junitQueryTest/a/b/c/Test1.java?m13 \
+		$(TESTDIR)/testngQueryTest/a/b/c/Test1.java?m12 \
+		$(TESTDIR)/testngQueryTest/a/b/c/Test1.java?m13 \
 		 > $(@:%.ok=%)/jt.log 2>&1
-	OUT=$$( $(ECHO) $$( $(AWK) '/STDOUT:/,/STDERR:/{ print $0; } { }' $(@:%.ok=%)/jt.log | $(GREP) -v STD ) ) ; \
-	if [ "$$OUT" != "Test1.m13" ]; then \
+	OUT=$$( $(ECHO) $$( $(AWK) '/STDOUT:/,/STDERR:/{ print $0; } { }' $(@:%.ok=%)/jt.log | $(GREP) -v STD  | $(GREP) "^test") ) ; \
+	if [ "$$OUT" != "test Test1.m13(): success" ]; then \
 	    echo "unexpected set of tests run: $$OUT"; exit 1 ; \
 	fi
-	$(GREP) "a/b/c/ .* tests: 1, skipped: 0, started: 1, succeeded: 1, failed: 0, aborted: 0" $(@:%.ok=%)/report/text/junit.txt
 	echo $@ passed at `date` > $@
 
-TESTS.jtreg += $(BUILDTESTDIR)/JUnitQueryTest.m12.m13.ok
+TESTS.jtreg += $(BUILDTESTDIR)/TestNGQueryTest.m12.m13.ok
 
 #----------------------------------------------------------------------
 #
 # Execute tests when duplicates are given: last one wins (m13, all)
 # See related test for the reverse order
 
-$(BUILDTESTDIR)/JUnitQueryTest.m13.all.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
+$(BUILDTESTDIR)/TestNGQueryTest.m13.all.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%)
@@ -170,24 +165,23 @@ $(BUILDTESTDIR)/JUnitQueryTest.m13.all.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDKHOME) \
 		-va \
-		$(TESTDIR)/junitQueryTest/a/b/c/Test1.java?m13 \
-		$(TESTDIR)/junitQueryTest/a/b/c/Test1.java \
+		$(TESTDIR)/testngQueryTest/a/b/c/Test1.java?m13 \
+		$(TESTDIR)/testngQueryTest/a/b/c/Test1.java \
 		 > $(@:%.ok=%)/jt.log 2>&1
-	OUT=$$( $(ECHO) $$( $(AWK) '/STDOUT:/,/STDERR:/{ print $0; } { }' $(@:%.ok=%)/jt.log | $(GREP) -v STD ) ) ; \
-	if [ "$$OUT" != "Test1.m11 Test1.m12 Test1.m13" ]; then \
+	OUT=$$( $(ECHO) $$( $(AWK) '/STDOUT:/,/STDERR:/{ print $0; } { }' $(@:%.ok=%)/jt.log | $(GREP) -v STD  | $(GREP) "^test") ) ; \
+	if [ "$$OUT" != "test Test1.m11(): success test Test1.m12(): success test Test1.m13(): success" ]; then \
 	    echo "unexpected set of tests run: $$OUT"; exit 1 ; \
 	fi
-	$(GREP) "a/b/c/ .* tests: 3, skipped: 0, started: 3, succeeded: 3, failed: 0, aborted: 0" $(@:%.ok=%)/report/text/junit.txt
 	echo $@ passed at `date` > $@
 
-TESTS.jtreg += $(BUILDTESTDIR)/JUnitQueryTest.m13.all.ok
+TESTS.jtreg += $(BUILDTESTDIR)/TestNGQueryTest.m13.all.ok
 
 #----------------------------------------------------------------------
 #
 # Execute tests when duplicates are given: last one wins (all, m13)
 # See related test for the reverse order
 
-$(BUILDTESTDIR)/JUnitQueryTest.all.m13.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
+$(BUILDTESTDIR)/TestNGQueryTest.all.m13.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%)
@@ -197,23 +191,22 @@ $(BUILDTESTDIR)/JUnitQueryTest.all.m13.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDKHOME) \
 		-va \
-		$(TESTDIR)/junitQueryTest/a/b/c/Test1.java \
-		$(TESTDIR)/junitQueryTest/a/b/c/Test1.java?m13 \
+		$(TESTDIR)/testngQueryTest/a/b/c/Test1.java \
+		$(TESTDIR)/testngQueryTest/a/b/c/Test1.java?m13 \
 		 > $(@:%.ok=%)/jt.log 2>&1
-	OUT=$$( $(ECHO) $$( $(AWK) '/STDOUT:/,/STDERR:/{ print $0; } { }' $(@:%.ok=%)/jt.log | $(GREP) -v STD ) ) ; \
-	if [ "$$OUT" != "Test1.m13" ]; then \
+	OUT=$$( $(ECHO) $$( $(AWK) '/STDOUT:/,/STDERR:/{ print $0; } { }' $(@:%.ok=%)/jt.log | $(GREP) -v STD  | $(GREP) "^test") ) ; \
+	if [ "$$OUT" != "test Test1.m13(): success" ]; then \
 	    echo "unexpected set of tests run: $$OUT"; exit 1 ; \
 	fi
-	$(GREP) "a/b/c/ .* tests: 1, skipped: 0, started: 1, succeeded: 1, failed: 0, aborted: 0" $(@:%.ok=%)/report/text/junit.txt
 	echo $@ passed at `date` > $@
 
-TESTS.jtreg += $(BUILDTESTDIR)/JUnitQueryTest.all.m13.ok
+TESTS.jtreg += $(BUILDTESTDIR)/TestNGQueryTest.all.m13.ok
 
 #----------------------------------------------------------------------
 #
 # Invalid use of query
 
-$(BUILDTESTDIR)/JUnitQueryTest.invalidQuery.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
+$(BUILDTESTDIR)/TestNGQueryTest.invalidQuery.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%)
@@ -223,20 +216,20 @@ $(BUILDTESTDIR)/JUnitQueryTest.invalidQuery.ok: $(JTREG_IMAGEDIR)/lib/javatest.j
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDKHOME) \
 		-va \
-		$(TESTDIR)/junitQueryTest/a/b/c?m13 \
+		$(TESTDIR)/testngQueryTest/a/b/c?m13 \
 			> $(@:%.ok=%)/jt.log 2>&1 || \
 		true "non-zero exit code from jtreg intentionally ignored"
 	$(GREP) -s "Error: Invalid use of query component: a/b/c?m13" $(@:%.ok=%)/jt.log
 	echo $@ passed at `date` > $@
 
-TESTS.jtreg += $(BUILDTESTDIR)/JUnitQueryTest.invalidQuery.ok
+TESTS.jtreg += $(BUILDTESTDIR)/TestNGQueryTest.invalidQuery.ok
 
 
 #----------------------------------------------------------------------
 #
 # Invalid method name
 
-$(BUILDTESTDIR)/JUnitQueryTest.invalidMethod.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
+$(BUILDTESTDIR)/TestNGQueryTest.invalidMethod.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%)
@@ -246,26 +239,25 @@ $(BUILDTESTDIR)/JUnitQueryTest.invalidMethod.ok: $(JTREG_IMAGEDIR)/lib/javatest.
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDKHOME) \
 		-va \
-		$(TESTDIR)/junitQueryTest/a/b/c/Test1.java?m14 \
+		$(TESTDIR)/testngQueryTest/a/b/c/Test1.java?m14 \
 			> $(@:%.ok=%)/jt.log 2>&1 || \
 		true "non-zero exit code from jtreg intentionally ignored"
 	$(GREP) -s 'Could not find method with name \[m14] in class \[Test1]' $(@:%.ok=%)/jt.log
-	$(GREP) -s "TEST RESULT: Failed. Execution failed: .*JUnitException: .* failed to discover tests" $(@:%.ok=%)/jt.log
+	$(GREP) -s "TEST RESULT: Failed. Execution failed: .*TestNGException: Could not find method with name" $(@:%.ok=%)/jt.log
 	echo $@ passed at `date` > $@
-
-TESTS.jtreg += $(BUILDTESTDIR)/JUnitQueryTest.invalidMethod.ok
+TESTS.jtreg += $(BUILDTESTDIR)/TestNGQueryTest.invalidMethod.ok
 
 #----------------------------------------------------------------------
 #
 # Convenience target
 
-junit-query-tests: \
-    $(BUILDTESTDIR)/JUnitQueryTest.all.ok \
-    $(BUILDTESTDIR)/JUnitQueryTest.m12.ok \
-    $(BUILDTESTDIR)/JUnitQueryTest.m12.Test2.ok \
-    $(BUILDTESTDIR)/JUnitQueryTest.m13.m12.ok \
-    $(BUILDTESTDIR)/JUnitQueryTest.m12.m13.ok \
-    $(BUILDTESTDIR)/JUnitQueryTest.m13.all.ok \
-    $(BUILDTESTDIR)/JUnitQueryTest.all.m13.ok \
-    $(BUILDTESTDIR)/JUnitQueryTest.invalidQuery.ok \
-    $(BUILDTESTDIR)/JUnitQueryTest.invalidMethod.ok
+testng-query-tests: \
+    $(BUILDTESTDIR)/TestNGQueryTest.all.ok \
+    $(BUILDTESTDIR)/TestNGQueryTest.m12.ok \
+    $(BUILDTESTDIR)/TestNGQueryTest.m12.Test2.ok \
+    $(BUILDTESTDIR)/TestNGQueryTest.m13.m12.ok \
+    $(BUILDTESTDIR)/TestNGQueryTest.m12.m13.ok \
+    $(BUILDTESTDIR)/TestNGQueryTest.m13.all.ok \
+    $(BUILDTESTDIR)/TestNGQueryTest.all.m13.ok \
+    $(BUILDTESTDIR)/TestNGQueryTest.invalidQuery.ok \
+    $(BUILDTESTDIR)/TestNGQueryTest.invalidMethod.ok
