@@ -2,7 +2,9 @@
 
 ## [Unreleased](https://git.openjdk.org/jtreg/compare/jtreg-7.1+1...master)
 
-_nothing noteworthy, yet_
+* Add options -testThreadFactory and -testThreadFactoryPath to allow
+  the use of a custom thread factory, to be used to create the thread to run a test.
+  * [CODETOOLS-7903373](https://bugs.openjdk.org/browse/CODETOOLS-79033734)
 
 ## [7.1+1](https://git.openjdk.org/jtreg/compare/jtreg-7+1...jtreg-7.1+1)
 
