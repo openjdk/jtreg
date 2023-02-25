@@ -25,6 +25,7 @@
 
 package com.sun.javatest.regtest.agent;
 
+import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
@@ -54,25 +55,24 @@ import java.util.concurrent.ThreadFactory;
  */
 public final class TestThreadFactoryHelper {
     static ThreadFactory loadThreadFactory(String className, String path) {
-        ClassLoader loader = ClassLoader.getSystemClassLoader();
-        if (path != null) {
-            SearchPath classpath = new SearchPath(path);
-            List<URL> urls = new ArrayList<>();
-            for (Path f : classpath.asList()) {
-                try {
-                    urls.add(f.toUri().toURL());
-                } catch (MalformedURLException e) {
-                }
+
+        SearchPath classpath = new SearchPath(path);
+        List<URL> urls = new ArrayList<>();
+        for (Path f : classpath.asList()) {
+            try {
+                urls.add(f.toUri().toURL());
+            } catch (MalformedURLException e) {
+                throw new RuntimeException(e);
             }
-            loader = new URLClassLoader(urls.toArray(new URL[urls.size()]), loader);
         }
-        try {
+
+        try (URLClassLoader loader = new URLClassLoader(urls.toArray(new URL[]{}), ClassLoader.getSystemClassLoader())) {
             Class<? extends ThreadFactory> clz = loader.loadClass(className).asSubclass(ThreadFactory.class);
             Constructor<? extends ThreadFactory> ctor = clz.getDeclaredConstructor();
             ThreadFactory factory = ctor.newInstance();
             return factory;
         } catch (ClassNotFoundException | InvocationTargetException | NoSuchMethodException
-                 | InstantiationException | IllegalAccessException e) {
+                 | InstantiationException | IllegalAccessException | IOException e) {
             throw new RuntimeException(e);
         }
     }
