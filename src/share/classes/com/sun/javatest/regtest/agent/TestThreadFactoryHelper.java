@@ -56,13 +56,15 @@ import java.util.concurrent.ThreadFactory;
 public final class TestThreadFactoryHelper {
     static ThreadFactory loadThreadFactory(String className, String path) {
 
-        SearchPath classpath = new SearchPath(path);
         List<URL> urls = new ArrayList<>();
-        for (Path f : classpath.asList()) {
-            try {
-                urls.add(f.toUri().toURL());
-            } catch (MalformedURLException e) {
-                throw new RuntimeException(e);
+        if (path != null) {
+            SearchPath classpath = new SearchPath(path);
+            for (Path f : classpath.asList()) {
+                try {
+                    urls.add(f.toUri().toURL());
+                } catch (MalformedURLException e) {
+                    throw new RuntimeException(e);
+                }
             }
         }
 
