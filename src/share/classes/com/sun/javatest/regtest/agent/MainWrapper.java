@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2023, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -35,6 +35,10 @@ import java.lang.reflect.Method;
   */
 public class MainWrapper
 {
+
+    public static String TEST_THREAD_FACTORY = "jtreg.test.thread.factory";
+    public static String TEST_THREAD_FACTORY_PATH = "jtreg.test.thread.factory.path";
+
     public static void main(String[] args) {
         String moduleName;
         String className;
@@ -65,8 +69,17 @@ public class MainWrapper
         }
 
         // RUN JAVA IN ANOTHER THREADGROUP
-        MainThreadGroup tg = new  MainThreadGroup();
-        Thread t = new Thread(tg, new MainThread(moduleName, className, classArgs), "MainThread");
+        MainThreadGroup tg = new MainThreadGroup();
+        Runnable task = new MainTask(moduleName, className, classArgs);
+        Thread t;
+        String testThreadFactory = System.getProperty(TEST_THREAD_FACTORY);
+        String testThreadFactoryPath = System.getProperty(TEST_THREAD_FACTORY_PATH);
+        if (testThreadFactory == null) {
+            t = new Thread(tg, task);
+        } else {
+            t = TestThreadFactoryHelper.loadThreadFactory(testThreadFactory, testThreadFactoryPath).newThread(task);
+        }
+        t.setName("MainThread");
         t.start();
         try {
             t.join();
@@ -94,8 +107,8 @@ public class MainWrapper
         }
     }
 
-    static class MainThread extends Thread {
-        MainThread(String moduleName, String className, String[] args) {
+    static class MainTask implements Runnable {
+        MainTask(String moduleName, String className, String[] args) {
             this.moduleName = moduleName;
             this.className = className;
             this.args = args;
@@ -219,4 +232,5 @@ public class MainWrapper
         MAIN_CANT_FIND_MAIN   = "Can't find `main' method",
         MAIN_SKIPPED          = "Skipped: ";
     private static final String SKIP_EXCEPTION = "jtreg.SkippedException";
+
 }

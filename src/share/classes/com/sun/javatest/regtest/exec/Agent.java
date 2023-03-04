@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010, 2023, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -94,7 +94,8 @@ public class Agent {
      * Start a JDK with given JVM options.
      */
     private Agent(File dir, JDK jdk, List<String> vmOpts, Map<String, String> envVars,
-            File policyFile, float timeoutFactor, Logger logger) throws Fault {
+            File policyFile, float timeoutFactor, Logger logger,
+            String testThreadFactory, String testThreadFactoryPath) throws Fault {
         try {
             id = ++count;
             this.jdk = jdk;
@@ -134,6 +135,15 @@ public class Agent {
                 cmd.add(String.valueOf(timeoutFactor));
             }
 
+            if (testThreadFactory != null) {
+                cmd.add(AgentServer.CUSTOM_TEST_THREAD_FACTORY);
+                cmd.add(testThreadFactory);
+            }
+
+            if (testThreadFactoryPath != null) {
+                cmd.add(CUSTOM_TEST_THREAD_FACTORY_PATH);
+                cmd.add(testThreadFactoryPath);
+            }
             log("Started " + cmd);
 
             ProcessBuilder pb = new ProcessBuilder(cmd);
@@ -738,7 +748,9 @@ public class Agent {
         synchronized Agent getAgent(File dir,
                                     JDK jdk,
                                     List<String> vmOpts,
-                                    Map<String, String> envVars)
+                                    Map<String, String> envVars,
+                                    String testThreadFactory,
+                                    String testThreadFactoryPath)
                 throws Fault {
             logger.log(null,
                     "POOL: get agent for:\n"
@@ -756,7 +768,8 @@ public class Agent {
                 stats.reuse(a);
             } else {
                 logger.log(null, "POOL: Creating new agent");
-                a = new Agent(dir, jdk, vmOpts, envVars, policyFile, timeoutFactor, logger);
+                a = new Agent(dir, jdk, vmOpts, envVars, policyFile, timeoutFactor, logger,
+                        testThreadFactory, testThreadFactoryPath);
                 stats.add(a);
             }
 

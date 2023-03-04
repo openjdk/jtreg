@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2021, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010, 2023, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -83,6 +83,8 @@ public class AgentServer implements ActionHelper.OutputHandler {
     public static final String HOST = "-host";
     public static final String PORT = "-port";
     public static final String TIMEOUTFACTOR = "-timeoutFactor";
+    public static final String CUSTOM_TEST_THREAD_FACTORY = "-testThreadFactory";
+    public static final String CUSTOM_TEST_THREAD_FACTORY_PATH = "-testThreadFactoryPath";
 
     public static final byte DO_COMPILE = 1;
     public static final byte DO_MAIN = 2;
@@ -144,6 +146,8 @@ public class AgentServer implements ActionHelper.OutputHandler {
     }
 
     private float timeoutFactor = 1.0f;
+    private String testThreadFactory;
+    private String testThreadFactoryPath;
 
     public AgentServer(String... args) throws IOException {
         if (traceServer) {
@@ -173,7 +177,11 @@ public class AgentServer implements ActionHelper.OutputHandler {
                 host = InetAddress.getByName(args[++i]);
             } else if (arg.equals(TIMEOUTFACTOR) && i + 1 < args.length) {
                 timeoutFactor = Float.valueOf(args[++i]);
-            } else {
+            } else if (arg.equals(CUSTOM_TEST_THREAD_FACTORY) && i + 1 < args.length) {
+                testThreadFactory = args[++i];
+            } else if (arg.equals(CUSTOM_TEST_THREAD_FACTORY_PATH) && i + 1 < args.length) {
+                testThreadFactoryPath = args[++i];
+        }   else {
                 throw new IllegalArgumentException(arg);
             }
         }
@@ -303,6 +311,8 @@ public class AgentServer implements ActionHelper.OutputHandler {
                     .classArgs(classArgs)
                     .timeout(0)
                     .timeoutFactor(timeoutFactor)
+                    .testThreadFactory(testThreadFactory)
+                    .testThreadFactoryPath(testThreadFactoryPath)
                     .outputHandler(this)
                     .runClass();
             writeStatus(status);

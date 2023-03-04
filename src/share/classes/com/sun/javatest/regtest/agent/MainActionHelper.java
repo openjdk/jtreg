@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2023, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -57,6 +57,8 @@ public class MainActionHelper extends ActionHelper {
     private List<String> classArgs;
     private int timeout;
     private float timeoutFactor;
+    private String testThreadFactory;
+    private String testThreadFactoryPath;
     private OutputHandler outputHandler;
 
     MainActionHelper(String testName) {
@@ -110,6 +112,16 @@ public class MainActionHelper extends ActionHelper {
 
     MainActionHelper timeoutFactor(float timeoutFactor) {
         this.timeoutFactor = timeoutFactor;
+        return this;
+    }
+
+    MainActionHelper testThreadFactory(String testThreadFactory) {
+        this.testThreadFactory = testThreadFactory;
+        return this;
+    }
+
+    MainActionHelper testThreadFactoryPath(String testThreadFactoryPath) {
+        this.testThreadFactoryPath = testThreadFactoryPath;
         return this;
     }
 
@@ -183,16 +195,25 @@ public class MainActionHelper extends ActionHelper {
                 return stat;
             }
 
+            AgentVMRunnable avmr = new AgentVMRunnable(method, methodArgs, err);
+
+            // Main and Thread are same here
             // RUN JAVA IN ANOTHER THREADGROUP
             AgentVMThreadGroup tg = new AgentVMThreadGroup(err, MSG_PREFIX, timeoutFactor);
-            AgentVMRunnable avmr = new AgentVMRunnable(method, methodArgs, err);
-            Thread t = new Thread(tg, avmr, "AgentVMThread");
+            Thread t;
+            if (testThreadFactory == null) {
+                t = new Thread(tg, avmr);
+            } else {
+                t = TestThreadFactoryHelper.loadThreadFactory(testThreadFactory, testThreadFactoryPath).newThread(avmr);
+            }
+
             Alarm alarm = null;
             if (timeout > 0) {
                 PrintWriter alarmOut = outputHandler.getPrintWriter(OutputHandler.OutputKind.LOG, true);
                 alarm = Alarm.schedulePeriodicInterrupt(timeout, TimeUnit.SECONDS, alarmOut, t);
             }
             Throwable error = null;
+            t.setName("AgentVMThread");
             t.start();
             try {
                 t.join();

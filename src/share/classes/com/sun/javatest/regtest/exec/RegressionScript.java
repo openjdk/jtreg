@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2023, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -62,6 +62,7 @@ import com.sun.javatest.TestEnvironment;
 import com.sun.javatest.TestResult;
 import com.sun.javatest.TestSuite;
 import com.sun.javatest.regtest.agent.JDK_Version;
+import com.sun.javatest.regtest.agent.MainWrapper;
 import com.sun.javatest.regtest.agent.SearchPath;
 import com.sun.javatest.regtest.config.ExecMode;
 import com.sun.javatest.regtest.config.Expr;
@@ -1128,11 +1129,20 @@ public class RegressionScript extends Script {
     //--------------------------------------------------------------------------
 
     TimeoutHandlerProvider getTimeoutHandlerProvider() throws TestRunException {
+
         try {
             return params.getTimeoutHandlerProvider();
         } catch (MalformedURLException e) {
             throw new TestRunException("Can't get timeout handler provider", e);
         }
+    }
+
+    String getTestThreadFactory() {
+        return params.getTestThreadFactory();
+    }
+
+    String getTestThreadFactoryPath() {
+        return params.getTestThreadFactoryPath();
     }
 
     //--------------------------------------------------------------------------
@@ -1231,10 +1241,17 @@ public class RegressionScript extends Script {
     /*
      * Get an agent for a VM with the given VM options.
      */
-    Agent getAgent(JDK jdk, SearchPath classpath, List<String> testVMOpts) throws Agent.Fault {
+    Agent getAgent(JDK jdk, SearchPath classpath, List<String> testVMOpts,
+                   String testThreadFactory, String testThreadFactoryPath) throws Agent.Fault {
         JDKOpts vmOpts = new JDKOpts();
         vmOpts.addAll("-classpath", classpath.toString());
         vmOpts.addAll(testVMOpts);
+
+        if (testThreadFactory != null) {
+            // Add property to differ agents with and without MainWrapper
+            vmOpts.add("-D" + MainWrapper.TEST_THREAD_FACTORY + "=" + testThreadFactory);
+        }
+
         if (params.getTestJDK().hasModules()) {
             vmOpts.addAllPatchModules(new SearchPath(params.getWorkDirectory().getFile("patches").toPath()));
         }
@@ -1260,7 +1277,8 @@ public class RegressionScript extends Script {
         envVars.put("CLASSPATH", cp.toString());
 
         Agent.Pool p = Agent.Pool.instance(params);
-        Agent agent = p.getAgent(absTestScratchDir().toFile(), jdk, vmOpts.toList(), envVars);
+        Agent agent = p.getAgent(absTestScratchDir().toFile(), jdk, vmOpts.toList(), envVars,
+                testThreadFactory, testThreadFactoryPath);
         agents.add(agent);
         return agent;
     }

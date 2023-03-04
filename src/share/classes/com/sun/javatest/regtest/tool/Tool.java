@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2023, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -530,6 +530,20 @@ public class Tool {
             @Override
             public void process(String opt, String arg) {
                 observerClassName = arg;
+            }
+        },
+
+       new Option(OLD, MAIN, "", "-ttf", "-testThreadFactory") {
+            @Override
+            public void process(String opt, String arg) {
+                testThreadFactory = arg;
+            }
+        },
+
+        new Option(STD, MAIN, "", "-ttfp", "-testThreadFactoryPath") {
+            @Override
+            public void process(String opt, String arg) {
+                testThreadFactoryPathArg = arg;
             }
         },
 
@@ -1679,6 +1693,14 @@ public class Tool {
                 rp.setTimeoutHandlerTimeout(timeoutHandlerTimeoutArg);
             }
 
+            if (testThreadFactory != null) {
+                rp.setTestThreadFactory(testThreadFactory);
+            }
+
+            if (testThreadFactoryPathArg != null) {
+                rp.setTestThreadFactoryPath(testThreadFactoryPathArg);
+            }
+
             Path rd = testManager.getReportDirectory(testSuite);
             if (rd != null)
                 rp.setReportDir(rd);
@@ -2278,6 +2300,8 @@ public class Tool {
     private String timeoutHandlerClassName;
     private List<Path> timeoutHandlerPathArg;
     private long timeoutHandlerTimeoutArg = -1; // -1: default; 0: no timeout; >0: timeout in seconds
+    private String testThreadFactory;
+    private String testThreadFactoryPathArg;
     private int maxPoolSize = -1;
     private Duration poolIdleTimeout = Duration.ofSeconds(30);
     private List<String> testCompilerOpts = new ArrayList<>();

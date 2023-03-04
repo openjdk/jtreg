@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2023, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -480,6 +480,13 @@ public class MainAction extends Action
         else if (policyFN != null) {
             javaProps.put("java.security.manager", "default");
         }
+
+        if (script.getTestThreadFactory() != null) {
+            javaProps.put(MainWrapper.TEST_THREAD_FACTORY, script.getTestThreadFactory());
+        }
+        if (script.getTestThreadFactoryPath() != null) {
+            javaProps.put(MainWrapper.TEST_THREAD_FACTORY_PATH, script.getTestThreadFactoryPath());
+        }
 //      javaProps.put("java.security.debug", "all");
 
         javaOpts.addAll(testJavaArgs);
@@ -620,8 +627,11 @@ public class MainAction extends Action
 
         Agent agent;
         try {
+            String factory = script.getTestThreadFactory() == null ? null : script.getTestThreadFactory();
             agent = script.getAgent(jdk, agentClasspath,
-                    filterJavaOpts(join(script.getTestVMJavaOptions(), script.getTestDebugOptions())));
+                    filterJavaOpts(join(script.getTestVMJavaOptions(), script.getTestDebugOptions())),
+                    factory,
+                    script.getTestThreadFactoryPath());
             section.getMessageWriter().println("Agent id: " + agent.getId());
             new ModuleConfig("Boot Layer").setFromOpts(agent.vmOpts).write(configWriter);
         } catch (Agent.Fault e) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2001, 2023, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -629,6 +629,8 @@ public class RegressionParameters
     private static final String TIMEOUT_HANDLER = ".timeoutHandler";
     private static final String TIMEOUT_HANDLER_PATH = ".timeoutHandlerPath";
     private static final String TIMEOUT_HANDLER_TIMEOUT = ".timeoutHandlerTimeout";
+    private static final String CUSTOM_TEST_THREAD_FACTORY = ".testThreadFactory";
+    private static final String CUSTOM_TEST_THREAD_FACTORY_PATH = ".testThreadFactoryPath";
     private static final String TEST_QUERIES = ".testQueries";
 
     @Override
@@ -719,6 +721,14 @@ public class RegressionParameters
             if (v != null)
                 setTimeoutHandlerTimeout(v);
 
+            v = data.get(prefix + CUSTOM_TEST_THREAD_FACTORY);
+            if (v != null)
+                setTestThreadFactory(v);
+
+            v = data.get(prefix + CUSTOM_TEST_THREAD_FACTORY_PATH);
+            if (v != null)
+                setTestThreadFactoryPath(v);
+
             v = data.get(prefix + TEST_QUERIES);
             if (v != null) {
                 setTestQueries(List.of(StringUtils.splitSeparator("\n", v)));
@@ -798,6 +808,14 @@ public class RegressionParameters
 
         if (timeoutHandlerTimeout != -1) {  // -1: default; 0: no timeout; >0: timeout in seconds
             data.put(prefix + TIMEOUT_HANDLER_TIMEOUT, String.valueOf(timeoutHandlerTimeout));
+        }
+
+        if (testThreadFactory != null) {
+            data.put(prefix + CUSTOM_TEST_THREAD_FACTORY, testThreadFactory);
+        }
+
+        if (testThreadFactoryPath != null) {
+            data.put(prefix + CUSTOM_TEST_THREAD_FACTORY_PATH, testThreadFactoryPath);
         }
 
         if (testQueries != null) {
@@ -1245,7 +1263,27 @@ public class RegressionParameters
     }
 
     private long timeoutHandlerTimeout;
+    //---------------------------------------------------------------------
 
+    public void setTestThreadFactory(String testThreadFactory) {
+        this.testThreadFactory = testThreadFactory;
+    }
+
+    public String getTestThreadFactory() {
+        return testThreadFactory;
+    }
+
+    private String testThreadFactory;
+
+    public void setTestThreadFactoryPath(String testThreadFactoryPath) {
+        this.testThreadFactoryPath = testThreadFactoryPath;
+    }
+
+    public String getTestThreadFactoryPath() {
+        return testThreadFactoryPath;
+    }
+
+    private String testThreadFactoryPath;
     //---------------------------------------------------------------------
 
     public void setMatchLists(Path[] files) {
