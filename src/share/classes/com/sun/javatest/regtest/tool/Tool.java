@@ -2158,11 +2158,11 @@ public class Tool {
             addEnvVars(envVars, "PATH"); // accept user's path, for now
         } else {
             addEnvVars(envVars, DEFAULT_UNIX_ENV_VARS);
-            addEnvVars(envVars, sysEnv, k -> k.startsWith("XDG_"));
+            addEnvVars(envVars, sysEnv, e -> e.getKey().startsWith("XDG_"));
             addEnvVars(envVars, "PATH=/bin:/usr/bin:/usr/sbin");
         }
         addEnvVars(envVars, envVarArgs);
-        addEnvVars(envVars, sysEnv, k -> k.startsWith("JTREG_"));
+        addEnvVars(envVars, sysEnv, e -> e.getKey().startsWith("JTREG_"));
 
         return envVars;
     }
@@ -2196,9 +2196,9 @@ public class Tool {
         }
     }
 
-    private void addEnvVars(Map<String, String> table, Map<String, String> sysEnv, Predicate<String> filter) {
+    private void addEnvVars(Map<String, String> table, Map<String, String> sysEnv, Predicate<Map.Entry<String, String>> filter) {
         System.getenv().entrySet().stream()
-                .filter(e -> e.getKey().startsWith("JTREG_"))
+                .filter(filter)
                 .forEach(e -> table.put(e.getKey(), e.getValue()));
     }
 
