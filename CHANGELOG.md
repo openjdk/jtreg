@@ -1,6 +1,8 @@
 ## [Unreleased](https://git.openjdk.org/jtreg/compare/jtreg-7.2+1...master)
 
-_No notewothy changes yet._
+* Updated set of default environment variables set for tests on Unix-like platforms.
+  * Includes `DBUS_SESSION_BUS_ADDRESS`, `WAYLAND_DISPLAY`, and `XDG-*` 
+    [CODETOOLS-7903400](https://bugs.openjdk.org/browse/CODETOOLS-7903400)
 
 ## [7.2+1](https://git.openjdk.org/jtreg/compare/jtreg-7.1.1+1...jtreg-7.2+1)
 

@@ -60,6 +60,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.function.Predicate;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.stream.Collectors;
@@ -2148,6 +2149,7 @@ public class Tool {
     }
 
     private Map<String, String> getEnvVars() {
+        Map<String, String> sysEnv = System.getenv();
         Map<String, String> envVars = new TreeMap<>();
         OS os = OS.current();
         if (os.family.equals("windows")) {
@@ -2156,16 +2158,11 @@ public class Tool {
             addEnvVars(envVars, "PATH"); // accept user's path, for now
         } else {
             addEnvVars(envVars, DEFAULT_UNIX_ENV_VARS);
+            addEnvVars(envVars, sysEnv, k -> k.startsWith("XDG_"));
             addEnvVars(envVars, "PATH=/bin:/usr/bin:/usr/sbin");
         }
         addEnvVars(envVars, envVarArgs);
-        for (Map.Entry<String, String> e: System.getenv().entrySet()) {
-            String k = e.getKey();
-            String v = e.getValue();
-            if (k.startsWith("JTREG_")) {
-                envVars.put(k, v);
-            }
-        }
+        addEnvVars(envVars, sysEnv, k -> k.startsWith("JTREG_"));
 
         return envVars;
     }
@@ -2197,6 +2194,12 @@ public class Tool {
                 table.put(name, value);
             }
         }
+    }
+
+    private void addEnvVars(Map<String, String> table, Map<String, String> sysEnv, Predicate<String> filter) {
+        System.getenv().entrySet().stream()
+                .filter(e -> e.getKey().startsWith("JTREG_"))
+                .forEach(e -> table.put(e.getKey(), e.getValue()));
     }
 
     private static String combineKeywords(String kw1, String kw2) {
@@ -2336,12 +2339,20 @@ public class Tool {
     private static final String MANUAL    = "manual";
 
     private static final String[] DEFAULT_UNIX_ENV_VARS = {
-        "DISPLAY", "GNOME_DESKTOP_SESSION_ID", "HOME", "LANG",
-        "LC_ALL", "LC_CTYPE", "LPDEST", "PRINTER", "TZ", "XMODIFIERS"
+            "DBUS_SESSION_BUS_ADDRESS", "DISPLAY",
+            "GNOME_DESKTOP_SESSION_ID",
+            "HOME",
+            "LANG", "LC_ALL", "LC_CTYPE", "LPDEST",
+            "PRINTER",
+            "TZ",
+            "WAYLAND_DISPLAY",
+            "XMODIFIERS"
     };
 
     private static final String[] DEFAULT_WINDOWS_ENV_VARS = {
-        "SystemDrive", "SystemRoot", "windir", "TMP", "TEMP", "TZ"
+            "SystemDrive", "SystemRoot",
+            "TMP", "TEMP", "TZ",
+            "windir"
     };
 
     private static final I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(Tool.class);
