@@ -2153,29 +2153,29 @@ public class Tool {
         Map<String, String> envVars = new TreeMap<>();
         OS os = OS.current();
         if (os.family.equals("windows")) {
-            addEnvVars(envVars, DEFAULT_WINDOWS_ENV_VARS);
+            addEnvVars(envVars, sysEnv, DEFAULT_WINDOWS_ENV_VARS);
             // TODO PATH? MKS? Cygwin?
-            addEnvVars(envVars, "PATH"); // accept user's path, for now
+            addEnvVars(envVars, sysEnv, "PATH"); // accept user's path, for now
         } else {
-            addEnvVars(envVars, DEFAULT_UNIX_ENV_VARS);
+            addEnvVars(envVars, sysEnv, DEFAULT_UNIX_ENV_VARS);
             addEnvVars(envVars, sysEnv, e -> e.getKey().startsWith("XDG_"));
-            addEnvVars(envVars, "PATH=/bin:/usr/bin:/usr/sbin");
+            addEnvVars(envVars, sysEnv, "PATH=/bin:/usr/bin:/usr/sbin");
         }
-        addEnvVars(envVars, envVarArgs);
+        addEnvVars(envVars, sysEnv, envVarArgs);
         addEnvVars(envVars, sysEnv, e -> e.getKey().startsWith("JTREG_"));
 
         return envVars;
     }
 
-    private void addEnvVars(Map<String, String> table, String list) {
-        addEnvVars(table, list.split(","));
+    private void addEnvVars(Map<String, String> table, Map<String, String> sysEnv, String list) {
+        addEnvVars(table, sysEnv, list.split(","));
     }
 
-    private void addEnvVars(Map<String, String> table, String[] list) {
-        addEnvVars(table, List.of(list));
+    private void addEnvVars(Map<String, String> table, Map<String, String> sysEnv, String[] list) {
+        addEnvVars(table, sysEnv, List.of(list));
     }
 
-    private void addEnvVars(Map<String, String> table, List<String> list) {
+    private void addEnvVars(Map<String, String> table, Map<String, String> sysEnv, List<String> list) {
         if (list == null)
             return;
 
@@ -2185,7 +2185,7 @@ public class Tool {
                 continue;
             int eq = s.indexOf("=");
             if (eq == -1) {
-                String value = System.getenv(s);
+                String value = sysEnv.get(s);
                 if (value != null)
                     table.put(s, value);
             } else if (eq > 0) {
@@ -2197,7 +2197,7 @@ public class Tool {
     }
 
     private void addEnvVars(Map<String, String> table, Map<String, String> sysEnv, Predicate<Map.Entry<String, String>> filter) {
-        System.getenv().entrySet().stream()
+        sysEnv.entrySet().stream()
                 .filter(filter)
                 .forEach(e -> table.put(e.getKey(), e.getValue()));
     }
@@ -2339,8 +2339,8 @@ public class Tool {
     private static final String MANUAL    = "manual";
 
     private static final String[] DEFAULT_UNIX_ENV_VARS = {
-            "DBUS_SESSION_BUS_ADDRESS", "DISPLAY",
-            "GNOME_DESKTOP_SESSION_ID",
+            "DBUS_SESSION_BUS_ADDRESS", "DESKTOP_SESSION", "DISPLAY",
+            "GDM_SESSION", "GNOME_DESKTOP_SESSION_ID", "GNOME_SHELL_SESSION_MODE",
             "HOME",
             "LANG", "LC_ALL", "LC_CTYPE", "LPDEST",
             "PRINTER",
