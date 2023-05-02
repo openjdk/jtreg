@@ -2340,7 +2340,7 @@ public class Tool {
 
     private static final String[] DEFAULT_UNIX_ENV_VARS = {
             "DBUS_SESSION_BUS_ADDRESS", "DESKTOP_SESSION", "DISPLAY",
-            "GDM_SESSION", "GNOME_DESKTOP_SESSION_ID", "GNOME_SHELL_SESSION_MODE",
+            "GDMSESSION", "GNOME_DESKTOP_SESSION_ID", "GNOME_SHELL_SESSION_MODE",
             "HOME",
             "LANG", "LC_ALL", "LC_CTYPE", "LPDEST",
             "PRINTER",
