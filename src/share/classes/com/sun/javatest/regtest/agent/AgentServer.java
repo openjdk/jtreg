@@ -376,7 +376,7 @@ public class AgentServer implements ActionHelper.OutputHandler {
                 AgentServer.logDateFormat.format(new Date()),
                 id,
                 message);
-		logWriter.flush();
+        logWriter.flush();
     }
 
     private final KeepAlive keepAlive;
