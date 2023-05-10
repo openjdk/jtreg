@@ -488,6 +488,9 @@ public class AgentServer implements ActionHelper.OutputHandler {
             @Override
             public void flush() throws IOException {
                 decode();
+                // let any content, that has been decoded into the charBuffer, be written out
+                // to the writer so that the writer can then flush it to underlying stream
+                writeCharBuffer();
                 w.flush();
             }
 
@@ -503,6 +506,14 @@ public class AgentServer implements ActionHelper.OutputHandler {
             private void decode() throws IOException {
                 byteBuffer.flip();
                 CoderResult cr;
+                // The decoder has been configured to replace unmappable character and
+                // malformed input, so this decoder.decode() will only report either
+                // UNDERFLOW or OVERFLOW.
+                // We transfer the decoded content in charBuffer to the writer only when the
+                // charBuffer is full. i.e. the decoder.decode() reports OVERFLOW. In the case of
+                // UNDERFLOW, we keep the decoded content in the charBuffer, until either this
+                // OutputStream instance is flushed or additional data is written into this
+                // OutputStream and the resultant decode() operation results in an OVERFLOW
                 while ((cr = decoder.decode(byteBuffer, charBuffer, false)) != CoderResult.UNDERFLOW) {
                     writeCharBuffer();
                 }
