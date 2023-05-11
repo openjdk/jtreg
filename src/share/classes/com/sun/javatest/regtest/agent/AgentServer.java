@@ -488,7 +488,7 @@ public class AgentServer implements ActionHelper.OutputHandler {
             @Override
             public void flush() throws IOException {
                 decode();
-                // let any content, that has been decoded into the charBuffer, be written out
+                // let any content that has been decoded into the charBuffer be written out
                 // to the writer so that the writer can then flush it to underlying stream
                 writeCharBuffer();
                 w.flush();
