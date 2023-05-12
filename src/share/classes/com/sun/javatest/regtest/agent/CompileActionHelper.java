@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2023, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -61,7 +61,7 @@ public class CompileActionHelper extends ActionHelper {
         // RUN THE COMPILER
         // Setup streams for the test:
         // ... to catch sysout and syserr
-        PrintStream sysOut = outputHandler.getPrintStream(OutputHandler.OutputKind.STDOUT, false);
+        PrintStream sysOut = outputHandler.getPrintStream(OutputHandler.OutputKind.STDOUT, true);
         PrintStream sysErr = outputHandler.getPrintStream(OutputHandler.OutputKind.STDERR, true);
 
         // ... for direct use with RegressionCompileCommand

@@ -146,7 +146,7 @@ public class MainActionHelper extends ActionHelper {
         }
         System.setProperties(p);
 
-        PrintStream out = outputHandler.getPrintStream(OutputHandler.OutputKind.STDOUT, false);
+        PrintStream out = outputHandler.getPrintStream(OutputHandler.OutputKind.STDOUT, true);
         PrintStream err = outputHandler.getPrintStream(OutputHandler.OutputKind.STDERR, true);
 
         AStatus status = passed(EXEC_PASS);
