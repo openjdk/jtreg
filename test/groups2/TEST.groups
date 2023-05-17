@@ -1,0 +1,5 @@
+all = .
+
+indirectAll = :all
+
+allWithExtra = Test1.java Test2.java :all

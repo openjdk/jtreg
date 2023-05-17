@@ -1,0 +1,263 @@
+#
+# Copyright (c) 2023, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+#----------------------------------------------------------------------
+#
+# Execute all (6) test methods in the test suite
+
+$(BUILDTESTDIR)/TestNGQueryTest.all.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
+		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
+		$(JTREG_IMAGEDIR)/bin/jtreg
+	$(RM) $(@:%.ok=%)
+	$(MKDIR) $(@:%.ok=%)
+	JT_JAVA=$(JDKHOME) JTHOME=$(JTREG_IMAGEDIR) \
+	    $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(JDKHOME) \
+		-va \
+		$(TESTDIR)/testngQueryTest/ \
+		 > $(@:%.ok=%)/jt.log 2>&1
+	OUT=$$( $(ECHO) $$( $(AWK) '/STDOUT:/,/STDERR:/{ print $0; } { }' $(@:%.ok=%)/jt.log | $(GREP) -v STD  | $(GREP) "^test") ) ; \
+	if [ "$$OUT" != "test Test1.m11(): success test Test1.m12(): success test Test1.m13(): success test Test2.m21(): success test Test2.m22(): success test Test2.m23(): success" ]; then \
+	    echo "unexpected set of tests run: $$OUT"; exit 1 ; \
+	fi
+	echo $@ passed at `date` > $@
+
+TESTS.jtreg += $(BUILDTESTDIR)/TestNGQueryTest.all.ok
+
+#----------------------------------------------------------------------
+#
+# Execute a single specific method (Test1.m12) using the query syntax  Test1.java?m12
+
+$(BUILDTESTDIR)/TestNGQueryTest.m12.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
+		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
+		$(JTREG_IMAGEDIR)/bin/jtreg
+	$(RM) $(@:%.ok=%)
+	$(MKDIR) $(@:%.ok=%)
+	JT_JAVA=$(JDKHOME) JTHOME=$(JTREG_IMAGEDIR) \
+	    $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(JDKHOME) \
+		-va \
+		$(TESTDIR)/testngQueryTest/a/b/c/Test1.java?m12 \
+		 > $(@:%.ok=%)/jt.log 2>&1
+	OUT=$$( $(ECHO) $$( $(AWK) '/STDOUT:/,/STDERR:/{ print $0; } { }' $(@:%.ok=%)/jt.log | $(GREP) -v STD  | $(GREP) "^test") ) ; \
+	if [ "$$OUT" != "test Test1.m12(): success" ]; then \
+	    echo "unexpected set of tests run: $$OUT"; exit 1 ; \
+	fi
+	echo $@ passed at `date` > $@
+
+TESTS.jtreg += $(BUILDTESTDIR)/TestNGQueryTest.m12.ok
+
+#----------------------------------------------------------------------
+#
+# Execute a mixture of 4 tests:
+# - a single specific method (Test1.m12) using the query syntax  Test1.java?m12
+# - all (3) test methods in Test2.java
+
+$(BUILDTESTDIR)/TestNGQueryTest.m12.Test2.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
+		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
+		$(JTREG_IMAGEDIR)/bin/jtreg
+	$(RM) $(@:%.ok=%)
+	$(MKDIR) $(@:%.ok=%)
+	JT_JAVA=$(JDKHOME) JTHOME=$(JTREG_IMAGEDIR) \
+	    $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(JDKHOME) \
+		-va \
+		$(TESTDIR)/testngQueryTest/a/b/c/Test1.java?m12 \
+		$(TESTDIR)/testngQueryTest/a/b/c/Test2.java \
+		 > $(@:%.ok=%)/jt.log 2>&1
+	OUT=$$( $(ECHO) $$( $(AWK) '/STDOUT:/,/STDERR:/{ print $0; } { }' $(@:%.ok=%)/jt.log | $(GREP) -v STD  | $(GREP) "^test") ) ; \
+	if [ "$$OUT" != "test Test1.m12(): success test Test2.m21(): success test Test2.m22(): success test Test2.m23(): success" ]; then \
+	    echo "unexpected set of tests run: $$OUT"; exit 1 ; \
+	fi
+	echo $@ passed at `date` > $@
+
+TESTS.jtreg += $(BUILDTESTDIR)/TestNGQueryTest.m12.Test2.ok
+
+#----------------------------------------------------------------------
+#
+# Execute tests when duplicates are given: last one wins (m13, m12)
+# See related test for the reverse order
+
+$(BUILDTESTDIR)/TestNGQueryTest.m13.m12.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
+		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
+		$(JTREG_IMAGEDIR)/bin/jtreg
+	$(RM) $(@:%.ok=%)
+	$(MKDIR) $(@:%.ok=%)
+	JT_JAVA=$(JDKHOME) JTHOME=$(JTREG_IMAGEDIR) \
+	    $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(JDKHOME) \
+		-va \
+		$(TESTDIR)/testngQueryTest/a/b/c/Test1.java?m13 \
+		$(TESTDIR)/testngQueryTest/a/b/c/Test1.java?m12 \
+		 > $(@:%.ok=%)/jt.log 2>&1
+	OUT=$$( $(ECHO) $$( $(AWK) '/STDOUT:/,/STDERR:/{ print $0; } { }' $(@:%.ok=%)/jt.log | $(GREP) -v STD  | $(GREP) "^test") ) ; \
+	if [ "$$OUT" != "test Test1.m12(): success" ]; then \
+	    echo "unexpected set of tests run: $$OUT"; exit 1 ; \
+	fi
+	echo $@ passed at `date` > $@
+
+TESTS.jtreg += $(BUILDTESTDIR)/TestNGQueryTest.m13.m12.ok
+
+#----------------------------------------------------------------------
+#
+# Execute tests when duplicates are given: last one wins (m12, m13)
+# See related test for the reverse order
+
+$(BUILDTESTDIR)/TestNGQueryTest.m12.m13.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
+		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
+		$(JTREG_IMAGEDIR)/bin/jtreg
+	$(RM) $(@:%.ok=%)
+	$(MKDIR) $(@:%.ok=%)
+	JT_JAVA=$(JDKHOME) JTHOME=$(JTREG_IMAGEDIR) \
+	    $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(JDKHOME) \
+		-va \
+		$(TESTDIR)/testngQueryTest/a/b/c/Test1.java?m12 \
+		$(TESTDIR)/testngQueryTest/a/b/c/Test1.java?m13 \
+		 > $(@:%.ok=%)/jt.log 2>&1
+	OUT=$$( $(ECHO) $$( $(AWK) '/STDOUT:/,/STDERR:/{ print $0; } { }' $(@:%.ok=%)/jt.log | $(GREP) -v STD  | $(GREP) "^test") ) ; \
+	if [ "$$OUT" != "test Test1.m13(): success" ]; then \
+	    echo "unexpected set of tests run: $$OUT"; exit 1 ; \
+	fi
+	echo $@ passed at `date` > $@
+
+TESTS.jtreg += $(BUILDTESTDIR)/TestNGQueryTest.m12.m13.ok
+
+#----------------------------------------------------------------------
+#
+# Execute tests when duplicates are given: last one wins (m13, all)
+# See related test for the reverse order
+
+$(BUILDTESTDIR)/TestNGQueryTest.m13.all.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
+		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
+		$(JTREG_IMAGEDIR)/bin/jtreg
+	$(RM) $(@:%.ok=%)
+	$(MKDIR) $(@:%.ok=%)
+	JT_JAVA=$(JDKHOME) JTHOME=$(JTREG_IMAGEDIR) \
+	    $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(JDKHOME) \
+		-va \
+		$(TESTDIR)/testngQueryTest/a/b/c/Test1.java?m13 \
+		$(TESTDIR)/testngQueryTest/a/b/c/Test1.java \
+		 > $(@:%.ok=%)/jt.log 2>&1
+	OUT=$$( $(ECHO) $$( $(AWK) '/STDOUT:/,/STDERR:/{ print $0; } { }' $(@:%.ok=%)/jt.log | $(GREP) -v STD  | $(GREP) "^test") ) ; \
+	if [ "$$OUT" != "test Test1.m11(): success test Test1.m12(): success test Test1.m13(): success" ]; then \
+	    echo "unexpected set of tests run: $$OUT"; exit 1 ; \
+	fi
+	echo $@ passed at `date` > $@
+
+TESTS.jtreg += $(BUILDTESTDIR)/TestNGQueryTest.m13.all.ok
+
+#----------------------------------------------------------------------
+#
+# Execute tests when duplicates are given: last one wins (all, m13)
+# See related test for the reverse order
+
+$(BUILDTESTDIR)/TestNGQueryTest.all.m13.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
+		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
+		$(JTREG_IMAGEDIR)/bin/jtreg
+	$(RM) $(@:%.ok=%)
+	$(MKDIR) $(@:%.ok=%)
+	JT_JAVA=$(JDKHOME) JTHOME=$(JTREG_IMAGEDIR) \
+	    $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(JDKHOME) \
+		-va \
+		$(TESTDIR)/testngQueryTest/a/b/c/Test1.java \
+		$(TESTDIR)/testngQueryTest/a/b/c/Test1.java?m13 \
+		 > $(@:%.ok=%)/jt.log 2>&1
+	OUT=$$( $(ECHO) $$( $(AWK) '/STDOUT:/,/STDERR:/{ print $0; } { }' $(@:%.ok=%)/jt.log | $(GREP) -v STD  | $(GREP) "^test") ) ; \
+	if [ "$$OUT" != "test Test1.m13(): success" ]; then \
+	    echo "unexpected set of tests run: $$OUT"; exit 1 ; \
+	fi
+	echo $@ passed at `date` > $@
+
+TESTS.jtreg += $(BUILDTESTDIR)/TestNGQueryTest.all.m13.ok
+
+#----------------------------------------------------------------------
+#
+# Invalid use of query
+
+$(BUILDTESTDIR)/TestNGQueryTest.invalidQuery.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
+		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
+		$(JTREG_IMAGEDIR)/bin/jtreg
+	$(RM) $(@:%.ok=%)
+	$(MKDIR) $(@:%.ok=%)
+	JT_JAVA=$(JDKHOME) JTHOME=$(JTREG_IMAGEDIR) \
+		$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(JDKHOME) \
+		-va \
+		$(TESTDIR)/testngQueryTest/a/b/c?m13 \
+			> $(@:%.ok=%)/jt.log 2>&1 || \
+		true "non-zero exit code from jtreg intentionally ignored"
+	$(GREP) -s "Error: Invalid use of query component: a/b/c?m13" $(@:%.ok=%)/jt.log
+	echo $@ passed at `date` > $@
+
+TESTS.jtreg += $(BUILDTESTDIR)/TestNGQueryTest.invalidQuery.ok
+
+
+#----------------------------------------------------------------------
+#
+# Invalid method name
+
+$(BUILDTESTDIR)/TestNGQueryTest.invalidMethod.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
+		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
+		$(JTREG_IMAGEDIR)/bin/jtreg
+	$(RM) $(@:%.ok=%)
+	$(MKDIR) $(@:%.ok=%)
+	JT_JAVA=$(JDKHOME) JTHOME=$(JTREG_IMAGEDIR) \
+		$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(JDKHOME) \
+		-va \
+		$(TESTDIR)/testngQueryTest/a/b/c/Test1.java?m14 \
+			> $(@:%.ok=%)/jt.log 2>&1 || \
+		true "non-zero exit code from jtreg intentionally ignored"
+	$(GREP) -s 'Could not find method with name \[m14] in class \[Test1]' $(@:%.ok=%)/jt.log
+	$(GREP) -s "TEST RESULT: Failed. Execution failed: .*TestNGException: Could not find method with name" $(@:%.ok=%)/jt.log
+	echo $@ passed at `date` > $@
+TESTS.jtreg += $(BUILDTESTDIR)/TestNGQueryTest.invalidMethod.ok
+
+#----------------------------------------------------------------------
+#
+# Convenience target
+
+testng-query-tests: \
+    $(BUILDTESTDIR)/TestNGQueryTest.all.ok \
+    $(BUILDTESTDIR)/TestNGQueryTest.m12.ok \
+    $(BUILDTESTDIR)/TestNGQueryTest.m12.Test2.ok \
+    $(BUILDTESTDIR)/TestNGQueryTest.m13.m12.ok \
+    $(BUILDTESTDIR)/TestNGQueryTest.m12.m13.ok \
+    $(BUILDTESTDIR)/TestNGQueryTest.m13.all.ok \
+    $(BUILDTESTDIR)/TestNGQueryTest.all.m13.ok \
+    $(BUILDTESTDIR)/TestNGQueryTest.invalidQuery.ok \
+    $(BUILDTESTDIR)/TestNGQueryTest.invalidMethod.ok

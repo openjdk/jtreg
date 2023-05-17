@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2023, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -39,6 +39,7 @@ import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -61,6 +62,7 @@ import com.sun.javatest.TestEnvironment;
 import com.sun.javatest.TestResult;
 import com.sun.javatest.TestSuite;
 import com.sun.javatest.regtest.agent.JDK_Version;
+import com.sun.javatest.regtest.agent.MainWrapper;
 import com.sun.javatest.regtest.agent.SearchPath;
 import com.sun.javatest.regtest.config.ExecMode;
 import com.sun.javatest.regtest.config.Expr;
@@ -236,7 +238,7 @@ public class RegressionScript extends Script {
                     // output for default case unchanged
                     printJDKInfo(msgPW, "JDK under test", getTestJDK(), getTestVMOptions());
                 } else {
-                    printJDKInfo(msgPW, "compile JDK", getCompileJDK(), Collections.<String>emptyList());
+                    printJDKInfo(msgPW, "compile JDK", getCompileJDK(), Collections.emptyList());
                     printJDKInfo(msgPW, "test JDK", getTestJDK(), getTestVMOptions());
                 }
 
@@ -420,9 +422,7 @@ public class RegressionScript extends Script {
                 opts.put(keyValue[0], keyValue[1]);
                 // [[fail,], [ref, Foo.ref]]
             }
-            List<String> args = new ArrayList<>();
-            for (int i = 2; i < tokens.length; i++)
-                args.add(tokens[i]);
+            List<String> args = new ArrayList<>(Arrays.asList(tokens).subList(2, tokens.length));
             // [-debug, Foo.java] (everything after the big options token)
             Class<?> c = null;
             try {
@@ -460,7 +460,7 @@ public class RegressionScript extends Script {
 
         boolean fast = true;
         for (String arg : args) {
-            fast = fast && (arg.indexOf("${") == -1);
+            fast = fast && (!arg.contains("${"));
         }
         if (fast) {
             return args;
@@ -472,12 +472,12 @@ public class RegressionScript extends Script {
         return newArgs;
     }
 
-    private static final Pattern namePattern = Pattern.compile("\\$\\{([A-Za-z0-9._]+)\\}");
+    private static final Pattern namePattern = Pattern.compile("\\$\\{([A-Za-z0-9._]+)}");
 
     private static String evalNames(String arg, Expr.Context c, Map<String,String> testProps)
             throws Expr.Fault, ParseException {
         Matcher m = namePattern.matcher(arg);
-        StringBuffer sb = null;
+        StringBuilder sb = null;
         // Note that '\' may appear in the replacement value for paths on Windows,
         // and so, in the following loop, avoid using Matcher::appendReplacement,
         // which interprets '\' and `$' in the replacement string.
@@ -485,14 +485,14 @@ public class RegressionScript extends Script {
         int pos = 0;
         while (m.find(pos)) {
             if (sb == null) {
-                sb = new StringBuffer();
+                sb = new StringBuilder();
             }
             String name = m.group(1);
             String value = testProps.containsKey(name) ? testProps.get(name) : c.get(name);
             if ("null".equals(value)) {
                 throw new ParseException("unset property " + name);
             }
-            sb.append(arg.substring(pos, m.start()));
+            sb.append(arg, pos, m.start());
             sb.append(value);
             pos = m.end();
         }
@@ -549,8 +549,8 @@ public class RegressionScript extends Script {
                 String f = (regEnv == null ? null : regEnv.lookup("javatestTimeoutFactor")[1]);
                 if (f != null)
                     value = Float.parseFloat(f);
-            } catch (TestEnvironment.Fault e) {
-            } catch (NumberFormatException e) {
+            } catch (TestEnvironment.Fault
+                     | NumberFormatException e) {
             }
             cacheJavaTestTimeoutFactor = value;
         }
@@ -609,7 +609,7 @@ public class RegressionScript extends Script {
      */
     private String getReason(String[] cmd) {
         String retVal;
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         String reason = cmd[0];
         switch (reason) {
             case Action.REASON_ASSUMED_ACTION:
@@ -1129,11 +1129,20 @@ public class RegressionScript extends Script {
     //--------------------------------------------------------------------------
 
     TimeoutHandlerProvider getTimeoutHandlerProvider() throws TestRunException {
+
         try {
             return params.getTimeoutHandlerProvider();
         } catch (MalformedURLException e) {
             throw new TestRunException("Can't get timeout handler provider", e);
         }
+    }
+
+    String getTestThreadFactory() {
+        return params.getTestThreadFactory();
+    }
+
+    String getTestThreadFactoryPath() {
+        return params.getTestThreadFactoryPath();
     }
 
     //--------------------------------------------------------------------------
@@ -1232,10 +1241,17 @@ public class RegressionScript extends Script {
     /*
      * Get an agent for a VM with the given VM options.
      */
-    Agent getAgent(JDK jdk, SearchPath classpath, List<String> testVMOpts) throws Agent.Fault {
+    Agent getAgent(JDK jdk, SearchPath classpath, List<String> testVMOpts,
+                   String testThreadFactory, String testThreadFactoryPath) throws Agent.Fault {
         JDKOpts vmOpts = new JDKOpts();
         vmOpts.addAll("-classpath", classpath.toString());
         vmOpts.addAll(testVMOpts);
+
+        if (testThreadFactory != null) {
+            // Add property to differ agents with and without MainWrapper
+            vmOpts.add("-D" + MainWrapper.TEST_THREAD_FACTORY + "=" + testThreadFactory);
+        }
+
         if (params.getTestJDK().hasModules()) {
             vmOpts.addAllPatchModules(new SearchPath(params.getWorkDirectory().getFile("patches").toPath()));
         }
@@ -1252,8 +1268,7 @@ public class RegressionScript extends Script {
             }
         }
 
-        Map<String, String> envVars = new HashMap<>();
-        envVars.putAll(getEnvVars());
+        Map<String, String> envVars = new HashMap<>(getEnvVars());
         // some tests are inappropriately relying on the CLASSPATH environment
         // variable being set, so ensure it is set. See equivalent code in MainAction
         // and Main.execChild. Note we cannot set exactly the same classpath as
@@ -1262,7 +1277,8 @@ public class RegressionScript extends Script {
         envVars.put("CLASSPATH", cp.toString());
 
         Agent.Pool p = Agent.Pool.instance(params);
-        Agent agent = p.getAgent(absTestScratchDir().toFile(), jdk, vmOpts.toList(), envVars);
+        Agent agent = p.getAgent(absTestScratchDir().toFile(), jdk, vmOpts.toList(), envVars,
+                testThreadFactory, testThreadFactoryPath);
         agents.add(agent);
         return agent;
     }

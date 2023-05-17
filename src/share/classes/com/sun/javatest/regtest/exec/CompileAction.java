@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2023, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -697,7 +697,7 @@ public class CompileAction extends Action {
             List<String> vmOpts = addDebugOpts && jdk.equals(script.getTestJDK())
                     ? join(script.getTestVMOptions(), script.getTestDebugOptions())
                     : script.getTestVMOptions();
-            agent = script.getAgent(jdk, agentClasspath, vmOpts);
+            agent = script.getAgent(jdk, agentClasspath, vmOpts, null, null);
             section.getMessageWriter().println("Agent id: " + agent.getId());
             new ModuleConfig("Boot Layer (javac runtime environment)")
                     .setFromOpts(agent.vmOpts)

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2023, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -60,6 +60,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.function.Predicate;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.stream.Collectors;
@@ -393,7 +394,7 @@ public class Tool {
             }
 
             @Override
-            public void process(String opt, String arg) {
+            public void process(String opt, String arg) throws BadArgs {
                 switch (arg) {
                     case "none":
                         reportMode = ReportMode.NONE;
@@ -404,9 +405,14 @@ public class Tool {
                     case "all-executed":
                         reportMode = ReportMode.ALL_EXECUTED;
                         break;
+                    case "files":
+                        reportMode = ReportMode.FILES;
+                        break;
                     case "all":
                         reportMode = ReportMode.ALL;
                         break;
+                    default:
+                        throw new BadArgs(i18n, "main.badReportOption", arg);
                 }
             }
         },
@@ -525,6 +531,20 @@ public class Tool {
             @Override
             public void process(String opt, String arg) {
                 observerClassName = arg;
+            }
+        },
+
+       new Option(OLD, MAIN, "", "-ttf", "-testThreadFactory") {
+            @Override
+            public void process(String opt, String arg) {
+                testThreadFactory = arg;
+            }
+        },
+
+        new Option(STD, MAIN, "", "-ttfp", "-testThreadFactoryPath") {
+            @Override
+            public void process(String opt, String arg) {
+                testThreadFactoryPathArg = arg;
             }
         },
 
@@ -1609,6 +1629,7 @@ public class Tool {
 
             // the tests are the tests to be executed by the harness, and do not
             // include the "query" component
+            // 'null' means "all tests"
             rp.setTests(testManager.getTests(testSuite));
 
             // the tests that have an associated query component, included in
@@ -1671,6 +1692,14 @@ public class Tool {
 
             if (timeoutHandlerTimeoutArg != 0) {
                 rp.setTimeoutHandlerTimeout(timeoutHandlerTimeoutArg);
+            }
+
+            if (testThreadFactory != null) {
+                rp.setTestThreadFactory(testThreadFactory);
+            }
+
+            if (testThreadFactoryPathArg != null) {
+                rp.setTestThreadFactoryPath(testThreadFactoryPathArg);
             }
 
             Path rd = testManager.getReportDirectory(testSuite);
@@ -1928,11 +1957,12 @@ public class Tool {
                         default:
                             throw new IllegalStateException();
 
-                        case EXECUTED:
+                        case EXECUTED: {
                             ParameterFilter pf = new ParameterFilter();
                             pf.update(params);
                             tf = pf;
                             break;
+                        }
 
                         case ALL_EXECUTED:
                             boolean[] statusValues = new boolean[Status.NUM_STATES];
@@ -1946,8 +1976,21 @@ public class Tool {
                         case ALL:
                             tf = new AllTestsFilter();
                             break;
-                    }
 
+                        case FILES: {
+                            try {
+                                RegressionParameters reportParams = new RegressionParameters("regtest", params.getTestSuite(), out::println);
+                                reportParams.setWorkDirectory(params.getWorkDirectory());
+                                reportParams.setTests(params.getTests());
+                                ParameterFilter pf = new ParameterFilter();
+                                pf.update(reportParams);
+                                tf = pf;
+                                break;
+                            } catch (Interview.Fault e) {
+                                throw new Fault(i18n, "main.cantCreateReportParameters", e);
+                            }
+                        }
+                    }
                 }
                 r.report(params, elapsedTimeHandler, stats, tf, quiet);
             }
@@ -2106,37 +2149,33 @@ public class Tool {
     }
 
     private Map<String, String> getEnvVars() {
+        Map<String, String> sysEnv = System.getenv();
         Map<String, String> envVars = new TreeMap<>();
         OS os = OS.current();
         if (os.family.equals("windows")) {
-            addEnvVars(envVars, DEFAULT_WINDOWS_ENV_VARS);
+            addEnvVars(envVars, sysEnv, DEFAULT_WINDOWS_ENV_VARS);
             // TODO PATH? MKS? Cygwin?
-            addEnvVars(envVars, "PATH"); // accept user's path, for now
+            addEnvVars(envVars, sysEnv, "PATH"); // accept user's path, for now
         } else {
-            addEnvVars(envVars, DEFAULT_UNIX_ENV_VARS);
-            addEnvVars(envVars, "PATH=/bin:/usr/bin:/usr/sbin");
+            addEnvVars(envVars, sysEnv, DEFAULT_UNIX_ENV_VARS);
+            addEnvVars(envVars, sysEnv, e -> e.getKey().startsWith("XDG_"));
+            addEnvVars(envVars, sysEnv, "PATH=/bin:/usr/bin:/usr/sbin");
         }
-        addEnvVars(envVars, envVarArgs);
-        for (Map.Entry<String, String> e: System.getenv().entrySet()) {
-            String k = e.getKey();
-            String v = e.getValue();
-            if (k.startsWith("JTREG_")) {
-                envVars.put(k, v);
-            }
-        }
+        addEnvVars(envVars, sysEnv, envVarArgs);
+        addEnvVars(envVars, sysEnv, e -> e.getKey().startsWith("JTREG_"));
 
         return envVars;
     }
 
-    private void addEnvVars(Map<String, String> table, String list) {
-        addEnvVars(table, list.split(","));
+    private void addEnvVars(Map<String, String> table, Map<String, String> sysEnv, String list) {
+        addEnvVars(table, sysEnv, list.split(","));
     }
 
-    private void addEnvVars(Map<String, String> table, String[] list) {
-        addEnvVars(table, List.of(list));
+    private void addEnvVars(Map<String, String> table, Map<String, String> sysEnv, String[] list) {
+        addEnvVars(table, sysEnv, List.of(list));
     }
 
-    private void addEnvVars(Map<String, String> table, List<String> list) {
+    private void addEnvVars(Map<String, String> table, Map<String, String> sysEnv, List<String> list) {
         if (list == null)
             return;
 
@@ -2146,7 +2185,7 @@ public class Tool {
                 continue;
             int eq = s.indexOf("=");
             if (eq == -1) {
-                String value = System.getenv(s);
+                String value = sysEnv.get(s);
                 if (value != null)
                     table.put(s, value);
             } else if (eq > 0) {
@@ -2155,6 +2194,12 @@ public class Tool {
                 table.put(name, value);
             }
         }
+    }
+
+    private void addEnvVars(Map<String, String> table, Map<String, String> sysEnv, Predicate<Map.Entry<String, String>> filter) {
+        sysEnv.entrySet().stream()
+                .filter(filter)
+                .forEach(e -> table.put(e.getKey(), e.getValue()));
     }
 
     private static String combineKeywords(String kw1, String kw2) {
@@ -2247,7 +2292,7 @@ public class Tool {
     private boolean guiFlag;
     private boolean reportOnlyFlag;
     private String showStream;
-    public enum ReportMode { NONE, EXECUTED, ALL_EXECUTED, ALL }
+    public enum ReportMode { NONE, EXECUTED, FILES, ALL_EXECUTED, ALL }
     private ReportMode reportMode;
     private boolean allowSetSecurityManagerFlag = true;
     private static Verbose  verbose;
@@ -2258,6 +2303,8 @@ public class Tool {
     private String timeoutHandlerClassName;
     private List<Path> timeoutHandlerPathArg;
     private long timeoutHandlerTimeoutArg = -1; // -1: default; 0: no timeout; >0: timeout in seconds
+    private String testThreadFactory;
+    private String testThreadFactoryPathArg;
     private int maxPoolSize = -1;
     private Duration poolIdleTimeout = Duration.ofSeconds(30);
     private List<String> testCompilerOpts = new ArrayList<>();
@@ -2292,12 +2339,20 @@ public class Tool {
     private static final String MANUAL    = "manual";
 
     private static final String[] DEFAULT_UNIX_ENV_VARS = {
-        "DISPLAY", "GNOME_DESKTOP_SESSION_ID", "HOME", "LANG",
-        "LC_ALL", "LC_CTYPE", "LPDEST", "PRINTER", "TZ", "XMODIFIERS"
+            "DBUS_SESSION_BUS_ADDRESS", "DESKTOP_SESSION", "DISPLAY",
+            "GDMSESSION", "GNOME_DESKTOP_SESSION_ID", "GNOME_SHELL_SESSION_MODE",
+            "HOME",
+            "LANG", "LC_ALL", "LC_CTYPE", "LPDEST",
+            "PRINTER",
+            "TZ",
+            "WAYLAND_DISPLAY",
+            "XMODIFIERS"
     };
 
     private static final String[] DEFAULT_WINDOWS_ENV_VARS = {
-        "SystemDrive", "SystemRoot", "windir", "TMP", "TEMP", "TZ"
+            "SystemDrive", "SystemRoot",
+            "TMP", "TEMP", "TZ",
+            "windir"
     };
 
     private static final I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(Tool.class);

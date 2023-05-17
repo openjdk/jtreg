@@ -189,7 +189,7 @@ public class ExtraPropDefns {
 
         javacArgs.addAll(javacOpts);
 
-        boolean needCompilation = false;
+        List<String> needCompileReasons = new ArrayList<>();
 
         for (String e: files) {
             boolean optional;
@@ -213,18 +213,24 @@ public class ExtraPropDefns {
                 String cn = getClassNameFromFile(sf);
                 classNames.add(cn);
 
-                if (!needCompilation) {
+                if (needCompileReasons.isEmpty() || trace) {
                     Path cf = classDir.resolve(cn.replace(".", File.separator) + ".class");
-                    if (!Files.exists(cf) || FileUtils.compareLastModifiedTimes(sf, cf) > 0) {
-                        needCompilation = true;
+                    if (Files.exists(cf)) {
+                        if (FileUtils.compareLastModifiedTimes(sf, cf) > 0) {
+                            needCompileReasons.add("Class file is out of date; class file: " + cf + ", source file: " + sf);
+                        }
+                    } else {
+                        needCompileReasons.add("Class file not found; class file: " + cf + ", source file: " + sf);
                     }
                 }
             }
         }
 
-        if (needCompilation) {
+        if (!needCompileReasons.isEmpty()) {
             if (trace) {
-                System.err.println("Compiling extra property definition files: " + javacArgs);
+                PrintStream out = System.err;
+                out.println("Compiling extra property definition files: " + javacArgs);
+                needCompileReasons.forEach(out::println);
             }
             List<String> pArgs = new ArrayList<>();
             pArgs.add(jdk.getJavacProg().toString());

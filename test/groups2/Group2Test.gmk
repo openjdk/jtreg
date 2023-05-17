@@ -1,0 +1,60 @@
+#
+# Copyright (c) 2022, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+#----------------------------------------------------------------------
+
+Group2Test.GROUPS = all indirectAll allWithExtra
+
+$(BUILDTESTDIR)/Group2Test.ok: \
+		$(Group2Test.GROUPS:%=$(BUILDTESTDIR)/Group2Test.%.ok) \
+		$(Group2Test.GROUPS:%=$(BUILDTESTDIR)/Group2Test.report-files.%.ok)
+	echo $@ passed at `date` > $@
+
+$(Group2Test.GROUPS:%=$(BUILDTESTDIR)/Group2Test.%.ok): \
+	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	$(JTREG_IMAGEDIR)/bin/jtreg
+	$(MKDIR) -p $(@:%.ok=%)
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(JDKHOME) \
+		$(TESTDIR)/groups2:$(@:$(BUILDTESTDIR)/Group2Test.%.ok=%) \
+		1>$(@:%.ok=%)/jt.log 2>&1
+	$(GREP) '^Test results: passed: 3$$' $(@:%.ok=%)/jt.log
+	echo $@ passed at `date` > $@
+
+$(Group2Test.GROUPS:%=$(BUILDTESTDIR)/Group2Test.report-files.%.ok): \
+	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	$(JTREG_IMAGEDIR)/bin/jtreg
+	$(MKDIR) -p $(@:%.ok=%)
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(JDKHOME) \
+		-report:files \
+		$(TESTDIR)/groups2:$(@:$(BUILDTESTDIR)/Group2Test.report-files.%.ok=%) \
+		1>$(@:%.ok=%)/jt.log 2>&1
+	$(GREP) '^Test results: passed: 3$$' $(@:%.ok=%)/jt.log
+	echo $@ passed at `date` > $@
+
+TESTS.jtreg += $(BUILDTESTDIR)/Group2Test.ok

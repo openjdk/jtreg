@@ -503,22 +503,25 @@ public class TestManager {
     }
 
     /**
-     * Returns the set of tests to be run in a given test suite.
+     * Returns the set of tests to be run in a given test suite,
+     * or {@code null} meaning "all tests".
      * The tests are identified in "URL form", containing the
      * path of the test relative to the test suite root, and
      * with an id if given. The query part of a test spec is
      * not included.
      *
      * @param ts the test suite
-     * @return the list of tests
+     * @return the list of tests, or {@code null} for all tests
      * @throws Fault if there is a problem with the tests to be run
      */
     public Set<String> getTests(RegressionTestSuite ts) throws Fault {
         Entry e = map.get(ts.getRootDir().toPath());
-        if (e == null)
+        if (e == null) {
             throw new IllegalArgumentException();
-        if (e.all)
-            return null;
+        }
+        if (e.all) {
+            return null; // all tests
+        }
         WorkDirectory wd = getWorkDirectory(ts);
         Set<String> tests = new LinkedHashSet<>();
         for (TestSpec test: e.tests) {
@@ -531,8 +534,11 @@ public class TestManager {
         }
         for (Path f: expandGroups(e)) {
             String test = pathToString(e.rootDir.relativize(f));
-            if (validatePath(wd, test))
+            if (test.isEmpty()) {
+                return null; // all tests
+            } else if (validatePath(wd, test)) {
                 tests.add(test);
+            }
         }
         if (tests.isEmpty() && (!allowEmptyGroups || e.groups.isEmpty()))
             throw new NoTests();

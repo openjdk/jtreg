@@ -50,6 +50,7 @@ import com.sun.javatest.finder.HTMLCommentStream;
 import com.sun.javatest.finder.JavaCommentStream;
 import com.sun.javatest.finder.ShScriptCommentStream;
 import com.sun.javatest.finder.TagTestFinder;
+import com.sun.javatest.regtest.agent.Flags;
 import com.sun.javatest.regtest.exec.Action;
 import com.sun.javatest.regtest.util.StringUtils;
 import com.sun.javatest.util.I18NResourceBundle;
@@ -127,6 +128,10 @@ public class RegressionTestFinder extends TagTestFinder
 
     @Override
     protected void scanFile(File file) {
+        if (traceFinder) {
+            System.err.println("RegressionTestFinder: reading " + file);
+        }
+
         try {
             File tngRoot = properties.getTestNGRoot(file);
             if (tngRoot != null) {
@@ -1058,4 +1063,6 @@ public class RegressionTestFinder extends TagTestFinder
     private static final I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(RegressionTestFinder.class);
     private static final boolean rejectTrailingBuild =
             !Boolean.getBoolean("javatest.regtest.allowTrailingBuild");
+
+    private static final boolean traceFinder = Flags.get("traceFinder");
 }

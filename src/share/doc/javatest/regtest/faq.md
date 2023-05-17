@@ -58,7 +58,7 @@ implement this specification, and is an older name for what is now known as
 
 ### What are the system requirements for using the JDK regression extensions?
 
-It is recommended that you run jtreg using JDK 1.8 or later.
+It is recommended that you run jtreg using JDK 11 or later.
 
 ### Where can I find a copy of jtreg?
 
@@ -559,7 +559,8 @@ The plain text files in the report directory include the following:
 * `summary.txt`: summary of test results: one test per line, suitable for use with `grep`
 * `timeStats.txt`: some statistics regarding test execution times
 
-Reports can be disabled with the `-noreport` option.
+Reports can be disabled with the `-noreport` option; the set of tests included
+in the report can be selected with the `-report:`_value_ option.
 
 It is generally recommended that the work and report directories should _not_ be
 placed anywhere in the test suite itself. Since jtreg may scan the entire test suite
@@ -1090,6 +1091,16 @@ These values are then followed by the mean and standard deviation
 of the test execution times.  If there are any tests taking an
 unexpectedly long time to execute, they can be determined by examining
 the `elapsed` entries in the `.jtr` files.
+
+### Why is there a delay after the tests have been run, before jtreg exits?
+
+By default, jtreg reports on all the tests that have been executed
+and which have results in the work directory. It may take a few seconds
+to find the set of tests for the report. You can use the `-report:`_value_
+option to specify which tests should be in the report. If you are just
+running a single test or a few tests, you may want to use `-report:files`,
+to just report on the tests specified in the files and/or groups given on the
+command line.
 
 ### How do I find the tests that took longest to run?
 

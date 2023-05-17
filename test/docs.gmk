@@ -31,4 +31,3 @@ $(BUILDTESTDIR)/tidy-docs.ok: \
 
 INITIAL_TESTS += \
 	$(BUILDTESTDIR)/tidy-docs.ok
-
