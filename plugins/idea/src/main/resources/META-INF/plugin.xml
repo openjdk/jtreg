@@ -29,7 +29,7 @@
     <description><![CDATA[
       Allows execution of tests developed using the <a href="http://openjdk.java.net/jtreg/">jtreg</a> framework.
     ]]></description>
-    <vendor>openjd</vendor>
+    <vendor>openjdk</vendor>
 
     <depends>AntSupport</depends>
     <depends>TestNG-J</depends>
