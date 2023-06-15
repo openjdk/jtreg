@@ -143,9 +143,9 @@ public class Alarm  {
     protected void run() {
         if (msgOut != null) {
             if (count == 0) {
-                msgOut.println(String.format("Timeout refired %s times", TimeUnit.SECONDS.convert(delay, delayUnit)));
+                msgOut.println(String.format("Timeout signalled after %d seconds", TimeUnit.SECONDS.convert(delay, delayUnit)));
             } else if (count % 100 == 0) {
-                msgOut.println(String.format("Timeout signalled after %d seconds", count));
+                msgOut.println(String.format("Timeout refired %s times", count));
             }
         }
         count++;
