@@ -145,7 +145,7 @@ public class Alarm  {
             if (count == 0) {
                 msgOut.println(String.format("Timeout signalled after %d seconds", TimeUnit.SECONDS.convert(delay, delayUnit)));
             } else if (count % 100 == 0) {
-                msgOut.println(String.format("Timeout refired %s times", count));
+                msgOut.println(String.format("Timeout refired %d times", count));
             }
         }
         count++;
