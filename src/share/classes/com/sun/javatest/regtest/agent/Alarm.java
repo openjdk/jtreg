@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010, 2023, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -143,9 +143,9 @@ public class Alarm  {
     protected void run() {
         if (msgOut != null) {
             if (count == 0) {
-                msgOut.println(String.format("Timeout refired %s times", TimeUnit.SECONDS.convert(delay, delayUnit)));
+                msgOut.println(String.format("Timeout signalled after %d seconds", TimeUnit.SECONDS.convert(delay, delayUnit)));
             } else if (count % 100 == 0) {
-                msgOut.println(String.format("Timeout signalled after %d seconds", count));
+                msgOut.println(String.format("Timeout refired %d times", count));
             }
         }
         count++;
