@@ -518,19 +518,25 @@ public abstract class Action extends ActionHelper {
             return Collections.emptySet();
 
         Set<String> results = new LinkedHashSet<>();
-        for (Path dir: pp.asList()) {
-            getModules(dir, results);
+        for (Path element : pp.asList()) {
+            if (Files.isRegularFile(element)) {
+                getModule(element, results);
+                continue;
+            }
+            for (Path file: FileUtils.listFiles(element)) {
+                getModule(file, results);
+            }
         }
         return results;
     }
 
-    private void getModules(Path dir, Set<String> results) {
-        for (Path f: FileUtils.listFiles(dir)) {
-            if (isModule(f)) {
-                results.add(f.getFileName().toString());
-            } else if (f.getFileName().toString().endsWith(".jar")) {
-                results.add(getAutomaticModuleName(f));
-            }
+    private void getModule(Path file, Set<String> results) {
+        if (isModule(file)) {
+            results.add(file.getFileName().toString());
+            return;
+        }
+        if (file.getFileName().toString().endsWith(".jar")) {
+            results.add(getAutomaticModuleName(file));
         }
     }
 
