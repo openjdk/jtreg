@@ -521,8 +521,7 @@ public abstract class Action extends ActionHelper {
         for (Path element : pp.asList()) {
             if (Files.isRegularFile(element)) {
                 getModule(element, results);
-            }
-            else if (Files.isDirectory(element)) {
+            } else if (Files.isDirectory(element)) {
                 for (Path file : FileUtils.listFiles(element)) {
                     getModule(file, results);
                 }
