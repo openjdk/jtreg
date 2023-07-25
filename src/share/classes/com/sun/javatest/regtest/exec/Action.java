@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2023, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -518,19 +518,23 @@ public abstract class Action extends ActionHelper {
             return Collections.emptySet();
 
         Set<String> results = new LinkedHashSet<>();
-        for (Path dir: pp.asList()) {
-            getModules(dir, results);
+        for (Path element : pp.asList()) {
+            if (Files.isRegularFile(element)) {
+                getModule(element, results);
+            } else if (Files.isDirectory(element)) {
+                for (Path file : FileUtils.listFiles(element)) {
+                    getModule(file, results);
+                }
+            }
         }
         return results;
     }
 
-    private void getModules(Path dir, Set<String> results) {
-        for (Path f: FileUtils.listFiles(dir)) {
-            if (isModule(f)) {
-                results.add(f.getFileName().toString());
-            } else if (f.getFileName().toString().endsWith(".jar")) {
-                results.add(getAutomaticModuleName(f));
-            }
+    private void getModule(Path file, Set<String> results) {
+        if (isModule(file)) {
+            results.add(file.getFileName().toString());
+        } else if (file.getFileName().toString().endsWith(".jar")) {
+            results.add(getAutomaticModuleName(file));
         }
     }
 
