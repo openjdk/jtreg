@@ -1,10 +1,26 @@
-## [Unreleased](https://git.openjdk.org/jtreg/compare/jtreg-7.2+1...master)
+## [Unreleased](https://git.openjdk.org/jtreg/compare/jtreg-7.3+1...master)
+
+_Nothing noteworthy, yet_
+
+## [7.3](https://git.openjdk.org/jtreg/compare/jtreg-7.2+1...jtreg-7.3+1)
 
 * Updated set of default environment variables set for tests on Unix-like platforms.
   * Includes `DBUS_SESSION_BUS_ADDRESS`, `WAYLAND_DISPLAY`, and `XDG-*` 
     [CODETOOLS-7903400](https://bugs.openjdk.org/browse/CODETOOLS-7903400)
 
-## [7.2+1](https://git.openjdk.org/jtreg/compare/jtreg-7.1.1+1...jtreg-7.2+1)
+* Updated external dependencies.
+  * Guice to 5.1.0 [CODETOOLS-7903468](https://bugs.openjdk.org/browse/CODETOOLS-7903468)
+  * JCommander to 1.82 [CODETOOLS-7903469](https://bugs.openjdk.org/browse/CODETOOLS-7903469)
+
+* Fixed output-related issues.
+  * AgentServer log() does not flush [CODETOOLS-7903470](https://bugs.openjdk.org/browse/CODETOOLS-7903470)
+  * System.out and System.err messages are missing in jtr file when a test times out in agentvm mode [CODETOOLS-7903441](https://bugs.openjdk.org/browse/CODETOOLS-7903441)
+  * Timeout refired %s times message confusing [CODETOOLS-7902485](https://bugs.openjdk.org/browse/CODETOOLS-7902485)
+ 
+* Fixed race-condition when running tests with a multi-module setup
+  * [CODETOOLS-7903507](https://bugs.openjdk.org/browse/CODETOOLS-7903507)
+
+## [7.2](https://git.openjdk.org/jtreg/compare/jtreg-7.1.1+1...jtreg-7.2+1)
 
 * Improved support for JUnit Jupiter.
   * Update jtreg to bundle JUnit 5.9.2 [CODETOOLS-7903406](https://bugs.openjdk.org/browse/CODETOOLS-7903406)
@@ -24,12 +40,12 @@
   the use of a custom thread factory, to be used to create the thread to run a test.
   * [CODETOOLS-7903373](https://bugs.openjdk.org/browse/CODETOOLS-79033734)
 
-## [7.1.1+1](https://git.openjdk.org/jtreg/compare/jtreg-7.1+1...jtreg-7.1.1+1)
+## [7.1.1](https://git.openjdk.org/jtreg/compare/jtreg-7.1+1...jtreg-7.1.1+1)
 
 * Summary reporter getter is now thread-safe.
   * [CODETOOLS-7903390](https://bugs.openjdk.org/browse/CODETOOLS-7903390)
 
-## [7.1+1](https://git.openjdk.org/jtreg/compare/jtreg-7+1...jtreg-7.1+1)
+## [7.1](https://git.openjdk.org/jtreg/compare/jtreg-7+1...jtreg-7.1+1)
 
 * Improved support for JUnit Jupiter.
   * Avoid using TestNG mixed mode.
@@ -61,8 +77,7 @@
   * Time taken to run tests. [CODETOOLS-7903261](https://bugs.openjdk.org/browse/CODETOOLS-7903261)
   * Accessing TestNG and JUnit libraries. [CODETOOLS-7903244](https://bugs.openjdk.org/browse/CODETOOLS-7903244)
 
-
-## [7+1](https://git.openjdk.org/jtreg/compare/jtreg-6.2+1...jtreg-7+1)
+## [7](https://git.openjdk.org/jtreg/compare/jtreg-6.2+1...jtreg-7+1)
 
 * Improved support for JUnit Jupiter.
   * Use JUnit Platform Launcher. [CODETOOLS-7903047](https://bugs.openjdk.org/browse/CODETOOLS-7903047)
@@ -86,8 +101,7 @@
 * Report `os.*` system properties in `.jtr` file.
   * [CODETOOLS-7903044](https://bugs.openjdk.org/browse/CODETOOLS-7903044)
 
-
-## [6.2+1](https://git.openjdk.org/jtreg/compare/jtreg-6.1+1...jtreg-6.2+1)
+## [6.2](https://git.openjdk.org/jtreg/compare/jtreg-6.1+1...jtreg-6.2+1)
 
 * Provide system property or option to override timeout.
   * [CODETOOLS-7903083](https://bugs.openjdk.org/browse/CODETOOLS-7903083)
@@ -104,8 +118,7 @@
 * jtreg should print stdout if JVM gathering properties fails.
   * [CODETOOLS-7903030](https://bugs.openjdk.org/browse/CODETOOLS-7903030)
 
-
-## [6.1+1](https://git.openjdk.org/jtreg/compare/jtreg-6+1...jtreg-6.1+1)
+## [6.1](https://git.openjdk.org/jtreg/compare/jtreg-6+1...jtreg-6.1+1)
 
 * Elapsed time of `MainAction` is including serialization wait time
   * [CODETOOLS-7902942](https://bugs.openjdk.org/browse/CODETOOLS-7902942)
@@ -122,9 +135,7 @@
 * jtreg should not set a security manager for JDK 18.
   * [CODETOOLS-7902990](https://bugs.openjdk.org/browse/CODETOOLS-7902990)
 
-
-## [6+1](https://git.openjdk.org/jtreg/compare/jtreg5.1-b01...jtreg-6+1)
-
+## [6](https://git.openjdk.org/jtreg/compare/jtreg5.1-b01...jtreg-6+1)
 
 * Add support for `Automatic-Module-Name` in jar files.
 
@@ -148,9 +159,7 @@
 
 * Add support for explicit `-retain:lastRun`.
 
-
-
-## [5.1-b01](https://git.openjdk.org/jtreg/compare/jtreg5.0-b01...jtreg5.1-b01)
+## [5.1](https://git.openjdk.org/jtreg/compare/jtreg5.0-b01...jtreg5.1-b01)
 
 * Update AsmTools to 7.0 b08; update JT Harness to 6.0-b11.
 
@@ -191,8 +200,7 @@
 * Validate test group names.
   * [CODETOOLS-7902606](https://bugs.openjdk.org/browse/CODETOOLS-7902606)
 
-
-## [5.0-b01](https://git.openjdk.org/jtreg/compare/jtreg4.2-b16...jtreg5.0-b01)
+## [5](https://git.openjdk.org/jtreg/compare/jtreg4.2-b16...jtreg5.0-b01)
 
 * Improve Cygwin detection by relaxing constraints on expected installation directory.
 
