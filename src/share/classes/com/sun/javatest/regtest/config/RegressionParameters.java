@@ -74,7 +74,7 @@ import static com.sun.javatest.regtest.util.StringUtils.join;
 
 public class RegressionParameters
     extends BasicInterviewParameters
-    implements Parameters.EnvParameters
+    implements Parameters.EnvParameters, Parameters.TestWideParameters
 {
     private final Consumer<String> logger;
 

@@ -624,6 +624,14 @@ public class Tool {
             }
         },
 
+        // only take vm crashes as failures
+        new Option(NONE, MAIN, "crashonly", "-crashonly"){
+            @Override
+            public void process(String opt, String arg){
+                crashOnly = true;
+            }
+        },
+
         // deprecated
         new Option(NONE, MAIN, "ignore", "-noignore") {
             @Override
@@ -1725,6 +1733,7 @@ public class Tool {
                 rp.setTestDebugOptions(testDebugOpts);
 
             rp.setCheck(checkFlag);
+            rp.setCrashOnly(crashOnly);
             rp.setExecMode(execMode);
             rp.setEnvVars(getEnvVars());
             rp.setCompileJDK((compileJDK != null) ? compileJDK : testJDK);
@@ -2315,6 +2324,7 @@ public class Tool {
     private boolean listTestsFlag;
     private boolean showGroupsFlag;
     private List<String> envVarArgs = new ArrayList<>();
+    private boolean crashOnly = false;
     private IgnoreKind ignoreKind;
     private List<Path> classPathAppendArg = new ArrayList<>();
     private Path nativeDirArg;
