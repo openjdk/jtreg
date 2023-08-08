@@ -57,7 +57,7 @@ import java.util.concurrent.TimeUnit;
 
 
 @SuppressWarnings("removal") // Security Manager and related APIs
-public class AgentServer implements ActionHelper.OutputHandler {
+public final class AgentServer implements ActionHelper.OutputHandler {
 
     /**
      * Main program used to invoke and run the server in child JVMs

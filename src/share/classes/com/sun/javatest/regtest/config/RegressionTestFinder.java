@@ -66,7 +66,7 @@ import com.sun.javatest.util.I18NResourceBundle;
   * @see com.sun.javatest.TestFinder
   * @see com.sun.javatest.finder.TagTestFinder
   */
-public class RegressionTestFinder extends TagTestFinder
+public final class RegressionTestFinder extends TagTestFinder
 {
     /**
      * Constructs the list of file names to exclude for pruning in the search
@@ -1014,7 +1014,7 @@ public class RegressionTestFinder extends TagTestFinder
     static final String[] excludeNames = { ".hg", ".git" };
 
     // These are all the error messages used in the finder.
-    protected static final String
+    static final String
         PARSE_TAG_BAD         = "Invalid tag: ",
         PARSE_BUG_EMPTY       = "No value provided for `@bug'",
         PARSE_BUG_INVALID     = "Invalid or unrecognized bugid: ",
