@@ -2149,7 +2149,6 @@ public class Tool {
     }
 
     private Map<String, String> getEnvVars() {
-        Map<String, String> sysEnv = System.getenv();
         Map<String, String> envVars = new TreeMap<>();
         OS os = OS.current();
         if (os.family.equals("windows")) {
@@ -2158,11 +2157,11 @@ public class Tool {
             addEnvVars(envVars, "PATH"); // accept user's path, for now
         } else {
             addEnvVars(envVars, DEFAULT_UNIX_ENV_VARS);
-            addEnvVars(envVars, sysEnv, e -> e.getKey().startsWith("XDG_"));
+            addEnvVarsByName(envVars, name -> name.startsWith("XDG_"));
             addEnvVars(envVars, "PATH=/bin:/usr/bin:/usr/sbin");
         }
         addEnvVars(envVars, envVarArgs);
-        addEnvVars(envVars, sysEnv, e -> e.getKey().startsWith("JTREG_"));
+        addEnvVarsByName(envVars, name -> name.startsWith("JTREG_"));
 
         return envVars;
     }
@@ -2185,7 +2184,7 @@ public class Tool {
                 continue;
             int eq = s.indexOf("=");
             if (eq == -1) {
-                String value = System.getenv(s);
+                String value = getCaseInsensitiveEnvironmentVariableOrNull(s);
                 if (value != null)
                     table.put(s, value);
             } else if (eq > 0) {
@@ -2196,10 +2195,18 @@ public class Tool {
         }
     }
 
-    private void addEnvVars(Map<String, String> table, Map<String, String> sysEnv, Predicate<Map.Entry<String, String>> filter) {
-        sysEnv.entrySet().stream()
-                .filter(filter)
+    // This method streams over a case-sensitive set of entries, returned by
+    // System.getenv(String); custom name filters can be implemented in a
+    // case-insensitive manner.
+    private void addEnvVarsByName(Map<String, String> table, Predicate<String> nameFilter) {
+        System.getenv().entrySet().stream()
+                .filter(e -> nameFilter.test(e.getKey()))
                 .forEach(e -> table.put(e.getKey(), e.getValue()));
+    }
+
+    // 7903515: Use case-insensitive System.getenv(String) here.
+    private static String getCaseInsensitiveEnvironmentVariableOrNull(String name) {
+        return System.getenv(name);
     }
 
     private static String combineKeywords(String kw1, String kw2) {
