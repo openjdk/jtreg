@@ -2195,9 +2195,8 @@ public class Tool {
         }
     }
 
-    // This method streams over a case-sensitive set of entries, returned by
-    // System.getenv(String); custom name filters can be implemented in a
-    // case-insensitive manner.
+    // This method streams over a case-sensitive set of entries, returned by System.getenv();
+    // Custom name filters can be implemented in a case-insensitive manner.
     private void addEnvVarsByName(Map<String, String> table, Predicate<String> nameFilter) {
         System.getenv().entrySet().stream()
                 .filter(e -> nameFilter.test(e.getKey()))
