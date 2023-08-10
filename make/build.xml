@@ -150,6 +150,7 @@
                 <attribute name="jtreg-Milestone" value="${build.milestone}"/>
                 <attribute name="jtreg-Build" value="${build.number}"/>
                 <attribute name="jtreg-BuildJavaVersion" value="${java.version}"/>
+                <attribute name="jtreg-VersionString" value="${build.version}+${build.number}"/>
                 <attribute name="jtreg-BuildDate" value="${build.date.time}"/>
             </manifest>
             <include name="COPYRIGHT"/>
