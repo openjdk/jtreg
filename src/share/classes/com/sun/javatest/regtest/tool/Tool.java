@@ -2184,7 +2184,7 @@ public class Tool {
                 continue;
             int eq = s.indexOf("=");
             if (eq == -1) {
-                String value = getCaseInsensitiveEnvironmentVariableOrNull(s);
+                String value = getEnvironmentVariableOrNull(s);
                 if (value != null)
                     table.put(s, value);
             } else if (eq > 0) {
@@ -2204,7 +2204,7 @@ public class Tool {
     }
 
     // 7903515: Use case-insensitive System.getenv(String) here.
-    private static String getCaseInsensitiveEnvironmentVariableOrNull(String name) {
+    private static String getEnvironmentVariableOrNull(String name) {
         return System.getenv(name);
     }
 
