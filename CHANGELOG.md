@@ -1,4 +1,8 @@
-## [Unreleased](https://git.openjdk.org/jtreg/compare/jtreg-7.3+1...master)
+## [Unreleased](https://git.openjdk.org/jtreg/compare/jtreg-7.3.1+1...master)
+
+_nothing noteworthy, yet_
+
+## [7.3.1](https://git.openjdk.org/jtreg/compare/jtreg-7.3+1...jtreg-7.3.1+1)
 
 * Fixed setting default environment variables on Windows
   * [CODETOOLS-7903515](https://bugs.openjdk.org/browse/CODETOOLS-7903515)
