@@ -74,7 +74,7 @@ import static com.sun.javatest.regtest.util.StringUtils.join;
 
 public class RegressionParameters
     extends BasicInterviewParameters
-    implements Parameters.EnvParameters, Parameters.TestWideParameters
+    implements Parameters.EnvParameters
 {
     private final Consumer<String> logger;
 
@@ -94,6 +94,52 @@ public class RegressionParameters
 
         setTitle("jtreg Configuration Editor"); // I18N
         setEdited(false);
+    }
+
+    public RegressionParameters(RegressionParameters regPar) throws Interview.Fault{
+        super(regPar.getTag(), regPar.getTestSuite());
+        this.asmToolsPath = regPar.asmToolsPath;
+        this.basicTestProperties = regPar.basicTestProperties;
+        this.envVars = regPar.envVars;
+        this.check = regPar.check;
+        this.compileJDK = regPar.testJDK;
+        this.excludeListFilter = regPar.excludeListFilter;
+        this.logger = regPar.logger;
+        this.exclusiveLock = regPar.exclusiveLock;
+        this.execMode = regPar.execMode;
+        this.exprContext = regPar.exprContext;
+        this.filterFaults = regPar.filterFaults;
+        this.ignoreKind = regPar.ignoreKind;
+        this.javaTestClassPath = regPar.javaTestClassPath;
+        this.junitPath = regPar.junitPath;
+        this.testngPath = regPar.testngPath;
+        this.keywordsFilter = regPar.keywordsFilter;
+        this.matchListFilter = regPar.matchListFilter;
+        this.matchLists = regPar.matchLists;
+        this.nativeDir = regPar.nativeDir;
+        this.priorStatusFilter = regPar.priorStatusFilter;
+        this.refIgnoreLinesPattern = regPar.refIgnoreLinesPattern;
+        this.relevantTestFilter = regPar.relevantTestFilter;
+        this.reportDir = regPar.reportDir;
+        this.retainArgs = regPar.retainArgs;
+        this.retainFilesPattern = regPar.retainFilesPattern;
+        //this.retainStatusSet = regPar.retainStatusSet;
+        this.testCompilerOpts = regPar.testCompilerOpts;
+        this.testDebugOpts = regPar.testDebugOpts;
+        this.testJavaOpts = regPar.testJavaOpts;
+        this.testJDK = regPar.testJDK;
+        this.testQueries = regPar.testQueries;
+        this.testThreadFactory = regPar.testThreadFactory;
+        this.testThreadFactoryPath = regPar.testThreadFactoryPath;
+        this.testVMOpts = regPar.testVMOpts;
+        this.timeLimit = regPar.timeLimit;
+        this.timeoutHandlerClassName = regPar.timeoutHandlerClassName;
+        this.timeoutHandlerPath = regPar.timeoutHandlerPath;
+        this.timeoutHandlerProvider = regPar.timeoutHandlerProvider;
+        this.timeoutHandlerTimeout = regPar.timeoutHandlerTimeout;
+        this.useWindowsSubsystemForLinux = regPar.useWindowsSubsystemForLinux;
+        //this.iTests = regPar.iTests;
+        //this.kflFiles = regPar.kflFiles;
     }
 
     //---------------------------------------------------------------------

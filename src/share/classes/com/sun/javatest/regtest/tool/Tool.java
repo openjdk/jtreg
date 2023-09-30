@@ -70,6 +70,7 @@ import javax.swing.Timer;
 import com.sun.interview.Interview;
 import com.sun.javatest.AllTestsFilter;
 import com.sun.javatest.Harness;
+import com.sun.javatest.CrashOnlyHarness;
 import com.sun.javatest.InterviewParameters;
 import com.sun.javatest.JavaTestSecurityManager;
 import com.sun.javatest.Keywords;
@@ -114,6 +115,7 @@ import com.sun.javatest.tool.Desktop;
 import com.sun.javatest.util.BackupPolicy;
 import com.sun.javatest.util.I18NResourceBundle;
 import com.sun.javatest.util.StringArray;
+import com.sun.javatest.Parameters;
 
 import static com.sun.javatest.regtest.Main.EXIT_BAD_ARGS;
 import static com.sun.javatest.regtest.Main.EXIT_EXCEPTION;
@@ -1240,6 +1242,17 @@ public class Tool {
             }
         });
 
+        if (crashOnly){
+            RegressionTestSuite.setParametersFactory(ts -> {
+                try {
+                    return createParameters(testManager, ts);
+                } catch (BadArgs
+                         | Fault ex) {
+                    throw new TestSuite.Fault(i18n, "main.cantCreateParameters", ex.getMessage());
+                }
+            });
+        }
+
         if (showGroupsFlag) {
             showGroups(testManager);
             return EXIT_OK;
@@ -1291,7 +1304,7 @@ public class Tool {
             if (multiRun && (verbose != null && verbose.multiRun))
                 out.println("Running tests in " + ts.getRootDir());
 
-            RegressionParameters params = createParameters(testManager, ts);
+            Parameters params = createParameters(testManager, ts);
             String[] tests = params.getTests();
             if (tests != null && tests.length == 0)
                 foundEmptyGroup = true;
@@ -1300,7 +1313,7 @@ public class Tool {
 
             switch (execMode) {
                 case AGENTVM:
-                    Agent.Pool p = Agent.Pool.instance(params);
+                    Agent.Pool p = Agent.Pool.instance((RegressionParameters)params);
                     if (allowSetSecurityManagerFlag) {
                         initPolicyFile();
                         p.setSecurityPolicy(policyFile.toFile());
@@ -1331,12 +1344,12 @@ public class Tool {
             TestEnvironment.addDefaultPropTable("(system properties)", System.getProperties());
 
             if (guiFlag) {
-                showTool(params);
+                showTool((RegressionParameters)params);
                 return EXIT_OK;
             } else {
                 try {
                     boolean quiet = (multiRun && !(verbose != null && verbose.multiRun));
-                    testStats.addAll(batchHarness(params, quiet));
+                    testStats.addAll(batchHarness((RegressionParameters)params, quiet));
                 } finally {
                     checkLockFiles(params.getWorkDirectory().getRoot(), "done");
                 }
@@ -1621,30 +1634,29 @@ public class Tool {
      * @return a RegressionParameters object
      */
     private RegressionParameters createParameters(
-            TestManager testManager, RegressionTestSuite testSuite)
+            TestManager testManager, RegressionTestSuite testSuite, RegressionParameters p)
             throws BadArgs, Fault
     {
         try {
-            RegressionParameters rp = new RegressionParameters("regtest", testSuite, out::println);
 
             WorkDirectory workDir = testManager.getWorkDirectory(testSuite);
-            rp.setWorkDirectory(workDir);
+            p.setWorkDirectory(workDir);
 
             // JT Harness 4.3+ requires a config file to be set
-            rp.setFile(workDir.getFile("config.jti"));
+            p.setFile(workDir.getFile("config.jti"));
 
-            rp.setRetainArgs(retainArgs);
+            p.setRetainArgs(retainArgs);
 
             // the tests are the tests to be executed by the harness, and do not
             // include the "query" component
             // 'null' means "all tests"
-            rp.setTests(testManager.getTests(testSuite));
+            p.setTests(testManager.getTests(testSuite));
 
             // the tests that have an associated query component, included in
             // the string
             List<String> testQueries = testManager.getTestQueries(testSuite);
             if (!testQueries.isEmpty()) {
-                rp.setTestQueries(testQueries);
+                p.setTestQueries(testQueries);
             }
 
             if (userKeywordExpr != null || extraKeywordExpr != null) {
@@ -1652,21 +1664,21 @@ public class Tool {
                         (userKeywordExpr == null) ? extraKeywordExpr
                         : (extraKeywordExpr == null) ? userKeywordExpr
                         : "(" + userKeywordExpr + ") & " + extraKeywordExpr;
-                rp.setKeywordsExpr(expr);
+                p.setKeywordsExpr(expr);
             }
 
-            rp.setExcludeLists(excludeListArgs.toArray(new Path[0]));
-            rp.setMatchLists(matchListArgs.toArray(new Path[0]));
+            p.setExcludeLists(excludeListArgs.toArray(new Path[0]));
+            p.setMatchLists(matchListArgs.toArray(new Path[0]));
 
             if (priorStatusValuesArg == null || priorStatusValuesArg.length() == 0)
-                rp.setPriorStatusValues(null);
+                p.setPriorStatusValues(null);
             else {
                 boolean[] b = new boolean[Status.NUM_STATES];
                 b[Status.PASSED]  = priorStatusValuesArg.contains("pass");
                 b[Status.FAILED]  = priorStatusValuesArg.contains("fail");
                 b[Status.ERROR]   = priorStatusValuesArg.contains("erro");
                 b[Status.NOT_RUN] = priorStatusValuesArg.contains("notr");
-                rp.setPriorStatusValues(b);
+                p.setPriorStatusValues(b);
             }
 
             if (concurrencyArg != null) {
@@ -1676,7 +1688,7 @@ public class Tool {
                         c = Runtime.getRuntime().availableProcessors();
                     else
                         c = Integer.parseInt(concurrencyArg);
-                    rp.setConcurrency(c);
+                    p.setConcurrency(c);
                 } catch (NumberFormatException e) {
                     throw new BadArgs(i18n, "main.badConcurrency");
                 }
@@ -1684,93 +1696,103 @@ public class Tool {
 
             if (timeoutFactorArg != null) {
                 try {
-                    rp.setTimeoutFactor(timeoutFactorArg);
+                    p.setTimeoutFactor(timeoutFactorArg);
                 } catch (NumberFormatException e) {
                     throw new BadArgs(i18n, "main.badTimeoutFactor");
                 }
             }
 
             if (timeoutHandlerClassName != null) {
-                rp.setTimeoutHandler(timeoutHandlerClassName);
+                p.setTimeoutHandler(timeoutHandlerClassName);
             }
 
             if (timeoutHandlerPathArg != null) {
-                rp.setTimeoutHandlerPath(timeoutHandlerPathArg);
+                p.setTimeoutHandlerPath(timeoutHandlerPathArg);
             }
 
             if (timeoutHandlerTimeoutArg != 0) {
-                rp.setTimeoutHandlerTimeout(timeoutHandlerTimeoutArg);
+                p.setTimeoutHandlerTimeout(timeoutHandlerTimeoutArg);
             }
 
             if (testThreadFactory != null) {
-                rp.setTestThreadFactory(testThreadFactory);
+                p.setTestThreadFactory(testThreadFactory);
             }
 
             if (testThreadFactoryPathArg != null) {
-                rp.setTestThreadFactoryPath(testThreadFactoryPathArg);
+                p.setTestThreadFactoryPath(testThreadFactoryPathArg);
             }
 
             Path rd = testManager.getReportDirectory(testSuite);
             if (rd != null)
-                rp.setReportDir(rd);
+                p.setReportDir(rd);
 
             if (exclusiveLockArg != null)
-                rp.setExclusiveLock(exclusiveLockArg);
+                p.setExclusiveLock(exclusiveLockArg);
 
-            if (!rp.isValid())
-                throw new Fault(i18n, "main.badParams", rp.getErrorMessage());
+            if (!p.isValid())
+                throw new Fault(i18n, "main.badParams", p.getErrorMessage());
 
             if (testVMOpts.size() > 0)
-                rp.setTestVMOptions(testVMOpts);
+                p.setTestVMOptions(testVMOpts);
 
             if (testCompilerOpts.size() > 0)
-                rp.setTestCompilerOptions(testCompilerOpts);
+                p.setTestCompilerOptions(testCompilerOpts);
 
             if (testJavaOpts.size() > 0)
-                rp.setTestJavaOptions(testJavaOpts);
+                p.setTestJavaOptions(testJavaOpts);
 
             if (testDebugOpts.size() > 0)
-                rp.setTestDebugOptions(testDebugOpts);
+                p.setTestDebugOptions(testDebugOpts);
 
-            rp.setCheck(checkFlag);
-            rp.setCrashOnly(crashOnly);
-            rp.setExecMode(execMode);
-            rp.setEnvVars(getEnvVars());
-            rp.setCompileJDK((compileJDK != null) ? compileJDK : testJDK);
-            rp.setTestJDK(testJDK);
+            p.setCheck(checkFlag);
+            p.setExecMode(execMode);
+            p.setEnvVars(getEnvVars());
+            p.setCompileJDK((compileJDK != null) ? compileJDK : testJDK);
+            p.setTestJDK(testJDK);
             if (ignoreKind != null)
-                rp.setIgnoreKind(ignoreKind);
+                p.setIgnoreKind(ignoreKind);
 
             if (junitPath != null)
-                rp.setJUnitPath(junitPath);
+                p.setJUnitPath(junitPath);
 
             if (testngPath != null)
-                rp.setTestNGPath(testngPath);
+                p.setTestNGPath(testngPath);
 
             if (asmtoolsPath != null)
-                rp.setAsmToolsPath(asmtoolsPath);
+                p.setAsmToolsPath(asmtoolsPath);
 
             if (timeLimitArg != null) {
                 try {
-                    rp.setTimeLimit(Integer.parseInt(timeLimitArg));
+                    p.setTimeLimit(Integer.parseInt(timeLimitArg));
                 } catch (NumberFormatException e) {
                     throw new BadArgs(i18n, "main.badTimeLimit");
                 }
             }
 
             if (nativeDirArg != null)
-                rp.setNativeDir(nativeDirArg);
+                p.setNativeDir(nativeDirArg);
 
-            rp.setUseWindowsSubsystemForLinux(useWindowsSubsystemForLinux);
+            p.setUseWindowsSubsystemForLinux(useWindowsSubsystemForLinux);
 
-            rp.initExprContext(); // will invoke/init jdk.getProperties(params)
+            p.initExprContext(); // will invoke/init jdk.getProperties(params)
 
-            return rp;
-        } catch (Interview.Fault f) {
-            // TODO: fix bad string -- need more helpful resource here
-            throw new Fault(i18n, "main.cantOpenTestSuite", testSuite.getRootDir(), f);
+            return p;
         } catch (JDK.Fault f) {
             throw new Fault(i18n, "main.cantGetJDKProperties", testJDK, f.getMessage());
+        }
+    }
+
+    private RegressionParameters createParameters(TestManager testManager, RegressionTestSuite testSuite) throws BadArgs, Fault{
+        try{
+            RegressionParameters p = new RegressionParameters("regtest", testSuite, out::println);
+            if(crashOnly){
+                p = new CrashOnlyParametersImpl(p);
+            }
+            return createParameters(testManager, testSuite, p);
+        }
+        catch (Interview.Fault f) {
+            // TODO: fix bad string -- need more helpful resource here
+            throw new Fault(i18n, "main.cantOpenTestSuite", testSuite.getRootDir(), f);
         }
     }
 
@@ -1899,6 +1921,9 @@ public class Tool {
                 BackupPolicy backupPolicy = createBackupPolicy();
 
                 Harness h = new Harness();
+                if(crashOnly){
+                    h = new CrashOnlyHarness();
+                }
                 h.setBackupPolicy(backupPolicy);
 
                 if (xmlFlag) {
