@@ -61,6 +61,8 @@ public class MainActionHelper extends ActionHelper {
     private String testThreadFactoryPath;
     private OutputHandler outputHandler;
 
+    private Throwable globalUncaughtThrowable;
+
     MainActionHelper(String testName) {
         this.testName = testName;
     }
@@ -200,6 +202,15 @@ public class MainActionHelper extends ActionHelper {
             // Main and Thread are same here
             // RUN JAVA IN ANOTHER THREADGROUP
             AgentVMThreadGroup tg = new AgentVMThreadGroup(err, MSG_PREFIX, timeoutFactor);
+            Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
+                synchronized (this) {
+                    if (e instanceof ThreadDeath)
+                        return;
+                    if (globalUncaughtThrowable == null) {
+                        globalUncaughtThrowable = e;
+                    }
+                }
+            });
             Thread t;
             if (testThreadFactory == null) {
                 t = new Thread(tg, avmr);
@@ -247,10 +258,11 @@ public class MainActionHelper extends ActionHelper {
                 }
             }
 
-            if (((avmr.t != null) || (tg.uncaughtThrowable != null)) && (error == null)) {
+            if (((avmr.t != null) || (tg.uncaughtThrowable != null) || (globalUncaughtThrowable != null))
+                    && (error == null)) {
                 if (avmr.t == null) {
-                    error = tg.uncaughtThrowable;
-                } else {
+                    error = tg.uncaughtThrowable != null ? tg.uncaughtThrowable : globalUncaughtThrowable;
+                }  else {
                     error = avmr.t;
                 }
                 if (SKIP_EXCEPTION.equals(error.getClass().getName())) {
@@ -286,6 +298,7 @@ public class MainActionHelper extends ActionHelper {
         } finally {
             out.close();
             err.close();
+            Thread.setDefaultUncaughtExceptionHandler(null);
             status = saved.restore(testName, status);
         }
 

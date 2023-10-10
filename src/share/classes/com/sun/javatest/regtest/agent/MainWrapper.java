@@ -39,6 +39,8 @@ public class MainWrapper
     public static String TEST_THREAD_FACTORY = "jtreg.test.thread.factory";
     public static String TEST_THREAD_FACTORY_PATH = "jtreg.test.thread.factory.path";
 
+    private static Throwable globalUncaughtThrowable = null;
+
     public static void main(String[] args) {
         String moduleName;
         String className;
@@ -70,6 +72,18 @@ public class MainWrapper
 
         // RUN JAVA IN ANOTHER THREADGROUP
         MainThreadGroup tg = new MainThreadGroup();
+
+        Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
+            synchronized (MainWrapper.class) {
+                if (e instanceof ThreadDeath)
+                    return;
+                e.printStackTrace(System.err);
+                if (globalUncaughtThrowable == null) {
+                    globalUncaughtThrowable = e;
+                }
+                AStatus.failed(MAIN_THREW_EXCEPT + e).exit();
+            }
+        });
         Runnable task = new MainTask(moduleName, className, classArgs);
         Thread t;
         String testThreadFactory = System.getProperty(TEST_THREAD_FACTORY);
@@ -90,10 +104,12 @@ public class MainWrapper
 
         if (tg.uncaughtThrowable != null) {
             handleTestException(tg.uncaughtThrowable);
-        } else {
-            AStatus.passed("")
-                   .exit();
         }
+        if (globalUncaughtThrowable != null) {
+            handleTestException(globalUncaughtThrowable);
+        }
+        AStatus.passed("").exit();
+
 
     } // main()
 
