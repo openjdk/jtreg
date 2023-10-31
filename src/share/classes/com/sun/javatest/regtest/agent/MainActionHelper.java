@@ -61,7 +61,7 @@ public class MainActionHelper extends ActionHelper {
     private String testThreadFactoryPath;
     private OutputHandler outputHandler;
 
-    private Throwable globalUncaughtThrowable;
+    private volatile Throwable globalUncaughtThrowable;
 
     MainActionHelper(String testName) {
         this.testName = testName;
