@@ -459,6 +459,22 @@ public class Tool {
             }
         },
 
+        new Option(GNU, AGENT_POOL, null, "--agent-attempts") {
+            @Override
+            public void process(String opt, String arg) throws BadArgs {
+                int numTimes;
+                try {
+                    numTimes = Integer.parseInt(arg);
+                } catch (NumberFormatException e) {
+                    throw new BadArgs(i18n, "main.badAgentSelAttempt", arg);
+                }
+                if (numTimes < 1) {
+                    throw new BadArgs(i18n, "main.badAgentSelAttempt", numTimes);
+                }
+                numAgentSelectionAttempt = numTimes;
+            }
+        },
+
         new Option(STD, MAIN, "", "-conc", "-concurrency") {
             @Override
             public void process(String opt, String arg) {
@@ -1311,6 +1327,7 @@ public class Tool {
                     }
                     p.setMaxPoolSize(maxPoolSize);
                     p.setIdleTimeout(poolIdleTimeout);
+                    p.setNumAgentSelectionAttempts(numAgentSelectionAttempt);
                     break;
                 case OTHERVM:
                     break;
@@ -2313,6 +2330,9 @@ public class Tool {
     private String testThreadFactoryPathArg;
     private int maxPoolSize = -1;
     private Duration poolIdleTimeout = Duration.ofSeconds(30);
+    // number of attempts to get an agent for an action. we default to 2, to allow
+    // for retrying a failed attempt once
+    private int numAgentSelectionAttempt = 2;
     private List<String> testCompilerOpts = new ArrayList<>();
     private List<String> testJavaOpts = new ArrayList<>();
     private List<String> testVMOpts = new ArrayList<>();

@@ -26,6 +26,7 @@
 package com.sun.javatest.regtest.exec;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UncheckedIOException;
 import java.lang.reflect.Method;
@@ -1229,10 +1230,39 @@ public class RegressionScript extends Script {
         envVars.put("CLASSPATH", cp.toString());
 
         Agent.Pool p = Agent.Pool.instance(params);
-        Agent agent = p.getAgent(absTestScratchDir().toFile(), jdk, vmOpts.toList(), envVars,
-                testThreadFactory, testThreadFactoryPath);
-        agents.add(agent);
-        return agent;
+        final int numAttempts = p.getNumAgentSelectionAttempts();
+        assert numAttempts >= 1 : "invalid agent selection attempts: " + numAttempts;
+        Agent.Fault toThrow = null;
+        for (int i = 1; i <= numAttempts; i++) {
+            try {
+                if (i != 1) {
+                    p.log("Re-attempting agent creation, attempt number " + i);
+                }
+                Agent agent = p.getAgent(absTestScratchDir().toFile(), jdk, vmOpts.toList(),
+                        envVars, testThreadFactory, testThreadFactoryPath);
+                agents.add(agent);
+                return agent;
+            } catch (Agent.Fault f) {
+                // keep track of the fault and reattempt to get an agent if within limit
+                if (toThrow == null) {
+                    toThrow = f;
+                } else {
+                    // add the previous exception as a suppressed exception
+                    // of the current one
+                    if (toThrow.getCause() != null) {
+                        f.addSuppressed(toThrow.getCause());
+                    }
+                    toThrow = f;
+                }
+                if (i == numAttempts || !(f.getCause() instanceof IOException)) {
+                    // we either made enough attempts or we failed due to a non IOException.
+                    // In either case we don't attempt to create an agent again and instead throw
+                    // the captured failure(s)
+                    throw toThrow;
+                }
+            }
+        }
+        throw new AssertionError("should not reach here");
     }
 
     /**

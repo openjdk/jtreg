@@ -37,6 +37,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -90,6 +92,18 @@ public class Agent {
     static final boolean showAgent = Flags.get("showAgent");
     static final boolean traceAgent = Flags.get("traceAgent");
 
+    private static final long UNKNOWN_PID = -1;
+    private static final Method PID_METHOD;
+    static {
+        Method pidMethod = null;
+        try {
+            pidMethod = Process.class.getDeclaredMethod("pid"); // only available in Java 9+
+        } catch (NoSuchMethodException | SecurityException e) {
+            pidMethod = null;
+        }
+        PID_METHOD = pidMethod;
+    }
+
     /**
      * Start a JDK with given JVM options.
      */
@@ -127,8 +141,9 @@ public class Agent {
             // is platform-specific, and Solaris has it on by default.
             ss.setReuseAddress(false);
             ss.bind(new InetSocketAddress(/*port:*/ 0), /*backlog:*/ 1);
+            final int port = ss.getLocalPort();
             cmd.add(AgentServer.PORT);
-            cmd.add(String.valueOf(ss.getLocalPort()));
+            cmd.add(String.valueOf(port));
 
             if (timeoutFactor != 1.0f) {
                 cmd.add(AgentServer.TIMEOUTFACTOR);
@@ -144,7 +159,7 @@ public class Agent {
                 cmd.add(CUSTOM_TEST_THREAD_FACTORY_PATH);
                 cmd.add(testThreadFactoryPath);
             }
-            log("Started " + cmd);
+            log("Launching " + cmd);
 
             ProcessBuilder pb = new ProcessBuilder(cmd);
             pb.directory(dir);
@@ -152,14 +167,19 @@ public class Agent {
             env.clear();
             env.putAll(envVars);
             process = pb.start();
+            final long pid = getPid(process);
             copyAgentProcessStream("stdout", process.getInputStream());
             copyAgentProcessStream("stderr", process.getErrorStream());
 
             try {
                 final int ACCEPT_TIMEOUT = (int) (60 * 1000 * timeoutFactor);
-                    // default 60 seconds, for server to start and "phone home"
+                // default 60 seconds, for server to start and "phone home"
                 ss.setSoTimeout(ACCEPT_TIMEOUT);
+                log("Waiting up to " + ACCEPT_TIMEOUT + " milli seconds for a" +
+                        " socket connection on port " + port +
+                        (pid != UNKNOWN_PID ? " from process " + pid : ""));
                 Socket s = ss.accept();
+                log("Received connection on port " + port + " from " + s);
                 s.setSoTimeout((int)(KeepAlive.READ_TIMEOUT * timeoutFactor));
                 in = new DataInputStream(s.getInputStream());
                 out = new DataOutputStream(s.getOutputStream());
@@ -171,6 +191,7 @@ public class Agent {
             // send keep-alive messages to server while not executing actions
             keepAlive.setEnabled(true);
         } catch (IOException e) {
+            log("Agent creation failed due to " + e);
             throw new Fault(e);
         }
     }
@@ -578,6 +599,17 @@ public class Agent {
         out.println("[" + AgentServer.logDateFormat.format(new Date()) + "] Agent[" + getId() + "]: " + message);
     }
 
+    private static long getPid(final Process process) {
+        if (PID_METHOD == null) {
+            return UNKNOWN_PID;
+        }
+        try {
+            return (long) PID_METHOD.invoke(process);
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            return UNKNOWN_PID;
+        }
+    }
+
     final JDK jdk;
     final List<String> vmOpts;
     final File execDir;
@@ -692,6 +724,10 @@ public class Agent {
             logger = Logger.instance(params);
         }
 
+        void log(final String message) {
+            this.logger.log(null, "POOL: " + message);
+        }
+
         /**
          * Sets the policy file to be used for agents created for this pool.
          *
@@ -728,6 +764,24 @@ public class Agent {
         public void setMaxPoolSize(int size) {
             this.maxPoolSize = size;
             logger.log(null, "POOL: max pool size: " + maxPoolSize);
+        }
+
+        /**
+         * Sets the maximum attempts to create or obtain an agent VM
+         * @param numAttempts number of attempts
+         * @throws IllegalArgumentException if {@code numAttempts} is lesser than {@code 1}
+         */
+        public void setNumAgentSelectionAttempts(final int numAttempts) {
+            if (numAttempts < 1) {
+                throw new IllegalArgumentException("invalid value for agent selection attempts: "
+                        + numAttempts);
+            }
+            this.numAgentSelectionAttempts = numAttempts;
+            logger.log(null, "POOL: agent selection attempts: " + numAttempts);
+        }
+
+        int getNumAgentSelectionAttempts() {
+            return this.numAgentSelectionAttempts;
         }
 
         /**
@@ -768,8 +822,13 @@ public class Agent {
                 stats.reuse(a);
             } else {
                 logger.log(null, "POOL: Creating new agent");
-                a = new Agent(dir, jdk, vmOpts, envVars, policyFile, timeoutFactor, logger,
-                        testThreadFactory, testThreadFactoryPath);
+                try {
+                    a = new Agent(dir, jdk, vmOpts, envVars, policyFile, timeoutFactor, logger,
+                            testThreadFactory, testThreadFactoryPath);
+                } catch (Fault f) {
+                    logger.log(null, "POOL: Agent creation failed due to " + f.getCause());
+                    throw f;
+                }
                 stats.add(a);
             }
 
@@ -927,6 +986,8 @@ public class Agent {
         private float timeoutFactor = 1.0f;
         private int maxPoolSize;
         private Duration idleTimeout;
+        // default is 2 i.e. we retry a failed agent selection once
+        private int numAgentSelectionAttempts = 2;
     }
 
     static class Stats {
