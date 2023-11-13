@@ -62,10 +62,10 @@ $(BUILDTESTDIR)/DebugTest.agentvm.ok: \
 		-debug:-Ddebug=true \
 		$(TESTDIR)/debug \
 			> $(@:%.ok=%/jt.log) 2>&1 ; rc=$$?
-	agents=`$(GREP) '^\[[-0-9 :,]*\] Agent...: Started' $(@:%.ok=%)/jt.log | wc -l | tr -d ' '` ; \
- 	debugAgents=`$(GREP) '^\[[-0-9 :,]*\] Agent...: Started.*-Ddebug=true' $(@:%.ok=%)/jt.log | wc -l | tr -d ' '` ; \
+	agents=`$(GREP) '^\[[-0-9 :,]*\] Agent...: Launching' $(@:%.ok=%)/jt.log | wc -l | tr -d ' '` ; \
+	debugAgents=`$(GREP) '^\[[-0-9 :,]*\] Agent...: Launching.*-Ddebug=true' $(@:%.ok=%)/jt.log | wc -l | tr -d ' '` ; \
 	if [ "$$agents" != 2 -o "$$debugAgents" != 1 ]; then \
-	    $(GREP) '^\[[-0-9 :,]*\] Agent...: Started' $(@:%.ok=%)/jt.log ; \
+	    $(GREP) '^\[[-0-9 :,]*\] Agent...: Launching' $(@:%.ok=%)/jt.log ; \
 	    echo "unexpected use of -debug options"; exit 1; \
 	fi
 	echo "test passed at `date`" > $@
