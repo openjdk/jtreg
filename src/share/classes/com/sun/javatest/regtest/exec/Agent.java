@@ -37,7 +37,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.PrintWriter;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
@@ -98,7 +97,7 @@ public class Agent {
         Method pidMethod = null;
         try {
             pidMethod = Process.class.getDeclaredMethod("pid"); // only available in Java 9+
-        } catch (NoSuchMethodException | SecurityException e) {
+        } catch (Exception e) {
             pidMethod = null;
         }
         PID_METHOD = pidMethod;
@@ -605,7 +604,7 @@ public class Agent {
         }
         try {
             return (long) PID_METHOD.invoke(process);
-        } catch (IllegalAccessException | InvocationTargetException e) {
+        } catch (Exception e) {
             return UNKNOWN_PID;
         }
     }
@@ -724,10 +723,6 @@ public class Agent {
             logger = Logger.instance(params);
         }
 
-        void log(final String message) {
-            this.logger.log(null, "POOL: " + message);
-        }
-
         /**
          * Sets the policy file to be used for agents created for this pool.
          *
@@ -769,7 +764,7 @@ public class Agent {
         /**
          * Sets the maximum attempts to create or obtain an agent VM
          * @param numAttempts number of attempts
-         * @throws IllegalArgumentException if {@code numAttempts} is lesser than {@code 1}
+         * @throws IllegalArgumentException if {@code numAttempts} is less than {@code 1}
          */
         public void setNumAgentSelectionAttempts(final int numAttempts) {
             if (numAttempts < 1) {
@@ -778,10 +773,6 @@ public class Agent {
             }
             this.numAgentSelectionAttempts = numAttempts;
             logger.log(null, "POOL: agent selection attempts: " + numAttempts);
-        }
-
-        int getNumAgentSelectionAttempts() {
-            return this.numAgentSelectionAttempts;
         }
 
         /**
@@ -799,7 +790,47 @@ public class Agent {
          * @return the agent
          * @throws Fault if there is a problem obtaining a suitable agent
          */
-        synchronized Agent getAgent(File dir,
+        Agent getAgent(File dir,
+                       JDK jdk,
+                       List<String> vmOpts,
+                       Map<String, String> envVars,
+                       String testThreadFactory,
+                       String testThreadFactoryPath)
+                throws Fault {
+            final int numAttempts = this.numAgentSelectionAttempts;
+            Agent.Fault toThrow = null;
+            for (int i = 1; i <= numAttempts; i++) {
+                try {
+                    if (i != 1) {
+                        logger.log(null, "POOL: re-attempting agent creation, attempt number " + i);
+                    }
+                    return doGetAgent(dir, jdk, vmOpts, envVars, testThreadFactory,
+                            testThreadFactoryPath);
+                } catch (Agent.Fault f) {
+                    logger.log(null, "POOL: agent creation failed due to " + f.getCause());
+                    // keep track of the fault and reattempt to get an agent if within limit
+                    if (toThrow == null) {
+                        toThrow = f;
+                    } else {
+                        // add the previous exception as a suppressed exception
+                        // of the current one
+                        if (toThrow.getCause() != null) {
+                            f.addSuppressed(toThrow.getCause());
+                        }
+                        toThrow = f;
+                    }
+                    if (i == numAttempts || !(f.getCause() instanceof IOException)) {
+                        // we either made enough attempts or we failed due to a non IOException.
+                        // In either case we don't attempt to create an agent again and instead
+                        // throw the captured failure(s)
+                        throw toThrow;
+                    }
+                }
+            }
+            throw new AssertionError("should not reach here");
+        }
+
+        synchronized Agent doGetAgent(File dir,
                                     JDK jdk,
                                     List<String> vmOpts,
                                     Map<String, String> envVars,
@@ -822,13 +853,8 @@ public class Agent {
                 stats.reuse(a);
             } else {
                 logger.log(null, "POOL: Creating new agent");
-                try {
-                    a = new Agent(dir, jdk, vmOpts, envVars, policyFile, timeoutFactor, logger,
-                            testThreadFactory, testThreadFactoryPath);
-                } catch (Fault f) {
-                    logger.log(null, "POOL: Agent creation failed due to " + f.getCause());
-                    throw f;
-                }
+                a = new Agent(dir, jdk, vmOpts, envVars, policyFile, timeoutFactor, logger,
+                        testThreadFactory, testThreadFactoryPath);
                 stats.add(a);
             }
 
@@ -986,8 +1012,8 @@ public class Agent {
         private float timeoutFactor = 1.0f;
         private int maxPoolSize;
         private Duration idleTimeout;
-        // default is 2 i.e. we retry a failed agent selection once
-        private int numAgentSelectionAttempts = 2;
+        // default is 1 i.e. we don't re-attempt a failed agent selection
+        private int numAgentSelectionAttempts = 1;
     }
 
     static class Stats {

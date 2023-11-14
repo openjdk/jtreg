@@ -2330,9 +2330,9 @@ public class Tool {
     private String testThreadFactoryPathArg;
     private int maxPoolSize = -1;
     private Duration poolIdleTimeout = Duration.ofSeconds(30);
-    // number of attempts to get an agent for an action. we default to 2, to allow
-    // for retrying a failed attempt once
-    private int numAgentSelectionAttempt = 2;
+    // number of attempts to get an agent for an action. we default to 1, which implies
+    // by default we don't re-attempt on a failure
+    private int numAgentSelectionAttempt = 1;
     private List<String> testCompilerOpts = new ArrayList<>();
     private List<String> testJavaOpts = new ArrayList<>();
     private List<String> testVMOpts = new ArrayList<>();
