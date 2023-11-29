@@ -109,6 +109,7 @@ public class Agent {
     private Agent(File dir, JDK jdk, List<String> vmOpts, Map<String, String> envVars,
             File policyFile, float timeoutFactor, Logger logger,
             String testThreadFactory, String testThreadFactoryPath) throws Fault {
+        Process agentServerProcess = null;
         try {
             id = ++count;
             this.jdk = jdk;
@@ -165,7 +166,7 @@ public class Agent {
             Map<String, String> env = pb.environment();
             env.clear();
             env.putAll(envVars);
-            process = pb.start();
+            agentServerProcess = process = pb.start();
             final long pid = getPid(process);
             copyAgentProcessStream("stdout", process.getInputStream());
             copyAgentProcessStream("stderr", process.getErrorStream());
@@ -191,6 +192,15 @@ public class Agent {
             keepAlive.setEnabled(true);
         } catch (IOException e) {
             log("Agent creation failed due to " + e);
+            if (agentServerProcess != null) {
+                // kill the launched process
+                log("killing AgentServer process");
+                try {
+                    ProcessUtils.destroyForcibly(agentServerProcess);
+                } catch (Exception ignored) {
+                    // ignore
+                }
+            }
             throw new Fault(e);
         }
     }
