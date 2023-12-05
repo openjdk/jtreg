@@ -72,7 +72,7 @@ import com.sun.javatest.util.I18NResourceBundle;
 import static com.sun.javatest.regtest.util.StringUtils.join;
 
 
-public class RegressionParameters
+public final class RegressionParameters
     extends BasicInterviewParameters
     implements Parameters.EnvParameters
 {

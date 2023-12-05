@@ -34,7 +34,7 @@ import java.io.PrintWriter;
 /**
  * A thread to copy an input stream/reader to an output stream/writer.
  */
-public class StreamCopier extends Thread {
+public final class StreamCopier extends Thread {
 
     public StreamCopier(InputStream in, PrintWriter out, LineScanner scanner) {
         super(Thread.currentThread().getName() + "_StreamCopier_" + (serial++));

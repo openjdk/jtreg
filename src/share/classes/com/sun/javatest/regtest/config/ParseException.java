@@ -32,7 +32,7 @@ import com.sun.javatest.regtest.exec.TestRunException;
  * parsing error may occur either during initial examination of the tags in
  * the finder or during more extensive verification of the run action.
  */
-public class ParseException extends TestRunException
+public final class ParseException extends TestRunException
 {
     static final long serialVersionUID = 5598548899306920122L;
     public ParseException(String msg) {
@@ -42,7 +42,7 @@ public class ParseException extends TestRunException
     public ParseException(Throwable t) {
         super(PARSE_EXCEPTION + t.getMessage());
         initCause(t);
-    } // ParseExeptionException()
+    }
 
     //----------misc statics----------------------------------------------------
 

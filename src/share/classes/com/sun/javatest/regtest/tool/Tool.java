@@ -2183,33 +2183,32 @@ public class Tool {
     }
 
     private Map<String, String> getEnvVars() {
-        Map<String, String> sysEnv = System.getenv();
         Map<String, String> envVars = new TreeMap<>();
         OS os = OS.current();
         if (os.family.equals("windows")) {
-            addEnvVars(envVars, sysEnv, DEFAULT_WINDOWS_ENV_VARS);
+            addEnvVars(envVars, DEFAULT_WINDOWS_ENV_VARS);
             // TODO PATH? MKS? Cygwin?
-            addEnvVars(envVars, sysEnv, "PATH"); // accept user's path, for now
+            addEnvVars(envVars, "PATH"); // accept user's path, for now
         } else {
-            addEnvVars(envVars, sysEnv, DEFAULT_UNIX_ENV_VARS);
-            addEnvVars(envVars, sysEnv, e -> e.getKey().startsWith("XDG_"));
-            addEnvVars(envVars, sysEnv, "PATH=/bin:/usr/bin:/usr/sbin");
+            addEnvVars(envVars, DEFAULT_UNIX_ENV_VARS);
+            addEnvVarsByName(envVars, name -> name.startsWith("XDG_"));
+            addEnvVars(envVars, "PATH=/bin:/usr/bin:/usr/sbin");
         }
-        addEnvVars(envVars, sysEnv, envVarArgs);
-        addEnvVars(envVars, sysEnv, e -> e.getKey().startsWith("JTREG_"));
+        addEnvVars(envVars, envVarArgs);
+        addEnvVarsByName(envVars, name -> name.startsWith("JTREG_"));
 
         return envVars;
     }
 
-    private void addEnvVars(Map<String, String> table, Map<String, String> sysEnv, String list) {
-        addEnvVars(table, sysEnv, list.split(","));
+    private void addEnvVars(Map<String, String> table, String list) {
+        addEnvVars(table, list.split(","));
     }
 
-    private void addEnvVars(Map<String, String> table, Map<String, String> sysEnv, String[] list) {
-        addEnvVars(table, sysEnv, List.of(list));
+    private void addEnvVars(Map<String, String> table, String[] list) {
+        addEnvVars(table, List.of(list));
     }
 
-    private void addEnvVars(Map<String, String> table, Map<String, String> sysEnv, List<String> list) {
+    private void addEnvVars(Map<String, String> table, List<String> list) {
         if (list == null)
             return;
 
@@ -2219,7 +2218,7 @@ public class Tool {
                 continue;
             int eq = s.indexOf("=");
             if (eq == -1) {
-                String value = sysEnv.get(s);
+                String value = getEnvironmentVariableOrNull(s);
                 if (value != null)
                     table.put(s, value);
             } else if (eq > 0) {
@@ -2230,10 +2229,17 @@ public class Tool {
         }
     }
 
-    private void addEnvVars(Map<String, String> table, Map<String, String> sysEnv, Predicate<Map.Entry<String, String>> filter) {
-        sysEnv.entrySet().stream()
-                .filter(filter)
+    // This method streams over a case-sensitive set of entries, returned by System.getenv();
+    // Custom name filters can be implemented in a case-insensitive manner.
+    private void addEnvVarsByName(Map<String, String> table, Predicate<String> nameFilter) {
+        System.getenv().entrySet().stream()
+                .filter(e -> nameFilter.test(e.getKey()))
                 .forEach(e -> table.put(e.getKey(), e.getValue()));
+    }
+
+    // 7903515: Use case-insensitive System.getenv(String) here.
+    private static String getEnvironmentVariableOrNull(String name) {
+        return System.getenv(name);
     }
 
     private static String combineKeywords(String kw1, String kw2) {

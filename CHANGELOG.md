@@ -1,6 +1,12 @@
-## [Unreleased](https://git.openjdk.org/jtreg/compare/jtreg-7.3+1...master)
+## [Unreleased](https://git.openjdk.org/jtreg/compare/jtreg-7.3.1+1...master)
 
-_Nothing noteworthy, yet_
+* Use SOURCE_BUILD_EPOCH to suppport reproducible builds
+  [CODETOOLS-7903539](https://bugs.openjdk.org/browse/CODETOOLS-7903539)
+
+## [7.3.1](https://git.openjdk.org/jtreg/compare/jtreg-7.3+1...jtreg-7.3.1+1)
+
+* Fixed setting default environment variables on Windows
+  * [CODETOOLS-7903515](https://bugs.openjdk.org/browse/CODETOOLS-7903515)
 
 ## [7.3](https://git.openjdk.org/jtreg/compare/jtreg-7.2+1...jtreg-7.3+1)
 
