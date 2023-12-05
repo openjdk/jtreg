@@ -40,6 +40,7 @@ import java.nio.charset.Charset;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
@@ -177,11 +178,14 @@ public class XMLWriter {
 
     private String getOutput(String name) throws TestResult.Fault {
         String[] titles = tr.getSectionTitles();
-        for (int i = 0; i < titles.length; i++) {
-            if (titles[i].equals("main")) {
-                Section s = tr.getSection(i);
-                for (String x : s.getOutputNames()) {
-                    return s.getOutput(name);
+        //first we are looking for a "main" section in jtr log.. if none is found it is usually cuz the test is executed via script, hence under "shell" section
+        for (String section : Arrays.asList("main", "shell")){
+            for (int i = 0; i < titles.length; i++) {
+                if (titles[i].equals(section)) {
+                    Section s = tr.getSection(i);
+                    for (String x : s.getOutputNames()) {
+                        return s.getOutput(name);
+                    }
                 }
             }
         }
