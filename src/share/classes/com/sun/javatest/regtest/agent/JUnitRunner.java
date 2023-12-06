@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2023, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2024, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -133,8 +133,10 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
 
             SummaryGeneratingListener summaryGeneratingListener = new SummaryGeneratingListener();
 
+            AgentVerbose verbose = AgentVerbose.ofStringRepresentation(System.getProperty("test.verbose"));
+
             LauncherConfig launcherConfig = LauncherConfig.builder()
-                .addTestExecutionListeners(new PrintingListener(System.err))
+                .addTestExecutionListeners(new PrintingListener(System.err, verbose))
                 .addTestExecutionListeners(summaryGeneratingListener)
                 .build();
 
@@ -187,18 +189,21 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
 
         final PrintWriter printer;
         final Lock lock;
+        final AgentVerbose verbose;
 
-        PrintingListener(PrintStream stream) {
-            this(new PrintWriter(stream, true));
+        PrintingListener(PrintStream stream, AgentVerbose verbose) {
+            this(new PrintWriter(stream, true), verbose);
         }
 
-        PrintingListener(PrintWriter printer) {
+        PrintingListener(PrintWriter printer, AgentVerbose verbose) {
             this.printer = printer;
             this.lock = new ReentrantLock();
+            this.verbose = verbose;
         }
 
         @Override
         public void executionSkipped(TestIdentifier identifier, String reason) {
+            if (verbose.passMode != AgentVerbose.Mode.FULL) return;
             if (identifier.isTest()) {
                 String status = "SKIPPED";
                 String source = toSourceString(identifier);
@@ -215,6 +220,7 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
 
         @Override
         public void executionStarted(TestIdentifier identifier) {
+            if (verbose.passMode != AgentVerbose.Mode.FULL) return;
             if (identifier.isTest()) {
                 String status = "STARTED";
                 String source = toSourceString(identifier);
@@ -231,6 +237,7 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
 
         @Override
         public void executionFinished(TestIdentifier identifier, TestExecutionResult result) {
+            if (verbose.passMode != AgentVerbose.Mode.FULL) return;
             lock.lock();
             try {
                 TestExecutionResult.Status status = result.getStatus();
@@ -253,6 +260,7 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
 
         @Override
         public void reportingEntryPublished(TestIdentifier identifier, ReportEntry entry) {
+            if (verbose.passMode != AgentVerbose.Mode.FULL) return;
             lock.lock();
             try {
                 printer.println(identifier.getDisplayName() + " -> " + entry.getTimestamp());
