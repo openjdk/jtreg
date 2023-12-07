@@ -2330,9 +2330,8 @@ public class Tool {
     private String testThreadFactoryPathArg;
     private int maxPoolSize = -1;
     private Duration poolIdleTimeout = Duration.ofSeconds(30);
-    // number of attempts to get an agent for an action. we default to 1, which implies
-    // by default we don't re-attempt on a failure
-    private int numAgentSelectionAttempt = 1;
+    // number of attempts to get an agent for an action
+    private int numAgentSelectionAttempt = DEFAULT_NUM_AGENT_SEL_ATTEMPT;
     private List<String> testCompilerOpts = new ArrayList<>();
     private List<String> testJavaOpts = new ArrayList<>();
     private List<String> testVMOpts = new ArrayList<>();
@@ -2380,6 +2379,10 @@ public class Tool {
             "TMP", "TEMP", "TZ",
             "windir"
     };
+
+    // default value for agent selection attempts. we default to 1, which implies
+    // by default we don't re-attempt on a failure
+    private static final int DEFAULT_NUM_AGENT_SEL_ATTEMPT = 1;
 
     private static final I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(Tool.class);
 }

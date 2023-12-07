@@ -808,6 +808,7 @@ public class Agent {
                        String testThreadFactoryPath)
                 throws Fault {
             final int numAttempts = this.numAgentSelectionAttempts;
+            assert numAttempts > 0 : "unexpected agent selection attempts: " + numAttempts;
             Agent.Fault toThrow = null;
             for (int i = 1; i <= numAttempts; i++) {
                 try {
@@ -1022,8 +1023,7 @@ public class Agent {
         private float timeoutFactor = 1.0f;
         private int maxPoolSize;
         private Duration idleTimeout;
-        // default is 1 i.e. we don't re-attempt a failed agent selection
-        private int numAgentSelectionAttempts = 1;
+        private int numAgentSelectionAttempts;
     }
 
     static class Stats {
