@@ -74,7 +74,7 @@ $(BUILDTESTDIR)/AgentOut.othervm.ok: \
 	for i in $(@:%.ok=%)/logs/*.log ; do \
 	   $(MKDIR) -p `dirname $$i`-filtered ; \
 	   $(SED) -e 's/\r$$//' -e '/^$$/d' -e '/^STATUS.*/d' -e '/^JavaTest.*/d' \
-			-e '/^###/d' -e '/.*warning.*/d' \
+			-e '/^###/d' -e '/^# no such/d' -e '/.*warning.*/d' \
 		< $$i \
 		> `dirname $$i`-filtered/`basename $$i` ; \
 	done
