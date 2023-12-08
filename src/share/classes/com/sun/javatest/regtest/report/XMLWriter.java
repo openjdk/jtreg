@@ -178,14 +178,12 @@ public class XMLWriter {
 
     private String getOutput(String name) throws TestResult.Fault {
         String[] titles = tr.getSectionTitles();
-        //first we are looking for a "main" section in jtr log.. if none is found it is usually cuz the test is executed via script, hence under "shell" section
-        for (String section : Arrays.asList("main", "shell")){
-            for (int i = 0; i < titles.length; i++) {
-                if (titles[i].equals(section)) {
-                    Section s = tr.getSection(i);
-                    for (String x : s.getOutputNames()) {
-                        return s.getOutput(name);
-                    }
+        //we are looking for either a "main" section or "shell" section in jtr log
+        for (int i = 0; i < titles.length; i++) {
+            if (titles[i].equals("main") || titles[i].equals("shell")) {
+                Section s = tr.getSection(i);
+                for (String x : s.getOutputNames()) {
+                    return s.getOutput(name);
                 }
             }
         }
