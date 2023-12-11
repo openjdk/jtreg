@@ -195,6 +195,7 @@
 
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -224,6 +225,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
 import java.util.function.BiFunction;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.zip.ZipFile;
@@ -331,14 +333,15 @@ public class Build {
             return;
         }
 
-        Ant ant = new Ant(config);
+        Tools tools = new Tools(config);
+        Ant ant = new Ant(config, tools);
 
         var dependencies = List.of(
-                new BuildInfo(config),
-                new AsmTools(config, ant),
-                new JTHarness(config, ant),
-                new JUnit(config),
-                new TestNG(config)
+                new BuildInfo(config, tools),
+                new AsmTools(config, tools, ant),
+                new JTHarness(config, tools, ant),
+                new JUnit(config, tools),
+                new TestNG(config, tools)
         );
 
         if (dependencies.stream().anyMatch(Dependency::isAntRequired)) {
@@ -361,7 +364,7 @@ public class Build {
             config.log("Building");
             config.out.flush();
             config.err.flush();
-            execScript(makeScript, config.options.makeArgs);
+            tools.runScript(makeScript, config.options.makeArgs);
         }
     }
 
@@ -375,29 +378,6 @@ public class Build {
         p.stringPropertyNames().stream()
                 .sorted()
                 .forEach(k -> out.println(k + "=" + p.getProperty(k)));
-    }
-
-    /**
-     * Executes a shell script.
-     *
-     * @param script the path for the script
-     * @param args the arguments, if any, for the script
-     * @throws Fault if an error occurs while executing the script
-     */
-    private static void execScript(Path script, List<String> args) throws Fault {
-        try {
-            Process p = new ProcessBuilder(join("sh", join(script.toString(), args)))
-                    .redirectError(ProcessBuilder.Redirect.INHERIT)
-                    .redirectOutput(ProcessBuilder.Redirect.INHERIT)
-                    .start();
-            p.waitFor();
-            int rc = p.exitValue();
-            if (rc != 0) {
-                throw new Fault("Error while running " + script + ": rc=" + rc);
-            }
-        } catch (IOException | InterruptedException e) {
-            throw new Fault("error running " + script + ": " + e);
-        }
     }
 
     /**
@@ -797,18 +777,6 @@ public class Build {
             }
         }
 
-        public Path getCommandPath(String name) throws Fault {
-            String n = name.toUpperCase(Locale.ROOT);
-            Path p = getPath(n);
-            if (p == null) {
-                p = which(name);
-                if (p != null) {
-                    properties.put(n, p.toString());
-                }
-            }
-            return p;
-        }
-
         public URL getURL(String key) {
             var v = getString(key);
             try {
@@ -829,25 +797,148 @@ public class Build {
             }
             return p;
         }
+    }
 
-        Path which(String cmd) throws Fault {
+    /**
+     * Utility class to interact with host-system tools.
+     */
+    static class Tools {
+        private final Config config;
+        private final boolean isWindows;
+        private final List<Path> sysPath;
+        private final Map<String, Path> commandPaths;
+
+        Tools(Config config) {
+            this.config = config;
+            isWindows = System.getProperty("os.name").startsWith("Windows");
+            sysPath = Arrays.stream(System.getenv("PATH")
+                            .split(Pattern.quote(File.pathSeparator)))
+                    .filter(c -> !c.isEmpty())
+                    .map(Path::of)
+                    .collect(Collectors.toList());
+            commandPaths = new HashMap<>();
+        }
+
+        void deleteDirectory(Path dir) throws Fault {
+            if (isWindows) {
+                exec("rmdir", "\\Q", "\\S", dir.toString());
+            } else {
+                exec(getCommandPath("rm"),"-rf", dir.toString());
+            }
+        }
+
+        String java(Path javaHome, List<String> args, Predicate<String> filter) throws Fault {
+            Path java = javaHome.resolve("bin").resolve("java" + (isWindows ? ".exe" : ""));
+            return exec(java, args, filter);
+        }
+
+        void runScript(Path script, List<String> args) throws Fault {
+            exec(getCommandPath("sh").toString(), join(script.toString(), args));
+        }
+
+        void tar(String... args) throws Fault {
+            exec(getCommandPath("tar"), args);
+        }
+
+        void unzip(String... args) throws Fault {
+            exec(getCommandPath("unzip"), args);
+        }
+
+        Path getCommandPath(String name) throws Fault {
+            Path p = commandPaths.get(name);
+            if (p == null) {
+                p = config.getPath(name.toUpperCase(Locale.ROOT));
+                if (p == null) {
+                    p = which(name);
+                }
+                commandPaths.put(name, p);
+            }
+            return p;
+        }
+
+        private Path which(String command) throws Fault {
+            var c = isWindows ? command + ".exe" : command;
+            return sysPath.stream()
+                    .map(p -> p.resolve(c))
+                    .filter(f -> Files.exists(f) && Files.isExecutable(f))
+                    .findFirst()
+                    .orElseThrow(() -> new Fault("cannot find path for " + command + " command"));
+        }
+
+        public void exec(Path command, String... args) throws Fault {
+            exec(command.toString(), List.of(args));
+        }
+
+        public void exec(String command, String... args) throws Fault {
+            exec(command, List.of(args));
+        }
+
+        public void exec(String command, List<String> args) throws Fault {
+            config.out.flush();
+            config.err.flush();
+//            System.err.println("exec: " + cmd + " " + args);
             try {
-                Process p = new ProcessBuilder(List.of("which", cmd))
+                Process p = new ProcessBuilder(join(command, args))
+                        .redirectError(ProcessBuilder.Redirect.INHERIT)
+                        .redirectOutput(ProcessBuilder.Redirect.INHERIT)
+                        .start();
+                p.waitFor();
+                int rc = p.exitValue();
+                if (rc != 0) {
+                    throw new Fault("error running '" + command + "': rc=" + rc);
+                }
+            } catch (IOException | InterruptedException e) {
+                throw new Fault("error running '" + command + "': " + e);
+            }
+        }
+
+        public String exec(Path command, List<String> args, Predicate<String> filter) throws Fault {
+            config.out.flush();
+            config.err.flush();
+            try {
+                Process p = new ProcessBuilder(join(command.toString(), args))
                         .redirectErrorStream(true)
                         .start();
+                String out;
                 try (var r = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
-                    String out = r.lines().collect(Collectors.joining());
-                    p.waitFor();
-                    int rc = p.exitValue();
-                    if (rc != 0) {
-                        throw new Fault("error running '" + cmd + "': rc=" + rc);
-                    }
-                    return out.isEmpty() ? null : Path.of(out);
+                    out = r.lines()
+                            .filter(filter)
+                            .findFirst()
+                            .orElse("");
                 }
-            } catch (InvalidPathException e) {
-                throw new Fault("Unexpected output from 'which " + cmd + "': " + e, e);
+                int rc = p.waitFor();
+                if (rc != 0) {
+                    throw new Fault("Error running '" + command + ": rc=" + rc);
+                }
+                return out;
             } catch (IOException | InterruptedException e) {
-                throw new Fault("error running '" + cmd +"': " + e);
+                throw new Fault("Error running '" + command + ": " + e, e);
+            }
+        }
+
+        public void exec(Path command, List<String> args, Map<String, String> envExtras, Path outFile) throws Fault {
+            config.out.flush();
+            config.err.flush();
+            try {
+                var pb = new ProcessBuilder(join(command.toString(), args))
+                        .redirectErrorStream(true);
+                var env = pb.environment();
+                env.putAll(envExtras);
+                var p = pb.start();
+                try (var in = new BufferedReader(new InputStreamReader(p.getInputStream()));
+                     var out = Files.newBufferedWriter(outFile)) {
+                    String line;
+                    while ((line = in.readLine()) != null) {
+                        out.write(line);
+                        out.newLine();
+                    }
+                }
+                int rc = p.waitFor();
+                if (rc != 0) {
+                    throw new Fault(command + " failed: rc=" + rc);
+                }
+            } catch (IOException | InterruptedException e) {
+                throw new Fault("error while running " + command + ": " + e, e);
             }
         }
     }
@@ -859,12 +950,14 @@ public class Build {
         protected final String name;
         protected final Path depsDir;
         protected final Config config;
+        protected final Tools tools;
 
         private static final String DEFAULT_MAVEN_URL = "https://repo1.maven.org/maven2";
 
-        Dependency(String name, Config config) {
+        Dependency(String name, Config config, Tools tools) {
             this.name = name;
             this.config = config;
+            this.tools = tools;
             this.depsDir = config.rootDir.resolve("build").resolve("deps").resolve(name);
         }
 
@@ -945,7 +1038,7 @@ public class Build {
         protected Path unpack(Path archive, Path dir) throws Fault {
             try (var ds = Files.newDirectoryStream(depsDir, Files::isDirectory)) {
                 for (var d : ds) {
-                    exec(config.getCommandPath("rm"), List.of("-rf", d.toString()));
+                    tools.deleteDirectory(d);
                 }
             } catch (IOException e) {
                 throw new Fault("error listing " + depsDir +": " + e, e);
@@ -953,13 +1046,11 @@ public class Build {
 
             String s = archive.getFileName().toString();
             if (s.endsWith(".tar.gz")) {
-                exec(config.getCommandPath("tar"),
-                        List.of("-xzf", archive.toString(), "-C", dir.toString()));
+                tools.tar("-xzf", archive.toString(), "-C", dir.toString());
             } else if (s.endsWith(".zip")) {
                 // cannot extract files with permissions using standard ZipFile API
                 // so resort to the unzip command
-                exec(config.getCommandPath("unzip"),
-                        List.of("-q", archive.toString(), "-d", dir.toString()));
+                tools.unzip("-q", archive.toString(), "-d", dir.toString());
             } else {
                 throw new Fault("unrecognized archive type for file " + archive);
             }
@@ -1021,25 +1112,6 @@ public class Build {
             var lastSep = p.lastIndexOf("/");
             return lastSep == -1 ? p : p.substring(lastSep+ 1);
         }
-
-        protected void exec(Path cmd, List<String> args) throws Fault {
-            config.out.flush();
-            config.err.flush();
-//            System.err.println("exec: " + cmd + " " + args);
-            try {
-                Process p = new ProcessBuilder(join(cmd.toString(), args))
-                        .redirectError(ProcessBuilder.Redirect.INHERIT)
-                        .redirectOutput(ProcessBuilder.Redirect.INHERIT)
-                        .start();
-                p.waitFor();
-                int rc = p.exitValue();
-                if (rc != 0) {
-                    throw new Fault("error running '" + cmd + "': rc=" + rc);
-                }
-            } catch (IOException | InterruptedException e) {
-                throw new Fault("error running '" + cmd + "': " + e);
-            }
-        }
     }
 
     /**
@@ -1051,8 +1123,8 @@ public class Build {
         String buildNumber;
         String versionString;
 
-        BuildInfo(Config config) {
-            super("jtreg", config);
+        BuildInfo(Config config, Tools tools) {
+            super("jtreg", config, tools);
         }
 
         @Override
@@ -1084,25 +1156,13 @@ public class Build {
             if (config.jdk.equals(Path.of(System.getProperty("java.home")))) {
                 version = Runtime.version().feature();
             } else {
-                var javaCmd = config.jdk.resolve("bin").resolve("java");
-                try {
-                    Process p = new ProcessBuilder(List.of(javaCmd.toString(), "-version"))
-                            .redirectErrorStream(true)
-                            .start();
-                    try (var r = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
-                        String out = r.lines()
-                                .filter(l -> l.matches(".*(java|openjdk).*"))
-                                .findFirst()
-                                .orElse("");
-                        var m = Pattern.compile("\"(1.)?(?<v>[0-9]+)\"").matcher(out);
-                        if (m.find()) {
-                            version = Integer.parseInt(m.group("v"));
-                        } else {
-                            throw new Fault("version info not found in output from '" + javaCmd + " -version'");
-                        }
-                    }
-                } catch (IOException e) {
-                    throw new Fault("Error running '" + javaCmd + " -version': " + e, e);
+                var v = tools.java(config.jdk, List.of("-version"),
+                        l -> l.matches(".*(java|openjdk).*"));
+                var m = Pattern.compile("\"(1.)?(?<v>[0-9]+)\"").matcher(v);
+                if (m.find()) {
+                    version = Integer.parseInt(m.group("v"));
+                } else {
+                    throw new Fault("version info not found in output from '" + config.jdk + "/bin/java -version'");
                 }
             }
 
@@ -1134,8 +1194,8 @@ public class Build {
         private static final String DEFAULT_ANT_ARCHIVE_URL_BASE =
                 "https://archive.apache.org/dist/ant/binaries";
 
-        public Ant(Config config) {
-            super("ant", config);
+        public Ant(Config config, Tools tools) {
+            super("ant", config, tools);
         }
 
         @Override
@@ -1168,31 +1228,10 @@ public class Build {
 
         void exec(Path file, List<String> args, Path outFile) throws Fault {
             config.log("Building " + file);
-            var execArgs = new ArrayList<String>();
-            execArgs.add(ant.toString());
-            execArgs.addAll(List.of("-f", file.toString()));
-            execArgs.addAll(args);
-            try {
-                var pb = new ProcessBuilder(execArgs)
-                        .redirectErrorStream(true);
-                var env = pb.environment();
-                env.put("JAVA_HOME", config.jdk.toString());
-                var p = pb.start();
-                try (var in = new BufferedReader(new InputStreamReader(p.getInputStream()));
-                     var out = Files.newBufferedWriter(outFile)) {
-                    String line;
-                    while ((line = in.readLine()) != null) {
-                        out.write(line);
-                        out.newLine();
-                    }
-                }
-                int rc = p.waitFor();
-                if (rc != 0) {
-                    throw new Fault("Ant failed: rc=" + rc);
-                }
-            } catch (IOException | InterruptedException e) {
-                throw new Fault("error while running Ant: " + e, e);
-            }
+            var antArgs = new ArrayList<String>();
+            antArgs.addAll(List.of("-f", file.toString()));
+            antArgs.addAll(args);
+            tools.exec(ant, antArgs, Map.of("JAVA_HOME", config.jdk.toString()), outFile);
         }
     }
 
@@ -1202,8 +1241,8 @@ public class Build {
         Path jar;
         Path license;
 
-        public AsmTools(Config config, Ant ant) {
-            super("asmtools", config);
+        public AsmTools(Config config, Tools tools, Ant ant) {
+            super("asmtools", config, tools);
             this.ant = ant;
         }
 
@@ -1305,8 +1344,8 @@ public class Build {
         Path copyright;
 
 
-        public JTHarness(Config config, Ant ant) {
-            super("jtharness", config);
+        public JTHarness(Config config, Tools tools, Ant ant) {
+            super("jtharness", config, tools);
             this.ant = ant;
         }
 
@@ -1403,8 +1442,8 @@ public class Build {
         Path jar;
         Path license;
 
-        public JUnit(Config config) {
-            super("junit", config);
+        public JUnit(Config config, Tools tools) {
+            super("junit", config, tools);
         }
 
         @Override
@@ -1445,10 +1484,10 @@ public class Build {
         private final Guice guice;
         private final JCommander jcommander;
 
-        public TestNG(Config config) {
-            super("testng", config);
-            this.guice = new Guice(config);
-            this.jcommander = new JCommander(config);
+        public TestNG(Config config, Tools tools) {
+            super("testng", config, tools);
+            this.guice = new Guice(config, tools);
+            this.jcommander = new JCommander(config, tools);
         }
 
         @Override
@@ -1500,8 +1539,8 @@ public class Build {
     static class Guice extends Dependency {
         Path jar;
 
-        public Guice(Config config) {
-            super("google_guice", config);
+        public Guice(Config config, Tools tools) {
+            super("google_guice", config, tools);
         }
 
         @Override
@@ -1526,8 +1565,8 @@ public class Build {
     static class JCommander extends Dependency {
         Path jar;
 
-        public JCommander(Config config) {
-            super("jcommander", config);
+        public JCommander(Config config, Tools tools) {
+            super("jcommander", config, tools);
         }
 
         @Override
