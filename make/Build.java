@@ -821,7 +821,7 @@ public class Build {
 
         void deleteDirectory(Path dir) throws Fault {
             if (isWindows) {
-                exec("rmdir", "\\Q", "\\S", dir.toString());
+                exec("rmdir", "/Q", "/S", dir.toString());
             } else {
                 exec(getCommandPath("rm"),"-rf", dir.toString());
             }
@@ -876,7 +876,6 @@ public class Build {
         public void exec(String command, List<String> args) throws Fault {
             config.out.flush();
             config.err.flush();
-//            System.err.println("exec: " + cmd + " " + args);
             try {
                 Process p = new ProcessBuilder(join(command, args))
                         .redirectError(ProcessBuilder.Redirect.INHERIT)
