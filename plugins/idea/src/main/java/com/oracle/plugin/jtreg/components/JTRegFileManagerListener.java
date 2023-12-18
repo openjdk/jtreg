@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, 2019 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -39,9 +39,12 @@ import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.*;
+import com.intellij.openapi.roots.libraries.Library;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.Alarm;
+import com.oracle.plugin.jtreg.service.JTRegService;
 import com.oracle.plugin.jtreg.util.JTRegUtils;
+import java.io.File;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -64,6 +67,7 @@ public class JTRegFileManagerListener implements FileEditorManagerListener {
         Alarm alarm = new Alarm();
         VirtualFile contentRoot;
         List<VirtualFile> roots = new ArrayList<>();
+        Library jtregLib;
         Document document;
         DocumentListener listener = new DocumentListener() {
             @Override
@@ -87,6 +91,7 @@ public class JTRegFileManagerListener implements FileEditorManagerListener {
             //clear out test info
             file = null;
             roots = null;
+            jtregLib = null;
             contentRoot = null;
             module = null;
             alarm = null;
@@ -120,7 +125,8 @@ public class JTRegFileManagerListener implements FileEditorManagerListener {
         LOG.info("processing file opened: " + testInfo.file + " @ " + project.getName());
         boolean isJtreg = JTRegUtils.isJTRegTestData(project, file);
         boolean isTestNg = JTRegUtils.isTestNGTestData(project, file);
-        if (isJtreg || isTestNg) {
+        boolean isJUnit = JTRegUtils.isJUnitTestData(project, file);
+        if (isJtreg || isTestNg || isJUnit) {
             //add jtreg roots
             try (TestRootManager.TestRootModel rootModel = rootManager.rootModel(testInfo)) {
                 List<VirtualFile> oldRoots = testInfo.roots;
@@ -134,6 +140,15 @@ public class JTRegFileManagerListener implements FileEditorManagerListener {
                         rootModel.addSourceFolders(testRoots);
                     }
                 }
+                if (isTestNg || isJUnit) {
+                    String libDir = JTRegService.getInstance(project).getJTRegDir();
+                    Library library = JTRegUtils.createJTRegLibrary(project, libDir);
+                    testInfo.jtregLib = library;
+                    rootModel.addLibrary(library);
+                } else if (testInfo.jtregLib != null) {
+                    rootModel.removeLibrary(testInfo.jtregLib);
+                    testInfo.jtregLib = null;
+                }
             }
         } else {
             try (TestRootManager.TestRootModel rootModel = rootManager.rootModel(testInfo)) {
@@ -142,6 +157,10 @@ public class JTRegFileManagerListener implements FileEditorManagerListener {
                     rootModel.removeSourceFolders(oldRoots);
                 }
                 testInfo.roots = Collections.emptyList();
+                if (testInfo.jtregLib != null) {
+                    rootModel.removeLibrary(testInfo.jtregLib);
+                    testInfo.jtregLib = null;
+                }
             }
         }
     }
@@ -161,12 +180,17 @@ public class JTRegFileManagerListener implements FileEditorManagerListener {
     void processFileClosed(TestInfo testInfo) {
         VirtualFile file = testInfo.file;
         LOG.info("processing file closed: " + testInfo.file + " @ " + project.getName());
-        if (!file.exists() || JTRegUtils.isJTRegTestData(project, file) || JTRegUtils.isTestNGTestData(project, file)) {
+        if (!file.exists() || JTRegUtils.isJTRegTestData(project, file)
+                || JTRegUtils.isTestNGTestData(project, file) || JTRegUtils.isJUnitTestData(project, file)) {
             if (project.isOpen()) {
                 try (TestRootManager.TestRootModel rootModel = rootManager.rootModel(testInfo)) {
                     List<VirtualFile> rootsToRemove = file.exists() ?
                             JTRegUtils.getTestRoots(project, file) : testInfo.roots;
                     rootModel.removeSourceFolders(rootsToRemove);
+                    if (testInfo.jtregLib != null) {
+                        rootModel.removeLibrary(testInfo.jtregLib);
+                        testInfo.jtregLib = null;
+                    }
                 }
             }
         }
@@ -177,6 +201,8 @@ public class JTRegFileManagerListener implements FileEditorManagerListener {
     class TestRootManager {
 
         Map<VirtualFile, Integer> refCount = new HashMap<>();
+        // Record the library reference count used by the module.
+        Map<Module, Integer> moduleLibRefCount = new HashMap<>();
 
         TestRootModel rootModel(TestInfo testInfo) {
             ModifiableRootModel modifiableRootModel = ModuleRootManager.getInstance(testInfo.module).getModifiableModel();
@@ -188,6 +214,7 @@ public class JTRegFileManagerListener implements FileEditorManagerListener {
 
         void dispose() {
             refCount.clear();
+            moduleLibRefCount.clear();
         }
 
         class TestRootModel implements AutoCloseable {
@@ -231,6 +258,38 @@ public class JTRegFileManagerListener implements FileEditorManagerListener {
                     refCount.remove(f);
                 } else {
                     refCount.put(f, i - 1);
+                }
+            }
+
+            /**
+             * Add the project library to the module.
+             */
+            void addLibrary(Library library) {
+                Integer i = moduleLibRefCount.get(modifiableRootModel.getModule());
+                if (i == null) {
+                    LOG.info("Adding library in module: " + modifiableRootModel.getModule().getName());
+                    ApplicationManager.getApplication().runWriteAction(() -> {
+                        modifiableRootModel.addLibraryEntry(library);
+                    });
+                }
+                moduleLibRefCount.put(modifiableRootModel.getModule(), i == null ? 1 : i + 1);
+            }
+
+            /**
+             * Remove the project library from the module.
+             */
+            void removeLibrary(Library library) {
+                Integer i = moduleLibRefCount.get(modifiableRootModel.getModule());
+                if (i == null) {
+                    // skip
+                } else if (i == 1) {
+                    LOG.info("Removing library in module: " + modifiableRootModel.getModule().getName());
+                    Optional<OrderEntry> entry = Arrays.stream(modifiableRootModel.getOrderEntries())
+                            .filter(orderEntry -> orderEntry.getPresentableName().equals(library.getName())).findFirst();
+                    entry.ifPresent(orderEntry -> modifiableRootModel.removeOrderEntry(orderEntry));
+                    moduleLibRefCount.remove(modifiableRootModel.getModule());
+                } else if (i > 1) {
+                    moduleLibRefCount.put(modifiableRootModel.getModule(), i - 1);
                 }
             }
 
