@@ -26,9 +26,6 @@
 package com.sun.javatest.regtest.exec;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.UncheckedIOException;
 import java.lang.reflect.Method;
@@ -847,12 +844,8 @@ public class RegressionScript extends Script {
                 // Put necessary jar files onto the module path as automatic modules.
                 // We cannot use the ${jtreg.home}/lib directory directly since it contains
                 // other jar files which are not valid as automatic modules.
-                Path md = workDir.getFile("modules").toPath();
-                if (needJUnit)
-                    install(params.getJUnitPath(), md);
-                if (needTestNG)
-                    install(params.getTestNGPath(), md);
-                mp.append(md);
+                if (needJUnit) params.getJUnitPath().asList().forEach(mp::append);
+                if (needTestNG) params.getTestNGPath().asList().forEach(mp::append);
             }
         } else {
             if (needJUnit)
@@ -948,12 +941,8 @@ public class RegressionScript extends Script {
                 // Put necessary jar files onto the module path as automatic modules.
                 // We cannot use the ${jtreg.home}/lib directory directly since it contains
                 // other jar files which are not valid as automatic modules.
-                Path md = workDir.getFile("modules").toPath();
-                if (needJUnit)
-                    install(params.getJUnitPath(), md);
-                if (needTestNG)
-                    install(params.getTestNGPath(), md);
-                mp.append(md);
+                if (needJUnit) params.getJUnitPath().asList().forEach(mp::append);
+                if (needTestNG) params.getTestNGPath().asList().forEach(mp::append);
             }
         } else {
             SearchPath fp = (!bcp.isEmpty() || usePatchModules()) ? bcp : cp;
@@ -995,43 +984,6 @@ public class RegressionScript extends Script {
         if (!pp.isEmpty())
             map.put(PathKind.PATCHPATH, pp);
         return map;
-    }
-
-    private void install(SearchPath path, Path dir) throws TestRunException {
-        synchronized (params.getWorkDirectory()) { // avoid multiple tests doing simultaneous install
-            if (Files.exists(dir)) {
-                if (!Files.isDirectory(dir))
-                    throw new TestRunException("modules in work directory is not a directory");
-            } else {
-                FileUtils.createDirectories(dir);
-            }
-
-            for (Path jar: path.asList()) {
-                Path target = dir.resolve(jar.getFileName());
-                if (Files.exists(target)
-                        && FileUtils.size(target) == FileUtils.size(jar)
-                        && FileUtils.compareLastModifiedTimes(target, jar) == 0) {
-                    return;
-                }
-
-                // Eventually replace with java.nio.file.Files::copy
-                try (OutputStream out = Files.newOutputStream(target);
-                        InputStream in = Files.newInputStream(jar)) {
-                    byte[] buf = new byte[8192];
-                    int n;
-                    while ((n = in.read(buf)) != -1) {
-                        out.write(buf, 0, n);
-                    }
-                } catch (IOException e) {
-                    throw new TestRunException("cannot init modules directory", e);
-                }
-                try {
-                    Files.setLastModifiedTime(target, FileUtils.getLastModifiedTime(jar));
-                } catch (IOException e) {
-                    throw new TestRunException("cannot set last modified time for " + target, e);
-                }
-            }
-        }
     }
 
     boolean useBootClassPath() {

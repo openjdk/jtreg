@@ -29,22 +29,22 @@
 
 $(CLASSDIR)/%.properties: $(JAVADIR)/%.properties
 	$(RM) -f $@
-	if [ ! -d $(@D) ] ; then $(MKDIR) -p $(@D) ; fi
+	$(MKDIR) -p $(@D)
 	$(CP) $(@:$(CLASSDIR)/%=$(JAVADIR)/%) $@
 
 $(CLASSDIR)/%.gif: $(JAVADIR)/%.gif
 	$(RM) -f $@
-	if [ ! -d $(@D) ] ; then $(MKDIR) -p $(@D) ; fi
+	$(MKDIR) -p $(@D)
 	$(CP) $(@:$(CLASSDIR)/%=$(JAVADIR)/%) $@
 
 $(CLASSDIR)/%.png: $(JAVADIR)/%.png
 	$(RM) -f $@
-	if [ ! -d $(@D) ] ; then $(MKDIR) -p $(@D) ; fi
+	$(MKDIR) -p $(@D)
 	$(CP) $(@:$(CLASSDIR)/%=$(JAVADIR)/%) $@
 
 $(CLASSDIR)/META-INF/services/%: $(JAVADIR)/META-INF/services/%
 	$(RM) -f $@
-	if [ ! -d $(@D) ] ; then $(MKDIR) -p $(@D) ; fi
+	$(MKDIR) -p $(@D)
 	$(CP) $(@:$(CLASSDIR)/%=$(JAVADIR)/%) $@
 
 #---------------------------------------------------------------------
@@ -60,6 +60,13 @@ $(CLASSDIR) $(BUILDDIR) $(BUILDDIR)/testClasses $(BUILDDIR)/testWork $(BUILDDIR)
 # default copyright; override as necessary
 JAR_COPYRIGHT = -C $(TOPDIR) COPYRIGHT
 
+DATE_FMT = +%B %d, %Y
+ifdef SOURCE_DATE_EPOCH
+    BUILD_DATE ?= $(shell LC_ALL=C date -u -d "@$(SOURCE_DATE_EPOCH)" "$(DATE_FMT)" 2>/dev/null || LC_ALL=C date -u -r "$(SOURCE_DATE_EPOCH)" "$(DATE_FMT)" 2>/dev/null || date -u "$(DATE_FMT)")
+else
+    BUILD_DATE ?= $(shell date "$(DATE_FMT)")
+endif
+
 $(IMAGES_DIR)/%.jar: pkgsToFiles.sh
 	$(RM) $@ $(@:$(IMAGES_DIR)/%.jar=$(BUILDDIR)/jarData/%)
 	$(MKDIR) -p $(@D)
@@ -73,7 +80,7 @@ $(IMAGES_DIR)/%.jar: pkgsToFiles.sh
 	  echo "$(@F:%.jar=%)-Build: $(BUILD_NUMBER)" ; \
 	  echo "$(@F:%.jar=%)-BuildJavaVersion: `$(JDKJAVA) -fullversion 2>&1 | awk '{print $$NF}'  | \
 		sed -e 's|^"\(.*\)"$$|Java(TM) 2 SDK, Version \1|'`" ; \
-	  echo "$(@F:%.jar=%)-BuildDate: `/bin/date +'%B %d, %Y'`" ; \
+	  echo "$(@F:%.jar=%)-BuildDate: $(BUILD_DATE)" ; \
 	) \
 		> $(@:$(IMAGES_DIR)/%.jar=$(BUILDDIR)/jarData/%/manifest.txt)
 	sh pkgsToFiles.sh $(CLASSDIR) $($(@F:%.jar=PKGS.JAR.%)) > $(@:$(IMAGES_DIR)/%.jar=$(BUILDDIR)/jarData/%/includes.txt)

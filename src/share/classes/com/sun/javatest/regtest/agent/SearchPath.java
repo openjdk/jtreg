@@ -41,7 +41,7 @@ import java.util.regex.Pattern;
  * A search path, as in an ordered set of file system locations,
  * such as directories, zip files and jar files.
  */
-public class SearchPath {
+public final class SearchPath {
     /**
      * Creates an empty search path.
      */

@@ -51,7 +51,7 @@ import com.sun.javatest.util.I18NResourceBundle;
 import com.sun.javatest.regtest.tool.RegressionContextManager;
 
 
-public class RegressionTestSuite extends TestSuite
+public final class RegressionTestSuite extends TestSuite
 {
     static Map<File, SoftReference<RegressionTestSuite>> cache;
 

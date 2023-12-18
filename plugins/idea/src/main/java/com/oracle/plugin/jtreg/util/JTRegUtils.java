@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, 2019 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2016, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -27,13 +27,19 @@ package com.oracle.plugin.jtreg.util;
 
 import com.intellij.lang.ant.config.AntBuildFile;
 import com.intellij.lang.ant.config.AntConfiguration;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.roots.OrderRootType;
+import com.intellij.openapi.roots.libraries.Library;
+import com.intellij.openapi.roots.libraries.LibraryTable;
+import com.intellij.openapi.roots.libraries.LibraryTablesRegistrar;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.psi.util.PsiUtil;
 import com.intellij.openapi.diagnostic.Logger;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
@@ -313,6 +319,65 @@ public class JTRegUtils {
         String qualifiedName = importStatement.getQualifiedName();
         //qualifiedName can be null if the import statement hasn't been fully written yet
         return qualifiedName != null && qualifiedName.startsWith("org.testng");
+    }
+
+    /**
+     * Judge whether the given file is a junit test.
+     */
+    public static boolean isJUnitTestData(Project project, VirtualFile file) {
+        return isJUnitTestData(PsiUtil.getPsiFile(project, file));
+    }
+
+    /**
+     * Judge whether the given file has the junit import statement.
+     */
+    public static boolean isJUnitTestData(PsiFile file) {
+        if (file instanceof PsiJavaFile) {
+            return Stream.of(((PsiJavaFile) file).getImportList().getImportStatements())
+                    .anyMatch(JTRegUtils::isJunitImport);
+        }
+        return false;
+    }
+
+    /**
+     * Judge whether the statement is a junit import statement.
+     */
+    public static boolean isJunitImport(PsiImportStatement importStatement) {
+        String qualifiedName = importStatement.getQualifiedName();
+        return qualifiedName != null && qualifiedName.startsWith("org.junit");
+    }
+
+    /**
+     * Create (if not existing) and get the jtreg project library.
+     */
+    public static Library createJTRegLibrary(Project project, String jtregDir) {
+        return updateJTRegLibrary(project, null, jtregDir);
+    }
+
+    /**
+     * Update the jtreg project library. The library would be created if it doesn't exist.
+     */
+    public static Library updateJTRegLibrary(Project project, String oldJtregDir, String newJtregDir) {
+        LibraryTable libraryTable = LibraryTablesRegistrar.getInstance().getLibraryTable(project);
+        final LibraryTable.ModifiableModel tableModel = libraryTable.getModifiableModel();
+        Library library = tableModel.getLibraryByName("jtreg-libs");
+        if (library == null) {
+            library = tableModel.createLibrary("jtreg-libs");
+        }
+        final Library.ModifiableModel libraryModel = library.getModifiableModel();
+        String oldDir = "file://" + oldJtregDir + File.separator + "lib";
+        if (oldJtregDir != null && !oldJtregDir.isBlank() && libraryModel.isJarDirectory(oldDir, OrderRootType.CLASSES)) {
+            libraryModel.removeRoot(oldDir, OrderRootType.CLASSES);
+        }
+        String newDir = "file://" + newJtregDir + File.separator + "lib";
+        if (newJtregDir != null && !newJtregDir.isBlank() && !libraryModel.isJarDirectory(newDir, OrderRootType.CLASSES)) {
+            libraryModel.addJarDirectory(newDir, true);
+        }
+        ApplicationManager.getApplication().runWriteAction(() -> {
+            libraryModel.commit();
+            tableModel.commit();
+        });
+        return library;
     }
 
     /**
