@@ -12,8 +12,8 @@
 * For details on running JDK tests using the JDK _make test_ framework, see
   [Using "make test" (the run-test framework)][make-test].
 
-[faq]: https://openjdk.java.net/jtreg/faq.html
-[tagspec]: https://openjdk.java.net/jtreg/tag-spec.html
+[faq]: https://openjdk.org/jtreg/faq.html
+[tagspec]: https://openjdk.org/jtreg/tag-spec.html
 [make-test]: https://github.com/openjdk/jdk/blob/master/doc/testing.md
 
 ## Using IntelliJ IDEA

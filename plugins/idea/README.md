@@ -19,7 +19,7 @@ The output of this folder is as follows:
        |-java (plugin sources)
        |-resources (plugin resources - the plugin.xml file lives here)
    |-build (where build files are stored)
-       |-distributions (where the plugin zip file is generated)   
+       |-distributions (where the plugin zip file is generated)
    |-build.gradle (the gradle build file)
    |-gradle.properties (contains properties required to build this project)
 ```
@@ -86,7 +86,7 @@ To run an existing configuration, simply select it from the drop down list in th
 
 Debugging works as for any other Java application. Simply set breakpoints (this can be done by left-clicking the area to the left of the code in the source editor, which will cause a red circle to appear). During a test debug, execution will stop at any given breakpoints, allowing you to see values of variables, set watch expressions, etc.
 
-> Note: debugging only works with a _single_ test action such as `@run` or `@compile`. If multiple test actions are present, debugging will not work correctly. This is a known issue. To workaround, please manually remove the test actions that do not need to be debugged. Conversely, `@build` actions can be safely ignored, as they do not have any adverse effect on the debugging process.  
+> Note: debugging only works with a _single_ test action such as `@run` or `@compile`. If multiple test actions are present, debugging will not work correctly. This is a known issue. To workaround, please manually remove the test actions that do not need to be debugged. Conversely, `@build` actions can be safely ignored, as they do not have any adverse effect on the debugging process.
 
 ### Inspecting jtreg test results
 
@@ -117,4 +117,4 @@ To select which Ant target to run before a jtreg test, simply go in the `File ->
 
 ### Dealing with bugs
 
-In the unfortunate case you run into a plugin bug, you will notice a red mark in the bottom right part of the IDE. If you click on that icon, you will have the ability to show the stack trace associated with the error (and you will also be offered the option of disabling the plugin). If you want to report a bug against the jtreg plugin, we recommend that you copy the stack trace along with the IDE log file (this can be found under `Help -> Show Log in Files`) and submit them along with a description of the experienced buggy behavior. Please forward such bug reports to `jtreg-dev@openjdk.java.net`, or `ide-support-dev@openjdk.java.net` 
+In the unfortunate case you run into a plugin bug, you will notice a red mark in the bottom right part of the IDE. If you click on that icon, you will have the ability to show the stack trace associated with the error (and you will also be offered the option of disabling the plugin). If you want to report a bug against the jtreg plugin, we recommend that you copy the stack trace along with the IDE log file (this can be found under `Help -> Show Log in Files`) and submit them along with a description of the experienced buggy behavior. Please forward such bug reports to `jtreg-dev@openjdk.org`, or `ide-support-dev@openjdk.org`
