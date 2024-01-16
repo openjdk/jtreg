@@ -34,7 +34,6 @@ all: build test
 
 #----------------------------------------------------------------------
 
-include jtdiff.gmk
 include jtreg.gmk
 include $(TOPDIR)/test/*.gmk
 include $(TOPDIR)/test/*/*.gmk
