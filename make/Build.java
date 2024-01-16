@@ -1053,7 +1053,7 @@ public class Build {
             } else {
                 throw new Fault("unrecognized archive type for file " + archive);
             }
-            
+
             try (DirectoryStream<Path> ds = Files.newDirectoryStream(dir, Files::isDirectory)) {
                 Path bestSoFar = null;
                 FileTime bestSoFarTime = null;
