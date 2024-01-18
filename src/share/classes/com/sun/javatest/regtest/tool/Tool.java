@@ -52,6 +52,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -1118,6 +1120,36 @@ public class Tool {
             baseDir = baseDirArg.toAbsolutePath();
         }
 
+        // support for -show:stream file.jtr
+        var jtrFiles = testSpecArgs.stream()
+                .filter(s -> s.file.getFileName().toString().endsWith(".jtr"))
+                .collect(Collectors.toList());
+        if (!jtrFiles.isEmpty()) {
+            if (jtrFiles.size() < testSpecArgs.size() || !testGroupSpecArgs.isEmpty()) {
+                throw new Fault(i18n, "main.invalidCombinationTestArgs");
+            } else if (jtrFiles.size() > 1) {
+                throw new Fault(i18n, "main.moreThanOneTestSpecified");
+            } else if (showStream == null) {
+                throw new Fault(i18n, "main.noStreamSpecified");
+            } else {
+                var jtr = jtrFiles.get(0);
+                if (jtr.id != null) {
+                    throw new Fault(i18n, "main.cannotSpecifyID", jtr);
+                }
+                if (jtr.query != null) {
+                    throw new Fault(i18n, "main.cannotSpecifyQuery", jtr);
+                }
+                Path p =jtr.file;
+                try {
+                    var tr = new TestResult(jtr.file.toFile());
+                    showStream(tr);
+                } catch (TestResult.Fault e) {
+                    throw new Fault(i18n, "main.cannotReloadTestResult", p);
+                }
+            }
+            return EXIT_OK;
+        }
+
         final TestManager testManager = new TestManager(out, baseDir, Tool.this::error);
         testManager.addTestSpecs(testSpecArgs);
         testManager.addGroupSpecs(testGroupSpecArgs);
@@ -1851,38 +1883,8 @@ public class Tool {
                 if (tr == null) {
                     out.println("No test specified");
                     ok = false;
-                } else if (tr.getStatus().isNotRun()) {
-                    out.println("Test has not been run");
-                    ok = false;
                 } else {
-                    try {
-                        // work around bug CODETOOLS-7900214 -- force the sections to be reloaded
-                        tr.getProperty("sections");
-                        String section, stream;
-                        int sep = showStream.indexOf("/");
-                        if (sep == -1) {
-                            section = null;
-                            stream = showStream;
-                        } else {
-                            section = showStream.substring(0, sep);
-                            stream = showStream.substring(sep + 1);
-                        }
-                        for (int i = 0; i < tr.getSectionCount(); i++) {
-                            TestResult.Section s = tr.getSection(i);
-                            if (section == null || section.equals(s.getTitle())) {
-                                String text = s.getOutput(stream);
-                                // need to handle internal newlines properly
-                                if (text != null) {
-                                    out.println("### Section " + s.getTitle());
-                                    out.println(text);
-                                }
-                            }
-                        }
-                        ok = true;
-                    } catch (TestResult.Fault f) {
-                        out.println("Cannot reload test results: " + f.getMessage());
-                        ok = false;
-                    }
+                    ok = showStream(tr);
                 }
                 quiet = true;
             } else {
@@ -2007,6 +2009,64 @@ public class Tool {
         } finally {
             out.flush();
             err.flush();
+        }
+    }
+
+    private boolean showStream(TestResult tr) {
+        if (tr.getStatus().isNotRun()) {
+            out.println("Test has not been run");
+            return false;
+        }
+
+        try {
+            // work around bug CODETOOLS-7900214 -- force the sections to be reloaded
+            tr.getProperty("sections");
+
+            boolean allOK = true;
+
+            var allSections = new HashMap<String, Set<String>>();
+            var allStreams = new HashSet<String>();
+            for (int i = 0; i < tr.getSectionCount(); i++) {
+                TestResult.Section s = tr.getSection(i);
+                var names = Set.of(s.getOutputNames());
+                allSections.put(s.getTitle(), names);
+                allStreams.addAll(names);
+            }
+            String section, outputName;
+            int sep = showStream.indexOf("/");
+            if (sep == -1) {
+                section = null;
+                outputName = showStream;
+                if (!allStreams.contains(outputName)) {
+                    out.println("# no such output stream: " + outputName);
+                    allOK = false;
+                }
+            } else {
+                section = showStream.substring(0, sep);
+                outputName = showStream.substring(sep + 1);
+                var outputNames = allSections.get(section);
+                if (outputNames == null) {
+                    out.println("# section not found: " + section);
+                    allOK = false;
+                } else if (!outputNames.contains(outputName)) {
+                    out.println("# output stream not found: " + showStream);
+                    allOK = false;
+                }
+            }
+            for (int i = 0; i < tr.getSectionCount(); i++) {
+                TestResult.Section s = tr.getSection(i);
+                if (section == null || section.equals(s.getTitle())) {
+                    String text = s.getOutput(outputName);
+                    if (text != null) {
+                        out.println("### Section " + s.getTitle());
+                        text.lines().forEach(out::println);
+                    }
+                }
+            }
+            return allOK;
+        } catch (TestResult.Fault f) {
+            out.println("Cannot reload test results: " + f.getMessage());
+            return false;
         }
     }
 
@@ -2217,7 +2277,7 @@ public class Tool {
     }
 
     /**
-     * Returns whether or not Cygwin may be available, by examining
+     * Returns whether Cygwin may be available, by examining
      * to see if "LETTER:STUFF\cygwin" is mentioned anywhere in the PATH.
      */
     private boolean isCygwinDetected() {

@@ -172,9 +172,9 @@ public class TestManager {
      * in and under that directory.
      */
     public static class TestSpec {
-        private final Path file;
-        private final String id;
-        private final String query;
+        public final Path file;
+        public final String id;
+        public final String query;
 
         /**
          * Returns true if a string may represent one or more tests.
