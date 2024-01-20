@@ -711,11 +711,11 @@ that action gets reported as a failed.
 
 This default behaviour can be overridden by passing the `--agent-attempts` option
 to `jtreg` command. This option takes an integer value which represents the number
-of attempts JTReg is allowed to make when attempting to get a agent for a test
-action. By default, the value of this option is `1`, implying JTReg will not
-re-attempt a failed attempt. Passing a higher value for this option will allow
-JTReg to re-attempt a failed attempt. For example, a value of `2` will allow JTReg
-to re-attempt once for each failed attempt.
+of attempts to make when attempting to get an agent for a test action. By default,
+the value of this option is `1`, implying JTReg will not re-attempt a failed
+attempt. Passing a higher value for this option will allow JTReg to re-attempt a
+failed attempt. For example, a value of `2` will allow JTReg to re-attempt once
+for each failed attempt.
 
 ### How do I specify whether to run tests concurrently?
 
