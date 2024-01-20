@@ -91,6 +91,11 @@ public class Agent {
     static final boolean showAgent = Flags.get("showAgent");
     static final boolean traceAgent = Flags.get("traceAgent");
 
+    // the following code here allows us to run jtreg on older
+    // JDKs where the pid() method is unavailable on the
+    // Process class. we use PID only for debug purposes and
+    // the inability to get the PID of a launched AgentServer
+    // is OK.
     private static final long UNKNOWN_PID = -1;
     private static final Method PID_METHOD;
     static {
