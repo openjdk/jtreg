@@ -461,6 +461,22 @@ public class Tool {
             }
         },
 
+        new Option(GNU, AGENT_POOL, null, "--agent-attempts") {
+            @Override
+            public void process(String opt, String arg) throws BadArgs {
+                int numTimes;
+                try {
+                    numTimes = Integer.parseInt(arg);
+                } catch (NumberFormatException e) {
+                    throw new BadArgs(i18n, "main.badAgentSelAttempt", arg);
+                }
+                if (numTimes < 1) {
+                    throw new BadArgs(i18n, "main.badAgentSelAttempt", numTimes);
+                }
+                numAgentSelectionAttempt = numTimes;
+            }
+        },
+
         new Option(STD, MAIN, "", "-conc", "-concurrency") {
             @Override
             public void process(String opt, String arg) {
@@ -1343,6 +1359,7 @@ public class Tool {
                     }
                     p.setMaxPoolSize(maxPoolSize);
                     p.setIdleTimeout(poolIdleTimeout);
+                    p.setNumAgentSelectionAttempts(numAgentSelectionAttempt);
                     break;
                 case OTHERVM:
                     break;
@@ -2373,6 +2390,8 @@ public class Tool {
     private String testThreadFactoryPathArg;
     private int maxPoolSize = -1;
     private Duration poolIdleTimeout = Duration.ofSeconds(30);
+    // number of attempts to get an agent for an action
+    private int numAgentSelectionAttempt = DEFAULT_NUM_AGENT_SEL_ATTEMPT;
     private List<String> testCompilerOpts = new ArrayList<>();
     private List<String> testJavaOpts = new ArrayList<>();
     private List<String> testVMOpts = new ArrayList<>();
@@ -2420,6 +2439,10 @@ public class Tool {
             "TMP", "TEMP", "TZ",
             "windir"
     };
+
+    // default value for agent selection attempts. we default to 1, which implies
+    // by default we don't re-attempt on a failure
+    private static final int DEFAULT_NUM_AGENT_SEL_ATTEMPT = 1;
 
     private static final I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(Tool.class);
 }

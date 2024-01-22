@@ -68,7 +68,7 @@ $(BUILDTESTDIR)/BadTests.agentvm.ok: \
 			> $(@:%.ok=%/jt.log) 2>&1 || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
 	$(GREP) -s 'Test results: passed: 17; failed: 1; error: 2' $(@:%.ok=%/jt.log)  > /dev/null
-	agents=`$(GREP) '^\[[-0-9 :,]*\] Agent\[[0-9][0-9]*\]: Started' $(@:%.ok=%/jt.log) | wc -l` ; \
+	agents=`$(GREP) '^\[[-0-9 :,]*\] Agent\[[0-9][0-9]*\]: Launching' $(@:%.ok=%/jt.log) | wc -l` ; \
 	if [ $${agents} -ne 4 ]; then echo "Unexpected number of agents used: $${agents}" ; exit 1 ; fi
 	echo "test passed at `date`" > $@
 

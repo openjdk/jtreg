@@ -37,6 +37,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -90,12 +91,30 @@ public class Agent {
     static final boolean showAgent = Flags.get("showAgent");
     static final boolean traceAgent = Flags.get("traceAgent");
 
+    // the following code here allows us to run jtreg on older
+    // JDKs where the pid() method is unavailable on the
+    // Process class. we use PID only for debug purposes and
+    // the inability to get the PID of a launched AgentServer
+    // is OK.
+    private static final long UNKNOWN_PID = -1;
+    private static final Method PID_METHOD;
+    static {
+        Method pidMethod = null;
+        try {
+            pidMethod = Process.class.getDeclaredMethod("pid"); // only available in Java 9+
+        } catch (Exception e) {
+            pidMethod = null;
+        }
+        PID_METHOD = pidMethod;
+    }
+
     /**
      * Start a JDK with given JVM options.
      */
     private Agent(File dir, JDK jdk, List<String> vmOpts, Map<String, String> envVars,
             File policyFile, float timeoutFactor, Logger logger,
             String testThreadFactory, String testThreadFactoryPath) throws Fault {
+        Process agentServerProcess = null;
         try {
             id = ++count;
             this.jdk = jdk;
@@ -127,8 +146,9 @@ public class Agent {
             // is platform-specific, and Solaris has it on by default.
             ss.setReuseAddress(false);
             ss.bind(new InetSocketAddress(/*port:*/ 0), /*backlog:*/ 1);
+            final int port = ss.getLocalPort();
             cmd.add(AgentServer.PORT);
-            cmd.add(String.valueOf(ss.getLocalPort()));
+            cmd.add(String.valueOf(port));
 
             if (timeoutFactor != 1.0f) {
                 cmd.add(AgentServer.TIMEOUTFACTOR);
@@ -144,22 +164,27 @@ public class Agent {
                 cmd.add(CUSTOM_TEST_THREAD_FACTORY_PATH);
                 cmd.add(testThreadFactoryPath);
             }
-            log("Started " + cmd);
+            log("Launching " + cmd);
 
             ProcessBuilder pb = new ProcessBuilder(cmd);
             pb.directory(dir);
             Map<String, String> env = pb.environment();
             env.clear();
             env.putAll(envVars);
-            process = pb.start();
+            agentServerProcess = process = pb.start();
+            final long pid = getPid(process);
             copyAgentProcessStream("stdout", process.getInputStream());
             copyAgentProcessStream("stderr", process.getErrorStream());
 
             try {
                 final int ACCEPT_TIMEOUT = (int) (60 * 1000 * timeoutFactor);
-                    // default 60 seconds, for server to start and "phone home"
+                // default 60 seconds, for server to start and "phone home"
                 ss.setSoTimeout(ACCEPT_TIMEOUT);
+                log("Waiting up to " + ACCEPT_TIMEOUT + " milli seconds for a" +
+                        " socket connection on port " + port +
+                        (pid != UNKNOWN_PID ? " from process " + pid : ""));
                 Socket s = ss.accept();
+                log("Received connection on port " + port + " from " + s);
                 s.setSoTimeout((int)(KeepAlive.READ_TIMEOUT * timeoutFactor));
                 in = new DataInputStream(s.getInputStream());
                 out = new DataOutputStream(s.getOutputStream());
@@ -171,6 +196,16 @@ public class Agent {
             // send keep-alive messages to server while not executing actions
             keepAlive.setEnabled(true);
         } catch (IOException e) {
+            log("Agent creation failed due to " + e);
+            if (agentServerProcess != null) {
+                // kill the launched process
+                log("killing AgentServer process");
+                try {
+                    ProcessUtils.destroyForcibly(agentServerProcess);
+                } catch (Exception ignored) {
+                    // ignore
+                }
+            }
             throw new Fault(e);
         }
     }
@@ -578,6 +613,17 @@ public class Agent {
         out.println("[" + AgentServer.logDateFormat.format(new Date()) + "] Agent[" + getId() + "]: " + message);
     }
 
+    private static long getPid(final Process process) {
+        if (PID_METHOD == null) {
+            return UNKNOWN_PID;
+        }
+        try {
+            return (long) PID_METHOD.invoke(process);
+        } catch (Exception e) {
+            return UNKNOWN_PID;
+        }
+    }
+
     final JDK jdk;
     final List<String> vmOpts;
     final File execDir;
@@ -731,6 +777,20 @@ public class Agent {
         }
 
         /**
+         * Sets the maximum attempts to create or obtain an agent VM
+         * @param numAttempts number of attempts
+         * @throws IllegalArgumentException if {@code numAttempts} is less than {@code 1}
+         */
+        public void setNumAgentSelectionAttempts(final int numAttempts) {
+            if (numAttempts < 1) {
+                throw new IllegalArgumentException("invalid value for agent selection attempts: "
+                        + numAttempts);
+            }
+            this.numAgentSelectionAttempts = numAttempts;
+            logger.log(null, "POOL: agent selection attempts: " + numAttempts);
+        }
+
+        /**
          * Obtains an agent with the desired properties.
          * If a suitable agent already exists in the pool, it will be removed from the pool and
          * returned; otherwise, a new one will be created.
@@ -745,7 +805,48 @@ public class Agent {
          * @return the agent
          * @throws Fault if there is a problem obtaining a suitable agent
          */
-        synchronized Agent getAgent(File dir,
+        Agent getAgent(File dir,
+                       JDK jdk,
+                       List<String> vmOpts,
+                       Map<String, String> envVars,
+                       String testThreadFactory,
+                       String testThreadFactoryPath)
+                throws Fault {
+            final int numAttempts = this.numAgentSelectionAttempts;
+            assert numAttempts > 0 : "unexpected agent selection attempts: " + numAttempts;
+            Agent.Fault toThrow = null;
+            for (int i = 1; i <= numAttempts; i++) {
+                try {
+                    if (i != 1) {
+                        logger.log(null, "POOL: re-attempting agent creation, attempt number " + i);
+                    }
+                    return doGetAgent(dir, jdk, vmOpts, envVars, testThreadFactory,
+                            testThreadFactoryPath);
+                } catch (Agent.Fault f) {
+                    logger.log(null, "POOL: agent creation failed due to " + f.getCause());
+                    // keep track of the fault and reattempt to get an agent if within limit
+                    if (toThrow == null) {
+                        toThrow = f;
+                    } else {
+                        // add the previous exception as a suppressed exception
+                        // of the current one
+                        if (toThrow.getCause() != null) {
+                            f.addSuppressed(toThrow.getCause());
+                        }
+                        toThrow = f;
+                    }
+                    if (i == numAttempts || !(f.getCause() instanceof IOException)) {
+                        // we either made enough attempts or we failed due to a non IOException.
+                        // In either case we don't attempt to create an agent again and instead
+                        // throw the captured failure(s)
+                        throw toThrow;
+                    }
+                }
+            }
+            throw new AssertionError("should not reach here");
+        }
+
+        synchronized Agent doGetAgent(File dir,
                                     JDK jdk,
                                     List<String> vmOpts,
                                     Map<String, String> envVars,
@@ -927,6 +1028,7 @@ public class Agent {
         private float timeoutFactor = 1.0f;
         private int maxPoolSize;
         private Duration idleTimeout;
+        private int numAgentSelectionAttempts;
     }
 
     static class Stats {

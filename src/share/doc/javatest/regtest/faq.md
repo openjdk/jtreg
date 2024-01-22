@@ -699,6 +699,24 @@ if the default mode was not used.  For example,
     elapsed time (seconds): 0.141
 ````
 
+#### jtreg has trouble starting agents; what can I do?
+
+When running in agent mode, JTReg creates agent VMs as and when necessary.
+Agent VM creation involves launching a process and communicating with it over
+a socket. The initial handshake between the newly launched process and JTReg
+can sometimes timeout if the system is under heavy load. This then causes the
+agent creation to fail. By default, JTReg does not re-attempt creation of the
+agent VM and instead the failure is propagated as a test action failure and
+that action gets reported as a failed.
+
+This default behaviour can be overridden by passing the `--agent-attempts` option
+to `jtreg` command. This option takes an integer value which represents the number
+of attempts to make when attempting to get an agent for a test action. By default,
+the value of this option is `1`, implying JTReg will not re-attempt a failed
+attempt. Passing a higher value for this option will allow JTReg to re-attempt a
+failed attempt. For example, a value of `2` will allow JTReg to re-attempt once
+for each failed attempt.
+
 ### How do I specify whether to run tests concurrently?
 
 jtreg provides the ability to run tests in parallel, using multiple
