@@ -25,7 +25,7 @@
  * Checks the value of System.getProperty("os.version") against an expected value.
  * For more info, see
  * JDK-8253702: BigSur version number reported as 10.16, should be 11.nn
- * https://bugs.openjdk.java.net/browse/JDK-8253702
+ * https://bugs.openjdk.org/browse/JDK-8253702
  */
 public class CheckJavaOSVersion {
     public static void main(String... args) {

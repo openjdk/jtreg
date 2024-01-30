@@ -326,7 +326,7 @@ export CURL="${CURL:-$(which curl)}"
 export CURL_OPTIONS="${CURL_OPTIONS:--s -f -L}"
 
 export MAVEN_REPO_URL_BASE="${MAVEN_REPO_URL_BASE:-https://repo1.maven.org/maven2}"
-export CODE_TOOLS_URL_BASE="${CODE_TOOLS_URL_BASE:-https://git.openjdk.java.net}"
+export CODE_TOOLS_URL_BASE="${CODE_TOOLS_URL_BASE:-https://git.openjdk.org}"
 export ANT_ARCHIVE_URL_BASE="${ANT_ARCHIVE_URL_BASE:-https://archive.apache.org/dist/ant/binaries}"
 
 setup_shasum

@@ -27,7 +27,7 @@ package com.oracle.plugin.jtreg.util;
 
 /**
  * This class models a jtreg test tag. For a full specification of jtreg tags please refer to the following
- * document: {@link "http://openjdk.java.net/jtreg/tag-spec.html"}.
+ * document: {@link "http://openjdk.org/jtreg/tag-spec.html"}.
  */
 public class Tag {
     private final int start;

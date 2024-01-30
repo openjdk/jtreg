@@ -1,6 +1,6 @@
 # Building The Regression Test Harness for the OpenJDK platform: `jtreg`
 
-(This information is also available at <http://openjdk.java.net/jtreg/build.html>)
+(This information is also available at <http://openjdk.org/jtreg/build.html>)
 
 `jtreg` depends on a number of external components:
     JT Harness, TestNG, JUnit, AsmTools, and JCov.

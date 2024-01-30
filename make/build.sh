@@ -57,7 +57,7 @@
 # MAVEN_REPO_URL_BASE (e.g. "https://repo1.maven.org/maven2")
 #     The base URL for the maven central repository.
 #
-# CODE_TOOLS_URL_BASE (e.g. "https://git.openjdk.java.net")
+# CODE_TOOLS_URL_BASE (e.g. "https://git.openjdk.org")
 #     The base URL for the code tools source repositories.
 #
 # ANT_ARCHIVE_URL_BASE (e.g. "https://archive.apache.org/dist/ant/binaries")
@@ -401,7 +401,7 @@ checkJavaOSVersion() {
   # This checks that the value in the Java "os.version" system property
   # is as expected.  While it is OK to *build* jtreg with a JDK with this bug,
   # some of the `jtreg` self-tests will fail: notably, test/problemList.
-  # See https://bugs.openjdk.java.net/browse/JDK-8253702
+  # See https://bugs.openjdk.org/browse/JDK-8253702
   case `uname` in
     Darwin )
       OS_VERSION=`defaults read loginwindow SystemVersionStampAsString`

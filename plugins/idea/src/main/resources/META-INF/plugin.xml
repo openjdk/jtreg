@@ -27,7 +27,7 @@
     <id>jtreg</id>
     <name>jtreg Test Support</name>
     <description><![CDATA[
-      Allows execution of tests developed using the <a href="http://openjdk.java.net/jtreg/">jtreg</a> framework.
+      Allows execution of tests developed using the <a href="http://openjdk.org/jtreg/">jtreg</a> framework.
     ]]></description>
     <vendor>openjdk</vendor>
 

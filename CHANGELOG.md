@@ -11,7 +11,7 @@
 ## [7.3](https://git.openjdk.org/jtreg/compare/jtreg-7.2+1...jtreg-7.3+1)
 
 * Updated set of default environment variables set for tests on Unix-like platforms.
-  * Includes `DBUS_SESSION_BUS_ADDRESS`, `WAYLAND_DISPLAY`, and `XDG-*` 
+  * Includes `DBUS_SESSION_BUS_ADDRESS`, `WAYLAND_DISPLAY`, and `XDG-*`
     [CODETOOLS-7903400](https://bugs.openjdk.org/browse/CODETOOLS-7903400)
 
 * Updated external dependencies.
@@ -22,7 +22,7 @@
   * AgentServer log() does not flush [CODETOOLS-7903470](https://bugs.openjdk.org/browse/CODETOOLS-7903470)
   * System.out and System.err messages are missing in jtr file when a test times out in agentvm mode [CODETOOLS-7903441](https://bugs.openjdk.org/browse/CODETOOLS-7903441)
   * Timeout refired %s times message confusing [CODETOOLS-7902485](https://bugs.openjdk.org/browse/CODETOOLS-7902485)
- 
+
 * Fixed race-condition when running tests with a multi-module setup
   * [CODETOOLS-7903507](https://bugs.openjdk.org/browse/CODETOOLS-7903507)
 
@@ -197,7 +197,7 @@
 * Support `@enablePreview`.
   * [CODETOOLS-7902654](https://bugs.openjdk.org/browse/CODETOOLS-7902654)
 
-* Use https://git.openjdk.java.net for CODE_TOOLS_URL.
+* Use https://git.openjdk.org for CODE_TOOLS_URL.
   * [CODETOOLS-7902637](https://bugs.openjdk.org/browse/CODETOOLS-7902637)
 
 * Ignore specified lines in `@compile/fail/ref=<file>`.
