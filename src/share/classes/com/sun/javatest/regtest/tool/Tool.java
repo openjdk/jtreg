@@ -46,6 +46,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -639,6 +640,13 @@ public class Tool {
             @Override
             public void process(String opt, String arg) {
                 showGroupsFlag = true;
+            }
+        },
+
+        new Option(NONE, MAIN, null, "-verifyexclude") {
+            @Override
+            public void process(String opt, String arg) {
+                verifyExcludeListsFlag = true;
             }
         },
 
@@ -1285,6 +1293,10 @@ public class Tool {
             return EXIT_OK;
         }
 
+        if (verifyExcludeListsFlag) {
+            verifyExcludeLists(testManager);
+        }
+
         if (listTestsFlag) {
             listTests(testManager);
             return EXIT_OK;
@@ -1405,6 +1417,63 @@ public class Tool {
                 : testStats.counts[Status.PASSED] == 0 && !foundEmptyGroup ? EXIT_NO_TESTS
                 : errors != 0 ? EXIT_FAULT
                 : EXIT_OK);
+    }
+
+    void verifyExcludeLists(TestManager testManager) throws BadArgs, Fault, Harness.Fault, InterruptedException  {
+        System.out.println("Ludvig verifying exclude files...");
+
+        List<String> validTestNames = new ArrayList<String>();
+        List<File> excludeFiles = new ArrayList<File>();
+        for (RegressionTestSuite ts: testManager.getTestSuites()) {
+            RegressionParameters params = createParameters(testManager, ts);
+            for (Iterator<TestResult> iter = getResultsIterator(params); iter.hasNext(); ) {
+                TestResult tr = iter.next();
+                out.println(tr.getTestName());
+                validTestNames.add(tr.getTestName());
+            }
+            File[] pls = params.getExcludeLists();
+            for (File f : pls) {
+                excludeFiles.add(f);
+            }
+        }
+        for(File plf : excludeFiles) {
+            try {
+                BufferedReader br = new BufferedReader(new FileReader(plf));
+                String line = null;
+                while ((line = br.readLine()) != null)
+                {
+                    line = line.trim();
+                    if (line.equals("")) continue;
+                    String[] words = line.split("\\s+");
+                    if (words.length == 0) continue;
+                    if (words[0].charAt(0) == '#') continue;
+
+                    // 0. Line is well-formatted
+                    if (words.length != 3) {
+                        throw new Error("Exclude file " + plf.getAbsolutePath() + ": test in following line does not contain three parts.\n" + 
+                        "-----\n" +
+                        line + 
+                        "-----");
+                    }
+
+                    String fullTestName = words[0];
+                    System.out.println("Ludvig test name: " + fullTestName);
+                    if (!validTestNames.contains(fullTestName)) {
+                        throw new Error("Exclude file " + plf.getAbsolutePath() + ": test in following line does not exist.\n" + 
+                        "-----\n" +
+                        line + 
+                        "-----");
+                    }
+                }
+            }
+            catch (FileNotFoundException e) {
+                System.out.println("File does not exist: "  + plf.getAbsolutePath());
+            }
+            catch (IOException e) {
+                System.out.println("File cannot be read: "  + plf.getAbsolutePath());
+            }
+        }
+        System.out.println("Did verify problemlists.");
     }
 
     JDK_Version checkJDK(JDK jdk) throws Fault {
@@ -2399,6 +2468,7 @@ public class Tool {
     private boolean checkFlag;
     private boolean listTestsFlag;
     private boolean showGroupsFlag;
+    private boolean verifyExcludeListsFlag;
     private List<String> envVarArgs = new ArrayList<>();
     private IgnoreKind ignoreKind;
     private List<Path> classPathAppendArg = new ArrayList<>();

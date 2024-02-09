@@ -150,6 +150,13 @@ public final class RegressionParameters
         mep.setExcludeFiles(FileUtils.toFiles(files));
     }
 
+    public File[] getExcludeLists() {
+        System.out.println("LUDVIG GET");
+        MutableExcludeListParameters mep =
+            (MutableExcludeListParameters) getExcludeListParameters();
+        return mep.getExcludeFiles();
+    }
+
     public void setPriorStatusValues(boolean[] b) {
         MutablePriorStatusParameters mpsp =
             (MutablePriorStatusParameters) getPriorStatusParameters();
