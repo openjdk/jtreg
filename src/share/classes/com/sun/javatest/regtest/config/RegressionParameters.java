@@ -151,7 +151,6 @@ public final class RegressionParameters
     }
 
     public File[] getExcludeLists() {
-        System.out.println("LUDVIG GET");
         MutableExcludeListParameters mep =
             (MutableExcludeListParameters) getExcludeListParameters();
         return mep.getExcludeFiles();
