@@ -1420,8 +1420,6 @@ public class Tool {
     }
 
     void verifyExcludeLists(TestManager testManager) throws BadArgs, Fault, Harness.Fault, InterruptedException  {
-        System.out.println("Ludvig verifying exclude files...");
-
         List<String> validTestNames = new ArrayList<String>();
         List<File> excludeFiles = new ArrayList<File>();
         for (RegressionTestSuite ts: testManager.getTestSuites()) {
@@ -1473,7 +1471,6 @@ public class Tool {
                 System.out.println("File cannot be read: "  + plf.getAbsolutePath());
             }
         }
-        System.out.println("Did verify problemlists.");
     }
 
     JDK_Version checkJDK(JDK jdk) throws Fault {
