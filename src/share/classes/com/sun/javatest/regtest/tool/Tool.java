@@ -643,7 +643,7 @@ public class Tool {
             }
         },
 
-        new Option(NONE, MAIN, null, "-verifyexclude") {
+        new Option(NONE, MAIN, null, "-ve", "-verifyexclude") {
             @Override
             public void process(String opt, String arg) {
                 verifyExcludeListsFlag = true;
@@ -1434,42 +1434,15 @@ public class Tool {
                 excludeFiles.add(f);
             }
         }
+        boolean hadErrors = false;
         for(File plf : excludeFiles) {
-            try {
-                BufferedReader br = new BufferedReader(new FileReader(plf));
-                String line = null;
-                while ((line = br.readLine()) != null)
-                {
-                    line = line.trim();
-                    if (line.equals("")) continue;
-                    String[] words = line.split("\\s+");
-                    if (words.length == 0) continue;
-                    if (words[0].charAt(0) == '#') continue;
+            ExcludeFileVerifier efv = new ExcludeFileVerifier();
+            efv.verify(plf, validTestNames);
+            hadErrors |= efv.getHadErrors();
+        }
 
-                    // 0. Line is well-formatted
-                    if (words.length != 3) {
-                        throw new Error("Exclude file " + plf.getAbsolutePath() + ": test in following line does not contain three parts.\n" +
-                        "-----\n" +
-                        line +
-                        "-----");
-                    }
-
-                    String fullTestName = words[0];
-                    System.out.println("Ludvig test name: " + fullTestName);
-                    if (!validTestNames.contains(fullTestName)) {
-                        throw new Error("Exclude file " + plf.getAbsolutePath() + ": test in following line does not exist.\n" +
-                        "-----\n" +
-                        line +
-                        "-----");
-                    }
-                }
-            }
-            catch (FileNotFoundException e) {
-                System.out.println("File does not exist: "  + plf.getAbsolutePath());
-            }
-            catch (IOException e) {
-                System.out.println("File cannot be read: "  + plf.getAbsolutePath());
-            }
+        if (hadErrors) {
+            error("Exclude lists had errors, resolve them.");
         }
     }
 
