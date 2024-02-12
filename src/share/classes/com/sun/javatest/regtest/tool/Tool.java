@@ -1448,18 +1448,18 @@ public class Tool {
 
                     // 0. Line is well-formatted
                     if (words.length != 3) {
-                        throw new Error("Exclude file " + plf.getAbsolutePath() + ": test in following line does not contain three parts.\n" + 
+                        throw new Error("Exclude file " + plf.getAbsolutePath() + ": test in following line does not contain three parts.\n" +
                         "-----\n" +
-                        line + 
+                        line +
                         "-----");
                     }
 
                     String fullTestName = words[0];
                     System.out.println("Ludvig test name: " + fullTestName);
                     if (!validTestNames.contains(fullTestName)) {
-                        throw new Error("Exclude file " + plf.getAbsolutePath() + ": test in following line does not exist.\n" + 
+                        throw new Error("Exclude file " + plf.getAbsolutePath() + ": test in following line does not exist.\n" +
                         "-----\n" +
-                        line + 
+                        line +
                         "-----");
                     }
                 }
