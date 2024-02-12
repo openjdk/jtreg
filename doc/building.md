@@ -40,6 +40,11 @@ variables used to define the location of dependencies to be downloaded.
 These are documented in _make/build.sh_ and are normally specified in
 _make/build-support/version-numbers_ and _make/build-support/*/version-numbers_ .
 
+### Rebuilding faster with `build/make.sh`
+
+After you have run `build.sh` once, if you wish to rebuild after making some 
+changes, you can run `build/make.sh` which should be significantly faster.
+
 ## Building `jtreg` with GNU Make
 
 If you don't want to use `build.sh` to build `jtreg`, you can invoke the
