@@ -1442,7 +1442,7 @@ public class Tool {
         }
 
         if (hadErrors) {
-            error("Exclude lists had errors, resolve them.");
+            error("Cannot run because an exclude list had errors, printed above. Either resolve them or remove the exlude list.");
         }
     }
 

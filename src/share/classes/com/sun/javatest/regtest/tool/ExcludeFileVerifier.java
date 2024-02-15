@@ -25,14 +25,15 @@ public class ExcludeFileVerifier {
             while ((line = br.readLine()) != null)
             {
                 n++;
-                line = line.trim();
-                if (lineIsComment(line)) continue;
-
+                if (lineIsComment(line.trim())) continue;
                 for(Check c : checks) {
-                    boolean result = c.check(line);
-                    if(!result)
-                    if(!c.check(line)) {
-                        System.out.println(file.getAbsolutePath() + " line " + n + ": " + c.error);
+                    if(!c.check(line.trim())) {
+                        System.out.println(file.getAbsolutePath() + " line " + n + " is invalid. Reason:");
+                        System.out.println(c.description());
+                        System.out.println("Line contents:");
+                        System.out.println("--------------");
+                        System.out.println(line);
+                        System.out.println("--------------");
                         hadErrors = true;
                     }
                 }
@@ -55,22 +56,18 @@ public class ExcludeFileVerifier {
     }
 
     abstract class Check {
-        public abstract String name();
+        public abstract String description();
         public abstract boolean check(String line);
-        public String error = "no error (should never see this)";
     }
 
     class LineFormatCheck extends Check {
-        public String name() {
-            return "Check line format.";
+        public String description() {
+            return "Must follow: <test-name> <bugid>(,<bugid>)* <platform>(,<platform>)* <description>";
         }
 
         public boolean check(String line) {
-            if (line.split("\\s+").length < 3) {
-                error = "Must follow format: <test-name> <bugid>(,<bugid>)* <platform>(,<platform>)* <description>";
-                return false;
-            }
-            return true;
+            // TODO a regex
+            return (line.split("\\s+").length >= 3);
         }
     }
 
@@ -81,18 +78,14 @@ public class ExcludeFileVerifier {
             this.validTestNames = validTestNames;
         }
 
-        public String name() {
-            return "Check that the test name exists.";
+        public String description() {
+            return "The fully qualified test must exists.";
         }
 
         public boolean check(String line) {
             String[] words = line.split("\\s+");
             String fullTestName = words[0];
-            if (!validTestNames.contains(fullTestName)) {
-                error = "Test does not exist:\n>" + fullTestName + "<";
-                return false;
-            }
-            return true;
+            return validTestNames.contains(fullTestName);
         }
     }
 }
