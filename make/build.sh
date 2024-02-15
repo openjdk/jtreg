@@ -784,7 +784,7 @@ make ASMTOOLS_JAR="${ASMTOOLS_JAR}"                           \\
      JUNIT_NOTICES="${JUNIT_NOTICES}"                         \\
      TESTNG_JARS="${TESTNG_JARS}"                             \\
      TESTNG_NOTICES="${TESTNG_NOTICES}"                       \\
-   ${MAKE_ARGS:-}
+   "\$@"
 EOF
 
-sh ${BUILD_DIR}/make.sh
+sh ${BUILD_DIR}/make.sh ${MAKE_ARGS:-}
