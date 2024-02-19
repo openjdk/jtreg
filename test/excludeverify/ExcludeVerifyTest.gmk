@@ -25,7 +25,7 @@
 
 #----------------------------------------------------------------------
 
-$(BUILDTESTDIR)/excludeverify.format.ok: \
+$(BUILDTESTDIR)/excludeverify.format.1.ok: \
                 $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(JTREG_IMAGEDIR)/lib/javatest.jar
 	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
@@ -35,7 +35,27 @@ $(BUILDTESTDIR)/excludeverify.format.ok: \
 		-jar $(JTREG_IMAGEJARDIR)/jtreg.jar \
 		-w:$(@:%.ok=%/work) \
 		-r:$(@:%.ok=%/report) \
-		-exclude:$(TESTDIR)/excludeverify/ProblemList/format.txt \
+		-exclude:$(TESTDIR)/excludeverify/ProblemList/format.1.txt \
+		-verifyexclude \
+		$(TESTDIR)/excludeverify \
+		> $(@:%.ok=%/log 2>&1) \
+	    && (cat $(@:%.ok=%/log) ; exit 1) \
+		|| (cat $(@:%.ok=%/log) ; exit 0)
+	$(GREP) -s "Must follow:" $(@:%.ok=%/log 2>&1)
+	$(GREP) -s "The fully qualified test must exists." $(@:%.ok=%/log 2>&1) && exit 1 || exit 0
+	echo $@ passed at `date` > $@
+
+$(BUILDTESTDIR)/excludeverify.format.2.ok: \
+                $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+		$(JTREG_IMAGEDIR)/lib/javatest.jar
+	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
+	$(MKDIR) -p $(@:%.ok=%)
+	$(JDKHOME)/bin/java \
+		-Djavatest.regtest.showCmd=true \
+		-jar $(JTREG_IMAGEJARDIR)/jtreg.jar \
+		-w:$(@:%.ok=%/work) \
+		-r:$(@:%.ok=%/report) \
+		-exclude:$(TESTDIR)/excludeverify/ProblemList/format.2.txt \
 		-verifyexclude \
 		$(TESTDIR)/excludeverify \
 		> $(@:%.ok=%/log 2>&1) \

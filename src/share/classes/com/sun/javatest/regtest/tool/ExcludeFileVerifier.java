@@ -7,6 +7,8 @@ import java.util.List;
 import java.io.IOException;
 import java.io.FileNotFoundException;
 import java.nio.file.Path;
+import java.util.regex.Pattern;
+import java.util.function.Predicate;
 
 public class ExcludeFileVerifier {
     private boolean hadErrors = false;
@@ -62,13 +64,14 @@ public class ExcludeFileVerifier {
     }
 
     class LineFormatCheck extends Check {
+        private static final String commalist = "([\\w-]+)(,[\\w-]+)*";
+        private static final String p = "\\S+\\s+" + commalist + "\\s" + commalist + ".*";
         public String description() {
             return "Must follow: <test-name> <bugid>(,<bugid>)* <platform>(,<platform>)* <description>";
         }
 
         public boolean check(String line) {
-            // TODO a regex
-            return (line.split("\\s+").length >= 3);
+            return Pattern.matches(p, line);
         }
     }
 
