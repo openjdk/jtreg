@@ -103,7 +103,7 @@ public class ExcludeFileVerifier {
     class DuplicateCheck extends Check {
         private List<String> usedTestNames;
 
-        public DuplicateCheck(List<String> usedTestNames) {
+        public TestExistsCheck(List<String> usedTestNames) {
             this.usedTestNames = usedTestNames;
         }
 
