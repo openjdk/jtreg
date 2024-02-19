@@ -40,7 +40,7 @@ $(BUILDTESTDIR)/excludeverify.format.1.ok: \
 		$(TESTDIR)/excludeverify \
 		> $(@:%.ok=%/log 2>&1) \
 	    && (cat $(@:%.ok=%/log) ; exit 1) \
-		|| (cat $(@:%.ok=%/log) ; exit 0)
+		|| (exit 0)
 	$(GREP) -s "Must follow:" $(@:%.ok=%/log 2>&1)
 	$(GREP) -s "The fully qualified test must exists." $(@:%.ok=%/log 2>&1) && exit 1 || exit 0
 	echo $@ passed at `date` > $@
@@ -60,7 +60,7 @@ $(BUILDTESTDIR)/excludeverify.format.2.ok: \
 		$(TESTDIR)/excludeverify \
 		> $(@:%.ok=%/log 2>&1) \
 	    && (cat $(@:%.ok=%/log) ; exit 1) \
-		|| (cat $(@:%.ok=%/log) ; exit 0)
+		|| (exit 0)
 	$(GREP) -s "Must follow:" $(@:%.ok=%/log 2>&1)
 	$(GREP) -s "The fully qualified test must exists." $(@:%.ok=%/log 2>&1) && exit 1 || exit 0
 	echo $@ passed at `date` > $@
@@ -80,7 +80,7 @@ $(BUILDTESTDIR)/excludeverify.exist.ok: \
 		$(TESTDIR)/excludeverify \
 		> $(@:%.ok=%/log 2>&1) \
 	    && (cat $(@:%.ok=%/log) ; exit 1) \
-		|| (cat $(@:%.ok=%/log) ; exit 0)
+		|| (exit 0)
 	$(GREP) -s "Must follow:" $(@:%.ok=%/log 2>&1) && exit 1 || exit 0
 	$(GREP) -s "The fully qualified test must exists." $(@:%.ok=%/log 2>&1)
 	echo $@ passed at `date` > $@
@@ -100,7 +100,7 @@ $(BUILDTESTDIR)/excludeverify.id.ok: \
 		$(TESTDIR)/excludeverify \
 		> $(@:%.ok=%/log 2>&1) \
 	    && (cat $(@:%.ok=%/log) ; exit 1) \
-		|| (cat $(@:%.ok=%/log) ; exit 0)
+		|| (exit 0)
 	$(GREP) -s "The fully qualified test must exists." $(@:%.ok=%/log 2>&1)
 	echo $@ passed at `date` > $@
 
@@ -136,7 +136,7 @@ $(BUILDTESTDIR)/excludeverify.duplicate.ok: \
 		$(TESTDIR)/excludeverify \
 		> $(@:%.ok=%/log 2>&1) \
 	    && (cat $(@:%.ok=%/log) ; exit 1) \
-		|| (cat $(@:%.ok=%/log) ; exit 0)
+		|| (exit 0)
 	$(GREP) -s "Exclude file cannot contain duplicate entries." $(@:%.ok=%/log 2>&1)
 	echo $@ passed at `date` > $@
 
