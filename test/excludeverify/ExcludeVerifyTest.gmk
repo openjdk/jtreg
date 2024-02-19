@@ -141,4 +141,9 @@ $(BUILDTESTDIR)/excludeverify.duplicate.ok: \
 	echo $@ passed at `date` > $@
 
 TESTS.jtreg += \
-	$(BUILDTESTDIR)/excludeverify.ok \
+	$(BUILDTESTDIR)/excludeverify.duplicate.ok \
+	$(BUILDTESTDIR)/excludeverify.format.1.ok \
+	$(BUILDTESTDIR)/excludeverify.format.2.ok \
+	$(BUILDTESTDIR)/excludeverify.good.ok \
+	$(BUILDTESTDIR)/excludeverify.id.ok \
+	$(BUILDTESTDIR)/excludeverify.exist.ok
