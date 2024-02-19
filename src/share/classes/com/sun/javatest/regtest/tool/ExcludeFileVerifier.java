@@ -35,6 +35,7 @@ public class ExcludeFileVerifier {
                         System.out.println(line);
                         System.out.println("--------------");
                         hadErrors = true;
+                        break;
                     }
                 }
             }
