@@ -11,14 +11,22 @@ import java.util.regex.Pattern;
 import java.util.function.Predicate;
 
 public class ExcludeFileVerifier {
+    private static String testName(String line) {
+        line = line.trim();
+        String[] words = line.split("\\s+");
+        return words.length >= 1 ? words[0] : null;
+    }
+
     private boolean hadErrors = false;
     public boolean getHadErrors() {
         return hadErrors;
     }
     public boolean verify(File file, List<String> validTestNames) {
+        ArrayList<String> usedTestNames = new ArrayList<String>();
         ArrayList<Check> checks = new ArrayList<Check>();
         checks.add(new LineFormatCheck());
         checks.add(new TestExistsCheck(validTestNames));
+        checks.add(new DuplicateCheck(usedTestNames));
 
         try {
             BufferedReader br = new BufferedReader(new FileReader(file));
@@ -40,14 +48,15 @@ public class ExcludeFileVerifier {
                         break;
                     }
                 }
+                usedTestNames.add(testName(line));
             }
-            }
-            catch (FileNotFoundException e) {
-                System.out.println("File does not exist: "  + file.getAbsolutePath());
-            }
-            catch (IOException e) {
-                System.out.println("File cannot be read: "  + file.getAbsolutePath());
-            }
+        }
+        catch (FileNotFoundException e) {
+            System.out.println("File does not exist: "  + file.getAbsolutePath());
+        }
+        catch (IOException e) {
+            System.out.println("File cannot be read: "  + file.getAbsolutePath());
+        }
         return true;
     }
 
@@ -87,9 +96,23 @@ public class ExcludeFileVerifier {
         }
 
         public boolean check(String line) {
-            String[] words = line.split("\\s+");
-            String fullTestName = words[0];
-            return validTestNames.contains(fullTestName);
+            return validTestNames.contains(testName(line));
+        }
+    }
+
+    class DuplicateCheck extends Check {
+        private List<String> usedTestNames;
+
+        public DuplicateCheck(List<String> usedTestNames) {
+            this.usedTestNames = usedTestNames;
+        }
+
+        public String description() {
+            return "Exclude file cannot contain duplicate entries.";
+        }
+
+        public boolean check(String line) {
+            return !usedTestNames.contains(testName(line));
         }
     }
 }
