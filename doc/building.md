@@ -106,8 +106,11 @@ of the `legal` directory in the generated image.
 
 ## Running `jtreg` Self-Tests
 
-The tests can be invoked with individual make targets, or collectively via the
-`test` target.
+`make test` will run all the self-tests. To invoke individual tests, use the 
+`.ok` file of each test as target, for example
+```
+bash build/make.sh -- $(pwd)/build/test/ControlTest.ok
+```
 
 Some tests depend on specific versions of JDK being available, specified
 by the following variables: `JDK8HOME`, `JDK9HOME`, `JDK14HOME`, `JDK18HOME`.
