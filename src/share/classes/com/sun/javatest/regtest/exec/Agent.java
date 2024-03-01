@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2023, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010, 2024, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -38,6 +38,7 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.lang.reflect.Method;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -145,7 +146,8 @@ public class Agent {
             // using a fixed port.) The default setting for SO_REUSEADDR
             // is platform-specific, and Solaris has it on by default.
             ss.setReuseAddress(false);
-            ss.bind(new InetSocketAddress(/*port:*/ 0), /*backlog:*/ 1);
+            InetAddress loopbackAddr = InetAddress.getLoopbackAddress();
+            ss.bind(new InetSocketAddress(loopbackAddr, /*port:*/ 0), /*backlog:*/ 1);
             final int port = ss.getLocalPort();
             cmd.add(AgentServer.PORT);
             cmd.add(String.valueOf(port));
