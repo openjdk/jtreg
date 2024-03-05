@@ -203,7 +203,7 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
 
         @Override
         public void executionSkipped(TestIdentifier identifier, String reason) {
-            if (verbose.passMode != AgentVerbose.Mode.FULL) return;
+            if (verbose.passMode == AgentVerbose.Mode.NONE) return;
             if (identifier.isTest()) {
                 String status = "SKIPPED";
                 String source = toSourceString(identifier);
@@ -220,7 +220,7 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
 
         @Override
         public void executionStarted(TestIdentifier identifier) {
-            if (verbose.passMode != AgentVerbose.Mode.FULL) return;
+            if (verbose.passMode == AgentVerbose.Mode.NONE) return;
             if (identifier.isTest()) {
                 String status = "STARTED";
                 String source = toSourceString(identifier);
@@ -237,7 +237,7 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
 
         @Override
         public void executionFinished(TestIdentifier identifier, TestExecutionResult result) {
-            if (verbose.passMode != AgentVerbose.Mode.FULL) return;
+            if (verbose.passMode == AgentVerbose.Mode.NONE) return;
             lock.lock();
             try {
                 TestExecutionResult.Status status = result.getStatus();
@@ -260,7 +260,7 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
 
         @Override
         public void reportingEntryPublished(TestIdentifier identifier, ReportEntry entry) {
-            if (verbose.passMode != AgentVerbose.Mode.FULL) return;
+            if (verbose.passMode == AgentVerbose.Mode.NONE) return;
             lock.lock();
             try {
                 printer.println(identifier.getDisplayName() + " -> " + entry.getTimestamp());
