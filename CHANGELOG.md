@@ -2,6 +2,7 @@
 
 * Use SOURCE_BUILD_EPOCH to suppport reproducible builds
   [CODETOOLS-7903539](https://bugs.openjdk.org/browse/CODETOOLS-7903539)
+* Updated jtreg to bundle JUnit 5.10.2 [CODETOOLS-7903578](https://bugs.openjdk.org/browse/CODETOOLS-7903578)
 
 ## [7.3.1](https://git.openjdk.org/jtreg/compare/jtreg-7.3+1...jtreg-7.3.1+1)
 
