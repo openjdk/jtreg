@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2024, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -208,11 +208,11 @@ abstract class ScratchDirectory {
 
         boolean ok = true;
         File[] children = dir.listFiles();
-        if (children == null) { // should always be not null, but sometimes it is
+        if (children == null) { // should always be not null, but File.listFiles() allows for it
             log.println("warning: cannot list contents of directory " + dir);
             ok = false;
         } else {
-            for (File file: dir.listFiles()) {
+            for (File file: children) {
                 if (isDirectory(file)) {
                     ok &= deleteFiles(file, p, match, true, badFiles, log);
                 } else {
