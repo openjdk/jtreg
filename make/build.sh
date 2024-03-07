@@ -770,7 +770,9 @@ cat > ${BUILD_DIR}/make.sh << EOF
 #!/bin/sh
 
 cd "${ROOT}/make"
-make ASMTOOLS_JAR="${ASMTOOLS_JAR}"                           \\
+make JT_HOME=""                                               \\
+     JTREG_HOME=""                                            \\
+     ASMTOOLS_JAR="${ASMTOOLS_JAR}"                           \\
      ASMTOOLS_NOTICES="${ASMTOOLS_NOTICES}"                   \\
      BUILDDIR="${BUILD_DIR}"                                  \\
      BUILD_MILESTONE="${JTREG_BUILD_MILESTONE}"               \\
