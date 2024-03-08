@@ -1298,7 +1298,7 @@ public final class RegressionParameters
         this.matchLists = List.of(files);
     }
 
-    List<Path> getMatchLists() {
+    public List<Path> getMatchLists() {
         return Collections.unmodifiableList(matchLists);
     }
 

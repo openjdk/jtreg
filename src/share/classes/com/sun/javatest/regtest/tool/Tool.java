@@ -1429,9 +1429,11 @@ public class Tool {
                 out.println(tr.getTestName());
                 validTestNames.add(tr.getTestName());
             }
-            File[] pls = params.getExcludeLists();
-            for (File f : pls) {
+            for (File f : params.getExcludeLists()) {
                 excludeFiles.add(f);
+            }
+            for (Path p : params.getMatchLists()) {
+                excludeFiles.add(p.toFile());
             }
         }
         boolean hadErrors = false;
