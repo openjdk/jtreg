@@ -153,7 +153,9 @@ public final class RegressionParameters
     public File[] getExcludeLists() {
         MutableExcludeListParameters mep =
             (MutableExcludeListParameters) getExcludeListParameters();
-        return mep.getExcludeFiles();
+        return mep.getExcludeFiles() != null 
+            ? mep.getExcludeFiles() 
+            : new File[0];
     }
 
     public void setPriorStatusValues(boolean[] b) {
