@@ -1,20 +1,22 @@
 package com.sun.javatest.regtest.tool;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.io.IOException;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.file.Path;
-import java.util.regex.Pattern;
+import java.util.ArrayList;
 import java.util.function.Predicate;
+import java.util.List;
+import java.util.regex.Pattern;
 
 public class ExcludeFileVerifier {
-    private static String testName(String line) {
-        line = line.trim();
-        String[] words = line.split("\\s+");
-        return words.length >= 1 ? words[0] : null;
+    private PrintWriter out;
+
+    public ExcludeFileVerifier(PrintWriter out) {
+        this.out = out;
     }
 
     private boolean hadErrors = false;
@@ -32,18 +34,17 @@ public class ExcludeFileVerifier {
             BufferedReader br = new BufferedReader(new FileReader(file));
             String line = null;
             int n = 0;
-            while ((line = br.readLine()) != null)
-            {
+            while ((line = br.readLine()) != null) {
                 n++;
                 if (lineIsComment(line.trim())) continue;
-                for(Check c : checks) {
+                for (Check c : checks) {
                     if(!c.check(line.trim())) {
-                        System.out.println(file.getAbsolutePath() + " line " + n + " is invalid. Reason:");
-                        System.out.println(c.description());
-                        System.out.println("Line contents:");
-                        System.out.println("--------------");
-                        System.out.println(line);
-                        System.out.println("--------------");
+                        out.println(file.getAbsolutePath() + " line " + n + " is invalid. Reason:");
+                        out.println(c.description());
+                        out.println("Line contents:");
+                        out.println("--------------");
+                        out.println(line);
+                        out.println("--------------");
                         hadErrors = true;
                         break;
                     }
@@ -66,6 +67,13 @@ public class ExcludeFileVerifier {
         if (line.charAt(0) == '#') return true;
         return false;
     }
+
+    private static String testName(String line) {
+        line = line.trim();
+        String[] words = line.split("\\s+");
+        return words.length >= 1 ? words[0] : null;
+    }
+
 
     abstract class Check {
         public abstract String description();

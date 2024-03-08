@@ -1436,7 +1436,7 @@ public class Tool {
         }
         boolean hadErrors = false;
         for(File plf : excludeFiles) {
-            ExcludeFileVerifier efv = new ExcludeFileVerifier();
+            ExcludeFileVerifier efv = new ExcludeFileVerifier(out);
             efv.verify(plf, validTestNames);
             hadErrors |= efv.getHadErrors();
         }
