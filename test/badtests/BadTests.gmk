@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2024, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -41,7 +41,11 @@ $(BUILDTESTDIR)/BadTests.othervm.ok: \
 		$(TESTDIR)/badtests \
 			> $(@:%.ok=%/jt.log) 2>&1 || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
-	$(GREP) -s 'Test results: passed: 18; failed: 2' $(@:%.ok=%/jt.log)  > /dev/null
+	if [ ${JAVA_SPECIFICATION_VERSION} -lt 18 ]; then \
+		$(GREP) -s 'Test results: passed: 18; failed: 2' $(@:%.ok=%/jt.log)  > /dev/null ; \
+	else \
+		$(GREP) -s 'Test results: passed: 15; failed: 2' $(@:%.ok=%/jt.log)  > /dev/null ; \
+	fi
 	echo "test passed at `date`" > $@
 
 # Run bad tests in agentvm mode
@@ -67,9 +71,18 @@ $(BUILDTESTDIR)/BadTests.agentvm.ok: \
 		$(TESTDIR)/badtests \
 			> $(@:%.ok=%/jt.log) 2>&1 || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
-	$(GREP) -s 'Test results: passed: 17; failed: 1; error: 2' $(@:%.ok=%/jt.log)  > /dev/null
 	agents=`$(GREP) '^\[[-0-9 :,]*\] Agent\[[0-9][0-9]*\]: Launching' $(@:%.ok=%/jt.log) | wc -l` ; \
-	if [ $${agents} -ne 4 ]; then echo "Unexpected number of agents used: $${agents}" ; exit 1 ; fi
+	if [ ${JAVA_SPECIFICATION_VERSION} -lt 18 ]; then \
+		$(GREP) -s 'Test results: passed: 17; failed: 1; error: 2' $(@:%.ok=%/jt.log)  > /dev/null ; \
+		if [ $${agents} -ne 4 ]; then \
+			echo "Unexpected number of agents used: $${agents}" ; exit 1 ; \
+		fi \
+	else \
+		$(GREP) -s 'Test results: passed: 15; failed: 2' $(@:%.ok=%/jt.log)  > /dev/null ; \
+		if [ $${agents} -ne 2 ]; then \
+			echo "Unexpected number of agents used: $${agents}" ; exit 1 ; \
+		fi \
+	fi
 	echo "test passed at `date`" > $@
 
 ifneq ($(OS_NAME), windows)

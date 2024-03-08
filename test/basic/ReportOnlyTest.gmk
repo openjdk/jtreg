@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2024, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -25,13 +25,8 @@
 
 #----------------------------------------------------------------------
 
-ifdef HEADLESS
-REPORT_EXPECT_PASS = 91
-REPORT_EXPECT_FAIL = 40
-else
-REPORT_EXPECT_PASS = 93
-REPORT_EXPECT_FAIL = 44
-endif
+REPORT_EXPECT_PASS := $(shell if [ ${JAVA_SPECIFICATION_VERSION} -lt 18 ]; then echo 91; else echo 88; fi)
+REPORT_EXPECT_FAIL := $(shell if [ ${JAVA_SPECIFICATION_VERSION} -lt 18 ]; then echo 40; else echo 28; fi)
 
 # for full JavaTest gui, add "-gui" to jtreg call
 $(BUILDTESTDIR)/ReportOnlyTest.ok: $(BUILDTESTDIR)/Basic.othervm.ok \
@@ -40,6 +35,7 @@ $(BUILDTESTDIR)/ReportOnlyTest.ok: $(BUILDTESTDIR)/Basic.othervm.ok \
 		   $(JTREG_IMAGEDIR)/bin/jtreg
 	JAVA_HOME=$(JDKHOME) CLASSPATH=$(ABSCLASSDIR) \
 	    $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+	    -k:!needDisplay \
 		-reportOnly  -automatic -v \
 		-workDir:$(BUILDTESTDIR)/Basic.othervm/work \
 		-reportDir:$(BUILDTESTDIR)/$(@:%.ok=%) \
