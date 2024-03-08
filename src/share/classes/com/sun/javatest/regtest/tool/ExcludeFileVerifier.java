@@ -74,25 +74,24 @@ public class ExcludeFileVerifier {
         return words.length >= 1 ? words[0] : null;
     }
 
-
-    abstract class Check {
+    abstract static class Check {
         public abstract String description();
         public abstract boolean check(String line);
     }
 
-    class LineFormatCheck extends Check {
+    static class LineFormatCheck extends Check {
         private static final String commalist = "([\\w-]+)(,[\\w-]+)*";
-        private static final String p = "\\S+\\s+" + commalist + "\\s" + commalist + ".*";
+        private static Pattern pattern = Pattern.compile("\\S+\\s+" + commalist + "\\s" + commalist + ".*");
         public String description() {
             return "Must follow: <test-name> <bugid>(,<bugid>)* <platform>(,<platform>)* <description>";
         }
 
         public boolean check(String line) {
-            return Pattern.matches(p, line);
+            return pattern.matcher(line).matches();
         }
     }
 
-    class TestExistsCheck extends Check {
+    static class TestExistsCheck extends Check {
         private List<String> validTestNames;
 
         public TestExistsCheck(List<String> validTestNames) {
@@ -108,7 +107,7 @@ public class ExcludeFileVerifier {
         }
     }
 
-    class DuplicateCheck extends Check {
+    static class DuplicateCheck extends Check {
         private List<String> usedTestNames;
 
         public DuplicateCheck(List<String> usedTestNames) {
