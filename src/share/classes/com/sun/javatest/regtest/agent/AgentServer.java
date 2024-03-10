@@ -55,9 +55,17 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import static java.nio.charset.StandardCharsets.US_ASCII;
+
 
 @SuppressWarnings("removal") // Security Manager and related APIs
 public final class AgentServer implements ActionHelper.OutputHandler {
+
+    /**
+     * The handshake bytes that the AgentServer sends over a Socket to the Agent
+     * to complete the communication handshake
+     */
+    public static final byte[] JTREG_AGENT_HANDSHAKE_MAGIC = "jtreg".getBytes(US_ASCII);
 
     /**
      * Main program used to invoke and run the server in child JVMs
@@ -182,7 +190,7 @@ public final class AgentServer implements ActionHelper.OutputHandler {
                 testThreadFactory = args[++i];
             } else if (arg.equals(CUSTOM_TEST_THREAD_FACTORY_PATH) && i + 1 < args.length) {
                 testThreadFactoryPath = args[++i];
-        }   else {
+            } else {
                 throw new IllegalArgumentException(arg);
             }
         }
@@ -210,6 +218,9 @@ public final class AgentServer implements ActionHelper.OutputHandler {
             log("Connecting to " + host + ":" + port);
             Socket s = new Socket(host, port);
             s.setSoTimeout((int)(KeepAlive.READ_TIMEOUT * timeoutFactor));
+            log("Connected to " + s.getRemoteSocketAddress() + ", now sending handshake bytes");
+            // before doing anything, complete the handshake with the other side
+            writeHandshakeMagicBytes(s);
             in = new DataInputStream(new BufferedInputStream(s.getInputStream()));
             out = new DataOutputStream(new BufferedOutputStream(s.getOutputStream()));
             log("Listening for commands at " + s.getLocalSocketAddress());
@@ -229,6 +240,12 @@ public final class AgentServer implements ActionHelper.OutputHandler {
             }
             rsm.setAllowSetIO(true);
         }
+    }
+
+    private static void writeHandshakeMagicBytes(final Socket s) throws IOException {
+        final OutputStream os = s.getOutputStream();
+        os.write(JTREG_AGENT_HANDSHAKE_MAGIC);
+        os.flush();
     }
 
     public void run() throws IOException {

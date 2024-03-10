@@ -45,6 +45,7 @@ import java.net.Socket;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
@@ -147,7 +148,11 @@ public class Agent {
             // is platform-specific, and Solaris has it on by default.
             ss.setReuseAddress(false);
             InetAddress loopbackAddr = InetAddress.getLoopbackAddress();
-            ss.bind(new InetSocketAddress(loopbackAddr, /*port:*/ 0), /*backlog:*/ 1);
+            // we allow for some unexpected processes to connect to the port we listen on.
+            // we discard such connections if, after connecting, our internal handshake fails
+            final int maxAcceptAttempts = 3;
+            final int backlog = maxAcceptAttempts;
+            ss.bind(new InetSocketAddress(loopbackAddr, /*port:*/ 0), backlog);
             final int port = ss.getLocalPort();
             cmd.add(AgentServer.PORT);
             cmd.add(String.valueOf(port));
@@ -182,12 +187,24 @@ public class Agent {
                 final int ACCEPT_TIMEOUT = (int) (60 * 1000 * timeoutFactor);
                 // default 60 seconds, for server to start and "phone home"
                 ss.setSoTimeout(ACCEPT_TIMEOUT);
-                log("Waiting up to " + ACCEPT_TIMEOUT + " milli seconds for a" +
-                        " socket connection on port " + port +
-                        (pid != UNKNOWN_PID ? " from process " + pid : ""));
-                Socket s = ss.accept();
-                log("Received connection on port " + port + " from " + s);
-                s.setSoTimeout((int)(KeepAlive.READ_TIMEOUT * timeoutFactor));
+                final int readTimeout = (int) (KeepAlive.READ_TIMEOUT * timeoutFactor);
+                Socket s = null;
+                for (int i = 0; i < maxAcceptAttempts; i++) {
+                    log("Waiting up to " + ACCEPT_TIMEOUT + " milli seconds for a" +
+                            " socket connection on port " + port +
+                            (pid != UNKNOWN_PID ? " from process " + pid : ""));
+                    s = acceptAndHandshake(ss, readTimeout);
+                    if (s != null) {
+                        // successful accept() and handshake
+                        break;
+                    }
+                }
+                if (s == null) {
+                    throw new IOException("could not complete handshake with AgentServer after "
+                            + maxAcceptAttempts + " attempts");
+                }
+                log("Successful handshake on port " + port + " from " + s);
+                s.setSoTimeout(readTimeout);
                 in = new DataInputStream(s.getInputStream());
                 out = new DataOutputStream(s.getOutputStream());
             } finally {
@@ -210,6 +227,46 @@ public class Agent {
             }
             throw new Fault(e);
         }
+    }
+
+    // accept()s a connection over the ServerSocket and then reads handshake bytes
+    // from the connected socket. if the read bytes match the expected handshake bytes
+    // then the connection and handshake is considered successful and the accepted
+    // Socket is returned. if the read bytes don't match the expected handshake bytes
+    // or if the read times out after accept()ing an connection, then this method
+    // closes the accepted connection and returns null.
+    private Socket acceptAndHandshake(final ServerSocket ss, final int handshakeReadTimeout)
+            throws IOException {
+        final Socket s = ss.accept();
+        try {
+            log("Received connection on port " + ss.getLocalPort() + " from " + s);
+            s.setSoTimeout(handshakeReadTimeout);
+            // read the handshake bytes
+            final byte[] handshakeBytes = new byte[JTREG_AGENT_HANDSHAKE_MAGIC.length];
+            final int numRead = s.getInputStream().read(handshakeBytes);
+            if (numRead == -1) {
+                // EOF
+                log("Received EOF before handshake from " + s);
+                return null;
+            }
+            // verify the handshake bytes
+            if (!Arrays.equals(JTREG_AGENT_HANDSHAKE_MAGIC, handshakeBytes)) {
+                log("Unexpected handshake bytes from socket: " + s + ", expected: "
+                        + Arrays.toString(JTREG_AGENT_HANDSHAKE_MAGIC)
+                        + ", actual: " + Arrays.toString(handshakeBytes));
+                return null;
+            }
+        } catch (IOException ioe) {
+            log("closing connection to " + s + " due to: " + ioe);
+            try {
+                s.close();
+            } catch (IOException ignored) {
+                // ignore
+            }
+            return null;
+        }
+        // got the expected handshake bytes
+        return s;
     }
 
     /**
