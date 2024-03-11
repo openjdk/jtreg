@@ -114,7 +114,7 @@ as the target to be built. For example:
 ```
 bash build/make.sh -- $(pwd)/build/test/ControlTest.ok
 ```
-Read more about test makesfiles in [test/README.md](test/README.md#makefiles).
+Read more about test makefiles in [test/README.md](test/README.md#makefiles).
 
 Some tests depend on specific versions of JDK being available, specified
 by the following variables: `JDK8HOME`, `JDK9HOME`, `JDK14HOME`, `JDK18HOME`.
