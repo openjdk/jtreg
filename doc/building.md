@@ -109,7 +109,7 @@ of the `legal` directory in the generated image.
 To run all the self-tests, use `make test`. This takes a couple minutes. 
 
 Any individual test can be run in isolation by running make with the full 
-absolute pathname for the marker file (that is, the *.ok target fort the test) 
+absolute pathname for the marker file (that is, the *.ok target for the test) 
 as the target to be built. For example:
 ```
 bash build/make.sh -- $(pwd)/build/test/ControlTest.ok

@@ -53,7 +53,7 @@ the test target can be conditionally included in `TESTS.jtreg` using `ifdef` or 
 mechanisms.
 
 Any individual test can be run in isolation by running `make` with the full
-absolute pathname for the marker file (that is, the `*.ok` target fort the test)
+absolute pathname for the marker file (that is, the `*.ok` target for the test)
 as the target to be built.
 
 ## Tests
