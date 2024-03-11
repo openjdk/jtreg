@@ -97,7 +97,7 @@ $(BUILDTESTDIR)/ExitCodeTest.Fault.ok: \
         if [ "$$rc" != 5 ]; then echo "unexpected exit code: " $$rc ; exit 1 ; fi
 	echo "test passed at `date`" > $@
 
-EXPECTED_ERR_MSG := "test result: Error. unexpected exit code: 211, doesn't match exit status: \"Passed.\" which was logged by the test process"
+EXPECTED_ERR_MSG := "test result: Error. unexpected exit code: 211, doesn't match exit status: \"Passed.\" which was reported by the test process"
 $(BUILDTESTDIR)/ExitCodeTest.ErrorAfterPass.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
