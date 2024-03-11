@@ -643,7 +643,7 @@ public class Tool {
             }
         },
 
-        new Option(NONE, MAIN, null, "-ve", "-verifyexclude") {
+        new Option(NONE, MAIN, null, "-i", "--verify-exclude") {
             @Override
             public void process(String opt, String arg) {
                 verifyExcludeListsFlag = true;

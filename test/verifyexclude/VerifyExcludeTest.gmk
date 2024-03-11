@@ -36,7 +36,7 @@ $(BUILDTESTDIR)/verifyexclude.format.1.ok: \
 		-w:$(@:%.ok=%/work) \
 		-r:$(@:%.ok=%/report) \
 		-exclude:$(TESTDIR)/verifyexclude/ProblemList/format.1.txt \
-		-verifyexclude \
+		--verify-exclude \
 		$(TESTDIR)/verifyexclude \
 		> $(@:%.ok=%/log 2>&1) \
 	    && (cat $(@:%.ok=%/log) ; exit 1) \
@@ -56,7 +56,7 @@ $(BUILDTESTDIR)/verifyexclude.format.2.ok: \
 		-w:$(@:%.ok=%/work) \
 		-r:$(@:%.ok=%/report) \
 		-exclude:$(TESTDIR)/verifyexclude/ProblemList/format.2.txt \
-		-verifyexclude \
+		--verify-exclude \
 		$(TESTDIR)/verifyexclude \
 		> $(@:%.ok=%/log 2>&1) \
 	    && (cat $(@:%.ok=%/log) ; exit 1) \
@@ -76,7 +76,7 @@ $(BUILDTESTDIR)/verifyexclude.exist.ok: \
 		-w:$(@:%.ok=%/work) \
 		-r:$(@:%.ok=%/report) \
 		-exclude:$(TESTDIR)/verifyexclude/ProblemList/exist.txt \
-		-verifyexclude \
+		--verify-exclude \
 		$(TESTDIR)/verifyexclude \
 		> $(@:%.ok=%/log 2>&1) \
 	    && (cat $(@:%.ok=%/log) ; exit 1) \
@@ -96,7 +96,7 @@ $(BUILDTESTDIR)/verifyexclude.id.ok: \
 		-w:$(@:%.ok=%/work) \
 		-r:$(@:%.ok=%/report) \
 		-exclude:$(TESTDIR)/verifyexclude/ProblemList/id.txt \
-		-verifyexclude \
+		--verify-exclude \
 		$(TESTDIR)/verifyexclude \
 		> $(@:%.ok=%/log 2>&1) \
 	    && (cat $(@:%.ok=%/log) ; exit 1) \
@@ -115,7 +115,7 @@ $(BUILDTESTDIR)/verifyexclude.good.ok: \
 		-w:$(@:%.ok=%/work) \
 		-r:$(@:%.ok=%/report) \
 		-exclude:$(TESTDIR)/verifyexclude/ProblemList/good.txt \
-		-verifyexclude \
+		--verify-exclude \
 		$(TESTDIR)/verifyexclude \
 		> $(@:%.ok=%/log 2>&1) \
 	    || (cat $(@:%.ok=%/log) ; exit 1)
@@ -132,7 +132,7 @@ $(BUILDTESTDIR)/verifyexclude.duplicate.ok: \
 		-w:$(@:%.ok=%/work) \
 		-r:$(@:%.ok=%/report) \
 		-exclude:$(TESTDIR)/verifyexclude/ProblemList/duplicate.txt \
-		-verifyexclude \
+		--verify-exclude \
 		$(TESTDIR)/verifyexclude \
 		> $(@:%.ok=%/log 2>&1) \
 	    && (cat $(@:%.ok=%/log) ; exit 1) \
@@ -151,7 +151,7 @@ $(BUILDTESTDIR)/verifyexclude.match.format.1.ok: \
 		-w:$(@:%.ok=%/work) \
 		-r:$(@:%.ok=%/report) \
 		-match:$(TESTDIR)/verifyexclude/ProblemList/format.1.txt \
-		-verifyexclude \
+		--verify-exclude \
 		$(TESTDIR)/verifyexclude \
 		> $(@:%.ok=%/log 2>&1) \
 	    && (cat $(@:%.ok=%/log) ; exit 1) \
@@ -160,10 +160,31 @@ $(BUILDTESTDIR)/verifyexclude.match.format.1.ok: \
 	$(GREP) -s "The fully qualified test must exists." $(@:%.ok=%/log 2>&1) && exit 1 || exit 0
 	echo $@ passed at `date` > $@
 
+$(BUILDTESTDIR)/verifyexclude.shortform.ok: \
+                $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+		$(JTREG_IMAGEDIR)/lib/javatest.jar
+	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
+	$(MKDIR) -p $(@:%.ok=%)
+	$(JDKHOME)/bin/java \
+		-Djavatest.regtest.showCmd=true \
+		-jar $(JTREG_IMAGEJARDIR)/jtreg.jar \
+		-w:$(@:%.ok=%/work) \
+		-r:$(@:%.ok=%/report) \
+		-exclude:$(TESTDIR)/verifyexclude/ProblemList/format.1.txt \
+		-i \
+		$(TESTDIR)/verifyexclude \
+		> $(@:%.ok=%/log 2>&1) \
+	    && (cat $(@:%.ok=%/log) ; exit 1) \
+		|| (exit 0)
+	$(GREP) -s "Must follow:" $(@:%.ok=%/log 2>&1)
+	echo $@ passed at `date` > $@
+
 TESTS.jtreg += \
 	$(BUILDTESTDIR)/verifyexclude.duplicate.ok \
 	$(BUILDTESTDIR)/verifyexclude.format.1.ok \
 	$(BUILDTESTDIR)/verifyexclude.format.2.ok \
 	$(BUILDTESTDIR)/verifyexclude.good.ok \
 	$(BUILDTESTDIR)/verifyexclude.id.ok \
-	$(BUILDTESTDIR)/verifyexclude.exist.ok
+	$(BUILDTESTDIR)/verifyexclude.exist.ok \
+    $(BUILDTESTDIR)/verifyexclude.match.format.1.ok \
+    $(BUILDTESTDIR)/verifyexclude.shortform.ok
