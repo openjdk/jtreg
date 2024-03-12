@@ -38,11 +38,11 @@ $(BUILDTESTDIR)/verifyexclude.format.1.ok: \
 		-exclude:$(TESTDIR)/verifyexclude/ProblemList/format.1.txt \
 		--verify-exclude \
 		$(TESTDIR)/verifyexclude \
-		> $(@:%.ok=%/log 2>&1) \
+		> $(@:%.ok=%/log) \
 	    && (cat $(@:%.ok=%/log) ; exit 1) \
 		|| (exit 0)
-	$(GREP) -s "Must follow:" $(@:%.ok=%/log 2>&1)
-	$(GREP) -s "The fully qualified test must exists." $(@:%.ok=%/log 2>&1) && exit 1 || exit 0
+	$(GREP) -s "Must follow:" $(@:%.ok=%/log)
+	$(GREP) -s "The fully qualified test must exists." $(@:%.ok=%/log) && exit 1 || exit 0
 	echo $@ passed at `date` > $@
 
 $(BUILDTESTDIR)/verifyexclude.format.2.ok: \
@@ -58,11 +58,11 @@ $(BUILDTESTDIR)/verifyexclude.format.2.ok: \
 		-exclude:$(TESTDIR)/verifyexclude/ProblemList/format.2.txt \
 		--verify-exclude \
 		$(TESTDIR)/verifyexclude \
-		> $(@:%.ok=%/log 2>&1) \
+		> $(@:%.ok=%/log) \
 	    && (cat $(@:%.ok=%/log) ; exit 1) \
 		|| (exit 0)
-	$(GREP) -s "Must follow:" $(@:%.ok=%/log 2>&1)
-	$(GREP) -s "The fully qualified test must exists." $(@:%.ok=%/log 2>&1) && exit 1 || exit 0
+	$(GREP) -s "Must follow:" $(@:%.ok=%/log)
+	$(GREP) -s "The fully qualified test must exists." $(@:%.ok=%/log) && exit 1 || exit 0
 	echo $@ passed at `date` > $@
 
 $(BUILDTESTDIR)/verifyexclude.exist.ok: \
@@ -78,11 +78,11 @@ $(BUILDTESTDIR)/verifyexclude.exist.ok: \
 		-exclude:$(TESTDIR)/verifyexclude/ProblemList/exist.txt \
 		--verify-exclude \
 		$(TESTDIR)/verifyexclude \
-		> $(@:%.ok=%/log 2>&1) \
+		> $(@:%.ok=%/log) \
 	    && (cat $(@:%.ok=%/log) ; exit 1) \
 		|| (exit 0)
-	$(GREP) -s "Must follow:" $(@:%.ok=%/log 2>&1) && exit 1 || exit 0
-	$(GREP) -s "The fully qualified test must exists." $(@:%.ok=%/log 2>&1)
+	$(GREP) -s "Must follow:" $(@:%.ok=%/log) && exit 1 || exit 0
+	$(GREP) -s "The fully qualified test must exists." $(@:%.ok=%/log)
 	echo $@ passed at `date` > $@
 
 $(BUILDTESTDIR)/verifyexclude.id.ok: \
@@ -98,10 +98,10 @@ $(BUILDTESTDIR)/verifyexclude.id.ok: \
 		-exclude:$(TESTDIR)/verifyexclude/ProblemList/id.txt \
 		--verify-exclude \
 		$(TESTDIR)/verifyexclude \
-		> $(@:%.ok=%/log 2>&1) \
+		> $(@:%.ok=%/log) \
 	    && (cat $(@:%.ok=%/log) ; exit 1) \
 		|| (exit 0)
-	$(GREP) -s "The fully qualified test must exists." $(@:%.ok=%/log 2>&1)
+	$(GREP) -s "The fully qualified test must exists." $(@:%.ok=%/log)
 	echo $@ passed at `date` > $@
 
 $(BUILDTESTDIR)/verifyexclude.good.ok: \
@@ -117,7 +117,7 @@ $(BUILDTESTDIR)/verifyexclude.good.ok: \
 		-exclude:$(TESTDIR)/verifyexclude/ProblemList/good.txt \
 		--verify-exclude \
 		$(TESTDIR)/verifyexclude \
-		> $(@:%.ok=%/log 2>&1) \
+		> $(@:%.ok=%/log) \
 	    || (cat $(@:%.ok=%/log) ; exit 1)
 	echo $@ passed at `date` > $@
 
@@ -134,10 +134,10 @@ $(BUILDTESTDIR)/verifyexclude.duplicate.ok: \
 		-exclude:$(TESTDIR)/verifyexclude/ProblemList/duplicate.txt \
 		--verify-exclude \
 		$(TESTDIR)/verifyexclude \
-		> $(@:%.ok=%/log 2>&1) \
+		> $(@:%.ok=%/log) \
 	    && (cat $(@:%.ok=%/log) ; exit 1) \
 		|| (exit 0)
-	$(GREP) -s "Exclude file cannot contain duplicate entries." $(@:%.ok=%/log 2>&1)
+	$(GREP) -s "Exclude file cannot contain duplicate entries." $(@:%.ok=%/log)
 	echo $@ passed at `date` > $@
 
 $(BUILDTESTDIR)/verifyexclude.match.format.1.ok: \
@@ -153,11 +153,11 @@ $(BUILDTESTDIR)/verifyexclude.match.format.1.ok: \
 		-match:$(TESTDIR)/verifyexclude/ProblemList/format.1.txt \
 		--verify-exclude \
 		$(TESTDIR)/verifyexclude \
-		> $(@:%.ok=%/log 2>&1) \
+		> $(@:%.ok=%/log) \
 	    && (cat $(@:%.ok=%/log) ; exit 1) \
 		|| (exit 0)
-	$(GREP) -s "Must follow:" $(@:%.ok=%/log 2>&1)
-	$(GREP) -s "The fully qualified test must exists." $(@:%.ok=%/log 2>&1) && exit 1 || exit 0
+	$(GREP) -s "Must follow:" $(@:%.ok=%/log)
+	$(GREP) -s "The fully qualified test must exists." $(@:%.ok=%/log) && exit 1 || exit 0
 	echo $@ passed at `date` > $@
 
 $(BUILDTESTDIR)/verifyexclude.shortform.ok: \
@@ -173,10 +173,10 @@ $(BUILDTESTDIR)/verifyexclude.shortform.ok: \
 		-exclude:$(TESTDIR)/verifyexclude/ProblemList/format.1.txt \
 		-i \
 		$(TESTDIR)/verifyexclude \
-		> $(@:%.ok=%/log 2>&1) \
+		> $(@:%.ok=%/log) \
 	    && (cat $(@:%.ok=%/log) ; exit 1) \
 		|| (exit 0)
-	$(GREP) -s "Must follow:" $(@:%.ok=%/log 2>&1)
+	$(GREP) -s "Must follow:" $(@:%.ok=%/log)
 	echo $@ passed at `date` > $@
 
 TESTS.jtreg += \
