@@ -41,7 +41,7 @@ $(BUILDTESTDIR)/exclude.agentvm.ok: \
 		$(@:$(BUILDTESTDIR)/exclude.%.ok=-%) \
 		-exclude:$(TESTDIR)/exclude/ProblemList.txt \
 		$(TESTDIR)/exclude \
-		> $(@:%.ok=%/log) \
+		> $(@:%.ok=%/log 2>&1) \
 	    || (cat $(@:%.ok=%/log) ; exit 1)
 	echo $@ passed at `date` > $@
 
