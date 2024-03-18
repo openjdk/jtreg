@@ -147,6 +147,6 @@ where reasonable. Existing `jtreg` command-line options have a certain style due
 age, but new options should strive to follow [JEP 293: Guidelines for JDK Command-Line Tool Options](https://openjdk.org/jeps/293). 
 For backwards compatibility, `jtreg` option names are case-insensitive.
 
-The jtreg codebase is very dependent on (jtharness)[https://github.com/openjdk/jtharness]. 
+The `jtreg` codebase is very dependent on (jtharness)[https://github.com/openjdk/jtharness]. 
 The two repos should most often be viewed together. This also places constraints 
 on what changes can (easily) be made in jtreg. 
