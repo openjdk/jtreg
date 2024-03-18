@@ -114,7 +114,7 @@ target which runs one of the self-tests. In order to run that individual test, u
 command:
 
 ```shell
-bash build/make.sh -- $(pwd)/build/test/ControlTest.ok
+bash build/make.sh $(pwd)/build/test/ControlTest.ok
 ```
 
 Some tests depend on specific versions of JDK being available, specified
