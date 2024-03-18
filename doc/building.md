@@ -143,12 +143,10 @@ The logic for using VNC is encapsulated within the script _make/display.sh_.
 # Contribution guidelines
 
 Contributors are encouraged to follow code style conventions in [Java Style Guidelines](https://cr.openjdk.org/~alundblad/styleguide/index-v6.html) 
-where reasonable. jtreg's command-line flags have a certain style due to their
+where reasonable. `jtreg` command-line options have a certain style due to their
 age, but new flags should strive to follow [JEP 293: Guidelines for JDK Command-Line Tool Options](https://openjdk.org/jeps/293). 
-One notable exception is the rule about case-sensitivity - jtreg's command line
-flags are case insensitive and due to backwards compatibility it seems 
-reasonable to keep this going forward.
+For backwards compatibility, `jtreg` option names are case-insensitive.
 
-The jtreg codebase is very dependend on (jtharness)[https://github.com/openjdk/jtharness]. 
-The two respos should most often be viewed together. This also places constraints 
+The jtreg codebase is very dependent on (jtharness)[https://github.com/openjdk/jtharness]. 
+The two repos should most often be viewed together. This also places constraints 
 on what changes can (easily) be made in jtreg. 
