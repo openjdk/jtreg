@@ -770,9 +770,7 @@ cat > ${BUILD_DIR}/make.sh << EOF
 #!/bin/sh
 
 cd "${ROOT}/make"
-make JT_HOME=""                                               \\
-     JTREG_HOME=""                                            \\
-     ASMTOOLS_JAR="${ASMTOOLS_JAR}"                           \\
+make ASMTOOLS_JAR="${ASMTOOLS_JAR}"                           \\
      ASMTOOLS_NOTICES="${ASMTOOLS_NOTICES}"                   \\
      BUILDDIR="${BUILD_DIR}"                                  \\
      BUILD_MILESTONE="${JTREG_BUILD_MILESTONE}"               \\
@@ -782,6 +780,8 @@ make JT_HOME=""                                               \\
      JAVATEST_JAR="$(mixed_path "${JTHARNESS_JAVATEST_JAR}")" \\
      JDKHOME="$(mixed_path ${JAVA_HOME})"                     \\
      JTHARNESS_NOTICES="${JTHARNESS_NOTICES}"                 \\
+     JTREG_HOME=""                                            \\
+     JT_HOME=""                                               \\
      JUNIT_JARS="${JUNIT_JARS}"                               \\
      JUNIT_NOTICES="${JUNIT_NOTICES}"                         \\
      TESTNG_JARS="${TESTNG_JARS}"                             \\
