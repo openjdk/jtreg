@@ -208,7 +208,7 @@ abstract class ScratchDirectory {
 
         boolean ok = true;
         File[] children = dir.listFiles();
-        if (children == null) { // should always be not null, but File.listFiles() allows for it
+        if (children == null) { // should always be not null, but may be null if an error occurs
             log.println("warning: cannot list contents of directory " + dir);
             ok = false;
         } else {
