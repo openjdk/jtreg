@@ -18,7 +18,7 @@ needed to test jtreg.
 
 At the top level, all tests have an associated `make` target, which by convention
 is of the form _testName_`.ok`. This corresponds to the path for a "marker file",
-which is updated when the thest has been executed successfully.
+which is updated when the test has been executed successfully.
 
 With only a few exceptions, the files for each test are grouped in a subdirectory
 of the main `test` directory. Each such directory contains a `*.gmk` file defining
@@ -53,7 +53,7 @@ the test target can be conditionally included in `TESTS.jtreg` using `ifdef` or 
 mechanisms.
 
 Any individual test can be run in isolation by running `make` with the full
-absolute pathname for the marker file (that is, the `*.ok` target fort the test)
+absolute pathname for the marker file (that is, the `*.ok` target for the test)
 as the target to be built.
 
 ## Tests
