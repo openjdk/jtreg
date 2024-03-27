@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001, 2023, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2001, 2024, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -65,6 +65,7 @@ import com.sun.javatest.interview.BasicInterviewParameters;
 import com.sun.javatest.regtest.agent.JDK_Version;
 import com.sun.javatest.regtest.agent.SearchPath;
 import com.sun.javatest.regtest.exec.TimeoutHandlerProvider;
+import com.sun.javatest.regtest.report.Verbose;
 import com.sun.javatest.regtest.util.FileUtils;
 import com.sun.javatest.regtest.util.StringUtils;
 import com.sun.javatest.util.I18NResourceBundle;
@@ -1307,6 +1308,18 @@ public final class RegressionParameters
     }
 
     private boolean useWindowsSubsystemForLinux;
+
+    //---------------------------------------------------------------------
+
+    public void setVerbose(Verbose verbose) {
+        this.verbose = verbose;
+    }
+
+    public Verbose getVerbose() {
+        return verbose;
+    }
+
+    private Verbose verbose;
 
     //---------------------------------------------------------------------
 
