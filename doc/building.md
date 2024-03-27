@@ -110,8 +110,8 @@ The tests can be invoked with individual make targets, or collectively via the
 `test` target. Individual make targets for self-tests are explained
 [here](../test/README.md#makefiles). For example, the
 [ControlTest.gmk](../test/ctrl/ControlTest.gmk) makefile has a `$(BUILDTESTDIR)/ControlTest.ok`
-target which runs one of the self-tests. In order to run that individual test, use the following
-command:
+target which runs one of the self-tests. In order to run that individual test, 
+use a command such as the following:
 
 ```shell
 bash build/make.sh $(pwd)/build/test/ControlTest.ok
