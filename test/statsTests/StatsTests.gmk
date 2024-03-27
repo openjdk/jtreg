@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2024, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -42,6 +42,8 @@ ifneq ($(OS_NAME), windows)
 TESTS.jtreg += $(BUILDTESTDIR)/StatsTest.ok
 endif
 
+STATS1_EXPECT_RUN := $(shell if [ ${JAVA_SPECIFICATION_VERSION} -lt 18 ]; then echo 44; else echo 32; fi)
+STATS1_EXPECT_FAIL := $(shell if [ ${JAVA_SPECIFICATION_VERSION} -lt 18 ]; then echo 32; else echo 22; fi)
 $(BUILDTESTDIR)/StatsTxt.1.ok: \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar
@@ -56,14 +58,16 @@ $(BUILDTESTDIR)/StatsTxt.1.ok: \
 		$(TESTDIR)/share/basic/main   \
 			> $(@:%.ok=%/jt.log) 2>&1  || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
-	$(GREP) -E -s '^TEST-STATS: StatsTxt run=44 failed=32 excluded=0\s?$$' \
+	$(GREP) -E -s '^TEST-STATS: StatsTxt run=$(STATS1_EXPECT_RUN) failed=$(STATS1_EXPECT_FAIL) excluded=0\s?$$' \
 		$(@:%.ok=%/jt.log)  > /dev/null
-	$(GREP) -E -s '^TEST-STATS: StatsTxt run=44 failed=32 excluded=0\s?$$' \
+	$(GREP) -E -s '^TEST-STATS: StatsTxt run=$(STATS1_EXPECT_RUN) failed=$(STATS1_EXPECT_FAIL) excluded=0\s?$$' \
 		$(@:%.ok=%/report/text/stats.txt)  > /dev/null
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += $(BUILDTESTDIR)/StatsTxt.1.ok
 
+STATS2_EXPECT_PASS := $(shell if [ ${JAVA_SPECIFICATION_VERSION} -lt 18 ]; then echo 12; else echo 10; fi)
+STATS2_EXPECT_FAIL := $(shell if [ ${JAVA_SPECIFICATION_VERSION} -lt 18 ]; then echo 32; else echo 22; fi)
 $(BUILDTESTDIR)/StatsTxt.2.ok: \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar
@@ -80,9 +84,9 @@ $(BUILDTESTDIR)/StatsTxt.2.ok: \
 		$(TESTDIR)/share/basic/ignore   \
 			> $(@:%.ok=%/jt.log) 2>&1  || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
-	$(GREP) -E -s '^TEST-STATS: StatsTxt passed=12 failed=32 ignored=2\s?$$' \
+	$(GREP) -E -s '^TEST-STATS: StatsTxt passed=$(STATS2_EXPECT_PASS) failed=$(STATS2_EXPECT_FAIL) ignored=2\s?$$' \
 		$(@:%.ok=%/jt.log)  > /dev/null
-	$(GREP) -E -s '^TEST-STATS: StatsTxt passed=12 failed=32 ignored=2\s?$$' \
+	$(GREP) -E -s '^TEST-STATS: StatsTxt passed=$(STATS2_EXPECT_PASS) failed=$(STATS2_EXPECT_FAIL) ignored=2\s?$$' \
 		$(@:%.ok=%/report/text/stats.txt)  > /dev/null
 	echo "test passed at `date`" > $@
 		    			

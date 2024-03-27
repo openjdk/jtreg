@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2024, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -24,6 +24,8 @@
 #
 
 #----------------------------------------------------------------------
+# only run the test on Java version lesser than 18
+INCLUDE_SEC_MGR_TEST := $(shell if [ ${JAVA_SPECIFICATION_VERSION} -lt 18 ]; then echo 1; else echo 0; fi)
 
 $(BUILDTESTDIR)/GoodSecurityManagerTest.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
@@ -35,8 +37,10 @@ $(BUILDTESTDIR)/GoodSecurityManagerTest.ok: \
 		$(TESTDIR)/SecurityManager/pass
 	echo "test passed at `date`" > $@
 
+ifeq ($(INCLUDE_SEC_MGR_TEST),1)
 TESTS.jtreg += \
 	$(BUILDTESTDIR)/GoodSecurityManagerTest.ok
+endif
 
 #----------------------------------------------------------------------
 
@@ -53,8 +57,10 @@ $(BUILDTESTDIR)/BadSecurityManagerTest.ok: \
 	grep "Cannot reset security manager" $(@:%.ok=%)/work/error/BadSecurityManagerTest.jtr
 	echo "test passed at `date`" > $@
 
+ifeq ($(INCLUDE_SEC_MGR_TEST),1)
 TESTS.jtreg += \
 	$(BUILDTESTDIR)/BadSecurityManagerTest.ok
+endif
 
 #----------------------------------------------------------------------
 
@@ -72,8 +78,10 @@ $(BUILDTESTDIR)/SecurityManagerTest_agentvm_forbid.ok: \
 	grep "Test results: failed: 5" $(@:%.ok=%)/out.txt
 	echo "test passed at `date`" > $@
 
+ifeq ($(INCLUDE_SEC_MGR_TEST),1)
 TESTS.jtreg += \
 	$(BUILDTESTDIR)/SecurityManagerTest_agentvm_forbid.ok
+endif
 
 #----------------------------------------------------------------------
 
@@ -87,8 +95,10 @@ $(BUILDTESTDIR)/SecurityManagerTest_othervm.ok: \
 		$(TESTDIR)/SecurityManager
 	echo "test passed at `date`" > $@
 
+ifeq ($(INCLUDE_SEC_MGR_TEST),1)
 TESTS.jtreg += \
 	$(BUILDTESTDIR)/SecurityManagerTest_othervm.ok
+endif
 
 #----------------------------------------------------------------------
 
