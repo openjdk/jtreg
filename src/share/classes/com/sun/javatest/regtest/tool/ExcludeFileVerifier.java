@@ -87,10 +87,7 @@ public class ExcludeFileVerifier {
     }
 
     static boolean lineIsComment(String line) {
-        line = line.trim();
-        if (line.equals("")) return true;
-        if (line.charAt(0) == '#') return true;
-        return false;
+        return line.isBlank() || line.trim().startsWith("#");
     }
 
     private static String testName(String line) {
