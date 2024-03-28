@@ -49,8 +49,8 @@ public class ExcludeFileVerifier {
         return hadErrors;
     }
     public boolean verify(File file, List<String> validTestNames) {
-        ArrayList<String> usedTestNames = new ArrayList<String>();
-        ArrayList<Check> checks = new ArrayList<Check>();
+        var usedTestNames = new ArrayList<String>();
+        var checks = new ArrayList<Check>();
         checks.add(new LineFormatCheck());
         checks.add(new TestExistsCheck(validTestNames));
         checks.add(new DuplicateCheck(usedTestNames));
