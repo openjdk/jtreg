@@ -39,7 +39,7 @@ $(BUILDTESTDIR)/verifyexclude.format.1.ok: \
 		--verify-exclude \
 		$(TESTDIR)/verifyexclude \
 		> $(@:%.ok=%/log) \
-	    && (cat $(@:%.ok=%/log) ; exit 1) \
+		&& (cat $(@:%.ok=%/log) ; exit 1) \
 		|| (exit 0)
 	$(GREP) -s "Must follow:" $(@:%.ok=%/log)
 	$(GREP) -s "The fully qualified test must exists." $(@:%.ok=%/log) && exit 1 || exit 0
@@ -186,5 +186,5 @@ TESTS.jtreg += \
 	$(BUILDTESTDIR)/verifyexclude.good.ok \
 	$(BUILDTESTDIR)/verifyexclude.id.ok \
 	$(BUILDTESTDIR)/verifyexclude.exist.ok \
-    $(BUILDTESTDIR)/verifyexclude.match.format.1.ok \
-    $(BUILDTESTDIR)/verifyexclude.shortform.ok
+	$(BUILDTESTDIR)/verifyexclude.match.format.1.ok \
+	$(BUILDTESTDIR)/verifyexclude.shortform.ok
