@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001, 2023, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2001, 2024, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -148,6 +148,14 @@ public final class RegressionParameters
         MutableExcludeListParameters mep =
             (MutableExcludeListParameters) getExcludeListParameters();
         mep.setExcludeFiles(FileUtils.toFiles(files));
+    }
+
+    public File[] getExcludeLists() {
+        MutableExcludeListParameters mep =
+            (MutableExcludeListParameters) getExcludeListParameters();
+        return mep.getExcludeFiles() != null
+            ? mep.getExcludeFiles()
+            : new File[0];
     }
 
     public void setPriorStatusValues(boolean[] b) {
@@ -1290,7 +1298,7 @@ public final class RegressionParameters
         this.matchLists = List.of(files);
     }
 
-    List<Path> getMatchLists() {
+    public List<Path> getMatchLists() {
         return Collections.unmodifiableList(matchLists);
     }
 
