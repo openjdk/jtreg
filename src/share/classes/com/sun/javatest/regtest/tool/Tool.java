@@ -46,6 +46,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -639,6 +640,13 @@ public class Tool {
             @Override
             public void process(String opt, String arg) {
                 showGroupsFlag = true;
+            }
+        },
+
+        new Option(NONE, MAIN, null, "-i", "--verify-exclude") {
+            @Override
+            public void process(String opt, String arg) {
+                verifyExcludeListsFlag = true;
             }
         },
 
@@ -1285,6 +1293,10 @@ public class Tool {
             return EXIT_OK;
         }
 
+        if (verifyExcludeListsFlag) {
+            verifyExcludeLists(testManager);
+        }
+
         if (listTestsFlag) {
             listTests(testManager);
             return EXIT_OK;
@@ -1405,6 +1417,35 @@ public class Tool {
                 : testStats.counts[Status.PASSED] == 0 && !foundEmptyGroup ? EXIT_NO_TESTS
                 : errors != 0 ? EXIT_FAULT
                 : EXIT_OK);
+    }
+
+    void verifyExcludeLists(TestManager testManager) throws BadArgs, Fault, Harness.Fault, InterruptedException  {
+        List<String> validTestNames = new ArrayList<String>();
+        List<File> excludeFiles = new ArrayList<File>();
+        for (RegressionTestSuite ts: testManager.getTestSuites()) {
+            RegressionParameters params = createParameters(testManager, ts);
+            for (Iterator<TestResult> iter = getResultsIterator(params); iter.hasNext(); ) {
+                TestResult tr = iter.next();
+                out.println(tr.getTestName());
+                validTestNames.add(tr.getTestName());
+            }
+            for (File f : params.getExcludeLists()) {
+                excludeFiles.add(f);
+            }
+            for (Path p : params.getMatchLists()) {
+                excludeFiles.add(p.toFile());
+            }
+        }
+        boolean hadErrors = false;
+        for(File plf : excludeFiles) {
+            ExcludeFileVerifier efv = new ExcludeFileVerifier(out);
+            efv.verify(plf, validTestNames);
+            hadErrors |= efv.getHadErrors();
+        }
+
+        if (hadErrors) {
+            error("Cannot run because an exclude list had errors, printed above. Either resolve them or remove the exclude list.");
+        }
     }
 
     JDK_Version checkJDK(JDK jdk) throws Fault {
@@ -2401,6 +2442,7 @@ public class Tool {
     private boolean checkFlag;
     private boolean listTestsFlag;
     private boolean showGroupsFlag;
+    private boolean verifyExcludeListsFlag;
     private List<String> envVarArgs = new ArrayList<>();
     private IgnoreKind ignoreKind;
     private List<Path> classPathAppendArg = new ArrayList<>();

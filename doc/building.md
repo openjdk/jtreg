@@ -107,7 +107,15 @@ of the `legal` directory in the generated image.
 ## Running `jtreg` Self-Tests
 
 The tests can be invoked with individual make targets, or collectively via the
-`test` target.
+`test` target. Individual make targets for self-tests are explained
+[here](../test/README.md#makefiles). For example, the
+[ControlTest.gmk](../test/ctrl/ControlTest.gmk) makefile has a `$(BUILDTESTDIR)/ControlTest.ok`
+target which runs one of the self-tests. In order to run that individual test, 
+use a command such as the following:
+
+```shell
+bash build/make.sh $(pwd)/build/test/ControlTest.ok
+```
 
 Some tests depend on specific versions of JDK being available, specified
 by the following variables: `JDK8HOME`, `JDK9HOME`, `JDK14HOME`, `JDK18HOME`.
@@ -139,3 +147,14 @@ to create a dummy X server, the server will be terminated when the test is
 complete.
 
 The logic for using VNC is encapsulated within the script _make/display.sh_.
+
+# Contribution guidelines
+
+Contributors are encouraged to follow code style conventions in [Java Style Guidelines](https://cr.openjdk.org/~alundblad/styleguide/index-v6.html) 
+where reasonable. Existing `jtreg` command-line options have a certain style due to their
+age, but new options should strive to follow [JEP 293: Guidelines for JDK Command-Line Tool Options](https://openjdk.org/jeps/293). 
+For backwards compatibility, `jtreg` option names are case-insensitive.
+
+The `jtreg` codebase is very dependent on (jtharness)[https://github.com/openjdk/jtharness]. 
+The two repos should most often be viewed together. This also places constraints 
+on what changes can (easily) be made in jtreg. 

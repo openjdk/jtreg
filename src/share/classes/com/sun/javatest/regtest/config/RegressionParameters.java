@@ -151,6 +151,14 @@ public final class RegressionParameters
         mep.setExcludeFiles(FileUtils.toFiles(files));
     }
 
+    public File[] getExcludeLists() {
+        MutableExcludeListParameters mep =
+            (MutableExcludeListParameters) getExcludeListParameters();
+        return mep.getExcludeFiles() != null
+            ? mep.getExcludeFiles()
+            : new File[0];
+    }
+
     public void setPriorStatusValues(boolean[] b) {
         MutablePriorStatusParameters mpsp =
             (MutablePriorStatusParameters) getPriorStatusParameters();
@@ -1291,7 +1299,7 @@ public final class RegressionParameters
         this.matchLists = List.of(files);
     }
 
-    List<Path> getMatchLists() {
+    public List<Path> getMatchLists() {
         return Collections.unmodifiableList(matchLists);
     }
 
