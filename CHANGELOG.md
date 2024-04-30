@@ -1,4 +1,12 @@
-## [Unreleased](https://git.openjdk.org/jtreg/compare/jtreg-7.3.1+1...master)
+## [Unreleased](https://git.openjdk.org/jtreg/compare/jtreg-7.4+1...master)
+
+_nothing noteworthy, yet_
+
+## [7.4](https://git.openjdk.org/jtreg/compare/jtreg-7.3.1+1...jtreg-7.4+1)
+
+* jtreg now verifies ProblemList files [CODETOOLS-7903659](https://bugs.openjdk.org/browse/CODETOOLS-7903659)
+
+* jtreg no longer ignores VM exit code when test process reports status with "STATUS: " line [CODETOOLS-7903621](https://bugs.openjdk.org/browse/CODETOOLS-7903621)
 
 * Use SOURCE_BUILD_EPOCH to suppport reproducible builds
   [CODETOOLS-7903539](https://bugs.openjdk.org/browse/CODETOOLS-7903539)
