@@ -73,13 +73,12 @@ public class JarManager {
     JarManager(Path libDir) {
 
         InputStream in = getClass().getResourceAsStream("jars.properties");
-        if (in == null) {
-            throw new Error("Can't find jars.properties");
-        }
-        try (InputStreamReader r = new InputStreamReader(in)) {
-            props.load(r);
-        } catch (IOException e) {
-            throw new Error("problem reading jars.properties");
+        if (in != null) {
+            try (InputStreamReader r = new InputStreamReader(in)) {
+                props.load(r);
+            } catch (IOException e) {
+                throw new Error("problem reading jars.properties");
+            }
         }
 
         this.libDir = libDir;

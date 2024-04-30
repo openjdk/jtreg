@@ -75,6 +75,7 @@ import com.sun.javatest.regtest.config.RegressionEnvironment;
 import com.sun.javatest.regtest.config.RegressionParameters;
 import com.sun.javatest.regtest.config.RegressionTestSuite;
 import com.sun.javatest.regtest.report.SummaryReporter;
+import com.sun.javatest.regtest.report.Verbose;
 import com.sun.javatest.regtest.tool.Version;
 import com.sun.javatest.regtest.util.FileUtils;
 import com.sun.javatest.regtest.util.StringUtils;
@@ -1139,7 +1140,10 @@ public class RegressionScript extends Script {
         if (testQuery != null) {
             p.put("test.query", testQuery);
         }
-        p.put("test.verbose", params.getVerbose().toString());
+        Verbose verbose = params.getVerbose();
+        if (verbose != null) {
+            p.put("test.verbose", verbose.toString());
+        }
         p.put("test.file", locations.absTestFile().toString());
         p.put("test.src", locations.absTestSrcDir().toString());
         p.put("test.src.path", toString(locations.absTestSrcPath()));
