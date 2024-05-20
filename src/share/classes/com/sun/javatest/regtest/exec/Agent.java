@@ -148,8 +148,8 @@ public class Agent {
             // is platform-specific, and Solaris has it on by default.
             ss.setReuseAddress(false);
             InetAddress loopbackAddr = InetAddress.getLoopbackAddress();
-            // we allow for some unexpected processes to connect to the port we listen on.
-            // we discard such connections if, after connecting, our internal handshake fails
+            // We allow for some unexpected processes to connect to the port we listen on.
+            // We discard such connections if, after connecting, our internal handshake fails.
             final int maxAcceptAttempts = 3;
             final int backlog = maxAcceptAttempts;
             ss.bind(new InetSocketAddress(loopbackAddr, /*port:*/ 0), backlog);
@@ -230,9 +230,9 @@ public class Agent {
     }
 
     // accept()s a connection over the ServerSocket and then reads handshake bytes
-    // from the connected socket. if the read bytes match the expected handshake bytes
+    // from the connected socket. If the read bytes match the expected handshake bytes
     // then the connection and handshake is considered successful and the accepted
-    // Socket is returned. if the read bytes don't match the expected handshake bytes
+    // Socket is returned. If the read bytes don't match the expected handshake bytes
     // or if the read times out after accept()ing an connection, then this method
     // closes the accepted connection and returns null.
     private Socket acceptAndHandshake(final ServerSocket ss, final int handshakeReadTimeout)
