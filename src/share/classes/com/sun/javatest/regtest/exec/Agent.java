@@ -238,23 +238,20 @@ public class Agent {
     private Socket acceptAndHandshake(final ServerSocket ss, final int handshakeReadTimeout)
             throws IOException {
         final Socket s = ss.accept();
+        final byte[] handshakeBytes;
+        int totalRead = 0;
         try {
             log("Received connection on port " + ss.getLocalPort() + " from " + s);
             s.setSoTimeout(handshakeReadTimeout);
             // read the handshake bytes
-            final byte[] handshakeBytes = new byte[JTREG_AGENT_HANDSHAKE_MAGIC.length];
-            final int numRead = s.getInputStream().read(handshakeBytes);
-            if (numRead == -1) {
-                // EOF
-                log("Received EOF before handshake from " + s);
-                return null;
-            }
-            // verify the handshake bytes
-            if (!Arrays.equals(JTREG_AGENT_HANDSHAKE_MAGIC, handshakeBytes)) {
-                log("Unexpected handshake bytes from socket: " + s + ", expected: "
-                        + Arrays.toString(JTREG_AGENT_HANDSHAKE_MAGIC)
-                        + ", actual: " + Arrays.toString(handshakeBytes));
-                return null;
+            handshakeBytes = new byte[JTREG_AGENT_HANDSHAKE_MAGIC.length];
+            while (totalRead < JTREG_AGENT_HANDSHAKE_MAGIC.length) {
+                final int numRead = s.getInputStream().read(handshakeBytes,
+                        totalRead, (JTREG_AGENT_HANDSHAKE_MAGIC.length - totalRead));
+                if (numRead == -1) {
+                    break;
+                }
+                totalRead += numRead;
             }
         } catch (IOException ioe) {
             log("closing connection to " + s + " due to: " + ioe);
@@ -263,6 +260,22 @@ public class Agent {
             } catch (IOException ignored) {
                 // ignore
             }
+            return null;
+        }
+        // we don't read more than handshake bytes in this method
+        assert totalRead <= JTREG_AGENT_HANDSHAKE_MAGIC.length : "unexpected number of handshake" +
+                " bytes read: " + totalRead;
+
+        if (totalRead < JTREG_AGENT_HANDSHAKE_MAGIC.length) {
+            // EOF
+            log("handshake failed - " + totalRead + " bytes received from " + s);
+            return null;
+        }
+        // verify the handshake bytes
+        if (!Arrays.equals(JTREG_AGENT_HANDSHAKE_MAGIC, handshakeBytes)) {
+            log("Unexpected handshake bytes from socket: " + s
+                    + ", expected: " + Arrays.toString(JTREG_AGENT_HANDSHAKE_MAGIC)
+                    + ", actual: " + Arrays.toString(handshakeBytes));
             return null;
         }
         // got the expected handshake bytes
