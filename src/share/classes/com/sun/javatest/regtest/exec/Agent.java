@@ -190,7 +190,7 @@ public class Agent {
                 final int readTimeout = (int) (KeepAlive.READ_TIMEOUT * timeoutFactor);
                 Socket s = null;
                 for (int i = 0; i < maxAcceptAttempts; i++) {
-                    log("Waiting up to " + ACCEPT_TIMEOUT + " milli seconds for a" +
+                    log("Waiting up to " + ACCEPT_TIMEOUT + " milliseconds for a" +
                             " socket connection on port " + port +
                             (pid != UNKNOWN_PID ? " from process " + pid : ""));
                     s = acceptAndHandshake(ss, readTimeout);
