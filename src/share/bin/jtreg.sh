@@ -138,6 +138,11 @@ elif [ -n "$wsl" -a -x "$JTREG_JAVA".exe ]; then
     driveDir=mnt
 fi
 
+if [ ! -e "$JTREG_JAVA" ]; then
+    echo "No java executable at $JTREG_JAVA"
+    exit 1;
+fi
+
 # Verify java version 11 or newer used to run jtreg
 version=`"$JTREG_JAVA" -classpath "${JTREG_HOME}/lib/jtreg.jar" com.sun.javatest.regtest.agent.GetSystemProperty java.version 2>&1 |
         grep 'java.version=' | sed -e 's/^.*=//' -e 's/^1\.//' -e 's/\([1-9][0-9]*\).*/\1/'`
