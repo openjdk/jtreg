@@ -237,10 +237,12 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
 
         @Override
         public void executionFinished(TestIdentifier identifier, TestExecutionResult result) {
-            if (verbose.passMode == AgentVerbose.Mode.NONE) return;
+            TestExecutionResult.Status status = result.getStatus();
+            if (status == TestExecutionResult.Status.SUCCESSFUL) {
+                if (verbose.passMode == AgentVerbose.Mode.NONE) return;
+            }
             lock.lock();
             try {
-                TestExecutionResult.Status status = result.getStatus();
                 if (status == TestExecutionResult.Status.ABORTED) {
                     result.getThrowable().ifPresent(printer::println); // not the entire stack trace
                 }
