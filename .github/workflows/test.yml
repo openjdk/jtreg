@@ -18,10 +18,10 @@ jobs:
         fetch-depth: 1
 
     - name: 'Set up Java Development Kit'
-      uses: actions/setup-java@v3
+      uses: oracle-actions/setup-java@v1
       with:
-        distribution: 'oracle'
-        java-version: '17'
+        website: oracle.com
+        release: 17
 
     - name: 'Build JTReg'
       shell: bash
