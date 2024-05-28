@@ -40,7 +40,6 @@ import java.nio.charset.Charset;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
@@ -177,22 +176,15 @@ public class XMLWriter {
     }
 
     private String getOutput(String name) throws TestResult.Fault {
-        List<String> titles = Arrays.asList(tr.getSectionTitles());
-        // we are looking primarily for either a "main" section or a "shell" section in jtr log
-        // if neither "main" or "shell" sections are found, we try searching for a "compile" section
-        String [] sections = {"main","shell","compile"};
-        for (String section : sections){
-            if (titles.contains(section)) {
-                return getOutputOfSection(name, titles.indexOf(section));
+        String[] titles = tr.getSectionTitles();
+        // try to find and return first output from the following sequence of title names
+        for (int i = 0; i < titles.length; i++) {
+            if (titles[i].equals("main") || titles[i].equals("shell") || titles[i].equals("compile")) {
+                Section s = tr.getSection(i);
+                for (String x : s.getOutputNames()) {
+                    return s.getOutput(name);
+                }
             }
-        }
-        return "";
-    }
-
-    private String getOutputOfSection(String name, int sectionNum) throws TestResult.Fault {
-        Section s = tr.getSection(sectionNum);
-        for (String x : s.getOutputNames()) {
-            return s.getOutput(name);
         }
         return "";
     }
