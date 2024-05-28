@@ -178,14 +178,22 @@ public class XMLWriter {
 
     private String getOutput(String name) throws TestResult.Fault {
         String[] titles = tr.getSectionTitles();
-        //we are looking for either a "main" section or "shell" section in jtr log
-        for (int i = 0; i < titles.length; i++) {
-            if (titles[i].equals("main") || titles[i].equals("shell")) {
-                Section s = tr.getSection(i);
-                for (String x : s.getOutputNames()) {
-                    return s.getOutput(name);
-                }
+        List<String> ttles = Arrays.asList(titles);
+        //we are looking primarily for either a "main" section or "shell" section in jtr log
+        //if neither "main" or "shell" sections are not found, we try searching for compile section
+        String [] sections = {"main","shell","compile"};
+        for (String section : sections){
+            if (ttles.contains(section)) {
+                return getOutputOfSection(name, ttles.indexOf(section));
             }
+        }
+        return "";
+    }
+
+    private String getOutputOfSection(String name, int sectionNum) throws TestResult.Fault {
+        Section s = tr.getSection(sectionNum);
+        for (String x : s.getOutputNames()) {
+            return s.getOutput(name);
         }
         return "";
     }
