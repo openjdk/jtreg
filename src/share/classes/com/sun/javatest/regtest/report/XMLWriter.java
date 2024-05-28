@@ -178,16 +178,17 @@ public class XMLWriter {
 
     private String getOutput(String name) throws TestResult.Fault {
         String[] titles = tr.getSectionTitles();
-        //we are looking for either a "main" section or "shell" section in jtr log
+        StringBuilder sb = new StringBuilder();
+        // try to find and return all outputs from the following sequence of title names
         for (int i = 0; i < titles.length; i++) {
-            if (titles[i].equals("main") || titles[i].equals("shell")) {
+            if (titles[i].equals("main") || titles[i].equals("shell") || titles[i].equals("compile")) {
                 Section s = tr.getSection(i);
                 for (String x : s.getOutputNames()) {
-                    return s.getOutput(name);
+                    sb.append(s.getOutput(name));
                 }
             }
         }
-        return "";
+        return sb.toString();
     }
 
     private void insertSystemOut() throws TestResult.Fault {
