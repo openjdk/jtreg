@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, 2024, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -73,12 +73,13 @@ public class JarManager {
     JarManager(Path libDir) {
 
         InputStream in = getClass().getResourceAsStream("jars.properties");
-        if (in != null) {
-            try (InputStreamReader r = new InputStreamReader(in)) {
-                props.load(r);
-            } catch (IOException e) {
-                throw new Error("problem reading jars.properties");
-            }
+        if (in == null) {
+            throw new Error("Can't find jars.properties");
+        }
+        try (InputStreamReader r = new InputStreamReader(in)) {
+            props.load(r);
+        } catch (IOException e) {
+            throw new Error("problem reading jars.properties");
         }
 
         this.libDir = libDir;
