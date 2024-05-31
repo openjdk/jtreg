@@ -1844,6 +1844,8 @@ public class Tool {
 
             rp.setUseWindowsSubsystemForLinux(useWindowsSubsystemForLinux);
 
+            rp.setVerbose(verbose);
+
             rp.initExprContext(); // will invoke/init jdk.getProperties(params)
 
             return rp;
