@@ -2,6 +2,7 @@
 cd %BUILDTEST%/RerunTest.agentvm/work/scratch && \
 DISPLAY=%DISPLAY% \
 HOME=%HOME% \
+JTREG_HOME=%JTREG_HOME% \
 LANG=en_US.UTF-8 \
 MY_ENV_VAR=x \
 PATH=/bin:/usr/bin:/usr/sbin \
@@ -17,6 +18,7 @@ TZ=GMT+0.00 \
         -J-Dtest.timeout.factor=1.0 \
         -J-Dtest.root=%WS%/test/rerun \
         -J-Dtest.name=std/AppletTest.java \
+        -J-Dtest.verbose=Verbose[p=SUMMARY,f=SUMMARY,e=SUMMARY,t=false,m=false] \
         -J-Dtest.file=%WS%/test/rerun/std/AppletTest.java \
         -J-Dtest.src=%WS%/test/rerun/std \
         -J-Dtest.src.path=%WS%/test/rerun/std \
@@ -28,11 +30,11 @@ TZ=GMT+0.00 \
         -sourcepath %WS%/test/rerun/std \
         -classpath %WS%/test/rerun/std:%BUILDTEST%/RerunTest.agentvm/work/classes/std/AppletTest.d:%JDKHOME%/lib/tools.jar \
         -XDignore.symbol.file=true %WS%/test/rerun/std/AppletTest.java
-
 ### Section applet
 cd %BUILDTEST%/RerunTest.agentvm/work/scratch && \
 DISPLAY=%DISPLAY% \
 HOME=%HOME% \
+JTREG_HOME=%JTREG_HOME% \
 LANG=en_US.UTF-8 \
 MY_ENV_VAR=x \
 PATH=/bin:/usr/bin:/usr/sbin \
@@ -50,6 +52,7 @@ TZ=GMT+0.00 \
         -Dtest.timeout.factor=1.0 \
         -Dtest.root=%WS%/test/rerun \
         -Dtest.name=std/AppletTest.java \
+        -Dtest.verbose=Verbose[p=SUMMARY,f=SUMMARY,e=SUMMARY,t=false,m=false] \
         -Dtest.file=%WS%/test/rerun/std/AppletTest.java \
         -Dtest.src=%WS%/test/rerun/std \
         -Dtest.src.path=%WS%/test/rerun/std \
@@ -57,4 +60,3 @@ TZ=GMT+0.00 \
         -Dtest.class.path=%BUILDTEST%/RerunTest.agentvm/work/classes/std/AppletTest.d \
         -Dtest.class.path.prefix=%BUILDTEST%/RerunTest.agentvm/work/classes/std/AppletTest.d:%WS%/test/rerun/std \
         -mx128m com.sun.javatest.regtest.agent.AppletWrapper %BUILDTEST%/RerunTest.agentvm/work/std/AppletTest.d/applet.0.jta
-

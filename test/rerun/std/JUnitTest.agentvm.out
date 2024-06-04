@@ -2,6 +2,7 @@
 cd %BUILDTEST%/RerunTest.agentvm/work/scratch && \
 DISPLAY=%DISPLAY% \
 HOME=%HOME% \
+JTREG_HOME=%JTREG_HOME% \
 LANG=en_US.UTF-8 \
 MY_ENV_VAR=x \
 PATH=/bin:/usr/bin:/usr/sbin \
@@ -17,6 +18,7 @@ TZ=GMT+0.00 \
         -J-Dtest.timeout.factor=1.0 \
         -J-Dtest.root=%WS%/test/rerun \
         -J-Dtest.name=std/JUnitTest.java \
+        -J-Dtest.verbose=Verbose[p=SUMMARY,f=SUMMARY,e=SUMMARY,t=false,m=false] \
         -J-Dtest.file=%WS%/test/rerun/std/JUnitTest.java \
         -J-Dtest.src=%WS%/test/rerun/std \
         -J-Dtest.src.path=%WS%/test/rerun/std \
@@ -28,11 +30,11 @@ TZ=GMT+0.00 \
         -sourcepath %WS%/test/rerun/std \
         -classpath %WS%/test/rerun/std:%BUILDTEST%/RerunTest.agentvm/work/classes/std/JUnitTest.d:%BUILD%/images/jtreg/lib/junit.jar:%JDKHOME%/lib/tools.jar \
         -XDignore.symbol.file=true %WS%/test/rerun/std/JUnitTest.java
-
 ### Section junit
 cd %BUILDTEST%/RerunTest.agentvm/work/scratch && \
 DISPLAY=%DISPLAY% \
 HOME=%HOME% \
+JTREG_HOME=%JTREG_HOME% \
 LANG=en_US.UTF-8 \
 MY_ENV_VAR=x \
 PATH=/bin:/usr/bin:/usr/sbin \
@@ -47,6 +49,7 @@ TZ=GMT+0.00 \
         -Dtest.timeout.factor=1.0 \
         -Dtest.root=%WS%/test/rerun \
         -Dtest.name=std/JUnitTest.java \
+        -Dtest.verbose=Verbose[p=SUMMARY,f=SUMMARY,e=SUMMARY,t=false,m=false] \
         -Dtest.file=%WS%/test/rerun/std/JUnitTest.java \
         -Dtest.src=%WS%/test/rerun/std \
         -Dtest.src.path=%WS%/test/rerun/std \
@@ -55,4 +58,3 @@ TZ=GMT+0.00 \
         -Dtest.class.path.prefix=%BUILDTEST%/RerunTest.agentvm/work/classes/std/JUnitTest.d:%WS%/test/rerun/std \
         -classpath %BUILDTEST%/RerunTest.agentvm/work/classes/std/JUnitTest.d:%WS%/test/rerun/std:%BUILD%/images/jtreg/lib/junit.jar:%JDKHOME%/lib/tools.jar:%BUILD%/images/jtreg/lib/javatest.jar:%BUILD%/images/jtreg/lib/jtreg.jar \
         com.sun.javatest.regtest.agent.JUnitRunner std/JUnitTest.java JUnitTest
-

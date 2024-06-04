@@ -2,6 +2,7 @@
 cd %BUILDTEST%/RerunTest.agentvm/work/scratch && \
 DISPLAY=%DISPLAY% \
 HOME=%HOME% \
+JTREG_HOME=%JTREG_HOME% \
 LANG=en_US.UTF-8 \
 MY_ENV_VAR=x \
 PATH=/bin:/usr/bin:/usr/sbin \
@@ -17,6 +18,7 @@ TZ=GMT+0.00 \
         -J-Dtest.timeout.factor=1.0 \
         -J-Dtest.root=%WS%/test/rerun \
         -J-Dtest.name=testng/TestNGTest.java \
+        -J-Dtest.verbose=Verbose[p=SUMMARY,f=SUMMARY,e=SUMMARY,t=false,m=false] \
         -J-Dtest.file=%WS%/test/rerun/testng/TestNGTest.java \
         -J-Dtest.src=%WS%/test/rerun/testng \
         -J-Dtest.src.path=%WS%/test/rerun/testng \
@@ -29,11 +31,11 @@ TZ=GMT+0.00 \
         -classpath %WS%/test/rerun/testng:%BUILDTEST%/RerunTest.agentvm/work/classes/testng:%BUILD%/images/jtreg/lib/testng.jar:%JDKHOME%/lib/tools.jar \
         -XDignore.symbol.file=true \
         -implicit:none %WS%/test/rerun/testng/TestNGTest.java
-
 ### Section testng
 cd %BUILDTEST%/RerunTest.agentvm/work/scratch && \
 DISPLAY=%DISPLAY% \
 HOME=%HOME% \
+JTREG_HOME=%JTREG_HOME% \
 LANG=en_US.UTF-8 \
 MY_ENV_VAR=x \
 PATH=/bin:/usr/bin:/usr/sbin \
@@ -48,6 +50,7 @@ TZ=GMT+0.00 \
         -Dtest.timeout.factor=1.0 \
         -Dtest.root=%WS%/test/rerun \
         -Dtest.name=testng/TestNGTest.java \
+        -Dtest.verbose=Verbose[p=SUMMARY,f=SUMMARY,e=SUMMARY,t=false,m=false] \
         -Dtest.file=%WS%/test/rerun/testng/TestNGTest.java \
         -Dtest.src=%WS%/test/rerun/testng \
         -Dtest.src.path=%WS%/test/rerun/testng \
@@ -56,4 +59,3 @@ TZ=GMT+0.00 \
         -Dtest.class.path.prefix=%BUILDTEST%/RerunTest.agentvm/work/classes/testng:%WS%/test/rerun/testng \
         -classpath %BUILDTEST%/RerunTest.agentvm/work/classes/testng:%WS%/test/rerun/testng:%BUILD%/images/jtreg/lib/testng.jar:%JDKHOME%/lib/tools.jar:%BUILD%/images/jtreg/lib/javatest.jar:%BUILD%/images/jtreg/lib/jtreg.jar \
         com.sun.javatest.regtest.agent.TestNGRunner testng/TestNGTest.java false TestNGTest
-

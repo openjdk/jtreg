@@ -2,6 +2,7 @@
 cd %BUILDTEST%/RerunTest.othervm/work/scratch && \
 DISPLAY=%DISPLAY% \
 HOME=%HOME% \
+JTREG_HOME=%JTREG_HOME% \
 LANG=en_US.UTF-8 \
 MY_ENV_VAR=x \
 PATH=/bin:/usr/bin:/usr/sbin \
@@ -17,6 +18,7 @@ TZ=GMT+0.00 \
         -J-Dtest.timeout.factor=1.0 \
         -J-Dtest.root=%WS%/test/rerun \
         -J-Dtest.name=std/CompileTest.java \
+        -J-Dtest.verbose=Verbose[p=SUMMARY,f=SUMMARY,e=SUMMARY,t=false,m=false] \
         -J-Dtest.file=%WS%/test/rerun/std/CompileTest.java \
         -J-Dtest.src=%WS%/test/rerun/std \
         -J-Dtest.src.path=%WS%/test/rerun/std \
@@ -26,4 +28,3 @@ TZ=GMT+0.00 \
         -d %BUILDTEST%/RerunTest.othervm/work/classes/std/CompileTest.d \
         -sourcepath %WS%/test/rerun/std \
         -classpath %WS%/test/rerun/std:%BUILDTEST%/RerunTest.othervm/work/classes/std/CompileTest.d:%JDKHOME%/lib/tools.jar %WS%/test/rerun/std/CompileTest.java
-

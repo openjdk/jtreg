@@ -1,10 +1,8 @@
 ### Section clean
 cd %BUILDTEST%/RerunTest.agentvm/work/scratch && \
 rm -f %BUILDTEST%/RerunTest.agentvm/work/classes/std/CleanTest.d/CleanTest.class
-
 ### Section clean
 cd %BUILDTEST%/RerunTest.agentvm/work/scratch && \
 for f in %BUILDTEST%/RerunTest.agentvm/work/classes/std/CleanTest.d/p/*; do
   if [ -f $f ]; then rm $f ; fi
 done
-
