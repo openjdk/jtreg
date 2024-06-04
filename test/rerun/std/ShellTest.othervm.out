@@ -2,6 +2,7 @@
 cd %BUILDTEST%/RerunTest.othervm/work/scratch && \
 DISPLAY=%DISPLAY% \
 HOME=%HOME% \
+JTREG_HOME=%JTREG_HOME% \
 LANG=en_US.UTF-8 \
 MY_ENV_VAR=x \
 PATH=/bin:/usr/bin:/usr/sbin \
@@ -24,4 +25,3 @@ PS=: \
 NULL=/dev/null \
     sh \
         %WS%/test/rerun/std/ShellTest.sh
-
