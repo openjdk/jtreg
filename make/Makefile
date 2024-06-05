@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1999, 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1999, 2024, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -42,8 +42,29 @@ include Rules.gmk
 build: $(BUILDFILES)
 
 test: checkJavaOSVersion $(BUILDTESTDIR) $(INITIAL_TESTS) $(TESTS) $(FINAL_TESTS)
-	count=`echo $+ | wc -w` ; \
+	@count=`echo $+ | wc -w` ; \
 	echo "All ($${count}) selected tests completed successfully"
+ifndef JDK8HOME
+	@echo "Warning: JDK8HOME not set; some tests may not have been executed"
+endif
+ifndef JDK9HOME
+	@echo "Warning: JDK9HOME not set; some tests may not have been executed"
+endif
+ifndef JDK10HOME
+	@echo "Warning: JDK10HOME not set; some tests may not have been executed"
+endif
+ifndef JDK14HOME
+	@echo "Warning: JDK14HOME not set; some tests may not have been executed"
+endif
+ifndef JDK18HOME
+	@echo "Warning: JDK18HOME not set; some tests may not have been executed"
+endif
+ifdef HEADLESS
+	@echo "Warning: HEADLESS is set; some tests may not have been executed"
+endif
+ifeq ($(OS_NAME), windows)
+	@echo "Warning: OS is Windows; some tests may not have been executed"
+endif
 
 quick-test: checkJavaOSVersion $(BUILDTESTDIR) $(INITIAL_TESTS)
 	count=`echo $+ | wc -w` ; \
@@ -78,6 +99,9 @@ ifdef JDK8HOME
 endif
 ifdef JDK9HOME
 	@echo "JDK9HOME            = $(JDK9HOME)"
+endif
+ifdef JDK10HOME
+	@echo "JDK10HOME           = $(JDK10HOME)"
 endif
 ifdef JDK14HOME
 	@echo "JDK14HOME           = $(JDK14HOME)"
