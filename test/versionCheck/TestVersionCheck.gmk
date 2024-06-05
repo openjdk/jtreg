@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2018, 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2018, 2024, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -34,8 +34,8 @@ $(BUILDTESTDIR)/TestVersionCheck.match.ok: \
 		-jar $(JTREG_IMAGEJARDIR)/jtreg.jar \
 		-w:$(@:%.ok=%/work) \
 		-r:$(@:%.ok=%/report) \
-		-compileJDK:$(JDK8HOME) \
-		-testJDK:$(JDK8HOME) \
+		-compileJDK:$(JDK10HOME) \
+		-testJDK:$(JDK10HOME) \
 		$(TESTDIR)/versionCheck \
 		> $(@:%.ok=%/log 2>&1) \
 	    || (cat $(@:%.ok=%/log) ; exit 1)
@@ -44,7 +44,7 @@ $(BUILDTESTDIR)/TestVersionCheck.match.ok: \
 	fi
 	echo $@ passed at `date` > $@
 
-ifdef JDK8HOME
+ifdef JDK10HOME
 TESTS.jtreg += \
 	$(BUILDTESTDIR)/TestVersionCheck.match.ok
 endif
@@ -60,8 +60,8 @@ $(BUILDTESTDIR)/TestVersionCheck.mismatch.ok: \
 		-jar $(JTREG_IMAGEJARDIR)/jtreg.jar \
 		-w:$(@:%.ok=%/work) \
 		-r:$(@:%.ok=%/report) \
-		-compileJDK:$(JDK7HOME) \
-		-testJDK:$(JDK8HOME) \
+		-compileJDK:$(JDK9HOME) \
+		-testJDK:$(JDK10HOME) \
 		$(TESTDIR)/versionCheck \
 		> $(@:%.ok=%/log 2>&1) \
 	    || (cat $(@:%.ok=%/log) ; exit 1)
@@ -72,8 +72,8 @@ $(BUILDTESTDIR)/TestVersionCheck.mismatch.ok: \
 	fi
 	echo $@ passed at `date` > $@
 
-ifdef JDK7HOME
-ifdef JDK8HOME
+ifdef JDK9HOME
+ifdef JDK10HOME
 TESTS.jtreg += \
 	$(BUILDTESTDIR)/TestVersionCheck.mismatch.ok
 endif

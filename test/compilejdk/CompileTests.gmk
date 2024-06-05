@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2024, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -23,6 +23,10 @@
 # questions.
 #
 
+# These tests use two different older versions of JDK
+# to test jtreg jdk-related options. They need to both
+# be < JDK 9 or >= JDK 9, and both different from JDKHOME
+
 #----------------------------------------------------------------------
 
 # Test @compile with -compilejdk; use not-a-jdk for -testjdk
@@ -36,11 +40,11 @@ $(BUILDTESTDIR)/CompileTest.1.othervm.ok: \
 	JT_JAVA=$(JDKHOME) \
 		$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-compilejdk:$(JDK5HOME) \
+		-compilejdk:$(JDK9HOME) \
 		-jdk:$(BUILDDIR)/not-a-jdk \
 		$(@:$(BUILDTESTDIR)/CompileTest.1.%.ok=-%) \
 		$(TESTDIR)/compilejdk/CompileTest.java
-	grep $(JDK5HOME) $(@:%.ok=%)/work/CompileTest.jtr
+	grep $(JDK9HOME) $(@:%.ok=%)/work/CompileTest.jtr
 	if grep $(JDKHOME) $(@:%.ok=%)/work/CompileTest.jtr ; then exit 1; fi
 	echo "test passed at `date`" > $@
 
@@ -54,7 +58,7 @@ $(BUILDTESTDIR)/CompileTest.2.othervm.ok: \
 	JTREG_SHOWAGENT=true JTREG_SHOWCMD=true \
 	JT_JAVA=$(JDKHOME) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(JDK5HOME) \
+		-jdk:$(JDK9HOME) \
 		$(@:$(BUILDTESTDIR)/CompileTest.2.%.ok=-%) \
 		$(TESTDIR)/compilejdk/ExecuteTest.java
 	JTREG_SHOWAGENT=true JTREG_SHOWCMD=true \
@@ -62,10 +66,10 @@ $(BUILDTESTDIR)/CompileTest.2.othervm.ok: \
 		$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-compilejdk:$(BUILDDIR)/not-a-jdk \
-		-jdk:$(JDK5HOME) \
+		-jdk:$(JDK9HOME) \
 		$(@:$(BUILDTESTDIR)/CompileTest.2.%.ok=-%) \
 		$(TESTDIR)/compilejdk/ExecuteTest.java
-	grep $(JDK5HOME) $(@:%.ok=%)/work/ExecuteTest.jtr
+	grep $(JDK9HOME) $(@:%.ok=%)/work/ExecuteTest.jtr
 	if grep $(JDKHOME) $(@:%.ok=%)/work/ExecuteTest.jtr ; then exit 1; fi
 	echo "test passed at `date`" > $@
 
@@ -80,7 +84,7 @@ $(BUILDTESTDIR)/CompileTest.3.othervm.ok: \
 	JT_JAVA=$(JDKHOME) \
 		$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-compilejdk:$(JDK5HOME) \
+		-compilejdk:$(JDK9HOME) \
 		-jdk:$(BUILDDIR)/just-java \
 		$(@:$(BUILDTESTDIR)/CompileTest.3.%.ok=-%) \
 		$(TESTDIR)/compilejdk/ExecuteTest.java
@@ -97,8 +101,8 @@ $(BUILDTESTDIR)/CompileTest.4.othervm.ok: \
 	JT_JAVA=$(JDKHOME) \
 		$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-compilejdk:$(JDK5HOME) \
-		-jdk:$(JDK6HOME) \
+		-compilejdk:$(JDK9HOME) \
+		-jdk:$(JDK10HOME) \
 		$(@:$(BUILDTESTDIR)/CompileTest.4.%.ok=-%) \
 		$(TESTDIR)/compilejdk/ToolsJarTest.java
 	echo "test passed at `date`" > $@
@@ -111,11 +115,11 @@ $(BUILDTESTDIR)/CompileTest.5.ok: \
 	JT_JAVA=$(JDKHOME) \
 		$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-compilejdk:$(JDK5HOME) \
-		-jdk:$(JDK6HOME) \
+		-compilejdk:$(JDK9HOME) \
+		-jdk:$(JDK10HOME) \
 		$(TESTDIR)/compilejdk/ShellTest.sh
-	fgrep 'COMPILEJAVA=$(JDK5HOME)' $(@:%.ok=%)/work/ShellTest.jtr
-	fgrep 'TESTJAVA=$(JDK6HOME)' $(@:%.ok=%)/work/ShellTest.jtr
+	fgrep 'COMPILEJAVA=$(JDK9HOME)' $(@:%.ok=%)/work/ShellTest.jtr
+	fgrep 'TESTJAVA=$(JDK10HOME)' $(@:%.ok=%)/work/ShellTest.jtr
 	echo "test passed at `date`" > $@
 
 # Invalid JDK, to trap unexpected use; suitable for -version, not much else
@@ -133,11 +137,12 @@ $(BUILDDIR)/not-a-jdk/bin/java:
 # Just Java, no javac
 $(BUILDDIR)/just-java/bin/java:
 	mkdir -p $(@D)
-	echo '$(JDK6HOME)/bin/java $$*' > $@
+	echo '$(JDK10HOME)/bin/java $$*' > $@
 	chmod +x $@
 
 ifneq ($(OS_NAME), windows)
-ifdef JDK5HOME
+ifdef JDK9HOME
+ifdef JDK10HOME
 TESTS.jtreg += \
 	$(BUILDTESTDIR)/CompileTest.1.agentvm.ok \
 	$(BUILDTESTDIR)/CompileTest.1.othervm.ok \
@@ -148,5 +153,6 @@ TESTS.jtreg += \
 	$(BUILDTESTDIR)/CompileTest.4.agentvm.ok \
 	$(BUILDTESTDIR)/CompileTest.4.othervm.ok \
 	$(BUILDTESTDIR)/CompileTest.5.ok
+endif
 endif
 endif
