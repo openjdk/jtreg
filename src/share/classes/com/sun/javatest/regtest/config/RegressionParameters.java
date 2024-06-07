@@ -65,6 +65,7 @@ import com.sun.javatest.interview.BasicInterviewParameters;
 import com.sun.javatest.regtest.agent.JDK_Version;
 import com.sun.javatest.regtest.agent.SearchPath;
 import com.sun.javatest.regtest.exec.TimeoutHandlerProvider;
+import com.sun.javatest.regtest.report.Verbose;
 import com.sun.javatest.regtest.util.FileUtils;
 import com.sun.javatest.regtest.util.StringUtils;
 import com.sun.javatest.util.I18NResourceBundle;
@@ -640,6 +641,7 @@ public final class RegressionParameters
     private static final String CUSTOM_TEST_THREAD_FACTORY = ".testThreadFactory";
     private static final String CUSTOM_TEST_THREAD_FACTORY_PATH = ".testThreadFactoryPath";
     private static final String TEST_QUERIES = ".testQueries";
+    private static final String TEST_VERBOSE = ".testVerbose";
 
     @Override
     public void load(Map<String, String> data, boolean checkChecksum) throws Interview.Fault {
@@ -742,6 +744,11 @@ public final class RegressionParameters
                 setTestQueries(List.of(StringUtils.splitSeparator("\n", v)));
             }
 
+            v = data.get(prefix + TEST_VERBOSE);
+            if (v != null) {
+                setVerbose(Verbose.decode(v));
+            }
+
         } catch (InvalidPathException e) {
             // This is unlikely to happen, but pretty serious if it does.
             // Since we only put valid paths into the parameters, there should be
@@ -828,6 +835,10 @@ public final class RegressionParameters
 
         if (testQueries != null) {
             data.put(prefix + TEST_QUERIES, join(testQueries, "\n"));
+        }
+
+        if (verbose != null) {
+            data.put(prefix + TEST_VERBOSE, verbose.toString());
         }
     }
 
@@ -1315,6 +1326,18 @@ public final class RegressionParameters
     }
 
     private boolean useWindowsSubsystemForLinux;
+
+    //---------------------------------------------------------------------
+
+    public void setVerbose(Verbose verbose) {
+        this.verbose = verbose;
+    }
+
+    public Verbose getVerbose() {
+        return verbose;
+    }
+
+    private Verbose verbose;
 
     //---------------------------------------------------------------------
 

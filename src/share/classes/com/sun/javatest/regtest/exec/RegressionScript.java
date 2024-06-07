@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2023, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2024, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -75,6 +75,7 @@ import com.sun.javatest.regtest.config.RegressionEnvironment;
 import com.sun.javatest.regtest.config.RegressionParameters;
 import com.sun.javatest.regtest.config.RegressionTestSuite;
 import com.sun.javatest.regtest.report.SummaryReporter;
+import com.sun.javatest.regtest.report.Verbose;
 import com.sun.javatest.regtest.tool.Version;
 import com.sun.javatest.regtest.util.FileUtils;
 import com.sun.javatest.regtest.util.StringUtils;
@@ -1138,6 +1139,10 @@ public class RegressionScript extends Script {
         String testQuery = params.getTestQuery(testName);
         if (testQuery != null) {
             p.put("test.query", testQuery);
+        }
+        Verbose verbose = params.getVerbose();
+        if (verbose != null) {
+            p.put("test.verbose", verbose.toString());
         }
         p.put("test.file", locations.absTestFile().toString());
         p.put("test.src", locations.absTestSrcDir().toString());
