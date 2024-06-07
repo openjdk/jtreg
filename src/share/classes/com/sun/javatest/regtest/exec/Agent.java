@@ -264,12 +264,10 @@ public class Agent {
             }
             return null;
         }
-        // we don't read more than handshake bytes in this method
-        assert totalRead <= JTREG_AGENT_HANDSHAKE_MAGIC.length : "unexpected number of handshake" +
-                " bytes read: " + totalRead;
-
-        if (totalRead < JTREG_AGENT_HANDSHAKE_MAGIC.length) {
-            // EOF
+        if (totalRead != JTREG_AGENT_HANDSHAKE_MAGIC.length) {
+            // we don't expect to read more than handshake bytes in this method
+            assert totalRead < JTREG_AGENT_HANDSHAKE_MAGIC.length : "unexpected number of" +
+                    " handshake bytes read: " + totalRead;
             log("handshake failed - " + totalRead + " bytes received from " + s);
             return null;
         }
