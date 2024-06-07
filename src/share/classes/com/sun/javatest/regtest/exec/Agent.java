@@ -100,6 +100,11 @@ public class Agent {
     // is OK.
     private static final long UNKNOWN_PID = -1;
     private static final Method PID_METHOD;
+    // We tolerate a certain number of connection attempts from unexpected processes
+    // on the port we listen on. We discard such connections if, after connecting,
+    // our internal handshake fails.
+    private static final int MAX_ACCEPT_ATTEMPTS = 3;
+
     static {
         Method pidMethod = null;
         try {
@@ -148,10 +153,7 @@ public class Agent {
             // is platform-specific, and Solaris has it on by default.
             ss.setReuseAddress(false);
             InetAddress loopbackAddr = InetAddress.getLoopbackAddress();
-            // We allow for some unexpected processes to connect to the port we listen on.
-            // We discard such connections if, after connecting, our internal handshake fails.
-            final int maxAcceptAttempts = 3;
-            final int backlog = maxAcceptAttempts;
+            final int backlog = MAX_ACCEPT_ATTEMPTS;
             ss.bind(new InetSocketAddress(loopbackAddr, /*port:*/ 0), backlog);
             final int port = ss.getLocalPort();
             cmd.add(AgentServer.PORT);
@@ -189,7 +191,7 @@ public class Agent {
                 ss.setSoTimeout(ACCEPT_TIMEOUT);
                 final int readTimeout = (int) (KeepAlive.READ_TIMEOUT * timeoutFactor);
                 Socket s = null;
-                for (int i = 0; i < maxAcceptAttempts; i++) {
+                for (int i = 0; i < MAX_ACCEPT_ATTEMPTS; i++) {
                     log("Waiting up to " + ACCEPT_TIMEOUT + " milliseconds for a" +
                             " socket connection on port " + port +
                             (pid != UNKNOWN_PID ? " from process " + pid : ""));
@@ -201,7 +203,7 @@ public class Agent {
                 }
                 if (s == null) {
                     throw new IOException("could not complete handshake with AgentServer after "
-                            + maxAcceptAttempts + " attempts");
+                            + MAX_ACCEPT_ATTEMPTS + " attempts");
                 }
                 log("Successful handshake on port " + port + " from " + s);
                 s.setSoTimeout(readTimeout);
