@@ -1150,7 +1150,8 @@ public class RegressionScript extends Script {
         p.put("test.classes", locations.absTestClsDir().toString());
         p.put("test.class.path", toString(locations.absTestClsPath()));
         if (getExecMode() == ExecMode.AGENTVM) {
-            // The following will be added to javac.class.path on the test VM
+            // The following will be added to java.class.path on the test VM
+            // and is not for general use
             SearchPath path = new SearchPath()
                     .append(locations.absTestClsDir())
                     .append(locations.absTestSrcDir())
