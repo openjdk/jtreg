@@ -239,9 +239,9 @@ public class Agent {
     // closes the accepted connection and returns null.
     private Socket acceptAndHandshake(final ServerSocket ss, final int handshakeReadTimeout)
             throws IOException {
-        final Socket s = ss.accept();
         final byte[] handshakeBytes;
         int totalRead = 0;
+        final Socket s = ss.accept();
         try {
             log("Received connection on port " + ss.getLocalPort() + " from " + s);
             s.setSoTimeout(handshakeReadTimeout);
@@ -256,12 +256,15 @@ public class Agent {
                 totalRead += numRead;
             }
         } catch (IOException ioe) {
-            log("closing connection to " + s + " due to: " + ioe);
             try {
                 s.close();
-            } catch (IOException ignored) {
-                // ignore
+            } catch (IOException closeFailure) {
+                if (closeFailure != ioe) {
+                    ioe.addSuppressed(closeFailure);
+                }
             }
+            log("closed the connection to " + s + " due to: " + ioe);
+            ioe.printStackTrace(); // log the read failure stacktrace
             return null;
         }
         if (totalRead != JTREG_AGENT_HANDSHAKE_MAGIC.length) {
