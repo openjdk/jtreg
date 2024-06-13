@@ -44,8 +44,9 @@ public class Test {
     }
 
     @org.testng.annotations.Test
-    public void alwaysSkip() {
+    public void alwaysSkip() throws Exception {
         System.out.println("running alwaysFail");
+        Thread.sleep(2);
         throw new SkipException("intentionally skipped from alwaysSkip");
     }
 

@@ -29,7 +29,11 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
+import java.time.Duration;
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.testng.IConfigurationListener;
@@ -109,10 +113,18 @@ public class TestNGRunner implements MainActionHelper.TestRunner {
             implements ITestListener, IConfigurationListener {
         enum InfoKind { CONFIG, TEST }
 
+        // keeps track of the test start time for each test
+        private final Map<ITestResult, Long> startTimeNanos =
+                Collections.synchronizedMap(new IdentityHashMap<>());
+
         @Override
         public void onTestStart(ITestResult itr) {
             count++;
-//            report(itr);
+            // Although testng itself provides getStartMillis() and getEndMillis()
+            // on ITestResult for duration tracking, the testng implementation uses
+            // System.currentTimeMillis(). We instead prefer using System.nanoTime() API
+            // for duration tracking.
+            startTimeNanos.put(itr, System.nanoTime());
         }
 
         @Override
@@ -185,7 +197,11 @@ public class TestNGRunner implements MainActionHelper.TestRunner {
             } else {
                 suffix = "\n";
             }
-            long durationMillis = itr.getEndMillis() - itr.getStartMillis();
+            Long startNanos = startTimeNanos.remove(itr);
+            Duration duration = startNanos == null
+                    ? Duration.ZERO
+                    : Duration.ofNanos(System.nanoTime() - startNanos);
+            long durationMillis = duration.toMillis();
             System.out.print(k.toString().toLowerCase()
                     + " " + itr.getMethod().getConstructorOrMethod().getDeclaringClass().getName()
                     + "." + itr.getMethod().getMethodName()
