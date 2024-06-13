@@ -185,12 +185,13 @@ public class TestNGRunner implements MainActionHelper.TestRunner {
             } else {
                 suffix = "\n";
             }
-
+            long durationMillis = itr.getEndMillis() - itr.getStartMillis();
             System.out.print(k.toString().toLowerCase()
                     + " " + itr.getMethod().getConstructorOrMethod().getDeclaringClass().getName()
                     + "." + itr.getMethod().getMethodName()
                     + formatParams(itr)
                         + ": " + statusToString(itr.getStatus())
+                        + " [" + durationMillis + "ms]"
                         + suffix);
         }
 
