@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2023, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2024, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -711,6 +711,7 @@ public abstract class Action extends ActionHelper {
         LOG_JT_COMMAND        = "JavaTest command: ",
         LOG_REASON            = "reason: ",
         LOG_ELAPSED_TIME      = "elapsed time (seconds): ",
+        LOG_EXCLUSIVE_ACCESS_TIME = "exclusiveAccess wait time (seconds): ",
         LOG_STARTED = "started: ",
         LOG_FINISHED = "finished: ",
         //LOG_JDK               = "JDK under test: ",

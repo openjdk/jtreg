@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2023, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2024, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -31,6 +31,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -338,11 +339,20 @@ public class MainAction extends Action
             endAction(status);
         } else {
             Lock lock = script.getLockIfRequired();
-            if (lock != null) lock.lock();
-
+            long exclusiveAccessWaitMillis = 0;
+            if (lock != null) {
+                long startNanos = System.nanoTime();
+                lock.lock();
+                exclusiveAccessWaitMillis = Duration.ofNanos(System.nanoTime() - startNanos).toMillis();
+            }
             // Start action after the lock is taken to ensure correct "elapsed time".
             startAction(true);
-
+            if (lock != null) {
+                // print the duration we waited for acquiring a lock due to
+                // exclusiveAccess.dir
+                section.getMessageWriter().println(LOG_EXCLUSIVE_ACCESS_TIME
+                        + ((double) exclusiveAccessWaitMillis / 1000.0));
+            }
             try {
                 switch (!othervmOverrideReasons.isEmpty() ? ExecMode.OTHERVM : script.getExecMode()) {
                     case AGENTVM:

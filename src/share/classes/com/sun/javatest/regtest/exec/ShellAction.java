@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2024, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -29,6 +29,7 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -282,7 +283,13 @@ public class ShellAction extends Action
             PrintWriter sysOut = section.createOutput("System.out");
             PrintWriter sysErr = section.createOutput("System.err");
             Lock lock = script.getLockIfRequired();
-            if (lock != null) lock.lock();
+            if (lock != null) {
+                long startNanos = System.nanoTime();
+                lock.lock();
+                long durationMillis = Duration.ofNanos(System.nanoTime() - startNanos).toMillis();
+                section.getMessageWriter().println(LOG_EXCLUSIVE_ACCESS_TIME
+                        + ((double) durationMillis/1000.0));
+            }
             try {
                 if (showCmd)
                     showCmd("shell", command, section);
