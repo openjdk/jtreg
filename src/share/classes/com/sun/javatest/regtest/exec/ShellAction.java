@@ -29,7 +29,6 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -162,6 +161,11 @@ public class ShellAction extends Action
         return Set.of(script.absTestSrcDir().resolve(shellFN).toFile());
     }
 
+    @Override
+    protected boolean supportsExclusiveAccess() {
+        return true;
+    }
+
     /**
      * The method that does the work of the action.  The necessary work for the
      * given action is defined by the tag specification.
@@ -282,14 +286,6 @@ public class ShellAction extends Action
             // PASS TO PROCESSCOMMAND
             PrintWriter sysOut = section.createOutput("System.out");
             PrintWriter sysErr = section.createOutput("System.err");
-            Lock lock = script.getLockIfRequired();
-            if (lock != null) {
-                long startNanos = System.nanoTime();
-                lock.lock();
-                long durationMillis = Duration.ofNanos(System.nanoTime() - startNanos).toMillis();
-                section.getMessageWriter().println(LOG_EXCLUSIVE_ACCESS_TIME
-                        + ((double) durationMillis/1000.0));
-            }
             try {
                 if (showCmd)
                     showCmd("shell", command, section);
@@ -310,7 +306,6 @@ public class ShellAction extends Action
                 status = normalize(cmd.exec());
 
             } finally {
-                if (lock != null) lock.unlock();
                 if (sysOut != null) sysOut.close();
                 if (sysErr != null) sysErr.close();
             }

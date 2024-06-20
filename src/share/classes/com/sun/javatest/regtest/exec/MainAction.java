@@ -31,7 +31,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Path;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -338,21 +337,7 @@ public class MainAction extends Action
             status = passed(CHECK_PASS);
             endAction(status);
         } else {
-            Lock lock = script.getLockIfRequired();
-            long exclusiveAccessWaitMillis = 0;
-            if (lock != null) {
-                long startNanos = System.nanoTime();
-                lock.lock();
-                exclusiveAccessWaitMillis = Duration.ofNanos(System.nanoTime() - startNanos).toMillis();
-            }
-            // Start action after the lock is taken to ensure correct "elapsed time".
             startAction(true);
-            if (lock != null) {
-                // print the duration we waited for acquiring a lock due to
-                // exclusiveAccess.dir
-                section.getMessageWriter().println(LOG_EXCLUSIVE_ACCESS_TIME
-                        + ((double) exclusiveAccessWaitMillis / 1000.0));
-            }
             try {
                 switch (!othervmOverrideReasons.isEmpty() ? ExecMode.OTHERVM : script.getExecMode()) {
                     case AGENTVM:
@@ -367,9 +352,7 @@ public class MainAction extends Action
                         throw new AssertionError();
                 }
             } finally {
-                // End action before releasing the lock.
                 endAction(status);
-                if (lock != null) lock.unlock();
             }
         }
 
@@ -386,6 +369,11 @@ public class MainAction extends Action
         List<String> buildArgs = List.of(join(testModuleName, testClassName));
         BuildAction ba = new BuildAction();
         return ba.build(buildOpts, buildArgs, SREASON_ASSUMED_BUILD, script);
+    }
+
+    @Override
+    protected boolean supportsExclusiveAccess() {
+        return true;
     }
 
     private Status runOtherJVM() throws TestRunException {
