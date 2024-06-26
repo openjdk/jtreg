@@ -65,7 +65,7 @@
 
 case "`uname -s`" in
     CYGWIN* ) cygwin=1 ;;
-    Linux ) if grep -qi Microsoft /proc/version ; then wsl=1 ; fi ;;
+    Linux ) if test -f /proc/version && grep -qi Microsoft /proc/version ; then wsl=1 ; fi ;;
 esac
 
 # Determine jtreg installation directory
