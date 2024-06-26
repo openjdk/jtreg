@@ -51,7 +51,7 @@ $(BUILDDIR)/classes.com.sun.javatest.regtest.agent.ok: \
 		$(JAVAFILES.com.sun.javatest.regtest-agentvm)
 	echo "classes built at `date`" > $@
 
-### The following files are for the jtreg tool
+### The following files are for the jtreg and jtdiff tools
 
 JAVAFILES.com.sun.javatest.regtest-tools := \
 	$(shell $(FIND) $(JAVADIR)/com/sun/javatest/regtest -name agent -prune -o -name \*.java -print )

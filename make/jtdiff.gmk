@@ -1,0 +1,78 @@
+#
+# Copyright (c) 1999, 2016, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+#----------------------------------------------------------------------
+#
+# compile com.sun.javatest.diff
+
+JAVAFILES.com.sun.javatest.diff := \
+	$(shell $(FIND) $(JAVADIR)/com/sun/javatest/diff -name \*.java )
+
+$(BUILDDIR)/classes.com.sun.javatest.diff.ok: \
+		$(JAVAFILES.com.sun.javatest.diff) \
+		$(BUILDDIR)/classes.com.sun.javatest.regtest.ok
+	CLASSPATH="$(CLASSDIR)$(PS)$(JAVATEST_JAR)$(PS)$(ANT_JAR)" \
+	    $(REGTEST_TOOL_JAVAC) $(REGTEST_TOOL_JAVAC_OPTIONS) \
+		-d $(CLASSDIR) \
+		-encoding ASCII \
+		$(JAVAFILES.com.sun.javatest.diff)
+	echo "classes built at `date`" > $@
+
+TARGETS.com.sun.javatest.diff += $(BUILDDIR)/classes.com.sun.javatest.diff.ok
+
+#----------------------------------------------------------------------
+#
+# resources required for com.sun.javatest.diff
+
+RESOURCES.com.sun.javatest.diff = \
+	$(CLASSDIR)/com/sun/javatest/diff/i18n.properties
+
+TARGETS.com.sun.javatest.diff += $(RESOURCES.com.sun.javatest.diff)
+
+#----------------------------------------------------------------------
+#
+# include jtdiff in jtreg.jar
+
+PKGS.JAR.jtreg += com.sun.javatest.diff
+TARGETS.JAR.jtreg += $(TARGETS.com.sun.javatest.diff)
+
+#----------------------------------------------------------------------
+#
+# executable scripts
+
+$(JTREG_IMAGEDIR)/bin/jtdiff: $(SRCSHAREBINDIR)/jtdiff.sh
+	$(MKDIR) -p $(@D)
+	$(RM) $@
+	$(CP) $<  $@
+	$(CHMOD) a+x,a-w $@
+
+TARGETS.ZIP.jtreg += \
+	$(JTREG_IMAGEDIR)/bin/jtdiff
+
+#----------------------------------------------------------------------
+
+TESTS += $(TESTS.jtdiff)
+
+
