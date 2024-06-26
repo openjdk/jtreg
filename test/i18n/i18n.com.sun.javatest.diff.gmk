@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2015, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2007, 2017, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -25,39 +25,17 @@
 
 #----------------------------------------------------------------------
 
-# Test compilation and execution using JDK 1.1
-# Only othervm supported -- jtreg can't run agentvm on 1.1
-$(BUILDTESTDIR)/JDK11Test.1.ok: \
-	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	    $(JTREG_IMAGEDIR)/bin/jtreg
-	$(RM) $(@:%.ok=%)
-	JTREG_SHOWAGENT=true JTREG_SHOWCMD=true \
-	JT_JAVA=$(JDK6HOME) \
-		$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
-		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(JDK1_1HOME) \
-		$(TESTDIR)/jdk11/ExecuteTest.java
-	echo "test passed at `date`" > $@
+$(BUILDTESTDIR)/i18n.com.sun.javatest.diff.ok: \
+		$(JAVAFILES.com.sun.javatest.diff) \
+		$(JAVADIR)/com/sun/javatest/diff/i18n.properties \
+		$(BUILDDIR)/classes.com.sun.javatest.diff.ok \
+		$(TESTDIR)/i18n/checkI18NProps.sh
+	$(MKDIR) -p $(@:%.ok=%)
+	CLASSPATH="$(CLASSDIR)$(PS)$(JAVADIR)$(PS)$(JAVATEST_JAR)" \
+		$(JDKJAVA) -Djavatest.i18n.log=com.sun.javatest.diff \
+			com.sun.javatest.diff.Main -help all \
+			> $(@:%.ok=%/i18n-log.txt) 2>&1
+	$(SH) $(TESTDIR)/i18n/checkI18NProps.sh $(@:%.ok=%) $(JAVADIR)/com/sun/javatest/diff $(@:%.ok=%/i18n-log.txt)
+	echo $@ passed at `date` > $@
 
-# Test split compilation using JDK 1.1
-$(BUILDTESTDIR)/JDK11Test.2.ok: \
-	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
-	    $(JTREG_IMAGEDIR)/bin/jtreg
-	$(RM) $(@:%.ok=%)
-	JTREG_SHOWAGENT=true JTREG_SHOWCMD=true \
-	JT_JAVA=$(JDK6HOME) \
-		$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
-		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-compilejdk:$(JDK1_1HOME) \
-		-jdk:$(JDK6HOME) \
-		$(TESTDIR)/jdk11/ExecuteTest.java
-	echo "test passed at `date`" > $@
-
-ifdef JDK1_1HOME
-ifdef JDK6HOME
-TESTS.jtreg += \
-	$(BUILDTESTDIR)/JDK11Test.1.ok \
-	$(BUILDTESTDIR)/JDK11Test.2.ok
-endif
-endif
-
+TESTS.jtdiff += $(BUILDTESTDIR)/i18n.com.sun.javatest.diff.ok

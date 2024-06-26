@@ -27,6 +27,7 @@ package com.sun.javatest.regtest.agent;
 
 import org.junit.platform.engine.TestExecutionResult;
 import org.junit.platform.engine.TestSource;
+import org.junit.platform.engine.UniqueId;
 import org.junit.platform.engine.discovery.DiscoverySelectors;
 import org.junit.platform.engine.reporting.ReportEntry;
 import org.junit.platform.engine.support.descriptor.MethodSource;
@@ -44,7 +45,10 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
+import java.time.Duration;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -190,6 +194,7 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
         final PrintWriter printer;
         final Lock lock;
         final AgentVerbose verbose;
+        final Map<UniqueId, Long> startNanosByUniqueId = new ConcurrentHashMap<>();
 
         PrintingListener(PrintStream stream, AgentVerbose verbose) {
             this(new PrintWriter(stream, true), verbose);
@@ -220,6 +225,7 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
 
         @Override
         public void executionStarted(TestIdentifier identifier) {
+            startNanosByUniqueId.put(identifier.getUniqueIdObject(), System.nanoTime());
             if (verbose.passMode == AgentVerbose.Mode.NONE) return;
             if (identifier.isTest()) {
                 String status = "STARTED";
@@ -241,6 +247,10 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
             if (status == TestExecutionResult.Status.SUCCESSFUL) {
                 if (verbose.passMode == AgentVerbose.Mode.NONE) return;
             }
+            Long startNanos = startNanosByUniqueId.remove(identifier.getUniqueIdObject());
+            Duration duration = startNanos == null
+                    ? Duration.ZERO
+                    : Duration.ofNanos(System.nanoTime() - startNanos);
             lock.lock();
             try {
                 if (status == TestExecutionResult.Status.ABORTED) {
@@ -252,7 +262,8 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
                 if (identifier.isTest()) {
                     String source = toSourceString(identifier);
                     String name = identifier.getDisplayName();
-                    printer.printf("%-10s %s '%s'%n", status, source, name);
+                    long millis = duration.toMillis();
+                    printer.printf("%-10s %s '%s' [%dms]%n", status, source, name, millis);
                 }
             }
             finally {

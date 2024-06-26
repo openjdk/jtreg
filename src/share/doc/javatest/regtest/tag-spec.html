@@ -1,6 +1,6 @@
 <!DOCTYPE HTML>
 <!--
- Copyright (c) 2006, 2020, Oracle and/or its affiliates. All rights reserved.
+ Copyright (c) 2006, 2024, Oracle and/or its affiliates. All rights reserved.
  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 
  This code is free software; you can redistribute it and/or modify it
@@ -1228,7 +1228,8 @@ for information on how to extend the set of supported names for a particular tes
 <p>The system properties in the following table will be set
 while executing any class specified in an action tag;
 the environment variables will be set while executing a shell
-action tag.
+action tag. Recently added values may not be available
+in environment variables.
 
 <table>
 <caption>Test-specific system properties and environment variables</caption>
@@ -1238,6 +1239,13 @@ action tag.
 <td><code>test.file</code>
 <td><code>TESTFILE</code>
 <td>The defining file of the test
+
+<tr>
+<td><code>test.name</code>
+<td><i>Not Available</i>
+<td>The name of the test, as a relative URL formed from the defining file
+of the test and any corresponding id if the file contains multiple separate
+test descriptions.
 
 <tr>
 <td><code>test.src</code>
@@ -1314,6 +1322,17 @@ will be unset or empty, if the version of JDK used to run the tests does not
 support modules.
 
 <tr>
+<td><code>test.module.path</code>
+<td><i>Not Available</i>
+<td>The path for any library modules used by the test.
+
+<tr>
+<td><code>test.patch.path</code>
+<td><i>Not Available</i>
+<td>The path for tests that are written as a patch for
+a system module.
+
+<tr>
 <td><code>test.root</code>
 <td><code>TESTROOT</code>
 <td>The root directory of the test suite
@@ -1325,6 +1344,11 @@ support modules.
 <td>Set (to <code>true</code>code>) if the test is using "preview features"
 as indicated by <code>@enablePreview</code> in the test description
 or an <code>enablePreview</code> entry in a TEST.properties file.
+
+<tr>
+<td><code>test.verbose</code>
+<td><i>Not Available</i>
+<td>The cumulative value of any command-line "verbose" options.
 
 <tr>
 <td><code>test.query</code>

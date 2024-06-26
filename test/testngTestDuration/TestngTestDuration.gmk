@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2011, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2024, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -23,19 +23,22 @@
 # questions.
 #
 
-#----------------------------------------------------------------------
-
-# 7900112: don't print unnecessary stack traces
-$(BUILDTESTDIR)/T7900112.ok: \
+# verify that the testng test method execution report includes the duration of the test
+$(BUILDTESTDIR)/TestngTestDuration.ok: \
 	$(JTREG_IMAGEDIR)/lib/javatest.jar \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	$(JDKHOME)/bin/java -jar $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		-w $(@:%.ok=%)/work/ -r $(@:%.ok=%)/report/ \
-		$(TESTDIR)/7900112 > $(@:%.ok=%/jt.log) 2>&1; \
-        $(GREP) 'java.lang.Exception: thrown exception is success' $(@:%.ok=%)/work/TestExpected.jtr > /dev/null ; rc=$$?; \
-        if [ "$$rc" = 0 ]; then echo "Unexpected stacktrace for successful test in TestExpected.jtr" ; exit 1 ; fi
+		$(TESTDIR)/testngTestDuration/Test.java > $(@:%.ok=%/jt.log) 2>&1 ; ls $(@:%.ok=%)/work ; rc=$$? ; \
+		if [ "$$rc" != 0 ]; then echo "unexpected exit code from test execution: " $$rc ; exit 1 ; fi ; \
+		$(GREP) 'test Test.alwaysFail(): failure \[[0-9]\+ms\]' $(@:%.ok=%)/work/Test.jtr > /dev/null ; found=$$?; \
+		if [ "$$found" != 0 ]; then echo "Test.jtr is missing alwaysFail() report" ; exit 1 ; fi ; \
+		$(GREP) 'test Test.alwaysPass(): success \[[0-9]\+ms\]' $(@:%.ok=%)/work/Test.jtr > /dev/null ; found=$$?; \
+		if [ "$$found" != 0 ]; then echo "Test.jtr is missing alwaysPass() report" ; exit 1 ; fi ; \
+		$(GREP) 'test Test.alwaysSkip(): skip \[[0-9]\+ms\]' $(@:%.ok=%)/work/Test.jtr > /dev/null ; found=$$?; \
+		if [ "$$found" != 0 ]; then echo "Test.jtr is missing alwaysSkip() report" ; exit 1 ; fi
 	echo $@ passed at `date` > $@
 
-TESTS.jtreg += $(BUILDTESTDIR)/T7900112.ok
-
+TESTS.jtreg += \
+	$(BUILDTESTDIR)/TestngTestDuration.ok

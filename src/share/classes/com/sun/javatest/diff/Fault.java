@@ -4,7 +4,9 @@
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
+ * published by the Free Software Foundation.  Oracle designates this
+ * particular file as subject to the "Classpath" exception as provided
+ * by Oracle in the LICENSE file that accompanied this code.
  *
  * This code is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -21,8 +23,18 @@
  * questions.
  */
 
-/* @test */
-public class Pass {
-    public static void main(String... args) {
+package com.sun.javatest.diff;
+
+import com.sun.javatest.util.I18NResourceBundle;
+
+/**
+ * Exception to report a problem while executing in Main.
+ */
+public class Fault extends Exception {
+
+    static final long serialVersionUID = 1607979458544175906L;
+
+    Fault(I18NResourceBundle i18n, String s, Object... args) {
+        super(i18n.getString(s, args));
     }
 }
