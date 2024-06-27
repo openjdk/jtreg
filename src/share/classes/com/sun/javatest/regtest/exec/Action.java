@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2023, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2024, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -376,6 +377,21 @@ public abstract class Action extends ActionHelper {
      * @param initConfig whether or not to initialize a configuration section
      */
     protected void startAction(boolean initConfig) {
+        long exclusiveAccessWaitMillis = 0;
+        // if the RegressionScript isn't meant to only check the test description,
+        // then before starting the action, we check if the RegressionScript
+        // requires a exclusiveAccess lock and if it does, we acquire it.
+        if (supportsExclusiveAccess() && !script.isCheck()) {
+            exclusiveAccessLock = script.getLockIfRequired();
+            if (exclusiveAccessLock != null) {
+                long startNanos = System.nanoTime();
+                exclusiveAccessLock.lock();
+                exclusiveAccessWaitMillis = Duration.ofNanos(
+                        System.nanoTime() - startNanos).toMillis();
+            }
+        }
+        Date startDate = new Date();
+        startTime = startDate.getTime();
         String name = getName();
         section = script.getTestResult().createSection(name);
 
@@ -387,27 +403,42 @@ public abstract class Action extends ActionHelper {
         if (initConfig) {
             configWriter = section.createOutput("configuration");
         }
-
-        Date startDate = new Date();
-        startTime = startDate.getTime();
+        if (exclusiveAccessLock != null) {
+            // log the time spent (in seconds) waiting for exclusiveAccess
+            pw.println(LOG_EXCLUSIVE_ACCESS_TIME + ((double) exclusiveAccessWaitMillis / 1000.0));
+        }
         pw.println(LOG_STARTED + startDate);
-    } // startAction()
+    }
 
     /**
      * Set the status for the passed action. After this call, the recording area
-     * for the action become immutable.
+     * for the action becomes immutable.
      *
      * @param status The final status of the action.
      */
     protected void endAction(Status status) {
-        Date endDate = new Date();
-        long elapsedTime = endDate.getTime() - startTime;
-        PrintWriter pw = section.getMessageWriter();
-        pw.println(LOG_FINISHED + endDate);
-        pw.println(LOG_ELAPSED_TIME + ((double) elapsedTime/1000.0));
-        recorder.close();
-        section.setStatus(status);
-    } // endAction()
+        try {
+            Date endDate = new Date();
+            long elapsedTime = endDate.getTime() - startTime;
+            PrintWriter pw = section.getMessageWriter();
+            pw.println(LOG_FINISHED + endDate);
+            pw.println(LOG_ELAPSED_TIME + ((double) elapsedTime / 1000.0));
+            recorder.close();
+            section.setStatus(status);
+        } finally {
+            if (exclusiveAccessLock != null) {
+                exclusiveAccessLock.unlock();
+            }
+        }
+    }
+
+    /**
+     * {@return true if the action can run a {@code RegressionScript}
+     *          that has been configured to run exclusively, false otherwise}
+     */
+    protected boolean supportsExclusiveAccess() {
+        return false;
+    }
 
     //----------workarounds-------------------------------------------------------
 
@@ -711,6 +742,7 @@ public abstract class Action extends ActionHelper {
         LOG_JT_COMMAND        = "JavaTest command: ",
         LOG_REASON            = "reason: ",
         LOG_ELAPSED_TIME      = "elapsed time (seconds): ",
+        LOG_EXCLUSIVE_ACCESS_TIME = "exclusiveAccess wait time (seconds): ",
         LOG_STARTED = "started: ",
         LOG_FINISHED = "finished: ",
         //LOG_JDK               = "JDK under test: ",
@@ -844,6 +876,9 @@ public abstract class Action extends ActionHelper {
     protected /*final*/ ActionRecorder recorder;
     protected /*final*/ PrintWriter configWriter;
     private long startTime;
+    // used when the action's RegressionScript is configured to
+    // run in exclusiveAccess.dir
+    private Lock exclusiveAccessLock;
 
     protected static final boolean showCmd = Flags.get("showCmd");
     protected static final boolean showMode = Flags.get("showMode");

@@ -130,7 +130,7 @@ public class TestProperties {
         return getEntry(file).junitRoot;
     }
 
-    boolean needsExclusiveAccess(File file) throws TestSuite.Fault {
+    boolean needsExclusiveAccess(File file) {
         return getEntry(file).needsExclusiveAccess;
     }
 
