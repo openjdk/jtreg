@@ -128,14 +128,7 @@ public class RegressionScript extends Script {
         // defaults
 
         testResult = getTestResult();
-
-        String hostname;
-        try {
-            hostname = InetAddress.getLocalHost().getCanonicalHostName();
-        } catch (UnknownHostException e) {
-            hostname = "127.0.0.1";
-        }
-        testResult.putProperty("hostname", hostname);
+        testResult.putProperty("hostname", regEnv.getHostName());
         String[] props = { "user.name" };
         for (String p: props) {
             testResult.putProperty(p, System.getProperty(p));
