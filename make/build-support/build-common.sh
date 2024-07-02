@@ -106,7 +106,7 @@ download_using_wget() {
     check_arguments "${FUNCNAME}" 2 $#
 
     local url="$1"
-    local destfile="$2"
+    local destfile=`realpath "$2"`
 
     set +e
     "${WGET}" ${WGET_OPTIONS} "${url}" -O "${destfile}"
