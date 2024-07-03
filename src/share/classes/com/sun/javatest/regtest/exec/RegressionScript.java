@@ -1059,7 +1059,7 @@ public class RegressionScript extends Script {
     }
 
     Lock getLockIfRequired() {
-        return testSuite.isExclusiveAccessRequired(td) ? Lock.get(params) : null;
+        return testSuite.needsExclusiveAccess(td) ? Lock.get(params) : null;
     }
 
     int getNextSerial() {
