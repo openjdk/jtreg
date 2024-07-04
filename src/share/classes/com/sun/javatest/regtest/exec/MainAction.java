@@ -337,12 +337,7 @@ public class MainAction extends Action
             status = passed(CHECK_PASS);
             endAction(status);
         } else {
-            Lock lock = script.getLockIfRequired();
-            if (lock != null) lock.lock();
-
-            // Start action after the lock is taken to ensure correct "elapsed time".
             startAction(true);
-
             try {
                 switch (!othervmOverrideReasons.isEmpty() ? ExecMode.OTHERVM : script.getExecMode()) {
                     case AGENTVM:
@@ -357,9 +352,7 @@ public class MainAction extends Action
                         throw new AssertionError();
                 }
             } finally {
-                // End action before releasing the lock.
                 endAction(status);
-                if (lock != null) lock.unlock();
             }
         }
 
@@ -376,6 +369,11 @@ public class MainAction extends Action
         List<String> buildArgs = List.of(join(testModuleName, testClassName));
         BuildAction ba = new BuildAction();
         return ba.build(buildOpts, buildArgs, SREASON_ASSUMED_BUILD, script);
+    }
+
+    @Override
+    protected boolean supportsExclusiveAccess() {
+        return true;
     }
 
     private Status runOtherJVM() throws TestRunException {

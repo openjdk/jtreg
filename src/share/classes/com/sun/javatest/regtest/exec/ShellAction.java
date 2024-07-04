@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2024, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -161,6 +161,11 @@ public class ShellAction extends Action
         return Set.of(script.absTestSrcDir().resolve(shellFN).toFile());
     }
 
+    @Override
+    protected boolean supportsExclusiveAccess() {
+        return true;
+    }
+
     /**
      * The method that does the work of the action.  The necessary work for the
      * given action is defined by the tag specification.
@@ -281,8 +286,6 @@ public class ShellAction extends Action
             // PASS TO PROCESSCOMMAND
             PrintWriter sysOut = section.createOutput("System.out");
             PrintWriter sysErr = section.createOutput("System.err");
-            Lock lock = script.getLockIfRequired();
-            if (lock != null) lock.lock();
             try {
                 if (showCmd)
                     showCmd("shell", command, section);
@@ -303,7 +306,6 @@ public class ShellAction extends Action
                 status = normalize(cmd.exec());
 
             } finally {
-                if (lock != null) lock.unlock();
                 if (sysOut != null) sysOut.close();
                 if (sysErr != null) sysErr.close();
             }
