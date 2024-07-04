@@ -87,6 +87,12 @@ public class Agent {
         }
     }
 
+    // represents a timeout that occurred while executing
+    // a test action within an agentvm
+    static final class ActionTimeout extends Exception {
+        private static final long serialVersionUID = 7956108605006221253L;
+    }
+
     // legacy support for logging to stderr
     // showAgent is superseded by always-on log to file
     static final boolean showAgent = Flags.get("showAgent");
@@ -309,7 +315,7 @@ public class Agent {
             int timeout,
             final TimeoutHandler timeoutHandler,
             TestResult.Section trs)
-                throws Fault {
+                throws ActionTimeout, Fault {
         trace("doCompileAction " + testName + " " + cmdArgs);
 
         return doAction("doCompileAction",
@@ -342,7 +348,7 @@ public class Agent {
             int timeout,
             final TimeoutHandler timeoutHandler,
             TestResult.Section trs)
-                throws Fault {
+                throws ActionTimeout, Fault {
         trace("doMainAction: " + testName
                     + " " + testClassPath
                     + " " + modulePath
@@ -382,7 +388,7 @@ public class Agent {
             int timeout,
             final TimeoutHandler timeoutHandler,
             TestResult.Section trs)
-                throws Fault {
+                throws ActionTimeout, Fault {
         final PrintWriter messageWriter = trs.getMessageWriter();
         // Handle the timeout here (instead of in the agent) to make it possible
         // to see the unchanged state of the Agent JVM when the timeout happens.
@@ -417,8 +423,7 @@ public class Agent {
             keepAlive.setEnabled(true);
             if (alarm.didFire()) {
                 waitForTimeoutHandler(actionName, timeoutHandler, timeoutHandlerDone);
-                throw new Fault(new Exception("Agent " + id + " timed out with a timeout of "
-                        + timeout + " seconds"));
+                throw new ActionTimeout();
             }
         }
     }
