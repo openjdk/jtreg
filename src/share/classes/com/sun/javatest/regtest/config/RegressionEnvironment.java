@@ -52,13 +52,13 @@ public class RegressionEnvironment extends TestEnvironment
      * {@return the hostname of the host in which this test harness is being run}
      */
     public final String getHostName() {
-        return LazyHostNameLookup.HOST_NAME;
+        return CachedCanonicalHostName.HOST_NAME;
     }
 
     public final RegressionParameters params;
 
 
-    private static final class LazyHostNameLookup {
+    private static final class CachedCanonicalHostName {
         private static final String HOST_NAME;
 
         static {
