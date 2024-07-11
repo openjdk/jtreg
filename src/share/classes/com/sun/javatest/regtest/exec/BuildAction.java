@@ -224,7 +224,7 @@ public class BuildAction extends Action
 
             // compile libraries first
             for (Map.Entry<LibLocn,List<ClassLocn>> e: classLocnsToCompile.entrySet()) {
-                if (e.getKey().name != null) {
+                if (e.getKey().isLibrary()) {
                     Status s = compileLibrary(e.getKey(), e.getValue());
                     if (!s.isPassed()) {
                         status = s;
@@ -236,7 +236,7 @@ public class BuildAction extends Action
             // compile test code
             if (status == null) {
                 for (Map.Entry<LibLocn,List<ClassLocn>> e: classLocnsToCompile.entrySet()) {
-                    if (e.getKey().name == null) {
+                    if (e.getKey().isTest()) {
                         Status s = compileLibrary(e.getKey(), e.getValue());
                         if (!s.isPassed()) {
                             status = s;
@@ -319,7 +319,7 @@ public class BuildAction extends Action
     private void showClasses(LibLocn lib, List<ClassLocn> toCompile) {
         PrintWriter pw = section.getMessageWriter();
 
-        if (lib.name == null) {
+        if (lib.isTest()) {
             pw.println("Test directory:");
         } else {
             pw.println("Library " + lib.name + ":");
