@@ -363,7 +363,7 @@ public class CompileAction extends Action {
             }
         }
 
-        if (runJavac && script.enablePreview() && !seenEnablePreview) {
+        if (runJavac && script.enablePreview() && !seenEnablePreview && libLocn.isTest()) {
             javacArgs.add(insertPos, "--enable-preview");
             if (!seenSourceOrRelease) {
                 int v = script.getTestJDKVersion().major;
