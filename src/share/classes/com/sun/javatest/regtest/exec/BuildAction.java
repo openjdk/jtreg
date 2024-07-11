@@ -304,11 +304,14 @@ public class BuildAction extends Action
         if (implicitOpt != null)
             compArgs.add(implicitOpt);
 
-        // read library-specific properties
+        // read and add library-specific compilation properties
         if (libLocn.isLibrary()) {
             try {
                 var properties = LibraryProperties.of(libLocn);
-                compArgs.addAll(properties.getJavacOptions());
+                if (properties.isEnablePreview()) {
+                    compArgs.add("--enable-preview");
+                    compArgs.add("--release=" + script.getTestJDKVersion().major);
+                }
             } catch (IOException exception) {
                 throw new TestRunException("Reading library properties failed: " + libLocn, exception);
             }

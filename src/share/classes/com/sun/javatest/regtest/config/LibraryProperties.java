@@ -27,37 +27,32 @@ package com.sun.javatest.regtest.config;
 
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.List;
 import java.util.Properties;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Provide access to properties defined in LIBRARY.properties files.
  */
 public final class LibraryProperties {
-    private final Properties properties;
+    private final boolean enablePreview;
 
-    public LibraryProperties(Properties properties) {
-        this.properties = properties;
+    public LibraryProperties(boolean enablePreview) {
+        this.enablePreview = enablePreview;
     }
 
     public static LibraryProperties of(Locations.LibLocn libLocn) throws IOException {
         var file = libLocn.absSrcDir.resolve("LIBRARY.properties");
         var properties = new Properties();
+        var enablePreview = false;
         if (Files.exists(file)) {
             try (var stream = Files.newInputStream(file)) {
                 properties.load(stream);
             }
+            enablePreview = Boolean.parseBoolean(properties.getProperty("enablePreview", "false"));
         }
-        return new LibraryProperties(properties);
+        return new LibraryProperties(enablePreview);
     }
 
-    public List<String> getJavacOptions() {
-        var value = properties.getProperty("javac.options");
-        if (value == null) return List.of();
-        return Stream.of(value.split("\\s"))
-                .map(arg -> arg.replace("${runtime.version.feature}", ""+Runtime.version().feature()))
-                .collect(Collectors.toList());
+    public boolean isEnablePreview() {
+        return enablePreview;
     }
 }
