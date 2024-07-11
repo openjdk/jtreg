@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2005, 2024, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -25,6 +25,8 @@
 
 package com.sun.javatest.regtest.config;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 
 import com.sun.javatest.TestEnvironment;
@@ -46,5 +48,27 @@ public class RegressionEnvironment extends TestEnvironment
         return new RegressionEnvironment(this);
     }
 
+    /**
+     * {@return the hostname of the host in which this test harness is being run}
+     */
+    public final String getHostName() {
+        return CachedCanonicalHostName.HOST_NAME;
+    }
+
     public final RegressionParameters params;
+
+
+    private static final class CachedCanonicalHostName {
+        private static final String HOST_NAME;
+
+        static {
+            String hostname;
+            try {
+                hostname = InetAddress.getLocalHost().getCanonicalHostName();
+            } catch (UnknownHostException e) {
+                hostname = "127.0.0.1";
+            }
+            HOST_NAME = hostname;
+        }
+    }
 }
