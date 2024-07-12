@@ -59,6 +59,7 @@ import com.sun.javatest.regtest.agent.SearchPath;
 import com.sun.javatest.regtest.config.ExecMode;
 import com.sun.javatest.regtest.config.JDK;
 import com.sun.javatest.regtest.config.JDKOpts;
+import com.sun.javatest.regtest.config.LibraryProperties;
 import com.sun.javatest.regtest.config.Locations;
 import com.sun.javatest.regtest.config.Locations.LibLocn;
 import com.sun.javatest.regtest.config.Modules;
@@ -363,7 +364,14 @@ public class CompileAction extends Action {
             }
         }
 
-        if (runJavac && script.enablePreview() && !seenEnablePreview && libLocn.isTest()) {
+        var usesLibraryWithPreview = script.locations.getLibs().stream()
+                .filter(LibLocn::isLibrary)
+                .map(LibraryProperties::of) // cache properties object in LibLocn
+                .anyMatch(LibraryProperties::isEnablePreview);
+
+        var needsEnablePreview = script.enablePreview() || usesLibraryWithPreview;
+
+        if (runJavac && needsEnablePreview && !seenEnablePreview && libLocn.isTest()) {
             javacArgs.add(insertPos, "--enable-preview");
             if (!seenSourceOrRelease) {
                 int v = script.getTestJDKVersion().major;

@@ -26,9 +26,8 @@
 package com.sun.javatest.regtest.exec;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.PrintWriter;
-import java.nio.file.Files;
+import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.text.DateFormat;
 import java.util.ArrayList;
@@ -312,7 +311,7 @@ public class BuildAction extends Action
                     compArgs.add("--enable-preview");
                     compArgs.add("--release=" + script.getTestJDKVersion().major);
                 }
-            } catch (IOException exception) {
+            } catch (UncheckedIOException exception) {
                 throw new TestRunException("Reading library properties failed: " + libLocn, exception);
             }
         }

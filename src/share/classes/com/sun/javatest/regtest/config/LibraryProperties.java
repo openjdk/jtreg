@@ -26,6 +26,7 @@
 package com.sun.javatest.regtest.config;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.util.Properties;
 
@@ -39,13 +40,15 @@ public final class LibraryProperties {
         this.enablePreview = enablePreview;
     }
 
-    public static LibraryProperties of(Locations.LibLocn libLocn) throws IOException {
+    public static LibraryProperties of(Locations.LibLocn libLocn) throws UncheckedIOException {
         var file = libLocn.absSrcDir.resolve("LIBRARY.properties");
         var properties = new Properties();
         var enablePreview = false;
         if (Files.exists(file)) {
             try (var stream = Files.newInputStream(file)) {
                 properties.load(stream);
+            } catch (IOException exception) {
+                throw new UncheckedIOException("Reading from file failed: " + file.toUri(), exception);
             }
             enablePreview = Boolean.parseBoolean(properties.getProperty("enablePreview", "false"));
         }
