@@ -364,12 +364,7 @@ public class CompileAction extends Action {
             }
         }
 
-        var usesLibraryWithPreview = script.locations.getLibs().stream()
-                .filter(LibLocn::isLibrary)
-                .map(LibraryProperties::of) // cache properties object in LibLocn
-                .anyMatch(LibraryProperties::isEnablePreview);
-
-        var needsEnablePreview = script.enablePreview() || usesLibraryWithPreview;
+        var needsEnablePreview = script.enablePreview() || usesLibraryCompiledWithPreviewEnabled();
 
         if (runJavac && needsEnablePreview && !seenEnablePreview && libLocn.isTest()) {
             javacArgs.add(insertPos, "--enable-preview");
@@ -423,6 +418,13 @@ public class CompileAction extends Action {
     } // run()
 
     //----------internal methods------------------------------------------------
+
+    private boolean usesLibraryCompiledWithPreviewEnabled() {
+        return script.locations.getLibs().stream()
+                .filter(LibLocn::isLibrary)
+                .map(LibraryProperties::of) // cache library properties object in LibLocn ?
+                .anyMatch(LibraryProperties::isEnablePreview);
+    }
 
     private Status jasm(List<String> files) {
         return asmtools("jasm", files);
