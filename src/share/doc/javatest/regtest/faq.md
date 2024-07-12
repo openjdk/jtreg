@@ -1936,9 +1936,9 @@ You can use `@run driver` to run a class that provides more complex logic, if ne
 
 ### My test uses "preview features": how do I specify the necessary options?
 
-Tests that use preview features must use the `--enable-preview` to compile
-and run the code.  In addition, to compile the code you must also specify the
-appropriate source level.
+Tests that use [preview features](https://openjdk.org/jeps/12) must use the 
+`--enable-preview` to compile and run the code.  In addition, to compile the 
+code you must also specify the appropriate source level.
 
 To provide these options, you can either do so explicitly, in `@compile` and `@run main`
 actions, or you can use the `@enablePreview` declarative tag, in which case jtreg
@@ -1953,6 +1953,14 @@ The equivalent of `@enablePreview` can be set on all the tests in a directory
 and its subdirectories by configuring an entry for `enablePreview` in the
 `TEST.properties` file in an enclosing directory. Any value set in a `TEST.properties`
 file can be overridden in individual tests by using `@enablePreview`.
+
+### My library uses "preview features": how do I specify the necessary options?
+
+Set `enablePreview=true` in the `LIBRARY.properties` file in the root directory
+of the library (the directory specified in the `@library` tag.)
+
+Note that if a library uses preview features, any tests that use the library
+will be assumed to need preview features enabled as well.
 
 
 --------
