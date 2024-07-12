@@ -28,6 +28,7 @@ package com.sun.javatest.regtest.config;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Properties;
 
 /**
@@ -41,18 +42,28 @@ public final class LibraryProperties {
     }
 
     public static LibraryProperties of(Locations.LibLocn libLocn) throws UncheckedIOException {
-        var file = libLocn.absSrcDir.resolve("LIBRARY.properties");
-        var properties = new Properties();
-        var enablePreview = false;
-        if (Files.exists(file)) {
-            try (var stream = Files.newInputStream(file)) {
-                properties.load(stream);
-            } catch (IOException exception) {
-                throw new UncheckedIOException("Reading from file failed: " + file.toUri(), exception);
+        // default values being used when no LIBRARY.properties is present
+        boolean enablePreview = false;
+
+        // read LIBRARY.properties file and initialize fields accordingly
+        Path root = libLocn.absSrcDir;
+        if (Files.isDirectory(root)) {
+            Path file = root.resolve("LIBRARY.properties");
+            if (Files.exists(file)) {
+                var properties = new Properties();
+                try (var stream = Files.newInputStream(file)) {
+                    properties.load(stream);
+                } catch (IOException exception) {
+                    throw new UncheckedIOException("Reading from file failed: " + file.toUri(), exception);
+                }
+                enablePreview = initEnablePreview(properties);
             }
-            enablePreview = Boolean.parseBoolean(properties.getProperty("enablePreview", "false"));
         }
         return new LibraryProperties(enablePreview);
+    }
+
+    private static boolean initEnablePreview(Properties properties) {
+        return Boolean.parseBoolean(properties.getProperty("enablePreview", "false"));
     }
 
     public boolean isEnablePreview() {
