@@ -47,7 +47,7 @@ public final class LibraryProperties {
 
         // read LIBRARY.properties file and initialize fields accordingly
         Path root = libLocn.absSrcDir;
-        if (Files.isDirectory(root)) {
+        if (root != null && Files.isDirectory(root)) {
             Path file = root.resolve("LIBRARY.properties");
             if (Files.exists(file)) {
                 var properties = new Properties();
