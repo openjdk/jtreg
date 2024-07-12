@@ -781,7 +781,7 @@ public class RegressionScript extends Script {
         SearchPath sp = new SearchPath();
 
         // Test:
-        if (libLocn == null || libLocn.name == null) {
+        if (libLocn == null || libLocn.isTest()) {
             if (multiModule) {
                 msp.append(locations.absTestSrcDir());
             } else {

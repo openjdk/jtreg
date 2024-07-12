@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2024, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -27,6 +27,7 @@ package com.sun.javatest.regtest.exec;
 
 import java.io.File;
 import java.io.PrintWriter;
+import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.text.DateFormat;
 import java.util.ArrayList;
@@ -39,6 +40,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 import com.sun.javatest.Status;
+import com.sun.javatest.regtest.config.LibraryProperties;
 import com.sun.javatest.regtest.config.Locations;
 import com.sun.javatest.regtest.config.Locations.ClassLocn;
 import com.sun.javatest.regtest.config.Locations.LibLocn;
@@ -224,7 +226,7 @@ public class BuildAction extends Action
 
             // compile libraries first
             for (Map.Entry<LibLocn,List<ClassLocn>> e: classLocnsToCompile.entrySet()) {
-                if (e.getKey().name != null) {
+                if (e.getKey().isLibrary()) {
                     Status s = compileLibrary(e.getKey(), e.getValue());
                     if (!s.isPassed()) {
                         status = s;
@@ -236,7 +238,7 @@ public class BuildAction extends Action
             // compile test code
             if (status == null) {
                 for (Map.Entry<LibLocn,List<ClassLocn>> e: classLocnsToCompile.entrySet()) {
-                    if (e.getKey().name == null) {
+                    if (e.getKey().isTest()) {
                         Status s = compileLibrary(e.getKey(), e.getValue());
                         if (!s.isPassed()) {
                             status = s;
@@ -301,6 +303,19 @@ public class BuildAction extends Action
         if (implicitOpt != null)
             compArgs.add(implicitOpt);
 
+        // read and add library-specific compilation properties
+        if (libLocn.isLibrary()) {
+            try {
+                var properties = LibraryProperties.of(libLocn);
+                if (properties.isEnablePreview()) {
+                    compArgs.add("--enable-preview");
+                    compArgs.add("--release=" + script.getTestJDKVersion().major);
+                }
+            } catch (UncheckedIOException exception) {
+                throw new TestRunException("Reading library properties failed: " + libLocn, exception);
+            }
+        }
+
         for (File file: files)
             compArgs.add(file.getPath());
 
@@ -319,7 +334,7 @@ public class BuildAction extends Action
     private void showClasses(LibLocn lib, List<ClassLocn> toCompile) {
         PrintWriter pw = section.getMessageWriter();
 
-        if (lib.name == null) {
+        if (lib.isTest()) {
             pw.println("Test directory:");
         } else {
             pw.println("Library " + lib.name + ":");

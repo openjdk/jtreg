@@ -83,6 +83,14 @@ public final class Locations {
             this.kind = kind;
         }
 
+        public boolean isLibrary() {
+            return name != null;
+        }
+
+        public boolean isTest() {
+            return name == null;
+        }
+
         @Override
         public boolean equals(Object other) {
             if (other instanceof LibLocn) {
