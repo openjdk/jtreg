@@ -231,7 +231,8 @@ public class MainAction extends Action
                 throw new ParseException(PARSE_SECURE_OTHERVM);
         }
 
-        if (script.enablePreview() && !seenEnablePreview) {
+        boolean needsEnablePreview = script.enablePreview() || usesLibraryCompiledWithPreviewEnabled();
+        if (needsEnablePreview && !seenEnablePreview) {
             testJavaArgs.add("--enable-preview");
             if (!othervm) {
                 // ideally, this should not force othervm mode, but just allow

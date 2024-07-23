@@ -59,7 +59,6 @@ import com.sun.javatest.regtest.agent.SearchPath;
 import com.sun.javatest.regtest.config.ExecMode;
 import com.sun.javatest.regtest.config.JDK;
 import com.sun.javatest.regtest.config.JDKOpts;
-import com.sun.javatest.regtest.config.LibraryProperties;
 import com.sun.javatest.regtest.config.Locations;
 import com.sun.javatest.regtest.config.Locations.LibLocn;
 import com.sun.javatest.regtest.config.Modules;
@@ -366,11 +365,13 @@ public class CompileAction extends Action {
 
         var needsEnablePreview = script.enablePreview() || usesLibraryCompiledWithPreviewEnabled();
 
-        if (runJavac && needsEnablePreview && !seenEnablePreview && libLocn.isTest()) {
+        if (runJavac && needsEnablePreview && !seenEnablePreview
+                && (libLocn == null || libLocn.isTest())) {
             javacArgs.add(insertPos, "--enable-preview");
             if (!seenSourceOrRelease) {
                 int v = script.getTestJDKVersion().major;
-                javacArgs.add(insertPos + 1, "--source=" + v);
+                javacArgs.add(insertPos + 1, "-source");
+                javacArgs.add(insertPos + 2, String.valueOf(v));
             }
         }
 
@@ -418,13 +419,6 @@ public class CompileAction extends Action {
     } // run()
 
     //----------internal methods------------------------------------------------
-
-    private boolean usesLibraryCompiledWithPreviewEnabled() {
-        return script.locations.getLibs().stream()
-                .filter(LibLocn::isLibrary)
-                .map(LibraryProperties::of) // cache library properties object in LibLocn ?
-                .anyMatch(LibraryProperties::isEnablePreview);
-    }
 
     private Status jasm(List<String> files) {
         return asmtools("jasm", files);
