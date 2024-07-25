@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright (c) 1998, 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1998, 2024, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -65,7 +65,7 @@
 
 case "`uname -s`" in
     CYGWIN* ) cygwin=1 ;;
-    Linux ) if grep -qi Microsoft /proc/version ; then wsl=1 ; fi ;;
+    Linux ) if test -f /proc/version && grep -qi Microsoft /proc/version ; then wsl=1 ; fi ;;
 esac
 
 # Determine jtreg installation directory
