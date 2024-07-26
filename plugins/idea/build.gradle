@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id 'org.jetbrains.intellij' version '1.14.1'
+    id 'org.jetbrains.intellij.platform' version '2.0.0-beta5'
 }
 
 def jtregLib = jtregHome + File.separator + "lib" + File.separator + "jtreg.jar"
@@ -18,16 +18,31 @@ compileJava {
 
 repositories {
     mavenCentral()
+
+    // Note: Cannot use closure for kotlin extensions
+    intellijPlatform.defaultRepositories()
 }
 
 dependencies {
     implementation files(jtregLib)
+
+    // Note: Cannot use closure for kotlin extensions
+    // https://github.com/JetBrains/intellij-platform-gradle-plugin/issues/1591 and 1592
+    intellijPlatform.intellijIdeaCommunity('2024.1.2')
+    intellijPlatform.plugin("AntSupport:${antSupportVersion}")
+    intellijPlatform.bundledPlugins('com.intellij.java', 'TestNG-J')
+    intellijPlatform.instrumentationTools()
 }
 
-// See https://github.com/JetBrains/gradle-intellij-plugin/
-intellij {
-    version = minBuild
-    plugins = ['java', 'AntSupport', 'TestNG-J']
+// See https://github.com/JetBrains/intellij-platform-gradle-plugin/
+intellijPlatform {
+    pluginConfiguration {
+        version = pluginVersion
+        ideaVersion {
+            sinceBuild = minBuild
+            untilBuild = ''
+        }
+    }
 }
 
 patchPluginXml {
