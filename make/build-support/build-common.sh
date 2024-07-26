@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2020, 2024, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -311,8 +311,8 @@ if [ -z "${log_module:-}" ]; then
     error "log_module not set in caller (line/file): $(caller)"
     exit 1
 fi
-
-ROOT="$(abspath ${ROOT:-${mydir}/..})"
+DEFAULT_ROOT="$(builtin cd ${mydir}/..; pwd)"
+ROOT="$(abspath ${ROOT:-${DEFAULT_ROOT}})"
 BUILD_DIR="$(abspath "${BUILD_DIR:-${ROOT}/build}")"
 DEPS_DIR="${BUILD_DIR}/deps"
 
