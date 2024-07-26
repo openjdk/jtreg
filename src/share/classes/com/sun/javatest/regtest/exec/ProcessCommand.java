@@ -216,6 +216,11 @@ public class ProcessCommand
         return timeoutHandler;
     }
 
+    ProcessCommand setMessageWriter(PrintWriter messageWriter) {
+        this.log = messageWriter;
+        return this;
+    }
+
     /**
      * Execute the command.
      * @return The result of the method is obtained by calling
@@ -239,6 +244,10 @@ public class ProcessCommand
                 pb.environment().putAll(env);
             }
             final Process process = pb.start();
+            if (log != null) {
+                final long pid = ProcessUtils.getProcessId(process);
+                log.println("Process id: " + ((pid == -1) ? "unknown" : pid));
+            }
             InputStream processIn = process.getInputStream();
             InputStream processErr = process.getErrorStream();
 
@@ -423,5 +432,6 @@ public class ProcessCommand
     private PrintWriter err;
     private long timeout;
     private TimeoutHandler timeoutHandler;
+    private PrintWriter log;
 }
 

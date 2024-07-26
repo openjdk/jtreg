@@ -296,6 +296,7 @@ public class ShellAction extends Action
 
                 // RUN THE SHELL SCRIPT
                 ProcessCommand cmd = new ProcessCommand()
+                    .setMessageWriter(section.getMessageWriter())
                     .setExecDir(script.absTestScratchDir().toFile())
                     .setCommand(command)
                     .setEnvironment(env)

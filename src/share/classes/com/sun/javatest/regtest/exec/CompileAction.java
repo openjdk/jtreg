@@ -644,6 +644,7 @@ public class CompileAction extends Action {
                 return new Status(aStatus.getType(), aStatus.getReason());
             }
         };
+        cmd.setMessageWriter(section.getMessageWriter());
 
         TimeoutHandler timeoutHandler =
             script.getTimeoutHandlerProvider().createHandler(this.getClass(), script, section);
@@ -703,6 +704,8 @@ public class CompileAction extends Action {
                     : script.getTestVMOptions();
             agent = script.getAgent(jdk, agentClasspath, vmOpts, null, null);
             section.getMessageWriter().println("Agent id: " + agent.getId());
+            final long pid = agent.getAgentServerPid();
+            section.getMessageWriter().println("Process id: " + ((pid == -1) ? "unknown" : pid));
             new ModuleConfig("Boot Layer (javac runtime environment)")
                     .setFromOpts(agent.vmOpts)
                     .write(configWriter);
