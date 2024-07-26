@@ -118,7 +118,7 @@ public class TestNGRunner implements MainActionHelper.TestRunner {
         enum InfoKind { CONFIG, TEST }
 
         private final AtomicInteger count = new AtomicInteger();
-        private final AtomicInteger successCount  = new AtomicInteger();
+        private final AtomicInteger successCount = new AtomicInteger();
         private final AtomicInteger failureCount = new AtomicInteger();
         private final AtomicInteger skippedCount = new AtomicInteger();
         private final AtomicInteger configSuccessCount = new AtomicInteger();
