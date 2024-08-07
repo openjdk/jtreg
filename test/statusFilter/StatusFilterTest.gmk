@@ -121,7 +121,7 @@ $(BUILDTESTDIR)/StatusFilter.ok: \
 		$(TESTDIR)/statusFilter \
 		> $(@:%.ok=%/rerun-all-executed.log 2>&1) || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
-	$(GREP) -E -s '^Test results: passed: 8; error: 1\s?$$' $(@:%.ok=%/rerun-all-executed.log) > /dev/null
+	$(GREP) -E -s '^Test results: passed: 8; error: 1; excluded: 1\s?$$' $(@:%.ok=%/rerun-all-executed.log) > /dev/null
 	lines=`$(CAT) $(@:%.ok=%/report)/text/summary.txt | $(WC) -l` ; \
 	if [ "$$lines" -ne "9" ]; then echo bad summary.txt ; exit 1 ; fi
 	#
@@ -136,7 +136,7 @@ $(BUILDTESTDIR)/StatusFilter.ok: \
 		$(TESTDIR)/statusFilter \
 		> $(@:%.ok=%/rerun-all.log 2>&1) || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
-	$(GREP) -E -s '^Test results: passed: 8; error: 1\s?$$' $(@:%.ok=%/rerun-all.log) > /dev/null
+	$(GREP) -E -s '^Test results: passed: 8; error: 1; excluded: 1\s?$$' $(@:%.ok=%/rerun-all.log) > /dev/null
 	lines=`$(CAT) $(@:%.ok=%/report)/text/summary.txt | $(WC) -l` ; \
 	if [ "$$lines" -ne "10" ]; then echo bad summary.txt ; exit 1 ; fi
 	#

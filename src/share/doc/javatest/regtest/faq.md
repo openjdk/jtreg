@@ -900,6 +900,43 @@ You have several alternatives.
 4.  Use the `-show` option to display the unencoded content of a stream. For example,
     * `jtreg -w` _work-dir_ `-show:System.out` _test-name_
 
+### How do I control the statistics reported on the console at the end of a test run?
+
+By default, `jtreg` reports simple execution statistics at the end of a test run.
+These are given in a line beginning `Test results:`, followed by a series of
+labeled values, including the following:
+
+ * the number of tests that passed; for historical reasons, this includes any
+   tests that were skipped by throwing `jtreg.SkippedException`
+ * the number of tests that failed
+ * the number of tests that could not be executed and which reported an error
+ * the number of filtered out by the exclude list (problem list) filter
+ * the number of tests that were filtered out by the keyword filter
+ * the number of skipped tests
+
+You may override the format of this line by setting the system property
+`jtreg.stats.format` to a `printf`-like format string. The following format
+specifiers are supported:
+
+* `%f`        &mdash; number of failed tests
+* `%F`        &mdash; number of failed and error tests
+* `%e`        &mdash; number of error tests
+* `%e`        &mdash; number of error tests
+* `%p`        &mdash; number of passed tests, including skipped tests
+* `%P`        &mdash; number of passed tests, excluding skipped tests
+* `%n`        &mdash; number of tests not run
+* `%r`        &mdash; number of tests run
+* `%s`        &mdash; number of skipped tests
+* `%x`        &mdash; number of tests filtered out by the exclude list (problem list) filter
+* `%i`        &mdash; number of tests filtered out by the keyword filter
+* `%,`        &mdash; conditional comma
+* `%<space>`  &mdash; conditional space
+* `%%`        &mdash; %
+* `%?X`       &mdash; prints given number if not zero, where X is one of f, F, e, p, P, s, x, i
+* `%?{textX}` &mdash; prints text and given number if number is not zero, where X is one of f, F, e, p, s, x, i
+
+A _conditional_ comma or space is only generated if it is not at the beginning of the line
+
 ### How do I see what groups are defined in my test suite?
 
 Use the `showGroups` option. To see all groups, specify the name of the test suite;

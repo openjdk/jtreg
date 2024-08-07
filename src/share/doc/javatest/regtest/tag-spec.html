@@ -616,6 +616,12 @@ multiple threads, some synchronization may be necessary to ensure that the
 other threads finish their work before the thread running the main method
 returns.
 
+<p>Sometimes, after the main method has been invoked, the code may determine
+that it cannot execute the test as required, and as such, the test should not
+be considered to have either passed or failed. In this situation, the test may
+throw an exception named `jtreg.SkippedException`, optionally providing
+a detail string to indicate why the test has been skipped.
+
 <p>The named <var>&lt;class&gt;</var> will be compiled on demand, just as though an "<code>@run</code> build
 <var>&lt;class&gt;</var>" action had been inserted before this action.  If this action requires
 classes other than <var>&lt;class&gt;</var> to be up to date, insert an appropriate build action
