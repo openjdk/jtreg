@@ -307,6 +307,8 @@ public class MainActionHelper extends ActionHelper {
         MAIN_CANT_INIT_MODULE_EXPORTS = "Can't init module exports: ",
         MAIN_SKIPPED = "Skipped: ";
 
+    public static final String MAIN_SKIPPED_STATUS_PREFIX = MAIN_SKIPPED + SKIP_EXCEPTION;
+
     /**
      * Marker interface for test driver classes, which need to be passed a class
      * loader to load the classes for the test.

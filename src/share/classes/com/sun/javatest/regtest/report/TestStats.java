@@ -35,6 +35,7 @@ import com.sun.javatest.Harness;
 import com.sun.javatest.Parameters;
 import com.sun.javatest.Status;
 import com.sun.javatest.TestResult;
+import com.sun.javatest.regtest.agent.MainActionHelper;
 import com.sun.javatest.regtest.config.CachingTestFilter;
 import com.sun.javatest.regtest.config.RegressionParameters;
 import com.sun.javatest.report.Report;
@@ -80,6 +81,9 @@ public class TestStats {
 
     public void add(TestResult tr) {
         counts[tr.getStatus().getType()]++;
+        if (tr.getStatus().getReason().startsWith(MainActionHelper.MAIN_SKIPPED_STATUS_PREFIX)) {
+            skipped++;
+        }
     }
 
     public void addAll(TestStats other) {
@@ -110,6 +114,15 @@ public class TestStats {
                     f, ((f > 0) && (    e + nr > 0) ? 1 : 0),
                     e, ((e > 0) && (        nr > 0) ? 1 : 0),
                     nr);
+                if (excluded > 0) {
+                    msg += i18n.getString("stats.tests.excluded", excluded);
+                }
+                if (ignored > 0) {
+                    msg += i18n.getString("stats.tests.ignored", ignored);
+                }
+                if (skipped > 0) {
+                    msg += i18n.getString("stats.tests.skipped", skipped);
+                }
             }
         }
         out.println(msg);
@@ -135,15 +148,17 @@ public class TestStats {
      * %f       number of failed tests
      * %F       number of failed and error tests
      * %e       number of error tests
-     * %p       number of passed tests
+     * %p       number of passed tests, including skipped tests
+     * %P       number of passed tests, excluding skipped tests
      * %n       number of tests not run
      * %r       number of tests run
+     * %s       number of skipped tests
      * %x       number of excluded tests
-     * %i       number of ignored tests
+     * %i       number of keyword-ignored tests
      * %,       conditional comma
      * %<space> conditional space
      * %%       %
-     * %?X      prints given number if not zero, where X is one of f, F, e, p, x, i
+     * %?X      prints given number if not zero, where X is one of f, F, e, p, P, s, x, i
      * %?{textX} prints text and given number if number is not zero, where
      *              X is one of f, F, e, p, x, i
      * </pre>
@@ -162,7 +177,9 @@ public class TestStats {
                     case 'i':
                     case 'n':
                     case 'p':
+                    case 'P':
                     case 'r':
+                    case 's':
                     case 'x': {
                         int count = getNumber(c);
                         if (count >= 0)
@@ -224,12 +241,14 @@ public class TestStats {
                                 break;
 
                             }
-                        } else
+                        } else {
                             sb.append("%").append("?");
+                        }
                         break;
 
-                    default:
+                    default: {
                         sb.append("%").append(c);
+                    }
                 }
             } else
                 sb.append(c);
@@ -253,8 +272,12 @@ public class TestStats {
                 return counts[Status.NOT_RUN];
             case 'p':
                 return counts[Status.PASSED];
+            case 'P':
+                return counts[Status.PASSED] - skipped;
             case 'r':
                 return counts[Status.PASSED] + counts[Status.FAILED] + counts[Status.ERROR];
+            case 's':
+                return skipped;
             case 'x':
                 return excluded;
             default:
@@ -265,6 +288,7 @@ public class TestStats {
     public int[] counts = new int[Status.NUM_STATES];
     int excluded;
     int ignored;
+    int skipped;
 
     private static final I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(TestStats.class);
 }

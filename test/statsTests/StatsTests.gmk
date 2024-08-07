@@ -25,6 +25,7 @@
 
 #----------------------------------------------------------------------
 
+# unit test for format support in TestStats.java
 $(BUILDTESTDIR)/StatsTest.ok: \
 	    $(TESTDIR)/statsTests/StatsTest.java \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
@@ -42,6 +43,7 @@ ifneq ($(OS_NAME), windows)
 TESTS.jtreg += $(BUILDTESTDIR)/StatsTest.ok
 endif
 
+# system test for format support in TestStats.java: see -Djtreg.stats.format
 $(BUILDTESTDIR)/StatsTxt.1.ok: \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar
@@ -56,14 +58,15 @@ $(BUILDTESTDIR)/StatsTxt.1.ok: \
 		$(TESTDIR)/share/basic/main   \
 			> $(@:%.ok=%/jt.log) 2>&1  || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
-	$(GREP) -E -s '^TEST-STATS: StatsTxt run=44 failed=32 excluded=0\s?$$' \
+	$(GREP) -E -s '^TEST-STATS: StatsTxt run=45 failed=32 excluded=0\s?$$' \
 		$(@:%.ok=%/jt.log)  > /dev/null
-	$(GREP) -E -s '^TEST-STATS: StatsTxt run=44 failed=32 excluded=0\s?$$' \
+	$(GREP) -E -s '^TEST-STATS: StatsTxt run=45 failed=32 excluded=0\s?$$' \
 		$(@:%.ok=%/report/text/stats.txt)  > /dev/null
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += $(BUILDTESTDIR)/StatsTxt.1.ok
 
+# system test for format support in TestStats.java: see -Djtreg.stats.format
 $(BUILDTESTDIR)/StatsTxt.2.ok: \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar
@@ -80,11 +83,62 @@ $(BUILDTESTDIR)/StatsTxt.2.ok: \
 		$(TESTDIR)/share/basic/ignore   \
 			> $(@:%.ok=%/jt.log) 2>&1  || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
-	$(GREP) -E -s '^TEST-STATS: StatsTxt passed=12 failed=32 ignored=2\s?$$' \
+	$(GREP) -E -s '^TEST-STATS: StatsTxt passed=13 failed=32 ignored=2\s?$$' \
 		$(@:%.ok=%/jt.log)  > /dev/null
-	$(GREP) -E -s '^TEST-STATS: StatsTxt passed=12 failed=32 ignored=2\s?$$' \
+	$(GREP) -E -s '^TEST-STATS: StatsTxt passed=13 failed=32 ignored=2\s?$$' \
 		$(@:%.ok=%/report/text/stats.txt)  > /dev/null
 	echo "test passed at `date`" > $@
 		    			
 TESTS.jtreg += $(BUILDTESTDIR)/StatsTxt.2.ok
+
+# system test for format support in TestStats.java: see -Djtreg.stats.format
+# (includes skipped)
+$(BUILDTESTDIR)/StatsTxt.3.ok: \
+	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar
+	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	$(JDKJAVA) \
+	    -Djtreg.stats.format="TEST-STATS: StatsTxt passed=%P failed=%F ignored=%i skipped=%s" \
+	    -jar $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+		-jdk:$(JDKHOME) \
+		-agentvm \
+		-w $(@:%.ok=%/work) \
+		-r $(@:%.ok=%/report) \
+		-ignore:quiet \
+		$(TESTDIR)/share/basic/main   \
+		$(TESTDIR)/share/basic/ignore   \
+			> $(@:%.ok=%/jt.log) 2>&1  || \
+	    true "non-zero exit code from JavaTest intentionally ignored"
+	$(GREP) -E -s '^TEST-STATS: StatsTxt passed=12 failed=32 ignored=2 skipped=1\s?$$' \
+		$(@:%.ok=%/jt.log)  > /dev/null
+	$(GREP) -E -s '^TEST-STATS: StatsTxt passed=12 failed=32 ignored=2 skipped=1\s?$$' \
+		$(@:%.ok=%/report/text/stats.txt)  > /dev/null
+	echo "test passed at `date`" > $@
+
+TESTS.jtreg += $(BUILDTESTDIR)/StatsTxt.3.ok
+
+# system test for default format support in TestStats.java: no -Djtreg.stats.format
+# (includes skipped)
+$(BUILDTESTDIR)/StatsTxt.4.ok: \
+	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar
+	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	$(JDKJAVA) \
+	    -jar $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+		-jdk:$(JDKHOME) \
+		-agentvm \
+		-w $(@:%.ok=%/work) \
+		-r $(@:%.ok=%/report) \
+		-ignore:quiet \
+		$(TESTDIR)/share/basic/main   \
+		$(TESTDIR)/share/basic/ignore   \
+			> $(@:%.ok=%/jt.log) 2>&1  || \
+	    true "non-zero exit code from JavaTest intentionally ignored"
+	$(GREP) -E -s '^Test results: passed: 13; failed: 19; error: 13; ignored: 2; skipped: 1\s?$$' \
+		$(@:%.ok=%/jt.log)  > /dev/null
+	$(GREP) -E -s '^Test results: passed: 13; failed: 19; error: 13; ignored: 2; skipped: 1\s?$$' \
+		$(@:%.ok=%/report/text/stats.txt)  > /dev/null
+	echo "test passed at `date`" > $@
+
+TESTS.jtreg += $(BUILDTESTDIR)/StatsTxt.4.ok
 

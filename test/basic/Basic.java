@@ -207,8 +207,8 @@ public class Basic
         numMain   += 2;
 
         // main
-        numPassed += 12; numFailed += 19; numError  += 12;
-        numMain   += 43;
+        numPassed += 13; numFailed += 19; numError  += 12;
+        numMain   += 44;
 
         // driver
         numPassed += 3; numFailed += 4; numError  += 10;
