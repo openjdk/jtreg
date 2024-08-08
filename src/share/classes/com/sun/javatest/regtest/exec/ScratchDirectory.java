@@ -223,7 +223,7 @@ abstract class ScratchDirectory {
                 }
             }
         }
-        if (ok && isEmpty(dir) && deleteDir) {
+        if (ok && isEmpty(dir, log) && deleteDir) {
             ok = delete(dir, badFiles, log);
         }
         return ok;
@@ -289,8 +289,12 @@ abstract class ScratchDirectory {
                 log.println("warning: could not empty " + toDir + ": " + e.getMessage());
             }
         }
-
-        for (File file: fromDir.listFiles()) {
+        final File[] children = fromDir.listFiles();
+        if (children == null) {
+            log.println("warning: cannot list contents of directory " + fromDir);
+            return result;
+        }
+        for (File file: children) {
             String fileName = file.getName();
             if (file.isDirectory()) {
                 File dest = new File(toDir, fileName);
@@ -327,8 +331,20 @@ abstract class ScratchDirectory {
         }
     }
 
-    private static boolean isEmpty(File dir) {
-        return dir.isDirectory() && (dir.listFiles().length == 0);
+    // returns true only if the dir is determined to be directory and has no
+    // files/directories within that directory
+    private static boolean isEmpty(File dir, PrintWriter log) {
+        if (!dir.isDirectory()) {
+            return false;
+        }
+        final File[] children = dir.listFiles();
+        if (children == null) {
+            // the dir doesn't represent a directory or an I/O error occurred.
+            // we can't say for certain if the dir is empty, so we return false.
+            log.println("warning: cannot list contents of directory " + dir);
+            return false;
+        }
+        return children.length == 0;
     }
 
     protected static File getResultDir(RegressionParameters params, TestDescription td) {
