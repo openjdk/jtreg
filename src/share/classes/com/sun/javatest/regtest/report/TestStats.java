@@ -85,9 +85,7 @@ public class TestStats {
         counts[tr.getStatus().getType()]++;
         if (tr.getStatus().getReason().startsWith(MainActionHelper.MAIN_SKIPPED_STATUS_PREFIX)) {
             skipped++;
-        }
-        if (tr.getStatus().isNotRun()) {
-            notRunResults.add(tr);
+            notRunResults.add(tr); // remember result for "not-run-summary.txt" reporting
         }
     }
 
@@ -140,7 +138,9 @@ public class TestStats {
         File reportTextDir = new File(reportDir, "text");
         reportTextDir.mkdirs();
         report(new File(reportTextDir, "stats.txt"));
-        reportNotRunSummary(new File(reportTextDir, "not-run-summary.txt"));
+        if (!notRunResults.isEmpty()) {
+            reportNotRunSummary(new File(reportTextDir, "not-run-summary.txt"));
+        }
     }
 
     private void report(File file) throws IOException {
