@@ -92,8 +92,10 @@ public class TestStats {
     }
 
     public void addAll(TestStats other) {
-        for (int i = 0; i < counts.length; i++)
+        for (int i = 0; i < counts.length; i++) {
             counts[i] += other.counts[i];
+        }
+        notRunResults.addAll(other.notRunResults);
     }
 
     public boolean isOK() {
