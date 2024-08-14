@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2024, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -30,6 +30,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import com.sun.javatest.Harness;
 import com.sun.javatest.Parameters;
@@ -83,6 +85,7 @@ public class TestStats {
         counts[tr.getStatus().getType()]++;
         if (tr.getStatus().getReason().startsWith(MainActionHelper.MAIN_SKIPPED_STATUS_PREFIX)) {
             skipped++;
+            notRunResults.add(tr); // remember for not-run-summary.txt
         }
     }
 
@@ -132,13 +135,21 @@ public class TestStats {
         File reportDir = report.getReportDir();
         File reportTextDir = new File(reportDir, "text");
         reportTextDir.mkdirs();
-        File file = new File(reportTextDir, "stats.txt");
-        report(file);
+        report(new File(reportTextDir, "stats.txt"));
+        reportNotRunSummary(new File(reportTextDir, "not-run-summary.txt"));
     }
 
-    public void report(File file) throws IOException {
+    private void report(File file) throws IOException {
         try (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(file)))) {
             showResultStats(out);
+        }
+    }
+
+    private void reportNotRunSummary(File file) throws IOException {
+        try (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(file)))) {
+            for (TestResult tr : notRunResults) {
+                out.println(tr.getTestName() + ": " + tr.getStatus().getReason());
+            }
         }
     }
 
@@ -289,6 +300,7 @@ public class TestStats {
     int excluded;
     int ignored;
     int skipped;
+    private final List<TestResult> notRunResults = new CopyOnWriteArrayList<>();
 
     private static final I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(TestStats.class);
 }
