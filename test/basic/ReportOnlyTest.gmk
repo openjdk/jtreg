@@ -26,7 +26,7 @@
 #----------------------------------------------------------------------
 
 ifdef HEADLESS
-REPORT_EXPECT_PASS = 91
+REPORT_EXPECT_PASS = 92
 REPORT_EXPECT_FAIL = 40
 else
 REPORT_EXPECT_PASS = 94
@@ -46,7 +46,7 @@ $(BUILDTESTDIR)/ReportOnlyTest.ok: $(BUILDTESTDIR)/Basic.othervm.ok \
 		$(TESTDIR)/share/basic \
 			> $(@:%.ok=%.jt.log) 2>&1 || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
-	$(GREP) -s 'Test results: passed: $(REPORT_EXPECT_PASS); failed: $(REPORT_EXPECT_FAIL); error: 88' $(@:%.ok=%.jt.log)  > /dev/null
+	$(GREP) -s 'Test results: passed: $(REPORT_EXPECT_PASS); failed: $(REPORT_EXPECT_FAIL); error: 88; not run: 6; skipped: 1' $(@:%.ok=%.jt.log)  > /dev/null
 	echo $@ passed at `date` > $@
 
 TESTS.jtreg += $(BUILDTESTDIR)/ReportOnlyTest.ok

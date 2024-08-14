@@ -85,7 +85,9 @@ public class TestStats {
         counts[tr.getStatus().getType()]++;
         if (tr.getStatus().getReason().startsWith(MainActionHelper.MAIN_SKIPPED_STATUS_PREFIX)) {
             skipped++;
-            notRunResults.add(tr); // remember for not-run-summary.txt
+        }
+        if (tr.getStatus().isNotRun()) {
+            notRunResults.add(tr);
         }
     }
 
