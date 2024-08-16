@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #
-# Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2020, 2024, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -46,7 +46,8 @@ setup_jtharness_source() {
     local dir="$1"
 
     # Build jtharness
-    local JTHARNESS_LOCAL_SRC_ARCHIVE="${dir}/../source.zip"
+    local src_archive_dir="$(builtin  cd ${dir}/..; pwd)"
+    local JTHARNESS_LOCAL_SRC_ARCHIVE="${src_archive_dir}/source.zip"
     if [ "${JTHARNESS_SRC_TAG}" = "tip" -o "${JTHARNESS_SRC_TAG}" = "master" ]; then
         local BRANCH="master"
         get_archive_no_checksum "${CODE_TOOLS_URL_BASE}/jtharness/archive/${BRANCH}.zip" "${JTHARNESS_LOCAL_SRC_ARCHIVE}" "${dir}"
@@ -61,6 +62,7 @@ build_jtharness() {
     check_arguments "${FUNCNAME}" 0 $#
 
     local JTHARNESS_SRC_DIR_BASE="${BUILD_DIR}/src"
+    mkdir -p "${JTHARNESS_SRC_DIR_BASE}"
     setup_jtharness_source "${JTHARNESS_SRC_DIR_BASE}"
 
     local JTHARNESS_DIST="${BUILD_DIR}/build"
