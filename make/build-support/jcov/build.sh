@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #
-# Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2020, 2024, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -55,7 +55,8 @@ setup_jcov_src() {
     local dir="$1"
 
     # Build jcov
-    local JCOV_LOCAL_SRC_ARCHIVE="${dir}/../source.zip"
+    local src_archive_dir="$(builtin  cd ${dir}/..; pwd)"
+    local JCOV_LOCAL_SRC_ARCHIVE="${src_archive_dir}/source.zip"
     if [ "${JCOV_SRC_TAG}" = "tip" -o "${JCOV_SRC_TAG}" = "master" ]; then
         local BRANCH="master"
         get_archive_no_checksum "${CODE_TOOLS_URL_BASE}/jcov/archive/${BRANCH}.zip" "${JCOV_LOCAL_SRC_ARCHIVE}" "${dir}"
