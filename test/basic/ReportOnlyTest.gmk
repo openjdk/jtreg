@@ -49,13 +49,14 @@ $(BUILDTESTDIR)/ReportOnlyTest.ok: $(BUILDTESTDIR)/Basic.othervm.ok \
 	    true "non-zero exit code from JavaTest intentionally ignored"
 	$(CAT) $(@:%.ok=%.jt.log)
 	if grep "headless: true" $(BUILDTESTDIR)/Basic.othervm/log > /dev/null ; then \
-	    REPORT_EXPECT_PASS=91 ; \
-	    REPORT_EXPECT_FAIL=40 ; \
+	    EXPECT_PASS=91 ; \
+	    EXPECT_FAIL=40 ; \
 	else \
-	    REPORT_EXPECT_PASS=93 ; \
-	    REPORT_EXPECT_FAIL=44 ; \
+	    EXPECT_PASS=93 ; \
+	    EXPECT_FAIL=44 ; \
 	fi ; \
-	$(GREP) -s "Test results: passed: $${REPORT_EXPECT_PASS}; failed: $${REPORT_EXPECT_FAIL}; error: 88" $(@:%.ok=%.jt.log)  > /dev/null
+	@echo "Expect: Test results: passed: $${EXPECT_PASS}; failed: $${EXPECT_FAIL}; error: 88" ; \
+	$(GREP) -s "Test results: passed: $${EXPECT_PASS}; failed: $${EXPECT_FAIL}; error: 88" $(@:%.ok=%.jt.log)  > /dev/null
 	echo $@ passed at `date` > $@
 
 TESTS.jtreg += $(BUILDTESTDIR)/ReportOnlyTest.ok
