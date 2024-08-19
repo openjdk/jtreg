@@ -34,7 +34,7 @@ import java.util.Objects;
  */
 public class ProcessUtils {
 
-    private static final Method destroyForciblyMethod;
+    private static final Method DESTROY_FORCIBLY_METHOD;
     private static final Method PID_METHOD;
 
     private static final long UNKNOWN_PID = -1;
@@ -47,7 +47,7 @@ public class ProcessUtils {
             // expected on pre-1.8 JDKs
             destroyMethod = null;
         }
-        destroyForciblyMethod = destroyMethod;
+        DESTROY_FORCIBLY_METHOD = destroyMethod;
 
         Method pidMethod = null;
         try {
@@ -68,9 +68,9 @@ public class ProcessUtils {
      * @return the Process object
      */
     public static Process destroyForcibly(Process process) {
-        if (destroyForciblyMethod != null) {
+        if (DESTROY_FORCIBLY_METHOD != null) {
             try {
-                return (Process) destroyForciblyMethod.invoke(process);
+                return (Process) DESTROY_FORCIBLY_METHOD.invoke(process);
             } catch (IllegalAccessException e) {
                 throw new RuntimeException(e);
             } catch (InvocationTargetException e) {
