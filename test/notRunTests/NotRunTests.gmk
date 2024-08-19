@@ -68,5 +68,5 @@ $(BUILDTESTDIR)/NotRunTests.ok: \
 	$(GREP) "; did not match prior status: 1;" $(@:%.ok=%/results-line.txt) > /dev/null
 	$(GREP) "; did not meet time-limit requirements: 1" $(@:%.ok=%/results-line.txt) > /dev/null
 	echo "test passed at `date`" > $@
-		    			
+
 TESTS.jtreg += $(BUILDTESTDIR)/NotRunTests.ok
