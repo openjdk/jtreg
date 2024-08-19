@@ -25,15 +25,16 @@
 
 #----------------------------------------------------------------------
 
-ifdef HEADLESS
-REPORT_EXPECT_PASS = 91
-REPORT_EXPECT_FAIL = 40
-else
-REPORT_EXPECT_PASS = 93
-REPORT_EXPECT_FAIL = 44
-endif
-
 # for full JavaTest gui, add "-gui" to jtreg call
+#
+# This test is a followup to Basic.othervm, and depends on the output from
+# test for its data. Basic.othervm adapts its behavior depending on whether
+# it is running in a headless environment, as determined by
+# java.awt.GraphicsEnvironment.isHeadless(). (See Basic.java, line 59)
+# This value is reported in the log that is written by Basic.java.
+# Because this test is a report of the tests executed in Basic.othervm,
+# we check that setting and adapt the behavior here accordingly.
+#
 $(BUILDTESTDIR)/ReportOnlyTest.ok: $(BUILDTESTDIR)/Basic.othervm.ok \
 		   $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		   $(JTREG_IMAGEDIR)/lib/jtreg.jar \
@@ -46,7 +47,14 @@ $(BUILDTESTDIR)/ReportOnlyTest.ok: $(BUILDTESTDIR)/Basic.othervm.ok \
 		$(TESTDIR)/share/basic \
 			> $(@:%.ok=%.jt.log) 2>&1 || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
-	$(GREP) -s 'Test results: passed: $(REPORT_EXPECT_PASS); failed: $(REPORT_EXPECT_FAIL); error: 88' $(@:%.ok=%.jt.log)  > /dev/null
+	if grep "headless: true" $(BUILDTESTDIR)/Basic.othervm/log > /dev/null ; then \
+	    REPORT_EXPECT_PASS=91 ; \
+	    REPORT_EXPECT_FAIL=40 ; \
+	else \
+	    REPORT_EXPECT_PASS=93 ; \
+	    REPORT_EXPECT_FAIL=44 ; \
+	fi ; \
+	$(GREP) -s "Test results: passed: $${REPORT_EXPECT_PASS}; failed: $${REPORT_EXPECT_FAIL}; error: 88" $(@:%.ok=%.jt.log)  > /dev/null
 	echo $@ passed at `date` > $@
 
 TESTS.jtreg += $(BUILDTESTDIR)/ReportOnlyTest.ok
