@@ -58,7 +58,7 @@ $(BUILDTESTDIR)/ModulesTest_LimitMods_java.se.ok: \
 		-javaoptions:"--limit-modules $(@:$(BUILDTESTDIR)/ModulesTest_LimitMods_%.ok=%)" \
 		$(TESTDIR)/modules \
 			> $(@:%.ok=%/jt.log) 2>&1
-	$(GREP) '^Test results: passed: 2$$' $(@:%.ok=%/jt.log)  > /dev/null
+	$(GREP) '^Test results: passed: 2; did not meet module requirements: 4$$' $(@:%.ok=%/jt.log)  > /dev/null
 	echo $@ passed at `date` > $@
 
 $(BUILDTESTDIR)/ModulesTest_IgnoreAtModules.ok: \

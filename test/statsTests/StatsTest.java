@@ -88,11 +88,11 @@ public class StatsTest {
             } else if (arg.startsWith("-p:")) {
                 ts.counts[Status.PASSED] = Integer.valueOf(arg.substring(3));
             } else if (arg.startsWith("-i:")) {
-                ts.ignored = Integer.valueOf(arg.substring(3));
+                ts.notRun_keywords_count = Integer.valueOf(arg.substring(3));
             } else if (arg.startsWith("-x:")) {
-                ts.excluded = Integer.valueOf(arg.substring(3));
+                ts.notRun_excluded_count = Integer.valueOf(arg.substring(3));
             } else if (arg.startsWith("-s:")) {
-                ts.skipped = Integer.valueOf(arg.substring(3));
+                ts.passed_skipped_count = Integer.valueOf(arg.substring(3));
             } else if (arg.equals("-0")) {
                 reset();
             } else if (arg.startsWith("--format:")) {
@@ -112,8 +112,8 @@ public class StatsTest {
         ts.counts[Status.FAILED] = 0;
         ts.counts[Status.NOT_RUN] = 0;
         ts.counts[Status.PASSED] = 0;
-        ts.excluded = 0;
-        ts.ignored = 0;
+        ts.notRun_excluded_count = 0;
+        ts.notRun_keywords_count = 0;
     }
 
     void test(String expect) {

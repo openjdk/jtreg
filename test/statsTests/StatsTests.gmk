@@ -134,9 +134,9 @@ $(BUILDTESTDIR)/StatsTxt.4.ok: \
 		$(TESTDIR)/share/basic/ignore   \
 			> $(@:%.ok=%/jt.log) 2>&1  || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
-	$(GREP) -E -s '^Test results: passed: 13; failed: 19; error: 13; ignored: 2; skipped: 1\s?$$' \
+	$(GREP) -E -s '^Test results: passed: 13; failed: 19; error: 13; skipped: 1; did not match keywords: 2\s?$$' \
 		$(@:%.ok=%/jt.log)  > /dev/null
-	$(GREP) -E -s '^Test results: passed: 13; failed: 19; error: 13; ignored: 2; skipped: 1\s?$$' \
+	$(GREP) -E -s '^Test results: passed: 13; failed: 19; error: 13; skipped: 1; did not match keywords: 2\s?$$' \
 		$(@:%.ok=%/report/text/stats.txt)  > /dev/null
 	echo "test passed at `date`" > $@
 
