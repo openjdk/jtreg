@@ -578,7 +578,7 @@ public class Agent {
 
     /**
      * Returns the process id of the {@code AgentServer} with which this {@code Agent}
-     * communicates. Returns {@code -1} if the process id of the {@code AgentServer}
+     * communicates or {@code -1} if the process id of the {@code AgentServer}
      * couldn't be determined.
      *
      * @return the AgentServer's process id
