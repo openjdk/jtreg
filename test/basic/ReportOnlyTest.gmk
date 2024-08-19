@@ -47,6 +47,7 @@ $(BUILDTESTDIR)/ReportOnlyTest.ok: $(BUILDTESTDIR)/Basic.othervm.ok \
 		$(TESTDIR)/share/basic \
 			> $(@:%.ok=%.jt.log) 2>&1 || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
+	$(CAT) $(@:%.ok=%.jt.log)
 	if grep "headless: true" $(BUILDTESTDIR)/Basic.othervm/log > /dev/null ; then \
 	    REPORT_EXPECT_PASS=91 ; \
 	    REPORT_EXPECT_FAIL=40 ; \
