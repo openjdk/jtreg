@@ -309,6 +309,8 @@ public class BuildAction extends Action
                 var properties = LibraryProperties.of(libLocn);
                 if (properties.isEnablePreview()) {
                     compArgs.add("--enable-preview");
+                    // use "--source" below, as "--release" fails with errors like the following:
+                    // "exporting a package from system module M is not allowed with --release"
                     compArgs.add("--source=" + script.getTestJDKVersion().major);
                 }
             } catch (UncheckedIOException exception) {
