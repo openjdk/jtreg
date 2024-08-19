@@ -309,7 +309,7 @@ public class BuildAction extends Action
                 var properties = LibraryProperties.of(libLocn);
                 if (properties.isEnablePreview()) {
                     compArgs.add("--enable-preview");
-                    compArgs.add("--release=" + script.getTestJDKVersion().major);
+                    compArgs.add("--source=" + script.getTestJDKVersion().major);
                 }
             } catch (UncheckedIOException exception) {
                 throw new TestRunException("Reading library properties failed: " + libLocn, exception);
