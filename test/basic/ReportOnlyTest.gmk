@@ -42,7 +42,7 @@ $(BUILDTESTDIR)/ReportOnlyTest.ok: $(BUILDTESTDIR)/Basic.othervm.ok \
 	    $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-reportOnly  -automatic -v \
 		-workDir:$(BUILDTESTDIR)/Basic.othervm/work \
-		-reportDir:$(@:%.ok=%) \
+		-reportDir:$(@:%.ok=%)/report \
 		$(TESTDIR)/share/basic \
 			> $(@:%.ok=%.jt.log) 2>&1 || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
