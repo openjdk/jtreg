@@ -49,7 +49,7 @@ $(BUILDTESTDIR)/ReportOnlyTest.ok: $(BUILDTESTDIR)/Basic.othervm.ok \
 	    true "non-zero exit code from JavaTest intentionally ignored"
 	$(CAT) $(@:%.ok=%.jt.log)
 	$(GREP) headless $(BUILDTESTDIR)/Basic.othervm/log
-	if $(GREP) "headless: true" $(BUILDTESTDIR)/Basic.othervm/log > /dev/null ; then \
+	if $(GREP) "headless: *true" $(BUILDTESTDIR)/Basic.othervm/log > /dev/null ; then \
 	    EXPECT_PASS=91 ; \
 	    EXPECT_FAIL=40 ; \
 	else \
