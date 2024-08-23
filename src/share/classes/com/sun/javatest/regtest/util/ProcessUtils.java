@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015, 2024, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -27,20 +27,35 @@ package com.sun.javatest.regtest.util;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Objects;
 
 /**
  * Utilities for handling Processes.
  */
 public class ProcessUtils {
 
-    private static Method destroyForciblyMethod;
+    private static final Method DESTROY_FORCIBLY_METHOD;
+    private static final Method PID_METHOD;
+
+    private static final long UNKNOWN_PID = -1;
 
     static {
+        Method destroyMethod;
         try {
-            destroyForciblyMethod = Process.class.getDeclaredMethod("destroyForcibly");
+            destroyMethod = Process.class.getDeclaredMethod("destroyForcibly");
         } catch (NoSuchMethodException e) {
             // expected on pre-1.8 JDKs
+            destroyMethod = null;
         }
+        DESTROY_FORCIBLY_METHOD = destroyMethod;
+
+        Method pidMethod = null;
+        try {
+            pidMethod = Process.class.getDeclaredMethod("pid"); // only available in Java 9+
+        } catch (NoSuchMethodException e) {
+            pidMethod = null;
+        }
+        PID_METHOD = pidMethod;
     }
 
     /**
@@ -53,9 +68,9 @@ public class ProcessUtils {
      * @return the Process object
      */
     public static Process destroyForcibly(Process process) {
-        if (destroyForciblyMethod != null) {
+        if (DESTROY_FORCIBLY_METHOD != null) {
             try {
-                return (Process) destroyForciblyMethod.invoke(process);
+                return (Process) DESTROY_FORCIBLY_METHOD.invoke(process);
             } catch (IllegalAccessException e) {
                 throw new RuntimeException(e);
             } catch (InvocationTargetException e) {
@@ -65,5 +80,26 @@ public class ProcessUtils {
         // fallback
         process.destroy();
         return process;
+    }
+
+    /**
+     * Returns the process id of the {@code process}. If the process id cannot be determined
+     * or if there was some exception when determining the process id, then this method returns
+     * {@code -1}.
+     *
+     * @param process the process
+     * @throws NullPointerException if {@code process} is null
+     * @return the process id or -1
+     */
+    public static long getProcessId(Process process) {
+        Objects.requireNonNull(process);
+        if (PID_METHOD == null) {
+            return UNKNOWN_PID;
+        }
+        try {
+            return (long) PID_METHOD.invoke(process);
+        } catch (Exception e) {
+            return UNKNOWN_PID;
+        }
     }
 }

@@ -518,6 +518,7 @@ public class MainAction extends Action
 
             // RUN THE MAIN WRAPPER CLASS
             ProcessCommand cmd = new ProcessCommand();
+            cmd.setMessageWriter(section.getMessageWriter());
             cmd.setExecDir(script.absTestScratchDir().toFile());
 
             // Set the exit codes and their associated strings.  Note that we
@@ -632,6 +633,8 @@ public class MainAction extends Action
                     factory,
                     script.getTestThreadFactoryPath());
             section.getMessageWriter().println("Agent id: " + agent.getId());
+            final long pid = agent.getAgentServerPid();
+            section.getMessageWriter().println("Process id: " + ((pid == -1) ? "unknown" : pid));
             new ModuleConfig("Boot Layer").setFromOpts(agent.vmOpts).write(configWriter);
         } catch (Agent.Fault e) {
             return error(AGENTVM_CANT_GET_VM + ": " + e.getCause());

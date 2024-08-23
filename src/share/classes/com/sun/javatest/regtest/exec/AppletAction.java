@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2024, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -296,6 +296,7 @@ public class AppletAction extends Action
 
             // RUN THE APPLET WRAPPER CLASS
             ProcessCommand cmd = new ProcessCommand();
+            cmd.setMessageWriter(section.getMessageWriter());
             cmd.setExecDir(script.absTestScratchDir().toFile());
 
             // Set the exit codes and their associated strings.  Note that we
