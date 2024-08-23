@@ -18,16 +18,14 @@ compileJava {
 
 repositories {
     mavenCentral()
-
-    // Note: Cannot use closure for kotlin extensions
-    intellijPlatform.defaultRepositories()
+    intellijPlatform {
+        defaultRepositories()
+    }
 }
 
 dependencies {
     implementation files(jtregLib)
 
-    // Note: Cannot use closure for kotlin extensions
-    // https://github.com/JetBrains/intellij-platform-gradle-plugin/issues/1591 and 1592
     intellijPlatform {
         intellijIdeaCommunity('2024.2.0.2')
         plugin("AntSupport:${antSupportVersion}")
