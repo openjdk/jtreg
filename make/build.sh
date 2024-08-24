@@ -779,6 +779,7 @@ make ASMTOOLS_JAR="${ASMTOOLS_JAR}"                           \\
      BUILD_VERSION="${JTREG_VERSION}"                         \\
      BUILD_VERSION_STRING="${JTREG_VERSION_STRING}"           \\
      JAVATEST_JAR="$(mixed_path "${JTHARNESS_JAVATEST_JAR}")" \\
+     JAVA_SPECIFICATION_VERSION="${JAVA_SPECIFICATION_VERSION}" \\
      JDKHOME="$(mixed_path ${JAVA_HOME})"                     \\
      JTHARNESS_NOTICES="${JTHARNESS_NOTICES}"                 \\
      JTREG_HOME=""                                            \\
@@ -787,7 +788,6 @@ make ASMTOOLS_JAR="${ASMTOOLS_JAR}"                           \\
      JUNIT_NOTICES="${JUNIT_NOTICES}"                         \\
      TESTNG_JARS="${TESTNG_JARS}"                             \\
      TESTNG_NOTICES="${TESTNG_NOTICES}"                       \\
-     JAVA_SPECIFICATION_VERSION="${JAVA_SPECIFICATION_VERSION}" \\
    "\$@"
 EOF
 
