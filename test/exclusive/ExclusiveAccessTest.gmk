@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2011, 2017, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2011, 2024, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -34,11 +34,12 @@ $(BUILDTESTDIR)/ExclusiveAccessTest.single.ok: \
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDKHOME) \
-		-conc:4 \
+		-conc:5 \
 		$(TESTDIR)/exclusive \
 			> $(@:%.ok=%/jt.log) 2>&1 || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
-	$(GREP) -s 'Test results: passed: 4' $(@:%.ok=%/jt.log)  > /dev/null
+	$(GREP) -s 'Test results: passed: 5' $(@:%.ok=%/jt.log)  > /dev/null
+	$(GREP) -s 'exclusiveAccess wait time' -R $(@:%.ok=%/work/)  > /dev/null
 	$(DIFF) $(BUILDTESTDIR)/ExclusiveAccessTest.ref $(@:%.ok=%)/Test.log
 	echo "test passed at `date`" > $@
 

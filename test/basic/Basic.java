@@ -86,7 +86,7 @@ public class Basic
         System.out.println("jdk:       " + jdkPath);
         System.out.println("envVars:   " + envVars);
         System.out.println("mode:      " + modeOpt);
-        System.out.println("headless:  " + isHeadless);
+        System.out.println("headless:  " + isHeadless);  // note: used by ReportOnlyTest.gmk
         System.out.println("java.awt.headless: " + headlessProperty);
 
         try {

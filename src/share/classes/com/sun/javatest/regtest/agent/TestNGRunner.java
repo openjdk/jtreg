@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, 2023, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012, 2024, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -29,7 +29,12 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
+import java.time.Duration;
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import org.testng.IConfigurationListener;
@@ -100,8 +105,11 @@ public class TestNGRunner implements MainActionHelper.TestRunner {
         testng.addListener(new XMLReporter());
         testng.setOutputDirectory(new File(".").getPath()); // current dir, i.e. scratch dir
         testng.run();
-        if (listener.configFailureCount > 0 || listener.failureCount > 0) {
-            throw new Exception("failures: " + listener.failureCount);
+        int configFailureCount = listener.configFailureCount.get();
+        int testFailureCount = listener.failureCount.get();
+        if (configFailureCount > 0 || testFailureCount > 0) {
+            throw new Exception("config failures: " + configFailureCount
+                    + ", test failures: " + testFailureCount);
         }
     }
 
@@ -109,21 +117,37 @@ public class TestNGRunner implements MainActionHelper.TestRunner {
             implements ITestListener, IConfigurationListener {
         enum InfoKind { CONFIG, TEST }
 
+        private final AtomicInteger count = new AtomicInteger();
+        private final AtomicInteger successCount = new AtomicInteger();
+        private final AtomicInteger failureCount = new AtomicInteger();
+        private final AtomicInteger skippedCount = new AtomicInteger();
+        private final AtomicInteger configSuccessCount = new AtomicInteger();
+        private final AtomicInteger configFailureCount = new AtomicInteger();
+        private final AtomicInteger configSkippedCount = new AtomicInteger();
+        private final AtomicInteger failedButWithinSuccessPercentageCount = new AtomicInteger();
+        // keeps track of the test start time for each test
+        private final Map<ITestResult, Long> startTimeNanos =
+                Collections.synchronizedMap(new IdentityHashMap<>());
+
         @Override
         public void onTestStart(ITestResult itr) {
-            count++;
-//            report(itr);
+            count.incrementAndGet();
+            // Although testng itself provides getStartMillis() and getEndMillis()
+            // on ITestResult for duration tracking, the testng implementation uses
+            // System.currentTimeMillis(). We instead prefer using System.nanoTime() API
+            // for duration tracking.
+            startTimeNanos.put(itr, System.nanoTime());
         }
 
         @Override
         public void onTestSuccess(ITestResult itr) {
-            successCount++;
+            successCount.incrementAndGet();
             report(InfoKind.TEST, itr);
         }
 
         @Override
         public void onTestFailure(ITestResult itr) {
-            failureCount++;
+            failureCount.incrementAndGet();
             report(InfoKind.TEST, itr);
         }
 
@@ -134,13 +158,13 @@ public class TestNGRunner implements MainActionHelper.TestRunner {
                 onTestFailure(itr);
                 return;
             }
-            skippedCount++;
+            skippedCount.incrementAndGet();
             report(InfoKind.TEST, itr);
         }
 
         @Override
         public void onTestFailedButWithinSuccessPercentage(ITestResult itr) {
-            failedButWithinSuccessPercentageCount++;
+            failedButWithinSuccessPercentageCount.incrementAndGet();
             report(InfoKind.TEST, itr);
         }
 
@@ -154,19 +178,19 @@ public class TestNGRunner implements MainActionHelper.TestRunner {
 
         @Override
         public void onConfigurationSuccess(ITestResult itr) {
-            configSuccessCount++;
+            configSuccessCount.incrementAndGet();
             report(InfoKind.CONFIG, itr);
         }
 
         @Override
         public void onConfigurationFailure(ITestResult itr) {
-            configFailureCount++;
+            configFailureCount.incrementAndGet();
             report(InfoKind.CONFIG, itr);
         }
 
         @Override
         public void onConfigurationSkip(ITestResult itr) {
-            configSkippedCount++;
+            configSkippedCount.incrementAndGet();
             report(InfoKind.CONFIG, itr);
         }
 
@@ -185,12 +209,17 @@ public class TestNGRunner implements MainActionHelper.TestRunner {
             } else {
                 suffix = "\n";
             }
-
+            Long startNanos = startTimeNanos.remove(itr);
+            Duration duration = startNanos == null
+                    ? Duration.ZERO
+                    : Duration.ofNanos(System.nanoTime() - startNanos);
+            long durationMillis = duration.toMillis();
             System.out.print(k.toString().toLowerCase()
                     + " " + itr.getMethod().getConstructorOrMethod().getDeclaringClass().getName()
                     + "." + itr.getMethod().getMethodName()
                     + formatParams(itr)
                         + ": " + statusToString(itr.getStatus())
+                        + " [" + durationMillis + "ms]"
                         + suffix);
         }
 
@@ -238,15 +267,6 @@ public class TestNGRunner implements MainActionHelper.TestRunner {
                     return "??";
             }
         }
-
-        int count;
-        int successCount;
-        int failureCount;
-        int skippedCount;
-        int configSuccessCount;
-        int configFailureCount;
-        int configSkippedCount;
-        int failedButWithinSuccessPercentageCount;
     }
 
     private static class FilterMethods implements IMethodInterceptor {

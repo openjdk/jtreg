@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2023, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2024, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -363,11 +363,15 @@ public class CompileAction extends Action {
             }
         }
 
-        if (runJavac && script.enablePreview() && !seenEnablePreview) {
+        var needsEnablePreview = script.enablePreview() || usesLibraryCompiledWithPreviewEnabled();
+
+        if (runJavac && needsEnablePreview && !seenEnablePreview
+                && (libLocn == null || libLocn.isTest())) {
             javacArgs.add(insertPos, "--enable-preview");
             if (!seenSourceOrRelease) {
                 int v = script.getTestJDKVersion().major;
-                javacArgs.add(insertPos + 1, "--source=" + v);
+                javacArgs.add(insertPos + 1, "-source");
+                javacArgs.add(insertPos + 2, String.valueOf(v));
             }
         }
 
@@ -640,6 +644,7 @@ public class CompileAction extends Action {
                 return new Status(aStatus.getType(), aStatus.getReason());
             }
         };
+        cmd.setMessageWriter(section.getMessageWriter());
 
         TimeoutHandler timeoutHandler =
             script.getTimeoutHandlerProvider().createHandler(this.getClass(), script, section);
@@ -699,6 +704,8 @@ public class CompileAction extends Action {
                     : script.getTestVMOptions();
             agent = script.getAgent(jdk, agentClasspath, vmOpts, null, null);
             section.getMessageWriter().println("Agent id: " + agent.getId());
+            final long pid = agent.getAgentServerPid();
+            section.getMessageWriter().println("Process id: " + ((pid == -1) ? "unknown" : pid));
             new ModuleConfig("Boot Layer (javac runtime environment)")
                     .setFromOpts(agent.vmOpts)
                     .write(configWriter);
@@ -721,6 +728,10 @@ public class CompileAction extends Action {
                     timeout,
                     timeoutHandler,
                     section);
+        } catch (Agent.ActionTimeout te) {
+            final String msg = "\"" + getName() + "\" action timed out with a timeout of "
+                    + timeout + " seconds on agent " + agent.id;
+            status = error(msg);
         } catch (Agent.Fault e) {
             if (e.getCause() instanceof IOException)
                 status = error(String.format(AGENTVM_IO_EXCEPTION, e.getCause()));

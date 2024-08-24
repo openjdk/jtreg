@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2024, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -21,10 +21,22 @@
  * questions.
  */
 
-/* @test
- * @compile/fail T.java
+/*
+ * @test
  */
-public class T {
-    public static void main(String... args) {
+public class ErrorAfterPass {
+
+    public static void main(final String[] args) {
+        // a shutdown hook which calls Runtime.halt() with a non-zero exit code
+        final Thread shutdownHook = new Thread(() -> {
+            final int shutdownHookExitCode = 211; // just some "unique" exit code
+            System.err.println("Calling Runtime.halt(" + shutdownHookExitCode
+                    + ") from shutdown hook");
+            Runtime.getRuntime().halt(shutdownHookExitCode);
+        }, "ErrorAfterPass-shutdown-hook");
+        // register the shutdown hook
+        Runtime.getRuntime().addShutdownHook(shutdownHook);
+        // finish the test successfully
+        System.err.println("ErrorAfterPass.main() completed successfully");
     }
 }

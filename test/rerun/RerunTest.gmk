@@ -69,6 +69,7 @@ $(BUILDTESTDIR)/RerunTest.othervm.ok: \
 		    -e 's|^DISPLAY=.* \\|DISPLAY=%DISPLAY% \\|' \
 		    -e 's|$(JDK8HOME)|%JDKHOME%|g' \
 		    -e "s|`cd $(JDK8HOME); pwd -P`|%JDKHOME%|g" \
+		    -e 's|JTREG_HOME=.* \\|JTREG_HOME=%JTREG_HOME% \\|' \
 		    -e '/JTREG_JAVA=/d' \
 		    -e '/LC_CTYPE=/d' \
 		    -e 's|$(BUILDTESTDIR)|%BUILDTEST%|g' \

@@ -1,6 +1,6 @@
 <!DOCTYPE HTML>
 <!--
- Copyright (c) 2006, 2020, Oracle and/or its affiliates. All rights reserved.
+ Copyright (c) 2006, 2024, Oracle and/or its affiliates. All rights reserved.
  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 
  This code is free software; you can redistribute it and/or modify it
@@ -245,6 +245,13 @@ not identify an existing directory or jar file.
 <li><b>precompiled jar file</b>: the entry is a jar file containing precompiled
     class files.
 </ul>
+
+<p>Configuration information for a library may be specified in a file named
+<a href="LIBRARY_PROPERTIES">LIBRARY.properties</a> in the root directory of
+the library. A library may be specified to use preview features,
+in which case the appropriate compile-time and runtime options will be
+provided automatically. This extends to any tests that may use the library.
+
 <p>It is an error if any entry in the library path list cannot be categorized.
 In particular, any one entry in the library path cannot contain more than one type of
 content.
@@ -372,6 +379,9 @@ in an enclosing TEST.properties file, then that default value will be used.
 If the tag is not present and no default value has been configured,
 a value of <code>false</code> will be assumed and no additional
 compile-time and run-time options will be provided.
+
+<p>If a test uses any libraries that use preview features,
+the test will be assumed to also use preview features.
 
 <p>There is no requirement to use <code>@enablePreview</code>.
 A test can still explicitly provide the necessary options instead.
@@ -881,7 +891,7 @@ of a test-source tree must therefore be identified by placing a file named
 TEST.ROOT in the root directory.  Exactly one such file must exist in every
 test-source tree.
 
-
+<h3 id="TEST_ROOT_PROPERTIES">TEST.ROOT and TEST.properties</h3>
 
 <p>The <span id="TEST_ROOT">TEST.ROOT</span> file contains test-suite configuration
 information. It is in the standard Java property-file format as described in the
@@ -1020,6 +1030,19 @@ The default value can be overridden in individual tests using the <code>@enableP
 declarative tag.
 </dl>
 
+<h3 id="LIBRARY_PROPERTIES">LIBRARY.properties</h3>
+
+Configuration properties for a library may be in a file named LIBRARY.properties
+in the root directory of the library (that is, the directory specified in a
+<code>@library</code> tag.
+
+The following property is available:
+
+<dl>
+<dt id="library-enablePreview"><code>enablePreview <var>&lt;true|false&gt;</var></code>
+<dd>Specify whether the classes in this library use preview features and that
+the necessary compile-time and run-time options should be provided automatically.
+</dl>
 
 <h2 id="DEFAULTS">DEFAULTS</h2>
 
@@ -1228,7 +1251,8 @@ for information on how to extend the set of supported names for a particular tes
 <p>The system properties in the following table will be set
 while executing any class specified in an action tag;
 the environment variables will be set while executing a shell
-action tag.
+action tag. Recently added values may not be available
+in environment variables.
 
 <table>
 <caption>Test-specific system properties and environment variables</caption>
@@ -1238,6 +1262,13 @@ action tag.
 <td><code>test.file</code>
 <td><code>TESTFILE</code>
 <td>The defining file of the test
+
+<tr>
+<td><code>test.name</code>
+<td><i>Not Available</i>
+<td>The name of the test, as a relative URL formed from the defining file
+of the test and any corresponding id if the file contains multiple separate
+test descriptions.
 
 <tr>
 <td><code>test.src</code>
@@ -1314,6 +1345,17 @@ will be unset or empty, if the version of JDK used to run the tests does not
 support modules.
 
 <tr>
+<td><code>test.module.path</code>
+<td><i>Not Available</i>
+<td>The path for any library modules used by the test.
+
+<tr>
+<td><code>test.patch.path</code>
+<td><i>Not Available</i>
+<td>The path for tests that are written as a patch for
+a system module.
+
+<tr>
 <td><code>test.root</code>
 <td><code>TESTROOT</code>
 <td>The root directory of the test suite
@@ -1325,6 +1367,11 @@ support modules.
 <td>Set (to <code>true</code>code>) if the test is using "preview features"
 as indicated by <code>@enablePreview</code> in the test description
 or an <code>enablePreview</code> entry in a TEST.properties file.
+
+<tr>
+<td><code>test.verbose</code>
+<td><i>Not Available</i>
+<td>The cumulative value of any command-line "verbose" options.
 
 <tr>
 <td><code>test.query</code>

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2024, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -21,22 +21,15 @@
  * questions.
  */
 
+import java.util.Date;
+
 /*
  * @test
+ * @run main Test
  */
+public class Test {
 
-// basic test for verifying jtreg can handle JDK 1.1 tests (since jtreg
-// has different code for handling JDK 1.1)
-
-public class ExecuteTest {
-    public static void main(String[] args) {
-        String[] props = {
-            "java.class.path",
-            "java.specification.version"
-        };
-
-        for (int i = 0; i < props.length; i++) {
-            System.err.println(props[i] + " = " + System.getProperty(props[i]));
-        }
+    public static void main(final String[] args) throws Exception {
+        System.out.println("test run at " + new Date());
     }
 }

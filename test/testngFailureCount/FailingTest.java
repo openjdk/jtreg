@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2024, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -21,8 +21,33 @@
  * questions.
  */
 
-/* @test */
-public class Pass {
-    public static void main(String... args) {
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
+import static org.testng.Assert.fail;
+
+/*
+ * @test
+ * @run testng/othervm -Ddataproviderthreadcount=4 FailingTest
+ */
+public class FailingTest {
+
+    @DataProvider(parallel = true)
+    public static Iterator<Object[]> integers() {
+        final List<Object[]> args = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            args.add(new Object[]{i});
+        }
+        return args.iterator();
+    }
+
+    @Test(dataProvider = "integers")
+    public void test(Integer arg) throws Exception {
+        TimeUnit.MILLISECONDS.sleep(100);
+        fail("failing intentionally for " + arg);
     }
 }

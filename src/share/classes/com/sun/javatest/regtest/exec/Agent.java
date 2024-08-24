@@ -87,27 +87,16 @@ public class Agent {
         }
     }
 
+    // represents a timeout that occurred while executing
+    // a test action within an agentvm
+    static final class ActionTimeout extends Exception {
+        private static final long serialVersionUID = 7956108605006221253L;
+    }
+
     // legacy support for logging to stderr
     // showAgent is superseded by always-on log to file
     static final boolean showAgent = Flags.get("showAgent");
     static final boolean traceAgent = Flags.get("traceAgent");
-
-    // the following code here allows us to run jtreg on older
-    // JDKs where the pid() method is unavailable on the
-    // Process class. we use PID only for debug purposes and
-    // the inability to get the PID of a launched AgentServer
-    // is OK.
-    private static final long UNKNOWN_PID = -1;
-    private static final Method PID_METHOD;
-    static {
-        Method pidMethod = null;
-        try {
-            pidMethod = Process.class.getDeclaredMethod("pid"); // only available in Java 9+
-        } catch (Exception e) {
-            pidMethod = null;
-        }
-        PID_METHOD = pidMethod;
-    }
 
     /**
      * Start a JDK with given JVM options.
@@ -174,7 +163,7 @@ public class Agent {
             env.clear();
             env.putAll(envVars);
             agentServerProcess = process = pb.start();
-            final long pid = getPid(process);
+            agentServerPid = ProcessUtils.getProcessId(process);
             copyAgentProcessStream("stdout", process.getInputStream());
             copyAgentProcessStream("stderr", process.getErrorStream());
 
@@ -184,7 +173,7 @@ public class Agent {
                 ss.setSoTimeout(ACCEPT_TIMEOUT);
                 log("Waiting up to " + ACCEPT_TIMEOUT + " milli seconds for a" +
                         " socket connection on port " + port +
-                        (pid != UNKNOWN_PID ? " from process " + pid : ""));
+                        (agentServerPid != -1 ? " from process " + agentServerPid : ""));
                 Socket s = ss.accept();
                 log("Received connection on port " + port + " from " + s);
                 s.setSoTimeout((int)(KeepAlive.READ_TIMEOUT * timeoutFactor));
@@ -309,7 +298,7 @@ public class Agent {
             int timeout,
             final TimeoutHandler timeoutHandler,
             TestResult.Section trs)
-                throws Fault {
+                throws ActionTimeout, Fault {
         trace("doCompileAction " + testName + " " + cmdArgs);
 
         return doAction("doCompileAction",
@@ -342,7 +331,7 @@ public class Agent {
             int timeout,
             final TimeoutHandler timeoutHandler,
             TestResult.Section trs)
-                throws Fault {
+                throws ActionTimeout, Fault {
         trace("doMainAction: " + testName
                     + " " + testClassPath
                     + " " + modulePath
@@ -382,7 +371,7 @@ public class Agent {
             int timeout,
             final TimeoutHandler timeoutHandler,
             TestResult.Section trs)
-                throws Fault {
+                throws ActionTimeout, Fault {
         final PrintWriter messageWriter = trs.getMessageWriter();
         // Handle the timeout here (instead of in the agent) to make it possible
         // to see the unchanged state of the Agent JVM when the timeout happens.
@@ -417,8 +406,7 @@ public class Agent {
             keepAlive.setEnabled(true);
             if (alarm.didFire()) {
                 waitForTimeoutHandler(actionName, timeoutHandler, timeoutHandlerDone);
-                throw new Fault(new Exception("Agent " + id + " timed out with a timeout of "
-                        + timeout + " seconds"));
+                throw new ActionTimeout();
             }
         }
     }
@@ -589,6 +577,17 @@ public class Agent {
     }
 
     /**
+     * Returns the process id of the {@code AgentServer} with which this {@code Agent}
+     * communicates or {@code -1} if the process id of the {@code AgentServer}
+     * couldn't be determined.
+     *
+     * @return the AgentServer's process id
+     */
+    long getAgentServerPid() {
+        return agentServerPid;
+    }
+
+    /**
      * Logs a message to the log file managed by the logger.
      *
      * @param message the message
@@ -615,17 +614,6 @@ public class Agent {
         out.println("[" + AgentServer.logDateFormat.format(new Date()) + "] Agent[" + getId() + "]: " + message);
     }
 
-    private static long getPid(final Process process) {
-        if (PID_METHOD == null) {
-            return UNKNOWN_PID;
-        }
-        try {
-            return (long) PID_METHOD.invoke(process);
-        } catch (Exception e) {
-            return UNKNOWN_PID;
-        }
-    }
-
     final JDK jdk;
     final List<String> vmOpts;
     final File execDir;
@@ -636,6 +624,7 @@ public class Agent {
     final int id;
     final Logger logger;
     Instant idleStartTime;
+    private final long agentServerPid;
 
     static int count;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2023, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2024, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -27,6 +27,7 @@ package com.sun.javatest.regtest.agent;
 
 import org.junit.platform.engine.TestExecutionResult;
 import org.junit.platform.engine.TestSource;
+import org.junit.platform.engine.UniqueId;
 import org.junit.platform.engine.discovery.DiscoverySelectors;
 import org.junit.platform.engine.reporting.ReportEntry;
 import org.junit.platform.engine.support.descriptor.MethodSource;
@@ -44,7 +45,10 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
+import java.time.Duration;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -133,8 +137,10 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
 
             SummaryGeneratingListener summaryGeneratingListener = new SummaryGeneratingListener();
 
+            AgentVerbose verbose = AgentVerbose.ofStringRepresentation(System.getProperty("test.verbose"));
+
             LauncherConfig launcherConfig = LauncherConfig.builder()
-                .addTestExecutionListeners(new PrintingListener(System.err))
+                .addTestExecutionListeners(new PrintingListener(System.err, verbose))
                 .addTestExecutionListeners(summaryGeneratingListener)
                 .build();
 
@@ -187,18 +193,22 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
 
         final PrintWriter printer;
         final Lock lock;
+        final AgentVerbose verbose;
+        final Map<UniqueId, Long> startNanosByUniqueId = new ConcurrentHashMap<>();
 
-        PrintingListener(PrintStream stream) {
-            this(new PrintWriter(stream, true));
+        PrintingListener(PrintStream stream, AgentVerbose verbose) {
+            this(new PrintWriter(stream, true), verbose);
         }
 
-        PrintingListener(PrintWriter printer) {
+        PrintingListener(PrintWriter printer, AgentVerbose verbose) {
             this.printer = printer;
             this.lock = new ReentrantLock();
+            this.verbose = verbose;
         }
 
         @Override
         public void executionSkipped(TestIdentifier identifier, String reason) {
+            if (verbose.passMode == AgentVerbose.Mode.NONE) return;
             if (identifier.isTest()) {
                 String status = "SKIPPED";
                 String source = toSourceString(identifier);
@@ -215,6 +225,8 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
 
         @Override
         public void executionStarted(TestIdentifier identifier) {
+            startNanosByUniqueId.put(identifier.getUniqueIdObject(), System.nanoTime());
+            if (verbose.passMode == AgentVerbose.Mode.NONE) return;
             if (identifier.isTest()) {
                 String status = "STARTED";
                 String source = toSourceString(identifier);
@@ -231,9 +243,16 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
 
         @Override
         public void executionFinished(TestIdentifier identifier, TestExecutionResult result) {
+            TestExecutionResult.Status status = result.getStatus();
+            if (status == TestExecutionResult.Status.SUCCESSFUL) {
+                if (verbose.passMode == AgentVerbose.Mode.NONE) return;
+            }
+            Long startNanos = startNanosByUniqueId.remove(identifier.getUniqueIdObject());
+            Duration duration = startNanos == null
+                    ? Duration.ZERO
+                    : Duration.ofNanos(System.nanoTime() - startNanos);
             lock.lock();
             try {
-                TestExecutionResult.Status status = result.getStatus();
                 if (status == TestExecutionResult.Status.ABORTED) {
                     result.getThrowable().ifPresent(printer::println); // not the entire stack trace
                 }
@@ -243,7 +262,8 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
                 if (identifier.isTest()) {
                     String source = toSourceString(identifier);
                     String name = identifier.getDisplayName();
-                    printer.printf("%-10s %s '%s'%n", status, source, name);
+                    long millis = duration.toMillis();
+                    printer.printf("%-10s %s '%s' [%dms]%n", status, source, name, millis);
                 }
             }
             finally {
@@ -253,6 +273,7 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
 
         @Override
         public void reportingEntryPublished(TestIdentifier identifier, ReportEntry entry) {
+            if (verbose.passMode == AgentVerbose.Mode.NONE) return;
             lock.lock();
             try {
                 printer.println(identifier.getDisplayName() + " -> " + entry.getTimestamp());

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014, 2024, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -216,6 +216,11 @@ public class ProcessCommand
         return timeoutHandler;
     }
 
+    ProcessCommand setMessageWriter(PrintWriter messageWriter) {
+        this.log = messageWriter;
+        return this;
+    }
+
     /**
      * Execute the command.
      * @return The result of the method is obtained by calling
@@ -239,6 +244,10 @@ public class ProcessCommand
                 pb.environment().putAll(env);
             }
             final Process process = pb.start();
+            if (log != null) {
+                final long pid = ProcessUtils.getProcessId(process);
+                log.println("Process id: " + ((pid == -1) ? "unknown" : pid));
+            }
             InputStream processIn = process.getInputStream();
             InputStream processErr = process.getErrorStream();
 
@@ -391,7 +400,19 @@ public class ProcessCommand
      **/
     protected Status getStatus(int exitCode, Status logStatus) {
         if (logStatus != null) {
-            return logStatus;
+            // verify that the status reported in the STDOUT of the test program
+            // indeed matches the exit code of the test program's process. This should
+            // catch issues where the test program's process might have run into issues
+            // (like VM crash) after the status was reported on STDOUT
+            final int logStatusExitCode = Status.exitCodes[logStatus.getType()];
+            if (logStatusExitCode == exitCode) {
+                // correctly reported exit
+                return logStatus;
+            }
+            final String errMsg = "unexpected exit code: " + exitCode
+                    + ", doesn't match exit status: \"" + logStatus + "\" which was"
+                    + " reported by the test process";
+            return Status.error(errMsg);
         } else if (statusTable != null) {
             Status s = statusTable.get(exitCode);
             return (s == null ? defaultStatus.augment("exit code: " + exitCode) : s);
@@ -411,5 +432,6 @@ public class ProcessCommand
     private PrintWriter err;
     private long timeout;
     private TimeoutHandler timeoutHandler;
+    private PrintWriter log;
 }
 

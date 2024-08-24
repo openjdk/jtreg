@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2000, 2024, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -215,7 +215,11 @@ public final class RegressionTestSuite extends TestSuite
         return properties.useOtherVM(td.getFile());
     }
 
-    public boolean needsExclusiveAccess(TestDescription td) throws TestSuite.Fault {
+    /**
+     * {@return true if the test is configured to run exclusively, false otherwise}
+     * @param td the test description
+     */
+    public boolean needsExclusiveAccess(TestDescription td) {
         return properties.needsExclusiveAccess(td.getFile());
     }
 

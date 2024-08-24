@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2023, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2024, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -75,6 +75,7 @@ import com.sun.javatest.regtest.config.RegressionEnvironment;
 import com.sun.javatest.regtest.config.RegressionParameters;
 import com.sun.javatest.regtest.config.RegressionTestSuite;
 import com.sun.javatest.regtest.report.SummaryReporter;
+import com.sun.javatest.regtest.report.Verbose;
 import com.sun.javatest.regtest.tool.Version;
 import com.sun.javatest.regtest.util.FileUtils;
 import com.sun.javatest.regtest.util.StringUtils;
@@ -127,14 +128,7 @@ public class RegressionScript extends Script {
         // defaults
 
         testResult = getTestResult();
-
-        String hostname;
-        try {
-            hostname = InetAddress.getLocalHost().getCanonicalHostName();
-        } catch (UnknownHostException e) {
-            hostname = "127.0.0.1";
-        }
-        testResult.putProperty("hostname", hostname);
+        testResult.putProperty("hostname", regEnv.getHostName());
         String[] props = { "user.name" };
         for (String p: props) {
             testResult.putProperty(p, System.getProperty(p));
@@ -787,7 +781,7 @@ public class RegressionScript extends Script {
         SearchPath sp = new SearchPath();
 
         // Test:
-        if (libLocn == null || libLocn.name == null) {
+        if (libLocn == null || libLocn.isTest()) {
             if (multiModule) {
                 msp.append(locations.absTestSrcDir());
             } else {
@@ -1057,15 +1051,8 @@ public class RegressionScript extends Script {
         return SummaryReporter.forJUnit(workDir);
     }
 
-    Lock getLockIfRequired() throws TestRunException {
-        try {
-            if (!testSuite.needsExclusiveAccess(td))
-                return null;
-        } catch (TestSuite.Fault e) {
-            throw new TestRunException("Can't determine if lock required", e);
-        }
-
-        return Lock.get(params);
+    Lock getLockIfRequired() {
+        return testSuite.needsExclusiveAccess(td) ? Lock.get(params) : null;
     }
 
     int getNextSerial() {
@@ -1139,13 +1126,18 @@ public class RegressionScript extends Script {
         if (testQuery != null) {
             p.put("test.query", testQuery);
         }
+        Verbose verbose = params.getVerbose();
+        if (verbose != null) {
+            p.put("test.verbose", verbose.toString());
+        }
         p.put("test.file", locations.absTestFile().toString());
         p.put("test.src", locations.absTestSrcDir().toString());
         p.put("test.src.path", toString(locations.absTestSrcPath()));
         p.put("test.classes", locations.absTestClsDir().toString());
         p.put("test.class.path", toString(locations.absTestClsPath()));
         if (getExecMode() == ExecMode.AGENTVM) {
-            // The following will be added to javac.class.path on the test VM
+            // The following will be added to java.class.path on the test VM
+            // and is not for general use
             SearchPath path = new SearchPath()
                     .append(locations.absTestClsDir())
                     .append(locations.absTestSrcDir())

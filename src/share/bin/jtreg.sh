@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright (c) 1998, 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1998, 2024, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -65,7 +65,7 @@
 
 case "`uname -s`" in
     CYGWIN* ) cygwin=1 ;;
-    Linux ) if grep -qi Microsoft /proc/version ; then wsl=1 ; fi ;;
+    Linux ) if test -f /proc/version && grep -qi Microsoft /proc/version ; then wsl=1 ; fi ;;
 esac
 
 # Determine jtreg installation directory
@@ -136,6 +136,11 @@ elif [ -n "$wsl" -a -x "$JTREG_JAVA".exe ]; then
     JTREG_JAVA="$JTREG_JAVA".exe
     JTREG_HOME=`wslpath -a -m "$JTREG_HOME"`
     driveDir=mnt
+fi
+
+if [ ! -e "$JTREG_JAVA" ]; then
+    echo "No java executable at $JTREG_JAVA"
+    exit 1;
 fi
 
 # Verify java version 11 or newer used to run jtreg

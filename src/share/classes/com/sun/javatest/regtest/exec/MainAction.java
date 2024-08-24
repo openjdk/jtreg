@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2023, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2024, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -231,7 +231,8 @@ public class MainAction extends Action
                 throw new ParseException(PARSE_SECURE_OTHERVM);
         }
 
-        if (script.enablePreview() && !seenEnablePreview) {
+        boolean needsEnablePreview = script.enablePreview() || usesLibraryCompiledWithPreviewEnabled();
+        if (needsEnablePreview && !seenEnablePreview) {
             testJavaArgs.add("--enable-preview");
             if (!othervm) {
                 // ideally, this should not force othervm mode, but just allow
@@ -337,12 +338,7 @@ public class MainAction extends Action
             status = passed(CHECK_PASS);
             endAction(status);
         } else {
-            Lock lock = script.getLockIfRequired();
-            if (lock != null) lock.lock();
-
-            // Start action after the lock is taken to ensure correct "elapsed time".
             startAction(true);
-
             try {
                 switch (!othervmOverrideReasons.isEmpty() ? ExecMode.OTHERVM : script.getExecMode()) {
                     case AGENTVM:
@@ -357,9 +353,7 @@ public class MainAction extends Action
                         throw new AssertionError();
                 }
             } finally {
-                // End action before releasing the lock.
                 endAction(status);
-                if (lock != null) lock.unlock();
             }
         }
 
@@ -376,6 +370,11 @@ public class MainAction extends Action
         List<String> buildArgs = List.of(join(testModuleName, testClassName));
         BuildAction ba = new BuildAction();
         return ba.build(buildOpts, buildArgs, SREASON_ASSUMED_BUILD, script);
+    }
+
+    @Override
+    protected boolean supportsExclusiveAccess() {
+        return true;
     }
 
     private Status runOtherJVM() throws TestRunException {
@@ -519,6 +518,7 @@ public class MainAction extends Action
 
             // RUN THE MAIN WRAPPER CLASS
             ProcessCommand cmd = new ProcessCommand();
+            cmd.setMessageWriter(section.getMessageWriter());
             cmd.setExecDir(script.absTestScratchDir().toFile());
 
             // Set the exit codes and their associated strings.  Note that we
@@ -633,6 +633,8 @@ public class MainAction extends Action
                     factory,
                     script.getTestThreadFactoryPath());
             section.getMessageWriter().println("Agent id: " + agent.getId());
+            final long pid = agent.getAgentServerPid();
+            section.getMessageWriter().println("Process id: " + ((pid == -1) ? "unknown" : pid));
             new ModuleConfig("Boot Layer").setFromOpts(agent.vmOpts).write(configWriter);
         } catch (Agent.Fault e) {
             return error(AGENTVM_CANT_GET_VM + ": " + e.getCause());
@@ -715,6 +717,10 @@ public class MainAction extends Action
                     timeout,
                     timeoutHandler,
                     section);
+        } catch (Agent.ActionTimeout e) {
+            final String msg = "\"" + getName() + "\" action timed out with a timeout of "
+                    + timeout + " seconds on agent " + agent.id;
+            status = error(msg);
         } catch (Agent.Fault e) {
             if (e.getCause() instanceof IOException)
                 status = error(String.format(AGENTVM_IO_EXCEPTION, e.getCause()));
