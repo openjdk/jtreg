@@ -238,8 +238,11 @@ public class Basic
         if (IS_JAVA18_PLUS) {
             // on Java versions 18 and higher we don't run some SecurityManager related tests.
             // we adjust the counts for those here.
-            numPassed -= 3; // 2 less Passed in main/Exit.java and 1 less in driver/Exit.java
-            numFailed -= 12; // 10 less Failed in main/Exit.java and 2 less in driver/Exit.java
+
+            // 2 less "Passed" expected in main/Exit.java and 1 less expected in driver/Exit.java
+            numPassed -= 3;
+            // 10 less "Failed" expected in main/Exit.java and 2 less expected in driver/Exit.java
+            numFailed -= 12;
             numError += 0; // no change in error count
         }
         actionTable.put("applet",  Integer.valueOf(numApplet));
