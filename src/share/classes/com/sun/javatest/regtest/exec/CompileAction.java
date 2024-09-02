@@ -363,9 +363,10 @@ public class CompileAction extends Action {
             }
         }
 
-        var needsEnablePreview = script.enablePreview() || usesLibraryCompiledWithPreviewEnabled();
-
-        if (runJavac && needsEnablePreview && !seenEnablePreview
+        if (runJavac
+                && !script.disablePreview()
+                && !seenEnablePreview
+                && script.enablePreview() || usesLibraryCompiledWithPreviewEnabled()
                 && (libLocn == null || libLocn.isTest())) {
             javacArgs.add(insertPos, "--enable-preview");
             if (!seenSourceOrRelease) {
