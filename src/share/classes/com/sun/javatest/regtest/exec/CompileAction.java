@@ -366,7 +366,7 @@ public class CompileAction extends Action {
         if (runJavac
                 && !script.disablePreview()
                 && !seenEnablePreview
-                && script.enablePreview() || usesLibraryCompiledWithPreviewEnabled()
+                && (script.enablePreview() || usesLibraryCompiledWithPreviewEnabled())
                 && (libLocn == null || libLocn.isTest())) {
             javacArgs.add(insertPos, "--enable-preview");
             if (!seenSourceOrRelease) {
