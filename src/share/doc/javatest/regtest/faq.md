@@ -958,7 +958,7 @@ _failed_
 
 _error_
 :   The number of tests that were executed and which indicated that an error
-    occurred bedfore it could be determined whether the test passed or failed.
+    occurred before it could be determined whether the test passed or failed.
 
 _skipped_
 :   The number of tests that "passed" but which indicated that the test
