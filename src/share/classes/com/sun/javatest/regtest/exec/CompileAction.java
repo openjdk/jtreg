@@ -367,6 +367,9 @@ public class CompileAction extends Action {
 
         if (runJavac && needsEnablePreview && !seenEnablePreview
                 && (libLocn == null || libLocn.isTest())) {
+            if (insertPos == -1) { // happens for example in "-proc:only CLASS" cases
+                insertPos = 0;     // prepend in order to not mess with variadic arguments
+            }
             javacArgs.add(insertPos, "--enable-preview");
             if (!seenSourceOrRelease) {
                 int v = script.getTestJDKVersion().major;
