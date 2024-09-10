@@ -24,7 +24,7 @@
 /*
  * @test
  * @library lib-no-properties lib-with-preview lib-without-preview
- * @build *
+ * @build TestUsingAllLibraries NoProperties WithPreview WithoutPreview
  * @run main TestUsingAllLibraries
  */
 public class TestUsingAllLibraries {

@@ -23,13 +23,26 @@
 
 /*
  * @test
+ * @bug 7903813
+ * @enablePreview false
  * @library lib-with-preview
- * @build TestUsingPreviewLibrary WithPreview
- * @run main TestUsingPreviewLibrary
+ * @build TestWithDisabledPreview WithPreview
+ * @run main TestWithDisabledPreview
  */
-public class TestUsingPreviewLibrary {
-    public static void main(String... args) {
-        System.out.println(new TestUsingPreviewLibrary());
-        System.out.println(new WithPreview());
+
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+public class TestWithDisabledPreview {
+    public static void main(String... args) throws Exception {
+        var location = TestWithDisabledPreview.class.getProtectionDomain().getCodeSource().getLocation();
+        var classFile = Path.of(location.toURI()).resolve(TestWithDisabledPreview.class.getSimpleName() + ".class");
+        try (var dis = new DataInputStream(new ByteArrayInputStream(Files.readAllBytes(classFile)))) {
+            dis.skipBytes(4); // 0xCAFEBABE
+            var minor = dis.readUnsignedShort();
+            if (minor != 0) throw new AssertionError("Unexpected minor version: " + minor);
+        }
     }
 }

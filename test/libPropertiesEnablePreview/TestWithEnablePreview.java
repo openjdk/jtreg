@@ -25,7 +25,7 @@
  * @test
  * @enablePreview
  * @library lib-without-preview
- * @build *
+ * @build TestWithEnablePreview WithoutPreview
  * @run main TestWithEnablePreview
  */
 public class TestWithEnablePreview {
