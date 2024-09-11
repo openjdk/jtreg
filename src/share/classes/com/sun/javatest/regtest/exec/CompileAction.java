@@ -327,7 +327,7 @@ public class CompileAction extends Action {
         List<String> jcodArgs = new ArrayList<>();
         boolean runJavac = process;
 
-        int insertPos = -1;
+        int sourceOrReleaseFeatureNumber = -1;
         boolean seenSourceOrRelease = false;
         boolean seenEnablePreview = false;
 
@@ -335,9 +335,6 @@ public class CompileAction extends Action {
             if (currArg.endsWith(".java")) {
                 if (!(new File(currArg)).exists())
                     throw new TestRunException(CANT_FIND_SRC + currArg);
-                if (insertPos == -1) {
-                    insertPos = javacArgs.size();
-                }
                 javacArgs.add(currArg);
                 runJavac = true;
             } else if (currArg.endsWith(".jasm")) {
@@ -353,11 +350,18 @@ public class CompileAction extends Action {
                     case "-source":
                     case "--source":
                     case "--release":
-                        if (insertPos == -1) {
-                            insertPos = javacArgs.size();
-                        }
                         seenSourceOrRelease= true;
-                        break;
+                        if (eq != -1) {
+                            var number = currArg.substring(eq + 1).trim();
+                            sourceOrReleaseFeatureNumber = Integer.parseInt(number);
+                        } else {
+                            sourceOrReleaseFeatureNumber = -2;
+                        }
+                        javacArgs.add(currArg);
+                        continue; // with next argument
+                }
+                if (sourceOrReleaseFeatureNumber == -2) {
+                    sourceOrReleaseFeatureNumber = Integer.parseInt(currArg);
                 }
                 javacArgs.add(currArg);
             }
@@ -368,14 +372,15 @@ public class CompileAction extends Action {
                 && !seenEnablePreview
                 && (script.enablePreview() || usesLibraryCompiledWithPreviewEnabled())
                 && (libLocn == null || libLocn.isTest())) {
-            if (insertPos == -1) { // happens for example in "-proc:only CLASS" cases
-                insertPos = 0;     // prepend in order to not mess with variadic arguments
-            }
-            javacArgs.add(insertPos, "--enable-preview");
+            int major = script.getTestJDKVersion().major;
+            // always prepend in order to not mess with variadic arguments
             if (!seenSourceOrRelease) {
-                int v = script.getTestJDKVersion().major;
-                javacArgs.add(insertPos + 1, "-source");
-                javacArgs.add(insertPos + 2, String.valueOf(v));
+                javacArgs.add(0, String.valueOf(major));
+                javacArgs.add(0, "-source");
+            }
+            // 7903809: prevent invalid source release errors
+            if (!seenSourceOrRelease || major == sourceOrReleaseFeatureNumber) {
+                javacArgs.add(0, "--enable-preview");
             }
         }
 

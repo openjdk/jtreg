@@ -23,7 +23,9 @@
 
 /*
  * @test
+ * @bug 7903809
  * @library lib-with-preview
+ * @compile --release 21 TestUsingPreviewLibrary.java
  * @build TestUsingPreviewLibrary WithPreview
  * @run main TestUsingPreviewLibrary
  */
