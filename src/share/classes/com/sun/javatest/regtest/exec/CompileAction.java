@@ -327,7 +327,7 @@ public class CompileAction extends Action {
         List<String> jcodArgs = new ArrayList<>();
         boolean runJavac = process;
 
-        int sourceOrReleaseFeatureNumber = -1;
+        String sourceOrReleaseVersion = "not-seen";
         boolean seenSourceOrRelease = false;
         boolean seenEnablePreview = false;
 
@@ -352,16 +352,15 @@ public class CompileAction extends Action {
                     case "--release":
                         seenSourceOrRelease= true;
                         if (eq != -1) {
-                            var number = currArg.substring(eq + 1).trim();
-                            sourceOrReleaseFeatureNumber = Integer.parseInt(number);
+                            sourceOrReleaseVersion = currArg.substring(eq + 1).trim();
                         } else {
-                            sourceOrReleaseFeatureNumber = -2;
+                            sourceOrReleaseVersion = "next-argument";
                         }
                         javacArgs.add(currArg);
                         continue; // with next argument
                 }
-                if (sourceOrReleaseFeatureNumber == -2) {
-                    sourceOrReleaseFeatureNumber = Integer.parseInt(currArg);
+                if (sourceOrReleaseVersion.equals("next-argument")) {
+                    sourceOrReleaseVersion = currArg;
                 }
                 javacArgs.add(currArg);
             }
@@ -372,14 +371,14 @@ public class CompileAction extends Action {
                 && !seenEnablePreview
                 && (script.enablePreview() || usesLibraryCompiledWithPreviewEnabled())
                 && (libLocn == null || libLocn.isTest())) {
-            int major = script.getTestJDKVersion().major;
+            String version = script.getTestJDKVersion().name();
             // always prepend in order to not mess with variadic arguments
             if (!seenSourceOrRelease) {
-                javacArgs.add(0, String.valueOf(major));
+                javacArgs.add(0, version);
                 javacArgs.add(0, "-source");
             }
             // 7903809: prevent invalid source release errors
-            if (!seenSourceOrRelease || major == sourceOrReleaseFeatureNumber) {
+            if (!seenSourceOrRelease || version.equals(sourceOrReleaseVersion)) {
                 javacArgs.add(0, "--enable-preview");
             }
         }
