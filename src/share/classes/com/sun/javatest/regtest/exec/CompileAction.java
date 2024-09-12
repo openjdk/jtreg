@@ -327,11 +327,12 @@ public class CompileAction extends Action {
         List<String> jcodArgs = new ArrayList<>();
         boolean runJavac = process;
 
-        String sourceOrReleaseVersion = "not-seen";
+        String sourceOrReleaseVersion = null;
         boolean seenSourceOrRelease = false;
         boolean seenEnablePreview = false;
 
-        for (String currArg : args) {
+        for (int i = 0; i < args.size(); i++) {
+            String currArg = args.get(i);
             if (currArg.endsWith(".java")) {
                 if (!(new File(currArg)).exists())
                     throw new TestRunException(CANT_FIND_SRC + currArg);
@@ -346,21 +347,17 @@ public class CompileAction extends Action {
                 switch (eq == -1 ? currArg : currArg.substring(0, eq)) {
                     case "--enable-preview":
                         seenEnablePreview = true;
-                        break;
+                        break; // switch
                     case "-source":
                     case "--source":
                     case "--release":
-                        seenSourceOrRelease= true;
+                        seenSourceOrRelease = true;
                         if (eq != -1) {
                             sourceOrReleaseVersion = currArg.substring(eq + 1).trim();
                         } else {
-                            sourceOrReleaseVersion = "next-argument";
+                            sourceOrReleaseVersion = args.size() > i + 1 ? args.get(i + 1) : null;
                         }
-                        javacArgs.add(currArg);
-                        continue; // with next argument
-                }
-                if (sourceOrReleaseVersion.equals("next-argument")) {
-                    sourceOrReleaseVersion = currArg;
+                        break; // switch
                 }
                 javacArgs.add(currArg);
             }

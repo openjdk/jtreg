@@ -26,6 +26,8 @@
  * @bug 7903809
  * @library lib-with-preview
  * @compile --release 11 TestUsingPreviewLibrary.java
+ * @compile  -source 1.8 TestUsingPreviewLibrary.java
+ * @compile --source 1.8 TestUsingPreviewLibrary.java
  * @build TestUsingPreviewLibrary WithPreview
  * @run main TestUsingPreviewLibrary
  */
