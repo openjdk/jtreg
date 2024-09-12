@@ -327,17 +327,15 @@ public class CompileAction extends Action {
         List<String> jcodArgs = new ArrayList<>();
         boolean runJavac = process;
 
-        int insertPos = -1;
+        String sourceOrReleaseVersion = null;
         boolean seenSourceOrRelease = false;
         boolean seenEnablePreview = false;
 
-        for (String currArg : args) {
+        for (int i = 0; i < args.size(); i++) {
+            String currArg = args.get(i);
             if (currArg.endsWith(".java")) {
                 if (!(new File(currArg)).exists())
                     throw new TestRunException(CANT_FIND_SRC + currArg);
-                if (insertPos == -1) {
-                    insertPos = javacArgs.size();
-                }
                 javacArgs.add(currArg);
                 runJavac = true;
             } else if (currArg.endsWith(".jasm")) {
@@ -349,15 +347,17 @@ public class CompileAction extends Action {
                 switch (eq == -1 ? currArg : currArg.substring(0, eq)) {
                     case "--enable-preview":
                         seenEnablePreview = true;
-                        break;
+                        break; // switch
                     case "-source":
                     case "--source":
                     case "--release":
-                        if (insertPos == -1) {
-                            insertPos = javacArgs.size();
+                        seenSourceOrRelease = true;
+                        if (eq != -1) {
+                            sourceOrReleaseVersion = currArg.substring(eq + 1).trim();
+                        } else {
+                            sourceOrReleaseVersion = args.size() > i + 1 ? args.get(i + 1) : null;
                         }
-                        seenSourceOrRelease= true;
-                        break;
+                        break; // switch
                 }
                 javacArgs.add(currArg);
             }
@@ -368,14 +368,15 @@ public class CompileAction extends Action {
                 && !seenEnablePreview
                 && (script.enablePreview() || usesLibraryCompiledWithPreviewEnabled())
                 && (libLocn == null || libLocn.isTest())) {
-            if (insertPos == -1) { // happens for example in "-proc:only CLASS" cases
-                insertPos = 0;     // prepend in order to not mess with variadic arguments
-            }
-            javacArgs.add(insertPos, "--enable-preview");
+            String version = script.getTestJDKVersion().name();
+            // always prepend in order to not mess with variadic arguments
             if (!seenSourceOrRelease) {
-                int v = script.getTestJDKVersion().major;
-                javacArgs.add(insertPos + 1, "-source");
-                javacArgs.add(insertPos + 2, String.valueOf(v));
+                javacArgs.add(0, version);
+                javacArgs.add(0, "-source");
+            }
+            // 7903809: prevent invalid source release errors
+            if (!seenSourceOrRelease || version.equals(sourceOrReleaseVersion)) {
+                javacArgs.add(0, "--enable-preview");
             }
         }
 
