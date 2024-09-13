@@ -237,6 +237,9 @@ public class ShellAction extends Action
             if (script.enablePreview()) {
                 env.put("TESTENABLEPREVIEW", "true");
             }
+            if (script.disablePreview()) {
+                env.put("TESTENABLEPREVIEW", "false");
+            }
             String testQuery = script.getTestQuery();
             if (testQuery != null) {
                 env.put("TESTQUERY", testQuery);
