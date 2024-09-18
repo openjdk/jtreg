@@ -944,9 +944,9 @@ A _conditional_ comma or space is only generated if it is not at the beginning o
 
 ### What do all those numbers in the "Test results" line mean?
 
-After running tests, `jtreg` prints out a line beginning `Test sesults:` followed
+After running tests, `jtreg` prints out a line beginning `Test results:` followed
 by a series of labeled numbers. The numbers give details about the number of
-tests that were as well as the number of tests that were not. What do they all mean?
+tests that were run as well as the number of tests that were not. What do they all mean?
 
 _passed_
 :   The number of tests that were executed and which indicated that the test passed.
