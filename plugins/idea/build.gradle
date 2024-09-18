@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id 'org.jetbrains.intellij' version '1.14.1'
+    id 'org.jetbrains.intellij.platform' version '2.0.1'
 }
 
 def jtregLib = jtregHome + File.separator + "lib" + File.separator + "jtreg.jar"
@@ -18,16 +18,32 @@ compileJava {
 
 repositories {
     mavenCentral()
+    intellijPlatform {
+        defaultRepositories()
+    }
 }
 
 dependencies {
     implementation files(jtregLib)
+
+    intellijPlatform {
+        intellijIdeaCommunity('2024.2.0.2')
+        plugin("AntSupport:${antSupportVersion}")
+        bundledPlugins('com.intellij.java', 'TestNG-J')
+        instrumentationTools()
+    }
+
 }
 
-// See https://github.com/JetBrains/gradle-intellij-plugin/
-intellij {
-    version = minBuild
-    plugins = ['java', 'AntSupport', 'TestNG-J']
+// See https://github.com/JetBrains/intellij-platform-gradle-plugin/
+intellijPlatform {
+    pluginConfiguration {
+        version = pluginVersion
+        ideaVersion {
+            sinceBuild = minBuild
+            untilBuild = ''
+        }
+    }
 }
 
 patchPluginXml {

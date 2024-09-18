@@ -444,6 +444,11 @@ public class RegressionScript extends Script {
         return ep != null && ep.equals("true");
     }
 
+    boolean disablePreview() {
+        String ep = td.getParameter("enablePreview");
+        return ep != null && ep.equals("false");
+    }
+
     private List<String> processArgs(List<String> args, Expr.Context c, Map<String,String> testProps)
             throws TestSuite.Fault, Expr.Fault, ParseException {
         if (!testSuite.getAllowSmartActionArgs(td))
@@ -1159,6 +1164,9 @@ public class RegressionScript extends Script {
         }
         if (enablePreview()) {
             p.put("test.enable.preview", "true");
+        }
+        if (disablePreview()) {
+            p.put("test.enable.preview", "false");
         }
         p.put("test.root", getTestRootDir().getPath());
         return Collections.unmodifiableMap(p);

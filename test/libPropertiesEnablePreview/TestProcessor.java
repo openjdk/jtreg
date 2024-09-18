@@ -23,17 +23,37 @@
 
 /*
  * @test
- * @bug 7903809
+ * @bug 7903808
  * @library lib-with-preview
- * @compile --release 11 TestUsingPreviewLibrary.java
- * @compile  -source 1.8 TestUsingPreviewLibrary.java
- * @compile --source 1.8 TestUsingPreviewLibrary.java
- * @build TestUsingPreviewLibrary WithPreview
- * @run main TestUsingPreviewLibrary
+ * @build TestProcessor WithPreview
+ * @compile -cp . -processor TestProcessor -proc:only TestProcessor.java
+ * @compile/process -cp . -processor TestProcessor -proc:only Test
  */
-public class TestUsingPreviewLibrary {
-    public static void main(String... args) {
-        System.out.println(new TestUsingPreviewLibrary());
-        System.out.println(new WithPreview());
+
+import java.util.*;
+import javax.annotation.processing.*;
+import javax.lang.model.*;
+import javax.lang.model.element.*;
+import javax.lang.model.util.*;
+
+public class TestProcessor extends AbstractProcessor {
+    @Override
+    public SourceVersion getSupportedSourceVersion() {
+        return SourceVersion.latest();
+    }
+
+    @Override
+    public Set<String> getSupportedAnnotationTypes() {
+        return Set.of();
+    }
+
+    public boolean process(Set<? extends TypeElement> types, RoundEnvironment env) {
+        return true;
+    }
+}
+
+class Test {
+    static {
+        WithPreview.class.toString();
     }
 }

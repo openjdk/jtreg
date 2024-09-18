@@ -231,13 +231,15 @@ public class MainAction extends Action
                 throw new ParseException(PARSE_SECURE_OTHERVM);
         }
 
-        boolean needsEnablePreview = script.enablePreview() || usesLibraryCompiledWithPreviewEnabled();
-        if (needsEnablePreview && !seenEnablePreview) {
-            testJavaArgs.add("--enable-preview");
-            if (!othervm) {
-                // ideally, this should not force othervm mode, but just allow
-                // the use of an agent with preview enabled
-                othervmOverrideReasons.add("test requires --enable-preview");
+        if (!script.disablePreview()) { // test with explicit `@enablePreview false` take precedence
+            boolean needsEnablePreview = script.enablePreview() || usesLibraryCompiledWithPreviewEnabled();
+            if (needsEnablePreview && !seenEnablePreview) {
+                testJavaArgs.add("--enable-preview");
+                if (!othervm) {
+                    // ideally, this should not force othervm mode, but just allow
+                    // the use of an agent with preview enabled
+                    othervmOverrideReasons.add("test requires --enable-preview");
+                }
             }
         }
 
