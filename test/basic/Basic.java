@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2024, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -207,8 +207,8 @@ public class Basic
         numMain   += 2;
 
         // main
-        numPassed += 12; numFailed += 19; numError  += 12;
-        numMain   += 43;
+        numPassed += 13; numFailed += 19; numError  += 12;
+        numMain   += 44;
 
         // driver
         numPassed += 3; numFailed += 4; numError  += 10;

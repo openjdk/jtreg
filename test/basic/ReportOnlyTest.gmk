@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2024, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -50,10 +50,10 @@ $(BUILDTESTDIR)/ReportOnlyTest.ok: $(BUILDTESTDIR)/Basic.othervm.ok \
 	$(CAT) $(@:%.ok=%.jt.log)
 	$(GREP) headless $(BUILDTESTDIR)/Basic.othervm/log
 	if $(GREP) "headless: *true" $(BUILDTESTDIR)/Basic.othervm/log > /dev/null ; then \
-	    EXPECT_PASS=91 ; \
+	    EXPECT_PASS=92 ; \
 	    EXPECT_FAIL=40 ; \
 	else \
-	    EXPECT_PASS=93 ; \
+	    EXPECT_PASS=94 ; \
 	    EXPECT_FAIL=44 ; \
 	fi ; \
 	echo "Expect: Test results: passed: $${EXPECT_PASS}; failed: $${EXPECT_FAIL}; error: 88" ; \

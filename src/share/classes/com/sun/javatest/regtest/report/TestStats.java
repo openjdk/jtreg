@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2024, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -30,12 +30,19 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import com.sun.javatest.Harness;
 import com.sun.javatest.Parameters;
 import com.sun.javatest.Status;
+import com.sun.javatest.TestDescription;
+import com.sun.javatest.TestFilter;
 import com.sun.javatest.TestResult;
-import com.sun.javatest.regtest.config.CachingTestFilter;
+import com.sun.javatest.TestResultTable;
+import com.sun.javatest.regtest.agent.MainActionHelper;
 import com.sun.javatest.regtest.config.RegressionParameters;
 import com.sun.javatest.report.Report;
 import com.sun.javatest.util.I18NResourceBundle;
@@ -44,6 +51,7 @@ import com.sun.javatest.util.I18NResourceBundle;
  * Track test status statistics
  */
 public class TestStats {
+    private Map<TestFilter, ? extends List<TestDescription>> filterDetails;
     public void register(Harness h) {
         // See the comments for RegressionParameters.getExcludeListFilter
         // for notes regarding the use of CachingTestFilter vs. ObservableTestFilter
@@ -55,18 +63,39 @@ public class TestStats {
             }
 
             @Override
-            public void finishedTesting() {
-                CachingTestFilter ef = params.getExcludeListFilter();
-                if (ef != null) {
-                    for (CachingTestFilter.Entry e: ef.getCacheEntries()) {
-                        if (!e.value)
-                            excluded++;
+            public void finishedTesting(TestResultTable.TreeIterator treeIterator) {
+                filterDetails = treeIterator.getFilterStats();
+                filterDetails.forEach((f, tds) -> {
+                    int count = tds.size();
+                    switch (f.getName()) {
+                        case "jtregExcludeListFilter":
+                            notRun_excluded_count += count;
+                            break;
+                        case "jtregMatchListFilter":
+                            notRun_matchList_count += count;
+                            break;
+                        case "jtregPriorStatusFilter":
+                            notRun_priorStatus_count += count;
+                            break;
+                        case "Keywords":
+                            notRun_keywords_count += count;
+                            break;
+                        case "ModulesFilter":
+                            notRun_modules_count += count;
+                            break;
+                        case "RequiresFilter":
+                            notRun_requires_count += count;
+                            break;
+                        case "TimeLimitFilter":
+                            notRun_timeLimit_count += count;
+                            break;
+
+                        default: {
+                            System.err.println("Filter not recognized: " + f.getName() + "(" + f + ")");
+                            notRun_other_count += count;
+                        }
                     }
-                }
-                RegressionParameters.KeywordsTestFilter kf = params.getKeywordsFilter();
-                if (kf != null) {
-                    ignored = kf.ignored.size();
-                }
+                });
             }
 
             @Override
@@ -80,6 +109,9 @@ public class TestStats {
 
     public void add(TestResult tr) {
         counts[tr.getStatus().getType()]++;
+        if (tr.getStatus().getReason().startsWith(MainActionHelper.MAIN_SKIPPED_STATUS_PREFIX)) {
+            passed_skipped_count++;
+        }
     }
 
     public void addAll(TestStats other) {
@@ -110,6 +142,30 @@ public class TestStats {
                     f, ((f > 0) && (    e + nr > 0) ? 1 : 0),
                     e, ((e > 0) && (        nr > 0) ? 1 : 0),
                     nr);
+                if (passed_skipped_count > 0) {
+                    msg += i18n.getString("stats.tests.skipped", passed_skipped_count);
+                }
+                if (notRun_excluded_count > 0) {
+                    msg += i18n.getString("stats.tests.excluded", notRun_excluded_count);
+                }
+                if (notRun_matchList_count > 0) {
+                    msg += i18n.getString("stats.tests.matchList", notRun_matchList_count);
+                }
+                if (notRun_keywords_count > 0) {
+                    msg += i18n.getString("stats.tests.keywords", notRun_keywords_count);
+                }
+                if (notRun_modules_count > 0) {
+                    msg += i18n.getString("stats.tests.modules", notRun_modules_count);
+                }
+                if (notRun_requires_count > 0) {
+                    msg += i18n.getString("stats.tests.requires", notRun_requires_count);
+                }
+                if (notRun_priorStatus_count > 0) {
+                    msg += i18n.getString("stats.tests.priorStatus", notRun_priorStatus_count);
+                }
+                if (notRun_timeLimit_count > 0) {
+                    msg += i18n.getString("stats.tests.timeLimit", notRun_timeLimit_count);
+                }
             }
         }
         out.println(msg);
@@ -119,13 +175,45 @@ public class TestStats {
         File reportDir = report.getReportDir();
         File reportTextDir = new File(reportDir, "text");
         reportTextDir.mkdirs();
-        File file = new File(reportTextDir, "stats.txt");
-        report(file);
+        File statsTxt = new File(reportTextDir, "stats.txt");
+        report(statsTxt);
+        File notRunTxt = new File(reportTextDir, "notRun.txt");
+        reportNotRunTests(notRunTxt);
     }
 
     public void report(File file) throws IOException {
         try (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(file)))) {
             showResultStats(out);
+        }
+    }
+
+    public void reportNotRunTests(File file) throws IOException {
+        try (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(file)))) {
+            reportNotRunTests(out);
+        }
+    }
+
+    public void reportNotRunTests(PrintWriter out) {
+        if (filterDetails == null || filterDetails.isEmpty()) {
+            out.println("no tests were filtered out");
+        } else {
+            Map<TestDescription, Status> map = new TreeMap<>(Comparator.comparing(TestDescription::getRootRelativeURL));
+            filterDetails.forEach((f, tds) -> {
+                var status = new Status(Status.NOT_RUN, f.getReason());
+                tds.forEach(td -> map.put(td, status));
+            });
+            var maxNameLength = map.keySet().stream()
+                    .map(TestDescription::getRootRelativeURL)
+                    .mapToInt(String::length)
+                    .max().getAsInt();
+            for (var e : map.entrySet()) {
+                var td = e.getKey();
+                var td_url = td.getRootRelativeURL();
+                var status = e.getValue();
+                out.println(td_url
+                        + " ".repeat(maxNameLength - td_url.length() + 1)
+                        + status);
+            }
         }
     }
 
@@ -135,15 +223,23 @@ public class TestStats {
      * %f       number of failed tests
      * %F       number of failed and error tests
      * %e       number of error tests
-     * %p       number of passed tests
-     * %n       number of tests not run
+     * %p       number of passed tests, including skipped tests
+     * %P       number of passed tests, excluding skipped tests
      * %r       number of tests run
+     * %s       number of skipped tests (run but threw SkippedException)
+     *
+     * %n       number of tests not run
+     * %m       number of tests not meeting module requirements
+     * %R       number of tests not meeting platform requirements
+     * %S       number of tests not matching specified status
+     * %t       number of tests not matching time limit requirements
      * %x       number of excluded tests
-     * %i       number of ignored tests
+     * %x       number of tests not on match list
+     * %k %i    number of keyword-ignored tests
      * %,       conditional comma
      * %<space> conditional space
      * %%       %
-     * %?X      prints given number if not zero, where X is one of f, F, e, p, x, i
+     * %?X      prints given number if not zero, where X is one of f, F, e, p, P, s, x, i
      * %?{textX} prints text and given number if number is not zero, where
      *              X is one of f, F, e, p, x, i
      * </pre>
@@ -160,10 +256,17 @@ public class TestStats {
                     case 'F':
                     case 'e':
                     case 'i':
+                    case 'k':
                     case 'n':
                     case 'p':
+                    case 'P':
                     case 'r':
-                    case 'x': {
+                    case 'R':
+                    case 's':
+                    case 't':
+                    case 'S':
+                    case 'x':
+                    case 'X': {
                         int count = getNumber(c);
                         if (count >= 0)
                             sb.append(String.valueOf(count));
@@ -224,12 +327,14 @@ public class TestStats {
                                 break;
 
                             }
-                        } else
+                        } else {
                             sb.append("%").append("?");
+                        }
                         break;
 
-                    default:
+                    default: {
                         sb.append("%").append(c);
+                    }
                 }
             } else
                 sb.append(c);
@@ -247,24 +352,98 @@ public class TestStats {
                 return counts[Status.FAILED] + counts[Status.ERROR];
             case 'e':
                 return counts[Status.ERROR];
-            case 'i':
-                return ignored;
+            case 'i': case 'k': // i for backward compatibility; was "ignored"
+                return notRun_keywords_count;
+            case 'm':
+                return notRun_modules_count;
             case 'n':
                 return counts[Status.NOT_RUN];
+            case 'o':
+                return notRun_other_count;
             case 'p':
                 return counts[Status.PASSED];
+            case 'P':
+                return counts[Status.PASSED] - passed_skipped_count;
             case 'r':
                 return counts[Status.PASSED] + counts[Status.FAILED] + counts[Status.ERROR];
+            case 'R':
+                return notRun_requires_count;
+            case 's':
+                return passed_skipped_count;
+            case 'S':
+                return notRun_priorStatus_count;
+            case 't':
+                return notRun_timeLimit_count;
             case 'x':
-                return excluded;
+                return notRun_excluded_count;
+            case 'X':
+                return notRun_matchList_count;
             default:
                 return -1;
         }
     }
 
+    /**
+     * The numbers of passed, failed, and error tests.
+     */
     public int[] counts = new int[Status.NUM_STATES];
-    int excluded;
-    int ignored;
+
+    /**
+     * The number of "skipped tests".
+     * Skipped tests are a subset of passed tests:
+     * the test class was executed, but it threw jtreg.SkippedException
+     */
+    int passed_skipped_count;
+
+    // not run tests
+
+    /**
+     * The number of tests excluded by an exclude list (problem list).
+     * See -exclude option.
+     */
+    int notRun_excluded_count;
+
+    /**
+     * The number of tests not run because of keywords.
+     * See -k option.
+     */
+    int notRun_keywords_count;
+
+    /**
+     * The number of tests not run because not on a match list.
+     * See -match option.
+     */
+    int notRun_matchList_count;
+
+    /**
+     * The number of tests not run because required modules were not available.
+     * See the @modules tag and the modules in the JDK under test.
+     */
+    int notRun_modules_count;
+
+    /**
+     * The number of tests not run because of the prior status.
+     * See the -status option.
+     */
+    int notRun_priorStatus_count;
+
+    /**
+     * The number of tests not run because the platform requirements were not met.
+     * See the @requires tag and the full set of platform properties.
+     */
+    int notRun_requires_count;
+
+    /**
+     * The number of tests not run because of the potential run time.
+     * See the -timelimit and other timeout-related options, and the
+     * declared timeout value for the test.
+     */
+    int notRun_timeLimit_count;
+
+    /**
+     * Fall through value for unrecognized filters. Should normally be zero.
+     */
+    int notRun_other_count;
 
     private static final I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(TestStats.class);
 }

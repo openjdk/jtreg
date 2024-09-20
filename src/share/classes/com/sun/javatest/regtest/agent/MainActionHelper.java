@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2023, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2024, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -306,6 +306,8 @@ public class MainActionHelper extends ActionHelper {
         MAIN_CANT_FIND_MAIN   = "Can't find `main' method",
         MAIN_CANT_INIT_MODULE_EXPORTS = "Can't init module exports: ",
         MAIN_SKIPPED = "Skipped: ";
+
+    public static final String MAIN_SKIPPED_STATUS_PREFIX = MAIN_SKIPPED + SKIP_EXCEPTION;
 
     /**
      * Marker interface for test driver classes, which need to be passed a class

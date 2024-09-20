@@ -229,18 +229,11 @@ public final class RegressionParameters
             if (mlf != null)
                 filters.add(mlf);
 
-            final TestFilter f = new CompositeFilter(filters.toArray(new TestFilter[0]));
-            return new CachingTestFilter(f.getName(), f.getDescription(), f.getReason()) {
-                @Override
-                protected String getCacheKey(TestDescription td) {
-                    return td.getRootRelativeURL();
-                }
-
-                @Override
-                protected boolean getCacheableValue(TestDescription td) throws Fault {
-                    return f.accepts(td);
-                }
-            };
+            // Do not cache the results of the composite filter,
+            // to not affect the filter stats, which handle CompositeFilters specially.
+            // Cache the individual filters.
+            TestFilter f = new CompositeFilter(filters.toArray(new TestFilter[0]));
+            return f;
         }
         return relevantTestFilter;
 
@@ -328,7 +321,7 @@ public final class RegressionParameters
             return null;
 
         return new CachingTestFilter(
-                "TestLimitFilter",
+                "TimeLimitFilter",
                 "Select tests that do not exceed a specified timeout value",
                 "Test declares a timeout which exceeds the requested time limit") {
 
@@ -494,7 +487,7 @@ public final class RegressionParameters
                 matchListFilter = new CachingTestFilter(
                         "jtregMatchListFilter",
                         "Select tests which are in a match list",
-                        "Test has not been matched by a match list") {
+                        "Test is not in a match list") {
                     final TestListWithPlatforms list = new TestListWithPlatforms(el, getTestOS());
                     @Override
                     protected String getCacheKey(TestDescription td) {

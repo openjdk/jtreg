@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2024, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -47,7 +47,7 @@ $(BUILDTESTDIR)/Basic.check.ok: \
 		$(TESTDIR)/share/basic \
 		> $(@:%.ok=%/log) 2>&1|| \
 	    true "non-zero exit code from JavaTest intentionally ignored"
-	$(GREP) -s 'Test results: passed: 156; error: 84' $(@:%.ok=%/log)  > /dev/null
+	$(GREP) -s 'Test results: passed: 157; error: 84' $(@:%.ok=%/log)  > /dev/null
 	echo $@ passed at `date` > $@
 
 INITIAL_TESTS += \
