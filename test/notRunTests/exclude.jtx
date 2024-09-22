@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1999, 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2024, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -23,20 +23,7 @@
 # questions.
 #
 
+# an exclude list (problem list) of tests that should not be run;
+# for use with `-exclude`
 
-stats.noTests=Test results: no tests selected
-stats.tests=Test results: \
-    {0,choice,0#|0<passed: {0,number}}{1,choice,0#|1#; }\
-    {2,choice,0#|0<failed: {2,number}}{3,choice,0#|1#; }\
-    {4,choice,0#|0<error: {4,number}}{5,choice,0#|1#; }\
-    {6,choice,0#|0<not run: {6,number}}
-
-stats.tests.skipped=; skipped: {0}
-
-stats.tests.excluded=; excluded: {0}
-stats.tests.keywords=; did not match keywords: {0}
-stats.tests.matchList=; not in match-list: {0}
-stats.tests.modules=; did not meet module requirements: {0}
-stats.tests.priorStatus=; did not match prior status: {0}
-stats.tests.requires=; did not meet platform requirements: {0}
-stats.tests.timeLimit=; did not meet time-limit requirements: {0}
+ExcludeTest.java

@@ -437,9 +437,9 @@ directly on the command line, for directories and files containing tests.
 
 If a file contains multiple tests, you can specify the name of a test within
 that file by appending `#`_ID_ to the file path, where _ID_ is either defined
-in the test itself after the `@test` tag, or the string `id`_N_  if no id is 
-explicitly defined, where N is the number of the test within the file, 
-and where `0` identifies the first test. 
+in the test itself after the `@test` tag, or the string `id`_N_  if no id is
+explicitly defined, where N is the number of the test within the file,
+and where `0` identifies the first test.
 
 If you specify `?`_string_ after the name of a test, the _string_ will be
 passed down to the test, for the test to filter the parts of the test to be
@@ -463,7 +463,7 @@ Table: Kinds of Supported Arguments
 | _directory_             | All tests found in files in and under the directory |
 | _file[#id]_             | All tests in a file, or a specific test in a file  |
 | _file[#id]?string_      | Parts of a test in a file                          |
-| _[directory]_`:`_group_ | All tests in a group defined for a testsuite       |   
+| _[directory]_`:`_group_ | All tests in a group defined for a testsuite       |
 | `@`_file_               | Expand arguments in a file                         |
 
 
@@ -900,6 +900,123 @@ You have several alternatives.
 4.  Use the `-show` option to display the unencoded content of a stream. For example,
     * `jtreg -w` _work-dir_ `-show:System.out` _test-name_
 
+### How do I control the statistics reported on the console at the end of a test run?
+
+By default, `jtreg` reports simple execution statistics at the end of a test run.
+These are given in a line beginning `Test results:`, followed by a series of
+labeled values, including the following:
+
+ * the number of tests that passed; for historical reasons, this includes any
+   tests that were skipped by throwing `jtreg.SkippedException`
+ * the number of tests that failed
+ * the number of tests that could not be executed and which reported an error
+ * the number of filtered out by the exclude list (problem list) filter
+ * the number of tests that were filtered out by the keyword filter
+ * the number of skipped tests
+
+You may override the format of this line by setting the system property
+`jtreg.stats.format` to a `printf`-like format string. The following format
+specifiers are supported:
+
+* `%f`         &mdash; number of failed tests
+* `%F`         &mdash; number of failed and error tests
+* `%e`         &mdash; number of error tests
+* `%e`         &mdash; number of error tests
+* `%p`         &mdash; number of passed tests, including skipped tests
+* `%P`         &mdash; number of passed tests, excluding skipped tests
+* `%n`         &mdash; number of tests not run
+* `%r`         &mdash; number of tests run
+* `%s`         &mdash; number of skipped tests
+* `%x`         &mdash; number of tests filtered out by the exclude list (problem list) filter
+* `%i` or `%k` &mdash; number of tests filtered out by the keyword filter
+* `%m`         &mdash; number of tests not meeting module requirements
+* `%R`         &mdash; number of tests not meeting platform requirements
+* `%S`         &mdash; number of tests not matching the prior status requirements
+* `%t`         &mdash; number of tests not meeting time-limit requirements
+* `%o`         &mdash; number of tests filtered out for other (unknown) reasons
+* `%,`         &mdash; conditional comma
+* `%<space>`   &mdash; conditional space
+* `%%`         &mdash; %
+* `%?X`        &mdash; prints given number if not zero, where X is one of f, F, e, p, P, s, x, i
+* `%?{textX}`  &mdash; prints text and given number if number is not zero, where X is one of f, F, e, p, s, x, i
+
+A _conditional_ comma or space is only generated if it is not at the beginning of the line.
+
+### What do all those numbers in the "Test results" line mean?
+
+After running tests, `jtreg` prints out a line beginning `Test results:` followed
+by a series of labeled numbers. The numbers give details about the number of
+tests that were run as well as the number of tests that were not. What do they all mean?
+
+_passed_
+:   The number of tests that were executed and which indicated that the test passed.
+    Note that some parts of the test may not have been executed. Some tests may be "skipped",
+    meaning that the test determined that it could not be executed as intended.
+
+_failed_
+:   The number of tests that were executed and which indicated that the test failed.
+
+_error_
+:   The number of tests that were executed and which indicated that an error
+    occurred before it could be determined whether the test passed or failed.
+
+_skipped_
+:   The number of tests that "passed" but which indicated that the test
+    could not be executed as expected. This only applies to tests that throw
+    `jtreg.SkippedException`. Some tests, such as "combo-tests" or those that use
+    a test framework like TestNG or JUnit , may provide additional mechanisms to
+    skip parts of a test. Such results are not included here. See the results
+    for an individual test, or for any summary files generated for the framework.
+
+_excluded_
+:   The number of tests that were present in an exclude list, such as a "problem list".
+
+_not in match-list_
+:   The number of tests that were not in a match list specified on the command line
+    with the `-match` option, which may be used to select and run _only_ those tests
+    that appear in an exclude list, such as a "problem list".
+
+_did not match keywords_
+:   The number of tests that did not match the keyword expression used to filter the
+    set of tests to be executed.
+
+    The keywords for each test may be user-defined, with the `@key` tag, or implicitly
+    defined by various tags and/or their options in the test description.
+    The full set of keywords for each test can be seen in the _testdescription_
+    section of the test's result file (`.jtr` file).
+
+    The keyword expression is a combination of any expression specified with the `-k` 
+    option and any expressions derived from other command-line expressions, like 
+    `-manual` (to select tests that require manual interaction), or `-bug` (to select 
+    tests that declare being a test for a given bug with the `@bug` tag.)
+    The full keyword expression can be seen in the _Keywords_ section in the file
+   `html/config.html` in the overall report for the test run.
+
+_did not meet module requirements_
+:   The number of tests that declared the need for specific modules to be available in
+    the JDK being tested, but which were not available.
+    See the `@modules` tag in the test description to see the modules that are
+    required by the test.
+    Examine the test JDK and any relevant JDK options to determine the set of
+    modules that will be availble. For example, see the JDK `--list-modules` option.
+
+_did not meet platform requirements_
+:   The number of tests that did not meet the requirements given in each test's
+    `@requires` tag. The values in the expression may be "standard" values, as
+    defined in the [Tag Specification](tag-spec.html#requires_names), or custom
+    values as defined in the `requires.extraPropsDefns` properties in the
+    test suite's `TEST.ROOT` file.
+
+_did not match prior status_
+:  The number of tests that were not executed because they did not meet the
+   "prior status" conditions given in the `jtreg` `-status` option.
+
+_did not meet time-limit requirements_
+: The number of tests that were not executed because they did not meet the
+  time-limit conditions given in the `jtreg` `-timelimit` option.
+
+Note that to avoid clutter, only non-zero values are given.
+
 ### How do I see what groups are defined in my test suite?
 
 Use the `showGroups` option. To see all groups, specify the name of the test suite;
@@ -1123,7 +1240,7 @@ command line.
 ### How do I find the tests that took longest to run?
 
 Using the [`elapsed`](#my-tests-take-a-long-time-to-run-how-do-i-find-where-the-time-goes)
-time written into each `.jtr` file, you can find the slowest tests with 
+time written into each `.jtr` file, you can find the slowest tests with
 a command such as the following:
 
     grep -r "^elapsed=" DIRS | sed -e 's/\\:/:/g' | sort -t = -k 2 -n -r
@@ -1148,11 +1265,11 @@ for the different units (seconds compared to milliseconds) in the two values.
 * If you are using the `-conc` or `-concurrency` option to run tests in parallel,
   try reducing the number of tests to be run at the same time.
 * Use VM options, like `-Xmx`, to limit the amount of memory available to each process.
-* Try reducing the priority used to run `jtreg` and the processes it runs. 
+* Try reducing the priority used to run `jtreg` and the processes it runs.
   On POSIX systems, you can use the `nice` command to control the priority of a process.
 
 The JDK [`make test`](#how-do-i-run-jdk-jtreg-tests-using-make-test-and-the-jdk-makefile-infrastructure)
-framework automatically uses these techniques to reduce the load on a system.  
+framework automatically uses these techniques to reduce the load on a system.
 
 ### What is the agent pool?
 
@@ -1936,8 +2053,8 @@ You can use `@run driver` to run a class that provides more complex logic, if ne
 
 ### My test uses "preview features": how do I specify the necessary options?
 
-Tests that use [preview features](https://openjdk.org/jeps/12) must use the 
-`--enable-preview` to compile and run the code.  In addition, to compile the 
+Tests that use [preview features](https://openjdk.org/jeps/12) must use the
+`--enable-preview` to compile and run the code.  In addition, to compile the
 code you must also specify the appropriate source level.
 
 To provide these options, you can either do so explicitly, in `@compile` and `@run main`

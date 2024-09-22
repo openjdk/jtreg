@@ -22,6 +22,8 @@
 
 * Speed-up error reporting on hosts with slow hostname lookups [CODETOOLS-7903746](https://bugs.openjdk.org/browse/CODETOOLS-7903746)
 
+* Updated jtreg to bundle JUnit 5.11.0 [CODETOOLS-7903821](https://bugs.openjdk.org/browse/CODETOOLS-7903821)
+
 ## [7.4](https://git.openjdk.org/jtreg/compare/jtreg-7.3.1+1...jtreg-7.4+1)
 
 * Remove support for `jtdiff` [CODETOOLS-7903622](https://bugs.openjdk.org/browse/CODETOOLS-7903622)

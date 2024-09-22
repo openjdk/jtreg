@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2015, 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2015, 2024, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -58,7 +58,7 @@ $(BUILDTESTDIR)/ModulesTest_LimitMods_java.se.ok: \
 		-javaoptions:"--limit-modules $(@:$(BUILDTESTDIR)/ModulesTest_LimitMods_%.ok=%)" \
 		$(TESTDIR)/modules \
 			> $(@:%.ok=%/jt.log) 2>&1
-	$(GREP) '^Test results: passed: 2$$' $(@:%.ok=%/jt.log)  > /dev/null
+	$(GREP) '^Test results: passed: 2; did not meet module requirements: 4$$' $(@:%.ok=%/jt.log)  > /dev/null
 	echo $@ passed at `date` > $@
 
 $(BUILDTESTDIR)/ModulesTest_IgnoreAtModules.ok: \
