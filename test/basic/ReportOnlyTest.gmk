@@ -54,7 +54,7 @@ $(BUILDTESTDIR)/ReportOnlyTest.ok: $(BUILDTESTDIR)/Basic.othervm.ok \
 			EXPECT_PASS=92 ; \
 			EXPECT_FAIL=40 ; \
 		else \
-			EXPECT_PASS=88 ; \
+			EXPECT_PASS=89 ; \
 			EXPECT_FAIL=28 ; \
 		fi ; \
 	else \
@@ -62,7 +62,7 @@ $(BUILDTESTDIR)/ReportOnlyTest.ok: $(BUILDTESTDIR)/Basic.othervm.ok \
 			EXPECT_PASS=94 ; \
 			EXPECT_FAIL=44 ; \
 		else \
-			EXPECT_PASS=90 ; \
+			EXPECT_PASS=91 ; \
 			EXPECT_FAIL=32 ; \
 		fi ; \
 	fi ; \

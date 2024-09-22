@@ -43,7 +43,7 @@ ifneq ($(OS_NAME), windows)
 TESTS.jtreg += $(BUILDTESTDIR)/StatsTest.ok
 endif
 
-STATS1_EXPECT_RUN := $(shell if [ ${JAVA_SPECIFICATION_VERSION} -lt 18 ]; then echo 45; else echo 32; fi)
+STATS1_EXPECT_RUN := $(shell if [ ${JAVA_SPECIFICATION_VERSION} -lt 18 ]; then echo 45; else echo 33; fi)
 STATS1_EXPECT_FAIL := $(shell if [ ${JAVA_SPECIFICATION_VERSION} -lt 18 ]; then echo 32; else echo 22; fi)
 # system test for format support in TestStats.java: see -Djtreg.stats.format
 $(BUILDTESTDIR)/StatsTxt.1.ok: \
@@ -68,7 +68,7 @@ $(BUILDTESTDIR)/StatsTxt.1.ok: \
 
 TESTS.jtreg += $(BUILDTESTDIR)/StatsTxt.1.ok
 
-STATS2_EXPECT_PASS := $(shell if [ ${JAVA_SPECIFICATION_VERSION} -lt 18 ]; then echo 13; else echo 10; fi)
+STATS2_EXPECT_PASS := $(shell if [ ${JAVA_SPECIFICATION_VERSION} -lt 18 ]; then echo 13; else echo 11; fi)
 STATS2_EXPECT_FAIL := $(shell if [ ${JAVA_SPECIFICATION_VERSION} -lt 18 ]; then echo 32; else echo 22; fi)
 # system test for format support in TestStats.java: see -Djtreg.stats.format
 $(BUILDTESTDIR)/StatsTxt.2.ok: \
@@ -95,6 +95,8 @@ $(BUILDTESTDIR)/StatsTxt.2.ok: \
 		    			
 TESTS.jtreg += $(BUILDTESTDIR)/StatsTxt.2.ok
 
+STATS3_EXPECT_PASS := $(shell if [ ${JAVA_SPECIFICATION_VERSION} -lt 18 ]; then echo 12; else echo 10; fi)
+STATS3_EXPECT_FAIL := $(shell if [ ${JAVA_SPECIFICATION_VERSION} -lt 18 ]; then echo 32; else echo 22; fi)
 # system test for format support in TestStats.java: see -Djtreg.stats.format
 # (includes skipped)
 $(BUILDTESTDIR)/StatsTxt.3.ok: \
@@ -113,14 +115,17 @@ $(BUILDTESTDIR)/StatsTxt.3.ok: \
 		$(TESTDIR)/share/basic/ignore   \
 			> $(@:%.ok=%/jt.log) 2>&1  || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
-	$(GREP) -E -s '^TEST-STATS: StatsTxt passed=12 failed=32 ignored=2 skipped=1\s?$$' \
+	$(GREP) -E -s '^TEST-STATS: StatsTxt passed=$(STATS3_EXPECT_PASS) failed=$(STATS3_EXPECT_FAIL) ignored=2 skipped=1\s?$$' \
 		$(@:%.ok=%/jt.log)  > /dev/null
-	$(GREP) -E -s '^TEST-STATS: StatsTxt passed=12 failed=32 ignored=2 skipped=1\s?$$' \
+	$(GREP) -E -s '^TEST-STATS: StatsTxt passed=$(STATS3_EXPECT_PASS) failed=$(STATS3_EXPECT_FAIL) ignored=2 skipped=1\s?$$' \
 		$(@:%.ok=%/report/text/stats.txt)  > /dev/null
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += $(BUILDTESTDIR)/StatsTxt.3.ok
 
+STATS4_EXPECT_PASS := $(shell if [ ${JAVA_SPECIFICATION_VERSION} -lt 18 ]; then echo 13; else echo 11; fi)
+STATS4_EXPECT_FAIL := $(shell if [ ${JAVA_SPECIFICATION_VERSION} -lt 18 ]; then echo 19; else echo 9; fi)
+STATS4_EXPECT_ERROR := $(shell if [ ${JAVA_SPECIFICATION_VERSION} -lt 18 ]; then echo 13; else echo 13; fi)
 # system test for default format support in TestStats.java: no -Djtreg.stats.format
 # (includes skipped)
 $(BUILDTESTDIR)/StatsTxt.4.ok: \
@@ -138,9 +143,9 @@ $(BUILDTESTDIR)/StatsTxt.4.ok: \
 		$(TESTDIR)/share/basic/ignore   \
 			> $(@:%.ok=%/jt.log) 2>&1  || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
-	$(GREP) -E -s '^Test results: passed: 13; failed: 19; error: 13; skipped: 1; did not match keywords: 2\s?$$' \
+	$(GREP) -E -s '^Test results: passed: $(STATS4_EXPECT_PASS); failed: $(STATS4_EXPECT_FAIL); error: $(STATS4_EXPECT_ERROR); skipped: 1; did not match keywords: 2.*?$$' \
 		$(@:%.ok=%/jt.log)  > /dev/null
-	$(GREP) -E -s '^Test results: passed: 13; failed: 19; error: 13; skipped: 1; did not match keywords: 2\s?$$' \
+	$(GREP) -E -s '^Test results: passed: $(STATS4_EXPECT_PASS); failed: $(STATS4_EXPECT_FAIL); error: $(STATS4_EXPECT_ERROR); skipped: 1; did not match keywords: 2.*?$$' \
 		$(@:%.ok=%/report/text/stats.txt)  > /dev/null
 	echo "test passed at `date`" > $@
 
