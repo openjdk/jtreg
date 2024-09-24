@@ -3,7 +3,7 @@
 (This information is also available at <http://openjdk.org/jtreg/build.html>)
 
 `jtreg` depends on a number of external components:
-    JT Harness, TestNG, JUnit, AsmTools, and JCov.
+    JT Harness, TestNG, JUnit, and AsmTools.
 
 The fundamental way to build `jtreg` is with GNU make, specifying where to find
 those external components, but a script is also available that will download
@@ -68,13 +68,7 @@ lists the variables that need to be set for each dependency.
    * `ASMTOOLS_JAR`: a jar file containing the classes for AsmTools
    * `ASMTOOLS_NOTICES`: any legal notices that may be required to use AsmTools
 
-3. [JCov]
-   * `JCOV_JAR`: a jar file containing the main set classes for JCov tools
-   * `JCOV_NETWORK_SAVER_JAR`: a jar file containing the classes to inject into
-     a JVM to save coverage information
-   * `JCOV_NOTICES`: any legal notices that may be required to use JCov
-
-4. [JUnit]
+3. [JUnit]
    * `JUNIT_JARS`: a list of one or more jar files containing the classes
      for JUnit and its dependencies: the list may be a series of jar files or
      a singleton "uber-jar"
@@ -83,7 +77,7 @@ lists the variables that need to be set for each dependency.
    Consult the JUnit documentation to see if there are any additional
    dependencies that may be required when running JUnit.
 
-5. [TestNG]
+4. [TestNG]
    * `TESTNG_JARS`: a list of one or more jar files containing the classes
      for TestNG and its dependencies: the list may be a series of jar files or
      a singleton "uber-jar"
@@ -98,7 +92,6 @@ copied to the `lib` directory in the generated image.  Any files identified by
 of the `legal` directory in the generated image.
 
 [AsmTools]: https://github.com/openjdk/asmtools
-[JCov]: https://github.com/openjdk/jcov
 [JT Harness]: https://github.com/openjdk/jtharness
 [JUnit]: https://junit.org/
 [TestNG]: https://testng.org/
