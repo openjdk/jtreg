@@ -1,4 +1,8 @@
-## [Unreleased](https://git.openjdk.org/jtreg/compare/jtreg-7.4+1...master)
+## [Unreleased](https://git.openjdk.org/jtreg/compare/jtreg-7.5+1...master)
+
+_nothing noteworthy, yet_
+
+## [7.5](https://git.openjdk.org/jtreg/compare/jtreg-7.4+1...jtreg-7.5+1)
 
 * Restore `jtdiff` tool [CODETOOLS-7903760](https://bugs.openjdk.org/browse/CODETOOLS-7903760)
 
