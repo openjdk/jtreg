@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #
-# Copyright (c) 2020, 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2020, 2024, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -395,6 +395,7 @@ sanity_check_java_home() {
         error "JDK 11 or newer is required to build jtreg"
         exit 1
     fi
+    JAVA_SPECIFICATION_VERSION=${vnum}
 }
 
 checkJavaOSVersion() {
@@ -778,6 +779,7 @@ make ASMTOOLS_JAR="${ASMTOOLS_JAR}"                           \\
      BUILD_VERSION="${JTREG_VERSION}"                         \\
      BUILD_VERSION_STRING="${JTREG_VERSION_STRING}"           \\
      JAVATEST_JAR="$(mixed_path "${JTHARNESS_JAVATEST_JAR}")" \\
+     JAVA_SPECIFICATION_VERSION="${JAVA_SPECIFICATION_VERSION}" \\
      JDKHOME="$(mixed_path ${JAVA_HOME})"                     \\
      JTHARNESS_NOTICES="${JTHARNESS_NOTICES}"                 \\
      JTREG_HOME=""                                            \\

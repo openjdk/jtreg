@@ -50,11 +50,21 @@ $(BUILDTESTDIR)/ReportOnlyTest.ok: $(BUILDTESTDIR)/Basic.othervm.ok \
 	$(CAT) $(@:%.ok=%.jt.log)
 	$(GREP) headless $(BUILDTESTDIR)/Basic.othervm/log
 	if $(GREP) "headless: *true" $(BUILDTESTDIR)/Basic.othervm/log > /dev/null ; then \
-	    EXPECT_PASS=92 ; \
-	    EXPECT_FAIL=40 ; \
+		if [ ${JAVA_SPECIFICATION_VERSION} -lt 18 ]; then \
+			EXPECT_PASS=92 ; \
+			EXPECT_FAIL=40 ; \
+		else \
+			EXPECT_PASS=89 ; \
+			EXPECT_FAIL=28 ; \
+		fi ; \
 	else \
-	    EXPECT_PASS=94 ; \
-	    EXPECT_FAIL=44 ; \
+		if [ ${JAVA_SPECIFICATION_VERSION} -lt 18 ]; then \
+			EXPECT_PASS=94 ; \
+			EXPECT_FAIL=44 ; \
+		else \
+			EXPECT_PASS=91 ; \
+			EXPECT_FAIL=32 ; \
+		fi ; \
 	fi ; \
 	echo "Expect: Test results: passed: $${EXPECT_PASS}; failed: $${EXPECT_FAIL}; error: 88" ; \
 	$(GREP) -s "Test results: passed: $${EXPECT_PASS}; failed: $${EXPECT_FAIL}; error: 88" $(@:%.ok=%.jt.log)  > /dev/null
