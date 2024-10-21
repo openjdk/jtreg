@@ -43,7 +43,7 @@ _make/build-support/version-numbers_ and _make/build-support/*/version-numbers_ 
 ### Rebuilding faster with `build/make.sh`
 
 After you have run `make/build.sh` once, if you wish to rebuild after making some
-changes, you can run `build/make.sh`. It skips the steps to download and build
+changes, you can run `build/make.sh --skip-download`. It skips the steps to download and build
 the dependencies, and so should be significantly faster.
 
 ## Building `jtreg` with GNU Make
