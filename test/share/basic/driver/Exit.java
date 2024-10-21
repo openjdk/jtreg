@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2024, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -24,18 +24,21 @@
 /**
  * @test
  * @summary Passed: Execution successful
+ * @requires jdk.version.major < 18
  * @run driver Exit
  */
 
 /**
  * @test
  * @summary Failed: Unexpected exit from test [exit code: 0]
+ * @requires jdk.version.major < 18
  * @run driver Exit 0
  */
 
 /**
  * @test
  * @summary Failed: Unexpected exit from test [exit code: 1]
+ * @requires jdk.version.major < 18
  * @run driver Exit 1
  */
 public class Exit

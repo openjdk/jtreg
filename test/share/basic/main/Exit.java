@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2007, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2024, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -24,72 +24,84 @@
 /**
  * @test
  * @summary Passed: Execution successful
+ * @requires jdk.version.major < 18
  * @run main Exit
  */
 
 /**
  * @test
  * @summary Failed: Unexpected exit from test [exit code: 0]
+ * @requires jdk.version.major < 18
  * @run main Exit 0
  */
 
 /**
  * @test
  * @summary Failed: Unexpected exit from test [exit code: 1]
+ * @requires jdk.version.major < 18
  * @run main Exit 1
  */
 
 /**
  * @test
  * @summary Passed: Execution successful
+ * @requires jdk.version.major < 18
  * @run main/othervm Exit
  */
 
 /**
  * @test
  * @summary Failed: Unexpected exit from test [exit code: 0]
+ * @requires jdk.version.major < 18
  * @run main/othervm Exit 0
  */
 
 /**
  * @test
  * @summary Failed: Unexpected exit from test [exit code: 1]
+ * @requires jdk.version.major < 18
  * @run main/othervm Exit 1
  */
 
 /**
  * @test
  * @summary Failed: Execution passed unexpectedly
+ * @requires jdk.version.major < 18
  * @run main/fail Exit
  */
 
 /**
  * @test
  * @summary Failed: Unexpected exit from test [exit code: 0]
+ * @requires jdk.version.major < 18
  * @run main/fail Exit 0
  */
 
 /**
  * @test
  * @summary Failed: Unexpected exit from test [exit code: 1]
+ * @requires jdk.version.major < 18
  * @run main/fail Exit 1
  */
 
 /**
  * @test
  * @summary Failed: Execution passed unexpectedly
+ * @requires jdk.version.major < 18
  * @run main/othervm/fail Exit
  */
 
 /**
  * @test
  * @summary Failed: Unexpected exit from test [exit code: 0]
+ * @requires jdk.version.major < 18
  * @run main/othervm/fail Exit 0
  */
 
 /**
  * @test
  * @summary Failed: Unexpected exit from test [exit code: 1]
+ * @requires jdk.version.major < 18
  * @run main/othervm/fail Exit 1
  */
 
