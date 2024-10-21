@@ -1288,7 +1288,7 @@ public final class RegressionParameters
     private String testThreadFactory;
 
     public void setTestThreadFactoryPath(String testThreadFactoryPath) {
-        this.testThreadFactoryPath = new File(testThreadFactoryPath).getAbsolutePath();
+        this.testThreadFactoryPath = Path.of(testThreadFactoryPath).toAbsolutePath().toString();
     }
 
     public String getTestThreadFactoryPath() {
