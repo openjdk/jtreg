@@ -179,6 +179,24 @@ $(BUILDTESTDIR)/verifyexclude.shortform.ok: \
 	$(GREP) -s "Must follow:" $(@:%.ok=%/log)
 	echo $@ passed at `date` > $@
 
+$(BUILDTESTDIR)/verifyexclude.good.invoke.direct.ok: \
+                $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+		$(JTREG_IMAGEDIR)/lib/javatest.jar
+	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
+	$(MKDIR) -p $(@:%.ok=%)
+	$(JDKHOME)/bin/java \
+		-Djavatest.regtest.showCmd=true \
+		-jar $(JTREG_IMAGEJARDIR)/jtreg.jar \
+		-w:$(@:%.ok=%/work) \
+		-r:$(@:%.ok=%/report) \
+		-exclude:$(TESTDIR)/verifyexclude/ProblemList/good.txt \
+		--verify-exclude \
+		$(TESTDIR)/verifyexclude/p/Pass.java \
+		> $(@:%.ok=%/log) \
+	    || (cat $(@:%.ok=%/log) ; exit 1)
+	echo $@ passed at `date` > $@
+
+
 TESTS.jtreg += \
 	$(BUILDTESTDIR)/verifyexclude.duplicate.ok \
 	$(BUILDTESTDIR)/verifyexclude.format.1.ok \
@@ -187,4 +205,5 @@ TESTS.jtreg += \
 	$(BUILDTESTDIR)/verifyexclude.id.ok \
 	$(BUILDTESTDIR)/verifyexclude.exist.ok \
 	$(BUILDTESTDIR)/verifyexclude.match.format.1.ok \
-	$(BUILDTESTDIR)/verifyexclude.shortform.ok
+	$(BUILDTESTDIR)/verifyexclude.shortform.ok \
+	$(BUILDTESTDIR)/verifyexclude.good.invoke.direct.ok
