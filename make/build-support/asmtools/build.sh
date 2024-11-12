@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #
-# Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2020, 2024, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -42,8 +42,8 @@ setup_asmtools_src() {
     check_arguments "${FUNCNAME}" 1 $#
 
     local dir="$1"
-
-    local ASMTOOLS_LOCAL_SRC_ARCHIVE="${dir}/../source.zip"
+    local src_archive_dir="$(builtin  cd ${dir}/..; pwd)"
+    local ASMTOOLS_LOCAL_SRC_ARCHIVE="${src_archive_dir}/source.zip"
     if [ "${ASMTOOLS_SRC_TAG}" = "tip" -o "${ASMTOOLS_SRC_TAG}" = "master" ]; then
         local BRANCH="master"
         get_archive_no_checksum "${CODE_TOOLS_URL_BASE}/asmtools/archive/${BRANCH}.zip" "${ASMTOOLS_LOCAL_SRC_ARCHIVE}" "${dir}"
@@ -58,6 +58,7 @@ build_asmtools() {
     check_arguments "${FUNCNAME}" 0 $#
 
     local ASMTOOLS_SRC_DIR_BASE="${BUILD_DIR}/src"
+    mkdir -p "${ASMTOOLS_SRC_DIR_BASE}"
     setup_asmtools_src "${ASMTOOLS_SRC_DIR_BASE}"
 
     local ASMTOOLS_DIST="${BUILD_DIR}/build"
