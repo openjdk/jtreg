@@ -80,8 +80,10 @@ import com.sun.javatest.ParameterFilter;
 import com.sun.javatest.ProductInfo;
 import com.sun.javatest.Status;
 import com.sun.javatest.StatusFilter;
+import com.sun.javatest.TestDescription;
 import com.sun.javatest.TestEnvironment;
 import com.sun.javatest.TestFilter;
+import com.sun.javatest.TestFinder;
 import com.sun.javatest.TestResult;
 import com.sun.javatest.TestResultTable;
 import com.sun.javatest.TestSuite;
@@ -1178,6 +1180,8 @@ public class Tool {
         testManager.addTestSpecs(testSpecArgs);
         testManager.addGroupSpecs(testGroupSpecArgs);
 
+        // TODO We know set of suites here, could save/do dummy
+
         if (testManager.isEmpty())
             throw new TestManager.NoTests();
 
@@ -1294,7 +1298,7 @@ public class Tool {
         }
 
         if (verifyExcludeListsFlag) {
-            verifyExcludeLists(testManager);
+            verifyExcludeLists(testManager, baseDir);
         }
 
         if (listTestsFlag) {
@@ -1419,7 +1423,30 @@ public class Tool {
                 : EXIT_OK);
     }
 
-    void verifyExcludeLists(TestManager testManager) throws BadArgs, Fault, Harness.Fault, InterruptedException  {
+    void verifyExcludeLists(TestManager testManager, Path baseDir) throws BadArgs, Fault, Harness.Fault, InterruptedException  {
+        List<String> validTestNames2 = new ArrayList<String>();
+        // dummy manager with an "all" spec for each suite
+        TestManager dummyTestManager = new TestManager(new PrintWriter(System.out, true), baseDir, Tool.this::error);
+        dummyTestManager.setWorkDirectory(testManager.getWorkDirectory()); // Without this, nullpointer happens in createparameters
+        List<TestManager.TestSpec> dummySpecs = new ArrayList<>();
+        //error("Specs");
+        for (RegressionTestSuite ts: testManager.getTestSuites()) {
+            //error(ts.getRootDir().toString());
+            dummySpecs.add(TestManager.TestSpec.of(ts.getRootDir().toString()));
+        }
+        dummyTestManager.addTestSpecs(dummySpecs);
+        //testManager.addGroupSpecs(testGroupSpecArgs);
+
+        // listTests implementation
+        for (RegressionTestSuite ts: dummyTestManager.getTestSuites()) {
+            out.println(i18n.getString("main.tests.suite", ts.getRootDir()));
+            RegressionParameters params = createParameters(dummyTestManager, ts);
+            for (Iterator<TestResult> iter = getResultsIterator(params); iter.hasNext(); ) {
+                TestResult tr = iter.next();
+                validTestNames2.add(tr.getTestName());
+            }
+        }
+        
         List<String> validTestNames = new ArrayList<String>();
         List<File> excludeFiles = new ArrayList<File>();
         for (RegressionTestSuite ts: testManager.getTestSuites()) {
@@ -1428,6 +1455,9 @@ public class Tool {
                 TestResult tr = iter.next();
                 out.println(tr.getTestName());
                 validTestNames.add(tr.getTestName());
+            }
+            if (testManager.getTests(ts) != null) for(String t : testManager.getTests(ts)) {
+                validTestNames.add(t);
             }
             for (File f : params.getExcludeLists()) {
                 excludeFiles.add(f);
@@ -1439,7 +1469,7 @@ public class Tool {
         boolean hadErrors = false;
         for(File plf : excludeFiles) {
             ExcludeFileVerifier efv = new ExcludeFileVerifier(out);
-            efv.verify(plf, validTestNames);
+            efv.verify(plf, validTestNames2);
             hadErrors |= efv.getHadErrors();
         }
 
