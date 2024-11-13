@@ -1424,52 +1424,38 @@ public class Tool {
     }
 
     void verifyExcludeLists(TestManager testManager, Path baseDir) throws BadArgs, Fault, Harness.Fault, InterruptedException  {
-        List<String> validTestNames2 = new ArrayList<String>();
         // dummy manager with an "all" spec for each suite
         TestManager dummyTestManager = new TestManager(new PrintWriter(System.out, true), baseDir, Tool.this::error);
         dummyTestManager.setWorkDirectory(testManager.getWorkDirectory()); // Without this, nullpointer happens in createparameters
-        List<TestManager.TestSpec> dummySpecs = new ArrayList<>();
-        //error("Specs");
-        for (RegressionTestSuite ts: testManager.getTestSuites()) {
-            //error(ts.getRootDir().toString());
-            dummySpecs.add(TestManager.TestSpec.of(ts.getRootDir().toString()));
-        }
-        dummyTestManager.addTestSpecs(dummySpecs);
-        //testManager.addGroupSpecs(testGroupSpecArgs);
-
-        // listTests implementation
+        dummyTestManager.addTestSpecs(testManager.getTestSuites().stream()
+            .map(ts -> TestManager.TestSpec.of(ts.getRootDir().toString()))
+            .collect(Collectors.toList()));
+        
+        List<String> validTestNames = new ArrayList<String>();
         for (RegressionTestSuite ts: dummyTestManager.getTestSuites()) {
             out.println(i18n.getString("main.tests.suite", ts.getRootDir()));
             RegressionParameters params = createParameters(dummyTestManager, ts);
             for (Iterator<TestResult> iter = getResultsIterator(params); iter.hasNext(); ) {
                 TestResult tr = iter.next();
-                validTestNames2.add(tr.getTestName());
+                validTestNames.add(tr.getTestName());
             }
         }
         
-        List<String> validTestNames = new ArrayList<String>();
-        List<File> excludeFiles = new ArrayList<File>();
+        List<File> excludeOrMatchFiles = new ArrayList<File>();
         for (RegressionTestSuite ts: testManager.getTestSuites()) {
             RegressionParameters params = createParameters(testManager, ts);
-            for (Iterator<TestResult> iter = getResultsIterator(params); iter.hasNext(); ) {
-                TestResult tr = iter.next();
-                out.println(tr.getTestName());
-                validTestNames.add(tr.getTestName());
-            }
-            if (testManager.getTests(ts) != null) for(String t : testManager.getTests(ts)) {
-                validTestNames.add(t);
-            }
             for (File f : params.getExcludeLists()) {
-                excludeFiles.add(f);
+                excludeOrMatchFiles.add(f);
             }
             for (Path p : params.getMatchLists()) {
-                excludeFiles.add(p.toFile());
+                excludeOrMatchFiles.add(p.toFile());
             }
         }
+
         boolean hadErrors = false;
-        for(File plf : excludeFiles) {
+        for(File plf : excludeOrMatchFiles) {
             ExcludeFileVerifier efv = new ExcludeFileVerifier(out);
-            efv.verify(plf, validTestNames2);
+            efv.verify(plf, validTestNames);
             hadErrors |= efv.getHadErrors();
         }
 
