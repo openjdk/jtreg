@@ -196,7 +196,6 @@ $(BUILDTESTDIR)/verifyexclude.shortform.ok: \
 	$(GREP) -s "Must follow:" $(@:%.ok=%/log)
 	echo $@ passed at `date` > $@
 
-# When you pass a specific test file, the "set of all tests" changes internally. CODETOOLS-7903883
 $(BUILDTESTDIR)/verifyexclude.good.invoke.direct.ok: \
                 $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(JTREG_IMAGEDIR)/lib/javatest.jar
@@ -214,6 +213,22 @@ $(BUILDTESTDIR)/verifyexclude.good.invoke.direct.ok: \
 	    || (cat $(@:%.ok=%/log) ; exit 1)
 	echo $@ passed at `date` > $@
 
+$(BUILDTESTDIR)/verifyexclude.good.invoke.group.ok: \
+                $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+		$(JTREG_IMAGEDIR)/lib/javatest.jar
+	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
+	$(MKDIR) -p $(@:%.ok=%)
+	$(JDKHOME)/bin/java \
+		-Djavatest.regtest.showCmd=true \
+		-jar $(JTREG_IMAGEJARDIR)/jtreg.jar \
+		-w:$(@:%.ok=%/work) \
+		-r:$(@:%.ok=%/report) \
+		-exclude:$(TESTDIR)/verifyexclude/ProblemList/good.txt \
+		--verify-exclude \
+		$(TESTDIR)/verifyexclude:group1 \
+		> $(@:%.ok=%/log) \
+	    || (cat $(@:%.ok=%/log) ; exit 1)
+	echo $@ passed at `date` > $@
 
 TESTS.jtreg += \
 	$(BUILDTESTDIR)/verifyexclude.duplicate.ok \
