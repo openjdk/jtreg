@@ -1440,7 +1440,7 @@ public class Tool {
                 validTestNames.add(tr.getTestName());
             }
         }
-        
+
         List<File> excludeOrMatchFiles = new ArrayList<File>();
         for (RegressionTestSuite ts: testManager.getTestSuites()) {
             RegressionParameters params = createParameters(testManager, ts);
