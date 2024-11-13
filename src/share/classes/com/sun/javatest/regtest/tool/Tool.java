@@ -1430,7 +1430,7 @@ public class Tool {
         dummyTestManager.addTestSpecs(testManager.getTestSuites().stream()
             .map(ts -> TestManager.TestSpec.of(ts.getRootDir().toString()))
             .collect(Collectors.toList()));
-        
+
         List<String> validTestNames = new ArrayList<String>();
         for (RegressionTestSuite ts: dummyTestManager.getTestSuites()) {
             out.println(i18n.getString("main.tests.suite", ts.getRootDir()));
