@@ -105,11 +105,6 @@ public final class RegressionTestSuite extends TestSuite
         }
     }
 
-    public TestDescription[] getTestSet() {
-        TestFinder testFinder = getTestFinder();
-        return testFinder.getTests();
-    }
-
     @Override
     public boolean getTestRefreshBehavior(int event) {
         switch (event) {
