@@ -1431,11 +1431,20 @@ public class Tool {
 
         List<String> validTestNames = new ArrayList<String>();
         for (RegressionTestSuite ts: dummyTestManager.getTestSuites()) {
-            out.println(i18n.getString("main.tests.suite", ts.getRootDir()));
+            if (verbose != null)  {
+                out.println(i18n.getString("main.tests.suite", ts.getRootDir()));
+                if (verbose == Verbose.ALL)  {
+                    out.println(i18n.getString("main.tests.allrecognizedtests"));
+                }
+            }
+
             RegressionParameters params = createParameters(dummyTestManager, ts);
             for (Iterator<TestResult> iter = getResultsIterator(params); iter.hasNext(); ) {
                 TestResult tr = iter.next();
                 validTestNames.add(tr.getTestName());
+                if (verbose == Verbose.ALL)  {
+                    out.println(tr.getTestName());
+                }
             }
         }
 
