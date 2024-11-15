@@ -1180,8 +1180,6 @@ public class Tool {
         testManager.addTestSpecs(testSpecArgs);
         testManager.addGroupSpecs(testGroupSpecArgs);
 
-        // TODO We know set of suites here, could save/do dummy
-
         if (testManager.isEmpty())
             throw new TestManager.NoTests();
 
