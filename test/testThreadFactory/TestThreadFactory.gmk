@@ -1,5 +1,6 @@
 #
-# Copyright (c) 2022, 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022, 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2024 Alibaba Group Holding Limited. All Rights Reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -25,7 +26,7 @@
 
 #----------------------------------------------------------------------
 
-$(BUILDTESTDIR)/TestThreadFactory.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
+$(BUILDTESTDIR)/TestThreadFactoryAbsolutePath.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(JTREG_IMAGEDIR)/bin/jtreg
 	$(JDKJAVAC) \
@@ -50,4 +51,30 @@ $(BUILDTESTDIR)/TestThreadFactory.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(TESTDIR)/testThreadFactory
 	echo "test passed at `date`" > $@
 
-TESTS.jtreg += $(BUILDTESTDIR)/TestThreadFactory.ok
+$(BUILDTESTDIR)/TestThreadFactoryRelativePath.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
+		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
+		$(JTREG_IMAGEDIR)/bin/jtreg
+	$(JDKJAVAC) \
+		-d $(@:%.ok=%)/classes \
+		$(TESTDIR)/testThreadFactory/TestThreadFactory.java
+	JTREG_JAVA=$(JDKJAVA) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-jdk:$(JDKHOME) \
+		-w:$(@:%.ok=%)/cmd.othervm/work \
+		-r:$(@:%.ok=%)/cmd.othervm/report \
+		-verbose:fail \
+		-testThreadFactory:TestThreadFactory \
+		-testThreadFactoryPath:../build/test/TestThreadFactoryRelativePath/classes \
+		$(TESTDIR)/testThreadFactory
+	JTREG_JAVA=$(JDKJAVA) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-jdk:$(JDKHOME) \
+                -agentvm \
+		-w:$(@:%.ok=%)/cmd.agentvm/work \
+		-r:$(@:%.ok=%)/cmd.agentvm/report \
+		-verbose:fail \
+		-testThreadFactory:TestThreadFactory \
+		-testThreadFactoryPath:../build/test/TestThreadFactoryRelativePath/classes \
+		$(TESTDIR)/testThreadFactory
+	echo "test passed at `date`" > $@
+
+TESTS.jtreg += $(BUILDTESTDIR)/TestThreadFactoryAbsolutePath.ok \
+               $(BUILDTESTDIR)/TestThreadFactoryRelativePath.ok
