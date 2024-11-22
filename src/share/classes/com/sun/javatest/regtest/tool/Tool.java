@@ -80,8 +80,10 @@ import com.sun.javatest.ParameterFilter;
 import com.sun.javatest.ProductInfo;
 import com.sun.javatest.Status;
 import com.sun.javatest.StatusFilter;
+import com.sun.javatest.TestDescription;
 import com.sun.javatest.TestEnvironment;
 import com.sun.javatest.TestFilter;
+import com.sun.javatest.TestFinder;
 import com.sun.javatest.TestResult;
 import com.sun.javatest.TestResultTable;
 import com.sun.javatest.TestSuite;
@@ -1294,7 +1296,7 @@ public class Tool {
         }
 
         if (verifyExcludeListsFlag) {
-            verifyExcludeLists(testManager);
+            verifyExcludeLists(testManager, baseDir);
         }
 
         if (listTestsFlag) {
@@ -1419,25 +1421,46 @@ public class Tool {
                 : EXIT_OK);
     }
 
-    void verifyExcludeLists(TestManager testManager) throws BadArgs, Fault, Harness.Fault, InterruptedException  {
+    void verifyExcludeLists(TestManager testManager, Path baseDir) throws BadArgs, Fault, Harness.Fault, InterruptedException  {
+        // dummy manager with an "all" spec for each suite
+        TestManager dummyTestManager = new TestManager(new PrintWriter(System.out, true), baseDir, Tool.this::error);
+        dummyTestManager.setWorkDirectory(testManager.getWorkDirectory()); // Without this, nullpointer happens in createparameters
+        dummyTestManager.addTestSpecs(testManager.getTestSuites().stream()
+            .map(ts -> TestManager.TestSpec.of(ts.getRootDir().toString()))
+            .collect(Collectors.toList()));
+
         List<String> validTestNames = new ArrayList<String>();
-        List<File> excludeFiles = new ArrayList<File>();
-        for (RegressionTestSuite ts: testManager.getTestSuites()) {
-            RegressionParameters params = createParameters(testManager, ts);
+        for (RegressionTestSuite ts: dummyTestManager.getTestSuites()) {
+            if (verbose != null)  {
+                out.println(i18n.getString("main.tests.suite", ts.getRootDir()));
+                if (verbose == Verbose.ALL)  {
+                    out.println(i18n.getString("main.tests.allrecognizedtests"));
+                }
+            }
+
+            RegressionParameters params = createParameters(dummyTestManager, ts);
             for (Iterator<TestResult> iter = getResultsIterator(params); iter.hasNext(); ) {
                 TestResult tr = iter.next();
-                out.println(tr.getTestName());
                 validTestNames.add(tr.getTestName());
-            }
-            for (File f : params.getExcludeLists()) {
-                excludeFiles.add(f);
-            }
-            for (Path p : params.getMatchLists()) {
-                excludeFiles.add(p.toFile());
+                if (verbose == Verbose.ALL)  {
+                    out.println(tr.getTestName());
+                }
             }
         }
+
+        List<File> excludeOrMatchFiles = new ArrayList<File>();
+        for (RegressionTestSuite ts: testManager.getTestSuites()) {
+            RegressionParameters params = createParameters(testManager, ts);
+            for (File f : params.getExcludeLists()) {
+                excludeOrMatchFiles.add(f);
+            }
+            for (Path p : params.getMatchLists()) {
+                excludeOrMatchFiles.add(p.toFile());
+            }
+        }
+
         boolean hadErrors = false;
-        for(File plf : excludeFiles) {
+        for(File plf : excludeOrMatchFiles) {
             ExcludeFileVerifier efv = new ExcludeFileVerifier(out);
             efv.verify(plf, validTestNames);
             hadErrors |= efv.getHadErrors();
