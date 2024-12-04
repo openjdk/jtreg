@@ -182,9 +182,17 @@ else
 TIDY	= /usr/bin/tidy
 endif
 TOUCH 	= /usr/bin/touch
+ifeq ($(SYSTEM_UNAME), FreeBSD)
+UNZIP	= /usr/local/bin/unzip
+else
 UNZIP 	= /usr/bin/unzip
+endif
 WC 	= /usr/bin/wc
+ifeq ($(SYSTEM_UNAME), FreeBSD)
+ZIP	= /usr/local/bin/zip
+else
 ZIP 	= /usr/bin/zip
+endif
 
 
 #----------------------------------------------------------------------
