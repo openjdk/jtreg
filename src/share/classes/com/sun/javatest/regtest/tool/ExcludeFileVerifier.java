@@ -121,7 +121,7 @@ public class ExcludeFileVerifier {
         }
 
         public String description() {
-            return "The fully qualified test must exists.";
+            return "The fully qualified test must exist.";
         }
 
         public boolean check(String line) {

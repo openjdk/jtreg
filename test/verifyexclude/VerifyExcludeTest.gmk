@@ -42,7 +42,7 @@ $(BUILDTESTDIR)/verifyexclude.format.1.ok: \
 		&& (cat $(@:%.ok=%/log) ; exit 1) \
 		|| (exit 0)
 	$(GREP) -s "Must follow:" $(@:%.ok=%/log)
-	$(GREP) -s "The fully qualified test must exists." $(@:%.ok=%/log) && exit 1 || exit 0
+	$(GREP) -s "The fully qualified test must exist." $(@:%.ok=%/log) && exit 1 || exit 0
 	echo $@ passed at `date` > $@
 
 $(BUILDTESTDIR)/verifyexclude.format.2.ok: \
@@ -62,7 +62,7 @@ $(BUILDTESTDIR)/verifyexclude.format.2.ok: \
 	    && (cat $(@:%.ok=%/log) ; exit 1) \
 		|| (exit 0)
 	$(GREP) -s "Must follow:" $(@:%.ok=%/log)
-	$(GREP) -s "The fully qualified test must exists." $(@:%.ok=%/log) && exit 1 || exit 0
+	$(GREP) -s "The fully qualified test must exist." $(@:%.ok=%/log) && exit 1 || exit 0
 	echo $@ passed at `date` > $@
 
 $(BUILDTESTDIR)/verifyexclude.exist.ok: \
@@ -82,7 +82,7 @@ $(BUILDTESTDIR)/verifyexclude.exist.ok: \
 	    && (cat $(@:%.ok=%/log) ; exit 1) \
 		|| (exit 0)
 	$(GREP) -s "Must follow:" $(@:%.ok=%/log) && exit 1 || exit 0
-	$(GREP) -s "The fully qualified test must exists." $(@:%.ok=%/log)
+	$(GREP) -s "The fully qualified test must exist." $(@:%.ok=%/log)
 	echo $@ passed at `date` > $@
 
 $(BUILDTESTDIR)/verifyexclude.id.ok: \
@@ -101,7 +101,7 @@ $(BUILDTESTDIR)/verifyexclude.id.ok: \
 		> $(@:%.ok=%/log) \
 	    && (cat $(@:%.ok=%/log) ; exit 1) \
 		|| (exit 0)
-	$(GREP) -s "The fully qualified test must exists." $(@:%.ok=%/log)
+	$(GREP) -s "The fully qualified test must exist." $(@:%.ok=%/log)
 	echo $@ passed at `date` > $@
 
 $(BUILDTESTDIR)/verifyexclude.format.whitespace.ok: \
@@ -174,7 +174,7 @@ $(BUILDTESTDIR)/verifyexclude.match.format.1.ok: \
 	    && (cat $(@:%.ok=%/log) ; exit 1) \
 		|| (exit 0)
 	$(GREP) -s "Must follow:" $(@:%.ok=%/log)
-	$(GREP) -s "The fully qualified test must exists." $(@:%.ok=%/log) && exit 1 || exit 0
+	$(GREP) -s "The fully qualified test must exist." $(@:%.ok=%/log) && exit 1 || exit 0
 	echo $@ passed at `date` > $@
 
 $(BUILDTESTDIR)/verifyexclude.shortform.ok: \
