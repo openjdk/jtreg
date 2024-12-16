@@ -51,6 +51,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
+import java.util.Iterator;
+import java.util.ServiceLoader;
 
 import com.sun.javatest.Script;
 import com.sun.javatest.Status;
@@ -79,6 +81,8 @@ import com.sun.javatest.regtest.report.Verbose;
 import com.sun.javatest.regtest.tool.Version;
 import com.sun.javatest.regtest.util.FileUtils;
 import com.sun.javatest.regtest.util.StringUtils;
+import com.sun.javatest.regtest.exec.StatusTransformer;
+
 
 import static com.sun.javatest.regtest.RStatus.error;
 import static com.sun.javatest.regtest.RStatus.passed;
@@ -327,6 +331,58 @@ public class RegressionScript extends Script {
         }
         return status;
     } // run()
+
+    /**
+     * Contains list of {@link StatusTransformer} that transform the test result status, or {@code null}
+     * if no transformer service was found.
+     */
+    private static final List<StatusTransformer> STATUS_TRANSFORMERS = loadStatusTransformers();
+
+    /**
+     * This method runs the statusTransformers stored in the private variable. In case the statusTransformer is null
+     * it returns the original status.
+     * @param originalStatus - original status of the testrun
+     * @param td - description of the test
+     * @return status after modification (the originalStatus by default)
+     */
+    @Override
+    protected void setTestResultStatus(TestResult testResultToFill, Status execStatus) {
+        Status newStatus = execStatus;
+        try {
+            TestDescription td = testResultToFill.getDescription();
+        }
+        catch(TestResult.Fault f){
+            newStatus = new Status(Status.ERROR, "Invalid state during testing. - test description missin.");
+            testResultToFill.setStatus(newStatus);
+            return;
+        }
+        for ( StatusTransformer st : STATUS_TRANSFORMERS) {
+            newStatus = st.transform(newStatus, td);
+            //in case the status has been modified by this function we want to log it for any user controlling the results.
+            newStatus = new Status(newStatus.getType(), newStatus.getReason() +
+                    " - The status of this test result has been modified by external code - " +
+                st.getClass().getName());
+        }
+        testResultToFill.setStatus(newStatus);
+    }
+
+    /**
+     * This method tries to search for alternative implementations of StatusTransformer. If no implementation is found
+     * returns an empty list.
+     * @return List<StatusTransformer> if some implementations are found and empty list if no implementation has been found.
+     */
+    private static synchronized List<StatusTransformer> loadStatusTransformers(){
+        ServiceLoader<StatusTransformer> loader = ServiceLoader.load(StatusTransformer.class);
+
+        Iterator<StatusTransformer> iterator = loader.iterator();
+        List<StatusTransformer> services = new ArrayList<>();
+
+        while (iterator.hasNext()) {
+            services.add(iterator.next());
+        }
+
+        return services;
+    }
 
     private void printJDKInfo(PrintWriter pw, String label, JDK jdk, List<String> opts) {
         pw.print(label);
