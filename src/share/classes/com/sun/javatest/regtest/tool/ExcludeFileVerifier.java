@@ -103,7 +103,7 @@ public class ExcludeFileVerifier {
 
     static class LineFormatCheck extends Check {
         private static final String commalist = "([\\w-]+)(,[\\w-]+)*";
-        private static Pattern pattern = Pattern.compile("\\S+\\s+" + commalist + "\\s" + commalist + ".*");
+        private static Pattern pattern = Pattern.compile("\\S+\\s+" + commalist + "\\s+" + commalist + ".*");
         public String description() {
             return "Must follow: <test-name> <bugid>(,<bugid>)* <platform>(,<platform>)* <description>";
         }
@@ -121,7 +121,7 @@ public class ExcludeFileVerifier {
         }
 
         public String description() {
-            return "The fully qualified test must exists.";
+            return "The fully qualified test must exist.";
         }
 
         public boolean check(String line) {

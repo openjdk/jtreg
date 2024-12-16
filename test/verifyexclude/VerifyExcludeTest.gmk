@@ -42,7 +42,7 @@ $(BUILDTESTDIR)/verifyexclude.format.1.ok: \
 		&& (cat $(@:%.ok=%/log) ; exit 1) \
 		|| (exit 0)
 	$(GREP) -s "Must follow:" $(@:%.ok=%/log)
-	$(GREP) -s "The fully qualified test must exists." $(@:%.ok=%/log) && exit 1 || exit 0
+	$(GREP) -s "The fully qualified test must exist." $(@:%.ok=%/log) && exit 1 || exit 0
 	echo $@ passed at `date` > $@
 
 $(BUILDTESTDIR)/verifyexclude.format.2.ok: \
@@ -62,7 +62,7 @@ $(BUILDTESTDIR)/verifyexclude.format.2.ok: \
 	    && (cat $(@:%.ok=%/log) ; exit 1) \
 		|| (exit 0)
 	$(GREP) -s "Must follow:" $(@:%.ok=%/log)
-	$(GREP) -s "The fully qualified test must exists." $(@:%.ok=%/log) && exit 1 || exit 0
+	$(GREP) -s "The fully qualified test must exist." $(@:%.ok=%/log) && exit 1 || exit 0
 	echo $@ passed at `date` > $@
 
 $(BUILDTESTDIR)/verifyexclude.exist.ok: \
@@ -82,7 +82,7 @@ $(BUILDTESTDIR)/verifyexclude.exist.ok: \
 	    && (cat $(@:%.ok=%/log) ; exit 1) \
 		|| (exit 0)
 	$(GREP) -s "Must follow:" $(@:%.ok=%/log) && exit 1 || exit 0
-	$(GREP) -s "The fully qualified test must exists." $(@:%.ok=%/log)
+	$(GREP) -s "The fully qualified test must exist." $(@:%.ok=%/log)
 	echo $@ passed at `date` > $@
 
 $(BUILDTESTDIR)/verifyexclude.id.ok: \
@@ -101,7 +101,24 @@ $(BUILDTESTDIR)/verifyexclude.id.ok: \
 		> $(@:%.ok=%/log) \
 	    && (cat $(@:%.ok=%/log) ; exit 1) \
 		|| (exit 0)
-	$(GREP) -s "The fully qualified test must exists." $(@:%.ok=%/log)
+	$(GREP) -s "The fully qualified test must exist." $(@:%.ok=%/log)
+	echo $@ passed at `date` > $@
+
+$(BUILDTESTDIR)/verifyexclude.format.whitespace.ok: \
+                $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+		$(JTREG_IMAGEDIR)/lib/javatest.jar
+	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
+	$(MKDIR) -p $(@:%.ok=%)
+	$(JDKHOME)/bin/java \
+		-Djavatest.regtest.showCmd=true \
+		-jar $(JTREG_IMAGEJARDIR)/jtreg.jar \
+		-w:$(@:%.ok=%/work) \
+		-r:$(@:%.ok=%/report) \
+		-exclude:$(TESTDIR)/verifyexclude/ProblemList/format.whitespace.txt \
+		--verify-exclude \
+		$(TESTDIR)/verifyexclude \
+		> $(@:%.ok=%/log) \
+	    || (cat $(@:%.ok=%/log) ; exit 1)
 	echo $@ passed at `date` > $@
 
 $(BUILDTESTDIR)/verifyexclude.good.ok: \
@@ -157,7 +174,7 @@ $(BUILDTESTDIR)/verifyexclude.match.format.1.ok: \
 	    && (cat $(@:%.ok=%/log) ; exit 1) \
 		|| (exit 0)
 	$(GREP) -s "Must follow:" $(@:%.ok=%/log)
-	$(GREP) -s "The fully qualified test must exists." $(@:%.ok=%/log) && exit 1 || exit 0
+	$(GREP) -s "The fully qualified test must exist." $(@:%.ok=%/log) && exit 1 || exit 0
 	echo $@ passed at `date` > $@
 
 $(BUILDTESTDIR)/verifyexclude.shortform.ok: \
@@ -179,6 +196,78 @@ $(BUILDTESTDIR)/verifyexclude.shortform.ok: \
 	$(GREP) -s "Must follow:" $(@:%.ok=%/log)
 	echo $@ passed at `date` > $@
 
+$(BUILDTESTDIR)/verifyexclude.good.invoke.direct.ok: \
+                $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+		$(JTREG_IMAGEDIR)/lib/javatest.jar
+	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
+	$(MKDIR) -p $(@:%.ok=%)
+	$(JDKHOME)/bin/java \
+		-Djavatest.regtest.showCmd=true \
+		-jar $(JTREG_IMAGEJARDIR)/jtreg.jar \
+		-w:$(@:%.ok=%/work) \
+		-r:$(@:%.ok=%/report) \
+		-exclude:$(TESTDIR)/verifyexclude/ProblemList/good.txt \
+		--verify-exclude \
+		$(TESTDIR)/verifyexclude/p/Pass.java \
+		> $(@:%.ok=%/log) \
+	    || (cat $(@:%.ok=%/log) ; exit 1)
+	echo $@ passed at `date` > $@
+
+$(BUILDTESTDIR)/verifyexclude.good.invoke.group.ok: \
+                $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+		$(JTREG_IMAGEDIR)/lib/javatest.jar
+	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
+	$(MKDIR) -p $(@:%.ok=%)
+	$(JDKHOME)/bin/java \
+		-Djavatest.regtest.showCmd=true \
+		-jar $(JTREG_IMAGEJARDIR)/jtreg.jar \
+		-w:$(@:%.ok=%/work) \
+		-r:$(@:%.ok=%/report) \
+		-exclude:$(TESTDIR)/verifyexclude/ProblemList/good.txt \
+		--verify-exclude \
+		$(TESTDIR)/verifyexclude:group1 \
+		> $(@:%.ok=%/log) \
+	    || (cat $(@:%.ok=%/log) ; exit 1)
+	echo $@ passed at `date` > $@
+
+$(BUILDTESTDIR)/verifyexclude.good.verbose.ok: \
+                $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+		$(JTREG_IMAGEDIR)/lib/javatest.jar
+	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
+	$(MKDIR) -p $(@:%.ok=%)
+	$(JDKHOME)/bin/java \
+		-Djavatest.regtest.showCmd=true \
+		-jar $(JTREG_IMAGEJARDIR)/jtreg.jar \
+		-w:$(@:%.ok=%/work) \
+		-r:$(@:%.ok=%/report) \
+		-v \
+		-exclude:$(TESTDIR)/verifyexclude/ProblemList/good.txt \
+		--verify-exclude \
+		$(TESTDIR)/verifyexclude \
+		> $(@:%.ok=%/log) \
+	    || (cat $(@:%.ok=%/log) ; exit 1)
+	$(GREP) -s "Testsuite:" $(@:%.ok=%/log)
+	echo $@ passed at `date` > $@
+
+$(BUILDTESTDIR)/verifyexclude.good.verbose.all.ok: \
+                $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+		$(JTREG_IMAGEDIR)/lib/javatest.jar
+	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
+	$(MKDIR) -p $(@:%.ok=%)
+	$(JDKHOME)/bin/java \
+		-Djavatest.regtest.showCmd=true \
+		-jar $(JTREG_IMAGEJARDIR)/jtreg.jar \
+		-w:$(@:%.ok=%/work) \
+		-r:$(@:%.ok=%/report) \
+		-va \
+		-exclude:$(TESTDIR)/verifyexclude/ProblemList/good.txt \
+		--verify-exclude \
+		$(TESTDIR)/verifyexclude \
+		> $(@:%.ok=%/log) \
+	    || (cat $(@:%.ok=%/log) ; exit 1)
+	$(GREP) -s "All recognized tests:" $(@:%.ok=%/log)
+	echo $@ passed at `date` > $@
+
 TESTS.jtreg += \
 	$(BUILDTESTDIR)/verifyexclude.duplicate.ok \
 	$(BUILDTESTDIR)/verifyexclude.format.1.ok \
@@ -187,4 +276,7 @@ TESTS.jtreg += \
 	$(BUILDTESTDIR)/verifyexclude.id.ok \
 	$(BUILDTESTDIR)/verifyexclude.exist.ok \
 	$(BUILDTESTDIR)/verifyexclude.match.format.1.ok \
-	$(BUILDTESTDIR)/verifyexclude.shortform.ok
+	$(BUILDTESTDIR)/verifyexclude.shortform.ok \
+	$(BUILDTESTDIR)/verifyexclude.good.invoke.direct.ok \
+	$(BUILDTESTDIR)/verifyexclude.good.verbose.all.ok \
+	$(BUILDTESTDIR)/verifyexclude.good.verbose.ok
