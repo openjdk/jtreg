@@ -21,6 +21,7 @@
  * questions.
  */
 
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 /**
@@ -42,4 +43,28 @@ public class Test1 {
     public void m13() {
         System.out.println("Test1.m13");
     }
+
+    @Test(dataProvider = "params")
+    public void parameterized(String str,
+                              NestedClass nested,
+                              boolean z, byte b, char c, short s, int i, long l, float f, double d,
+                              String[] stra,
+                              boolean[] za, byte[] ba, char[] ca, short[] sa, int[] ia, long[] la, float[] fa, double[] da) {
+        System.out.println("Test1.parameterized");
+    }
+
+    @DataProvider
+    static Object[][] params() {
+        return new Object[][]{
+                new Object[]{
+                        "a",
+                        new NestedClass(),
+                        true, (byte) 42, 'x', (short) 42, 42, 42L, 42.0F, 42.0D,
+                        new String[0],
+                        new boolean[0], new byte[0], new char[0], new short[0], new int[0], new long[0], new float[0], new double[0]
+                }
+        };
+    }
+
+    static class NestedClass {}
 }

@@ -46,11 +46,13 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 
 /**
  * TestRunner to run JUnit tests.
@@ -127,13 +129,27 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
         // https://junit.org/junit5/docs/current/user-guide/#launcher-api-execution
         Thread.currentThread().setContextClassLoader(mainClass.getClassLoader());
         try {
-            // if test.query is set, treat it as a method name to be executed
-            String testQuery = System.getProperty("test.query");
-            LauncherDiscoveryRequest request = LauncherDiscoveryRequestBuilder.request()
-                .selectors(testQuery == null
-                        ? DiscoverySelectors.selectClass(mainClass)
-                        : DiscoverySelectors.selectMethod(mainClass, testQuery))
-                .build();
+            String testQueryStr = System.getProperty("test.query");
+            LauncherDiscoveryRequest request;
+            if (testQueryStr != null && !testQueryStr.isEmpty()) {
+                TestQuery testQuery = TestQuery.parse(testQueryStr);
+                String className = testQuery.className();
+                Optional<String> methodName = testQuery.methodName();
+                Optional<List<String>> paramTypeNames = testQuery.paramTypeNames();
+                Optional<String> paramTypeNamesStr = paramTypeNames.map(l -> l.stream().collect(Collectors.joining(",")));
+
+                request = LauncherDiscoveryRequestBuilder.request()
+                    .selectors(methodName.isPresent()
+                            ? paramTypeNamesStr.isPresent()
+                                ? DiscoverySelectors.selectMethod(className, methodName.get(), paramTypeNamesStr.get())
+                                : DiscoverySelectors.selectMethod(className, methodName.get())
+                            : DiscoverySelectors.selectClass(className))
+                        .build();
+            } else {
+                request = LauncherDiscoveryRequestBuilder.request()
+                    .selectors(DiscoverySelectors.selectClass(mainClass))
+                    .build();
+            }
 
             SummaryGeneratingListener summaryGeneratingListener = new SummaryGeneratingListener();
 

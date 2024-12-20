@@ -30,10 +30,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
 import java.time.Duration;
-import java.util.Collections;
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -43,6 +40,7 @@ import org.testng.IMethodInterceptor;
 import org.testng.ITestContext;
 import org.testng.ITestListener;
 import org.testng.ITestNGListener;
+import org.testng.ITestNGMethod;
 import org.testng.ITestResult;
 import org.testng.SkipException;
 import org.testng.TestNG;
@@ -98,8 +96,8 @@ public class TestNGRunner implements MainActionHelper.TestRunner {
         testng.setMixed(mixedMode);
         testng.setDefaultSuiteName(testName);
         testng.setTestClasses(new Class<?>[]{mainClass});
-        if (testQuery != null) {
-            testng.setMethodInterceptor(new FilterMethods(className, testQuery));
+        if (testQuery != null && !testQuery.isEmpty()) {
+            testng.setMethodInterceptor(new FilterMethods(TestQuery.parse(testQuery)));
         }
         testng.addListener((ITestNGListener) listener); // recognizes both ITestListener and IConfigurationListener
         testng.addListener(new XMLReporter());
@@ -271,11 +269,9 @@ public class TestNGRunner implements MainActionHelper.TestRunner {
 
     private static class FilterMethods implements IMethodInterceptor {
 
-        private final String testClass;
-        private final String testQuery;
+        private final TestQuery testQuery;
 
-        public FilterMethods(String testClass, String testQuery) {
-            this.testClass = testClass;
+        public FilterMethods(TestQuery testQuery) {
             this.testQuery = testQuery;
         }
 
@@ -283,12 +279,35 @@ public class TestNGRunner implements MainActionHelper.TestRunner {
         public List<IMethodInstance> intercept(List<IMethodInstance> ms, ITestContext c) {
             List<IMethodInstance> result =
                     ms.stream()
-                      .filter(mi -> testQuery.equals(mi.getMethod()
-                                                       .getMethodName()))
+                      .filter(mi -> {
+                          ITestNGMethod method = mi.getMethod();
+                          if (!method.getRealClass().getName().equals(testQuery.className())) {
+                              return false;
+                          }
+
+                          if (testQuery.methodName().isPresent()
+                                  && !testQuery.methodName().get().equals(method.getMethodName())) {
+                              return false;
+                          }
+
+                          if (testQuery.paramTypeNames().isPresent()) {
+                              List<String> paramTypeNames = testQuery.paramTypeNames().get();
+                              Class<?>[] params = method.getConstructorOrMethod().getParameterTypes();
+                              if (params.length != paramTypeNames.size()) {
+                                  return false;
+                              }
+                              for (int i = 0; i < params.length; i++) {
+                                  if (!params[i].getName().equals(paramTypeNames.get(i))) {
+                                      return false;
+                                  }
+                              }
+                          }
+                          return true;
+                      })
                       .collect(Collectors.toList());
 
             if (result.isEmpty()) {
-                throw new TestNGException("Could not find method with name [" + testQuery + "] in class [" + testClass + "]");
+                throw new TestNGException("Could not find method with query [" + testQuery + "]");
             }
 
             return result;
