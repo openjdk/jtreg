@@ -43,6 +43,7 @@ import java.awt.event.ActionListener;
  * This class models the dialog associated with the (project-wide) jtreg tool settings.
  */
 public class JTRegConfigurable<T extends JTRegConfiguration> extends SettingsEditor<T> {
+    private JTextField jtregQuery;
     private JTextField jtregOptions;
     private TextFieldWithBrowseButton jtregDir;
     private TextFieldWithBrowseButton workDirectory;
@@ -90,6 +91,7 @@ public class JTRegConfigurable<T extends JTRegConfiguration> extends SettingsEdi
         configuration.setPackage(directoryRadioButton.isSelected() ?
                 FileUtil.toSystemIndependentName(directory.getText().trim()) : null);
         configuration.setProgramParameters(jtregOptions.getText().trim());
+        configuration.setQuery(jtregQuery.getText().trim());
         configuration.setWorkingDirectory(workDirectory.getText().isEmpty() ?
                 null : FileUtil.toSystemIndependentName(workDirectory.getText().trim()));
     }
@@ -107,6 +109,7 @@ public class JTRegConfigurable<T extends JTRegConfiguration> extends SettingsEdi
             directory.setText(aPackage != null ? FileUtil.toSystemDependentName(aPackage) : null);
         }
         jtregOptions.setText(configuration.getProgramParameters());
+        jtregQuery.setText(configuration.getQuery());
         String workDir = configuration.getWorkingDirectory();
         workDirectory.setText(workDir == null ? "" : FileUtil.toSystemDependentName(workDir));
         updateComponents(null);

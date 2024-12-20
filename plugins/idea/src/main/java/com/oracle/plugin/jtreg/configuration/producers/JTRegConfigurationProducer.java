@@ -36,13 +36,14 @@ import com.intellij.execution.junit.JavaRunConfigurationProducerBase;
 import com.intellij.lang.ant.config.*;
 import com.intellij.lang.ant.config.impl.AntBeforeRunTask;
 import com.intellij.lang.ant.config.impl.AntBeforeRunTaskProvider;
-import com.intellij.psi.PsiFile;
+import com.intellij.psi.*;
 import com.oracle.plugin.jtreg.configuration.JTRegConfiguration;
 import com.oracle.plugin.jtreg.service.JTRegService;
 import com.oracle.plugin.jtreg.configuration.JTRegConfigurationType;
 import com.theoryinpractice.testng.configuration.TestNGConfiguration;
 
 import java.util.List;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 /**
@@ -65,10 +66,90 @@ public abstract class JTRegConfigurationProducer extends JavaRunConfigurationPro
         if (location == null) {
             return false;
         }
-        PsiFile testClass = location.getPsiElement().getContainingFile();
-        final String runClass = unitConfiguration.getRunClass();
-        return runClass != null && testClass != null && testClass.getVirtualFile() != null &&
-                runClass.equals(testClass.getVirtualFile().getPath());
+
+        PsiElement element = location.getPsiElement();
+        String query = getQuery(element);
+        PsiFile contextFile = element.getContainingFile();
+        final String configFile = unitConfiguration.getRunClass();
+        return configFile != null && contextFile != null && contextFile.getVirtualFile() != null &&
+                configFile.equals(contextFile.getVirtualFile().getPath())
+                && query.equals(unitConfiguration.getQuery());
+    }
+
+    protected static String getQuery(PsiElement element) {
+        if (element instanceof PsiIdentifier
+                && element.getParent() instanceof PsiMethod method) {
+            return getMethodQuery(method);
+        } else if (element instanceof PsiIdentifier
+                && element.getParent() instanceof PsiClass cls) {
+            return binaryNameFor(cls);
+        } else {
+            return "";
+        }
+    }
+
+    // construct a query string which gets pass, through jtreg, to junit/testng to select the method we want to run
+    private static String getMethodQuery(PsiMethod method) {
+        StringJoiner paramTypeNames = new StringJoiner(",");
+        PsiParameterList params = method.getParameterList();
+        for (int i = 0; i < params.getParametersCount(); i++) {
+            PsiParameter param = params.getParameter(i);
+            PsiType type = param.getType();
+            paramTypeNames.add(binaryNameFor(type));
+        }
+        String className = binaryNameFor(((PsiClass) method.getParent()));
+        return className + "::" + method.getName() + '(' + paramTypeNames + ')';
+    }
+
+    private static String binaryNameFor(PsiType type) {
+        if (type instanceof PsiPrimitiveType) {
+            return type.getCanonicalText();
+        } else if (type instanceof PsiClassType clsType) {
+            return binaryNameFor(clsType.resolve());
+        } else if (type instanceof PsiArrayType arrayType) {
+            return binaryNameFor(arrayType);
+        } else {
+            return type.getCanonicalText();
+        }
+    }
+
+    private static String binaryNameFor(PsiClass cls) {
+        // handle nested classes. Convert '.' to '$'
+        String nestedName = cls.getName();
+        PsiClass current = cls;
+        while ((current = current.getContainingClass()) != null) {
+            nestedName = current.getName() + "." + nestedName;
+        }
+        String qualName = cls.getQualifiedName();
+        String packageName = qualName.substring(0, qualName.length() - nestedName.length());
+        return packageName + nestedName.replace('.', '$');
+    }
+
+    private static String binaryNameFor(PsiArrayType arrayType) {
+        PsiType component = arrayType.getDeepComponentType();
+        String componentName;
+        if (component instanceof PsiPrimitiveType primitiveType) {
+            componentName = descriptorFor(primitiveType);
+        } else if (component instanceof PsiClassType clsType) {
+            componentName = "L" + binaryNameFor(clsType.resolve()) + ";";
+        } else {
+            componentName = component.getCanonicalText();
+        }
+        return "[".repeat(arrayType.getArrayDimensions()) + componentName;
+    }
+
+    private static String descriptorFor(PsiPrimitiveType primitiveType) {
+        return switch (primitiveType.getCanonicalText()) {
+            case "boolean" -> "Z";
+            case "byte" -> "B";
+            case "char" -> "C";
+            case "short" -> "S";
+            case "int" -> "I";
+            case "long" -> "J";
+            case "float" -> "F";
+            case "double" -> "D";
+            default -> primitiveType.getCanonicalText();
+        };
     }
 
     @Override

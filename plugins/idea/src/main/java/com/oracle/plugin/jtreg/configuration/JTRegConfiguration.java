@@ -70,6 +70,7 @@ public class JTRegConfiguration extends JavaTestConfigurationBase {
     private boolean alternativeJrePathEnabled;
     private String alternativeJrePath;
     private String file;
+    private String query;
     private String directory;
     private String workDirectory;
 
@@ -216,6 +217,14 @@ public class JTRegConfiguration extends JavaTestConfigurationBase {
 
     public void setRunClass(String file) {
         this.file = file;
+    }
+
+    public String getQuery() {
+        return query;
+    }
+
+    public void setQuery(String query) {
+        this.query = query;
     }
 
     @Nullable
