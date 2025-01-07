@@ -82,7 +82,7 @@
 #     The curl-like executable to use when downloading files.
 #     Note: If available, wget will be preferred.
 #
-# CURL_OPTS (e.g. "-v")
+# CURL_OPTIONS (e.g. "-v")
 #     Additional arguments to pass to CURL when downloading files.
 #
 # SKIP_DOWNLOAD
