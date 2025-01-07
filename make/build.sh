@@ -75,7 +75,7 @@
 # WGET
 #     The wget-like executable to use when downloading files.
 #
-# WGET_OPTS (e.g. "-v")
+# WGET_OPTIONS (e.g. "-v")
 #     Additional arguments to pass to WGET when downloading files.
 #
 # CURL (e.g. "/path/to/my/wget")
