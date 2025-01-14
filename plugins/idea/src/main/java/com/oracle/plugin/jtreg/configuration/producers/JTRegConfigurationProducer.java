@@ -40,6 +40,7 @@ import com.intellij.psi.*;
 import com.oracle.plugin.jtreg.configuration.JTRegConfiguration;
 import com.oracle.plugin.jtreg.service.JTRegService;
 import com.oracle.plugin.jtreg.configuration.JTRegConfigurationType;
+import com.oracle.plugin.jtreg.util.JTRegUtils;
 import com.theoryinpractice.testng.configuration.TestNGConfiguration;
 
 import java.util.List;
@@ -77,19 +78,24 @@ public abstract class JTRegConfigurationProducer extends JavaRunConfigurationPro
     }
 
     protected static String getQuery(PsiElement element) {
+        boolean isJUnit = JTRegUtils.isJUnitTestData(element.getContainingFile());
+        boolean isTestNG = JTRegUtils.isTestNGTestData(element.getContainingFile());
         if (element instanceof PsiIdentifier
                 && element.getParent() instanceof PsiMethod method) {
-            return getMethodQuery(method);
-        } else if (element instanceof PsiIdentifier
+            if (isJUnit) {
+                return "junit-select:method:" + getJUnitMethodQuery(method);
+            } else if (isTestNG) {
+                // just the method name for TestNG
+                return method.getName();
+            }
+        } else if (isJUnit && element instanceof PsiIdentifier
                 && element.getParent() instanceof PsiClass cls) {
-            return binaryNameFor(cls);
-        } else {
-            return "";
+            return "junit-select:class:" + binaryNameFor(cls);
         }
+        return "";
     }
 
-    // construct a query string which gets pass, through jtreg, to junit/testng to select the method we want to run
-    private static String getMethodQuery(PsiMethod method) {
+    private static String getJUnitMethodQuery(PsiMethod method) {
         StringJoiner paramTypeNames = new StringJoiner(",");
         PsiParameterList params = method.getParameterList();
         for (int i = 0; i < params.getParametersCount(); i++) {
@@ -98,7 +104,7 @@ public abstract class JTRegConfigurationProducer extends JavaRunConfigurationPro
             paramTypeNames.add(binaryNameFor(type));
         }
         String className = binaryNameFor(((PsiClass) method.getParent()));
-        return className + "::" + method.getName() + '(' + paramTypeNames + ')';
+        return className + "#" + method.getName() + '(' + paramTypeNames + ')';
     }
 
     private static String binaryNameFor(PsiType type) {
