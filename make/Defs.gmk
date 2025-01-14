@@ -173,7 +173,6 @@ TIDY 	:= $(shell if [ -r /usr/local/bin/tidy ]; then \
 else
 TIDY	= /usr/bin/tidy
 endif
-TR      = /usr/bin/tr
 TOUCH 	= /usr/bin/touch
 UNZIP 	= /usr/bin/unzip
 WC 	= /usr/bin/wc
