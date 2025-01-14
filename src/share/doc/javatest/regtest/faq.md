@@ -443,12 +443,13 @@ and where `0` identifies the first test.
 
 If you specify `?`_string_ after the name of a test, the _string_ will be
 passed down to the test, for the test to filter the parts of the test to be
-executed. For any tests executed by JUnit Platform, the string is interpreted
-as a pattern consisting of class name, method name, and parameter types, such as: 
-`<class name>[::<method name>([<param type>[...,<param type>]])]`. Both the
-`<class name>` and the `<param type>` elements must be supplied as binary
-names (as returned by `Class::getName`). If you give conflicting values for
-the string, including not setting any value, the last one specified will be used.
+executed. For any tests executed by JUnit Platform, the string is by default interpreted
+as the name of a single method in the test to be executed. However, it is also
+possible to use other JUnit selectors by prefixing the query string with `junit-select:`.
+The rest of the string can then be any selector identifier as listed in the left-most
+column of the table found here: https://junit.org/junit5/docs/current/user-guide/#running-tests-discovery-selectors 
+If you give conflicting values for the string, including not setting any value, the last
+one specified will be used.
 
 If you wish to specify a long list of arguments, you can put the list in a file
 and specify that file using the `@`_file_ option.
@@ -495,19 +496,24 @@ a test should be run on any particular system.
 
 ### How do I run a single test method or class in a JUnit test?
 
-Specify the test and method on the command-line with the `?` syntax:
+Specify the test and method name on the command-line with the `?` syntax:
 
-    path-to-test?class-name::method-name(param-type, ...param-type)
+    path-to-test?method-name
 
-The `class-name` and `param-type` elements must be binary class names, as returned by `Class::getName`.
-To run a method that has no parameters, the `param-type` elements can be omitted, like so:
+This will run a method called `method-name`, having no parameters, in the top-level test class.
 
-    path-to-test?class-name::method-name()
+To run a parameterized test method, the extended selector syntax has to be used. For example:
 
-To run a specific nested test class, annotated with the `@Nested` annotation, just the
-class name should be passed after the `?`:
+    path-to-test?junit-select:method:class-name#method-name(param-type, ...param-type)
 
-    path-to-test?class-name
+Note that in this case, the `class-name` and `param-type` elements must be binary names, as returned
+by `Class::getName`. For some examples, see: https://junit.org/junit5/docs/current/api/org.junit.platform.engine/org/junit/platform/engine/discovery/DiscoverySelectors.html#selectMethod(java.lang.String)
+
+To run a specific nested test class, annotated with the `@Nested` annotation, the following can be used:
+
+    path-to-test?junit-select:class:class-name
+
+Note that again, the `class-name` has to be the binary name of the class.
 
 See [How do I specify which tests to run?](#how-do-i-specify-which-tests-to-run).
 
