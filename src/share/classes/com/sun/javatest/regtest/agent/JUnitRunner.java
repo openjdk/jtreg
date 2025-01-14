@@ -25,6 +25,7 @@
 
 package com.sun.javatest.regtest.agent;
 
+import org.junit.platform.engine.DiscoverySelector;
 import org.junit.platform.engine.TestExecutionResult;
 import org.junit.platform.engine.TestSource;
 import org.junit.platform.engine.UniqueId;
@@ -62,6 +63,8 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
     private static final String JUNIT_NO_DRIVER = "No JUnit driver -- install JUnit JAR file(s) next to jtreg.jar";
     // this is a temporary flag while transitioning from JUnit 4 to 5
     private static final boolean JUNIT_RUN_WITH_JUNIT_4 = Flags.get("runWithJUnit4");
+
+    private static final String JUNIT_SELECT_PREFIX = "junit-select:";
 
     public static void main(String... args) throws Exception {
         main(null, args);
@@ -130,26 +133,23 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
         Thread.currentThread().setContextClassLoader(mainClass.getClassLoader());
         try {
             String testQueryStr = System.getProperty("test.query");
-            LauncherDiscoveryRequest request;
+            DiscoverySelector selector;
             if (testQueryStr != null && !testQueryStr.isEmpty()) {
-                TestQuery testQuery = TestQuery.parse(testQueryStr);
-                String className = testQuery.className();
-                Optional<String> methodName = testQuery.methodName();
-                Optional<List<String>> paramTypeNames = testQuery.paramTypeNames();
-                Optional<String> paramTypeNamesStr = paramTypeNames.map(l -> l.stream().collect(Collectors.joining(",")));
-
-                request = LauncherDiscoveryRequestBuilder.request()
-                    .selectors(methodName.isPresent()
-                            ? paramTypeNamesStr.isPresent()
-                                ? DiscoverySelectors.selectMethod(className, methodName.get(), paramTypeNamesStr.get())
-                                : DiscoverySelectors.selectMethod(className, methodName.get())
-                            : DiscoverySelectors.selectClass(className))
-                        .build();
+                if (testQueryStr.startsWith(JUNIT_SELECT_PREFIX)) {
+                    // https://junit.org/junit5/docs/current/user-guide/#running-tests-discovery-selectors
+                    String selectorStr = testQueryStr.substring(JUNIT_SELECT_PREFIX.length());
+                    selector = DiscoverySelectors.parse(selectorStr)
+                            .orElseThrow(() -> new IllegalArgumentException("Selector can not be pased: " + selectorStr));
+                } else {
+                    // legacy, assume method name
+                    selector = DiscoverySelectors.selectMethod(mainClass, testQueryStr);
+                }
             } else {
-                request = LauncherDiscoveryRequestBuilder.request()
-                    .selectors(DiscoverySelectors.selectClass(mainClass))
-                    .build();
+                selector = DiscoverySelectors.selectClass(mainClass);
             }
+            LauncherDiscoveryRequest request = LauncherDiscoveryRequestBuilder.request()
+                    .selectors(selector)
+                    .build();
 
             SummaryGeneratingListener summaryGeneratingListener = new SummaryGeneratingListener();
 
