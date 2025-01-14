@@ -444,9 +444,11 @@ and where `0` identifies the first test.
 If you specify `?`_string_ after the name of a test, the _string_ will be
 passed down to the test, for the test to filter the parts of the test to be
 executed. For any tests executed by JUnit Platform, the string is interpreted
-as the name of a single method in the test to be executed.  If you give
-conflicting values for the string, including not setting any value, the last
-one specified will be used.
+as a pattern consisting of class name, method name, and parameter types, such as: 
+`<class name>[::<method name>([<param type>[...,<param type>]])]`. Both the
+`<class name>` and the `<param type>` elements must be supplied as binary
+names (as returned by `Class::getName`). If you give conflicting values for
+the string, including not setting any value, the last one specified will be used.
 
 If you wish to specify a long list of arguments, you can put the list in a file
 and specify that file using the `@`_file_ option.
@@ -491,11 +493,21 @@ Note that in addition to the command-line options just listed, a test
 may contain tags such as `@requires` and `@modules` that determine whether
 a test should be run on any particular system.
 
-### How do I run a single test method in a JUnit test?
+### How do I run a single test method or class in a JUnit test?
 
-Specify the test and method name on the command-line with the `?` syntax:
+Specify the test and method on the command-line with the `?` syntax:
 
-    path-to-test?method-name
+    path-to-test?class-name::method-name(param-type, ...param-type)
+
+The `class-name` and `param-type` elements must be binary class names, as returned by `Class::getName`.
+To run a method that has no parameters, the `param-type` elements can be omitted, like so:
+
+    path-to-test?class-name::method-name()
+
+To run a specific nested test class, annotated with the `@Nested` annotation, just the
+class name should be passed after the `?`:
+
+    path-to-test?class-name
 
 See [How do I specify which tests to run?](#how-do-i-specify-which-tests-to-run).
 
