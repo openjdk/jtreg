@@ -139,7 +139,7 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
                     // https://junit.org/junit5/docs/current/user-guide/#running-tests-discovery-selectors
                     String selectorStr = testQueryStr.substring(JUNIT_SELECT_PREFIX.length());
                     selector = DiscoverySelectors.parse(selectorStr)
-                            .orElseThrow(() -> new IllegalArgumentException("Selector can not be pased: " + selectorStr));
+                            .orElseThrow(() -> new IllegalArgumentException("Selector can not be parsed: " + selectorStr));
                 } else {
                     // legacy, assume method name
                     selector = DiscoverySelectors.selectMethod(mainClass, testQueryStr);
