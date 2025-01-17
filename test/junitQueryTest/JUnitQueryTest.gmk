@@ -261,6 +261,31 @@ TESTS.jtreg += $(BUILDTESTDIR)/JUnitQueryTest.nested.class.ok
 
 #----------------------------------------------------------------------
 #
+# Top-level class that looks like a group name. Testing whether we detect this correctly as a query string
+
+$(BUILDTESTDIR)/JUnitQueryTest.toplevel.class.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
+		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
+		$(JTREG_IMAGEDIR)/bin/jtreg
+	$(RM) $(@:%.ok=%)
+	$(MKDIR) $(@:%.ok=%)
+	JT_JAVA=$(JDKHOME) JTHOME=$(JTREG_IMAGEDIR) \
+	    $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(JDKHOME) \
+		-va \
+		"$(TESTDIR)/junitQueryTest/a/b/c/Test1.java?junit-select:class:Test1" \
+		 > $(@:%.ok=%)/jt.log 2>&1
+	OUT=$$( $(ECHO) $$( $(AWK) '/STDOUT:/,/STDERR:/{ print $0; } { }' $(@:%.ok=%)/jt.log | $(GREP) -v STD ) ) ; \
+	if [ "$$OUT" != "Test1.parameterized Test1.m11 Test1.m12 Test1.m13 Test1.nested" ]; then \
+	    echo "unexpected set of tests run: $$OUT"; exit 1 ; \
+	fi
+	$(GREP) "a/b/c/ .* tests: 5, skipped: 0, started: 5, succeeded: 5, failed: 0, aborted: 0" $(@:%.ok=%)/report/text/junit.txt
+	echo $@ passed at `date` > $@
+
+TESTS.jtreg += $(BUILDTESTDIR)/JUnitQueryTest.toplevel.class.ok
+
+#----------------------------------------------------------------------
+#
 # Invalid use of query
 
 $(BUILDTESTDIR)/JUnitQueryTest.invalidQuery.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
@@ -319,5 +344,6 @@ junit-query-tests: \
     $(BUILDTESTDIR)/JUnitQueryTest.all.m13.ok \
     $(BUILDTESTDIR)/JUnitQueryTest.parameterized.ok \
     $(BUILDTESTDIR)/JUnitQueryTest.nested.class.ok \
+    $(BUILDTESTDIR)/JUnitQueryTest.toplevel.class.ok \
     $(BUILDTESTDIR)/JUnitQueryTest.invalidQuery.ok \
     $(BUILDTESTDIR)/JUnitQueryTest.invalidMethod.ok
