@@ -506,14 +506,14 @@ To run a parameterized test method, the extended selector syntax has to be used.
 
     path-to-test?junit-select:method:class-name#method-name(param-type, ...param-type)
 
-Note that in this case, the `class-name` and `param-type` elements must be binary names, as returned
-by `Class::getName`. For some examples, see: https://junit.org/junit5/docs/current/api/org.junit.platform.engine/org/junit/platform/engine/discovery/DiscoverySelectors.html#selectMethod(java.lang.String)
+The format supported by the `method` selector is described in greater detail in the documentation of
+[DiscoverySelectors::selectMethod](https://junit.org/junit5/docs/current/api/org.junit.platform.engine/org/junit/platform/engine/discovery/DiscoverySelectors.html#selectMethod(java.lang.String)).
 
 To run a specific nested test class, annotated with the `@Nested` annotation, the following can be used:
 
-    path-to-test?junit-select:class:class-name
+    path-to-test?junit-select:class:enclosing-class-name$nested-class-name
 
-Note that again, the `class-name` has to be the binary name of the class.
+Note that ij this case, the string after `class:` is the binary name of the nested class, as returned by `Class::getName`.
 
 See [How do I specify which tests to run?](#how-do-i-specify-which-tests-to-run).
 
