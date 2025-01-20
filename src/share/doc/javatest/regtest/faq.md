@@ -513,7 +513,7 @@ To run a specific nested test class, annotated with the `@Nested` annotation, th
 
     path-to-test?junit-select:class:enclosing-class-name$nested-class-name
 
-Note that ij this case, the string after `class:` is the binary name of the nested class, as returned by `Class::getName`.
+Note that in this case, the string after `class:` is the binary name of the nested class, as returned by `Class::getName`.
 
 See [How do I specify which tests to run?](#how-do-i-specify-which-tests-to-run).
 
