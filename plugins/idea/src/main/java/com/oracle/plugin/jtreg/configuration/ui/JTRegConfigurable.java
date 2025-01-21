@@ -79,6 +79,7 @@ public class JTRegConfigurable<T extends JTRegConfiguration> extends SettingsEdi
 
     private void updateComponents(ActionEvent _unused) {
         file.setEnabled(fileRadioButton.isSelected());
+        jtregQuery.setEnabled(fileRadioButton.isSelected());
         directory.setEnabled(directoryRadioButton.isSelected());
     }
 
