@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2024, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -25,6 +25,7 @@
 
 package com.sun.javatest.regtest.agent;
 
+import org.junit.platform.engine.DiscoverySelector;
 import org.junit.platform.engine.TestExecutionResult;
 import org.junit.platform.engine.TestSource;
 import org.junit.platform.engine.UniqueId;
@@ -60,6 +61,8 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
     private static final String JUNIT_NO_DRIVER = "No JUnit driver -- install JUnit JAR file(s) next to jtreg.jar";
     // this is a temporary flag while transitioning from JUnit 4 to 5
     private static final boolean JUNIT_RUN_WITH_JUNIT_4 = Flags.get("runWithJUnit4");
+
+    private static final String JUNIT_SELECT_PREFIX = "junit-select:";
 
     public static void main(String... args) throws Exception {
         main(null, args);
@@ -127,13 +130,24 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
         // https://junit.org/junit5/docs/current/user-guide/#launcher-api-execution
         Thread.currentThread().setContextClassLoader(mainClass.getClassLoader());
         try {
-            // if test.query is set, treat it as a method name to be executed
-            String testQuery = System.getProperty("test.query");
+            String testQueryStr = System.getProperty("test.query");
+            DiscoverySelector selector;
+            if (testQueryStr != null && !testQueryStr.isEmpty()) {
+                if (testQueryStr.startsWith(JUNIT_SELECT_PREFIX)) {
+                    // https://junit.org/junit5/docs/current/user-guide/#running-tests-discovery-selectors
+                    String selectorStr = testQueryStr.substring(JUNIT_SELECT_PREFIX.length());
+                    selector = DiscoverySelectors.parse(selectorStr)
+                            .orElseThrow(() -> new IllegalArgumentException("Selector can not be parsed: " + selectorStr));
+                } else {
+                    // legacy, assume method name
+                    selector = DiscoverySelectors.selectMethod(mainClass, testQueryStr);
+                }
+            } else {
+                selector = DiscoverySelectors.selectClass(mainClass);
+            }
             LauncherDiscoveryRequest request = LauncherDiscoveryRequestBuilder.request()
-                .selectors(testQuery == null
-                        ? DiscoverySelectors.selectClass(mainClass)
-                        : DiscoverySelectors.selectMethod(mainClass, testQuery))
-                .build();
+                    .selectors(selector)
+                    .build();
 
             SummaryGeneratingListener summaryGeneratingListener = new SummaryGeneratingListener();
 

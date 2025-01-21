@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022, 2025, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -40,10 +40,10 @@ $(BUILDTESTDIR)/JUnitQueryTest.all.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(TESTDIR)/junitQueryTest/ \
 		 > $(@:%.ok=%)/jt.log 2>&1
 	OUT=$$( $(ECHO) $$( $(AWK) '/STDOUT:/,/STDERR:/{ print $0; } { }' $(@:%.ok=%)/jt.log | $(GREP) -v STD ) ) ; \
-	if [ "$$OUT" != "Test1.m11 Test1.m12 Test1.m13 Test2.m21 Test2.m22 Test2.m23" ]; then \
+	if [ "$$OUT" != "Test1.parameterized Test1.m11 Test1.m12 Test1.m13 Test1.nested Test2.m21 Test2.m22 Test2.m23" ]; then \
 	    echo "unexpected set of tests run: $$OUT"; exit 1 ; \
 	fi
-	$(GREP) "a/b/c/ .* tests: 6, skipped: 0, started: 6, succeeded: 6, failed: 0, aborted: 0" $(@:%.ok=%)/report/text/junit.txt
+	$(GREP) "a/b/c/ .* tests: 8, skipped: 0, started: 8, succeeded: 8, failed: 0, aborted: 0" $(@:%.ok=%)/report/text/junit.txt
 	echo $@ passed at `date` > $@
 
 TESTS.jtreg += $(BUILDTESTDIR)/JUnitQueryTest.all.ok
@@ -174,10 +174,10 @@ $(BUILDTESTDIR)/JUnitQueryTest.m13.all.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(TESTDIR)/junitQueryTest/a/b/c/Test1.java \
 		 > $(@:%.ok=%)/jt.log 2>&1
 	OUT=$$( $(ECHO) $$( $(AWK) '/STDOUT:/,/STDERR:/{ print $0; } { }' $(@:%.ok=%)/jt.log | $(GREP) -v STD ) ) ; \
-	if [ "$$OUT" != "Test1.m11 Test1.m12 Test1.m13" ]; then \
+	if [ "$$OUT" != "Test1.parameterized Test1.m11 Test1.m12 Test1.m13 Test1.nested" ]; then \
 	    echo "unexpected set of tests run: $$OUT"; exit 1 ; \
 	fi
-	$(GREP) "a/b/c/ .* tests: 3, skipped: 0, started: 3, succeeded: 3, failed: 0, aborted: 0" $(@:%.ok=%)/report/text/junit.txt
+	$(GREP) "a/b/c/ .* tests: 5, skipped: 0, started: 5, succeeded: 5, failed: 0, aborted: 0" $(@:%.ok=%)/report/text/junit.txt
 	echo $@ passed at `date` > $@
 
 TESTS.jtreg += $(BUILDTESTDIR)/JUnitQueryTest.m13.all.ok
@@ -208,6 +208,81 @@ $(BUILDTESTDIR)/JUnitQueryTest.all.m13.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 	echo $@ passed at `date` > $@
 
 TESTS.jtreg += $(BUILDTESTDIR)/JUnitQueryTest.all.m13.ok
+
+#----------------------------------------------------------------------
+#
+# parameterizedTest
+
+$(BUILDTESTDIR)/JUnitQueryTest.parameterized.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
+		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
+		$(JTREG_IMAGEDIR)/bin/jtreg
+	$(RM) $(@:%.ok=%)
+	$(MKDIR) $(@:%.ok=%)
+	JT_JAVA=$(JDKHOME) JTHOME=$(JTREG_IMAGEDIR) \
+	    $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(JDKHOME) \
+		-va \
+		"$(TESTDIR)/junitQueryTest/a/b/c/Test1.java?junit-select:method:Test1#parameterized(java.lang.String,Test1\$$NestedClass,boolean,byte,char,short,int,long,float,double,[Ljava.lang.String;,[Z,[B,[C,[S,[I,[J,[F,[D)" \
+		 > $(@:%.ok=%)/jt.log 2>&1
+	OUT=$$( $(ECHO) $$( $(AWK) '/STDOUT:/,/STDERR:/{ print $0; } { }' $(@:%.ok=%)/jt.log | $(GREP) -v STD ) ) ; \
+	if [ "$$OUT" != "Test1.parameterized" ]; then \
+	    echo "unexpected set of tests run: $$OUT"; exit 1 ; \
+	fi
+	$(GREP) "a/b/c/ .* tests: 1, skipped: 0, started: 1, succeeded: 1, failed: 0, aborted: 0" $(@:%.ok=%)/report/text/junit.txt
+	echo $@ passed at `date` > $@
+
+TESTS.jtreg += $(BUILDTESTDIR)/JUnitQueryTest.parameterized.ok
+
+#----------------------------------------------------------------------
+#
+# nested class
+
+$(BUILDTESTDIR)/JUnitQueryTest.nested.class.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
+		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
+		$(JTREG_IMAGEDIR)/bin/jtreg
+	$(RM) $(@:%.ok=%)
+	$(MKDIR) $(@:%.ok=%)
+	JT_JAVA=$(JDKHOME) JTHOME=$(JTREG_IMAGEDIR) \
+	    $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(JDKHOME) \
+		-va \
+		"$(TESTDIR)/junitQueryTest/a/b/c/Test1.java?junit-select:class:Test1\$$NestedTests" \
+		 > $(@:%.ok=%)/jt.log 2>&1
+	OUT=$$( $(ECHO) $$( $(AWK) '/STDOUT:/,/STDERR:/{ print $0; } { }' $(@:%.ok=%)/jt.log | $(GREP) -v STD ) ) ; \
+	if [ "$$OUT" != "Test1.nested" ]; then \
+	    echo "unexpected set of tests run: $$OUT"; exit 1 ; \
+	fi
+	$(GREP) "a/b/c/ .* tests: 1, skipped: 0, started: 1, succeeded: 1, failed: 0, aborted: 0" $(@:%.ok=%)/report/text/junit.txt
+	echo $@ passed at `date` > $@
+
+TESTS.jtreg += $(BUILDTESTDIR)/JUnitQueryTest.nested.class.ok
+
+#----------------------------------------------------------------------
+#
+# Top-level class that looks like a group name. Testing whether we detect this correctly as a query string
+
+$(BUILDTESTDIR)/JUnitQueryTest.toplevel.class.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
+		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
+		$(JTREG_IMAGEDIR)/bin/jtreg
+	$(RM) $(@:%.ok=%)
+	$(MKDIR) $(@:%.ok=%)
+	JT_JAVA=$(JDKHOME) JTHOME=$(JTREG_IMAGEDIR) \
+	    $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(JDKHOME) \
+		-va \
+		"$(TESTDIR)/junitQueryTest/a/b/c/Test1.java?junit-select:class:Test1" \
+		 > $(@:%.ok=%)/jt.log 2>&1
+	OUT=$$( $(ECHO) $$( $(AWK) '/STDOUT:/,/STDERR:/{ print $0; } { }' $(@:%.ok=%)/jt.log | $(GREP) -v STD ) ) ; \
+	if [ "$$OUT" != "Test1.parameterized Test1.m11 Test1.m12 Test1.m13 Test1.nested" ]; then \
+	    echo "unexpected set of tests run: $$OUT"; exit 1 ; \
+	fi
+	$(GREP) "a/b/c/ .* tests: 5, skipped: 0, started: 5, succeeded: 5, failed: 0, aborted: 0" $(@:%.ok=%)/report/text/junit.txt
+	echo $@ passed at `date` > $@
+
+TESTS.jtreg += $(BUILDTESTDIR)/JUnitQueryTest.toplevel.class.ok
 
 #----------------------------------------------------------------------
 #
@@ -267,5 +342,8 @@ junit-query-tests: \
     $(BUILDTESTDIR)/JUnitQueryTest.m12.m13.ok \
     $(BUILDTESTDIR)/JUnitQueryTest.m13.all.ok \
     $(BUILDTESTDIR)/JUnitQueryTest.all.m13.ok \
+    $(BUILDTESTDIR)/JUnitQueryTest.parameterized.ok \
+    $(BUILDTESTDIR)/JUnitQueryTest.nested.class.ok \
+    $(BUILDTESTDIR)/JUnitQueryTest.toplevel.class.ok \
     $(BUILDTESTDIR)/JUnitQueryTest.invalidQuery.ok \
     $(BUILDTESTDIR)/JUnitQueryTest.invalidMethod.ok

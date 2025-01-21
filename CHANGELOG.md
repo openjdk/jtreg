@@ -1,6 +1,6 @@
 ## [Unreleased](https://git.openjdk.org/jtreg/compare/jtreg-7.5+1...master)
 
-_nothing noteworthy, yet_
+* Support running individual parameterized tests and @Nested test classes [CODETOOLS-7903930](https://bugs.openjdk.org/browse/CODETOOLS-7903930)
 
 ## [7.5](https://git.openjdk.org/jtreg/compare/jtreg-7.4+1...jtreg-7.5+1)
 

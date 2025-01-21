@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -101,10 +101,15 @@ public class TestManager {
          * - two or more characters followed by :id
          * Thus, letter:id is not accepted as a group spec, and so will be treated
          * elsewhere as a plain absolute file path instead.
+         *
+         * Additionally, since query strings are indicated by '?', and can contain
+         * any string, the '?' character is not allowed to be in the file path, to
+         * avoid picking up tests with a query string that contains ':' as being
+         * group specs.
          */
         static final Pattern groupPtn = System.getProperty("os.name").matches("(?i)windows.*")
-                ? Pattern.compile("(?<dir>|[^A-Za-z]|.{2,}):(?<group>[A-Za-z0-9_,]+)")
-                : Pattern.compile("(?<dir>.*):(?<group>[A-Za-z0-9_,]+)");
+                ? Pattern.compile("(?<dir>|[^A-Za-z?]|[^?]{2,}):(?<group>[A-Za-z0-9_,]+)")
+                : Pattern.compile("(?<dir>[^?]*):(?<group>[A-Za-z0-9_,]+)");
 
         /**
          * Returns true if a string may represent a named group of tests.
