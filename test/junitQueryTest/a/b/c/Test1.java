@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2022, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -21,7 +21,15 @@
  * questions.
  */
 
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+
+import java.util.stream.Stream;
+
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 /**
  * A collection of test methods, to help exercise the query mechanism.
@@ -41,5 +49,37 @@ public class Test1 {
     @Test
     public void m13() {
         System.out.println("Test1.m13");
+    }
+
+    @ParameterizedTest
+    @MethodSource("params")
+    public void parameterized(String str,
+                              NestedClass nested,
+                              boolean z, byte b, char c, short s, int i, long l, float f, double d,
+                              String[] stra,
+                              boolean[] za, byte[] ba, char[] ca, short[] sa, int[] ia, long[] la, float[] fa, double[] da) {
+        System.out.println("Test1.parameterized");
+    }
+
+    static Stream<Arguments> params() {
+        return Stream.of(
+            arguments(
+                    "a",
+                    new NestedClass(),
+                    true, (byte) 42, 'x', (short) 42, 42, 42L, 42.0F, 42.0D,
+                    new String[0],
+                    new boolean[0], new byte[0], new char[0], new short[0], new int[0], new long[0], new float[0], new double[0]
+            )
+        );
+    }
+
+    static class NestedClass {}
+
+    @Nested
+    class NestedTests {
+        @Test
+        public void nested() {
+            System.out.println("Test1.nested");
+        }
     }
 }
