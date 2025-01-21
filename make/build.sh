@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #
-# Copyright (c) 2020, 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2020, 2025, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -75,14 +75,14 @@
 # WGET
 #     The wget-like executable to use when downloading files.
 #
-# WGET_OPTS (e.g. "-v")
+# WGET_OPTIONS (e.g. "-v")
 #     Additional arguments to pass to WGET when downloading files.
 #
 # CURL (e.g. "/path/to/my/wget")
 #     The curl-like executable to use when downloading files.
 #     Note: If available, wget will be preferred.
 #
-# CURL_OPTS (e.g. "-v")
+# CURL_OPTIONS (e.g. "-v")
 #     Additional arguments to pass to CURL when downloading files.
 #
 # SKIP_DOWNLOAD
