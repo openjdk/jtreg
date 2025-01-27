@@ -2,6 +2,9 @@
 
 * Support running individual parameterized tests and @Nested test classes [CODETOOLS-7903930](https://bugs.openjdk.org/browse/CODETOOLS-7903930)
 
+* Remove problematic implementation for `LIBRARY.properties` support [CODETOOLS-7903940](https://bugs.openjdk.org/browse/CODETOOLS-7903940)
+
+
 ## [7.5](https://git.openjdk.org/jtreg/compare/jtreg-7.4+1...jtreg-7.5+1)
 
 * Restore `jtdiff` tool [CODETOOLS-7903760](https://bugs.openjdk.org/browse/CODETOOLS-7903760)
