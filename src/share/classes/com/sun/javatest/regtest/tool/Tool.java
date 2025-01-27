@@ -2208,7 +2208,8 @@ public class Tool {
             return trt.getIterator(tests, filters);
     }
 
-    // Trying to get all possible results
+    // An iterator that applies no filters.
+    // The intention is to help discover all "existing" tests.
     private Iterator<TestResult> getEagerResultsIterator(InterviewParameters params) {
         TestResultTable trt = params.getWorkDirectory().getTestResultTable();
         trt.waitUntilReady();
