@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2024, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -55,8 +55,6 @@ import com.sun.javatest.regtest.agent.ActionHelper;
 import com.sun.javatest.regtest.agent.Flags;
 import com.sun.javatest.regtest.agent.SearchPath;
 import com.sun.javatest.regtest.config.ExecMode;
-import com.sun.javatest.regtest.config.LibraryProperties;
-import com.sun.javatest.regtest.config.Locations;
 import com.sun.javatest.regtest.config.Modules;
 import com.sun.javatest.regtest.config.OS;
 import com.sun.javatest.regtest.config.ParseException;
@@ -696,13 +694,6 @@ public abstract class Action extends ActionHelper {
             }
         }
         return false;
-    }
-
-    protected boolean usesLibraryCompiledWithPreviewEnabled() {
-        return script.locations.getLibs().stream()
-                .filter(Locations.LibLocn::isLibrary)
-                .map(LibraryProperties::of) // cache library properties object in LibLocn ?
-                .anyMatch(LibraryProperties::isEnablePreview);
     }
 
     //----------misc statics----------------------------------------------------
