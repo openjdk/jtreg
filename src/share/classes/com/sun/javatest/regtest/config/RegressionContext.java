@@ -104,7 +104,7 @@ public class RegressionContext implements Expr.Context {
         String testThreadFactory = (params == null || params.getTestThreadFactory() == null)
                 ? "null"
                 : params.getTestThreadFactory();
-        values.put("jtreg.ttf", testThreadFactory);
+        values.put("test.thread.factory", testThreadFactory);
 
         processVMOptions((params == null) ? Collections.<String>emptyList() : params.getTestVMJavaOptions());
     }
