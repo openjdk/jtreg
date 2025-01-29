@@ -69,11 +69,11 @@ public class JTRegClassConfigurationProducer extends JTRegConfigurationProducer 
     private static String nameForElement(PsiElement element) {
         if (element instanceof PsiIdentifier
                 && element.getParent() instanceof PsiMethod method) {
-            String className = ((PsiClass) method.getParent()).getName();
+            String className = ((PsiClass) method.getParent()).getQualifiedName();
             return className + "::" + method.getName();
         } else if (element instanceof PsiIdentifier
                 && element.getParent() instanceof PsiClass cls) {
-            return cls.getName();
+            return cls.getQualifiedName();
         } else {
             return element.getContainingFile().getName();
         }
