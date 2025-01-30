@@ -141,7 +141,15 @@ CP 	= /bin/cp
 DIFF 	= /usr/bin/diff
 ECHO	= /bin/echo
 FIND	= /usr/bin/find
+ifeq ($(SYSTEM_UNAME), FreeBSD)
+GREP  := $(shell if [ -r /usr/local/bin/ggrep ]; then \
+    echo /usr/local/bin/ggrep ; \
+  else \
+    echo $(ECHO) "GNU grep is required, but was not found" ; \
+  fi )
+else
 GREP 	:= $(shell if [ -r /bin/grep ]; then echo /bin/grep ; else echo /usr/bin/grep ; fi )
+endif
 LN	= /bin/ln
 LS	= /bin/ls
 MKDIR 	= /bin/mkdir
@@ -174,9 +182,17 @@ else
 TIDY	= /usr/bin/tidy
 endif
 TOUCH 	= /usr/bin/touch
+ifeq ($(SYSTEM_UNAME), FreeBSD)
+UNZIP	= /usr/local/bin/unzip
+else
 UNZIP 	= /usr/bin/unzip
+endif
 WC 	= /usr/bin/wc
+ifeq ($(SYSTEM_UNAME), FreeBSD)
+ZIP	= /usr/local/bin/zip
+else
 ZIP 	= /usr/bin/zip
+endif
 
 
 #----------------------------------------------------------------------
