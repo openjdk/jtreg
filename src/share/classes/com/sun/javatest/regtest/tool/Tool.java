@@ -1439,7 +1439,7 @@ public class Tool {
             }
 
             RegressionParameters params = createParameters(dummyTestManager, ts);
-            for (Iterator<TestResult> iter = getResultsIterator(params); iter.hasNext(); ) {
+            for (Iterator<TestResult> iter = getEagerResultsIterator(params); iter.hasNext(); ) {
                 TestResult tr = iter.next();
                 validTestNames.add(tr.getTestName());
                 if (verbose == Verbose.ALL)  {
@@ -2206,6 +2206,15 @@ public class Tool {
             return Collections.emptyIterator();
         else
             return trt.getIterator(tests, filters);
+    }
+
+    // An iterator that applies no filters.
+    // The intention is to help discover all "existing" tests.
+    private Iterator<TestResult> getEagerResultsIterator(InterviewParameters params) {
+        TestResultTable trt = params.getWorkDirectory().getTestResultTable();
+        trt.waitUntilReady();
+        TestFilter[] filters = null;
+        return trt.getIterator(filters);
     }
 
     private void showTool(final InterviewParameters params) throws BadArgs {
