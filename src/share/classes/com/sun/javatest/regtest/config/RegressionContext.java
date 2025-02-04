@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -100,6 +100,11 @@ public class RegressionContext implements Expr.Context {
         values.put("os.processors", String.valueOf(os.processors));
         values.put("os.maxMemory", String.valueOf(os.maxMemory));
         values.put("os.maxSwap", String.valueOf(os.maxSwap));
+
+        String testThreadFactory = (params == null || params.getTestThreadFactory() == null)
+                ? "null"
+                : params.getTestThreadFactory();
+        values.put("test.thread.factory", testThreadFactory);
 
         processVMOptions((params == null) ? Collections.<String>emptyList() : params.getTestVMJavaOptions());
     }
