@@ -63,7 +63,7 @@ The plugin allows user to configure how jtreg should be invoked by the plugin. P
 * which jtreg options should be used to run tests
 * where jtreg should put its output files
 
-Configuring such parameters is possible through the dialog located under `File -> Settings`, under the `jtreg` panel. By default, such settings are saved on a per-project basis. If, however, you would like to specify IDE-wide default, you can do so by accessing a similar dialog under `File -> Other Settings -> Default Settings`.
+Configuring such parameters is possible through the dialog located under `File -> Settings`, under the `jtreg` panel. By default, such settings are saved on a per-project basis. If, however, you would like to specify IDE-wide default, you can do so by accessing a similar dialog under `File -> New Projects Setup -> Settings for New Projects...`.
 
 Note: the settings specified here will be used as defaults for creating new jtreg run/debug configurations. As a result, if any error is made when configuring global jtreg settings, such errors will be propagated in all newly created jtreg test configurations.
 
