@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2016, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -27,15 +27,12 @@ package com.oracle.plugin.jtreg.configuration.producers;
 
 import com.intellij.execution.Location;
 import com.intellij.execution.actions.ConfigurationContext;
-import com.intellij.lang.ant.config.AntConfiguration;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.util.Ref;
 import com.intellij.psi.*;
 import com.oracle.plugin.jtreg.configuration.JTRegConfiguration;
 import com.oracle.plugin.jtreg.service.JTRegService;
 import com.oracle.plugin.jtreg.util.JTRegUtils;
-import com.oracle.plugin.jtreg.configuration.JTRegConfiguration;
-import com.oracle.plugin.jtreg.service.JTRegService;
 
 /**
  * This class generates a jtreg configuration from a given file selected in the IDE.
@@ -44,8 +41,10 @@ public class JTRegClassConfigurationProducer extends JTRegConfigurationProducer 
 
     @Override
     protected boolean setupConfigurationFromContext(JTRegConfiguration configuration, ConfigurationContext context, Ref<PsiElement> sourceElement) {
-        final Location contextLocation = context.getLocation();
+        final Location<PsiElement> contextLocation = context.getLocation();
         assert contextLocation != null;
+        final PsiElement element = contextLocation.getPsiElement();
+
         PsiFile psiFile = contextLocation.getPsiElement().getContainingFile();
         if (psiFile == null ||
                 !JTRegUtils.isInJTRegRoot(psiFile.getContainingDirectory()) ||
@@ -59,8 +58,24 @@ public class JTRegClassConfigurationProducer extends JTRegConfigurationProducer 
         configuration.setWorkingDirectory(JTRegService.getInstance(configuration.getProject()).getWorkDir());
         configuration.setRunClass(psiFile.getVirtualFile().getPath());
         configuration.restoreOriginalModule(originalModule);
-        configuration.setName(psiFile.getName());
+
+        configuration.setQuery(getQuery(element));
+        configuration.setName(nameForElement(element));
+
         initBeforeTaskActions(configuration);
         return true;
+    }
+
+    private static String nameForElement(PsiElement element) {
+        if (element instanceof PsiIdentifier
+                && element.getParent() instanceof PsiMethod method) {
+            String className = ((PsiClass) method.getParent()).getQualifiedName();
+            return className + "::" + method.getName();
+        } else if (element instanceof PsiIdentifier
+                && element.getParent() instanceof PsiClass cls) {
+            return cls.getQualifiedName();
+        } else {
+            return element.getContainingFile().getName();
+        }
     }
 }

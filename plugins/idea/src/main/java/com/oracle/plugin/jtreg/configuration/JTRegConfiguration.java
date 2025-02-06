@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -70,6 +70,7 @@ public class JTRegConfiguration extends JavaTestConfigurationBase {
     private boolean alternativeJrePathEnabled;
     private String alternativeJrePath;
     private String file;
+    private String query;
     private String directory;
     private String workDirectory;
 
@@ -216,6 +217,14 @@ public class JTRegConfiguration extends JavaTestConfigurationBase {
 
     public void setRunClass(String file) {
         this.file = file;
+    }
+
+    public String getQuery() {
+        return query;
+    }
+
+    public void setQuery(String query) {
+        this.query = query;
     }
 
     @Nullable

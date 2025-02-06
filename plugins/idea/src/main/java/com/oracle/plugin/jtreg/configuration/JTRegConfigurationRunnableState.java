@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2016, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -28,7 +28,6 @@ package com.oracle.plugin.jtreg.configuration;
 import com.intellij.execution.*;
 import com.intellij.execution.configurations.JavaParameters;
 import com.intellij.execution.configurations.ParametersList;
-import com.intellij.execution.configurations.RuntimeConfigurationError;
 import com.intellij.execution.configurations.RuntimeConfigurationException;
 import com.intellij.execution.process.KillableColoredProcessHandler;
 import com.intellij.execution.process.OSProcessHandler;
@@ -37,16 +36,11 @@ import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.runners.ProgramRunner;
 import com.intellij.execution.testframework.SearchForTestsTask;
 import com.intellij.execution.testframework.TestSearchScope;
-import com.intellij.execution.ui.DefaultJreSelector;
 import com.intellij.openapi.module.Module;
-import com.intellij.openapi.projectRoots.JdkUtil;
-import com.intellij.openapi.projectRoots.ProjectJdkTable;
-import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.util.PathUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import com.oracle.plugin.jtreg.executors.JTRegDebuggerRunner;
-import com.oracle.plugin.jtreg.runtime.JTRegTestListener;
 import com.oracle.plugin.jtreg.service.JTRegService;
 
 import java.io.File;
@@ -148,7 +142,11 @@ class JTRegConfigurationRunnableState extends JavaTestFrameworkRunnableState<JTR
         javaParameters.getProgramParametersList().add("-o:com.oracle.plugin.jtreg.runtime.JTRegTestListener");
         javaParameters.getProgramParametersList().add("-od:" + PathUtil.getJarPathForClass(JTRegConfiguration.class));
         if (getConfiguration().getRunClass() != null) {
-            javaParameters.getProgramParametersList().add(getConfiguration().getRunClass());
+            if (getConfiguration().getQuery() != null && !getConfiguration().getQuery().isEmpty()) {
+                javaParameters.getProgramParametersList().add(getConfiguration().getRunClass() + "?" + getConfiguration().getQuery());
+            } else {
+                javaParameters.getProgramParametersList().add(getConfiguration().getRunClass());
+            }
         } else {
             javaParameters.getProgramParametersList().add(getConfiguration().getPackage());
         }
