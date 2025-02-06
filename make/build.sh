@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #
-# Copyright (c) 2020, 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2020, 2025, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -75,14 +75,14 @@
 # WGET
 #     The wget-like executable to use when downloading files.
 #
-# WGET_OPTS (e.g. "-v")
+# WGET_OPTIONS (e.g. "-v")
 #     Additional arguments to pass to WGET when downloading files.
 #
 # CURL (e.g. "/path/to/my/wget")
 #     The curl-like executable to use when downloading files.
 #     Note: If available, wget will be preferred.
 #
-# CURL_OPTS (e.g. "-v")
+# CURL_OPTIONS (e.g. "-v")
 #     Additional arguments to pass to CURL when downloading files.
 #
 # SKIP_DOWNLOAD
@@ -765,13 +765,23 @@ if [ -n "${SKIP_MAKE:-}" ]; then
     exit
 fi
 
+MAKE=$(which make)
+setup_make() {
+    case `uname` in
+      FreeBSD )
+          MAKE=/usr/local/bin/gmake ;;
+    esac
+}
+setup_make
+check_file "${MAKE}"
+
 # save make command for possible later reuse, bypassing this script
 mkdir -p ${BUILD_DIR}
 cat > ${BUILD_DIR}/make.sh << EOF
 #!/bin/sh
 
 cd "${ROOT}/make"
-make ASMTOOLS_JAR="${ASMTOOLS_JAR}"                           \\
+${MAKE} ASMTOOLS_JAR="${ASMTOOLS_JAR}"                           \\
      ASMTOOLS_NOTICES="${ASMTOOLS_NOTICES}"                   \\
      BUILDDIR="${BUILD_DIR}"                                  \\
      BUILD_MILESTONE="${JTREG_BUILD_MILESTONE}"               \\

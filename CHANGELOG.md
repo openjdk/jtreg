@@ -1,16 +1,24 @@
-## [Unreleased](https://git.openjdk.org/jtreg/compare/jtreg-7.5+1...master)
+## [Unreleased](https://git.openjdk.org/jtreg/compare/jtreg-7.5.1+1...master)
+
+_nothing noteworthy, yet_
+
+## [7.5.1](https://git.openjdk.org/jtreg/compare/jtreg-7.5+1...jtreg-7.5.1+1)
 
 * Support running individual parameterized tests and @Nested test classes [CODETOOLS-7903930](https://bugs.openjdk.org/browse/CODETOOLS-7903930)
+
+* Remove problematic implementation for `LIBRARY.properties` support [CODETOOLS-7903940](https://bugs.openjdk.org/browse/CODETOOLS-7903940)
+
+* Add `test.thread.factory` property to filter tests based on test thread factory value [CODETOOLS-7903931](https://bugs.openjdk.org/browse/CODETOOLS-7903931)
+
+* Fix and improve `--verify-exclude` feature
+  [CODETOOLS-7903883](https://bugs.openjdk.org/browse/CODETOOLS-7903883)
+  [CODETOOLS-7903935](https://bugs.openjdk.org/browse/CODETOOLS-7903935)
 
 ## [7.5](https://git.openjdk.org/jtreg/compare/jtreg-7.4+1...jtreg-7.5+1)
 
 * Restore `jtdiff` tool [CODETOOLS-7903760](https://bugs.openjdk.org/browse/CODETOOLS-7903760)
 
 * Add support for `LIBRARY.properties` file in the directory specified in the `@library` tag  [CODETOOLS-7903775](https://bugs.openjdk.org/browse/CODETOOLS-7903775)
-  > Set `enablePreview=true` in the `LIBRARY.properties` file in the root directory
-  > of the library (the directory specified in the `@library` tag.)
-  > Note that if a library uses preview features, any tests that use the library
-  > will be assumed to need preview features enabled as well.
 
 * The verbose option given at the command-line is now propagated to test agents, including the JUnit test runner.
   [CODETOOLS-7903443](https://bugs.openjdk.org/browse/CODETOOLS-7903443)

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2024, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -232,7 +232,7 @@ public class MainAction extends Action
         }
 
         if (!script.disablePreview()) { // test with explicit `@enablePreview false` take precedence
-            boolean needsEnablePreview = script.enablePreview() || usesLibraryCompiledWithPreviewEnabled();
+            boolean needsEnablePreview = script.enablePreview();
             if (needsEnablePreview && !seenEnablePreview) {
                 testJavaArgs.add("--enable-preview");
                 if (!othervm) {

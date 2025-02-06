@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2024, 2025, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -43,6 +43,7 @@ $(BUILDTESTDIR)/TestTagSpec_sysProps.ok: \
 		$(JAVAFILES.com.sun.javatest.regtest-tools)
 	$(GREP) -oh '\(.put(\|put(map, \)"test.[^"]*' $(JAVAFILES.com.sun.javatest.regtest-tools) | \
 		$(GREP) -v "test.class.path.prefix" | \
+		$(GREP) -v "test.thread.factory" | \
 		$(SED) -e 's/.*"//' | $(SORT) -u > $(@:%.ok=%.src)
 	$(GREP) -o '<code>test[^<]*</code>' $(JTREG_TAGSPEC) | \
 		$(SED) -e 's/<[^>]*>//g' | $(SORT) -u > $(@:%.ok=%.spec)

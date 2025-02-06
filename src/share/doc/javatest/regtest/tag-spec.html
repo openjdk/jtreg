@@ -245,13 +245,6 @@ not identify an existing directory or jar file.
 <li><b>precompiled jar file</b>: the entry is a jar file containing precompiled
     class files.
 </ul>
-
-<p>Configuration information for a library may be specified in a file named
-<a href="LIBRARY_PROPERTIES">LIBRARY.properties</a> in the root directory of
-the library. A library may be specified to use preview features,
-in which case the appropriate compile-time and runtime options will be
-provided automatically. This extends to any tests that may use the library.
-
 <p>It is an error if any entry in the library path list cannot be categorized.
 In particular, any one entry in the library path cannot contain more than one type of
 content.
@@ -1036,19 +1029,6 @@ The default value can be overridden in individual tests using the <code>@enableP
 declarative tag.
 </dl>
 
-<h3 id="LIBRARY_PROPERTIES">LIBRARY.properties</h3>
-
-Configuration properties for a library may be in a file named LIBRARY.properties
-in the root directory of the library (that is, the directory specified in a
-<code>@library</code> tag.
-
-The following property is available:
-
-<dl>
-<dt id="library-enablePreview"><code>enablePreview <var>&lt;true|false&gt;</var></code>
-<dd>Specify whether the classes in this library use preview features and that
-the necessary compile-time and run-time options should be provided automatically.
-</dl>
 
 <h2 id="DEFAULTS">DEFAULTS</h2>
 
