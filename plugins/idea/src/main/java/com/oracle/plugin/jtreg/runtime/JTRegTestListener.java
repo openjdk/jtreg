@@ -28,7 +28,6 @@ package com.oracle.plugin.jtreg.runtime;
 
 import com.oracle.plugin.jtreg.util.MapSerializerUtil;
 import com.sun.javatest.Harness;
-import com.sun.javatest.Parameters;
 import com.sun.javatest.Status;
 import com.sun.javatest.TestResult;
 import com.oracle.plugin.jtreg.util.MapSerializerUtil;
@@ -36,7 +35,10 @@ import com.oracle.plugin.jtreg.util.MapSerializerUtil;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * The jtreg test listener; this class listens for jtreg test events and maps them into events that the IDE
@@ -45,19 +47,14 @@ import java.util.stream.Collectors;
 public class JTRegTestListener implements Harness.Observer {
 
     @Override
-    public void startingTestRun(Parameters parameters) {
-        System.out.println("##teamcity[testSuiteStarted name=\'jtreg\']");
-    }
-
-    @Override
     public void startingTest(TestResult testResult) {
         String location = "";
         try {
-            location = "locationHint=\'file://" + testResult.getDescription().getFile().getCanonicalPath() + "\'";
+            location = "locationHint='file://" + testResult.getDescription().getFile().getCanonicalPath() + "'";
         } catch (TestResult.Fault | IOException e) {
             //do nothing (leave location empty)
         }
-        System.out.println("##teamcity[testStarted name=\'" + escapeName(testResult.getTestName()) + "\' " +
+        System.out.println("##teamcity[testStarted name='" + escapeName(testResult.getTestName()) + "' " +
                 location + "]");
     }
 
@@ -69,15 +66,17 @@ public class JTRegTestListener implements Harness.Observer {
             if (file.isFile()) {
                 final String output = loadText(file);
                 if (output != null && output.length() > 0) {
-                    System.out.println("##teamcity[testStdOut name=\'" + escapeName(testResult.getTestName()) + "\' " +
-                            "out=\'" + escapeName(output) + "\']");
+                    System.out.println("##teamcity[testStdOut name='" + escapeName(testResult.getTestName()) + "' " +
+                            "out='" + escapeName(output) + "']");
                 }
             }
-            System.out.println("##teamcity[testFailed name=\'" + escapeName(testResult.getTestName()) + "\' " +
-                    "message=\'" + escapeName(status.getReason()) + "\']");
+            System.out.println("##teamcity[testFailed name='" + escapeName(testResult.getTestName()) + "' " +
+                    "message='" + escapeName(status.getReason()) + "']");
         } else if (status.isNotRun()) {
-            System.out.println("##teamcity[testIgnored name=\'" + escapeName(testResult.getTestName()) + "\']");
+            System.out.println("##teamcity[testIgnored name='" + escapeName(testResult.getTestName()) + "']");
         }
+
+        reportJUnitTestMethods(file);
 
         String duration = "0";
         try {
@@ -85,26 +84,43 @@ public class JTRegTestListener implements Harness.Observer {
         } catch (Throwable t) {
             //do nothing (leave duration unspecified)
         }
-        System.out.println("##teamcity[testFinished name=\'" + escapeName(testResult.getTestName()) + "\' " +
-                (!duration.equals("0") ? "duration=\'" + duration : "") + "\'" +
-                (!status.isFailed() ? "outputFile=\'" + escapeName(file.getAbsolutePath()) + "\'" : "") +
+        System.out.println("##teamcity[testFinished name='" + escapeName(testResult.getTestName()) + "' " +
+                (!duration.equals("0") ? "duration='" + duration : "") + "'" +
+                (!status.isFailed() ? "outputFile='" + escapeName(file.getAbsolutePath()) + "'" : "") +
                 " ]");
     }
 
-    @Override
-    public void stoppingTestRun() {
-        //do nothing
-    }
+    private static void reportJUnitTestMethods(File testOutput) {
+        try (Stream<String> lines = Files.lines(testOutput.toPath())) {
+            Iterator<String> itt = lines.iterator();
+            while (itt.hasNext()) {
+                String line = itt.next();
+                if (line.startsWith("STARTED")) {
+                    List<String> stdErr = new ArrayList<>();
+                    stdErr.add(line);
+                    String[] logParts = line.split("\\s+", 3);
+                    String testName = logParts[1];
 
-    @Override
-    public void finishedTesting() {
-        //do nothing
+                    System.out.println("##teamcity[testStarted name='" + escapeName(testName) + "' ]");
 
-    }
-
-    @Override
-    public void finishedTestRun(boolean b) {
-        System.out.println("##teamcity[testSuiteFinished name=\'jtreg\']");
+                    do {
+                        line = itt.next();
+                        stdErr.add(line);
+                    } while (!line.startsWith("SUCCESSFUL") && !line.startsWith("ABORTED")
+                            && !line.startsWith("SKIPPED") && !line.startsWith("FAILED"));
+                    System.out.println("##teamcity[testStdErr name='" + escapeName(testName) + "' " +
+                            "out='" + escapeName(String.join("\n", stdErr)) + "']");
+                    if (line.startsWith("SKIPPED")) {
+                        System.out.println("##teamcity[testIgnored name='" + escapeName(testName) + "']");
+                    } else if (line.startsWith("FAILED")) {
+                        System.out.println("##teamcity[testFailed name='" + escapeName(testName) + "' ]");
+                    }
+                    System.out.println("##teamcity[testFinished name='" + escapeName(testName) + "' ]");
+                }
+            }
+        } catch (IOException e) {
+            // skip
+        }
     }
 
     @Override
@@ -118,7 +134,7 @@ public class JTRegTestListener implements Harness.Observer {
 
     private static String loadText(File file) {
         try {
-            return Files.readAllLines(file.toPath()).stream().collect(Collectors.joining("\n"));
+            return String.join("\n", Files.readAllLines(file.toPath()));
         } catch (IOException e) {
             return "Failed to load test results.";
         }
