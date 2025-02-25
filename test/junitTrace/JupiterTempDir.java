@@ -38,7 +38,9 @@ import org.junit.jupiter.api.io.TempDir;
 class JupiterTempDir {
     @Test
     void currentWorkingDirectoryIsParentOfTemporaryDirectory(@TempDir Path temporary) {
-        assumeTrue(System.getProperty("test.file") != null, "jtreg not running");
+        // Verify that this test was launched through jtreg launcher, which sets the `test.file`
+        // system property. Find a list of them at https://openjdk.org/jtreg/tag-spec.html#testvars
+        assumeTrue(System.getProperty("test.file") != null, "jtreg launched this test");
 
         assertTrue(Files.isDirectory(temporary), "temporary directory expected");
 
