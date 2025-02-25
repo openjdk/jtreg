@@ -25,6 +25,11 @@
 
 package com.sun.javatest.regtest.agent;
 
+import org.junit.jupiter.api.extension.AnnotatedElementContext;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.io.CleanupMode;
+import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.api.io.TempDirFactory;
 import org.junit.platform.engine.DiscoverySelector;
 import org.junit.platform.engine.TestExecutionResult;
 import org.junit.platform.engine.TestSource;
@@ -46,6 +51,9 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
@@ -147,6 +155,8 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
             }
             LauncherDiscoveryRequest request = LauncherDiscoveryRequestBuilder.request()
                     .selectors(selector)
+                    .configurationParameter(TempDir.DEFAULT_CLEANUP_MODE_PROPERTY_NAME, CleanupMode.NEVER.name())
+                    .configurationParameter(TempDir.DEFAULT_FACTORY_PROPERTY_NAME, ScratchAsTemporaryDirectory.class.getName())
                     .build();
 
             SummaryGeneratingListener summaryGeneratingListener = new SummaryGeneratingListener();
@@ -307,6 +317,22 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
                 return source.getClassName() + "::" + source.getMethodName();
             }
             return testSource.toString();
+        }
+    }
+
+    /**
+     * Custom temporary directory factory for JUnit Jupiter tests.
+     * <p>
+     * When jtreg executes a test, the current directory for the test is set
+     * to a scratch directory so that the test can easily write any temporary
+     * files. This implementation ensures JUnit's standard factory follows
+     * that rule.
+     */
+    static class ScratchAsTemporaryDirectory implements TempDirFactory {
+        @Override
+        public Path createTempDirectory(AnnotatedElementContext context, ExtensionContext extensionContext) throws Exception {
+            Path scratchDirectory = Paths.get("").toAbsolutePath();
+            return Files.createTempDirectory(scratchDirectory, "junit-");
         }
     }
 }
