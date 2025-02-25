@@ -21,13 +21,14 @@
  * questions.
  */
 
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
-import org.junit.jupiter.api.io.TempDir;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 /*
  * @test
@@ -36,13 +37,15 @@ import java.nio.file.Path;
  */
 class JupiterTempDir {
     @Test
-    @EnabledIfSystemProperty(named = "test.name", matches = "JupiterTempDir.java")
-    void test(@TempDir Path temporary) throws Exception {
+    void currentWorkingDirectoryIsParentOfTemporaryDirectory(@TempDir Path temporary) {
+        assumeTrue(System.getProperty("test.file") != null, "jtreg not running");
+
+        assertTrue(Files.isDirectory(temporary), "temporary directory expected");
+
         var currentWorkingDirectory = Path.of("");
         var expected = currentWorkingDirectory.toAbsolutePath().toString();
         var actual = temporary.getParent().toAbsolutePath().toString();
-        Assertions.assertEquals(expected, actual, "Unexpected root for temporary files");
 
-        Files.createTempFile(temporary, "temp-", ".temp");
+        assertEquals(expected, actual, "unexpected parent directory for temporary files");
     }
 }
