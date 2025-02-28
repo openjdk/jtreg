@@ -210,7 +210,7 @@ public class CompileAction extends Action {
 
             if (currArg.endsWith(".java")) {
                 foundJavaFile = true;
-            } else if (currArg.endsWith(".jasm") || currArg.endsWith("jcod")) {
+            } else if (currArg.endsWith(".jasm") || currArg.endsWith(".jcod")) {
                 foundAsmFile = true;
             }
 
