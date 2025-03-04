@@ -30,22 +30,26 @@ import com.intellij.execution.ui.JrePathEditor;
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
 import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.projectRoots.JdkUtil;
+import com.intellij.openapi.ui.ComboBox;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.ui.components.JBTextField;
 import com.oracle.plugin.jtreg.configuration.JTRegConfiguration;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Objects;
+import java.util.stream.IntStream;
 
 /**
- * This class models the dialog associated with the (project-wide) jtreg tool settings.
+ * This class models the "Run/Debug Configurations" dialog for the JTReg tool settings.
  */
 public class JTRegConfigurable<T extends JTRegConfiguration> extends SettingsEditor<T> {
     private JTextField jtregQuery;
     private JTextField jtregOptions;
-    private TextFieldWithBrowseButton jtregDir;
     private TextFieldWithBrowseButton workDirectory;
     private JrePathEditor jrePathEditor;
     private JPanel mainPane;
@@ -63,10 +67,12 @@ public class JTRegConfigurable<T extends JTRegConfiguration> extends SettingsEdi
         directoryRadioButton.addActionListener(listener);
     }
 
+    /**
+     * Gets called for each JTReg configuration entry
+     * when it appears in the "Run/Debug Configurations" window.
+     */
     private void createUIComponents() {
         jrePathEditor = new JrePathEditor(DefaultJreSelector.projectSdk(project));
-        jtregDir = new TextFieldWithBrowseButton();
-        jtregDir.addBrowseFolderListener("Directory with Strategies", null, project, FileChooserDescriptorFactory.createSingleFolderDescriptor());
         workDirectory = new TextFieldWithBrowseButton();
         workDirectory.addBrowseFolderListener("Directory with Strategies", null, project, FileChooserDescriptorFactory.createSingleFolderDescriptor());
         file = new TextFieldWithBrowseButton();
@@ -83,10 +89,15 @@ public class JTRegConfigurable<T extends JTRegConfiguration> extends SettingsEdi
         directory.setEnabled(directoryRadioButton.isSelected());
     }
 
+    /**
+     * Gets frequently called to retrieve data from the form.
+     *
+     * @param configuration JTReg configuration to be populated.
+     */
     @Override
-    public void applyEditorTo(final JTRegConfiguration configuration) {
-        configuration.setAlternativeJrePath(jrePathEditor.getJrePathOrName());
-        configuration.setAlternativeJrePathEnabled(jrePathEditor.isAlternativeJreSelected());
+    public void applyEditorTo(@NotNull final JTRegConfiguration configuration) {
+        applyEditorJrePathTo(configuration);
+
         configuration.setRunClass(fileRadioButton.isSelected() ?
                 FileUtil.toSystemIndependentName(file.getText().trim()) : null);
         configuration.setPackage(directoryRadioButton.isSelected() ?
@@ -97,6 +108,63 @@ public class JTRegConfigurable<T extends JTRegConfiguration> extends SettingsEdi
                 null : FileUtil.toSystemIndependentName(workDirectory.getText().trim()));
     }
 
+    /**
+     * Retrieves the raw string value from the JRE Path Editor,
+     * checks whether it is present in the list of the JRE Path Editor.
+     * If it is in the list, the value is retrieved as usual.
+     * Otherwise, the method checks if the value is a valid JDK path,
+     * and if so, adds it to the JRE Path Editor list.
+     * <p>
+     * If the user manually selects the JRE path, it is always considered "alternative".
+     * <p>
+     * Resolves the window freeze issue when the user specifies a JRE path
+     * that is missing from the project's SDK list.
+     * <p>
+     * <b>Note:</b> Using the methods
+     * {@link JrePathEditor#getJrePathOrName} and {@link JrePathEditor#isAlternativeJreSelected}
+     * is resource-intensive when the selected path corresponds to the valid Java home,
+     * but this path is not present in the JrePathEditor list.
+     *
+     * @param configuration the JTReg configuration
+     *                      whose fields {@code alternativeJrePath} and {@code isAlternativeJre}
+     *                      need to be populated.
+     * @see com.intellij.execution.ui.JreComboboxEditor#getItem()
+     * @see org.jetbrains.jps.model.java.impl.JdkVersionDetectorImpl#detectJdkVersionInfo
+     */
+    private void applyEditorJrePathTo(@NotNull JTRegConfiguration configuration) {
+        final ComboBox<JrePathEditor.JreComboBoxItem> jreComboBox = jrePathEditor.getComponent();
+        final ComboBoxEditor jreComboBoxEditor = jreComboBox.getEditor();
+        final JBTextField jreTextField = (JBTextField) jreComboBoxEditor.getEditorComponent();
+
+        final String jrePathOrNameText = jreTextField.getText().trim();
+        final boolean inList = IntStream.range(0, jreComboBox.getItemCount())
+                .mapToObj(jreComboBox::getItemAt)
+                .map(JrePathEditor.JreComboBoxItem::getPresentableText)
+                .filter(Objects::nonNull)
+                .anyMatch(pathOrName -> pathOrName.equals(jrePathOrNameText));
+
+        final String alternativeJrePath;
+        final boolean alternativeJREPathEnabled;
+        if (inList) { // safe to get item from JRE path editor
+            alternativeJrePath = jrePathEditor.getJrePathOrName();
+            alternativeJREPathEnabled = jrePathEditor.isAlternativeJreSelected();
+        } else { // JRE path editor would be time-consuming
+            alternativeJrePath = FileUtil.toSystemIndependentName(jrePathOrNameText); // The value here should always be the path, not the name.
+            alternativeJREPathEnabled = true;
+            if (JdkUtil.checkForJdk(alternativeJrePath)) {
+                // If the path is a valid JDK, add it to the ComboBox list.
+                jrePathEditor.setPathOrName(alternativeJrePath, true);
+            }
+        }
+        configuration.setAlternativeJrePath(alternativeJrePath);
+        configuration.setAlternativeJrePathEnabled(alternativeJREPathEnabled);
+    }
+
+    /**
+     * Gets called to populate the fields in the form from the stored JTReg configuration.
+     *
+     * @param configuration JTReg stored configuration.
+     */
     @Override
     public void resetEditorFrom(final JTRegConfiguration configuration) {
         jrePathEditor.setPathOrName(configuration.getAlternativeJrePath(), configuration.isAlternativeJrePathEnabled());
