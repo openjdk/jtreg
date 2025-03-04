@@ -84,7 +84,7 @@ public class JTRegConfiguration extends JavaTestConfigurationBase {
     }
 
     @Override
-    public void setEnvs(Map<String, String> map) {
+    public void setEnvs(@NotNull Map<String, String> map) {
     }
 
     @NotNull
@@ -120,14 +120,14 @@ public class JTRegConfiguration extends JavaTestConfigurationBase {
     }
 
     @Override
-    public void readExternal(Element element) throws InvalidDataException {
+    public void readExternal(@NotNull Element element) throws InvalidDataException {
         super.readExternal(element);
         XmlSerializer.deserializeInto(this, element);
     }
 
 
     @Override
-    public void writeExternal(Element element) throws WriteExternalException {
+    public void writeExternal(@NotNull Element element) throws WriteExternalException {
         super.writeExternal(element);
 
         XmlSerializer.serializeInto(this, element);
@@ -152,7 +152,7 @@ public class JTRegConfiguration extends JavaTestConfigurationBase {
     }
 
     @Override
-    public SMTRunnerConsoleProperties createTestConsoleProperties(Executor executor) {
+    public @NotNull SMTRunnerConsoleProperties createTestConsoleProperties(@NotNull Executor executor) {
         //produces some additional benefits for rerun failed tests, etc
         return new JTRegConfigurationConsoleProperties(executor, JTRegConfiguration.this);
     }
@@ -193,19 +193,31 @@ public class JTRegConfiguration extends JavaTestConfigurationBase {
         }
     }
 
-    String getJDKString() {
+    /**
+     * Returns the path to the JDK used by JTReg.
+     *
+     * @return the JDK path, or {@code null} if no JDK is selected or if it is invalid.
+     */
+    @Nullable String getJDKString() {
         String jdkString = null;
-        if (isAlternativeJrePathEnabled()) {
-            String jdkPathString = getAlternativeJrePath();
-            Sdk sdk = ProjectJdkTable.getInstance().findJdk(jdkPathString);
-            if (sdk != null) {
-                jdkString = sdk.getHomePath();
-            } else if (JdkUtil.checkForJdk(jdkPathString)) {
-                jdkString = jdkPathString;
+        final ProjectJdkTable projectJdkTable = ProjectJdkTable.getInstance();
+        if (alternativeJrePathEnabled) {
+            if (null != alternativeJrePath) {
+                final Sdk sdk = projectJdkTable.findJdk(alternativeJrePath);
+                if (null != sdk) {
+                    jdkString = sdk.getHomePath();
+                } else if (JdkUtil.checkForJdk(alternativeJrePath)) {
+                    jdkString = alternativeJrePath;
+                }
             }
-        } else {
-            String defaultJdk = DefaultJreSelector.projectSdk(getProject()).getNameAndDescription().first;
-            jdkString = ProjectJdkTable.getInstance().findJdk(defaultJdk).getHomePath();
+        } else { // Default SDK is chosen
+            final String defaultJDKName = DefaultJreSelector.projectSdk(getProject()).getNameAndDescription().first;
+            if (null != defaultJDKName) {
+                final Sdk projectSDK = projectJdkTable.findJdk(defaultJDKName);
+                if (null != projectSDK) {
+                    jdkString = projectSDK.getHomePath();
+                }
+            }
         }
         return jdkString;
     }
