@@ -45,9 +45,6 @@ $(BUILDTESTDIR)/ModLibsTest.agentvm.ok: \
 	echo "test passed at `date`" > $@
 
 
-ifdef JDK9HOME
 TESTS.jtreg += \
 	$(BUILDTESTDIR)/ModLibsTest.othervm.ok \
 	$(BUILDTESTDIR)/ModLibsTest.agentvm.ok
-endif
-
