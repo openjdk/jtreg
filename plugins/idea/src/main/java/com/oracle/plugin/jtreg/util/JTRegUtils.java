@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2016, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -25,6 +25,7 @@
 
 package com.oracle.plugin.jtreg.util;
 
+import com.intellij.execution.junit.JUnitUtil;
 import com.intellij.lang.ant.config.AntBuildFile;
 import com.intellij.lang.ant.config.AntConfiguration;
 import com.intellij.openapi.application.ApplicationManager;
@@ -33,17 +34,22 @@ import com.intellij.openapi.roots.OrderRootType;
 import com.intellij.openapi.roots.libraries.Library;
 import com.intellij.openapi.roots.libraries.LibraryTable;
 import com.intellij.openapi.roots.libraries.LibraryTablesRegistrar;
+import com.intellij.openapi.util.text.StringUtilRt;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.psi.util.PsiUtil;
 import com.intellij.openapi.diagnostic.Logger;
+import com.theoryinpractice.testng.util.TestNGUtil;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.function.BiPredicate;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 
@@ -53,6 +59,39 @@ import java.util.stream.Stream;
 public class JTRegUtils {
 
     private static final Logger LOG = Logger.getInstance(JTRegUtils.class);
+
+    /**
+     * A predicate that checks if two strings are either both empty or both null,
+     * or if they are equal to each other, taking into account null == empty string value.
+     *
+     * <p>This predicate will return {@code true} if:
+     * <ul>
+     *     <li>Both strings are empty, or</li>
+     *     <li>Both strings are {@code null}, or</li>
+     *     <li>The strings are equal using {@link Objects#equals(Object, Object)}.</li>
+     * </ul>
+     */
+    public static final BiPredicate<String, String> NOT_NULLIZED_STRING_EQUALS = (a, b) -> { //
+        return StringUtilRt.notNullize(a).equals(StringUtilRt.notNullize(b));
+    };
+
+    public static final Predicate<PsiMethod> IS_TESTNG_TEST_METHOD = TestNGUtil::hasTest;
+    public static final Predicate<PsiClass> IS_TESTNG_TEST_CLASS = TestNGUtil::isTestNGClass;
+
+    public static final Predicate<PsiMethod> IS_JUNIT_TEST_METHOD = JUnitUtil::isTestAnnotated;
+    public static final Predicate<PsiClass> IS_JUNIT_TEST_CLASS = JUnitUtil::isTestClass;
+
+    public static final Predicate<PsiMethod> IS_THIRD_PARTY_TEST_METHOD = IS_TESTNG_TEST_METHOD.or(IS_JUNIT_TEST_METHOD);
+    public static final Predicate<PsiClass> IS_THIRD_PARTY_TEST_CLASS = IS_TESTNG_TEST_CLASS.or(IS_JUNIT_TEST_CLASS);
+
+    public static final Predicate<PsiElement> IS_THIRD_PARTY_TEST_ELEMENT = e -> { //
+        return ((e instanceof PsiMethod psiMethod) && IS_THIRD_PARTY_TEST_METHOD.test(psiMethod))
+                || ((e instanceof PsiClass psiClass) && IS_THIRD_PARTY_TEST_CLASS.test(psiClass));
+    };
+
+    public static final Predicate<PsiElement> IS_DIR_ELEMENT = PsiDirectory.class::isInstance;
+    public static final Predicate<PsiElement> IS_FILE_ELEMENT = PsiFile.class::isInstance;
+    public static final Predicate<PsiElement> IS_FILE_OR_DIR_ELEMENT = IS_FILE_ELEMENT.or(IS_DIR_ELEMENT);
 
     /**
      * Are we inside a jtreg test root?
@@ -292,6 +331,38 @@ public class JTRegUtils {
      */
     public static boolean isTestNGTestData(Project project, VirtualFile file) {
         return isTestNGTestData(PsiUtil.getPsiFile(project, file));
+    }
+
+    /**
+     * Determines whether the given element is a valid test-related element.
+     * The element must be one of the following:
+     * <ul>
+     *     <li>An element inside a test file</li>
+     *     <li>A test file</li>
+     *     <li>A test directory</li>
+     * </ul>
+     *
+     * <p>Additionally, the following conditions must be met:</p>
+     * <ul>
+     *     <li>A test file must contain the {@code @test} comment tag.</li>
+     *     <li>A test file must be located inside a test directory.</li>
+     *     <li>A test directory must have a parent directory that contains a {@code TEST.ROOT} file.</li>
+     * </ul>
+     *
+     * @param element The element for the run configuration (by default, contains the element at the caret).
+     * @return {@code true} if the element is a valid test-related element, {@code false} otherwise.
+     */
+    public static boolean isRunnableByJTReg(@NotNull PsiElement element) {
+        final PsiFile runFile;
+        final PsiDirectory runDir;
+        if (element instanceof PsiDirectory psiDirectory) {
+            runFile = null;
+            runDir = psiDirectory;
+        } else {
+            runFile = (element instanceof PsiFile psiFile) ? psiFile : element.getContainingFile();
+            runDir = null != runFile ? runFile.getContainingDirectory() : null;
+        }
+        return isInJTRegRoot(runDir) && isJTRegTestData(runFile);
     }
 
     /**
