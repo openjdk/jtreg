@@ -32,20 +32,26 @@ import com.intellij.execution.RunManagerEx;
 import com.intellij.execution.actions.ConfigurationContext;
 import com.intellij.execution.actions.ConfigurationFromContext;
 import com.intellij.execution.application.ApplicationConfiguration;
+import com.intellij.execution.configurations.RunConfiguration;
+import com.intellij.execution.junit.JUnitConfiguration;
 import com.intellij.execution.junit.JavaRunConfigurationProducerBase;
 import com.intellij.lang.ant.config.*;
 import com.intellij.lang.ant.config.impl.AntBeforeRunTask;
 import com.intellij.lang.ant.config.impl.AntBeforeRunTaskProvider;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import com.oracle.plugin.jtreg.configuration.JTRegConfiguration;
 import com.oracle.plugin.jtreg.service.JTRegService;
 import com.oracle.plugin.jtreg.configuration.JTRegConfigurationType;
 import com.oracle.plugin.jtreg.util.JTRegUtils;
 import com.theoryinpractice.testng.configuration.TestNGConfiguration;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
+
+import static com.oracle.plugin.jtreg.util.JTRegUtils.*;
 
 /**
  * This class serves as a common superclass for both file and folder-based configuration producers.
@@ -56,27 +62,87 @@ public abstract class JTRegConfigurationProducer extends JavaRunConfigurationPro
         super(JTRegConfigurationType.getInstance());
     }
 
+    /**
+     * @see JTRegClassConfigurationProducer#setupConfigurationFromContext
+     */
     @Override
-    public boolean isConfigurationFromContext(JTRegConfiguration unitConfiguration, ConfigurationContext context) {
-        final Location contextLocation = context.getLocation();
+    public boolean isConfigurationFromContext(@NotNull JTRegConfiguration unitConfiguration,
+                                              @NotNull ConfigurationContext context) {
+        final Location<PsiElement> contextLocation = context.getLocation();
         if (contextLocation == null) {
             return false;
         }
 
-        Location location = JavaExecutionUtil.stepIntoSingleClass(contextLocation);
+        final Location<?> location = JavaExecutionUtil.stepIntoSingleClass(contextLocation);
         if (location == null) {
             return false;
         }
 
         PsiElement element = location.getPsiElement();
-        String query = getQuery(element);
-        PsiFile contextFile = element.getContainingFile();
-        final String configFile = unitConfiguration.getRunClass();
-        return configFile != null && contextFile != null && contextFile.getVirtualFile() != null &&
-                configFile.equals(contextFile.getVirtualFile().getPath())
-                && query.equals(unitConfiguration.getQuery());
+        element = findExactRunElement(element);
+
+        final String contextQuery = getQuery(element);
+
+        final PsiFile contextFile = (element instanceof PsiFile psiFile) ? psiFile : element.getContainingFile();
+        final VirtualFile contextVirtualFile = null != contextFile ? contextFile.getVirtualFile() : null;
+        final String contextFilePath = null != contextVirtualFile ? contextVirtualFile.getPath() : null;
+
+        final String contextDirPath = (element instanceof PsiDirectory d) ? d.getVirtualFile().getPath() : null;
+
+        return NOT_NULLIZED_STRING_EQUALS.test(contextFilePath, unitConfiguration.getRunClass())
+                && NOT_NULLIZED_STRING_EQUALS.test(contextDirPath, unitConfiguration.getPackage())
+                && NOT_NULLIZED_STRING_EQUALS.test(contextQuery, unitConfiguration.getQuery());
     }
 
+    /**
+     * Finds the nearest test element among the parents of the given element:
+     * <ol>
+     *     <li>Test method</li>
+     *     <li>Test class</li>
+     *     <li>File</li>
+     * </ol>
+     * If no test element is found among the parents, returns the given element.
+     * <p>
+     * An element is considered test-runnable only if all its parent elements,
+     * up to the containing file, are also test-runnable.
+     * <p>
+     * A directory is also considered a test-runnable element.
+     *
+     * @param element The element for the run configuration (by default, contains the element at the caret).
+     * @return The nearest test element found, or {@code element} if no test element is found among the parents.
+     * @see JTRegClassConfigurationProducer#nameForElement(PsiElement)
+     * @see #getQuery(PsiElement)
+     */
+    @NotNull
+    protected PsiElement findExactRunElement(@NotNull final PsiElement element) {
+        PsiElement retval = null;
+        for (PsiElement e = element; null != e; e = e.getParent()) {
+            if (IS_FILE_OR_DIR_ELEMENT.test(e)) {
+                if (null == retval) {
+                    retval = e;
+                }
+                break;
+            }
+
+            if (IS_THIRD_PARTY_TEST_ELEMENT.test(e)) {
+                final PsiElement identifyingElement = ((PsiNameIdentifierOwner) e).getIdentifyingElement();
+                if (null != identifyingElement) { // null for name of the non-test inner class
+                    if (null == retval) {
+                        // When found, check the left hierarchy up to the class for runnability
+                        retval = identifyingElement;
+                    }
+                } else {
+                    retval = null;
+                }
+            } else {
+                retval = null;
+            }
+        }
+
+        return null != retval ? retval : element;
+    }
+
+    @NotNull
     protected static String getQuery(PsiElement element) {
         boolean isJUnit = JTRegUtils.isJUnitTestData(element.getContainingFile());
         boolean isTestNG = JTRegUtils.isTestNGTestData(element.getContainingFile());
@@ -158,14 +224,17 @@ public abstract class JTRegConfigurationProducer extends JavaRunConfigurationPro
         };
     }
 
+    /**
+     * @see ConfigurationFromContext#COMPARATOR
+     * @see com.intellij.execution.actions.PreferredProducerFind#doGetConfigurationsFromContext
+     */
     @Override
-    public boolean shouldReplace(ConfigurationFromContext self, ConfigurationFromContext other) {
-        if (other.getConfiguration() instanceof TestNGConfiguration) {
-            return true;
-        } else if (other.getConfiguration() instanceof ApplicationConfiguration) {
-            return true;
-        }
-        return super.shouldReplace(self, other);
+    public boolean shouldReplace(@NotNull ConfigurationFromContext self, @NotNull ConfigurationFromContext other) {
+        final RunConfiguration otherCnf = other.getConfiguration();
+        return otherCnf instanceof ApplicationConfiguration
+                || otherCnf instanceof TestNGConfiguration
+                || otherCnf instanceof JUnitConfiguration
+                || super.shouldReplace(self, other);
     }
 
     public void initBeforeTaskActions(JTRegConfiguration configuration) {
