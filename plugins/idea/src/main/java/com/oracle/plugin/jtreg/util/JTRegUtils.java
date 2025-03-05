@@ -97,9 +97,7 @@ public class JTRegUtils {
      * Are we inside a jtreg test root?
      */
     public static boolean isInJTRegRoot(PsiDirectory dir) {
-        return dir != null ?
-                isInJTRegRoot(dir.getVirtualFile()) :
-                false;
+        return null != dir && isInJTRegRoot(dir.getVirtualFile());
     }
 
     /**
