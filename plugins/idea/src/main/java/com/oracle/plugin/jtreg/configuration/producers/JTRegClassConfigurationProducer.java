@@ -51,7 +51,7 @@ public class JTRegClassConfigurationProducer extends JTRegConfigurationProducer 
     protected boolean setupConfigurationFromContext(@NotNull JTRegConfiguration configuration,
                                                     @NotNull ConfigurationContext context,
                                                     @NotNull Ref<PsiElement> sourceElement) {
-        final Location<PsiElement> contextLocation = context.getLocation();
+        Location<PsiElement> contextLocation = context.getLocation();
         assert contextLocation != null;
 
         PsiElement element = contextLocation.getPsiElement();
@@ -71,7 +71,7 @@ public class JTRegClassConfigurationProducer extends JTRegConfigurationProducer 
         if (element instanceof PsiDirectory runDir) {
             configuration.setPackage(runDir.getVirtualFile().getPath());
         } else {
-            final PsiFile runFile = (element instanceof PsiFile psiFile) ? psiFile : element.getContainingFile();
+            PsiFile runFile = (element instanceof PsiFile psiFile) ? psiFile : element.getContainingFile();
             configuration.setRunClass(runFile.getVirtualFile().getPath());
         }
 
@@ -112,11 +112,11 @@ public class JTRegClassConfigurationProducer extends JTRegConfigurationProducer 
      */
     private void preventRunPriorityLoss(PsiElement element, @NotNull Ref<PsiElement> sourceElement) {
         if (element instanceof PsiClassOwner psiClassOwner) {
-            final PsiClass[] psiClasses = psiClassOwner.getClasses();
+            PsiClass[] psiClasses = psiClassOwner.getClasses();
             if (1 == psiClasses.length) {
                 sourceElement.set(psiClasses[0]); // for Application/TestNG/JUnit
             } else {
-                final PsiClass mainClass = ApplicationConfigurationType.getMainClass(element);
+                PsiClass mainClass = ApplicationConfigurationType.getMainClass(element);
                 if (null != mainClass) {
                     sourceElement.set(mainClass); // for Application
                 }

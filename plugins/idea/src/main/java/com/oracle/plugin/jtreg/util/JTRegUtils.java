@@ -351,8 +351,8 @@ public class JTRegUtils {
      * @return {@code true} if the element is a valid test-related element, {@code false} otherwise.
      */
     public static boolean isRunnableByJTReg(@NotNull PsiElement element) {
-        final PsiFile runFile;
-        final PsiDirectory runDir;
+        PsiFile runFile;
+        PsiDirectory runDir;
         if (element instanceof PsiDirectory psiDirectory) {
             runFile = null;
             runDir = psiDirectory;

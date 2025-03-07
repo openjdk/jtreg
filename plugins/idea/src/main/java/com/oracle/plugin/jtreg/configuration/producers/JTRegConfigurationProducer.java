@@ -68,12 +68,12 @@ public abstract class JTRegConfigurationProducer extends JavaRunConfigurationPro
     @Override
     public boolean isConfigurationFromContext(@NotNull JTRegConfiguration unitConfiguration,
                                               @NotNull ConfigurationContext context) {
-        final Location<PsiElement> contextLocation = context.getLocation();
+        Location<PsiElement> contextLocation = context.getLocation();
         if (contextLocation == null) {
             return false;
         }
 
-        final Location<?> location = JavaExecutionUtil.stepIntoSingleClass(contextLocation);
+        Location<?> location = JavaExecutionUtil.stepIntoSingleClass(contextLocation);
         if (location == null) {
             return false;
         }
@@ -81,13 +81,13 @@ public abstract class JTRegConfigurationProducer extends JavaRunConfigurationPro
         PsiElement element = location.getPsiElement();
         element = findExactRunElement(element);
 
-        final String contextQuery = getQuery(element);
+        String contextQuery = getQuery(element);
 
-        final PsiFile contextFile = (element instanceof PsiFile psiFile) ? psiFile : element.getContainingFile();
-        final VirtualFile contextVirtualFile = null != contextFile ? contextFile.getVirtualFile() : null;
-        final String contextFilePath = null != contextVirtualFile ? contextVirtualFile.getPath() : null;
+        PsiFile contextFile = (element instanceof PsiFile psiFile) ? psiFile : element.getContainingFile();
+        VirtualFile contextVirtualFile = null != contextFile ? contextFile.getVirtualFile() : null;
+        String contextFilePath = null != contextVirtualFile ? contextVirtualFile.getPath() : null;
 
-        final String contextDirPath = (element instanceof PsiDirectory d) ? d.getVirtualFile().getPath() : null;
+        String contextDirPath = (element instanceof PsiDirectory d) ? d.getVirtualFile().getPath() : null;
 
         return NOT_NULLIZED_STRING_EQUALS.test(contextFilePath, unitConfiguration.getRunClass())
                 && NOT_NULLIZED_STRING_EQUALS.test(contextDirPath, unitConfiguration.getPackage())
@@ -230,7 +230,7 @@ public abstract class JTRegConfigurationProducer extends JavaRunConfigurationPro
      */
     @Override
     public boolean shouldReplace(@NotNull ConfigurationFromContext self, @NotNull ConfigurationFromContext other) {
-        final RunConfiguration otherCnf = other.getConfiguration();
+        RunConfiguration otherCnf = other.getConfiguration();
         return otherCnf instanceof ApplicationConfiguration
                 || otherCnf instanceof TestNGConfiguration
                 || otherCnf instanceof JUnitConfiguration
