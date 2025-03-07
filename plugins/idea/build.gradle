@@ -30,6 +30,7 @@ dependencies {
         intellijIdeaCommunity('2024.2.0.2')
         plugin("AntSupport:${antSupportVersion}")
         bundledPlugins('com.intellij.java', 'TestNG-J')
+        bundledPlugins('com.intellij.java', 'JUnit')
         instrumentationTools()
     }
 
