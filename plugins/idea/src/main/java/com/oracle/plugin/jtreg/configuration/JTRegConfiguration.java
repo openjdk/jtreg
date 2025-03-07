@@ -200,10 +200,10 @@ public class JTRegConfiguration extends JavaTestConfigurationBase {
      */
     @Nullable String getJDKString() {
         String jdkString = null;
-        final ProjectJdkTable projectJdkTable = ProjectJdkTable.getInstance();
+        ProjectJdkTable projectJdkTable = ProjectJdkTable.getInstance();
         if (alternativeJrePathEnabled) {
             if (null != alternativeJrePath) {
-                final Sdk sdk = projectJdkTable.findJdk(alternativeJrePath);
+                Sdk sdk = projectJdkTable.findJdk(alternativeJrePath);
                 if (null != sdk) {
                     jdkString = sdk.getHomePath();
                 } else if (JdkUtil.checkForJdk(alternativeJrePath)) {
@@ -211,9 +211,9 @@ public class JTRegConfiguration extends JavaTestConfigurationBase {
                 }
             }
         } else { // Default SDK is chosen
-            final String defaultJDKName = DefaultJreSelector.projectSdk(getProject()).getNameAndDescription().first;
+            String defaultJDKName = DefaultJreSelector.projectSdk(getProject()).getNameAndDescription().first;
             if (null != defaultJDKName) {
-                final Sdk projectSDK = projectJdkTable.findJdk(defaultJDKName);
+                Sdk projectSDK = projectJdkTable.findJdk(defaultJDKName);
                 if (null != projectSDK) {
                     jdkString = projectSDK.getHomePath();
                 }
