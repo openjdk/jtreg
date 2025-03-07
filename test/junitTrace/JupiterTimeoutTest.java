@@ -34,7 +34,7 @@ import org.junit.jupiter.api.io.TempDir;
 class JupiterTimeoutTest {
     @Test
     void test() {
-        String actual = System.getProperty("test.default.timeout.seconds", "-1");
-        assertEquals("123", actual, "unexpected default timeout seconds");
+        String actual = System.getProperty("test.timeout.default.seconds", "-1");
+        assertEquals("123", actual, "unexpected default value for timeout seconds");
     }
 }

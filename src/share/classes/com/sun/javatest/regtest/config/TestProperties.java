@@ -277,7 +277,7 @@ public class TestProperties {
                     maxOutputSize = getInt("maxOutputSize", -1);
 
                     // add the default test timeout value in seconds
-                    defaultTimeout = Duration.ofSeconds(getInt("default.timeout.seconds", 120));
+                    defaultTimeout = Duration.ofSeconds(getInt("timeout.default.seconds", 120));
 
                     // determine whether tests can use "smart action args"
                     allowSmartActionArgs = initAllowSmartActionArgs(parent);

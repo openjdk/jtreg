@@ -43,6 +43,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
@@ -1127,7 +1128,7 @@ public class RegressionScript extends Script {
 
     Map<String, String> getTestProperties()  {
         // initialize the properties with standard properties common to all tests
-        Map<String, String> p = new LinkedHashMap<>(params.getBasicTestProperties());
+        Map<String, String> p = new TreeMap<>(params.getBasicTestProperties());
         // add test-specific properties
         String testName = testResult.getTestName();
         p.put("test.name", testName);
@@ -1174,7 +1175,7 @@ public class RegressionScript extends Script {
         }
         if (isTimeoutsEnabled()) {
             long seconds = properties.getDefaultTimeout(getTestDescription().getFile()).toSeconds();
-            p.put("test.default.timeout.seconds", Long.toString(seconds));
+            p.put("test.timeout.default.seconds", Long.toString(seconds));
         }
         p.put("test.root", getTestRootDir().getPath());
         return Collections.unmodifiableMap(p);

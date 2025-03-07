@@ -1,1 +1,1 @@
-default.timeout.seconds=123
+timeout.default.seconds=123
