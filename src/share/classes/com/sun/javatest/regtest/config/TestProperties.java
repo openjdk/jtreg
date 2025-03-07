@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -30,6 +30,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.ref.SoftReference;
+import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -162,6 +163,10 @@ public class TestProperties {
         return getEntry(file).maxOutputSize;
     }
 
+    public final Duration getDefaultTimeout(File file) {
+        return getEntry(file).defaultTimeout;
+    }
+
     boolean getAllowSmartActionArgs(File file) {
         return getEntry(file).allowSmartActionArgs;
     }
@@ -220,6 +225,7 @@ public class TestProperties {
             final int maxOutputSize;
             final boolean allowSmartActionArgs;
             final boolean enablePreview;
+            final Duration defaultTimeout;
 
             Entry(Entry parent, File dir) {
                 this.parent = parent;
@@ -270,6 +276,9 @@ public class TestProperties {
                     // add the maxOutputSize for result content
                     maxOutputSize = getInt("maxOutputSize", -1);
 
+                    // add the default test timeout value in seconds
+                    defaultTimeout = Duration.ofSeconds(getInt("default.timeout.seconds", 120));
+
                     // determine whether tests can use "smart action args"
                     allowSmartActionArgs = initAllowSmartActionArgs(parent);
 
@@ -291,6 +300,7 @@ public class TestProperties {
                     extLibRoots = parent.extLibRoots;
                     modules = parent.modules;
                     maxOutputSize = parent.maxOutputSize;
+                    defaultTimeout = parent.defaultTimeout;
                     allowSmartActionArgs = parent.allowSmartActionArgs;
                     enablePreview = parent.enablePreview;
                 }
