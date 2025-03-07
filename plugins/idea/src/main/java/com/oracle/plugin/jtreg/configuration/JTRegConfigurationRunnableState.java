@@ -56,7 +56,7 @@ import java.util.stream.Stream;
 /**
  * This class tells the IDE how a given configuration should be translated into an actual command line invocation.
  */
-class JTRegConfigurationRunnableState extends JavaTestFrameworkRunnableState<JTRegConfiguration> {
+public class JTRegConfigurationRunnableState extends JavaTestFrameworkRunnableState<JTRegConfiguration> {
 
     private final JTRegConfiguration myConfiguration;
 
