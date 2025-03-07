@@ -48,11 +48,11 @@ Once the build is configured correctly, the plugin can even be tested in a sandb
 
 To install the plugin in your IDE, first you need to build a plugin module file (a `.zip` file), as described in the previous section.
 
-Once the plugin zip has been obtained, it can be installed in the IDE; go in `Help -> Find Action...`, and type `Install plugin from disk`, and then select the corresponding action from the drop down list. A new file dialog will pop up: point the IDE to the zip file you have created in the step above. The IDE will require a restart - once restart is completed the installation process is completed, and the plugin is ready to be used to run and debug jtreg tests.
+Once the plugin zip has been obtained, it can be installed in the IDE; go in `Help -> Find Action...`, and type `Install plugin from disk`, and then select the corresponding action from the drop-down list. A new file dialog will pop up: point the IDE to the zip file you have created in the step above. The IDE will require a restart - once restart is completed the installation process is completed, and the plugin is ready to be used to run and debug jtreg tests.
 
 ## Using the plugin
 
-This section covers the the functionalities supported by the jtreg plugin.
+This section covers the functionalities supported by the jtreg plugin.
 
 ### Configuring jtreg
 
@@ -63,7 +63,7 @@ The plugin allows user to configure how jtreg should be invoked by the plugin. P
 * which jtreg options should be used to run tests
 * where jtreg should put its output files
 
-Configuring such parameters is possible through the dialog located under `File -> Settings`, under the `jtreg` panel. By default, such settings are saved on a per-project basis. If, however, you would like to specify IDE-wide default, you can do so by accessing a similar dialog under `File -> New Projects Setup -> Settings for New Projects...`.
+Configuring such parameters is possible through the dialog located under `File -> Settings`, under the `jtreg` panel. By default, such settings are saved on a per-project basis. If, however, you would like to specify IDE-wide default, you can do so by accessing a similar dialog under `File -> New Projects Setup -> Settings for New Projects...` and expanding the `Other Settings` section.
 
 Note: the settings specified here will be used as defaults for creating new jtreg run/debug configurations. As a result, if any error is made when configuring global jtreg settings, such errors will be propagated in all newly created jtreg test configurations.
 
