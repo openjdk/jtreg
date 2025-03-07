@@ -132,19 +132,19 @@ public class JTRegConfigurable<T extends JTRegConfiguration> extends SettingsEdi
      * @see org.jetbrains.jps.model.java.impl.JdkVersionDetectorImpl#detectJdkVersionInfo
      */
     private void applyEditorJrePathTo(@NotNull JTRegConfiguration configuration) {
-        final ComboBox<JrePathEditor.JreComboBoxItem> jreComboBox = jrePathEditor.getComponent();
-        final ComboBoxEditor jreComboBoxEditor = jreComboBox.getEditor();
-        final JBTextField jreTextField = (JBTextField) jreComboBoxEditor.getEditorComponent();
+        ComboBox<JrePathEditor.JreComboBoxItem> jreComboBox = jrePathEditor.getComponent();
+        ComboBoxEditor jreComboBoxEditor = jreComboBox.getEditor();
+        JBTextField jreTextField = (JBTextField) jreComboBoxEditor.getEditorComponent();
 
-        final String jrePathOrNameText = jreTextField.getText().trim();
-        final boolean inList = IntStream.range(0, jreComboBox.getItemCount())
+        String jrePathOrNameText = jreTextField.getText().trim();
+        boolean inList = IntStream.range(0, jreComboBox.getItemCount())
                 .mapToObj(jreComboBox::getItemAt)
                 .map(JrePathEditor.JreComboBoxItem::getPresentableText)
                 .filter(Objects::nonNull)
                 .anyMatch(pathOrName -> pathOrName.equals(jrePathOrNameText));
 
-        final String alternativeJrePath;
-        final boolean alternativeJREPathEnabled;
+        String alternativeJrePath;
+        boolean alternativeJREPathEnabled;
         if (inList) { // safe to get item from JRE path editor
             alternativeJrePath = jrePathEditor.getJrePathOrName();
             alternativeJREPathEnabled = jrePathEditor.isAlternativeJreSelected();
