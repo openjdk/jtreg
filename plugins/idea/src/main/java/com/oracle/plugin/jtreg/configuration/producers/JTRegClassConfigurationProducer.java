@@ -74,6 +74,8 @@ public class JTRegClassConfigurationProducer extends JTRegConfigurationProducer 
             PsiFile runFile = (element instanceof PsiFile psiFile) ? psiFile : element.getContainingFile();
             if (null != runFile && null != runFile.getVirtualFile()) {
                 configuration.setRunClass(runFile.getVirtualFile().getPath());
+            } else {
+                return false;
             }
         }
 
