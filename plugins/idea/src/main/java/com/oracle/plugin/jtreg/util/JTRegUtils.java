@@ -58,21 +58,6 @@ public class JTRegUtils {
 
     private static final Logger LOG = Logger.getInstance(JTRegUtils.class);
 
-    /**
-     * Checks if two strings are equal to each other,
-     * taking into account {@code null} == {@code empty string} value.
-     *
-     * @return {@code true} if any of the following is {@code true}:
-     * <ul>
-     *     <li>Both strings are {@code null}.</li>
-     *     <li>One string is {@code null} and the other is empty.</li>
-     *     <li>The strings are equal.</li>
-     * </ul>
-     */
-    public static boolean isEqualNullAsEmpty(String a, String b) {
-        return StringUtilRt.notNullize(a).equals(StringUtilRt.notNullize(b));
-    }
-
     public static boolean isThirdPartyTestElement(PsiElement element) {
         return ((element instanceof PsiMethod psiMethod)
                 && (TestNGUtil.hasTest(psiMethod) || JUnitUtil.isTestAnnotated(psiMethod)))
