@@ -128,7 +128,7 @@ public abstract class JTRegConfigurationProducer extends JavaRunConfigurationPro
                 final PsiElement identifyingElement = ((PsiNameIdentifierOwner) e).getIdentifyingElement();
                 if (null != identifyingElement) { // null for name of the non-test inner class
                     if (null == retval) {
-                        // When found, check the left hierarchy up to the class for runnability
+                        // When found, check the rest of the hierarchy up to the class for runnability
                         retval = identifyingElement;
                     }
                 } else {
