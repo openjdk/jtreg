@@ -58,6 +58,10 @@ public class JTRegUtils {
 
     private static final Logger LOG = Logger.getInstance(JTRegUtils.class);
 
+    /**
+     * @param element PSI element
+     * @return Whether this element is a class or method and corresponds to any supported third-party test framework.
+     */
     public static boolean isThirdPartyTestElement(PsiElement element) {
         return ((element instanceof PsiMethod psiMethod)
                 && (TestNGUtil.hasTest(psiMethod) || JUnitUtil.isTestAnnotated(psiMethod)))
