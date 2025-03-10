@@ -89,9 +89,9 @@ public abstract class JTRegConfigurationProducer extends JavaRunConfigurationPro
 
         String contextDirPath = (element instanceof PsiDirectory d) ? d.getVirtualFile().getPath() : null;
 
-        return NOT_NULLIZED_STRING_EQUALS.test(contextFilePath, unitConfiguration.getRunClass())
-                && NOT_NULLIZED_STRING_EQUALS.test(contextDirPath, unitConfiguration.getPackage())
-                && NOT_NULLIZED_STRING_EQUALS.test(contextQuery, unitConfiguration.getQuery());
+        return isEqualNullAsEmpty(contextFilePath, unitConfiguration.getRunClass())
+                && isEqualNullAsEmpty(contextDirPath, unitConfiguration.getPackage())
+                && isEqualNullAsEmpty(contextQuery, unitConfiguration.getQuery());
     }
 
     /**
@@ -117,14 +117,14 @@ public abstract class JTRegConfigurationProducer extends JavaRunConfigurationPro
     protected PsiElement findExactRunElement(@NotNull final PsiElement element) {
         PsiElement retval = null;
         for (PsiElement e = element; null != e; e = e.getParent()) {
-            if (IS_FILE_OR_DIR_ELEMENT.test(e)) {
+            if ((e instanceof PsiFile) || (e instanceof PsiDirectory)) {
                 if (null == retval) {
                     retval = e;
                 }
                 break;
             }
 
-            if (IS_THIRD_PARTY_TEST_ELEMENT.test(e)) {
+            if (isThirdPartyTestElement(e)) {
                 final PsiElement identifyingElement = ((PsiNameIdentifierOwner) e).getIdentifyingElement();
                 if (null != identifyingElement) { // null for name of the non-test inner class
                     if (null == retval) {

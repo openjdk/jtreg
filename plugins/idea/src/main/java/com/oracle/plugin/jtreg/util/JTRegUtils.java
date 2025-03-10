@@ -48,8 +48,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.util.*;
-import java.util.function.BiPredicate;
-import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 
@@ -61,37 +59,26 @@ public class JTRegUtils {
     private static final Logger LOG = Logger.getInstance(JTRegUtils.class);
 
     /**
-     * A predicate that checks if two strings are either both empty or both null,
-     * or if they are equal to each other, taking into account null == empty string value.
+     * Checks if two strings are equal to each other,
+     * taking into account {@code null} == {@code empty string} value.
      *
-     * <p>This predicate will return {@code true} if:
+     * @return {@code true} if any of the following is {@code true}:
      * <ul>
-     *     <li>Both strings are empty, or</li>
-     *     <li>Both strings are {@code null}, or</li>
-     *     <li>The strings are equal using {@link Objects#equals(Object, Object)}.</li>
+     *     <li>Both strings are {@code null}.</li>
+     *     <li>One string is {@code null} and the other is empty.</li>
+     *     <li>The strings are equal.</li>
      * </ul>
      */
-    public static final BiPredicate<String, String> NOT_NULLIZED_STRING_EQUALS = (a, b) -> { //
+    public static boolean isEqualNullAsEmpty(String a, String b) {
         return StringUtilRt.notNullize(a).equals(StringUtilRt.notNullize(b));
-    };
+    }
 
-    public static final Predicate<PsiMethod> IS_TESTNG_TEST_METHOD = TestNGUtil::hasTest;
-    public static final Predicate<PsiClass> IS_TESTNG_TEST_CLASS = TestNGUtil::isTestNGClass;
-
-    public static final Predicate<PsiMethod> IS_JUNIT_TEST_METHOD = JUnitUtil::isTestAnnotated;
-    public static final Predicate<PsiClass> IS_JUNIT_TEST_CLASS = JUnitUtil::isTestClass;
-
-    public static final Predicate<PsiMethod> IS_THIRD_PARTY_TEST_METHOD = IS_TESTNG_TEST_METHOD.or(IS_JUNIT_TEST_METHOD);
-    public static final Predicate<PsiClass> IS_THIRD_PARTY_TEST_CLASS = IS_TESTNG_TEST_CLASS.or(IS_JUNIT_TEST_CLASS);
-
-    public static final Predicate<PsiElement> IS_THIRD_PARTY_TEST_ELEMENT = e -> { //
-        return ((e instanceof PsiMethod psiMethod) && IS_THIRD_PARTY_TEST_METHOD.test(psiMethod))
-                || ((e instanceof PsiClass psiClass) && IS_THIRD_PARTY_TEST_CLASS.test(psiClass));
-    };
-
-    public static final Predicate<PsiElement> IS_DIR_ELEMENT = PsiDirectory.class::isInstance;
-    public static final Predicate<PsiElement> IS_FILE_ELEMENT = PsiFile.class::isInstance;
-    public static final Predicate<PsiElement> IS_FILE_OR_DIR_ELEMENT = IS_FILE_ELEMENT.or(IS_DIR_ELEMENT);
+    public static boolean isThirdPartyTestElement(PsiElement element) {
+        return ((element instanceof PsiMethod psiMethod)
+                && (TestNGUtil.hasTest(psiMethod) || JUnitUtil.isTestAnnotated(psiMethod)))
+                || ((element instanceof PsiClass psiClass)
+                && (TestNGUtil.isTestNGClass(psiClass) || JUnitUtil.isTestClass(psiClass)));
+    }
 
     /**
      * Are we inside a jtreg test root?
