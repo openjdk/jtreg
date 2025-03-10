@@ -89,9 +89,9 @@ public abstract class JTRegConfigurationProducer extends JavaRunConfigurationPro
 
         String contextDirPath = (element instanceof PsiDirectory d) ? d.getVirtualFile().getPath() : null;
 
-        return isEqualNullAsEmpty(contextFilePath, unitConfiguration.getRunClass())
-                && isEqualNullAsEmpty(contextDirPath, unitConfiguration.getPackage())
-                && isEqualNullAsEmpty(contextQuery, unitConfiguration.getQuery());
+        return Comparing.strEqual(contextFilePath, unitConfiguration.getRunClass())
+                && Comparing.strEqual(contextDirPath, unitConfiguration.getPackage())
+                && Comparing.strEqual(contextQuery, unitConfiguration.getQuery());
     }
 
     /**
