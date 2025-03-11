@@ -106,9 +106,7 @@ public class JTRegConfigurationProducer extends JavaRunConfigurationProducerBase
             }
 
             preventRunPriorityLoss(element, sourceElement);
-
             element = findExactRunElement(element);
-
             configuration.setQuery(getQuery(element));
         }
         configuration.setName(nameForElement(element));
