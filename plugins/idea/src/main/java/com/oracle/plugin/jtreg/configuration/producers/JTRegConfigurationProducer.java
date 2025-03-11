@@ -121,8 +121,9 @@ public class JTRegConfigurationProducer extends JavaRunConfigurationProducerBase
      * or a "main" method for the Application run configuration.
      * <p>
      * The class {@link com.intellij.execution.actions.PreferredProducerFind} sorts the applicable runners using
-     * {@link com.intellij.execution.actions.ConfigurationFromContext#COMPARATOR},
-     * removing more general ones and retaining more specific or equal configurations.
+     * {@link com.intellij.execution.actions.ConfigurationFromContext#COMPARATOR}.
+     * This comparator prefers configuration A over configuration B
+     * when the source element of A is nested within B in the PSI tree.
      * <p>
      * When the user tries to run a test on a file, and another type of Run Configuration can intercept the execution,
      * this method sets the {@code PsiClass} element in the {@code sourceElement} reference to ensure priority is retained.
