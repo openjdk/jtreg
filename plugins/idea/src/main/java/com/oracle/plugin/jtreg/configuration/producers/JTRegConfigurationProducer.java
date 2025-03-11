@@ -77,10 +77,6 @@ public class JTRegConfigurationProducer extends JavaRunConfigurationProducerBase
     protected boolean setupConfigurationFromContext(@NotNull JTRegConfiguration configuration,
                                                     @NotNull ConfigurationContext context,
                                                     @NotNull Ref<PsiElement> sourceElement) {
-        if (context.containsMultipleSelection()) {
-            return false;
-        }
-
         Location<PsiElement> contextLocation = context.getLocation();
         if (null == contextLocation) {
             return false;
