@@ -34,7 +34,6 @@ import com.intellij.openapi.roots.OrderRootType;
 import com.intellij.openapi.roots.libraries.Library;
 import com.intellij.openapi.roots.libraries.LibraryTable;
 import com.intellij.openapi.roots.libraries.LibraryTablesRegistrar;
-import com.intellij.openapi.util.text.StringUtilRt;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -336,7 +335,7 @@ public class JTRegUtils {
             runFile = (element instanceof PsiFile psiFile) ? psiFile : element.getContainingFile();
             runDir = null != runFile ? runFile.getContainingDirectory() : null;
         }
-        return isInJTRegRoot(runDir) && isJTRegTestData(runFile);
+        return isInJTRegRoot(runDir) && ((element instanceof PsiDirectory) || isJTRegTestData(runFile));
     }
 
     /**

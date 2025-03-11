@@ -26,18 +26,21 @@
 package com.oracle.plugin.jtreg.configuration.producers;
 
 import com.intellij.execution.BeforeRunTask;
-import com.intellij.execution.JavaExecutionUtil;
 import com.intellij.execution.Location;
 import com.intellij.execution.RunManagerEx;
 import com.intellij.execution.actions.ConfigurationContext;
 import com.intellij.execution.actions.ConfigurationFromContext;
 import com.intellij.execution.application.ApplicationConfiguration;
+import com.intellij.execution.application.ApplicationConfigurationType;
 import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.execution.junit.JUnitConfiguration;
+import com.intellij.execution.junit.JUnitUtil;
 import com.intellij.execution.junit.JavaRunConfigurationProducerBase;
 import com.intellij.lang.ant.config.*;
 import com.intellij.lang.ant.config.impl.AntBeforeRunTask;
 import com.intellij.lang.ant.config.impl.AntBeforeRunTaskProvider;
+import com.intellij.openapi.util.Comparing;
+import com.intellij.openapi.util.Ref;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import com.oracle.plugin.jtreg.configuration.JTRegConfiguration;
@@ -45,7 +48,9 @@ import com.oracle.plugin.jtreg.service.JTRegService;
 import com.oracle.plugin.jtreg.configuration.JTRegConfigurationType;
 import com.oracle.plugin.jtreg.util.JTRegUtils;
 import com.theoryinpractice.testng.configuration.TestNGConfiguration;
+import com.theoryinpractice.testng.util.TestNGUtil;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.StringJoiner;
@@ -54,16 +59,135 @@ import java.util.stream.Collectors;
 import static com.oracle.plugin.jtreg.util.JTRegUtils.*;
 
 /**
- * This class serves as a common superclass for both file and folder-based configuration producers.
+ * This class is used to generate a run configuration for JTReg for the file or directory selected in the IDE.
  */
-public abstract class JTRegConfigurationProducer extends JavaRunConfigurationProducerBase<JTRegConfiguration> implements Cloneable {
+public class JTRegConfigurationProducer extends JavaRunConfigurationProducerBase<JTRegConfiguration> {
 
     public JTRegConfigurationProducer() {
         super(JTRegConfigurationType.getInstance());
     }
 
     /**
-     * @see JTRegClassConfigurationProducer#setupConfigurationFromContext
+     * @see #isConfigurationFromContext
+     * @see com.intellij.execution.application.AbstractApplicationConfigurationProducer#setupConfigurationFromContext
+     * @see com.intellij.execution.testframework.AbstractInClassConfigurationProducer#setupConfigurationFromContext
+     * @see com.intellij.psi.util.PsiTreeUtil#isAncestor
+     */
+    @Override
+    protected boolean setupConfigurationFromContext(@NotNull JTRegConfiguration configuration,
+                                                    @NotNull ConfigurationContext context,
+                                                    @NotNull Ref<PsiElement> sourceElement) {
+        if (context.containsMultipleSelection()) {
+            return false;
+        }
+
+        Location<PsiElement> contextLocation = context.getLocation();
+        if (null == contextLocation) {
+            return false;
+        }
+
+        PsiElement element = contextLocation.getPsiElement();
+
+        if (!JTRegUtils.isRunnableByJTReg(element)) {
+            return false;
+        }
+
+        setupConfigurationModule(context, configuration);
+
+        configuration.setAlternativeJrePathEnabled(JTRegService.getInstance(configuration.getProject()).isAlternativeJrePathEnabled());
+        configuration.setAlternativeJrePath(JTRegService.getInstance(configuration.getProject()).getAlternativeJrePath());
+        configuration.setProgramParameters(JTRegService.getInstance(configuration.getProject()).getJTregOptions());
+        configuration.setWorkingDirectory(JTRegService.getInstance(configuration.getProject()).getWorkDir());
+
+        if (element instanceof PsiDirectory runDir) {
+            configuration.setPackage(runDir.getVirtualFile().getPath());
+        } else {
+            PsiFile runFile = (element instanceof PsiFile psiFile) ? psiFile : element.getContainingFile();
+            if (null != runFile && null != runFile.getVirtualFile()) {
+                configuration.setRunClass(runFile.getVirtualFile().getPath());
+            } else {
+                return false;
+            }
+
+            preventRunPriorityLoss(element, sourceElement);
+
+            element = findExactRunElement(element);
+
+            configuration.setQuery(getQuery(element));
+        }
+        configuration.setName(nameForElement(element));
+
+        initBeforeTaskActions(configuration);
+        return true;
+    }
+
+    /**
+     * Ensures that the Application, TestNG, or JUnit run configuration does not receive a higher priority.
+     * This applies when the user attempts to run a file containing a single class for TestNG/JUnit,
+     * or a "main" method for the Application run configuration.
+     * <p>
+     * The class {@link com.intellij.execution.actions.PreferredProducerFind} sorts the applicable runners using
+     * {@link com.intellij.execution.actions.ConfigurationFromContext#COMPARATOR},
+     * removing more general ones and retaining more specific or equal configurations.
+     * <p>
+     * When the user tries to run a test on a file, and another type of Run Configuration can intercept the execution,
+     * this method sets the {@code PsiClass} element in the {@code sourceElement} reference to ensure priority is retained.
+     *
+     * @param element       current PSI element
+     * @param sourceElement a reference to the source element for the run configuration
+     *                      (by default contains the element at caret,
+     *                      can be updated by the producer to point to a higher-level element in the tree).
+     * @see com.intellij.execution.application.AbstractApplicationConfigurationProducer#setupConfigurationFromContext
+     * @see com.intellij.execution.testframework.AbstractInClassConfigurationProducer#setupConfigurationFromContext
+     * @see com.intellij.execution.actions.PreferredProducerFind#doGetConfigurationsFromContext
+     * @see com.intellij.execution.actions.ConfigurationFromContext#COMPARATOR
+     * @see com.intellij.psi.util.PsiTreeUtil#isAncestor
+     */
+    private void preventRunPriorityLoss(PsiElement element, @NotNull Ref<PsiElement> sourceElement) {
+        if (element instanceof PsiClassOwner psiClassOwner) {
+            PsiClass[] psiClasses = psiClassOwner.getClasses();
+            if (1 == psiClasses.length) {
+                sourceElement.set(psiClasses[0]); // for Application/TestNG/JUnit
+            } else {
+                PsiClass mainClass = ApplicationConfigurationType.getMainClass(element);
+                if (null != mainClass) {
+                    sourceElement.set(mainClass); // for Application
+                }
+            }
+        }
+    }
+
+    /**
+     * Generates a name for the run test configuration.
+     *
+     * @param element the current PSI element.
+     * @return One of the following: {"ClassName", "ClassName::TestMethodName"}, or the default "FileName.java".
+     * @see #findExactRunElement(PsiElement)
+     */
+    @Nullable("when null, IDEA automatically assigns the default name: 'Unnamed'")
+    private String nameForElement(@NotNull PsiElement element) {
+        switch (element) {
+            case PsiFileSystemItem psiFileOrDir -> {
+                return psiFileOrDir.getName();
+            }
+            case PsiClass psiClass -> {
+                return psiClass.getQualifiedName();
+            }
+            case PsiMethod psiMethod -> {
+                String className = ((PsiClass) psiMethod.getParent()).getQualifiedName();
+                return className + "::" + psiMethod.getName();
+            }
+            default -> {
+                PsiFile psiFile = element.getContainingFile();
+                return null != psiFile ? psiFile.getName() : null;
+            }
+        }
+    }
+
+    /**
+     * @see #setupConfigurationFromContext
+     * @see com.intellij.execution.application.AbstractApplicationConfigurationProducer#isConfigurationFromContext
+     * @see com.intellij.execution.testframework.AbstractInClassConfigurationProducer#isConfigurationFromContext
      */
     @Override
     public boolean isConfigurationFromContext(@NotNull JTRegConfiguration unitConfiguration,
@@ -73,13 +197,7 @@ public abstract class JTRegConfigurationProducer extends JavaRunConfigurationPro
             return false;
         }
 
-        Location<?> location = JavaExecutionUtil.stepIntoSingleClass(contextLocation);
-        if (location == null) {
-            return false;
-        }
-
-        PsiElement element = location.getPsiElement();
-        element = findExactRunElement(element);
+        PsiElement element = findExactRunElement(contextLocation.getPsiElement());
 
         String contextQuery = getQuery(element);
 
@@ -110,14 +228,14 @@ public abstract class JTRegConfigurationProducer extends JavaRunConfigurationPro
      *
      * @param element The element for the run configuration (by default, contains the element at the caret).
      * @return The nearest test element found, or {@code element} if no test element is found among the parents.
-     * @see JTRegClassConfigurationProducer#nameForElement(PsiElement)
+     * @see #nameForElement(PsiElement)
      * @see #getQuery(PsiElement)
      */
     @NotNull
-    protected PsiElement findExactRunElement(@NotNull final PsiElement element) {
+    private PsiElement findExactRunElement(@NotNull PsiElement element) {
         PsiElement retval = null;
         for (PsiElement e = element; null != e; e = e.getParent()) {
-            if ((e instanceof PsiFile) || (e instanceof PsiDirectory)) {
+            if (e instanceof PsiFileSystemItem) {
                 if (null == retval) {
                     retval = e;
                 }
@@ -125,14 +243,9 @@ public abstract class JTRegConfigurationProducer extends JavaRunConfigurationPro
             }
 
             if (isThirdPartyTestElement(e)) {
-                final PsiElement identifyingElement = ((PsiNameIdentifierOwner) e).getIdentifyingElement();
-                if (null != identifyingElement) { // null for name of the non-test inner class
-                    if (null == retval) {
-                        // When found, check the rest of the hierarchy up to the class for runnability
-                        retval = identifyingElement;
-                    }
-                } else {
-                    retval = null;
+                if (null == retval) {
+                    // When found, check the rest of the hierarchy up to the class for runnability
+                    retval = e;
                 }
             } else {
                 retval = null;
@@ -144,19 +257,15 @@ public abstract class JTRegConfigurationProducer extends JavaRunConfigurationPro
 
     @NotNull
     protected static String getQuery(PsiElement element) {
-        boolean isJUnit = JTRegUtils.isJUnitTestData(element.getContainingFile());
-        boolean isTestNG = JTRegUtils.isTestNGTestData(element.getContainingFile());
-        if (element instanceof PsiIdentifier
-                && element.getParent() instanceof PsiMethod method) {
-            if (isJUnit) {
-                return "junit-select:method:" + getJUnitMethodQuery(method);
-            } else if (isTestNG) {
+        if (element instanceof PsiMethod psiMethod) {
+            if (JUnitUtil.isTestAnnotated(psiMethod)) {
+                return "junit-select:method:" + getJUnitMethodQuery(psiMethod);
+            } else if (TestNGUtil.hasTest(psiMethod)) {
                 // just the method name for TestNG
-                return method.getName();
+                return psiMethod.getName();
             }
-        } else if (isJUnit && element instanceof PsiIdentifier
-                && element.getParent() instanceof PsiClass cls) {
-            return "junit-select:class:" + binaryNameFor(cls);
+        } else if (element instanceof PsiClass psiClass && JUnitUtil.isTestClass(psiClass)) {
+            return "junit-select:class:" + binaryNameFor(psiClass);
         }
         return "";
     }

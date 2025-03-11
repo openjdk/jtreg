@@ -38,9 +38,7 @@
     <extensions defaultExtensionNs="com.intellij">
         <programRunner implementation="com.oracle.plugin.jtreg.executors.JTRegDebuggerRunner"/>
         <configurationType implementation="com.oracle.plugin.jtreg.configuration.JTRegConfigurationType"/>
-        <runConfigurationProducer implementation="com.oracle.plugin.jtreg.configuration.producers.JTRegClassConfigurationProducer"/>
-        <runConfigurationProducer
-                implementation="com.oracle.plugin.jtreg.configuration.producers.JTRegDirectoryConfigurationProducer"/>
+        <runConfigurationProducer implementation="com.oracle.plugin.jtreg.configuration.producers.JTRegConfigurationProducer"/>
         <projectConfigurable displayName="jtreg" id="jtreg" instance="com.oracle.plugin.jtreg.service.ui.JTRegServiceConfigurable"/>
         <projectService serviceImplementation="com.oracle.plugin.jtreg.service.JTRegService"/>
         <defaultLiveTemplatesProvider implementation="com.oracle.plugin.jtreg.templates.JTRegTemplateProvider"/>
