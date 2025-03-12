@@ -241,7 +241,6 @@ public class Help {
          */
 
         out.println(i18n.getString("help.version.txt", versionArgs));
-        out.println(i18n.getString("help.copyright.txt"));
         for (VersionHelper h: versionHelpers)
             h.showVersion(out);
     }
@@ -401,8 +400,6 @@ public class Help {
                 }
             }
 
-            ww.write('\n');
-            ww.write(i18n.getString("help.copyright.txt"));
             ww.write("\n\n");
 
             ww.flush();
