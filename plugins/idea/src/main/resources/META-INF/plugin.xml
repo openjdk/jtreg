@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright (c) 2016, 2019 Oracle and/or its affiliates. All rights reserved.
+  ~ Copyright (c) 2016, 2025 Oracle and/or its affiliates. All rights reserved.
   ~ DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
   ~
   ~ This code is free software; you can redistribute it and/or modify it
@@ -33,13 +33,12 @@
 
     <depends>AntSupport</depends>
     <depends>TestNG-J</depends>
+    <depends>JUnit</depends>
 
     <extensions defaultExtensionNs="com.intellij">
         <programRunner implementation="com.oracle.plugin.jtreg.executors.JTRegDebuggerRunner"/>
         <configurationType implementation="com.oracle.plugin.jtreg.configuration.JTRegConfigurationType"/>
-        <runConfigurationProducer implementation="com.oracle.plugin.jtreg.configuration.producers.JTRegClassConfigurationProducer"/>
-        <runConfigurationProducer
-                implementation="com.oracle.plugin.jtreg.configuration.producers.JTRegDirectoryConfigurationProducer"/>
+        <runConfigurationProducer implementation="com.oracle.plugin.jtreg.configuration.producers.JTRegConfigurationProducer"/>
         <projectConfigurable displayName="jtreg" id="jtreg" instance="com.oracle.plugin.jtreg.service.ui.JTRegServiceConfigurable"/>
         <projectService serviceImplementation="com.oracle.plugin.jtreg.service.JTRegService"/>
         <defaultLiveTemplatesProvider implementation="com.oracle.plugin.jtreg.templates.JTRegTemplateProvider"/>

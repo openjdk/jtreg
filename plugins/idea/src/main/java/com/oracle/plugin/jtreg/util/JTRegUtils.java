@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2016, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -25,6 +25,7 @@
 
 package com.oracle.plugin.jtreg.util;
 
+import com.intellij.execution.junit.JUnitUtil;
 import com.intellij.lang.ant.config.AntBuildFile;
 import com.intellij.lang.ant.config.AntConfiguration;
 import com.intellij.openapi.application.ApplicationManager;
@@ -38,6 +39,8 @@ import com.intellij.psi.*;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.psi.util.PsiUtil;
 import com.intellij.openapi.diagnostic.Logger;
+import com.theoryinpractice.testng.util.TestNGUtil;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -55,12 +58,21 @@ public class JTRegUtils {
     private static final Logger LOG = Logger.getInstance(JTRegUtils.class);
 
     /**
+     * @param element PSI element
+     * @return Whether this element is a class or method and corresponds to any supported third-party test framework.
+     */
+    public static boolean isThirdPartyTestElement(PsiElement element) {
+        return ((element instanceof PsiMethod psiMethod)
+                && (TestNGUtil.hasTest(psiMethod) || JUnitUtil.isTestAnnotated(psiMethod)))
+                || ((element instanceof PsiClass psiClass)
+                && (TestNGUtil.isTestNGClass(psiClass) || JUnitUtil.isTestClass(psiClass)));
+    }
+
+    /**
      * Are we inside a jtreg test root?
      */
     public static boolean isInJTRegRoot(PsiDirectory dir) {
-        return dir != null ?
-                isInJTRegRoot(dir.getVirtualFile()) :
-                false;
+        return null != dir && isInJTRegRoot(dir.getVirtualFile());
     }
 
     /**
@@ -292,6 +304,38 @@ public class JTRegUtils {
      */
     public static boolean isTestNGTestData(Project project, VirtualFile file) {
         return isTestNGTestData(PsiUtil.getPsiFile(project, file));
+    }
+
+    /**
+     * Determines whether the given element is a valid test-related element.
+     * The element must be one of the following:
+     * <ul>
+     *     <li>An element inside a test file</li>
+     *     <li>A test file</li>
+     *     <li>A test directory</li>
+     * </ul>
+     *
+     * <p>Additionally, the following conditions must be met:</p>
+     * <ul>
+     *     <li>A test file must contain the {@code @test} comment tag.</li>
+     *     <li>A test file must be located inside a test directory.</li>
+     *     <li>A test directory must have a parent directory that contains a {@code TEST.ROOT} file.</li>
+     * </ul>
+     *
+     * @param element The element for the run configuration (by default, contains the element at the caret).
+     * @return {@code true} if the element is a valid test-related element, {@code false} otherwise.
+     */
+    public static boolean isRunnableByJTReg(@NotNull PsiElement element) {
+        PsiFile runFile;
+        PsiDirectory runDir;
+        if (element instanceof PsiDirectory psiDirectory) {
+            runFile = null;
+            runDir = psiDirectory;
+        } else {
+            runFile = (element instanceof PsiFile psiFile) ? psiFile : element.getContainingFile();
+            runDir = null != runFile ? runFile.getContainingDirectory() : null;
+        }
+        return isInJTRegRoot(runDir) && ((element instanceof PsiDirectory) || isJTRegTestData(runFile));
     }
 
     /**
