@@ -363,11 +363,7 @@ public class CompileAction extends Action {
             }
         }
 
-        if (runJavac
-                && !script.disablePreview()
-                && !seenEnablePreview
-                && (script.enablePreview())
-                && (libLocn == null || libLocn.isTest())) {
+        if (runJavac && script.enablePreview() && !seenEnablePreview) {
             String version = script.getTestJDKVersion().name();
             // always prepend in order to not mess with variadic arguments
             if (!seenSourceOrRelease) {
