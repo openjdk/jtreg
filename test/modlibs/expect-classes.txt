@@ -16,6 +16,7 @@
 ./classes/buildAction/usermods/BuildUserModPackage.d/modules/um4/um4_p1/um4_q1/um4_r1/um4_p1_q1_r1_B2.class
 ./classes/compileAction/packages/CompilePkg.d/p/C.class
 ./classes/compileAction/patch/CompilePatch.d/patches/java.base/java/io/IOHelper.class
+./classes/compileAction/patch/CompilePatch.d/patches/java.base/java/io/IOHelper2.class
 ./classes/compileAction/usermods/CompileUserMod.d/modules/um1/module-info.class
 ./classes/compileAction/usermods/CompileUserMod.d/modules/um1/um1_p1/um1_p1_C.class
 ./classes/compileAction/usermods/CompileUserMods.d/modules/um2/module-info.class

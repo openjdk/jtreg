@@ -210,6 +210,11 @@ public class CompileAction extends Action {
 
             if (currArg.endsWith(".java")) {
                 foundJavaFile = true;
+            } else if (currArg.endsWith(".jasm") || currArg.endsWith(".jcod")) {
+                foundAsmFile = true;
+            }
+
+            if (foundJavaFile || foundAsmFile) {
                 File sourceFile = new File(currArg.replace('/', File.separatorChar));
                 if (!sourceFile.isAbsolute()) {
                     // User must have used @compile, so file must be
@@ -217,22 +222,6 @@ public class CompileAction extends Action {
                     if (multiModule)
                         addModule(currArg);
                     Path absSourceFile = locations.absTestSrcFile(module, sourceFile);
-                    if (!Files.exists(absSourceFile))
-                        throw new ParseException(CANT_FIND_SRC + currArg);
-                    args.set(i, absSourceFile.toString());
-                }
-            } else if (currArg.endsWith(".jasm") || currArg.endsWith("jcod")) {
-                if (module != null) {
-                    throw new ParseException(COMPILE_OPT_DISALLOW);
-                }
-                foundAsmFile = true;
-                File sourceFile = new File(currArg.replace('/', File.separatorChar));
-                if (!sourceFile.isAbsolute()) {
-                    // User must have used @compile, so file must be
-                    // in the same directory as the defining file.
-                    if (multiModule)
-                        addModule(currArg);
-                    Path absSourceFile = locations.absTestSrcFile(null, sourceFile);
                     if (!Files.exists(absSourceFile))
                         throw new ParseException(CANT_FIND_SRC + currArg);
                     args.set(i, absSourceFile.toString());
