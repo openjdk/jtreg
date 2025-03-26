@@ -254,11 +254,14 @@ such as tests, or other separate libraries.
 
 <p>In general, classes in library directories are not automatically compiled
 as part of a compilation command explicitly naming the source files containing
-those classes. A test that relies upon library classes should contain appropriate
-<code>@build</code> directives to ensure that the classes will be compiled.
-It is strongly recommended that tests do not rely on the use of implicit compilation
-by the Java compiler. Such an approach is generally fragile, and may lead to
-incomplete recompilation when a test or library code has been modified.
+those classes. The library directory is used as additional sourcepath for test compilation.
+So jtreg impliitly compiles all test dependcies that are located in library directory.
+A test that relies upon library classes might contain appropriate
+<code>@build</code> directives to explictily point classes to be compiled.
+This might be useful when test depends on linbrary classes during runtime only.
+
+<p>
+The implicit usage might cause incomplete recompilation when a test or library code has been modified.
 
 <p>If a library directory is used by a directory of <a href="#TESTNG">TestNG</a> tests,
 all the classes in a library directory will be automatically compiled by means of implicit
