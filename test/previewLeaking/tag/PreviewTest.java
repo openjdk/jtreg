@@ -29,30 +29,28 @@
  * @run main PreviewTest
  */
 
-import java.io.ByteArrayOutputStream;
-import java.lang.classfile.ClassFile;
-import java.lang.classfile.ClassModel;
+import java.io.DataInputStream;
 
-public class PreviewTest {
+public record PreviewTest() {
   public static void main(String... args) {
-    System.err.println(new Lib());
-    var model = parseClassModel(Lib.class);
-    if (model.minorVersion() != ClassFile.PREVIEW_MINOR_VERSION) {
-      throw new AssertionError(Lib.class + " not in preview: " + model.toDebugString());
+    assertUsesPreviewFeature(PreviewTest.class);
+    assertUsesPreviewFeature(Lib.class);
+  }
+
+  static void assertUsesPreviewFeature(Class<?> type) {
+    var minor = minorVersion(type);
+    if (minor != 65535) {
+      throw new AssertionError(type + " doesn't use preview features. Minor version is " + minor);
     }
   }
 
-  static ClassModel parseClassModel(Class<?> type) {
-    return parseClassModel(type, ClassFile.of());
-  }
-
-  static ClassModel parseClassModel(Class<?> type, ClassFile context) {
+  static int minorVersion(Class<?> type) {
     var name = type.getName().replace('.', '/') + ".class";
     try (var in = type.getClassLoader().getResourceAsStream(name)) {
       if (in == null) throw new RuntimeException("Resource not found: " + name);
-      var out = new ByteArrayOutputStream(1024);
-      in.transferTo(out);
-      return context.parse(out.toByteArray());
+      var dis = new DataInputStream(in);
+      dis.skipBytes(4); // 0xCAFEBABE
+      return dis.readUnsignedShort();
     } catch (Exception exception) {
       throw new RuntimeException("Reading resource failed: " + name, exception);
     }
