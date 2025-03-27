@@ -32,7 +32,7 @@ $(BUILDTESTDIR)/PreviewTest_good.ok: \
 	JTREG_JAVA=$(JDKJAVA) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDKHOME) \
-		-javacoptions:-XDforcePreview
+		-javacoptions:-XDforcePreview \
 		'-k:!bad' \
 		$(TESTDIR)/preview/  \
 			> $(@:%.ok=%/jt.log)
@@ -46,7 +46,7 @@ $(BUILDTESTDIR)/PreviewTest_bad.ok: \
 	JTREG_JAVA=$(JDKJAVA) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDKHOME) \
-		-javacoptions:-XDforcePreview
+		-javacoptions:-XDforcePreview \
 		'-k:bad' \
 		$(TESTDIR)/preview/  \
 			> $(@:%.ok=%/jt.log) || \

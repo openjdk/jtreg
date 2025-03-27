@@ -34,8 +34,8 @@ $(BUILDTESTDIR)/PreviewLeakingTest.ok: \
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDKHOME) \
+		-javacoptions:-XDforcePreview \
 		-va \
-		-javacoptions:-XDforcePreview
 		$(TESTDIR)/previewLeaking/
 	echo "test passed at `date`" > $@
 
