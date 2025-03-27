@@ -27,17 +27,16 @@
 #
 # Verify preview flag leaks into library class compilation
 
-$(BUILDTESTDIR)/PreviewLeaking.ok: \
+$(BUILDTESTDIR)/PreviewLeakingTest.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
+	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDKHOME) \
 		-va \
 		-javacoptions:-XDforcePreview
-		$(TESTDIR)/previewLeaking
+		$(TESTDIR)/previewLeaking/
 	echo "test passed at `date`" > $@
 
-TESTS.jtreg += \
-	$(BUILDTESTDIR)/TestPreviewLeaking.ok
-
+TESTS.jtreg += $(BUILDTESTDIR)/PreviewLeakingTest.ok
