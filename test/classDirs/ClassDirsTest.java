@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -72,8 +72,10 @@ public class ClassDirsTest {
         TestSuite ts = createTests(base, "p.*");
         ts.run(base.resolve("work"), base.resolve("report"), ts.dir.resolve("std"));
         checkClassFiles(base.resolve("work/classes"),
-            "lib/p/Lib1.class",
-            "lib/p/Lib2.class",
+            "std/Test1.d/lib/p/Lib1.class",
+            "std/Test1.d/lib/p/Lib2.class",
+            "std/Test2.d/lib/p/Lib1.class",
+            "std/Test2.d/lib/p/Lib2.class",
             "std/Test1.d/Test1.class",
             "std/Test2.d/Test2.class"
         );
@@ -92,8 +94,10 @@ public class ClassDirsTest {
         TestSuite ts = createTests(base, "p.Lib2");
         ts.run(base.resolve("work"), base.resolve("report"), ts.dir.resolve("std"));
         checkClassFiles(base.resolve("work/classes"),
-            "lib/p/Lib1.class",
-            "lib/p/Lib2.class",
+            "std/Test1.d/lib/p/Lib1.class",
+            "std/Test1.d/lib/p/Lib2.class",
+            "std/Test2.d/lib/p/Lib1.class",
+            "std/Test2.d/lib/p/Lib2.class",
             "std/Test1.d/Test1.class",
             "std/Test2.d/Test2.class"
         );
@@ -133,8 +137,8 @@ public class ClassDirsTest {
         TestSuite ts = createTests(base, null);
         ts.run(base.resolve("work"), base.resolve("report"), ts.dir.resolve("testng"));
         checkClassFiles(base.resolve("work/classes"),
-            "lib/p/Lib1.class",
-            "lib/p/Lib2.class",
+            "testng/lib/p/Lib1.class",
+            "testng/lib/p/Lib2.class",
             "testng/testng/Test1.class",
             "testng/testng/Test2.class"
         );
@@ -154,10 +158,14 @@ public class ClassDirsTest {
         ts.run(base.resolve("work"), base.resolve("report1"), ts.dir.resolve("testng"));
         ts.run(base.resolve("work"), base.resolve("report2"), ts.dir.resolve("std"));
         checkClassFiles(base.resolve("work/classes"),
-            "lib/p/Lib1.class",
-            "lib/p/Lib2.class",
+            "std/Test1.d/p/Lib1.class",
+            "std/Test1.d/p/Lib2.class",
+            "std/Test2.d/p/Lib1.class",
+            "std/Test2.d/p/Lib2.class",
             "std/Test1.d/Test1.class",
             "std/Test2.d/Test2.class",
+            "testng/lib/p/Lib1.class",
+            "testng/lib/p/Lib2.class",
             "testng/testng/Test1.class",
             "testng/testng/Test2.class"
         );
@@ -177,8 +185,8 @@ public class ClassDirsTest {
         ts.run(base.resolve("work"), base.resolve("report1"), ts.dir.resolve("std"));
         ts.run(base.resolve("work"), base.resolve("report2"), ts.dir.resolve("testng"));
         checkClassFiles(base.resolve("work/classes"),
-            "lib/p/Lib1.class",
-            "lib/p/Lib2.class",
+            "testng/lib/p/Lib1.class",
+            "testng/lib/p/Lib2.class",
             "std/Test1.d/Test1.class",
             "std/Test1.d/p/Lib1.class",
             "std/Test1.d/p/Lib2.class",
