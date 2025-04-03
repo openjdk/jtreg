@@ -88,6 +88,9 @@ public final class RegressionTestSuite extends TestSuite
         return map;
     }
 
+    public TestProperties getTestProperties() {
+        return properties;
+    }
 
     @Override
     public String getName() {
