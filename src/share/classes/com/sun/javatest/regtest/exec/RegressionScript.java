@@ -468,11 +468,9 @@ public class RegressionScript extends Script {
         return newArgs;
     }
 
-    private static final Pattern namePattern = Pattern.compile("\\$\\{([A-Za-z0-9._]+)}");
-
     private static String evalNames(String arg, Expr.Context c, Map<String,String> testProps)
             throws Expr.Fault, ParseException {
-        Matcher m = namePattern.matcher(arg);
+        Matcher m = SMART_ACTION_NAME_PATTERN.matcher(arg);
         StringBuilder sb = null;
         // Note that '\' may appear in the replacement value for paths on Windows,
         // and so, in the following loop, avoid using Matcher::appendReplacement,
@@ -1189,10 +1187,20 @@ public class RegressionScript extends Script {
         if (!fileName.endsWith(".java")) {
             return Optional.empty();
         }
-
-        // "Test.java" -> "Test"
-        String className = fileName.substring(0, fileName.length() - ".java".length());
-        return Optional.of(className);
+        try {
+            // Scan .java file in naive manner; without taking comments into account...
+            var charContent = Files.readString(locations.absTestFile());
+            var packageMatcher = PACKAGE_NAME_PATTERN.matcher(charContent);
+            var packageName = packageMatcher.find() ? packageMatcher.group(1) + "." : "";
+            var nameMatcher = TYPE_NAME_PATTERN.matcher(charContent);
+            if (!nameMatcher.find()) {
+                return Optional.empty();
+            }
+            var className = nameMatcher.group(2).trim();
+            return Optional.of(packageName + className);
+        } catch (Exception e) {
+            return Optional.empty();
+        }
     }
 
     File getTestRootDir() {
@@ -1332,6 +1340,11 @@ public class RegressionScript extends Script {
         NOT_EXT_ACTION        = " does not extend Action",
         ILLEGAL_ACCESS_INIT   = "Illegal access to init method: ",
         BAD_ACTION            = "Bad action for script: ";
+
+    private static final Pattern
+        SMART_ACTION_NAME_PATTERN = Pattern.compile("\\$\\{([A-Za-z0-9._]+)}"),
+        PACKAGE_NAME_PATTERN = Pattern.compile("package\\s+([\\w.]+);"),
+        TYPE_NAME_PATTERN = Pattern.compile("(class|interface|enum|record)\\s+(.+)\\s*\\{.*");
 
     //----------member variables-----------------------------------------------
 
