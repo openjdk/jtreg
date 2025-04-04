@@ -1140,6 +1140,7 @@ public class RegressionScript extends Script {
             p.put("test.verbose", verbose.toString());
         }
         p.put("test.file", locations.absTestFile().toString());
+        p.put("test.main.class", guessMainClassName());
         p.put("test.src", locations.absTestSrcDir().toString());
         p.put("test.src.path", toString(locations.absTestSrcPath()));
         p.put("test.classes", locations.absTestClsDir().toString());
@@ -1181,12 +1182,33 @@ public class RegressionScript extends Script {
                 .map(Path::toString)
                 .collect(Collectors.joining(File.pathSeparator));
     }
-//    // where
-//    private String toString(List<File> files) {
-//        return files.stream()
-//                .map(File::getPath)
-//                .collect(Collectors.joining(File.pathSeparator));
-//    }
+
+    private String guessMainClassName() {
+        // find compilation source root in order to get the package name without parsing the source
+        var root = getTestRootDir().toPath();
+        var current = locations.absTestFile().getParent();
+        while (!current.equals(root)) {
+            if (Files.exists(current.resolve("TEST.properties"))) {
+                break;
+            }
+            if (Files.exists(current.resolve("TEST.ROOT"))) {
+                break;
+            }
+            current = current.getParent();
+            if (current == null) {
+                return "<test root not found>";
+            }
+        }
+
+        String name = current.relativize(locations.absTestFile()).toString();
+        if (!name.endsWith(".java")) {
+            return "<can not guess main class name from non-Java files>";
+        }
+
+        return name // "p/q/.../Test.java" -> "p.q...Test"
+                .substring(0, name.length() - ".java".length()) // get top-level class name
+                .replace(File.separatorChar, '.'); // get package name from directory names
+    }
 
     File getTestRootDir() {
         return params.getTestSuite().getRootDir();
