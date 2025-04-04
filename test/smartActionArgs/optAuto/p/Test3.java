@@ -25,7 +25,7 @@ package p;
 
 /*
  * @test
- * @run main ${test.main.class} --test.src ${test.src}
+ * @run main p.${test.main.class} --test.src ${test.src}
  */
 
 import java.util.Arrays;

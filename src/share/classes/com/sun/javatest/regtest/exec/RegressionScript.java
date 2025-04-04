@@ -42,6 +42,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Consumer;
@@ -1140,7 +1141,7 @@ public class RegressionScript extends Script {
             p.put("test.verbose", verbose.toString());
         }
         p.put("test.file", locations.absTestFile().toString());
-        p.put("test.main.class", guessMainClassName());
+        computeMainClassNameFromTestFile().ifPresent(name -> p.put("test.main.class", name));
         p.put("test.src", locations.absTestSrcDir().toString());
         p.put("test.src.path", toString(locations.absTestSrcPath()));
         p.put("test.classes", locations.absTestClsDir().toString());
@@ -1183,31 +1184,15 @@ public class RegressionScript extends Script {
                 .collect(Collectors.joining(File.pathSeparator));
     }
 
-    private String guessMainClassName() {
-        // find compilation source root in order to get the package name without parsing the source
-        var root = getTestRootDir().toPath();
-        var current = locations.absTestFile().getParent();
-        while (!current.equals(root)) {
-            if (Files.exists(current.resolve("TEST.properties"))) {
-                break;
-            }
-            if (Files.exists(current.resolve("TEST.ROOT"))) {
-                break;
-            }
-            current = current.getParent();
-            if (current == null) {
-                return "<test root not found>";
-            }
+    private Optional<String> computeMainClassNameFromTestFile() {
+        String fileName = locations.absTestFile().toString();
+        if (!fileName.endsWith(".java")) {
+            return Optional.empty();
         }
 
-        String name = current.relativize(locations.absTestFile()).toString();
-        if (!name.endsWith(".java")) {
-            return "<can not guess main class name from non-Java files>";
-        }
-
-        return name // "p/q/.../Test.java" -> "p.q...Test"
-                .substring(0, name.length() - ".java".length()) // get top-level class name
-                .replace(File.separatorChar, '.'); // get package name from directory names
+        // "Test.java" -> "Test"
+        String className = fileName.substring(0, fileName.length() - ".java".length());
+        return Optional.of(className);
     }
 
     File getTestRootDir() {
