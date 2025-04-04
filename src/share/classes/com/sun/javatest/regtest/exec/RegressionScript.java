@@ -42,6 +42,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Consumer;
@@ -467,11 +468,9 @@ public class RegressionScript extends Script {
         return newArgs;
     }
 
-    private static final Pattern namePattern = Pattern.compile("\\$\\{([A-Za-z0-9._]+)}");
-
     private static String evalNames(String arg, Expr.Context c, Map<String,String> testProps)
             throws Expr.Fault, ParseException {
-        Matcher m = namePattern.matcher(arg);
+        Matcher m = SMART_ACTION_NAME_PATTERN.matcher(arg);
         StringBuilder sb = null;
         // Note that '\' may appear in the replacement value for paths on Windows,
         // and so, in the following loop, avoid using Matcher::appendReplacement,
@@ -1140,6 +1139,7 @@ public class RegressionScript extends Script {
             p.put("test.verbose", verbose.toString());
         }
         p.put("test.file", locations.absTestFile().toString());
+        computeMainClassNameFromTestFile().ifPresent(name -> p.put("test.main.class", name));
         p.put("test.src", locations.absTestSrcDir().toString());
         p.put("test.src.path", toString(locations.absTestSrcPath()));
         p.put("test.classes", locations.absTestClsDir().toString());
@@ -1181,12 +1181,27 @@ public class RegressionScript extends Script {
                 .map(Path::toString)
                 .collect(Collectors.joining(File.pathSeparator));
     }
-//    // where
-//    private String toString(List<File> files) {
-//        return files.stream()
-//                .map(File::getPath)
-//                .collect(Collectors.joining(File.pathSeparator));
-//    }
+
+    private Optional<String> computeMainClassNameFromTestFile() {
+        String fileName = locations.absTestFile().getFileName().toString();
+        if (!fileName.endsWith(".java")) {
+            return Optional.empty();
+        }
+        try {
+            // Scan .java file in naive manner; without taking comments into account...
+            String charContent = Files.readString(locations.absTestFile()); // assuming UTF-8 encoding
+            Matcher packageMatcher = PACKAGE_NAME_PATTERN.matcher(charContent);
+            String packageName = packageMatcher.find() ? packageMatcher.group(1) + "." : "";
+            Matcher nameMatcher = TYPE_NAME_PATTERN.matcher(charContent);
+            if (!nameMatcher.find()) {
+                return Optional.empty();
+            }
+            String className = nameMatcher.group(2).trim();
+            return Optional.of(packageName + className);
+        } catch (Exception e) {
+            return Optional.empty();
+        }
+    }
 
     File getTestRootDir() {
         return params.getTestSuite().getRootDir();
@@ -1325,6 +1340,11 @@ public class RegressionScript extends Script {
         NOT_EXT_ACTION        = " does not extend Action",
         ILLEGAL_ACCESS_INIT   = "Illegal access to init method: ",
         BAD_ACTION            = "Bad action for script: ";
+
+    private static final Pattern
+        SMART_ACTION_NAME_PATTERN = Pattern.compile("\\$\\{([A-Za-z0-9._]+)}"),
+        PACKAGE_NAME_PATTERN = Pattern.compile("package\\s+([\\w.]+);"),
+        TYPE_NAME_PATTERN = Pattern.compile("(class|interface|enum|record)\\s+(.+)\\s*\\{.*");
 
     //----------member variables-----------------------------------------------
 

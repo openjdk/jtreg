@@ -21,23 +21,46 @@
  * questions.
  */
 
+package p;
+
 /*
  * @test
- * @run main ${test.main.class} ${os.name} --os=${os.name} x${os.name}x${os.version}x
+ * @run main ${test.main.class} --test.src ${test.src}
  */
 
 import java.util.Arrays;
+import java.util.Objects;
 
-public class Test {
+public class Test3 {
     private static final boolean expectDollar = false; // opt-auto, i.e. in
 
     public static void main(String... args) throws Exception {
         System.out.println(Arrays.toString(args));
 
-        for (String arg: args) {
-            boolean foundDollar = arg.indexOf("$") != -1;
-            if (foundDollar != expectDollar)
-                throw new Exception("Unexpected result: " + arg);
+        for (int i = 0; i < args.length; i++) {
+            String arg = args[i];
+            String value = args[++i];
+
+            switch (arg) {
+                case "--test.src":
+                case "--test.classes":
+                case "--test.class.path":
+                    if (expectDollar) {
+                        checkEqual(value, "${" + arg.substring(2) + "}");
+                    } else {
+                        checkEqual(value, System.getProperty(arg.substring(2)));
+                    }
+                    break;
+            }
+        }
+    }
+
+    private static void checkEqual(String found, String expect) throws Exception {
+        if (!Objects.equals(found, expect)) {
+            System.err.println("Error: mismatch");
+            System.err.println("  Expect: " + expect);
+            System.err.println("  Found:  " + found);
+            throw new Exception("Command line not as expected.");
         }
     }
 }
