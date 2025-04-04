@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2024, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -29,9 +29,7 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.io.UncheckedIOException;
 import java.lang.reflect.Method;
-import java.net.InetAddress;
 import java.net.MalformedURLException;
-import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
@@ -74,6 +72,7 @@ import com.sun.javatest.regtest.config.ParseException;
 import com.sun.javatest.regtest.config.RegressionEnvironment;
 import com.sun.javatest.regtest.config.RegressionParameters;
 import com.sun.javatest.regtest.config.RegressionTestSuite;
+import com.sun.javatest.regtest.config.TestProperties;
 import com.sun.javatest.regtest.report.SummaryReporter;
 import com.sun.javatest.regtest.report.Verbose;
 import com.sun.javatest.regtest.tool.Version;
@@ -347,7 +346,7 @@ public class RegressionScript extends Script {
     public static Set<File> getSourceFiles(RegressionParameters p, TestDescription td) {
         Consumer<String> logger = System.err::println;
         try {
-            RegressionScript tmp = new RegressionScript();
+            RegressionScript tmp = new RegressionScript(p.getTestSuite().getTestProperties());
             // init the script enough to parse the actions
             tmp.params = p;
             tmp.td= td;
@@ -528,10 +527,15 @@ public class RegressionScript extends Script {
      * @return     the timeout, in seconds
      */
     protected int getActionTimeout(int time) {
-        final int DEFAULT_ACTION_TIMEOUT = 120; // seconds
-        return isTimeoutsEnabled()
-                ? (int) ((time < 0 ? DEFAULT_ACTION_TIMEOUT : time) * getTimeoutFactor())
-                : 0;
+        if (!isTimeoutsEnabled() || time == 0) {
+            return 0;
+        }
+        int seconds = time > 0 ? time : getDefaultTimeoutSeconds();
+        return (int) (seconds * getTimeoutFactor());
+    }
+
+    private int getDefaultTimeoutSeconds() {
+        return (int) properties.getDefaultTimeout(getTestDescription().getFile()).toSeconds();
     }
 
     protected float getTimeoutFactor() {
@@ -1342,5 +1346,10 @@ public class RegressionScript extends Script {
     private Modules modules;
     private ScratchDirectory scratchDirectory;
     Locations locations;
+    private final TestProperties properties;
+
+    public RegressionScript(TestProperties properties) {
+        this.properties = properties;
+    }
 
 }
