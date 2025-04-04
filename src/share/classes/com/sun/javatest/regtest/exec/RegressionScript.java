@@ -1185,7 +1185,7 @@ public class RegressionScript extends Script {
     }
 
     private Optional<String> computeMainClassNameFromTestFile() {
-        String fileName = locations.absTestFile().toString();
+        String fileName = locations.absTestFile().getFileName().toString();
         if (!fileName.endsWith(".java")) {
             return Optional.empty();
         }
