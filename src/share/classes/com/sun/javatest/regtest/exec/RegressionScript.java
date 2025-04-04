@@ -1189,14 +1189,14 @@ public class RegressionScript extends Script {
         }
         try {
             // Scan .java file in naive manner; without taking comments into account...
-            var charContent = Files.readString(locations.absTestFile());
-            var packageMatcher = PACKAGE_NAME_PATTERN.matcher(charContent);
-            var packageName = packageMatcher.find() ? packageMatcher.group(1) + "." : "";
-            var nameMatcher = TYPE_NAME_PATTERN.matcher(charContent);
+            String charContent = Files.readString(locations.absTestFile()); // assuming UTF-8 encoding
+            Matcher packageMatcher = PACKAGE_NAME_PATTERN.matcher(charContent);
+            String packageName = packageMatcher.find() ? packageMatcher.group(1) + "." : "";
+            Matcher nameMatcher = TYPE_NAME_PATTERN.matcher(charContent);
             if (!nameMatcher.find()) {
                 return Optional.empty();
             }
-            var className = nameMatcher.group(2).trim();
+            String className = nameMatcher.group(2).trim();
             return Optional.of(packageName + className);
         } catch (Exception e) {
             return Optional.empty();
