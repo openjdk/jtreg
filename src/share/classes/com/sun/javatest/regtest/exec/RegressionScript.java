@@ -26,6 +26,7 @@
 package com.sun.javatest.regtest.exec;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UncheckedIOException;
 import java.lang.reflect.Method;
@@ -1183,22 +1184,22 @@ public class RegressionScript extends Script {
     }
 
     private Optional<String> computeMainClassNameFromTestFile() {
-        String fileName = locations.absTestFile().getFileName().toString();
-        if (!fileName.endsWith(".java")) {
+        Path file = locations.absTestFile();
+        // Take file name as basis for class name.
+        String fileName = file.getFileName().toString();
+        int fileNameLength = fileName.length(); // including ".java".length() = 5
+        if (fileNameLength <= 5 && !fileName.endsWith(".java")) {
             return Optional.empty();
         }
+        String className = fileName.substring(0, fileNameLength - 5);
+        // Scan .java file for "package NAME;" without taking comments into account.
         try {
-            // Scan .java file in naive manner; without taking comments into account...
-            String charContent = Files.readString(locations.absTestFile()); // assuming UTF-8 encoding
+            // Assume non-large files in UTF-8 encoding.
+            String charContent = Files.readString(file);
             Matcher packageMatcher = PACKAGE_NAME_PATTERN.matcher(charContent);
             String packageName = packageMatcher.find() ? packageMatcher.group(1) + "." : "";
-            Matcher nameMatcher = TYPE_NAME_PATTERN.matcher(charContent);
-            if (!nameMatcher.find()) {
-                return Optional.empty();
-            }
-            String className = nameMatcher.group(2).trim();
             return Optional.of(packageName + className);
-        } catch (Exception e) {
+        } catch (IOException ignored) {
             return Optional.empty();
         }
     }
@@ -1343,8 +1344,7 @@ public class RegressionScript extends Script {
 
     private static final Pattern
         SMART_ACTION_NAME_PATTERN = Pattern.compile("\\$\\{([A-Za-z0-9._]+)}"),
-        PACKAGE_NAME_PATTERN = Pattern.compile("package\\s+([\\w.]+);"),
-        TYPE_NAME_PATTERN = Pattern.compile("(class|interface|enum|record)\\s+(.+)\\s*\\{.*");
+        PACKAGE_NAME_PATTERN = Pattern.compile("package\\s+([\\w.]+);");
 
     //----------member variables-----------------------------------------------
 
