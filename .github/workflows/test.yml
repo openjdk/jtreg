@@ -44,3 +44,30 @@ jobs:
         HEADLESS: 1
       run: |
         bash make/build.sh --skip-download
+
+  freebsd-x64:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run tests in FreeBSD
+        id: test
+        uses: vmactions/freebsd-vm@v1
+        with:
+          prepare: |
+            pkg install -y bash curl git gmake gnugrep openjdk21 zip
+            mount -t fdescfs fdesc /dev/fd
+            mount -t procfs proc /proc
+
+          run: |
+            pwd
+            ls -lah
+            whoami
+            env
+            freebsd-version
+            sysctl hw.model
+            sysctl hw.ncpu
+            sysctl hw.physmem
+            sysctl hw.usermem
+            pw user add -n action -m
+            su action -c 'git config --global --add safe.directory /home/runner/work/jtreg/jtreg && bash make/build.sh --jdk /usr/local/openjdk21 && bash build/make.sh test'
