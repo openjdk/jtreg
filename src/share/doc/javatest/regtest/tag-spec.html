@@ -1253,7 +1253,10 @@ in environment variables.
 <td><code>test.main.class</code>
 <td><i>Not Available</i>
 <td>The computed name of the main entry-point of the current Java source file.
-It can be used action tags, for example:<code>@run main ${test.main.class}</code>
+It is based on the simple <code>test.file</code> name without the <code>.java</code>
+extension; prepended with an optional package name parsed from the source file.
+Therefore, non-Java files aren't supported nor inner classes are detected.
+It can be used in action tags, for example:<code>@run main ${test.main.class}</code>
 
 <tr>
 <td><code>test.name</code>

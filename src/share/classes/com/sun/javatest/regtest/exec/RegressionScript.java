@@ -1176,7 +1176,7 @@ public class RegressionScript extends Script {
         p.put("test.root", getTestRootDir().getPath());
         return Collections.unmodifiableMap(p);
     }
-    // where
+
     private String toString(List<Path> files) {
         return files.stream()
                 .map(Path::toString)
