@@ -38,6 +38,7 @@ import com.intellij.execution.testframework.SearchForTestsTask;
 import com.intellij.execution.testframework.TestSearchScope;
 import com.intellij.openapi.module.Module;
 import com.intellij.util.PathUtil;
+import com.oracle.plugin.jtreg.util.JTRegUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import com.oracle.plugin.jtreg.executors.JTRegDebuggerRunner;
@@ -106,6 +107,15 @@ public class JTRegConfigurationRunnableState extends JavaTestFrameworkRunnableSt
         JavaParameters javaParameters = super.createJavaParameters();
         javaParameters.getProgramParametersList().clearAll();
         javaParameters.setMainClass("com.sun.javatest.regtest.Main");
+
+        if (JTRegUtils.IS_WINDOWS) {
+            // Forward temp dir related environment variables. On windows, these are needed to be able to accurately
+            // find the temporary directory. (Otherwise we default to 'C:\WINDOWS', which is typically inaccessible).
+            // See https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-gettemppatha#remarks
+            javaParameters.addEnv("TMP", System.getenv("TMP"));
+            javaParameters.addEnv("TEMP", System.getenv("TEMP"));
+            javaParameters.addEnv("USERPROFILE", System.getenv("USERPROFILE"));
+        }
 
         String jdkString = getConfiguration().getJDKString();
 
@@ -177,10 +187,6 @@ public class JTRegConfigurationRunnableState extends JavaTestFrameworkRunnableSt
     protected OSProcessHandler createHandler(Executor executor) throws ExecutionException {
         final OSProcessHandler processHandler = new KillableColoredProcessHandler(createCommandLine());
         ProcessTerminatedListener.attach(processHandler);
-        final SearchForTestsTask searchingForTestsTask = createSearchingForTestsTask();
-        if (searchingForTestsTask != null) {
-            searchingForTestsTask.attachTaskToProcess(processHandler);
-        }
         return processHandler;
     }
 
@@ -204,12 +210,6 @@ public class JTRegConfigurationRunnableState extends JavaTestFrameworkRunnableSt
      */
     protected boolean isSmRunnerUsed() {
         return true;
-    }
-
-    @Override
-    public SearchForTestsTask createSearchingForTestsTask() {
-        //todo add here test detection based on myConfiguration.getPackage(), for class configuration - do nothing
-        return null;
     }
 
     @NotNull
