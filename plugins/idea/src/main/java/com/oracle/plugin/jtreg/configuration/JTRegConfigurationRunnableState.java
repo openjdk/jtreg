@@ -187,6 +187,10 @@ public class JTRegConfigurationRunnableState extends JavaTestFrameworkRunnableSt
     protected OSProcessHandler createHandler(Executor executor) throws ExecutionException {
         final OSProcessHandler processHandler = new KillableColoredProcessHandler(createCommandLine());
         ProcessTerminatedListener.attach(processHandler);
+        final SearchForTestsTask searchingForTestsTask = createSearchingForTestsTask();
+        if (searchingForTestsTask != null) {
+            searchingForTestsTask.attachTaskToProcess(processHandler);
+        }
         return processHandler;
     }
 
@@ -210,6 +214,12 @@ public class JTRegConfigurationRunnableState extends JavaTestFrameworkRunnableSt
      */
     protected boolean isSmRunnerUsed() {
         return true;
+    }
+
+    @Override
+    public SearchForTestsTask createSearchingForTestsTask() {
+        //todo add here test detection based on myConfiguration.getPackage(), for class configuration - do nothing
+        return null;
     }
 
     @NotNull
