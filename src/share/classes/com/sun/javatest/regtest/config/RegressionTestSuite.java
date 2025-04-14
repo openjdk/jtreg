@@ -88,6 +88,9 @@ public final class RegressionTestSuite extends TestSuite
         return map;
     }
 
+    public TestProperties getTestProperties() {
+        return properties;
+    }
 
     @Override
     public String getName() {
@@ -121,7 +124,7 @@ public final class RegressionTestSuite extends TestSuite
     public Script createScript(TestDescription td, String[] exclTestCases, TestEnvironment scriptEnv,
             WorkDirectory workDir,
             BackupPolicy backupPolicy) throws Fault {
-        Script s = new RegressionScript();
+        Script s = new RegressionScript(properties);
 
         // generic script init
         s.initTestDescription(td);
