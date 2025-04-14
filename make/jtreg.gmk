@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1999, 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1999, 2025, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -42,7 +42,7 @@ JAVAFILES.com.sun.javatest.regtest-agentvm := \
 
 $(BUILDDIR)/classes.com.sun.javatest.regtest.agent.ok: \
 		$(JAVAFILES.com.sun.javatest.regtest-agentvm)
-	$(MKDIR) -p $(CLASSDIR)
+	$(MKDIR) $(CLASSDIR)
 	CLASSPATH="$(CLASSDIR)$(PS)$(JAVATEST_JAR)$(PS)$(JUNIT_CLASSPATH)$(PS)$(TESTNG_CLASSPATH)" \
 	    $(REGTEST_AGENT_JAVAC) $(REGTEST_AGENT_JAVAC_OPTIONS) \
 		-d $(CLASSDIR) \
@@ -103,7 +103,7 @@ $(BUILDDIR)/classes/com/sun/javatest/regtest/tool/jars.properties: \
 	$(ASMTOOLS_JAR) \
 	$(TESTNG_JARS) \
 	$(JUNIT_JARS)
-	$(MKDIR) -p $(@D)
+	$(MKDIR) $(@D)
 	( \
 	    echo "asmtools=$(notdir $(ASMTOOLS_JAR))" ; \
 	    echo "testng=$(notdir $(TESTNG_JARS))" ; \
@@ -132,7 +132,7 @@ JTREG_DOCS = \
 	$(JTREG_USAGE)
 
 $(JTREG_COPYRIGHT): $(TOPDIR)/COPYRIGHT
-	$(MKDIR) -p $(@D)
+	$(MKDIR) $(@D)
 	$(RM) $@
 	$(CP) $< $@
 
@@ -144,7 +144,7 @@ $(BUILDDIR)/alt-faq.html: FAQ_SED_OPTIONS = -e '/max-width: 36em;/d'
 $(JTREG_FAQ) $(BUILDDIR)/alt-faq.html:   $(SRCJTREGDOCDIR)/faq.md \
 		$(SRCJTREGDOCDIR)/faq-local-style.html \
 		$(SRCJTREGDOCDIR)/faq-intro.html
-	$(MKDIR) -p $(@D)
+	$(MKDIR) $(@D)
 	$(ECHO) '/<header>/{;:a;N;/<\/header>/!ba;};/<h1 class="title">/d' | tr ';' '\n' > $(BUILDDIR)/fixupheader
 	$(PANDOC) \
 	    --standalone \
@@ -165,20 +165,20 @@ $(JTREG_FAQ) $(BUILDDIR)/alt-faq.html:   $(SRCJTREGDOCDIR)/faq.md \
 
 
 $(JTREG_README): $(SRCJTREGDOCDIR)/README
-	$(MKDIR) -p $(@D)
+	$(MKDIR) $(@D)
 	$(RM) $@
 	$(CP) $< $@
 
 $(JTREG_TAGSPEC): $(JTREG_IMAGEDIR)/doc/jtreg/%: $(SRCJTREGDOCDIR)/%
 	$(RM) $@
-	$(MKDIR) -p $(@D)
+	$(MKDIR) $(@D)
 	$(CP) $^ $@
 
 $(JTREG_USAGE): $(BUILDDIR)/jtreg-usage.txt
 	$(CP) $^ $@
 
 $(JTREG_LICENSE): $(TOPDIR)/LICENSE
-	$(MKDIR) -p $(@D)
+	$(MKDIR) $(@D)
 	$(CP) $^ $@
 
 $(BUILDDIR)/jtreg-usage.txt: \
@@ -262,7 +262,7 @@ TARGETS.ZIP.jtreg += $(JTREG_IMAGEJARDIR)/jtreg.jar
 define IMPORT_FILE
 $(2)/$(notdir $(1)): $(call PosixPath,$(1))
 	$(RM) -f $$@
-	$(MKDIR) -p $$(@D)
+	$(MKDIR) $$(@D)
 	$(CP) $$< $$@
 
 TARGETS.ZIP.jtreg += $(2)/$(notdir $(1))
@@ -276,7 +276,7 @@ TARGETS.com.sun.javatest.regtest += $(RESOURCES.com.sun.javatest.regtest)
 
 $(JTREG_IMAGEDIR)/lib/javatest.jar: $(call PosixPath,$(JAVATEST_JAR))
 	$(RM) -f $@
-	$(MKDIR) -p $(@D)
+	$(MKDIR) $(@D)
 	$(CP) $< $@
 
 TARGETS.ZIP.jtreg += $(JTREG_IMAGEJARDIR)/javatest.jar
@@ -326,7 +326,7 @@ ALL_JTREG_JARS = \
 # executable scripts
 
 $(JTREG_IMAGEDIR)/bin/jtreg: $(SRCSHAREBINDIR)/jtreg.sh
-	$(MKDIR) -p $(@D)
+	$(MKDIR) $(@D)
 	$(RM) $@
 	$(CP) $<  $@
 	$(CHMOD) a+x,a-w $@

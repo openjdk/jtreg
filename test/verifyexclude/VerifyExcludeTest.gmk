@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2024, 2025, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -29,7 +29,7 @@ $(BUILDTESTDIR)/verifyexclude.format.1.ok: \
                 $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(JTREG_IMAGEDIR)/lib/javatest.jar
 	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
-	$(MKDIR) -p $(@:%.ok=%)
+	$(MKDIR) $(@:%.ok=%)
 	$(JDKHOME)/bin/java \
 		-Djavatest.regtest.showCmd=true \
 		-jar $(JTREG_IMAGEJARDIR)/jtreg.jar \
@@ -49,7 +49,7 @@ $(BUILDTESTDIR)/verifyexclude.format.2.ok: \
                 $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(JTREG_IMAGEDIR)/lib/javatest.jar
 	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
-	$(MKDIR) -p $(@:%.ok=%)
+	$(MKDIR) $(@:%.ok=%)
 	$(JDKHOME)/bin/java \
 		-Djavatest.regtest.showCmd=true \
 		-jar $(JTREG_IMAGEJARDIR)/jtreg.jar \
@@ -69,7 +69,7 @@ $(BUILDTESTDIR)/verifyexclude.exist.ok: \
                 $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(JTREG_IMAGEDIR)/lib/javatest.jar
 	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
-	$(MKDIR) -p $(@:%.ok=%)
+	$(MKDIR) $(@:%.ok=%)
 	$(JDKHOME)/bin/java \
 		-Djavatest.regtest.showCmd=true \
 		-jar $(JTREG_IMAGEJARDIR)/jtreg.jar \
@@ -89,7 +89,7 @@ $(BUILDTESTDIR)/verifyexclude.id.ok: \
                 $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(JTREG_IMAGEDIR)/lib/javatest.jar
 	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
-	$(MKDIR) -p $(@:%.ok=%)
+	$(MKDIR) $(@:%.ok=%)
 	$(JDKHOME)/bin/java \
 		-Djavatest.regtest.showCmd=true \
 		-jar $(JTREG_IMAGEJARDIR)/jtreg.jar \
@@ -108,7 +108,7 @@ $(BUILDTESTDIR)/verifyexclude.format.whitespace.ok: \
                 $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(JTREG_IMAGEDIR)/lib/javatest.jar
 	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
-	$(MKDIR) -p $(@:%.ok=%)
+	$(MKDIR) $(@:%.ok=%)
 	$(JDKHOME)/bin/java \
 		-Djavatest.regtest.showCmd=true \
 		-jar $(JTREG_IMAGEJARDIR)/jtreg.jar \
@@ -125,7 +125,7 @@ $(BUILDTESTDIR)/verifyexclude.good.ok: \
                 $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(JTREG_IMAGEDIR)/lib/javatest.jar
 	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
-	$(MKDIR) -p $(@:%.ok=%)
+	$(MKDIR) $(@:%.ok=%)
 	$(JDKHOME)/bin/java \
 		-Djavatest.regtest.showCmd=true \
 		-jar $(JTREG_IMAGEJARDIR)/jtreg.jar \
@@ -142,7 +142,7 @@ $(BUILDTESTDIR)/verifyexclude.duplicate.ok: \
                 $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(JTREG_IMAGEDIR)/lib/javatest.jar
 	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
-	$(MKDIR) -p $(@:%.ok=%)
+	$(MKDIR) $(@:%.ok=%)
 	$(JDKHOME)/bin/java \
 		-Djavatest.regtest.showCmd=true \
 		-jar $(JTREG_IMAGEJARDIR)/jtreg.jar \
@@ -161,7 +161,7 @@ $(BUILDTESTDIR)/verifyexclude.match.format.1.ok: \
                 $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(JTREG_IMAGEDIR)/lib/javatest.jar
 	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
-	$(MKDIR) -p $(@:%.ok=%)
+	$(MKDIR) $(@:%.ok=%)
 	$(JDKHOME)/bin/java \
 		-Djavatest.regtest.showCmd=true \
 		-jar $(JTREG_IMAGEJARDIR)/jtreg.jar \
@@ -181,7 +181,7 @@ $(BUILDTESTDIR)/verifyexclude.shortform.ok: \
                 $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(JTREG_IMAGEDIR)/lib/javatest.jar
 	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
-	$(MKDIR) -p $(@:%.ok=%)
+	$(MKDIR) $(@:%.ok=%)
 	$(JDKHOME)/bin/java \
 		-Djavatest.regtest.showCmd=true \
 		-jar $(JTREG_IMAGEJARDIR)/jtreg.jar \
@@ -200,7 +200,7 @@ $(BUILDTESTDIR)/verifyexclude.good.invoke.direct.ok: \
                 $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(JTREG_IMAGEDIR)/lib/javatest.jar
 	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
-	$(MKDIR) -p $(@:%.ok=%)
+	$(MKDIR) $(@:%.ok=%)
 	$(JDKHOME)/bin/java \
 		-Djavatest.regtest.showCmd=true \
 		-jar $(JTREG_IMAGEJARDIR)/jtreg.jar \
@@ -217,7 +217,7 @@ $(BUILDTESTDIR)/verifyexclude.good.invoke.group.ok: \
                 $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(JTREG_IMAGEDIR)/lib/javatest.jar
 	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
-	$(MKDIR) -p $(@:%.ok=%)
+	$(MKDIR) $(@:%.ok=%)
 	$(JDKHOME)/bin/java \
 		-Djavatest.regtest.showCmd=true \
 		-jar $(JTREG_IMAGEJARDIR)/jtreg.jar \
@@ -234,7 +234,7 @@ $(BUILDTESTDIR)/verifyexclude.good.verbose.ok: \
                 $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(JTREG_IMAGEDIR)/lib/javatest.jar
 	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
-	$(MKDIR) -p $(@:%.ok=%)
+	$(MKDIR) $(@:%.ok=%)
 	$(JDKHOME)/bin/java \
 		-Djavatest.regtest.showCmd=true \
 		-jar $(JTREG_IMAGEJARDIR)/jtreg.jar \
@@ -253,7 +253,7 @@ $(BUILDTESTDIR)/verifyexclude.good.verbose.all.ok: \
                 $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(JTREG_IMAGEDIR)/lib/javatest.jar
 	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
-	$(MKDIR) -p $(@:%.ok=%)
+	$(MKDIR) $(@:%.ok=%)
 	$(JDKHOME)/bin/java \
 		-Djavatest.regtest.showCmd=true \
 		-jar $(JTREG_IMAGEJARDIR)/jtreg.jar \

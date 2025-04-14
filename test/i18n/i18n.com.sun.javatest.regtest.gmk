@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2025, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -28,7 +28,7 @@ $(BUILDTESTDIR)/i18n.com.sun.javatest.regtest.config.ok: \
 		$(JAVADIR)/com/sun/javatest/regtest/config/i18n.properties \
 		$(BUILDDIR)/classes.com.sun.javatest.regtest.ok \
 		$(TESTDIR)/i18n/checkI18NProps.sh
-	$(MKDIR) -p $(@:%.ok=%)
+	$(MKDIR) $(@:%.ok=%)
 	$(SH) $(TESTDIR)/i18n/checkI18NProps.sh $(@:%.ok=%) $(JAVADIR)/com/sun/javatest/regtest/config
 	echo $@ passed at `date` > $@
 
@@ -36,7 +36,7 @@ $(BUILDTESTDIR)/i18n.com.sun.javatest.regtest.report.ok: \
 		$(JAVADIR)/com/sun/javatest/regtest/report/i18n.properties \
 		$(BUILDDIR)/classes.com.sun.javatest.regtest.ok \
 		$(TESTDIR)/i18n/checkI18NProps.sh
-	$(MKDIR) -p $(@:%.ok=%)
+	$(MKDIR) $(@:%.ok=%)
 	$(SH) $(TESTDIR)/i18n/checkI18NProps.sh $(@:%.ok=%) $(JAVADIR)/com/sun/javatest/regtest/report
 	echo $@ passed at `date` > $@
 
@@ -44,7 +44,7 @@ $(BUILDTESTDIR)/i18n.com.sun.javatest.regtest.tool.ok: \
 		$(JAVADIR)/com/sun/javatest/regtest/tool/i18n.properties \
 		$(BUILDDIR)/classes.com.sun.javatest.regtest.ok \
 		$(TESTDIR)/i18n/checkI18NProps.sh
-	$(MKDIR) -p $(@:%.ok=%)
+	$(MKDIR) $(@:%.ok=%)
 	CLASSPATH="$(CLASSDIR)$(PS)$(JAVADIR)$(PS)$(JAVATEST_JAR)" \
 	    $(JDKJAVA) -Djavatest.i18n.log=com.sun.javatest.regtest.tool \
 		com.sun.javatest.regtest.Main -help all \
