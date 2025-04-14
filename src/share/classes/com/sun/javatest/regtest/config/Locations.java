@@ -286,7 +286,7 @@ public final class Locations {
             }
         } else {
             checkLibPath(relLibDir.resolve(lib));
-            if (Files.exists(libDir.resolve(lib)))
+            if (Files.exists(absTestSrcDir.resolve(lib)))
                 return createLibLocn(lib, absTestSrcDir, libDir.resolve(relLibDir));
         }
         throw new Fault(CANT_FIND_LIB + lib);
