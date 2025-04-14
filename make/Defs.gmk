@@ -152,7 +152,7 @@ GREP 	:= $(shell if [ -r /bin/grep ]; then echo /bin/grep ; else echo /usr/bin/g
 endif
 LN	= /bin/ln
 LS	= /bin/ls
-MKDIR 	= /bin/mkdir
+MKDIR 	= /bin/mkdir -p
 MV 	= /bin/mv
 PANDOC  := $(shell if [ -r /usr/bin/pandoc ]; then \
 		echo /usr/bin/pandoc ; \
