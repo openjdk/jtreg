@@ -34,8 +34,8 @@ $(BUILDTESTDIR)/SmartActionArgs.othervm.ok: \
 		-jdk:$(JDKHOME) \
 		$(@:$(BUILDTESTDIR)/SmartActionArgs.%.ok=-%) \
 		$(TESTDIR)/smartActionArgs \
-			> $(@:%.ok=%/jt.log); \
-		ls $(BUILDTESTDIR)
+			> $(@:%.ok=%/jt.log) 2>&1 || \
+		true "non-zero exit code from JavaTest intentionally ignored"
 	$(GREP) -s 'Test results: passed: 8; error: 1' $(@:%.ok=%/jt.log)  > /dev/null
 	$(GREP) -s 'Bad classname provided for .build.: ${test.main.class}' $(@:%.ok=%/work/optOut/Test3.jtr)  > /dev/null
 	$(CHMOD) -R +w $(@:%.ok=%)
