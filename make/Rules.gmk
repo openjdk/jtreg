@@ -28,22 +28,22 @@
 # Copy resources (*.properties) into classes directory from source tree
 
 $(CLASSDIR)/%.properties: $(JAVADIR)/%.properties
-	$(RM) -f $@
+	$(RM) $@
 	$(MKDIR) $(@D)
 	$(CP) $(@:$(CLASSDIR)/%=$(JAVADIR)/%) $@
 
 $(CLASSDIR)/%.gif: $(JAVADIR)/%.gif
-	$(RM) -f $@
+	$(RM) $@
 	$(MKDIR) $(@D)
 	$(CP) $(@:$(CLASSDIR)/%=$(JAVADIR)/%) $@
 
 $(CLASSDIR)/%.png: $(JAVADIR)/%.png
-	$(RM) -f $@
+	$(RM) $@
 	$(MKDIR) $(@D)
 	$(CP) $(@:$(CLASSDIR)/%=$(JAVADIR)/%) $@
 
 $(CLASSDIR)/META-INF/services/%: $(JAVADIR)/META-INF/services/%
-	$(RM) -f $@
+	$(RM) $@
 	$(MKDIR) $(@D)
 	$(CP) $(@:$(CLASSDIR)/%=$(JAVADIR)/%) $@
 

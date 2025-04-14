@@ -261,7 +261,7 @@ TARGETS.ZIP.jtreg += $(JTREG_IMAGEJARDIR)/jtreg.jar
 #
 define IMPORT_FILE
 $(2)/$(notdir $(1)): $(call PosixPath,$(1))
-	$(RM) -f $$@
+	$(RM) $$@
 	$(MKDIR) $$(@D)
 	$(CP) $$< $$@
 
@@ -275,7 +275,7 @@ endef
 TARGETS.com.sun.javatest.regtest += $(RESOURCES.com.sun.javatest.regtest)
 
 $(JTREG_IMAGEDIR)/lib/javatest.jar: $(call PosixPath,$(JAVATEST_JAR))
-	$(RM) -f $@
+	$(RM) $@
 	$(MKDIR) $(@D)
 	$(CP) $< $@
 
