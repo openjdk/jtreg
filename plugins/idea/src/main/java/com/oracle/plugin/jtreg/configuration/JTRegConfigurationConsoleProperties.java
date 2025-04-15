@@ -36,9 +36,9 @@ import com.intellij.execution.ui.ConsoleView;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.JavaPsiFacade;
 import com.intellij.psi.PsiClass;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.search.GlobalSearchScope;
-import com.intellij.psi.util.PsiUtil;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -78,7 +78,7 @@ public class JTRegConfigurationConsoleProperties extends JavaAwareTestConsolePro
                 return List.of();
             }
 
-            String[] pathParts = path.split("::", 2);
+            String[] pathParts = path.split("/");
             String className = pathParts[0];
             String methodName = null;
             if (pathParts.length > 1) {
@@ -96,7 +96,17 @@ public class JTRegConfigurationConsoleProperties extends JavaAwareTestConsolePro
 
             PsiMethod[] methods = cls.findMethodsByName(methodName, false);
             if (methods.length == 1) {
-                return List.of(PsiLocation.fromPsiElement(methods[0]));
+                Location<PsiElement> location = PsiLocation.fromPsiElement(methods[0]);
+                if (pathParts.length > 2) {
+                    try {
+                        int iterationNum = Integer.parseInt(pathParts[2]);
+                        String iterationName = pathParts[3];
+                        return List.of(new JTRegIterationLocation(location, iterationNum, iterationName));
+                    } catch (NumberFormatException e) {
+                        // fallthrough
+                    }
+                }
+                return List.of(location);
             }
 
             return List.of();

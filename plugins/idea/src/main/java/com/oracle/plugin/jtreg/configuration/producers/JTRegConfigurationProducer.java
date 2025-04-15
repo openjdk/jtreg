@@ -68,10 +68,9 @@ public class JTRegConfigurationProducer extends JavaRunConfigurationProducerBase
     }
 
     /**
-     * @see #isConfigurationFromContext
-     * @see com.intellij.execution.application.AbstractApplicationConfigurationProducer#setupConfigurationFromContext
-     * @see com.intellij.execution.testframework.AbstractInClassConfigurationProducer#setupConfigurationFromContext
-     * @see com.intellij.psi.util.PsiTreeUtil#isAncestor
+     * @see #setupConfigurationFromContext
+     * @see com.intellij.execution.application.AbstractApplicationConfigurationProducer#isConfigurationFromContext
+     * @see com.intellij.execution.testframework.AbstractInClassConfigurationProducer#isConfigurationFromContext
      */
     @Override
     protected boolean setupConfigurationFromContext(@NotNull JTRegConfiguration configuration,
@@ -97,6 +96,7 @@ public class JTRegConfigurationProducer extends JavaRunConfigurationProducerBase
 
         if (element instanceof PsiDirectory runDir) {
             configuration.setPackage(runDir.getVirtualFile().getPath());
+            configuration.setName(nameForElement(element));
         } else {
             PsiFile runFile = (element instanceof PsiFile psiFile) ? psiFile : element.getContainingFile();
             if (null != runFile && null != runFile.getVirtualFile()) {
