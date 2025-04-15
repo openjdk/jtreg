@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2013, 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2013, 2025, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -29,7 +29,7 @@ $(BUILDTESTDIR)/RerunTest2.ok: \
 	    $(TESTDIR)/rerun2/RerunTest2.java \
 	    $(ALL_JTREG_JARS) \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
-	$(RM) $(@:%.ok=%) ; $(MKDIR) -p $(@:%.ok=%)
+	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	$(MKDIR) $(@:%.ok=%)/classes
 	$(JDKHOME)/bin/javac \
 		-d $(@:%.ok=%)/classes \

@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1996, 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1996, 2025, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -28,29 +28,29 @@
 # Copy resources (*.properties) into classes directory from source tree
 
 $(CLASSDIR)/%.properties: $(JAVADIR)/%.properties
-	$(RM) -f $@
-	$(MKDIR) -p $(@D)
+	$(RM) $@
+	$(MKDIR) $(@D)
 	$(CP) $(@:$(CLASSDIR)/%=$(JAVADIR)/%) $@
 
 $(CLASSDIR)/%.gif: $(JAVADIR)/%.gif
-	$(RM) -f $@
-	$(MKDIR) -p $(@D)
+	$(RM) $@
+	$(MKDIR) $(@D)
 	$(CP) $(@:$(CLASSDIR)/%=$(JAVADIR)/%) $@
 
 $(CLASSDIR)/%.png: $(JAVADIR)/%.png
-	$(RM) -f $@
-	$(MKDIR) -p $(@D)
+	$(RM) $@
+	$(MKDIR) $(@D)
 	$(CP) $(@:$(CLASSDIR)/%=$(JAVADIR)/%) $@
 
 $(CLASSDIR)/META-INF/services/%: $(JAVADIR)/META-INF/services/%
-	$(RM) -f $@
-	$(MKDIR) -p $(@D)
+	$(RM) $@
+	$(MKDIR) $(@D)
 	$(CP) $(@:$(CLASSDIR)/%=$(JAVADIR)/%) $@
 
 #---------------------------------------------------------------------
 
 $(CLASSDIR) $(BUILDDIR) $(BUILDDIR)/testClasses $(BUILDDIR)/testWork $(BUILDDIR)/testReport:
-	$(MKDIR) -p $@
+	$(MKDIR) $@
 
 #----------------------------------------------------------------------
 #
@@ -69,8 +69,8 @@ endif
 
 $(IMAGES_DIR)/%.jar: pkgsToFiles.sh
 	$(RM) $@ $(@:$(IMAGES_DIR)/%.jar=$(BUILDDIR)/jarData/%)
-	$(MKDIR) -p $(@D)
-	$(MKDIR) -p $(@:$(IMAGES_DIR)/%.jar=$(BUILDDIR)/jarData/%)
+	$(MKDIR) $(@D)
+	$(MKDIR) $(@:$(IMAGES_DIR)/%.jar=$(BUILDDIR)/jarData/%)
 	( if [ -n "$(JAR_MAINCLASS)" ]; then echo "Main-class: $(JAR_MAINCLASS)" ; fi ; \
 	  if [ -n "$(JAR_CLASSPATH)" ]; then echo "Class-Path: $(JAR_CLASSPATH)" ; fi ; \
 	  echo "$(@F:%.jar=%)-Name: $(@F:%.jar=%)" ; \

@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2015, 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2015, 2025, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -28,7 +28,7 @@
 $(BUILDTESTDIR)/ModulesTest_NoLimitMods.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
-	$(MKDIR) -p $(@:%.ok=%)/classes
+	$(MKDIR) $(@:%.ok=%)/classes
 	JTREG_JAVA=$(JDKJAVA) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDK9HOME) \
@@ -51,7 +51,7 @@ $(BUILDTESTDIR)/ModulesTest_LimitMods_java.base.ok \
 $(BUILDTESTDIR)/ModulesTest_LimitMods_java.se.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
-	$(MKDIR) -p $(@:%.ok=%)/classes
+	$(MKDIR) $(@:%.ok=%)/classes
 	JTREG_JAVA=$(JDKJAVA) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDK9HOME) \
@@ -64,7 +64,7 @@ $(BUILDTESTDIR)/ModulesTest_LimitMods_java.se.ok: \
 $(BUILDTESTDIR)/ModulesTest_IgnoreAtModules.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
-	$(MKDIR) -p $(@:%.ok=%)/classes
+	$(MKDIR) $(@:%.ok=%)/classes
 	JTREG_JAVA=$(JDKJAVA) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDK8HOME) \
