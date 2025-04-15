@@ -44,6 +44,7 @@ import com.intellij.openapi.util.Ref;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import com.oracle.plugin.jtreg.configuration.JTRegConfiguration;
+import com.oracle.plugin.jtreg.configuration.JTRegIterationLocation;
 import com.oracle.plugin.jtreg.service.JTRegService;
 import com.oracle.plugin.jtreg.configuration.JTRegConfigurationType;
 import com.oracle.plugin.jtreg.util.JTRegUtils;
@@ -107,9 +108,14 @@ public class JTRegConfigurationProducer extends JavaRunConfigurationProducerBase
 
             preventRunPriorityLoss(element, sourceElement);
             element = findExactRunElement(element);
-            configuration.setQuery(getQuery(element));
+            if (contextLocation instanceof JTRegIterationLocation iterationLocation) {
+                configuration.setQuery(getQuery(element, iterationLocation.getIteration()));
+                configuration.setName(nameForElement(element) + " [" + iterationLocation.getIterationName() + "]");
+            } else {
+                configuration.setQuery(getQuery(element, -1));
+                configuration.setName(nameForElement(element));
+            }
         }
-        configuration.setName(nameForElement(element));
 
         initBeforeTaskActions(configuration);
         return true;
@@ -194,7 +200,8 @@ public class JTRegConfigurationProducer extends JavaRunConfigurationProducerBase
 
         PsiElement element = findExactRunElement(contextLocation.getPsiElement());
 
-        String contextQuery = getQuery(element);
+        int iteration = contextLocation instanceof JTRegIterationLocation il ? il.getIteration() : -1;
+        String contextQuery = getQuery(element, iteration);
 
         PsiFile contextFile = (element instanceof PsiFile psiFile) ? psiFile : element.getContainingFile();
         VirtualFile contextVirtualFile = null != contextFile ? contextFile.getVirtualFile() : null;
@@ -224,7 +231,7 @@ public class JTRegConfigurationProducer extends JavaRunConfigurationProducerBase
      * @param element The element for the run configuration (by default, contains the element at the caret).
      * @return The nearest test element found, or {@code element} if no test element is found among the parents.
      * @see #nameForElement(PsiElement)
-     * @see #getQuery(PsiElement)
+     * @see #getQuery(PsiElement,int)
      */
     @NotNull
     private PsiElement findExactRunElement(@NotNull PsiElement element) {
@@ -251,10 +258,18 @@ public class JTRegConfigurationProducer extends JavaRunConfigurationProducerBase
     }
 
     @NotNull
-    protected static String getQuery(PsiElement element) {
+    private static String getQuery(PsiElement element, int iteration) {
         if (element instanceof PsiMethod psiMethod) {
             if (JUnitUtil.isTestAnnotated(psiMethod)) {
-                return "junit-select:method:" + getJUnitMethodQuery(psiMethod);
+                String query = "junit-select:";
+                if (iteration != -1) {
+                    query += "iteration:";
+                }
+                query += "method:" + getJUnitMethodQuery(psiMethod);
+                if (iteration != -1) {
+                    query += "[" + iteration + "]";
+                }
+                return query;
             } else if (TestNGUtil.hasTest(psiMethod)) {
                 // just the method name for TestNG
                 return psiMethod.getName();

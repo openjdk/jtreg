@@ -86,6 +86,7 @@ public class JTRegTestListener implements Harness.Observer {
         try {
             tryReportJUnitResults(file);
         } catch (Throwable t) {
+            t.printStackTrace();
             // failed. ignore
         }
 
@@ -114,6 +115,9 @@ public class JTRegTestListener implements Harness.Observer {
         }
     }
 
+    private static final Pattern JUNIT_TEST_START = Pattern.compile(
+            "STARTED\\s+(?<class>[A-Za-z0-9._$]+)::(?<method>[A-Za-z0-9._$]+)\\s+(?<rest>.*)");
+
     private static void reportJUnitSection(Iterator<String> itt) {
         Deque<String> nesting = new ArrayDeque<>();
         System.out.println("##teamcity[testSuiteStarted name='junit' ]");
@@ -122,15 +126,13 @@ public class JTRegTestListener implements Harness.Observer {
             if (line.startsWith("result:")) {
                 break; // end of section. Stop parsing
             }
-            if (line.startsWith("STARTED")) {
+            Matcher m = JUNIT_TEST_START.matcher(line);
+            if (m.find()) {
                 List<String> stdErr = new ArrayList<>();
                 stdErr.add(line);
-                String[] logParts = line.split("\\s+", 3);
-                String testName = logParts[1];
-                String[] testNameParts = testName.split("::");
-                String className = testNameParts[0].replace("$", ".");
-                String methodName = testNameParts[1];
-                Iteration iteration = parseIteration(logParts[2]);
+                String className = m.group("class").replace("$", ".");
+                String methodName = m.group("method");
+                Iteration iteration = parseIteration(m.group("rest"));
                 String displayTestName = methodName + (iteration != null ? " [" + iteration.name() + "]" : "");
 
                 while (!nesting.isEmpty() && !className.contains(nesting.peek())) {
@@ -149,6 +151,11 @@ public class JTRegTestListener implements Harness.Observer {
 
                 do {
                     line = itt.next();
+                    if (line.startsWith("JT Harness has limited the test output")) {
+                        // jtharness truncated the output. Discard this result
+                        // and look for the next one.
+                        continue;
+                    }
                     stdErr.add(line);
                 } while (!line.startsWith("SUCCESSFUL") && !line.startsWith("ABORTED")
                         && !line.startsWith("SKIPPED") && !line.startsWith("FAILED"));
@@ -181,7 +188,7 @@ public class JTRegTestListener implements Harness.Observer {
         return "locationHint='jtreg://" + escapeName(path) + "'";
     }
 
-    private static final Pattern ITERATION_PATTERN = Pattern.compile("'\\[(?<num>\\d+)\\] (?<name>.*)'");
+    private static final Pattern ITERATION_PATTERN = Pattern.compile("'\\[(?<num>\\d+)] (?<name>.*)'");
     private record Iteration(int num, String name) {}
 
     private static Iteration parseIteration(String iteration) {
