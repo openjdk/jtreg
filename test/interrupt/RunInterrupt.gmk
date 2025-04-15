@@ -35,7 +35,7 @@ $(BUILDTESTDIR)/InterruptTest.ok: \
 		-cp $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		-Xlint -Werror \
 		-encoding ASCII $(TESTDIR)/interrupt/InterruptTest.java
-	$(RM) -rf $(@:%.ok=%)/tmp
+	$(RM) $(@:%.ok=%)/tmp
 	$(MKDIR) $(@:%.ok=%)/tmp
 	$(JDKJAVA) -cp "$(@:%.ok=%)/classes$(PS)$(JTREG_IMAGEDIR)/lib/jtreg.jar" -Djava.io.tmpdir=$(@:%.ok=%)/tmp InterruptTest
 	echo "test passed at `date`" > $@
