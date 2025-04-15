@@ -154,7 +154,8 @@ public class JTRegTestListener implements Harness.Observer {
                 String[] logParts = line.split("\\s+", 3);
                 String testName = logParts[1];
                 String[] testNameParts = testName.split("::");
-                String className = testNameParts[0].replace("$", ".");
+                String rawClassName = testNameParts[0];
+                String className = rawClassName.replace("$", ".");
                 String methodName = testNameParts[1];
 
                 if (!nesting.isEmpty() && !className.contains(nesting.peek())) {
@@ -163,12 +164,13 @@ public class JTRegTestListener implements Harness.Observer {
                 if (nesting.isEmpty() || !nesting.peek().equals(className)) {
                     nesting.push(className);
                     System.out.println("##teamcity[testSuiteStarted name='" + simpleClassName(className) + "'"
-                            + " locationHint='java:suite://" + className + "'"
+                            + " locationHint='jtreg://" + escapeName(rawClassName) + "'"
                             + " ]");
                 }
 
                 System.out.println("##teamcity[testStarted name='" + escapeName(methodName) + "'"
-                        + " locationHint='java:test://" + className + "/" + methodName+ "'"
+                        // TODO add iteration as meta info
+                        + " locationHint='jtreg://" + escapeName(rawClassName + "::" + methodName) + "'"
                         + " ]");
 
                 do {
