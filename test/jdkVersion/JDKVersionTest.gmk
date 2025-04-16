@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2017, 2018, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2017, 2025, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -30,7 +30,7 @@
 
 $(BUILDTESTDIR)/TestJDKVersion.classes.ok: \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar
-	$(MKDIR) -p $(@:%.ok=%)
+	$(MKDIR) $(@:%.ok=%)
 	$(JDKJAVA) -cp "$(CLASSDIR)$(PS)$(JTREG_IMAGEDIR)/lib/javatest.jar" com.sun.javatest.regtest.Main \
 		-jdk:$(JDKHOME) \
 		-w:$(@:%.ok=%/work) \
@@ -45,7 +45,7 @@ $(BUILDTESTDIR)/TestJDKVersion.classes.ok: \
 
 $(BUILDTESTDIR)/TestJDKVersion.jar.ok: \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar
-	$(MKDIR) -p $(@:%.ok=%)
+	$(MKDIR) $(@:%.ok=%)
 	$(JDKJAVA) -cp "$(JTREG_IMAGEJARDIR)/jtreg.jar$(PS)$(JTREG_IMAGEDIR)/lib/javatest.jar" com.sun.javatest.regtest.Main \
 		-jdk:$(JDKHOME) \
 		-w:$(@:%.ok=%/work) \

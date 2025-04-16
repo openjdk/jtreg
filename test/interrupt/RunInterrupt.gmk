@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2017, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2017, 2025, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -29,14 +29,14 @@ $(BUILDTESTDIR)/InterruptTest.ok: \
 	    $(TESTDIR)/interrupt/InterruptTest.java \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
-	$(MKDIR) -p $(@:%.ok=%)/classes
+	$(MKDIR) $(@:%.ok=%)/classes
 	$(JDKJAVAC) \
 		-d $(@:%.ok=%)/classes \
 		-cp $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		-Xlint -Werror \
 		-encoding ASCII $(TESTDIR)/interrupt/InterruptTest.java
-	$(RM) -rf $(@:%.ok=%)/tmp
-	$(MKDIR) -p $(@:%.ok=%)/tmp
+	$(RM) $(@:%.ok=%)/tmp
+	$(MKDIR) $(@:%.ok=%)/tmp
 	$(JDKJAVA) -cp "$(@:%.ok=%)/classes$(PS)$(JTREG_IMAGEDIR)/lib/jtreg.jar" -Djava.io.tmpdir=$(@:%.ok=%)/tmp InterruptTest
 	echo "test passed at `date`" > $@
 

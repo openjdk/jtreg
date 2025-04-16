@@ -1,5 +1,5 @@
  #
-# Copyright (c) 2019, 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2019, 2025, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -30,7 +30,7 @@ $(BUILDTESTDIR)/StatusFilter.ok: \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(JTREG_IMAGEDIR)/lib/javatest.jar
 	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
-	$(MKDIR) -p $(@:%.ok=%)
+	$(MKDIR) $(@:%.ok=%)
 	#
 	@echo "*** run p1 tests with 1 failure; expect 4 pass 1 fail"
 	$(JDKHOME)/bin/java \

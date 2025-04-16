@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2025, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -34,7 +34,7 @@ $(BUILDTESTDIR)/T4499340.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 	$(MKDIR) $(@:%.ok=%)
 	( cd $(TESTDIR)/4499340 ; find test -name SCCS -prune -o -type f -print ) | \
 		while read file ; do \
-			$(MKDIR) -p `dirname $(@:%.ok=%)/$$file` ; \
+			$(MKDIR) `dirname $(@:%.ok=%)/$$file` ; \
 			$(CP) $(TESTDIR)/4499340/$$file `dirname $(@:%.ok=%)/$$file` ;\
 		done
 	$(MKDIR) $(@:%.ok=%)/classes

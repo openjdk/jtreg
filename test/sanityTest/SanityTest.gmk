@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2025, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -25,7 +25,7 @@
 
 $(BUILDTESTDIR)/TestSanityTest.ok:
 	$(RM) $(@:%.ok=%)
-	$(MKDIR) -p $(@:%.ok=%)
+	$(MKDIR) $(@:%.ok=%)
 	$(FIND) $(TOPDIR)/make $(TOPDIR)/test -name \*.gmk | \
 		xargs $(GREP) -o 'JDK[1-9][0-9_]*HOME' | $(SED) -e 's/.*://' | $(SORT) -u \
 		> $(@:%.ok=%/refs.txt)

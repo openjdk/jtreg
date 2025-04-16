@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2025, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -32,7 +32,7 @@ $(BUILDTESTDIR)/autovm.ok: $(AUTOVM_FILES) \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar
 	for ts in none agentvm othervm; do \
 	    $(RM) $(BUILDTESTDIR)/autovm/tests/default.$$ts ; \
-	    $(MKDIR) -p $(BUILDTESTDIR)/autovm/tests/default.$$ts ; \
+	    $(MKDIR) $(BUILDTESTDIR)/autovm/tests/default.$$ts ; \
 	    $(CP) -R $(TESTDIR)/autovm/* $(BUILDTESTDIR)/autovm/tests/default.$$ts ; \
 	    if [ $$ts != none ]; then \
 		echo "defaultExecMode=$$ts" >> $(BUILDTESTDIR)/autovm/tests/default.$$ts/TEST.ROOT ; \
