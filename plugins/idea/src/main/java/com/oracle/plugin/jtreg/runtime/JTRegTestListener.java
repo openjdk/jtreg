@@ -83,12 +83,7 @@ public class JTRegTestListener implements Harness.Observer {
             System.out.println("##teamcity[testIgnored name='jtreg']");
         }
 
-        try {
-            tryReportJUnitResults(file);
-        } catch (Throwable t) {
-            t.printStackTrace();
-            // failed. ignore
-        }
+        tryReportJUnitResults(file);
 
         String duration = "0";
         try {
@@ -109,7 +104,12 @@ public class JTRegTestListener implements Harness.Observer {
             while (itt.hasNext()) {
                 String line = itt.next();
                 if (line.startsWith("#section:junit")) {
-                    reportJUnitSection(itt);
+                    try {
+                        reportJUnitSection(itt);
+                    } catch (Throwable t) {
+                        t.printStackTrace();
+                        // failed. ignore
+                    }
                 }
             }
         }
