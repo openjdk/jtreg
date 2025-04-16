@@ -41,6 +41,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 /**
  * The jtreg test listener; this class listens for jtreg test events and maps them into events that the IDE
@@ -83,7 +84,7 @@ public class JTRegTestListener implements Harness.Observer {
             System.out.println("##teamcity[testIgnored name='jtreg']");
         }
 
-        tryReportJUnitResults(file);
+        tryReportJUnitResults(testResult);
 
         String duration = "0";
         try {
@@ -98,19 +99,18 @@ public class JTRegTestListener implements Harness.Observer {
         System.out.println("##teamcity[testSuiteFinished name='" + escapeName(testResult.getTestName()) + "' ]");
     }
 
-    private void tryReportJUnitResults(File file) {
-        if (file.isFile()) {
-            Iterator<String> itt = loadText(file).iterator();
-            while (itt.hasNext()) {
-                String line = itt.next();
-                if (line.startsWith("#section:junit")) {
-                    try {
-                        reportJUnitSection(itt);
-                    } catch (Throwable t) {
-                        t.printStackTrace();
-                        // failed. ignore
+    private void tryReportJUnitResults(TestResult testResult) {
+        for (int i = 0; i < testResult.getSectionCount(); i++) {
+            try {
+                TestResult.Section section = testResult.getSection(i);
+                if (section.getTitle().equals("junit")) {
+                    try (Stream<String> lines = section.getOutput("System.err").lines()) {
+                        reportJUnitSection(lines.iterator());
                     }
                 }
+            } catch (Throwable t) {
+                t.printStackTrace();
+                // failed. ignore.
             }
         }
     }
