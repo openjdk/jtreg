@@ -38,11 +38,11 @@ import com.intellij.execution.testframework.SearchForTestsTask;
 import com.intellij.execution.testframework.TestSearchScope;
 import com.intellij.openapi.module.Module;
 import com.intellij.util.PathUtil;
-import com.oracle.plugin.jtreg.util.JTRegUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import com.oracle.plugin.jtreg.executors.JTRegDebuggerRunner;
 import com.oracle.plugin.jtreg.service.JTRegService;
+import com.oracle.plugin.jtreg.util.JTRegUtils;
 
 import java.io.File;
 import java.io.IOException;
