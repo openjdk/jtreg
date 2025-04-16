@@ -55,6 +55,7 @@ import java.util.stream.Stream;
  */
 public class JTRegUtils {
 
+    public static final boolean IS_WINDOWS = System.getProperty("os.name").startsWith("Windows");
     private static final Logger LOG = Logger.getInstance(JTRegUtils.class);
 
     /**
