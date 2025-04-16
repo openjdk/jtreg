@@ -95,6 +95,13 @@ public class JTRegConfigurationRunnableState extends JavaTestFrameworkRunnableSt
         return TestSearchScope.SINGLE_MODULE;
     }
 
+    private static void forwardTempVar(JavaParameters parameters, String varName) {
+        String value = System.getenv(varName);
+        if (value != null) {
+            parameters.addEnv(varName, value);
+        }
+    }
+
     @Override
     protected JavaParameters createJavaParameters() throws ExecutionException {
 
@@ -112,9 +119,9 @@ public class JTRegConfigurationRunnableState extends JavaTestFrameworkRunnableSt
             // Forward temp dir related environment variables. On windows, these are needed to be able to accurately
             // find the temporary directory. (Otherwise we default to 'C:\WINDOWS', which is typically inaccessible).
             // See https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-gettemppatha#remarks
-            javaParameters.addEnv("TMP", System.getenv("TMP"));
-            javaParameters.addEnv("TEMP", System.getenv("TEMP"));
-            javaParameters.addEnv("USERPROFILE", System.getenv("USERPROFILE"));
+            forwardTempVar(javaParameters, "TMP");
+            forwardTempVar(javaParameters, "TEMP");
+            forwardTempVar(javaParameters, "USERPROFILE");
         }
 
         String jdkString = getConfiguration().getJDKString();
