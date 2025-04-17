@@ -126,7 +126,7 @@ public class JTRegTestListener implements Harness.Observer {
             case FAILED -> tcTestFailed(test.name(), "");
             case SKIPPED -> tcTestIgnored(test.name());
         }
-        tcTestFinished(test.name());
+        tcTestFinished(test.name(), test.duration());
     }
 
     private static String classLocationHint(String className) {
@@ -180,8 +180,8 @@ public class JTRegTestListener implements Harness.Observer {
         System.out.println("##teamcity[testIgnored name='" + escapeName(testName) + "']");
     }
 
-    private static void tcTestFinished(String testName) {
-        System.out.println("##teamcity[testFinished name='" + escapeName(testName) + "' ]");
+    private static void tcTestFinished(String testName, String duration) {
+        tcTestFinished(testName, duration, null);
     }
 
     private static void tcTestFinished(String testName, String duration, String outputFile) {
@@ -202,7 +202,7 @@ public class JTRegTestListener implements Harness.Observer {
 
     private static class JUnitResults {
         private record TestMethod(String name, String methodName, Iteration iteration, Result result,
-                                  List<String> stderrLines) {
+                                  List<String> stderrLines, String duration) {
             enum Result {SUCCESSFUL, SKIPPED, FAILED}
 
             private record Iteration(int num, String name) {
@@ -264,8 +264,11 @@ public class JTRegTestListener implements Harness.Observer {
                     } else {
                         result = TestMethod.Result.SUCCESSFUL;
                     }
+                    String[] lineParts = line.split(" ");
+                    String duration = lineParts[lineParts.length -1]; // e.g. '[64ms]'
+                    duration = duration.substring(1, duration.length() - 3); // drop '[' and 'ms]'
 
-                    TestMethod test = new TestMethod(displayTestName, methodName, iteration, result, stdErr);
+                    TestMethod test = new TestMethod(displayTestName, methodName, iteration, result, stdErr, duration);
                     String[] nestedClasses = dropPackage(className).split("\\$");
                     String classNameForLookup = className.replace('$', '.');
                     TestClass current = classesByName.computeIfAbsent(nestedClasses[0],
