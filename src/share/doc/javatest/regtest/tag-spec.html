@@ -256,9 +256,9 @@ such as tests, or other separate libraries.
 as part of a compilation command explicitly naming the source files containing
 those classes. The library directory is used as an additional sourcepath for test compilation.
 So jtreg implicitly compiles all test dependencies that are located in a library directory.
-A test that relies upon library classes might contain appropriate
+A test that relies upon library classes in runtime only should contains appropriate
 <code>@build</code> directives to explictily compile classes.
-This might be useful when a test depends on library classes during runtime only.
+This is useful when a test depends on library classes during reflection for example.
 
 <p>
 The implicit usage might cause incomplete recompilation when a test or library code has been modified.
