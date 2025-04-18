@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -28,13 +28,13 @@
  * @library /lib
  * @run main Test Test
  * @build A LA
- * @run main Test Test A LA
+ * @run main Test Test A LA lib.LA
  * @build *
- * @run main Test Test A B C LA LB LC
+ * @run main Test Test A B C LA LB LC lib.LA lib.LB lib.LC
  * @build p.PA p.LPA
- * @run main Test Test A B C LA LB LC p.PA p.LPA
+ * @run main Test Test A B C LA LB LC p.PA p.LPA lib.LC lib.LA lib.LB lib.p.LPA
  * @build p.*
- * @run main Test Test A B C LA LB LC p.PA p.PB p.PC p.LPA p.LPB p.LPC
+ * @run main Test Test A B C LA LB LC p.PA p.PB p.PC p.LPA p.LPB p.LPC lib.LA lib.LB lib.LC lib.p.LPA lib.p.LPB lib.p.LPC
  */
 
 import java.io.*;
