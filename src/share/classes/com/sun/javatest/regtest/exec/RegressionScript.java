@@ -1188,7 +1188,7 @@ public class RegressionScript extends Script {
         // Take file name as basis for class name.
         String fileName = file.getFileName().toString();
         int fileNameLength = fileName.length(); // including ".java".length() = 5
-        if (fileNameLength <= 5 && !fileName.endsWith(".java")) {
+        if (fileNameLength <= 5 || !fileName.endsWith(".java")) {
             return Optional.empty();
         }
         String className = fileName.substring(0, fileNameLength - 5);
