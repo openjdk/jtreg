@@ -42,6 +42,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import com.oracle.plugin.jtreg.executors.JTRegDebuggerRunner;
 import com.oracle.plugin.jtreg.service.JTRegService;
+import com.oracle.plugin.jtreg.util.JTRegUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -94,6 +95,13 @@ public class JTRegConfigurationRunnableState extends JavaTestFrameworkRunnableSt
         return TestSearchScope.SINGLE_MODULE;
     }
 
+    private static void forwardEnvVar(JavaParameters parameters, String varName) {
+        String value = System.getenv(varName);
+        if (value != null) {
+            parameters.addEnv(varName, value);
+        }
+    }
+
     @Override
     protected JavaParameters createJavaParameters() throws ExecutionException {
 
@@ -106,6 +114,15 @@ public class JTRegConfigurationRunnableState extends JavaTestFrameworkRunnableSt
         JavaParameters javaParameters = super.createJavaParameters();
         javaParameters.getProgramParametersList().clearAll();
         javaParameters.setMainClass("com.sun.javatest.regtest.Main");
+
+        if (JTRegUtils.IS_WINDOWS) {
+            // Forward temp dir related environment variables. On windows, these are needed to be able to accurately
+            // find the temporary directory. (Otherwise we default to 'C:\WINDOWS', which is typically inaccessible).
+            // See https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-gettemppatha#remarks
+            forwardEnvVar(javaParameters, "TMP");
+            forwardEnvVar(javaParameters, "TEMP");
+            forwardEnvVar(javaParameters, "USERPROFILE");
+        }
 
         String jdkString = getConfiguration().getJDKString();
 
