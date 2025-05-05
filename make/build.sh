@@ -221,7 +221,7 @@ usage() {
     echo "--help"
     echo "      Show this message"
     echo "--jdk /path/to/jdk"
-    echo "      Path to JDK; must be JDK 11 or higher"
+    echo "      Path to JDK; must be JDK 17 or higher"
     echo "--quiet | -q"
     echo "      Reduce the logging output."
     echo "--show-default-versions"
@@ -391,8 +391,8 @@ sanity_check_java_home() {
         grep -e ^java -e ^openjdk |
         head -n 1 | \
         sed -e 's/^[^0-9]*\(1\.\)*\([1-9][0-9]*\).*/\2/' )
-    if [ "${vnum:-0}" -lt "11" ]; then
-        error "JDK 11 or newer is required to build jtreg"
+    if [ "${vnum:-0}" -lt "17" ]; then
+        error "JDK 17 or newer is required to build jtreg"
         exit 1
     fi
     JAVA_SPECIFICATION_VERSION=${vnum}
