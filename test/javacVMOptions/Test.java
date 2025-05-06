@@ -25,6 +25,7 @@
  * @test
  * @compile Test.java
  * @compile -J-DmyProperty=123 -processor Test -proc:only Test.java
+ * @compile Test.java -XDrawDiagnostic
  */
 
 import java.util.Objects;
