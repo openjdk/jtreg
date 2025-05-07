@@ -23,6 +23,9 @@
 
 /*
  * @test
+ * @bug 7902510 7904002
+ * @comment Test passing VM options to javac when compiling test cases
+ *
  * @compile Test.java
  * @compile -J-DmyProperty=123 -processor Test -proc:only Test.java
  * @compile Test.java -XDrawDiagnostic
