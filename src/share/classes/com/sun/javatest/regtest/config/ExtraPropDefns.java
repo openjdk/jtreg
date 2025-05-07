@@ -30,6 +30,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -306,7 +307,7 @@ public class ExtraPropDefns {
 
     private String getClassNameFromFile(Path file) throws Fault {
         try {
-            return getClassNameFromSource(Files.readString(file));
+            return getClassNameFromSource(Files.readString(file, Charset.defaultCharset()));
         } catch (IOException e) {
             throw new Fault("Problem reading " + file, e);
         }
