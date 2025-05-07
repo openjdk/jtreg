@@ -70,6 +70,6 @@ jobs:
             sysctl hw.physmem
             sysctl hw.usermem
             pw user add -n action -m
-            su action -c 'git config --global --add safe.directory /home/runner/work/jtreg/jtreg'
+            su action -c 'git config --global --add safe.directory $(pwd)'
             su action -c 'bash make/build.sh --jdk /usr/local/openjdk21'
             su action -c 'bash build/make.sh test'
