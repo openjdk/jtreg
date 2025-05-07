@@ -208,13 +208,17 @@ public class CompileAction extends Action {
             // note: in the following code, some args are overwritten in place
             String currArg = args.get(i);
 
+            boolean isSourceFile = false;
+
             if (currArg.endsWith(".java")) {
                 foundJavaFile = true;
+                isSourceFile = true;
             } else if (currArg.endsWith(".jasm") || currArg.endsWith(".jcod")) {
                 foundAsmFile = true;
+                isSourceFile = true;
             }
 
-            if (foundJavaFile || foundAsmFile) {
+            if (isSourceFile) {
                 File sourceFile = new File(currArg.replace('/', File.separatorChar));
                 if (!sourceFile.isAbsolute()) {
                     // User must have used @compile, so file must be
