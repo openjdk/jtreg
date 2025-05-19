@@ -1,6 +1,19 @@
-## [Unreleased](https://git.openjdk.org/jtreg/compare/jtreg-7.5.1+1...master)
+## [Unreleased](https://git.openjdk.org/jtreg/compare/jtreg-7.5.2+1...master)
 
 _nothing noteworthy, yet_
+
+## [7.5.2](https://git.openjdk.org/jtreg/compare/jtreg-7.5.1+1...jtreg-7.5.2+1)
+
+* Support `${test.main.class}` for Java source files in smart arguments [CODETOOLS-7903981](https://bugs.openjdk.org/browse/CODETOOLS-7903981)
+
+* Make default timeout seconds configurable [CODETOOLS-7903961](https://bugs.openjdk.org/browse/CODETOOLS-7903961)
+
+* Restore propagation of preview flag into library code [CODETOOLS-7903971](https://bugs.openjdk.org/browse/CODETOOLS-7903971)
+
+* Add support for `.jasm` and `.jcod` file in patched modules [CODETOOLS-7903955](https://bugs.openjdk.org/browse/CODETOOLS-7903955)
+
+* Use scratch directory for JUnit's `@TempDir` annotation by default [CODETOOLS-7903953](https://bugs.openjdk.org/browse/CODETOOLS-7903953)
+
 
 ## [7.5.1](https://git.openjdk.org/jtreg/compare/jtreg-7.5+1...jtreg-7.5.1+1)
 
