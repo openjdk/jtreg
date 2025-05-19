@@ -10,7 +10,7 @@ _nothing noteworthy, yet_
 
 * Restore propagation of preview flag into library code [CODETOOLS-7903971](https://bugs.openjdk.org/browse/CODETOOLS-7903971)
 
-* Add support for `.jasm` and `.jasdf` file in patched modules [CODETOOLS-7903955](https://bugs.openjdk.org/browse/CODETOOLS-7903955)
+* Add support for `.jasm` and `.jcod` file in patched modules [CODETOOLS-7903955](https://bugs.openjdk.org/browse/CODETOOLS-7903955)
 
 * Use scratch directory for JUnit's `@TempDir` annotation by default [CODETOOLS-7903953](https://bugs.openjdk.org/browse/CODETOOLS-7903953)
 
