@@ -273,6 +273,7 @@ public class JTRegTestListener implements Harness.Observer {
 
         private static Collection<TestClass> parse(Iterator<String> itt) {
             Map<String, TestClass> classesByName = new HashMap<>();
+            outer:
             while (itt.hasNext()) {
                 String line = itt.next();
                 if (line.startsWith("result:")) {
@@ -292,7 +293,7 @@ public class JTRegTestListener implements Harness.Observer {
                         if (line.startsWith("JT Harness has limited the test output")) {
                             // jtharness truncated the output. Discard this result
                             // and look for the next one.
-                            continue;
+                            continue outer;
                         }
                         stdErr.add(line);
                     } while (!line.startsWith("SUCCESSFUL") && !line.startsWith("ABORTED")
@@ -330,10 +331,4 @@ public class JTRegTestListener implements Harness.Observer {
             return lastDot != -1 ? className.substring(lastDot + 1) : className;
         }
     }
-
-    private static class ExclusiveLock<T> {
-        private final AtomicReference<T> lock = new AtomicReference<>();
-
-    }
-
 }
