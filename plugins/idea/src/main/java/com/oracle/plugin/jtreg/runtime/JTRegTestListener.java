@@ -33,6 +33,7 @@ import com.sun.javatest.TestResult;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -43,25 +44,59 @@ import java.util.stream.Stream;
  */
 public class JTRegTestListener implements Harness.Observer {
 
+    private static final AtomicReference<String> CURRENT_WRITER = new AtomicReference<>();
+
     @Override
     public void startingTest(TestResult testResult) {
-        tcSuiteStarted(testResult.getTestName(), getFileLocationHint(testResult));
-    }
-
-    private static String getFileLocationHint(TestResult testResult) {
-        try {
-            return "file://" + testResult.getDescription().getFile().getCanonicalPath();
-        } catch (TestResult.Fault | IOException e) {
-            //do nothing (leave location empty)
-            return null;
+        if (tryLock(testResult)) {
+            tcSuiteStarted(testResult.getTestName(), getFileLocationHint(testResult));
         }
     }
 
     @Override
     public void finishedTest(TestResult testResult) {
-        reportJTRegResult(testResult);
-        tryReportJUnitResults(testResult);
-        tcSuiteFinished(testResult.getTestName());
+        // For now, we synchronize all output, so that events displays correctly in the IDE
+        // even when running tests concurrently (e.g. with -conc:auto).
+        // There doesn't seem to be a way to write test events out of order, but still
+        // have them display correctly in the IDE, except for writing out the entire
+        // even tree first before any testing starts, but we can not do this as we don't
+        // know which nested events we are going to get when running tests.
+        // The downside of this is that some tests will only start to show up in the UI once they finish,
+        // and some test events might 'stall' until a longer running test that grabbed the lock early has finished.
+         try {
+            if (!hasLock(testResult)) {
+                lock(testResult);
+                // The lock was held by another test in 'startingTest', so we write this event here.
+                tcSuiteStarted(testResult.getTestName(), getFileLocationHint(testResult));
+            }
+            reportJTRegResult(testResult);
+            tryReportJUnitResults(testResult);
+            tcSuiteFinished(testResult.getTestName());
+        } finally {
+            // Release lock if we managed to grab it/held it when entering this method
+            // This might be false if an exception occurred before we managed to grab the lock.
+            if (hasLock(testResult)) {
+                releaseLock();
+            }
+        }
+    }
+
+    private boolean tryLock(TestResult testResult) {
+        return CURRENT_WRITER.compareAndSet(null, testResult.getTestName());
+    }
+
+    private boolean hasLock(TestResult testResult) {
+        return Objects.equals(CURRENT_WRITER.get(), testResult.getTestName());
+    }
+
+    private void lock(TestResult testResult) {
+        while (!CURRENT_WRITER.compareAndSet(null, testResult.getTestName())) {
+            Thread.onSpinWait();
+        }
+    }
+
+    private void releaseLock() {
+        CURRENT_WRITER.set(null);
     }
 
     private static void reportJTRegResult(TestResult testResult) {
@@ -125,6 +160,15 @@ public class JTRegTestListener implements Harness.Observer {
             case SKIPPED -> tcTestIgnored(test.name());
         }
         tcTestFinished(test.name(), test.duration());
+    }
+
+    private static String getFileLocationHint(TestResult testResult) {
+        try {
+            return "file://" + testResult.getDescription().getFile().getCanonicalPath();
+        } catch (TestResult.Fault | IOException e) {
+            //do nothing (leave location empty)
+            return null;
+        }
     }
 
     private static String classLocationHint(String className) {
@@ -286,4 +330,10 @@ public class JTRegTestListener implements Harness.Observer {
             return lastDot != -1 ? className.substring(lastDot + 1) : className;
         }
     }
+
+    private static class ExclusiveLock<T> {
+        private final AtomicReference<T> lock = new AtomicReference<>();
+
+    }
+
 }
