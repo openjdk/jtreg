@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2016, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -28,15 +28,15 @@ package com.oracle.plugin.jtreg.runtime;
 
 import com.oracle.plugin.jtreg.util.MapSerializerUtil;
 import com.sun.javatest.Harness;
-import com.sun.javatest.Parameters;
 import com.sun.javatest.Status;
 import com.sun.javatest.TestResult;
-import com.oracle.plugin.jtreg.util.MapSerializerUtil;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.util.stream.Collectors;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 /**
  * The jtreg test listener; this class listens for jtreg test events and maps them into events that the IDE
@@ -44,67 +44,193 @@ import java.util.stream.Collectors;
  */
 public class JTRegTestListener implements Harness.Observer {
 
-    @Override
-    public void startingTestRun(Parameters parameters) {
-        System.out.println("##teamcity[testSuiteStarted name=\'jtreg\']");
-    }
+    private static final AtomicReference<String> CURRENT_WRITER = new AtomicReference<>();
 
     @Override
     public void startingTest(TestResult testResult) {
-        String location = "";
-        try {
-            location = "locationHint=\'file://" + testResult.getDescription().getFile().getCanonicalPath() + "\'";
-        } catch (TestResult.Fault | IOException e) {
-            //do nothing (leave location empty)
+        if (tryLock(testResult)) {
+            tcSuiteStarted(testResult.getTestName(), getFileLocationHint(testResult));
         }
-        System.out.println("##teamcity[testStarted name=\'" + escapeName(testResult.getTestName()) + "\' " +
-                location + "]");
     }
 
     @Override
     public void finishedTest(TestResult testResult) {
-        final Status status = testResult.getStatus();
-        final File file = testResult.getFile();
-        if (status.isFailed() || status.isError()) {
-            if (file.isFile()) {
-                final String output = loadText(file);
-                if (output != null && output.length() > 0) {
-                    System.out.println("##teamcity[testStdOut name=\'" + escapeName(testResult.getTestName()) + "\' " +
-                            "out=\'" + escapeName(output) + "\']");
-                }
+        // For now, we synchronize all output, so that events displays correctly in the IDE
+        // even when running tests concurrently (e.g. with -conc:auto).
+        // There doesn't seem to be a way to write test events out of order, but still
+        // have them display correctly in the IDE, except for writing out the entire
+        // even tree first before any testing starts, but we can not do this as we don't
+        // know which nested events we are going to get when running tests.
+        // The downside of this is that some tests will only start to show up in the UI once they finish,
+        // and some test events might 'stall' until a longer running test that grabbed the lock early has finished.
+         try {
+            if (!hasLock(testResult)) {
+                lock(testResult);
+                // The lock was held by another test in 'startingTest', so we write this event here.
+                tcSuiteStarted(testResult.getTestName(), getFileLocationHint(testResult));
             }
-            System.out.println("##teamcity[testFailed name=\'" + escapeName(testResult.getTestName()) + "\' " +
-                    "message=\'" + escapeName(status.getReason()) + "\']");
+            reportJTRegResult(testResult);
+            tryReportJUnitResults(testResult);
+            tcSuiteFinished(testResult.getTestName());
+        } finally {
+            // Release lock if we managed to grab it/held it when entering this method
+            // This might be false if an exception occurred before we managed to grab the lock.
+            if (hasLock(testResult)) {
+                releaseLock();
+            }
+        }
+    }
+
+    private boolean tryLock(TestResult testResult) {
+        return CURRENT_WRITER.compareAndSet(null, testResult.getTestName());
+    }
+
+    private boolean hasLock(TestResult testResult) {
+        return Objects.equals(CURRENT_WRITER.get(), testResult.getTestName());
+    }
+
+    private void lock(TestResult testResult) {
+        while (!CURRENT_WRITER.compareAndSet(null, testResult.getTestName())) {
+            Thread.onSpinWait();
+        }
+    }
+
+    private void releaseLock() {
+        CURRENT_WRITER.set(null);
+    }
+
+    private static void reportJTRegResult(TestResult testResult) {
+        // report the overall jtreg results as a pseudo test called 'jtreg'
+        tcTestStarted("jtreg");
+        Status status = testResult.getStatus();
+        if (status.isFailed() || status.isError()) {
+            tcTestFailed("jtreg", status.getReason());
         } else if (status.isNotRun()) {
-            System.out.println("##teamcity[testIgnored name=\'" + escapeName(testResult.getTestName()) + "\']");
+            tcTestIgnored("jtreg");
         }
 
-        String duration = "0";
+        String duration = null;
         try {
             duration = testResult.getProperty("elapsed").split(" ")[0];
         } catch (Throwable t) {
             //do nothing (leave duration unspecified)
         }
-        System.out.println("##teamcity[testFinished name=\'" + escapeName(testResult.getTestName()) + "\' " +
-                (!duration.equals("0") ? "duration=\'" + duration : "") + "\'" +
-                (!status.isFailed() ? "outputFile=\'" + escapeName(file.getAbsolutePath()) + "\'" : "") +
-                " ]");
+        tcTestFinished("jtreg", duration, testResult.getFile().getAbsolutePath());
     }
 
-    @Override
-    public void stoppingTestRun() {
-        //do nothing
+    private void tryReportJUnitResults(TestResult testResult) {
+        // try to report each 'junit' section of the test results
+        // by parsing the junit results from stderr
+        for (int i = 0; i < testResult.getSectionCount(); i++) {
+            try {
+                TestResult.Section section = testResult.getSection(i);
+                if (section.getTitle().equals("junit")) {
+                    try (Stream<String> lines = section.getOutput("System.err").lines()) {
+                        Collection<JUnitResults.TestClass> classes = JUnitResults.parse(lines.iterator());
+                        tcSuiteStarted("junit");
+                        for (JUnitResults.TestClass cls : classes) {
+                            reportTestClass(cls);
+                        }
+                        tcSuiteFinished("junit");
+                    }
+                }
+            } catch (Throwable t) {
+                t.printStackTrace();
+                // failed. ignore.
+            }
+        }
     }
 
-    @Override
-    public void finishedTesting() {
-        //do nothing
-
+    private static void reportTestClass(JUnitResults.TestClass testClass) {
+        tcSuiteStarted(testClass.simpleName(), classLocationHint(testClass.name()));
+        for (JUnitResults.TestMethod test : testClass.testMethods()) {
+            reportTestMethod(test, testClass.name());
+        }
+        for (JUnitResults.TestClass nestedTestClass : testClass.nestedClasses().values()) {
+            reportTestClass(nestedTestClass);
+        }
+        tcSuiteFinished(testClass.simpleName());
     }
 
-    @Override
-    public void finishedTestRun(boolean b) {
-        System.out.println("##teamcity[testSuiteFinished name=\'jtreg\']");
+    private static void reportTestMethod(JUnitResults.TestMethod test, String className) {
+        tcTestStarted(test.name(), methodLocationHint(className, test.methodName(), test.iteration()));
+        tcTestStdErr(test.name(), test.stderrLines());
+        switch (test.result()) {
+            case FAILED -> tcTestFailed(test.name(), "");
+            case SKIPPED -> tcTestIgnored(test.name());
+        }
+        tcTestFinished(test.name(), test.duration());
+    }
+
+    private static String getFileLocationHint(TestResult testResult) {
+        try {
+            return "file://" + testResult.getDescription().getFile().getCanonicalPath();
+        } catch (TestResult.Fault | IOException e) {
+            //do nothing (leave location empty)
+            return null;
+        }
+    }
+
+    private static String classLocationHint(String className) {
+        return "jtreg://" + className;
+    }
+
+    private static String methodLocationHint(String className, String methodName,
+                                             JUnitResults.TestMethod.Iteration iteration) {
+        String path = className + "/" + methodName;
+        if (iteration != null) {
+            path += "/" + iteration.num() + "/" + iteration.name();
+        }
+        return "jtreg://" + path;
+    }
+
+    private static void tcSuiteStarted(String suiteName) {
+        tcSuiteStarted(suiteName, null);
+    }
+
+    private static void tcSuiteStarted(String suiteName, String locationHint) {
+        System.out.println("##teamcity[testSuiteStarted name='" + escapeName(suiteName) + "'"
+                + (locationHint != null ? " locationHint='" + escapeName(locationHint) + "'" : "")
+                + " ]");
+    }
+
+    private static void tcSuiteFinished(String suiteName) {
+        System.out.println("##teamcity[testSuiteFinished name='" + escapeName(suiteName) + "' ]");
+    }
+
+    private static void tcTestStarted(String testName) {
+        tcTestStarted(testName, null);
+    }
+
+    private static void tcTestStarted(String testName, String locationHint) {
+        System.out.println("##teamcity[testStarted name='" + escapeName(testName) + "'"
+                + (locationHint != null ? " locationHint='" + escapeName(locationHint) + "'" : "")
+                + " ]");
+    }
+
+    private static void tcTestStdErr(String testName, List<String> lines) {
+        System.out.println("##teamcity[testStdErr name='" + escapeName(testName) + "' " +
+                "out='" + escapeName(String.join("\n", lines) + '\n') + "']");
+    }
+
+    private static void tcTestFailed(String testName, String message) {
+        System.out.println("##teamcity[testFailed name='" + escapeName(testName) + "' " +
+                "message='" + escapeName(message) + "' ]");
+    }
+
+    private static void tcTestIgnored(String testName) {
+        System.out.println("##teamcity[testIgnored name='" + escapeName(testName) + "']");
+    }
+
+    private static void tcTestFinished(String testName, String duration) {
+        tcTestFinished(testName, duration, null);
+    }
+
+    private static void tcTestFinished(String testName, String duration, String outputFile) {
+        System.out.println("##teamcity[testFinished name='" + escapeName(testName)  + "'"
+                + (duration != null ? "duration='" + duration + "'" : "")
+                + (outputFile != null ? "outputFile='" + escapeName(outputFile) + "'" : "")
+                + " ]");
     }
 
     @Override
@@ -116,11 +242,93 @@ public class JTRegTestListener implements Harness.Observer {
         return MapSerializerUtil.escapeStr(str);
     }
 
-    private static String loadText(File file) {
-        try {
-            return Files.readAllLines(file.toPath()).stream().collect(Collectors.joining("\n"));
-        } catch (IOException e) {
-            return "Failed to load test results.";
+    private static class JUnitResults {
+        private record TestMethod(String name, String methodName, Iteration iteration, Result result,
+                                  List<String> stderrLines, String duration) {
+            enum Result {SUCCESSFUL, SKIPPED, FAILED}
+
+            private record Iteration(int num, String name) {
+                private static final Pattern PATTERN = Pattern.compile("'\\[(?<num>\\d+)] (?<name>.*)'");
+
+                private static Iteration parse(String iteration) {
+                    Matcher m = PATTERN.matcher(iteration);
+                    if (!m.find()) {
+                        return null;
+                    }
+                    int iterationNum = Integer.parseInt(m.group("num")) - 1; // convert to zero indexed
+                    return new Iteration(iterationNum, m.group("name"));
+                }
+            }
+        }
+
+        private record TestClass(String name, String simpleName, List<TestMethod> testMethods,
+                                 Map<String, TestClass> nestedClasses) {
+            public TestClass(String name, String simpleName) {
+                this(name, simpleName, new ArrayList<>(), new HashMap<>());
+            }
+        }
+
+        private static final Pattern JUNIT_TEST_START = Pattern.compile(
+                "STARTED\\s+(?<class>[A-Za-z0-9._$]+)::(?<method>[A-Za-z0-9._$]+)\\s+(?<rest>.*)");
+
+        private static Collection<TestClass> parse(Iterator<String> itt) {
+            Map<String, TestClass> classesByName = new HashMap<>();
+            outer:
+            while (itt.hasNext()) {
+                String line = itt.next();
+                if (line.startsWith("result:")) {
+                    break; // end of section. Stop parsing
+                }
+                Matcher m = JUNIT_TEST_START.matcher(line);
+                if (m.find()) {
+                    List<String> stdErr = new ArrayList<>();
+                    stdErr.add(line);
+                    String className = m.group("class");
+                    String methodName = m.group("method");
+                    TestMethod.Iteration iteration = TestMethod.Iteration.parse(m.group("rest"));
+                    String displayTestName = methodName + (iteration != null ? " [" + iteration.name() + "]" : "");
+
+                    do {
+                        line = itt.next();
+                        if (line.startsWith("JT Harness has limited the test output")) {
+                            // jtharness truncated the output. Discard this result
+                            // and look for the next one.
+                            continue outer;
+                        }
+                        stdErr.add(line);
+                    } while (!line.startsWith("SUCCESSFUL") && !line.startsWith("ABORTED")
+                            && !line.startsWith("SKIPPED") && !line.startsWith("FAILED"));
+
+                    TestMethod.Result result;
+                    if (line.startsWith("SKIPPED")) {
+                        result = TestMethod.Result.SKIPPED;
+                    } else if (line.startsWith("FAILED") || line.startsWith("ABORTED")) {
+                        result = TestMethod.Result.FAILED;
+                    } else {
+                        result = TestMethod.Result.SUCCESSFUL;
+                    }
+                    String[] lineParts = line.split(" ");
+                    String duration = lineParts[lineParts.length -1]; // e.g. '[64ms]'
+                    duration = duration.substring(1, duration.length() - 3); // drop '[' and 'ms]'
+
+                    TestMethod test = new TestMethod(displayTestName, methodName, iteration, result, stdErr, duration);
+                    String[] nestedClasses = dropPackage(className).split("\\$");
+                    String classNameForLookup = className.replace('$', '.');
+                    TestClass current = classesByName.computeIfAbsent(nestedClasses[0],
+                            k -> new TestClass(classNameForLookup, k));
+                    for (int i = 1; i < nestedClasses.length; i++) {
+                        current = current.nestedClasses().computeIfAbsent(nestedClasses[i],
+                                k -> new TestClass(classNameForLookup, k));
+                    }
+                    current.testMethods().add(test);
+                }
+            }
+            return classesByName.values();
+        }
+
+        private static String dropPackage(String className) {
+            int lastDot = className.lastIndexOf(".");
+            return lastDot != -1 ? className.substring(lastDot + 1) : className;
         }
     }
 }
