@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -69,7 +69,29 @@ public class ClassDirsTest {
      */
     @Test
     void testNoImplicitCompilation(Path base) throws Exception {
-        TestSuite ts = createTests(base, "p.*");
+        TestSuite ts = createTests(base, "p.*", false);
+        ts.run(base.resolve("work"), base.resolve("report"), ts.dir.resolve("std"));
+        checkClassFiles(base.resolve("work/classes"),
+            "std/Test1.d/lib/p/Lib1.class",
+            "std/Test1.d/lib/p/Lib2.class",
+            "std/Test2.d/lib/p/Lib1.class",
+            "std/Test2.d/lib/p/Lib2.class",
+            "std/Test1.d/Test1.class",
+            "std/Test2.d/Test2.class"
+        );
+    }
+
+    /**
+     * Verifies the set of expected classes when the tests use
+     * explicit build tags for library classes.
+     * The property shareLibraries is set to true.
+     *
+     * @param base a directory for the test suite and results
+     * @throws Exception if an error occurs
+     */
+    @Test
+    void testNoImplicitCompilationLegacy(Path base) throws Exception {
+        TestSuite ts = createTests(base, "p.*", true);
         ts.run(base.resolve("work"), base.resolve("report"), ts.dir.resolve("std"));
         checkClassFiles(base.resolve("work/classes"),
             "lib/p/Lib1.class",
@@ -78,6 +100,7 @@ public class ClassDirsTest {
             "std/Test2.d/Test2.class"
         );
     }
+
 
     /**
      * Verifies the set of expected classes when the tests use
@@ -89,11 +112,13 @@ public class ClassDirsTest {
      */
     @Test
     void testPartialImplicitCompilation(Path base) throws Exception {
-        TestSuite ts = createTests(base, "p.Lib2");
+        TestSuite ts = createTests(base, "p.Lib2", false);
         ts.run(base.resolve("work"), base.resolve("report"), ts.dir.resolve("std"));
         checkClassFiles(base.resolve("work/classes"),
-            "lib/p/Lib1.class",
-            "lib/p/Lib2.class",
+            "std/Test1.d/lib/p/Lib1.class",
+            "std/Test1.d/lib/p/Lib2.class",
+            "std/Test2.d/lib/p/Lib1.class",
+            "std/Test2.d/lib/p/Lib2.class",
             "std/Test1.d/Test1.class",
             "std/Test2.d/Test2.class"
         );
@@ -109,7 +134,7 @@ public class ClassDirsTest {
      */
     @Test
     void testImplicitCompilation(Path base) throws Exception {
-        TestSuite ts = createTests(base, null);
+        TestSuite ts = createTests(base, null, false);
         ts.run(base.resolve("work"), base.resolve("report"), ts.dir.resolve("std"));
         checkClassFiles(base.resolve("work/classes"),
             "std/Test1.d/Test1.class",
@@ -130,11 +155,11 @@ public class ClassDirsTest {
      */
     @Test
     void testTestNG(Path base) throws Exception {
-        TestSuite ts = createTests(base, null);
+        TestSuite ts = createTests(base, null, false);
         ts.run(base.resolve("work"), base.resolve("report"), ts.dir.resolve("testng"));
         checkClassFiles(base.resolve("work/classes"),
-            "lib/p/Lib1.class",
-            "lib/p/Lib2.class",
+            "testng/lib/p/Lib1.class",
+            "testng/lib/p/Lib2.class",
             "testng/testng/Test1.class",
             "testng/testng/Test2.class"
         );
@@ -150,14 +175,18 @@ public class ClassDirsTest {
      */
     @Test
     void testTestNGImplicit(Path base) throws Exception {
-        TestSuite ts = createTests(base, null);
+        TestSuite ts = createTests(base, null, false);
         ts.run(base.resolve("work"), base.resolve("report1"), ts.dir.resolve("testng"));
         ts.run(base.resolve("work"), base.resolve("report2"), ts.dir.resolve("std"));
         checkClassFiles(base.resolve("work/classes"),
-            "lib/p/Lib1.class",
-            "lib/p/Lib2.class",
+            "std/Test1.d/p/Lib1.class",
+            "std/Test1.d/p/Lib2.class",
+            "std/Test2.d/p/Lib1.class",
+            "std/Test2.d/p/Lib2.class",
             "std/Test1.d/Test1.class",
             "std/Test2.d/Test2.class",
+            "testng/lib/p/Lib1.class",
+            "testng/lib/p/Lib2.class",
             "testng/testng/Test1.class",
             "testng/testng/Test2.class"
         );
@@ -173,12 +202,12 @@ public class ClassDirsTest {
      */
     @Test
     void testImplicitTestNG(Path base) throws Exception {
-        TestSuite ts = createTests(base, null);
+        TestSuite ts = createTests(base, null, false);
         ts.run(base.resolve("work"), base.resolve("report1"), ts.dir.resolve("std"));
         ts.run(base.resolve("work"), base.resolve("report2"), ts.dir.resolve("testng"));
         checkClassFiles(base.resolve("work/classes"),
-            "lib/p/Lib1.class",
-            "lib/p/Lib2.class",
+            "testng/lib/p/Lib1.class",
+            "testng/lib/p/Lib2.class",
             "std/Test1.d/Test1.class",
             "std/Test1.d/p/Lib1.class",
             "std/Test1.d/p/Lib2.class",
@@ -198,8 +227,9 @@ public class ClassDirsTest {
      * @return the test suite
      * @throws Exception if an error occurs
      */
-    private TestSuite createTests(Path base, String build) throws Exception {
-        TestSuite ts = new TestSuite(base.resolve("tests"), "requiredVersion = 4.2 b08")
+    private TestSuite createTests(Path base, String build, boolean shareLibraries) throws Exception {
+        String shareLibrariesLine = shareLibraries ? "shareLibraries = true" : "";
+        TestSuite ts = new TestSuite(base.resolve("tests"), "requiredVersion = 4.2 b08\n" + shareLibrariesLine)
             .addLibraryFile("lib", "package p; public class Lib1 { void m() { } }")
             .addLibraryFile("lib", "package p; public class Lib2 { void m(Lib1 l1) { } }");
 
