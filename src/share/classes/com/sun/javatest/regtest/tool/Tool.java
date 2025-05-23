@@ -1468,6 +1468,7 @@ public class Tool {
 
         if (hadErrors) {
             error("Cannot run because an exclude list had errors, printed above. Either resolve them or remove the exclude list.");
+            exit(EXIT_BAD_ARGS);
         }
     }
 
