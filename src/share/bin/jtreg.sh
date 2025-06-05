@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright (c) 1998, 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1998, 2025, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -144,6 +144,7 @@ if [ ! -e "$JTREG_JAVA" ]; then
 fi
 
 # Verify java version 11 or newer used to run jtreg
+# Note that some bundled test dependencies, like asmtools 8.x, might require newer Java versions, like Java 17, to run.
 version=`"$JTREG_JAVA" -classpath "${JTREG_HOME}/lib/jtreg.jar" com.sun.javatest.regtest.agent.GetSystemProperty java.version 2>&1 |
         grep 'java.version=' | sed -e 's/^.*=//' -e 's/^1\.//' -e 's/\([1-9][0-9]*\).*/\1/'`
 
