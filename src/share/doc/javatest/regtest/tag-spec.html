@@ -1,6 +1,6 @@
 <!DOCTYPE HTML>
 <!--
- Copyright (c) 2006, 2024, Oracle and/or its affiliates. All rights reserved.
+ Copyright (c) 2006, 2025, Oracle and/or its affiliates. All rights reserved.
  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 
  This code is free software; you can redistribute it and/or modify it
@@ -1251,6 +1251,15 @@ in environment variables.
 <td><code>test.file</code>
 <td><code>TESTFILE</code>
 <td>The defining file of the test
+
+<tr>
+<td><code>test.main.class</code>
+<td><i>Not Available</i>
+<td>The computed name of the main entry-point of the current Java source file.
+It is based on the simple <code>test.file</code> name without the <code>.java</code>
+extension; prepended with an optional package name parsed from the source file.
+Therefore, non-Java files aren't supported nor inner classes are detected.
+It can be used in action tags, for example:<code>@run main ${test.main.class}</code>
 
 <tr>
 <td><code>test.name</code>

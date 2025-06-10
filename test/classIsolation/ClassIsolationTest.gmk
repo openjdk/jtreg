@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2025, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -33,7 +33,7 @@ $(BUILDTESTDIR)/ClassIsolation.disable.b07.ok: $(UCD_FILES) \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar
 	$(RM) $(@:%.ok=%)
-	$(MKDIR) -p  $(@:%.ok=%)/jtreg
+	$(MKDIR)  $(@:%.ok=%)/jtreg
 	$(CP) -R $(JTREG_IMAGEDIR)/* $(@:%.ok=%)/jtreg
 	$(ECHO) "JTREG_VERSION=4.2 b07" > $(@:%.ok=%)/jtreg/release
 	$(JDKJAVA) -jar $(@:%.ok=%)/jtreg/lib/jtreg.jar \
@@ -54,7 +54,7 @@ $(BUILDTESTDIR)/ClassIsolation.disable.b08.ok: $(UCD_FILES) \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar
 	$(RM) $(@:%.ok=%)
-	$(MKDIR) -p  $(@:%.ok=%)/jtreg
+	$(MKDIR)  $(@:%.ok=%)/jtreg
 	$(CP) -R $(JTREG_IMAGEDIR)/* $(@:%.ok=%)/jtreg
 	$(ECHO) "JTREG_VERSION=4.2 b08" > $(@:%.ok=%)/jtreg/release
 	$(JDKJAVA) -jar $(@:%.ok=%)/jtreg/lib/jtreg.jar \
@@ -74,7 +74,7 @@ $(BUILDTESTDIR)/ClassIsolation.default.b08.ok: $(UCD_FILES) \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar
 	$(RM) $(@:%.ok=%)
-	$(MKDIR) -p  $(@:%.ok=%)/jtreg
+	$(MKDIR)  $(@:%.ok=%)/jtreg
 	$(CP) -R $(JTREG_IMAGEDIR)/* $(@:%.ok=%)/jtreg
 	$(ECHO) "JTREG_VERSION=4.2 b08" > $(@:%.ok=%)/jtreg/release
 	$(JDKJAVA) -jar $(@:%.ok=%)/jtreg/lib/jtreg.jar \
@@ -94,7 +94,7 @@ $(BUILDTESTDIR)/ClassIsolation.enable.b08.ok: $(UCD_FILES) \
 	    $(JTREG_IMAGEDIR)/lib/javatest.jar \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar
 	$(RM) $(@:%.ok=%)
-	$(MKDIR) -p  $(@:%.ok=%)/jtreg
+	$(MKDIR)  $(@:%.ok=%)/jtreg
 	$(CP) -R $(JTREG_IMAGEDIR)/* $(@:%.ok=%)/jtreg
 	$(ECHO) "JTREG_VERSION=4.2 b08" > $(@:%.ok=%)/jtreg/release
 	$(JDKJAVA) -jar $(@:%.ok=%)/jtreg/lib/jtreg.jar \

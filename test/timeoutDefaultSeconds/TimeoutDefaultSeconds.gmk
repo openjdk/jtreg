@@ -25,7 +25,7 @@
 
 $(BUILDTESTDIR)/TimeoutDefaultSeconds.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar
-	$(RM) $(@:%.ok=%) ; $(MKDIR) -p $(@:%.ok=%)
+	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	$(JDKHOME)/bin/java -jar $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		-w $(@:%.ok=%)/work/ -r $(@:%.ok=%)/report/ \
 		$(TESTDIR)/timeoutDefaultSeconds > $(@:%.ok=%/jt.log) 2>&1 ; ls $(@:%.ok=%)/work ; \

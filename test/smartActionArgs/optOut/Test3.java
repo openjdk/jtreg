@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, 2025, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -21,24 +21,15 @@
  * questions.
  */
 
+package optOut;
+
 /*
  * @test
- * @run main ${test.main.class} ${os.name} --os=${os.name} x${os.name}x${os.version}x
+ * @run main ${test.main.class}
  */
 
-import java.util.Arrays;
-
-public class Test {
-    private static final boolean expectDollar = false; // opt-auto, i.e. in
-
-    public static void main(String... args) throws Exception {
-        System.out.println(Arrays.toString(args));
-
-        for (String arg: args) {
-            boolean foundDollar = arg.indexOf("$") != -1;
-            if (foundDollar != expectDollar)
-                throw new Exception("Unexpected result: " + arg);
-        }
+public class Test3 {
+    public static void main(String... args) {
+        throw new AssertionError("Should not be here: smart action args are disabled");
     }
 }
-

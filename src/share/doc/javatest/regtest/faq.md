@@ -58,7 +58,7 @@ implement this specification, and is an older name for what is now known as
 
 ### What are the system requirements for using the JDK regression extensions?
 
-It is recommended that you run jtreg using JDK 11 or later.
+It is recommended that you run jtreg using JDK 17 or later.
 
 ### Where can I find a copy of jtreg?
 

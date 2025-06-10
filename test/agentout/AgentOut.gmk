@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2018, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2018, 2025, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -72,7 +72,7 @@ $(BUILDTESTDIR)/AgentOut.othervm.ok: \
 		    > $(@:%.ok=%)/logs/MainTest-System.err.log
 	# remove noise lines
 	for i in $(@:%.ok=%)/logs/*.log ; do \
-	   $(MKDIR) -p `dirname $$i`-filtered ; \
+	   $(MKDIR) `dirname $$i`-filtered ; \
 	   $(SED) -e 's/\r$$//' -e '/^$$/d' -e '/^STATUS.*/d' -e '/^JavaTest.*/d' \
 			-e '/^###/d' -e '/^# no such/d' -e '/.*warning.*/d' \
 		< $$i \

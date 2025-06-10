@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2025, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -37,7 +37,7 @@ $(BUILDTESTDIR)/Basic.check.ok: \
 		$(BUILDTESTDIR)/i18n.com.sun.javatest.regtest.tool.ok \
 	        $(BASIC.files)
 	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
-	$(MKDIR) -p $(@:%.ok=%/work/scratch) $(@:%.ok=%/report)
+	$(MKDIR) $(@:%.ok=%/work/scratch) $(@:%.ok=%/report)
 	$(JDKJAVA) \
 		-Djavatest.regtest.allowTrailingBuild=true \
 		-jar $(JTREG_IMAGEDIR)/lib/jtreg.jar \
@@ -70,7 +70,7 @@ endif
 $(BUILDTESTDIR)/Basic.classes.ok: \
 		$(ALL_JTREG_JARS) \
 		$(TESTDIR)/basic/Basic.java
-	$(MKDIR) -p $(BUILDTESTDIR)/basic/classes
+	$(MKDIR) $(BUILDTESTDIR)/basic/classes
 	CLASSPATH="$(CLASSDIR)$(PS)$(JAVADIR)$(PS)$(JAVATEST_JAR)" \
 		$(JDKJAVAC) -Xlint -Werror -encoding ASCII -d $(BUILDTESTDIR)/basic/classes $(TESTDIR)/basic/Basic.java
 	echo Basic.java compiled at `date` > $@
@@ -83,7 +83,7 @@ $(BUILDTESTDIR)/Basic.agentvm.ok: \
 		$(BUILDTESTDIR)/i18n.com.sun.javatest.regtest.tool.ok \
 	        $(BASIC.files)
 	$(RM) $(@:%.ok=%/work) $(@:%.ok=%/report)
-	$(MKDIR) -p $(@:%.ok=%/work/scratch) $(@:%.ok=%/report)
+	$(MKDIR) $(@:%.ok=%/work/scratch) $(@:%.ok=%/report)
 	cd $(@:%.ok=%/work/scratch) ; \
 	    $(JDKJAVA) \
 		-cp "../../../basic/classes$(PS)$(JTREG_IMAGEJARDIR)/jtreg.jar" \

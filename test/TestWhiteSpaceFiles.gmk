@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2022, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2025, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -30,7 +30,7 @@ $(BUILDTESTDIR)/TestWhiteSpaceFiles.ok: \
 	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	    $(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(BUILDTESTDIR)/tmp/$(@F:%.ok=%)
-	$(MKDIR) -p $(BUILDTESTDIR)/tmp/$(@F:%.ok=%)
+	$(MKDIR) $(BUILDTESTDIR)/tmp/$(@F:%.ok=%)
 	ln -s $(JDKHOME) $(BUILDTESTDIR)/tmp/$(@F:%.ok=%)/"j2se home"
 	ln -s $(shell cd $(JTREG_IMAGEDIR); pwd) $(BUILDTESTDIR)/tmp/$(@F:%.ok=%)/"jtreg home"
 	$(BUILDTESTDIR)/tmp/$(@F:%.ok=%)/"jtreg home"/bin/jtreg $(JTREG_OPTS) \

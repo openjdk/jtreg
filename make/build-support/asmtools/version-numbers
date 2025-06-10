@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2020, 2025, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -23,8 +23,8 @@
 # questions.
 #
 
-DEFAULT_ASMTOOLS_SRC_TAG=7.0-b09
-DEFAULT_ASMTOOLS_SRC_ARCHIVE_CHECKSUM=604f5e1aad1912968781dc72a1f86043e4e2dc20
+DEFAULT_ASMTOOLS_SRC_TAG=8.1
+DEFAULT_ASMTOOLS_SRC_ARCHIVE_CHECKSUM=6dcd98e53131bc923df5fdd10baa42c601f1c97c
 
 DEFAULT_ANT_VERSION=1.10.8
 DEFAULT_ANT_ARCHIVE_CHECKSUM=dbe187ce2963f9df8a67de8aaff3b0a437d06978
