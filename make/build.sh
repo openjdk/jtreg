@@ -398,21 +398,8 @@ sanity_check_java_home() {
     JAVA_SPECIFICATION_VERSION=${vnum}
 }
 
-checkJavaOSVersion() {
-  # This checks that the value in the Java "os.version" system property
-  # is as expected.  While it is OK to *build* jtreg with a JDK with this bug,
-  # some of the `jtreg` self-tests will fail: notably, test/problemList.
-  # See https://bugs.openjdk.org/browse/JDK-8253702
-  case `uname` in
-    Darwin )
-      OS_VERSION=`defaults read loginwindow SystemVersionStampAsString`
-      ${JAVA_HOME}/bin/java ${mydir}/CheckJavaOSVersion.java ${OS_VERSION}
-  esac
-}
-
 setup_java_home
 sanity_check_java_home
-#checkJavaOSVersion   #temp: check for presence of the JDK os.version bug (JDK-8253702)
 export JAVA_HOME
 info "JAVA_HOME: ${JAVA_HOME}"
 

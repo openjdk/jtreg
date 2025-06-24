@@ -42,7 +42,7 @@ include Rules.gmk
 
 build: $(BUILDFILES)
 
-test: checkJavaOSVersion $(BUILDTESTDIR) $(INITIAL_TESTS) $(TESTS) $(FINAL_TESTS)
+test: $(BUILDTESTDIR) $(INITIAL_TESTS) $(TESTS) $(FINAL_TESTS)
 	@count=`echo $+ | wc -w` ; \
 	echo "All ($${count}) selected tests completed successfully"
 ifndef JDK8HOME
@@ -67,7 +67,7 @@ ifeq ($(OS_NAME), windows)
 	@echo "Warning: OS is Windows; some tests may not have been executed"
 endif
 
-quick-test: checkJavaOSVersion $(BUILDTESTDIR) $(INITIAL_TESTS)
+quick-test: $(BUILDTESTDIR) $(INITIAL_TESTS)
 	count=`echo $+ | wc -w` ; \
 	echo "All ($${count}) selected tests completed successfully"
 
@@ -132,14 +132,6 @@ $(BUILDTESTDIR):
 	$(MKDIR) $@
 
 #----------------------------------------------------------------------
-
-checkJavaOSVersion:
-ifeq ($(OS_NAME), macosx)
-	$(JDKJAVA) CheckJavaOSVersion.java $(OS_VERSION)
-endif
-
-#----------------------------------------------------------------------
-
 
 .PHONY: default all build test images new-images clean sanity
 
