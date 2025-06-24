@@ -325,7 +325,7 @@ $(BUILDTESTDIR)/JUnitQueryTest.invalidMethod.ok: $(JTREG_IMAGEDIR)/lib/javatest.
 			> $(@:%.ok=%)/jt.log 2>&1 || \
 		true "non-zero exit code from jtreg intentionally ignored"
 	$(GREP) -s 'Could not find method with name \[m14] in class \[Test1]' $(@:%.ok=%)/jt.log
-	$(GREP) -s "TEST RESULT: Failed. Execution failed: .*JUnitException: .* failed to discover tests" $(@:%.ok=%)/jt.log
+	$(GREP) -s "TEST RESULT: Failed. Execution failed: .* JUnit test failure" $(@:%.ok=%)/jt.log
 	echo $@ passed at `date` > $@
 
 TESTS.jtreg += $(BUILDTESTDIR)/JUnitQueryTest.invalidMethod.ok
