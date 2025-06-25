@@ -1,6 +1,12 @@
 ## [Unreleased](https://git.openjdk.org/jtreg/compare/jtreg-7.5.2+1...master)
 
-_nothing noteworthy, yet_
+* Require JDK 17 to build `jtreg` tool. [CODETOOLS-7904000](https://bugs.openjdk.org/browse/CODETOOLS-7904000)
+
+* Update bundled dependencies:
+  * AsmTools 8.1 [CODETOOLS-7903081](https://bugs.openjdk.org/browse/CODETOOLS-7903081)
+  * JUnit 5.13.2 [CODETOOLS-7904046](https://bugs.openjdk.org/browse/CODETOOLS-7904046)
+
+* Fix `--verify-exclude` to abort test runs when discovering failures [CODETOOLS-7904015](https://bugs.openjdk.org/browse/CODETOOLS-7904015)
 
 ## [7.5.2](https://git.openjdk.org/jtreg/compare/jtreg-7.5.1+1...jtreg-7.5.2+1)
 
