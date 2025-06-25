@@ -270,7 +270,7 @@ get_archive() {
 
 
 ##
-# Set up the ANT (and possibly ANT_JAR) environment variable(s)
+# Set up the ANT (and possibly ANT_JAR, and ANT_HOME) environment variable(s)
 #
 setup_ant() {
     check_arguments "${FUNCNAME}" 0 $#
@@ -292,6 +292,7 @@ setup_ant() {
         get_archive "${ANT_ARCHIVE_URL}" "${ANT_LOCAL_ARCHIVE_FILE}" "${ANT_DEPS_DIR}" "${ANT_ARCHIVE_CHECKSUM}"
         ANT="$(find "${ANT_DEPS_DIR}" -path '*/bin/ant')"
         ANT_JAR="$(dirname "${ANT}")/../lib/ant.jar"
+        ANT_HOME="${ANT}/../.."
         return
     fi
 
