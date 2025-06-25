@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2024, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -36,7 +36,6 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.Reader;
@@ -46,7 +45,6 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -80,10 +78,8 @@ import com.sun.javatest.ParameterFilter;
 import com.sun.javatest.ProductInfo;
 import com.sun.javatest.Status;
 import com.sun.javatest.StatusFilter;
-import com.sun.javatest.TestDescription;
 import com.sun.javatest.TestEnvironment;
 import com.sun.javatest.TestFilter;
-import com.sun.javatest.TestFinder;
 import com.sun.javatest.TestResult;
 import com.sun.javatest.TestResultTable;
 import com.sun.javatest.TestSuite;
@@ -142,7 +138,6 @@ public class Tool {
      * @param args An array of args, such as might be supplied on the command line.
      */
     public static void main(String[] args) {
-        checkJavaOSVersion();
 
         PrintWriter out = new PrintWriter(System.out, true);
         PrintWriter err = new PrintWriter(System.err, true);
@@ -185,49 +180,6 @@ public class Tool {
             exit(EXIT_EXCEPTION);
         }
     } // main()
-
-    private static void checkJavaOSVersion() {
-        String osName = System.getProperty("os.name");
-        if (osName != null && osName.equals("Mac OS X")) {
-            var command = List.of("sw_vers", "-productVersion");
-            try {
-                String expectVersion;
-                Process p = new ProcessBuilder(command)
-                        .redirectErrorStream(true)
-                        .start();
-                try (InputStream in = p.getInputStream();
-                    BufferedReader r = new BufferedReader(new InputStreamReader(in))) {
-                    expectVersion = r.lines().collect(Collectors.joining());
-                }
-                p.waitFor();
-                int rc = p.exitValue();
-                if (rc != 0) {
-                    System.err.println("Error getting OS version: "
-                            + String.join(" ", command) + ": rc=" + rc);
-                    System.exit(99);
-                }
-
-                checkJavaOSVersion(expectVersion);
-
-            } catch (IOException | InterruptedException e) {
-                System.err.println("Error getting OS version: "
-                        + String.join(" ", command) + ": " + e);
-                System.exit(99);
-            }
-        }
-    }
-
-    private static void checkJavaOSVersion(String expectVersion) {
-        String osVersion = System.getProperty("os.version");
-        if (!osVersion.startsWith(expectVersion)) {
-            System.err.println("The version of JDK you are using to run jtreg does not report the OS version correctly.");
-            System.err.println("    java.home:    " + System.getProperty("java.home"));
-            System.err.println("    java.version: " + System.getProperty("java.version"));
-            System.err.println("    os.version:   " + osVersion + "  (expected: " + expectVersion + ")");
-            System.err.println("Use a more recent update of this version of JDK, or a newer version of JDK.");
-            System.exit(1);
-        }
-    }
 
     /**
      * Call System.exit, taking care to get permission from the
