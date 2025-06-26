@@ -143,6 +143,10 @@ public class TestProperties {
         return getEntry(file).libBuildArgs;
     }
 
+    boolean getShareLibraries(File file) {
+        return getEntry(file).shareLibraries;
+    }
+
     Set<String> getModules(File file) throws TestSuite.Fault {
         return getEntry(file).modules;
     }
@@ -220,6 +224,7 @@ public class TestProperties {
             private final Set<File> junitDirs;
             final Set<String> libDirs;
             final Set<String> libBuildArgs;
+            final boolean shareLibraries;
             final Set<File> extLibRoots;
             final Set<String> modules;
             final int maxOutputSize;
@@ -267,6 +272,9 @@ public class TestProperties {
                     // add the list of library dirs for TestNG tests
                     libBuildArgs = initSimpleSet(parent == null ? null : parent.libBuildArgs, "lib.build");
 
+                    // determine if explicitly compiled libraries should be shared
+                    shareLibraries = initShareLibraries(parent);
+
                     // add the list of external library roots
                     extLibRoots = initFileSet(parent == null ? null : parent.extLibRoots, "external.lib.roots", dir);
 
@@ -297,6 +305,7 @@ public class TestProperties {
                     junitDirs = parent.junitDirs;
                     libDirs = parent.libDirs;
                     libBuildArgs = parent.libBuildArgs;
+                    shareLibraries = parent.shareLibraries;
                     extLibRoots = parent.extLibRoots;
                     modules = parent.modules;
                     maxOutputSize = parent.maxOutputSize;
@@ -501,6 +510,18 @@ public class TestProperties {
 
                 if (parent != null) {
                     return parent.enablePreview;
+                }
+
+                return false;
+            }
+
+            private boolean initShareLibraries(Entry parent) {
+                if (properties.containsKey("shareLibraries")) {
+                    return properties.getProperty("shareLibraries").equals("true");
+                }
+
+                if (parent != null) {
+                    return parent.shareLibraries;
                 }
 
                 return false;
