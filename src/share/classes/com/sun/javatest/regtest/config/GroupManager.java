@@ -29,6 +29,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URI;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -99,7 +100,7 @@ public class GroupManager {
             }
 
 
-            try (BufferedReader in = Files.newBufferedReader(file)){
+            try (BufferedReader in = Files.newBufferedReader(file, Charset.defaultCharset())){
                 Properties p = new Properties();
                 p.load(in);
                 for (Map.Entry<Object,Object> e: p.entrySet()) {
