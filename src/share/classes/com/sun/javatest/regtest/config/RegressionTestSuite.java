@@ -238,6 +238,10 @@ public final class RegressionTestSuite extends TestSuite
         return properties.getLibBuildArgs(td.getFile());
     }
 
+    public boolean getShareLibraries(TestDescription td) {
+        return properties.getShareLibraries(td.getFile());
+    }
+
     public Set<File> getExternalLibRoots(TestDescription td) throws TestSuite.Fault {
         return properties.getExternalLibs(td.getFile());
     }

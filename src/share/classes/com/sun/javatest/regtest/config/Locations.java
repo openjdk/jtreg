@@ -244,11 +244,15 @@ public final class Locations {
      * @throws Fault if there is an error resolving the library location
      */
     private LibLocn getLibLocn(TestDescription td, String lib) throws Fault {
+        Path libDir = absTestClsDir;
+        if (testSuite.getShareLibraries(td)) {
+            libDir = absBaseClsDir;
+        }
         if (lib.startsWith("/")) {
             String libTail = lib.substring(1);
             checkLibPath(Path.of(libTail));
             if (Files.exists(absBaseSrcDir.resolve(libTail))) {
-                return createLibLocn(lib, absBaseSrcDir, absBaseClsDir);
+                return createLibLocn(lib, absBaseSrcDir, libDir);
             } else {
                 try {
                     for (File extRootFile: testSuite.getExternalLibRoots(td)) {
@@ -256,7 +260,7 @@ public final class Locations {
                         if (Files.exists(extRoot.resolve(libTail))) {
                             // since absBaseSrcDir/lib does not exist, we can safely
                             // use absBaseClsDir/lib for the compiled classes
-                            return createLibLocn(lib, extRoot, absBaseClsDir);
+                            return createLibLocn(lib, extRoot, libDir);
                         }
                     }
                 } catch (RegressionTestSuite.Fault e) {
@@ -283,7 +287,7 @@ public final class Locations {
         } else {
             checkLibPath(relLibDir.resolve(lib));
             if (Files.exists(absTestSrcDir.resolve(lib)))
-                return createLibLocn(lib, absTestSrcDir, absBaseClsDir.resolve(relLibDir));
+                return createLibLocn(lib, absTestSrcDir, libDir.resolve(relLibDir));
         }
         throw new Fault(CANT_FIND_LIB + lib);
     }
