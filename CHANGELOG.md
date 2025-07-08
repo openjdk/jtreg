@@ -4,7 +4,7 @@
 
 * Update bundled dependencies:
   * AsmTools 8.1 [CODETOOLS-7903081](https://bugs.openjdk.org/browse/CODETOOLS-7903081)
-  * JUnit 5.13.2 [CODETOOLS-7904046](https://bugs.openjdk.org/browse/CODETOOLS-7904046)
+  * JUnit 5.13.3 [CODETOOLS-7904055](https://bugs.openjdk.org/browse/CODETOOLS-7904055)
 
 * Fix `--verify-exclude` to abort test runs when discovering failures [CODETOOLS-7904015](https://bugs.openjdk.org/browse/CODETOOLS-7904015)
 
