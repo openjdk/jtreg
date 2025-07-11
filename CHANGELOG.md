@@ -1,8 +1,8 @@
-## [Unreleased](https://git.openjdk.org/jtreg/compare/jtreg-8+1...master)
+## [Unreleased](https://git.openjdk.org/jtreg/compare/jtreg-8+2...master)
 
 _nothing noteworthy, yet_
 
-## [8](https://git.openjdk.org/jtreg/compare/jtreg-7.5.2+1...jtreg-8+1)
+## [8](https://git.openjdk.org/jtreg/compare/jtreg-7.5.2+1...jtreg-8+2)
 
 * Require JDK 17 to build `jtreg` tool. [CODETOOLS-7904000](https://bugs.openjdk.org/browse/CODETOOLS-7904000)
 
