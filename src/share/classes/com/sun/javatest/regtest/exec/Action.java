@@ -34,9 +34,10 @@ import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -390,8 +391,8 @@ public abstract class Action extends ActionHelper {
                         System.nanoTime() - startNanos).toMillis();
             }
         }
-        Date startDate = new Date();
-        startTime = startDate.getTime();
+        ZonedDateTime startedAt = ZonedDateTime.now();
+        startTime = startedAt.toInstant().toEpochMilli();
         String name = getName();
         section = script.getTestResult().createSection(name);
 
@@ -407,7 +408,7 @@ public abstract class Action extends ActionHelper {
             // log the time spent (in seconds) waiting for exclusiveAccess
             pw.println(LOG_EXCLUSIVE_ACCESS_TIME + ((double) exclusiveAccessWaitMillis / 1000.0));
         }
-        pw.println(LOG_STARTED + startDate);
+        pw.println(LOG_STARTED + DATE_TIME_FORMATTER.format(startedAt));
     }
 
     /**
@@ -418,10 +419,10 @@ public abstract class Action extends ActionHelper {
      */
     protected void endAction(Status status) {
         try {
-            Date endDate = new Date();
-            long elapsedTime = endDate.getTime() - startTime;
+            ZonedDateTime endedAt = ZonedDateTime.now();
+            long elapsedTime = endedAt.toInstant().toEpochMilli() - startTime;
             PrintWriter pw = section.getMessageWriter();
-            pw.println(LOG_FINISHED + endDate);
+            pw.println(LOG_FINISHED + DATE_TIME_FORMATTER.format(endedAt));
             pw.println(LOG_ELAPSED_TIME + ((double) elapsedTime / 1000.0));
             recorder.close();
             section.setStatus(status);
@@ -883,6 +884,9 @@ public abstract class Action extends ActionHelper {
     protected static final boolean showCmd = Flags.get("showCmd");
     protected static final boolean showMode = Flags.get("showMode");
     protected static final boolean showJDK = Flags.get("showJDK");
+    // used for logging start/end date time in the report, example "Fri Aug 22 11:12:22.256 UTC 2025"
+    private static final DateTimeFormatter DATE_TIME_FORMATTER =
+            DateTimeFormatter.ofPattern("EEE MMM dd HH:mm:ss.SSS zzz yyyy");
 }
 
 
