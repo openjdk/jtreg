@@ -33,6 +33,7 @@ import java.lang.ref.SoftReference;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -171,6 +172,10 @@ public class TestProperties {
         return getEntry(file).defaultTimeout;
     }
 
+    public final Set<String> getDisallowedActions(final File file) {
+        return getEntry(file).disallowedActions;
+    }
+
     boolean getAllowSmartActionArgs(File file) {
         return getEntry(file).allowSmartActionArgs;
     }
@@ -231,6 +236,7 @@ public class TestProperties {
             final boolean allowSmartActionArgs;
             final boolean enablePreview;
             final Duration defaultTimeout;
+            final Set<String> disallowedActions;
 
             Entry(Entry parent, File dir) {
                 this.parent = parent;
@@ -292,6 +298,9 @@ public class TestProperties {
 
                     // determine whether tests use preview features, and so require --enable-preview option
                     enablePreview = initEnablePreview(parent);
+
+                    // test actions that aren't allowed in the test definition
+                    disallowedActions = initDisallowedActions(parent);
                 } else {
                     if (parent == null)
                         throw new IllegalStateException("TEST.ROOT not found");
@@ -312,6 +321,7 @@ public class TestProperties {
                     defaultTimeout = parent.defaultTimeout;
                     allowSmartActionArgs = parent.allowSmartActionArgs;
                     enablePreview = parent.enablePreview;
+                    this.disallowedActions = parent.disallowedActions;
                 }
 
                 useBootClassPath= initUseBootClassPath(parent, dir);
@@ -400,6 +410,23 @@ public class TestProperties {
                 } else {
                     return parent;
                 }
+            }
+
+            private Set<String> initDisallowedActions(final Entry parent) {
+                final String val = properties.getProperty("disallowedActions");
+                if (val != null) {
+                    final Set<String> disallowed = new HashSet<>();
+                    // comma separated values
+                    final String[] actions = val.split(",");
+                    for (final String s : actions) {
+                        if (s.isBlank()) {
+                            continue;
+                        }
+                        disallowed.add(s.trim());
+                    }
+                    return Collections.unmodifiableSet(disallowed);
+                }
+                return parent == null ? Set.of() : parent.disallowedActions;
             }
 
             private boolean initUseBootClassPath(Entry parent, File dir) {

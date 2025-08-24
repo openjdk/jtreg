@@ -400,6 +400,8 @@ public class RegressionScript extends Script {
 
         Expr.Context exprContext = params.getExprContext();
         Map<String,String> testProps = getTestProperties();
+        final File testDefinitionFile = getTestDescription().getFile();
+        final Set<String> disallowedActions = properties.getDisallowedActions(testDefinitionFile);
         for (String runCmd : runCmds) {
             // e.g. reason compile/fail/ref=Foo.ref -debug Foo.java
             // where "reason" indicates why the action should run
@@ -422,6 +424,12 @@ public class RegressionScript extends Script {
                 if (c == null) {
                     if (stopOnError)
                         throw new ParseActionsException(BAD_ACTION + verb);
+                    continue;
+                }
+                if (disallowedActions.contains(verb)) {
+                    if (stopOnError) {
+                        throw new ParseActionsException("Disallowed test action: " + verb);
+                    }
                     continue;
                 }
                 Action action = (Action) (c.getDeclaredConstructor().newInstance());
