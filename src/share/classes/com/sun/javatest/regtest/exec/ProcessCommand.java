@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2024, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -39,7 +39,6 @@ import java.util.concurrent.TimeUnit;
 import com.sun.javatest.Status;
 import com.sun.javatest.regtest.TimeoutHandler;
 import com.sun.javatest.regtest.agent.Alarm;
-import com.sun.javatest.regtest.util.ProcessUtils;
 import com.sun.javatest.regtest.util.StreamCopier;
 
 /**
@@ -245,8 +244,8 @@ public class ProcessCommand
             }
             final Process process = pb.start();
             if (log != null) {
-                final long pid = ProcessUtils.getProcessId(process);
-                log.println("Process id: " + ((pid == -1) ? "unknown" : pid));
+                final long pid = process.pid();
+                log.println("Process id: " + pid);
             }
             InputStream processIn = process.getInputStream();
             InputStream processErr = process.getErrorStream();
@@ -325,7 +324,7 @@ public class ProcessCommand
                 if (timeoutHandler != null) {
                     timeoutHandler.handleTimeout(process);
                 }
-                ProcessUtils.destroyForcibly(process);
+                process.destroyForcibly();
 
                 timeoutHandlerDone.countDown();
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2024, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -37,7 +37,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.PrintWriter;
-import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
@@ -73,7 +72,6 @@ import com.sun.javatest.regtest.agent.Flags;
 import com.sun.javatest.regtest.agent.SearchPath;
 import com.sun.javatest.regtest.config.JDK;
 import com.sun.javatest.regtest.config.RegressionParameters;
-import com.sun.javatest.regtest.util.ProcessUtils;
 import com.sun.javatest.regtest.util.StringUtils;
 
 import static com.sun.javatest.regtest.RStatus.createStatus;
@@ -163,7 +161,6 @@ public class Agent {
             env.clear();
             env.putAll(envVars);
             agentServerProcess = process = pb.start();
-            agentServerPid = ProcessUtils.getProcessId(process);
             copyAgentProcessStream("stdout", process.getInputStream());
             copyAgentProcessStream("stderr", process.getErrorStream());
 
@@ -171,9 +168,8 @@ public class Agent {
                 final int ACCEPT_TIMEOUT = (int) (60 * 1000 * timeoutFactor);
                 // default 60 seconds, for server to start and "phone home"
                 ss.setSoTimeout(ACCEPT_TIMEOUT);
-                log("Waiting up to " + ACCEPT_TIMEOUT + " milli seconds for a" +
-                        " socket connection on port " + port +
-                        (agentServerPid != -1 ? " from process " + agentServerPid : ""));
+                log("Waiting up to " + ACCEPT_TIMEOUT + " milliseconds for a" +
+                        " socket connection on port " + port + " from process " + process.pid());
                 Socket s = ss.accept();
                 log("Received connection on port " + port + " from " + s);
                 s.setSoTimeout((int)(KeepAlive.READ_TIMEOUT * timeoutFactor));
@@ -191,11 +187,7 @@ public class Agent {
             if (agentServerProcess != null) {
                 // kill the launched process
                 log("killing AgentServer process");
-                try {
-                    ProcessUtils.destroyForcibly(agentServerProcess);
-                } catch (Exception ignored) {
-                    // ignore
-                }
+                agentServerProcess.destroyForcibly();
             }
             throw new Fault(e);
         }
@@ -469,7 +461,7 @@ public class Agent {
             out.close();
         } catch (IOException e) {
             trace("Killing process (" + e + ")");
-            ProcessUtils.destroyForcibly(process); // force shutdown if necessary
+            process.destroyForcibly(); // force shutdown if necessary
         }
 
         PrintWriter pw = new PrintWriter(System.err, true);
@@ -481,7 +473,7 @@ public class Agent {
         } catch (InterruptedException e) {
             log("Interrupted while closing");
             log("Killing process");
-            ProcessUtils.destroyForcibly(process);
+            process.destroyForcibly();
         } finally {
             alarm.cancel();
             Thread.interrupted(); // clear any interrupted status
@@ -578,13 +570,12 @@ public class Agent {
 
     /**
      * Returns the process id of the {@code AgentServer} with which this {@code Agent}
-     * communicates or {@code -1} if the process id of the {@code AgentServer}
-     * couldn't be determined.
+     * communicates.
      *
      * @return the AgentServer's process id
      */
-    long getAgentServerPid() {
-        return agentServerPid;
+    final long getAgentServerPid() {
+        return process.pid();
     }
 
     /**
@@ -624,7 +615,6 @@ public class Agent {
     final int id;
     final Logger logger;
     Instant idleStartTime;
-    private final long agentServerPid;
 
     static int count;
 
