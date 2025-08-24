@@ -1816,7 +1816,7 @@ public class Tool {
             }
 
             if (nativeDirArg != null)
-                rp.setNativeDir(nativeDirArg);
+                rp.setNativeDir(nativeDirArg.toAbsolutePath());
 
             rp.setUseWindowsSubsystemForLinux(useWindowsSubsystemForLinux);
 
