@@ -83,6 +83,19 @@ $(BUILDTESTDIR)/EnvTest.full.ok: $(ENV.files) \
 	    ( cat $(@:%.ok=%/jt.log) ; exit 1 )
 	echo "test passed at `date`" > $@
 
+$(BUILDTESTDIR)/EnvTest.assert.envs.ok: \
+		$(JTREG_IMAGEDIR)/lib/javatest.jar \
+		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
+		$(JTREG_IMAGEDIR)/bin/jtreg
+
+	PRINTER=foo XAUTHORITY=bar DESKTOP_SESSION=foobar \
+	SystemRoot=barfoo windir=hello \
+		$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+            -jdk:$(JDKHOME) \
+            -w $(@:%.ok=%)/work/ \
+            -r $(@:%.ok=%)/report/ \
+            -verbose:fail \
+            $(TESTDIR)/env/EnvVarAssertTest.java
 
 ifneq ($(OS_NAME), windows)
 ifdef JDK8HOME
@@ -93,3 +106,5 @@ TESTS.jtreg += \
 endif
 endif
 endif
+
+TESTS.jtreg += $(BUILDTESTDIR)/EnvTest.assert.envs.ok
