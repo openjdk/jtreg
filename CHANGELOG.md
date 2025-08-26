@@ -1,6 +1,7 @@
 ## [Unreleased](https://git.openjdk.org/jtreg/compare/jtreg-8+2...master)
 
-_nothing noteworthy, yet_
+* `XAUTHORITY` environment variable is now preserved when launching tests on Unix-like platforms.
+  [CODETOOLS-7904016](https://bugs.openjdk.org/browse/CODETOOLS-7904016)
 
 ## [8](https://git.openjdk.org/jtreg/compare/jtreg-7.5.2+1...jtreg-8+2)
 

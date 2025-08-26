@@ -2410,22 +2410,31 @@ automatically propagated into the test's JVM are:
 * Linux and Solaris:
     * `PATH` is set to `/bin:/usr/bin:/usr/sbin`
     * The following are propagated from the user's environment:
+        `DBUS_SESSION_BUS_ADDRESS`,
+        `DESKTOP_SESSION`,
         `DISPLAY`,
+        `GDMSESSION`,
+        `GNOME_DESKTOP_SESSION_ID`,
+        `GNOME_SHELL_SESSION_MODE`,
         `HOME`
         `LANG`,
         `LC_ALL`,
         `LC_CTYPE`,
         `LPDEST`,
         `PRINTER`,
-        `TZ` and
-        `XMODIFIERS`
-
+        `TZ`,
+        `WAYLAND_DISPLAY`,
+        `XMODIFIERS`,
+        `XAUTHORITY`
 * Windows:
 
     * `PATH` is set to the MKS or Cygwin toolkit binary directory
     * The following are propagated from the user's environment:
         `SystemDrive`,
-        `SystemRoot`
+        `SystemRoot`,
+        `TMP`,
+        `TEMP`,
+        `TZ`,
         `windir`
 
 If your test needs to provide more environment variables or
