@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2024, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -37,7 +37,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.PrintWriter;
-import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
@@ -459,6 +458,10 @@ public class Agent {
         }
     }
 
+    private boolean isAgentServerAlive() {
+        return this.process.isAlive();
+    }
+
     public void close() {
         log("Closing...");
 
@@ -494,20 +497,6 @@ public class Agent {
         out.writeShort(c.size());
         for (String s: c)
             out.writeUTF(s);
-    }
-
-    void writeOptionalString(String s) throws IOException {
-        if (s == null)
-            out.writeByte(0);
-        else {
-            out.writeByte(1);
-            out.writeUTF(s);
-        }
-    }
-
-    static String readOptionalString(DataInputStream in) throws IOException {
-        int b = in.readByte();
-        return (b == 0) ? null : in.readUTF();
     }
 
     void writeMap(Map<String, String> map) throws IOException {
@@ -855,16 +844,23 @@ public class Agent {
             // that older, less-used agents can be reclaimed.
             Agent a = (agents == null) ? null : agents.pollLast();
             if (a != null) {
-                logger.log(null, "POOL: Reusing Agent[" + a.getId() + "]");
-                allAgents.remove(a);
-                stats.reuse(a);
-            } else {
-                logger.log(null, "POOL: Creating new agent");
-                a = new Agent(dir, jdk, vmOpts, envVars, policyFile, timeoutFactor, logger,
-                        testThreadFactory, testThreadFactoryPath);
-                stats.add(a);
+                // use a pooled agent only if the agent's process hasn't exited
+                // (for example due to JVM crash when the agent was pooled)
+                if (a.isAgentServerAlive()) {
+                    logger.log(null, "POOL: Reusing Agent[" + a.getId() + "]");
+                    allAgents.remove(a);
+                    stats.reuse(a);
+                    return a;
+                }
+                // remove the dead agent from the pool
+                logger.log(null, "POOL: Removing Agent[" + a.getId() + "]"
+                        + " because agent server process " + a.getAgentServerPid() + " is dead");
+                removeAgent(a);
             }
-
+            logger.log(null, "POOL: Creating new agent");
+            a = new Agent(dir, jdk, vmOpts, envVars, policyFile, timeoutFactor, logger,
+                    testThreadFactory, testThreadFactoryPath);
+            stats.add(a);
             return a;
         }
 
@@ -875,6 +871,12 @@ public class Agent {
          * @param agent the agent
          */
         synchronized void save(Agent agent) {
+            // do not save the agent into the pool if the agent's process is already dead
+            if (!agent.isAgentServerAlive()) {
+                logger.log(agent, "Agent server process " + agent.getAgentServerPid()
+                        + " is dead, will not save agent to pool");
+                return;
+            }
             logger.log(agent, "Saving agent to pool");
             String key = getKey(agent.execDir, agent.jdk, agent.vmOpts);
             agentsByKey.computeIfAbsent(key, k -> new LinkedList<>()).add(agent);
