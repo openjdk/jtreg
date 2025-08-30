@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -110,7 +110,7 @@ public abstract class SummaryReporter {
         }
 
         static final String testsPrefix = "Total tests run:";
-        static final Pattern testsPattern = Pattern.compile("[^0-9]+([0-9]+)[^0-9]+([0-9]+)[^0-9]+([0-9]+)[^0-9]*");
+        static final Pattern testsPattern = Pattern.compile("Total tests run: ([0-9]+), Passes: ([0-9]+), Failures: ([0-9]+), Skips: ([0-9]+)");
         static final String configPrefix = "Configuration Failures:";
         static final Pattern configPattern = Pattern.compile("[^0-9]+([0-9]+)[^0-9]+([0-9]+)[^0-9]*");
 
@@ -121,16 +121,15 @@ public abstract class SummaryReporter {
                 String group = td.getParameter("packageRoot");
                 if (group == null)
                     group = td.getRootRelativePath();
-                Info info = infoMap.get(group);
-                if (info == null)
-                    infoMap.put(group, info = new Info());
+                Info info = infoMap.computeIfAbsent(group, __ -> new Info());
                 String out = s.getOutput(OutputKind.STDOUT.name);
                 if (out != null) {
                     Matcher tm = getMatcher(out, testsPrefix, testsPattern);
                     if (tm != null && tm.matches()) {
                         info.count += Integer.parseInt(tm.group(1));
-                        info.failureCount += Integer.parseInt(tm.group(2));
-                        info.skippedCount += Integer.parseInt(tm.group(3));
+                        // info.successCount += Integer.parseInt(tm.group(2));
+                        info.failureCount += Integer.parseInt(tm.group(3));
+                        info.skippedCount += Integer.parseInt(tm.group(4));
                     }
                     Matcher cm = getMatcher(out, configPrefix, configPattern);
                     if (cm != null && cm.matches()) {
@@ -152,7 +151,7 @@ public abstract class SummaryReporter {
             if (endPos == -1)
                 return null;
 
-            return p.matcher(out.substring(pos, endPos));
+            return p.matcher(out.substring(pos, endPos).strip()); // get rid of any "\r", too
         }
 
         @Override

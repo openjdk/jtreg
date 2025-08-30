@@ -32,7 +32,7 @@ $(BUILDTESTDIR)/TestNGJUnitTest.othervm.ok: \
 		$(JTREG_IMAGEDIR)/bin/jtreg
 	$(MKDIR) $(@:%.ok=%)
 	JTREG_JAVA=$(JDKJAVA) $(JTREG_IMAGEDIR)/bin/jtreg \
-		-jdk:$(JDK8HOME) \
+		-jdk:$(JDKHOME) \
 		-w:$(@:%.ok=%/work) \
 		-r:$(@:%.ok=%/report) \
 		$(@:$(BUILDTESTDIR)/TestNGJUnitTest.%.ok=-%) \
@@ -41,11 +41,10 @@ $(BUILDTESTDIR)/TestNGJUnitTest.othervm.ok: \
 	$(GREP) -s 'Test results: passed: 2' $(@:%.ok=%/jt.log)  > /dev/null
 	$(GREP) -s 'Total tests run: 3, Passes: 3, Failures: 0, Skips: 0' $(@:%.ok=%/work)/testng/p/T1.jtr  > /dev/null
 	$(GREP) -s 'Total tests run: 3, Passes: 3, Failures: 0, Skips: 0' $(@:%.ok=%/work)/testng/p/T2.jtr  > /dev/null
+	$(GREP) -s 'testng/ total: 6, passed: 6, failed: 0, skipped: 0, config failed: 0, config skipped: 0' $(@:%.ok=%/report)/text/testng.txt  > /dev/null
 	echo $@ passed at `date` > $@
 
-ifdef JDK8HOME
 TESTS.jtreg += \
 	$(BUILDTESTDIR)/TestNGJUnitTest.agentvm.ok \
 	$(BUILDTESTDIR)/TestNGJUnitTest.othervm.ok
-endif
 
