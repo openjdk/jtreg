@@ -36,6 +36,7 @@ import java.util.TreeMap;
 import java.util.WeakHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.IntStream;
 
 import com.sun.javatest.TestDescription;
 import com.sun.javatest.TestResult;
@@ -74,13 +75,6 @@ public abstract class SummaryReporter {
     }
 
     /**
-     * Returns {@code true} if there is no content to be shown.
-     *
-     * @return {@code true} if there is no content to be shown
-     */
-    public abstract boolean isEmpty();
-
-    /**
      * Adds the results for an action in a test.
      *
      * @param tr the test result for the test
@@ -91,10 +85,11 @@ public abstract class SummaryReporter {
     /**
      * Writes a summary report about the tests that executed.
      *
+     * @return the sum of executed tests
      * @param reportDir the directory in which to write the report
      * @throws IOException if there is a problem writing the report
      */
-    public abstract void writeReport(File reportDir) throws IOException;
+    abstract int writeReport(File reportDir) throws IOException;
 
     /**
      * A summary reporter that aggregates info for TestNG tests, using info written
@@ -103,11 +98,6 @@ public abstract class SummaryReporter {
     private static class TestNGSummaryReporter extends SummaryReporter {
 
         private final Map<String, Info> infoMap = new TreeMap<>();
-
-        @Override
-        public boolean isEmpty() {
-            return infoMap.isEmpty();
-        }
 
         static final String testsPrefix = "Total tests run:";
         static final Pattern testsPattern = Pattern.compile("Total tests run: ([0-9]+), Passes: ([0-9]+), Failures: ([0-9]+), Skips: ([0-9]+)");
@@ -155,7 +145,8 @@ public abstract class SummaryReporter {
         }
 
         @Override
-        public void writeReport(File reportDir) throws IOException {
+        int writeReport(File reportDir) throws IOException {
+            if (infoMap.isEmpty()) return 0;
             File reportTextDir = new File(reportDir, "text");
             reportTextDir.mkdirs();
             File f = new File(reportTextDir, "testng.txt");
@@ -164,6 +155,7 @@ public abstract class SummaryReporter {
                     out.println(e.getKey() + " " + e.getValue());
                 }
             }
+            return infoMap.values().stream().flatMapToInt(info -> IntStream.of(info.count)).sum();
         }
 
         static class Info {
@@ -193,11 +185,6 @@ public abstract class SummaryReporter {
     private static class JUnitSummaryReporter extends SummaryReporter {
 
         private final Map<String, Info> infoMap = new TreeMap<>();
-
-        @Override
-        public boolean isEmpty() {
-            return infoMap.isEmpty();
-        }
 
         static final Pattern infoPattern = Pattern.compile("(?s)\\[ JUnit Containers:.*JUnit Tests:.*]");
         static final Pattern numberPattern = Pattern.compile("[0-9]+");
@@ -240,7 +227,8 @@ public abstract class SummaryReporter {
         }
 
         @Override
-        public void writeReport(File reportDir) throws IOException {
+        int writeReport(File reportDir) throws IOException {
+            if (infoMap.isEmpty()) return 0;
             File reportTextDir = new File(reportDir, "text");
             reportTextDir.mkdirs();
             File f = new File(reportTextDir, "junit.txt");
@@ -249,6 +237,7 @@ public abstract class SummaryReporter {
                     out.println(e.getKey() + " " + e.getValue());
                 }
             }
+            return infoMap.values().stream().flatMapToInt(info -> IntStream.of(info.tests.count)).sum();
         }
 
         static class Counts {

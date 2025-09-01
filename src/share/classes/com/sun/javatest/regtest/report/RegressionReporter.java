@@ -111,12 +111,12 @@ public class RegressionReporter {
                 if (testStats != null)
                     testStats.report(r);
 
-                for (var sr : List.of(
-                        SummaryReporter.forTestNG(params.getWorkDirectory()),
-                        SummaryReporter.forJUnit(params.getWorkDirectory()))) {
-                    if (!sr.isEmpty()) {
-                        sr.writeReport(rd);
-                    }
+                int countTestNG = SummaryReporter.forTestNG(params.getWorkDirectory()).writeReport(rd);
+                int countJUnit = SummaryReporter.forJUnit(params.getWorkDirectory()).writeReport(rd);
+                int sumOfCounts = countTestNG + countJUnit;
+                if (sumOfCounts > 0) {
+                    log.println(String.format("Framework-based tests: %d, TestNG: %d, JUnit: %d",
+                            sumOfCounts, countTestNG, countJUnit));
                 }
             }
             fixupReports(rd, wd);
