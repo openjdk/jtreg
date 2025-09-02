@@ -67,8 +67,6 @@ import java.util.concurrent.locks.ReentrantLock;
 public class JUnitRunner implements MainActionHelper.TestRunner {
     // error message for when "NoClassDefFoundError" are raised accessing JUnit classes
     private static final String JUNIT_NO_DRIVER = "No JUnit driver -- install JUnit JAR file(s) next to jtreg.jar";
-    // this is a temporary flag while transitioning from JUnit 4 to 5
-    private static final boolean JUNIT_RUN_WITH_JUNIT_4 = Flags.get("runWithJUnit4");
 
     private static final String JUNIT_SELECT_PREFIX = "junit-select:";
 
@@ -104,34 +102,7 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
             cl = JUnitRunner.class.getClassLoader();
         }
         Class<?> mainClass = Class.forName(className, false, cl);
-        if (JUNIT_RUN_WITH_JUNIT_4) {
-            runWithJUnit4(mainClass);
-        } else {
-            runWithJUnitPlatform(mainClass);
-        }
-    }
-
-    private static void runWithJUnit4(Class<?> mainClass) throws Exception {
-        org.junit.runner.Result result;
-        try {
-            result = org.junit.runner.JUnitCore.runClasses(mainClass);
-        } catch (NoClassDefFoundError ex) {
-            throw new Exception(JUNIT_NO_DRIVER, ex);
-        }
-        if (!result.wasSuccessful()) {
-            for (org.junit.runner.notification.Failure failure : result.getFailures()) {
-                StringWriter sw = new StringWriter();
-                PrintWriter pw = new PrintWriter(sw);
-                try {
-                    pw.println("JavaTest Message: JUnit Failure: " + failure);
-                    failure.getException().printStackTrace(pw);
-                } finally {
-                    pw.close();
-                }
-                System.err.println(sw.toString());
-            }
-            throw new Exception("JUnit test failure");
-        }
+        runWithJUnitPlatform(mainClass);
     }
 
     private static void runWithJUnitPlatform(Class<?> mainClass) throws Exception {
