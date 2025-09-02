@@ -36,7 +36,6 @@ import java.util.TreeMap;
 import java.util.WeakHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.IntStream;
 
 import com.sun.javatest.TestDescription;
 import com.sun.javatest.TestResult;
@@ -85,7 +84,7 @@ public abstract class SummaryReporter {
     /**
      * Writes a summary report about the tests that executed.
      *
-     * @return the sum of executed tests
+     * @return the sum of executed test counts
      * @param reportDir the directory in which to write the report
      * @throws IOException if there is a problem writing the report
      */
@@ -150,12 +149,15 @@ public abstract class SummaryReporter {
             File reportTextDir = new File(reportDir, "text");
             reportTextDir.mkdirs();
             File f = new File(reportTextDir, "testng.txt");
+            int sum = 0;
             try (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(f)))) {
                 for (Map.Entry<String, Info> e : infoMap.entrySet()) {
-                    out.println(e.getKey() + " " + e.getValue());
+                    Info info = e.getValue();
+                    out.println(e.getKey() + " " + info);
+                    sum += info.count;
                 }
             }
-            return infoMap.values().stream().flatMapToInt(info -> IntStream.of(info.count)).sum();
+            return sum;
         }
 
         static class Info {
@@ -232,12 +234,15 @@ public abstract class SummaryReporter {
             File reportTextDir = new File(reportDir, "text");
             reportTextDir.mkdirs();
             File f = new File(reportTextDir, "junit.txt");
+            int sum = 0;
             try (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(f)))) {
                 for (Map.Entry<String, Info> e: infoMap.entrySet()) {
-                    out.println(e.getKey() + " " + e.getValue());
+                    Info info = e.getValue();
+                    out.println(e.getKey() + " " + info);
+                    sum += info.tests.count;
                 }
             }
-            return infoMap.values().stream().flatMapToInt(info -> IntStream.of(info.tests.count)).sum();
+            return sum;
         }
 
         static class Counts {
