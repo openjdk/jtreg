@@ -64,7 +64,8 @@ $(BUILDDIR)/classes.com.sun.javatest.regtest.ok: \
 		-d $(CLASSDIR) \
 		-encoding ASCII \
 		$(TOOL_DEBUG_FLAGS) \
-		$(JAVAFILES.com.sun.javatest.regtest-tools)
+		$(JAVAFILES.com.sun.javatest.regtest-tools) \
+		$(JAVADIR)/org/junit/jupiter/api/AssertionUtils.java
 	echo "classes built at `date`" > $@
 
 TARGETS.com.sun.javatest.regtest += $(BUILDDIR)/classes.com.sun.javatest.regtest.ok
@@ -237,7 +238,8 @@ PKGS.JAR.jtreg += \
 	com.sun.javatest.regtest.report \
 	com.sun.javatest.regtest.tool \
 	com.sun.javatest.regtest.util \
-	java.lang
+	java.lang \
+	org.junit.jupiter.api
 TARGETS.JAR.jtreg += $(TARGETS.com.sun.javatest.regtest)
 
 FILES.JAR.jtreg=$(CLASSDIR)/META-INF/services/java.util.spi.ToolProvider

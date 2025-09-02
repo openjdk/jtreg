@@ -37,10 +37,11 @@ $(BUILDTESTDIR)/JUnitTrace.othervm.ok: \
 		$(TESTDIR)/junitTrace/  \
 			> $(@:%.ok=%/jt.log) 2>&1 || \
 			true "non-zero exit code from JavaTest intentionally ignored"
-	$(GREP) -s 'Test results: passed: 3; failed: 2' $(@:%.ok=%/jt.log)  > /dev/null
+	$(GREP) -s 'Test results: passed: 3; failed: 3' $(@:%.ok=%/jt.log)  > /dev/null
 	$(GREP) -s "java.lang.NullPointerException: NPE" $(@:%.ok=%/work/NPE.jtr) > /dev/null
 	$(GREP) -s "Intentionally thrown before all" $(@:%.ok=%/work/JupiterLifecycle.jtr) > /dev/null
 	$(GREP) -s "Intentionally thrown after all" $(@:%.ok=%/work/JupiterLifecycle.jtr) > /dev/null
+	$(GREP) -s "Should have used `assertArrayEquals()`" $(@:%.ok=%/work/JupiterAssertEqualsWithArraysTests.jtr) > /dev/null
 	if $(GREP) -s "^\s\s*at " $(@:%.ok=%/work/Pass.jtr) > /dev/null ; then \
 		echo "unexpected text"; exit 1; \
 	fi

@@ -937,6 +937,11 @@ public class RegressionScript extends Script {
             pp.append(locations.absLibClsList(LibLocn.Kind.SYS_MODULE));
         }
 
+        // javatest.jar and jtreg.jar
+        if (include_jtreg) {
+            (testOnBootClassPath ? bcp : cp).append(getJavaTestClassPath());
+        }
+
         // Frameworks:
         if (multiModule) {
             // assert !testOnBootClassPath && !useXPatch()
@@ -970,11 +975,6 @@ public class RegressionScript extends Script {
             // sure to use the proper one for the platform
             cpa = cpa.replace('/', File.separatorChar);
             cp.append(cpa);
-        }
-
-        // javatest.jar and jtreg.jar
-        if (include_jtreg) {
-            (testOnBootClassPath ? bcp : cp).append(getJavaTestClassPath());
         }
 
         Map<PathKind, SearchPath> map = new EnumMap<>(PathKind.class);
