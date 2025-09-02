@@ -115,7 +115,7 @@ public class RegressionReporter {
                 int countJUnit = SummaryReporter.forJUnit(params.getWorkDirectory()).writeReport(rd);
                 int sumOfCounts = countTestNG + countJUnit;
                 if (sumOfCounts > 0) {
-                    log.println(String.format("Framework-based tests: %d, TestNG: %d, JUnit: %d",
+                    log.println(String.format("Framework-based tests: %d = %d TestNG + %d JUnit",
                             sumOfCounts, countTestNG, countJUnit));
                 }
             }
