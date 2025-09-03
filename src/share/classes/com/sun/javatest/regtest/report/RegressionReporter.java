@@ -41,6 +41,7 @@ import java.text.DateFormat;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -115,7 +116,8 @@ public class RegressionReporter {
                 int countJUnit = SummaryReporter.forJUnit(params.getWorkDirectory()).writeReport(rd);
                 int sumOfCounts = countTestNG + countJUnit;
                 if (sumOfCounts > 0) {
-                    log.println(String.format("Framework-based tests: %,d = %,d TestNG + %,d JUnit",
+                    log.println(String.format(Locale.ROOT,
+                            "Framework-based tests: %,d = %,d TestNG + %,d JUnit",
                             sumOfCounts, countTestNG, countJUnit));
                 }
             }
