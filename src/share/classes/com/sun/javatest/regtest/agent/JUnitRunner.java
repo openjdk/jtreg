@@ -55,6 +55,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -69,6 +71,10 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
     private static final String JUNIT_NO_DRIVER = "No JUnit driver -- install JUnit JAR file(s) next to jtreg.jar";
 
     private static final String JUNIT_SELECT_PREFIX = "junit-select:";
+
+    // example "11:12:22.256"
+    private static final DateTimeFormatter HOUR_MIN_SEC_MS_FORMAT =
+            DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
 
     public static void main(String... args) throws Exception {
         main(null, args);
@@ -203,14 +209,16 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
 
         @Override
         public void executionSkipped(TestIdentifier identifier, String reason) {
+            final ZonedDateTime now = ZonedDateTime.now();
             if (verbose.passMode == AgentVerbose.Mode.NONE) return;
             if (identifier.isTest()) {
+                String skippedTime = now.format(HOUR_MIN_SEC_MS_FORMAT);
                 String status = "SKIPPED";
                 String source = toSourceString(identifier);
                 String name = identifier.getDisplayName();
                 lock.lock();
                 try {
-                    printer.printf("%-10s %s '%s' %s%n", status, source, name, reason);
+                    printer.printf("[%s] %-10s %s '%s' %s%n", skippedTime, status, source, name, reason);
                 }
                 finally {
                     lock.unlock();
@@ -220,15 +228,17 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
 
         @Override
         public void executionStarted(TestIdentifier identifier) {
+            final ZonedDateTime now = ZonedDateTime.now();
             startNanosByUniqueId.put(identifier.getUniqueIdObject(), System.nanoTime());
             if (verbose.passMode == AgentVerbose.Mode.NONE) return;
             if (identifier.isTest()) {
+                String startTime = now.format(HOUR_MIN_SEC_MS_FORMAT);
                 String status = "STARTED";
                 String source = toSourceString(identifier);
                 String name = identifier.getDisplayName();
                 lock.lock();
                 try {
-                    printer.printf("%-10s %s '%s'%n", status, source, name);
+                    printer.printf("[%s] %-10s %s '%s'%n", startTime, status, source, name);
                 }
                 finally {
                     lock.unlock();
@@ -238,6 +248,7 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
 
         @Override
         public void executionFinished(TestIdentifier identifier, TestExecutionResult result) {
+            final ZonedDateTime now = ZonedDateTime.now();
             TestExecutionResult.Status status = result.getStatus();
             if (status == TestExecutionResult.Status.SUCCESSFUL) {
                 if (verbose.passMode == AgentVerbose.Mode.NONE) return;
@@ -255,10 +266,11 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
                     result.getThrowable().ifPresent(throwable -> throwable.printStackTrace(printer));
                 }
                 if (identifier.isTest()) {
+                    String finishedTime = now.format(HOUR_MIN_SEC_MS_FORMAT);
                     String source = toSourceString(identifier);
                     String name = identifier.getDisplayName();
                     long millis = duration.toMillis();
-                    printer.printf("%-10s %s '%s' [%dms]%n", status, source, name, millis);
+                    printer.printf("[%s] %-10s %s '%s' [%dms]%n", finishedTime, status, source, name, millis);
                 }
             }
             finally {
