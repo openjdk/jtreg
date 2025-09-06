@@ -412,13 +412,13 @@ public class TestProperties {
                 }
             }
 
-            private Set<String> initDisallowedActions(final Entry parent) {
-                final String val = properties.getProperty("disallowedActions");
+            private Set<String> initDisallowedActions(Entry parent) {
+                String val = properties.getProperty("disallowedActions");
                 if (val != null) {
-                    final Set<String> disallowed = new HashSet<>();
+                    Set<String> disallowed = new HashSet<>();
                     // comma separated values
-                    final String[] actions = val.split(",");
-                    for (final String s : actions) {
+                    String[] actions = val.split(",");
+                    for (String s : actions) {
                         if (s.isBlank()) {
                             continue;
                         }

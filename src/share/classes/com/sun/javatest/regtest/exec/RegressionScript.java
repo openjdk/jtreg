@@ -400,8 +400,8 @@ public class RegressionScript extends Script {
 
         Expr.Context exprContext = params.getExprContext();
         Map<String,String> testProps = getTestProperties();
-        final File testDefinitionFile = getTestDescription().getFile();
-        final Set<String> disallowedActions = properties.getDisallowedActions(testDefinitionFile);
+        File testDefinitionFile = getTestDescription().getFile();
+        Set<String> disallowedActions = properties.getDisallowedActions(testDefinitionFile);
         for (String runCmd : runCmds) {
             // e.g. reason compile/fail/ref=Foo.ref -debug Foo.java
             // where "reason" indicates why the action should run
