@@ -228,7 +228,7 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
 
         @Override
         public void executionStarted(TestIdentifier identifier) {
-            final ZonedDateTime now = ZonedDateTime.now();
+            ZonedDateTime now = ZonedDateTime.now();
             startNanosByUniqueId.put(identifier.getUniqueIdObject(), System.nanoTime());
             if (verbose.passMode == AgentVerbose.Mode.NONE) return;
             if (identifier.isTest()) {
@@ -248,7 +248,7 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
 
         @Override
         public void executionFinished(TestIdentifier identifier, TestExecutionResult result) {
-            final ZonedDateTime now = ZonedDateTime.now();
+            ZonedDateTime now = ZonedDateTime.now();
             TestExecutionResult.Status status = result.getStatus();
             if (status == TestExecutionResult.Status.SUCCESSFUL) {
                 if (verbose.passMode == AgentVerbose.Mode.NONE) return;

@@ -147,21 +147,21 @@ public class TestNGRunner implements MainActionHelper.TestRunner {
 
         @Override
         public void onTestSuccess(ITestResult itr) {
-            final ZonedDateTime now = ZonedDateTime.now();
+            ZonedDateTime now = ZonedDateTime.now();
             successCount.incrementAndGet();
             report(now, InfoKind.TEST, itr);
         }
 
         @Override
         public void onTestFailure(ITestResult itr) {
-            final ZonedDateTime now = ZonedDateTime.now();
+            ZonedDateTime now = ZonedDateTime.now();
             failureCount.incrementAndGet();
             report(now, InfoKind.TEST, itr);
         }
 
         @Override
         public void onTestSkipped(ITestResult itr) {
-            final ZonedDateTime now = ZonedDateTime.now();
+            ZonedDateTime now = ZonedDateTime.now();
             Throwable t = itr.getThrowable();
             if (t != null && !(t instanceof SkipException)) {
                 onTestFailure(itr);
@@ -173,7 +173,7 @@ public class TestNGRunner implements MainActionHelper.TestRunner {
 
         @Override
         public void onTestFailedButWithinSuccessPercentage(ITestResult itr) {
-            final ZonedDateTime now = ZonedDateTime.now();
+            ZonedDateTime now = ZonedDateTime.now();
             failedButWithinSuccessPercentageCount.incrementAndGet();
             report(now, InfoKind.TEST, itr);
         }
@@ -188,21 +188,21 @@ public class TestNGRunner implements MainActionHelper.TestRunner {
 
         @Override
         public void onConfigurationSuccess(ITestResult itr) {
-            final ZonedDateTime now = ZonedDateTime.now();
+            ZonedDateTime now = ZonedDateTime.now();
             configSuccessCount.incrementAndGet();
             report(now, InfoKind.CONFIG, itr);
         }
 
         @Override
         public void onConfigurationFailure(ITestResult itr) {
-            final ZonedDateTime now = ZonedDateTime.now();
+            ZonedDateTime now = ZonedDateTime.now();
             configFailureCount.incrementAndGet();
             report(now, InfoKind.CONFIG, itr);
         }
 
         @Override
         public void onConfigurationSkip(ITestResult itr) {
-            final ZonedDateTime now = ZonedDateTime.now();
+            ZonedDateTime now = ZonedDateTime.now();
             configSkippedCount.incrementAndGet();
             report(now, InfoKind.CONFIG, itr);
         }
