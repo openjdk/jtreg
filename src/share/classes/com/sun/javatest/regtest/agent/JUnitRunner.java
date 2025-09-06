@@ -209,7 +209,7 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
 
         @Override
         public void executionSkipped(TestIdentifier identifier, String reason) {
-            final ZonedDateTime now = ZonedDateTime.now();
+            ZonedDateTime now = ZonedDateTime.now();
             if (verbose.passMode == AgentVerbose.Mode.NONE) return;
             if (identifier.isTest()) {
                 String skippedTime = now.format(HOUR_MIN_SEC_MS_FORMAT);
