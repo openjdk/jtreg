@@ -172,7 +172,7 @@ public class TestProperties {
         return getEntry(file).defaultTimeout;
     }
 
-    public final Set<String> getDisallowedActions(final File file) {
+    public final Set<String> getDisallowedActions(File file) {
         return getEntry(file).disallowedActions;
     }
 
