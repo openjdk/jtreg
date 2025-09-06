@@ -723,8 +723,12 @@ public class CompileAction extends Action {
                     timeoutHandler,
                     section);
         } catch (Agent.ActionTimeout te) {
-            final String msg = "\"" + getName() + "\" action timed out with a timeout of "
+            String msg = "\"" + getName() + "\" action timed out with a timeout of "
                     + timeout + " seconds on agent " + agent.id;
+            if (te.getSuppressedStatus().isPresent()) {
+                Status suppressed = te.getSuppressedStatus().get();
+                msg += "; but completed after timeout - suppressed status: \"" + suppressed + "\"";
+            }
             status = error(msg);
         } catch (Agent.Fault e) {
             if (e.getCause() instanceof IOException)

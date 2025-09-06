@@ -54,6 +54,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -89,6 +90,28 @@ public class Agent {
     // a test action within an agentvm
     static final class ActionTimeout extends Exception {
         private static final long serialVersionUID = 7956108605006221253L;
+
+        private final Status suppressedStatus;
+
+        private ActionTimeout() {
+            this(null);
+        }
+
+        /**
+         * @param suppressedStatus action completion status which will be suppressed in favour
+         *                         of timed out error status. Can be null.
+         */
+        private ActionTimeout(Status suppressedStatus) {
+            this.suppressedStatus = suppressedStatus;
+        }
+
+        /**
+         * {@return the action's completion status that was suppressed in favour of reporting
+         * the timed out error status}
+         */
+        Optional<Status> getSuppressedStatus() {
+            return Optional.ofNullable(this.suppressedStatus);
+        }
     }
 
     // legacy support for logging to stderr
@@ -381,6 +404,7 @@ public class Agent {
                         }
                     });
         }
+        Status actionStatus = null;
         keepAlive.setEnabled(false);
         try {
             captureProcessStreams(trs);
@@ -388,7 +412,8 @@ public class Agent {
                 agentAction.send();
             }
             trace(actionName + ": request sent");
-            return readResults(trs);
+            actionStatus = readResults(trs);
+            return actionStatus;
         } catch (IOException e) {
             trace(actionName + ":  error " + e);
             throw new Fault(e);
@@ -398,7 +423,7 @@ public class Agent {
             keepAlive.setEnabled(true);
             if (alarm.didFire()) {
                 waitForTimeoutHandler(actionName, timeoutHandler, timeoutHandlerDone);
-                throw new ActionTimeout();
+                throw new ActionTimeout(actionStatus);
             }
         }
     }

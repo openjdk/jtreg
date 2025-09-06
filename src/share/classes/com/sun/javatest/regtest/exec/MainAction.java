@@ -719,9 +719,13 @@ public class MainAction extends Action
                     timeout,
                     timeoutHandler,
                     section);
-        } catch (Agent.ActionTimeout e) {
-            final String msg = "\"" + getName() + "\" action timed out with a timeout of "
+        } catch (Agent.ActionTimeout te) {
+            String msg = "\"" + getName() + "\" action timed out with a timeout of "
                     + timeout + " seconds on agent " + agent.id;
+            if (te.getSuppressedStatus().isPresent()) {
+                Status suppressed = te.getSuppressedStatus().get();
+                msg += "; but completed after timeout - suppressed status: \"" + suppressed + "\"";
+            }
             status = error(msg);
         } catch (Agent.Fault e) {
             if (e.getCause() instanceof IOException)
