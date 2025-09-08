@@ -39,6 +39,7 @@ import com.intellij.execution.junit.JavaRunConfigurationProducerBase;
 import com.intellij.lang.ant.config.*;
 import com.intellij.lang.ant.config.impl.AntBeforeRunTask;
 import com.intellij.lang.ant.config.impl.AntBeforeRunTaskProvider;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Comparing;
 import com.intellij.openapi.util.Ref;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -357,13 +358,14 @@ public class JTRegConfigurationProducer extends JavaRunConfigurationProducerBase
     }
 
     public void initBeforeTaskActions(JTRegConfiguration configuration) {
-        AntConfigurationBase antConfiguration = (AntConfigurationBase)AntConfiguration.getInstance(configuration.getProject());
+        Project project = configuration.getProject();
+        AntConfigurationBase antConfiguration = (AntConfigurationBase)AntConfiguration.getInstance(project);
         antConfiguration.ensureInitialized();
-        List<AntBuildTarget> targets = JTRegService.getInstance(configuration.getProject()).getOptTargets(antConfiguration);
+        List<AntBuildTarget> targets = JTRegService.getInstance(project).getOptTargets(antConfiguration);
         if (!targets.isEmpty()) {
             List<BeforeRunTask> beforeTasks = targets.stream().map(target -> {
                 AntBeforeRunTask beforeTask =
-                        AntBeforeRunTaskProvider.getProvider(antConfiguration.getProject(), AntBeforeRunTaskProvider.ID)
+                        AntBeforeRunTaskProvider.getProvider(project, AntBeforeRunTaskProvider.ID)
                                 .createTask(configuration);
                 beforeTask.setTargetName(target.getName());
                 beforeTask.setAntFileUrl(target.getModel().getBuildFile().getVirtualFile().getUrl());
@@ -371,7 +373,7 @@ public class JTRegConfigurationProducer extends JavaRunConfigurationProducerBase
                 return beforeTask;
             }).collect(Collectors.toList());
 
-            RunManagerEx.getInstanceEx(configuration.getProject())
+            RunManagerEx.getInstanceEx(project)
                     .setBeforeRunTasks(configuration, beforeTasks, false);
         }
     }
