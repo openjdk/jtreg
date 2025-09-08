@@ -87,11 +87,13 @@ public class Agent {
     }
 
     // represents a timeout that occurred while executing
-    // a test action within an agentvm
+    // a test action within an agentvm.
+    // This is an internal class and doesn't get propagated to applications
+    // nor is relevant for serialization.
     static final class ActionTimeout extends Exception {
         private static final long serialVersionUID = 7956108605006221253L;
 
-        private final Status suppressedStatus;
+        private transient final Status suppressedStatus;
 
         private ActionTimeout() {
             this(null);
