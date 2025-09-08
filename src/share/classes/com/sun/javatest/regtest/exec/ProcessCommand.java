@@ -267,7 +267,7 @@ public class ProcessCommand
             if (processOut != null) {
                 processOut.close();
             }
-
+            Status status = null;
             try {
                 StatusScanner statusScanner = new StatusScanner();
                 StreamCopier outCopier = new StreamCopier(processIn, out);
@@ -282,8 +282,8 @@ public class ProcessCommand
                 // if the timeout hasn't fired, cancel it as quickly as possible
                 alarm.cancel();
 
-                return getStatus(exitCode, statusScanner.exitStatus());
-
+                status = getStatus(exitCode, statusScanner.exitStatus());
+                return status;
             } catch (InterruptedException e) {
                 alarm.cancel();
                 return Status.error("Program `" + cmd.get(0) + "' interrupted");
@@ -295,12 +295,16 @@ public class ProcessCommand
                 // if the timeout has fired - wait for the timeout handler to finish
                 if (alarm.didFire()) {
                     boolean done = waitForTimeoutHandler(timeoutHandlerDone, timeoutHandler);
-                    String msg = "Program `" + cmd.get(0) + "' timed out";
+                    String msg = "'" + cmd.get(0) + "' timed out after " + timeout + " ms";
                     if (!done) {
                         msg += ": timeout handler did not complete within its own timeout.";
                     }
                     long end = System.currentTimeMillis();
-                    msg += " (timeout set to " + timeout + "ms, elapsed time including timeout handling was " + (end - start) + "ms).";
+                    msg += " (elapsed time including timeout handling " + (end - start) + " ms)";
+                    if (status != null) {
+                        // the command completed after the timeout had fired
+                        msg += "; but completed after timeout - suppressed status: \"" + status + "\"";
+                    }
                     return Status.error(msg);
                 }
             }

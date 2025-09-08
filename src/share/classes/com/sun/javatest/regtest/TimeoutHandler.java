@@ -28,9 +28,12 @@ package com.sun.javatest.regtest;
 import java.io.File;
 import java.io.PrintWriter;
 import java.nio.file.Path;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.concurrent.TimeUnit;
 
 import com.sun.javatest.regtest.agent.Alarm;
+import com.sun.javatest.regtest.exec.Action;
 
 /**
  * Abstract superclass for timeout handlers.
@@ -40,6 +43,10 @@ import com.sun.javatest.regtest.agent.Alarm;
  * alternative implementation may be specified on the {@code jtreg} command line.
  */
 public abstract class TimeoutHandler {
+
+    // example "11:12:22.256"
+    private static final DateTimeFormatter HOUR_MIN_SEC_MS_FORMAT =
+            DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
 
     /**
      * The log to which messages should be written.
@@ -111,6 +118,8 @@ public abstract class TimeoutHandler {
      */
     public final void handleTimeout(Process proc) {
         log.println("Timeout information:");
+        final String startedAt = HOUR_MIN_SEC_MS_FORMAT.format(ZonedDateTime.now());
+        log.println("[" + startedAt + "] starting timeout handler action(s)");
         final long pid = proc.pid();
         Alarm a = (timeout <= 0)
                 ? Alarm.NONE
@@ -122,6 +131,8 @@ public abstract class TimeoutHandler {
             log.println("Timeout handler interrupted: ");
             ex.printStackTrace(log);
         } finally {
+            final String endedAt = HOUR_MIN_SEC_MS_FORMAT.format(ZonedDateTime.now());
+            log.println("[" + endedAt + "] timeout handler action(s) completed");
             a.cancel();
         }
 
