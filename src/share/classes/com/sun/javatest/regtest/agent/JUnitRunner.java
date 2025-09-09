@@ -60,6 +60,8 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * TestRunner to run JUnit tests.
@@ -133,6 +135,7 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
             SummaryGeneratingListener summaryGeneratingListener = new SummaryGeneratingListener();
 
             AgentVerbose verbose = AgentVerbose.ofStringRepresentation(System.getProperty("test.verbose"));
+            Logger.getLogger("org.junit").setLevel(Level.WARNING);
 
             LauncherConfig launcherConfig = LauncherConfig.builder()
                 .addTestExecutionListeners(new PrintingListener(System.err, verbose))
