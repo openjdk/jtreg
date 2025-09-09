@@ -32,7 +32,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 /*
  * @test
- * @bug 7903953
+ * @bug 7903953 7904078
  * @run junit JupiterTempDir
  */
 class JupiterTempDir {

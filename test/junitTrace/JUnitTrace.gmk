@@ -44,6 +44,9 @@ $(BUILDTESTDIR)/JUnitTrace.othervm.ok: \
 	if $(GREP) -s "^\s\s*at " $(@:%.ok=%/work/Pass.jtr) > /dev/null ; then \
 		echo "unexpected text"; exit 1; \
 	fi
+	if $(GREP) -s "^\s\s*CleanupMode.NEVER" $(@:%.ok=%/work/JupiterTempDir.jtr) > /dev/null ; then \
+		echo "unexpected text"; exit 1; \
+	fi
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += \
