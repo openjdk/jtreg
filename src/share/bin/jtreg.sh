@@ -72,8 +72,8 @@ esac
 JTREG_HOME=${JTREG_HOME:-$JT_HOME}      # allow for old version of name
 if [ -n "$JTREG_HOME" ]; then
     if [ ! -r $JTREG_HOME/lib/jtreg.jar ];then
-        echo "Invalid JTREG_HOME=$JTREG_HOME. Cannot find or read $JTREG_HOME/lib/jtreg.jar"
-       exit 1;
+        echo "Invalid JTREG_HOME=$JTREG_HOME. Cannot find or read $JTREG_HOME/lib/jtreg.jar" >&2
+        exit 1
     fi
 else
     # Deduce where script is installed
@@ -94,7 +94,8 @@ else
         p=`dirname "$p"`
     done
     if [ -z "$JTREG_HOME" ]; then
-        echo "Cannot determine JTREG_HOME; please set it explicitly"; exit 1
+        echo "Cannot determine JTREG_HOME; please set it explicitly" >&2
+        exit 1
     fi
 fi
 
@@ -139,8 +140,8 @@ elif [ -n "$wsl" -a -x "$JTREG_JAVA".exe ]; then
 fi
 
 if [ ! -e "$JTREG_JAVA" ]; then
-    echo "No java executable at $JTREG_JAVA"
-    exit 1;
+    echo "No java executable at $JTREG_JAVA" >&2
+    exit 1
 fi
 
 # Verify java version 11 or newer used to run jtreg
@@ -149,11 +150,11 @@ version=`"$JTREG_JAVA" -classpath "${JTREG_HOME}/lib/jtreg.jar" com.sun.javatest
         grep 'java.version=' | sed -e 's/^.*=//' -e 's/^1\.//' -e 's/\([1-9][0-9]*\).*/\1/'`
 
 if [ -z "$version" ]; then
-    echo "Cannot determine version of java to run jtreg"
-    exit 1;
+    echo "Cannot determine version of java to run jtreg" >&2
+    exit 1
 elif [ "$version" -lt 11 ]; then
-    echo "java version 11 or later is required to run jtreg"
-    exit 1;
+    echo "java version 11 or later is required to run jtreg" >&2
+    exit 1
 fi
 
 # Separate out -J* options for the JVM
