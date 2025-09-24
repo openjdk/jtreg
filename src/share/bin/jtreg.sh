@@ -162,6 +162,8 @@ DUALCASE=1  # for MKS: make case statement case-sensitive (6709498)
 saveIFS="$IFS"
 nl='
 '
+unset javaOpts
+unset jtregOpts
 for i in "$@" ; do
     IFS=
     if [ -n "$driveDir" ]; then i=`echo $i | sed -e 's|/'$driveDir'/\([A-Za-z]\)/|\1:/|'` ; fi
