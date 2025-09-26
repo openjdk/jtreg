@@ -31,7 +31,6 @@ import java.io.StringWriter;
 import java.lang.reflect.Method;
 import java.time.Duration;
 import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -51,6 +50,7 @@ import org.testng.TestNG;
 import org.testng.TestNGException;
 import org.testng.reporters.XMLReporter;
 
+import static com.sun.javatest.regtest.agent.Utils.HOUR_MIN_SEC_MS_FORMAT;
 import static org.testng.ITestResult.FAILURE;
 import static org.testng.ITestResult.SKIP;
 import static org.testng.ITestResult.SUCCESS;
@@ -60,10 +60,6 @@ import static org.testng.ITestResult.SUCCESS_PERCENTAGE_FAILURE;
  * TestRunner to run TestNG tests.
  */
 public class TestNGRunner implements MainActionHelper.TestRunner {
-
-    // example "11:12:22.256"
-    private static final DateTimeFormatter HOUR_MIN_SEC_MS_FORMAT =
-            DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
 
     public static void main(String... args) throws Exception {
         main(null, args);

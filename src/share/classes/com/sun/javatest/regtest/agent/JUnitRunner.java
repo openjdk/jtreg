@@ -56,7 +56,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -64,6 +63,8 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import static com.sun.javatest.regtest.agent.Utils.HOUR_MIN_SEC_MS_FORMAT;
 
 /**
  * TestRunner to run JUnit tests.
@@ -73,10 +74,6 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
     private static final String JUNIT_NO_DRIVER = "No JUnit driver -- install JUnit JAR file(s) next to jtreg.jar";
 
     private static final String JUNIT_SELECT_PREFIX = "junit-select:";
-
-    // example "11:12:22.256"
-    private static final DateTimeFormatter HOUR_MIN_SEC_MS_FORMAT =
-            DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
 
     public static void main(String... args) throws Exception {
         main(null, args);
