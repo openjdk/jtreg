@@ -26,15 +26,12 @@
 package com.sun.javatest.regtest.exec;
 
 
-import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.net.InetAddress;
@@ -60,13 +57,16 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.WeakHashMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import com.sun.javatest.Status;
 import com.sun.javatest.TestResult;
 import com.sun.javatest.WorkDirectory;
 import com.sun.javatest.regtest.TimeoutHandler;
 import com.sun.javatest.regtest.agent.ActionHelper;
+import com.sun.javatest.regtest.agent.AgentProcessLogger;
 import com.sun.javatest.regtest.agent.AgentServer;
 import com.sun.javatest.regtest.agent.Alarm;
 import com.sun.javatest.regtest.agent.Flags;
@@ -186,8 +186,9 @@ public class Agent {
             env.clear();
             env.putAll(envVars);
             agentServerProcess = process = pb.start();
-            copyAgentProcessStream("stdout", process.getInputStream());
-            copyAgentProcessStream("stderr", process.getErrorStream());
+
+            processLogger = new AgentProcessLogger(process);
+            startAgentLog();
 
             try {
                 final int ACCEPT_TIMEOUT = (int) (60 * 1000 * timeoutFactor);
@@ -219,29 +220,10 @@ public class Agent {
     }
 
     /**
-     * Reads the output written by an agent process, and copies it either to
-     * the current TestResult object (when one is available) or to the agent's
-     * log file, if output is found while there is no test using the agent.
-     *
-     * @param name the name of the stream
-     * @param in   the stream
+     * Writes process input and error stream to the agent log.
      */
-    void copyAgentProcessStream(final String name, final InputStream in) {
-        Thread t = new Thread() {
-            @Override
-            public void run() {
-                try (BufferedReader inReader = new BufferedReader(new InputStreamReader(in))) {
-                    String line;
-                    while ((line = inReader.readLine()) != null) {
-                        handleProcessStreamLine(name, line);
-                    }
-                } catch (IOException e) {
-                    // ignore
-                }
-            }
-        };
-        t.setDaemon(true);
-        t.start();
+    private void startAgentLog() {
+        processLogger.startLogging( (String stream, String logLine) -> log(stream + ": " + logLine));
     }
 
     /**
@@ -276,30 +258,35 @@ public class Agent {
      * @param section the test result section to be used, or {@code null}
      */
     private synchronized void captureProcessStreams(TestResult.Section section) {
+        if (currentTestResultSection != section) {
+            try {
+                processLogger.stopLogging();
+            } catch (InterruptedException | ExecutionException | TimeoutException ex) {
+                log("Failed to stop agent logging" + ex);
+            }
+        }
         currentTestResultSection = section;
         if (currentTestResultSection == null) {
             for (PrintWriter pw : processStreamWriters.values()) {
                 pw.close();
             }
             processStreamWriters.clear();
+            startAgentLog();
+        } else {
+            processLogger.startLogging(this::handleProcessStreamLine);
         }
     }
 
     /**
      * Saves a line of output that was written by the agent to stdout (fd1) or stderr (fd2).
-     * If there is a current test result section, the line is saved there;
-     * otherwise it is written to the agent log file.
+     * If there is a current test result section, the line is saved there.
      *
      * @param name the name of the stream from which the line was read
      * @param line the line that was read
      */
     private synchronized void handleProcessStreamLine(String name, String line) {
-        if (currentTestResultSection == null) {
-            log(name + ": " + line);
-        } else {
-            processStreamWriters.computeIfAbsent(name, currentTestResultSection::createOutput)
-                    .println(line);
-        }
+        processStreamWriters.computeIfAbsent(name, currentTestResultSection::createOutput)
+                .println(line);
     }
 
     public boolean matches(File execDir, JDK jdk, List<String> vmOpts) {
@@ -409,18 +396,25 @@ public class Agent {
         Status actionStatus = null;
         keepAlive.setEnabled(false);
         try {
-            captureProcessStreams(trs);
             synchronized (out) {
                 agentAction.send();
             }
+            // The agent sends process output separator in response
+            // to receiving a command. Wait for the separator and
+            // redirect log to the test result section
+            captureProcessStreams(trs);
             trace(actionName + ": request sent");
             actionStatus = readResults(trs);
+            // The agent will be disposed on exception.
+            // Reset the agent log only if the agent can be reused.
+            // The agent will send process output separator on
+            // command execution.
+            captureProcessStreams(null);
             return actionStatus;
         } catch (IOException e) {
             trace(actionName + ":  error " + e);
             throw new Fault(e);
         } finally {
-            captureProcessStreams(null);
             alarm.cancel();
             keepAlive.setEnabled(true);
             if (alarm.didFire()) {
@@ -509,7 +503,9 @@ public class Agent {
             alarm.cancel();
             Thread.interrupted(); // clear any interrupted status
         }
-
+        // Ensure that thread pool threads are shut down
+        // and the agent log is fully written
+        processLogger.shutdown();
         log("Closed");
     }
 
@@ -626,6 +622,7 @@ public class Agent {
     final List<String> vmOpts;
     final File execDir;
     final Process process;
+    final AgentProcessLogger processLogger;
     final DataInputStream in;
     final DataOutputStream out;
     final KeepAlive keepAlive;
