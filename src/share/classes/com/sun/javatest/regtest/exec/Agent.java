@@ -258,12 +258,10 @@ public class Agent {
      * @param section the test result section to be used, or {@code null}
      */
     private synchronized void captureProcessStreams(TestResult.Section section) {
-        if (currentTestResultSection != section) {
-            try {
-                processLogger.stopLogging();
-            } catch (InterruptedException | ExecutionException | TimeoutException ex) {
-                log("Failed to stop agent logging" + ex);
-            }
+        try {
+            processLogger.stopLogging();
+        } catch (InterruptedException | ExecutionException | TimeoutException ex) {
+            log("Failed to stop agent logging" + ex);
         }
         currentTestResultSection = section;
         if (currentTestResultSection == null) {
