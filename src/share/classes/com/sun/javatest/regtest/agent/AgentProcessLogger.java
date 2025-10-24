@@ -28,14 +28,16 @@ package com.sun.javatest.regtest.agent;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 /**
  * Handles stdout/stderr process output from the agent.
@@ -49,14 +51,11 @@ public class AgentProcessLogger {
      * @param p agent process
      */
     public AgentProcessLogger(Process p) {
-        executorService = Executors.newFixedThreadPool(2, new ThreadFactory() {
-            @Override
-            public Thread newThread(Runnable runnable) {
+        executorService = Executors.newFixedThreadPool(2, runnable -> {
                 Thread th = new Thread(runnable);
                 th.setDaemon(true);
                 return th;
-            }
-        });
+            });
         stdOut = new BufferedReader(new InputStreamReader(p.getInputStream()));
         stdErr = new BufferedReader(new InputStreamReader(p.getErrorStream()));
     }
@@ -67,13 +66,20 @@ public class AgentProcessLogger {
      * @param logConsumer log consumer, has two parameters - stream name and
      *                    the log line
      */
-    public void startLogging(BiConsumer<String, String> logConsumer) {
+    public void startLogging(BiConsumer<String, String> logConsumer,
+                             Map<String, PrintWriter> processStreamWriters,
+                             Function<String, PrintWriter> mappingFunction) {
         if (inputDone != null || errorDone != null) {
             throw new RuntimeException("call stopLogging first");
+        }
+        if (processStreamWriters != null) {
+            processStreamWriters.computeIfAbsent("stdout", mappingFunction);
+            processStreamWriters.computeIfAbsent("stderr", mappingFunction);
         }
         inputDone = executorService.submit(() -> captureLog("stdout", stdOut, logConsumer));
         errorDone = executorService.submit(() -> captureLog("stderr", stdErr, logConsumer));
     }
+
 
     /**
      * Waits for the logging tasks to finish
@@ -81,8 +87,8 @@ public class AgentProcessLogger {
      * @param timeout shutdown timeout
      * @param timeUnit shutdown time unit
      *
-     * @throws ExecutionException
-     * @throws InterruptedException
+     * @throws ExecutionException the logger threw an unexpected exception
+     * @throws InterruptedException the logger was interrupted
      * @throws TimeoutException     logging task failed to stop within 60 seconds
      */
     public void stopLogging(int timeout, TimeUnit timeUnit) throws ExecutionException, InterruptedException, TimeoutException {
@@ -116,7 +122,7 @@ public class AgentProcessLogger {
      */
     private Void captureLog(String streamName, BufferedReader reader, BiConsumer<String, String> consumer) {
         try {
-            String line = null;
+            String line;
             while ((line = reader.readLine()) != null) {
                 int endMarker  = line.indexOf(AgentServer.PROCESS_OUTPUT_SEPARATOR);
                 if (endMarker < 0) {

@@ -223,7 +223,8 @@ public class Agent {
      * Writes process input and error stream to the agent log.
      */
     private void startAgentLog() {
-        processLogger.startLogging( (String stream, String logLine) -> log(stream + ": " + logLine));
+        processLogger.startLogging( (String stream, String logLine) -> log(stream + ": " + logLine),
+            null, null);
     }
 
     /**
@@ -273,9 +274,8 @@ public class Agent {
                 Objects.requireNonNull(processStreamWriters);
                 Objects.requireNonNull(name);
                 Objects.requireNonNull(line);
-                processStreamWriters.computeIfAbsent(name, currentTestResultSection::createOutput)
-                        .println(line);
-            });
+                processStreamWriters.get(name).println(line);
+            }, processStreamWriters, currentTestResultSection::createOutput);
         }
     }
 
