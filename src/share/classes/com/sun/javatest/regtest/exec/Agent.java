@@ -257,12 +257,9 @@ public class Agent {
      *
      * @param section the test result section to be used, or {@code null}
      */
-    private synchronized void captureProcessStreams(TestResult.Section section) {
-        try {
-            processLogger.stopLogging();
-        } catch (InterruptedException | ExecutionException | TimeoutException ex) {
-            log("Failed to stop agent logging" + ex);
-        }
+    private synchronized void captureProcessStreams(TestResult.Section section, int timeout, TimeUnit timeUnit)
+                   throws InterruptedException, ExecutionException, TimeoutException {
+        processLogger.stopLogging(timeout, timeUnit);
         currentTestResultSection = section;
         if (currentTestResultSection == null) {
             for (PrintWriter pw : processStreamWriters.values()) {
@@ -395,16 +392,16 @@ public class Agent {
             // The agent sends process output separator in response
             // to receiving a command. Wait for the separator and
             // redirect log to the test result section
-            captureProcessStreams(trs);
+            captureProcessStreams(trs, timeout, TimeUnit.SECONDS);
             trace(actionName + ": request sent");
             actionStatus = readResults(trs);
             // The agent will be disposed on exception.
             // Reset the agent log only if the agent can be reused.
             // The agent will send process output separator on
             // command execution.
-            captureProcessStreams(null);
+            captureProcessStreams(null, timeout, TimeUnit.SECONDS);
             return actionStatus;
-        } catch (IOException e) {
+        } catch (InterruptedException | TimeoutException | ExecutionException | IOException e) {
             trace(actionName + ":  error " + e);
             throw new Fault(e);
         } finally {
@@ -498,7 +495,7 @@ public class Agent {
         }
         // Ensure that thread pool threads are shut down
         // and the agent log is fully written
-        processLogger.shutdown();
+        processLogger.shutdown(60, TimeUnit.SECONDS);
         log("Closed");
     }
 

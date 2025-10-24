@@ -78,23 +78,29 @@ public class AgentProcessLogger {
     /**
      * Waits for the logging tasks to finish
      *
+     * @param timeout shutdown timeout
+     * @param timeUnit shutdown time unit
+     *
      * @throws ExecutionException
      * @throws InterruptedException
      * @throws TimeoutException     logging task failed to stop within 60 seconds
      */
-    public void stopLogging() throws ExecutionException, InterruptedException, TimeoutException {
-        inputDone.get(60, TimeUnit.SECONDS);
-        errorDone.get(60, TimeUnit.SECONDS);
+    public void stopLogging(int timeout, TimeUnit timeUnit) throws ExecutionException, InterruptedException, TimeoutException {
+        inputDone.get(timeout, timeUnit);
+        errorDone.get(timeout, timeUnit);
         inputDone = null;
         errorDone = null;
     }
 
     /**
      * Wait for logging tasks to finish and shutdown the thread pool
+     *
+     * @param timeout shutdown timeout
+     * @param timeUnit shutdown time unit
      */
-    public void shutdown() {
+    public void shutdown(int timeout, TimeUnit timeUnit) {
         try {
-            stopLogging();
+            stopLogging(timeout, timeUnit);
         } catch (ExecutionException | InterruptedException | TimeoutException ex) {
             // ignore exception, the process is terminating
         }
