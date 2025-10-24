@@ -112,10 +112,16 @@ public class AgentProcessLogger {
         try {
             String line = null;
             while ((line = reader.readLine()) != null) {
-                if (AgentServer.PROCESS_OUTPUT_SEPARATOR.equals(line)) {
-                    break;
+                int endMarker  = line.indexOf(AgentServer.PROCESS_OUTPUT_SEPARATOR);
+                if (endMarker < 0) {
+                    consumer.accept(streamName, line);
+                    continue;
                 }
-                consumer.accept(streamName, line);
+                if (endMarker > 0) {
+                    line = line.substring(0, endMarker);
+                    consumer.accept(streamName, line);
+                }
+                break;
             }
         } catch (IOException ex) {
             // ignore the exception, the reader might be closed
