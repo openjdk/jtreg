@@ -271,20 +271,15 @@ public class Agent {
             processStreamWriters.clear();
             startAgentLog();
         } else {
-            processLogger.startLogging(this::handleProcessStreamLine);
+            processLogger.startLogging((String name, String line) -> {
+                Objects.requireNonNull(currentTestResultSection);
+                Objects.requireNonNull(processStreamWriters);
+                Objects.requireNonNull(name);
+                Objects.requireNonNull(line);
+                processStreamWriters.computeIfAbsent(name, currentTestResultSection::createOutput)
+                        .println(line);
+            });
         }
-    }
-
-    /**
-     * Saves a line of output that was written by the agent to stdout (fd1) or stderr (fd2).
-     * If there is a current test result section, the line is saved there.
-     *
-     * @param name the name of the stream from which the line was read
-     * @param line the line that was read
-     */
-    private synchronized void handleProcessStreamLine(String name, String line) {
-        processStreamWriters.computeIfAbsent(name, currentTestResultSection::createOutput)
-                .println(line);
     }
 
     public boolean matches(File execDir, JDK jdk, List<String> vmOpts) {
