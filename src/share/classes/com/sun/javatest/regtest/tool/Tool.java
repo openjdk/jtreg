@@ -1993,7 +1993,7 @@ public class Tool {
 
                 h.addObserver(new BasicObserver() {
                     @Override
-                    public void error(String msg) {
+                    public synchronized void error(String msg) {
                         Tool.this.error(msg);
                     }
                 });
