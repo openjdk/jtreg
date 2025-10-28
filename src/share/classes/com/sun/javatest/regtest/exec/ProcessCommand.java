@@ -328,6 +328,18 @@ public class ProcessCommand
                 ProcessUtils.destroyForcibly(process);
 
                 timeoutHandlerDone.countDown();
+
+                // unlock the main thread if the process fails
+                // to exit
+                try {
+                    if (!process.waitFor(timeout, TimeUnit.SECONDS)) {
+                        victim.interrupt();
+                    }
+                }
+                catch (InterruptedException e ) {
+                    log.println("Interrupted exception: " + e);
+                    victim.interrupt();
+                }
             }
         };
         timeoutHandlerThread.setName("Timeout Handler for " + cmd.get(0));
