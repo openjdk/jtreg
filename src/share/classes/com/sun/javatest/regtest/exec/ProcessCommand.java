@@ -336,7 +336,7 @@ public class ProcessCommand
                         victim.interrupt();
                     }
                 }
-                catch (InterruptedException e ) {
+                catch (InterruptedException e) {
                     log.println("Interrupted exception: " + e);
                     victim.interrupt();
                 }
