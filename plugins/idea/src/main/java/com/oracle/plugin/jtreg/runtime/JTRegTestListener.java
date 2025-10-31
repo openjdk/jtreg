@@ -296,17 +296,18 @@ public class JTRegTestListener implements Harness.Observer {
                             continue outer;
                         }
                         stdErr.add(line);
-                    } while (!line.startsWith("SUCCESSFUL") && !line.startsWith("ABORTED")
-                            && !line.startsWith("SKIPPED") && !line.startsWith("FAILED"));
+                    } while (!line.contains("SUCCESSFUL") && !line.contains("ABORTED")
+                            && !line.contains("SKIPPED") && !line.contains("FAILED"));
 
                     TestMethod.Result result;
-                    if (line.startsWith("SKIPPED")) {
+                    if (line.contains("SKIPPED")) {
                         result = TestMethod.Result.SKIPPED;
-                    } else if (line.startsWith("FAILED") || line.startsWith("ABORTED")) {
+                    } else if (line.contains("FAILED") || line.contains("ABORTED")) {
                         result = TestMethod.Result.FAILED;
                     } else {
                         result = TestMethod.Result.SUCCESSFUL;
                     }
+
                     String[] lineParts = line.split(" ");
                     String duration = lineParts[lineParts.length -1]; // e.g. '[64ms]'
                     duration = duration.substring(1, duration.length() - 3); // drop '[' and 'ms]'
