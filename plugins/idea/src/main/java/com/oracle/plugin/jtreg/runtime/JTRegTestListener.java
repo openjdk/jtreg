@@ -106,7 +106,7 @@ public class JTRegTestListener implements Harness.Observer {
         if (status.isFailed() || status.isError()) {
             tcTestFailed("jtreg", status.getReason());
         } else if (status.isNotRun()) {
-            tcTestIgnored("jtreg");
+            tcTestIgnored("jtreg", status.getReason());
         }
 
         String duration = null;
@@ -157,7 +157,7 @@ public class JTRegTestListener implements Harness.Observer {
         tcTestStdErr(test.name(), test.stderrLines());
         switch (test.result()) {
             case FAILED -> tcTestFailed(test.name(), "");
-            case SKIPPED -> tcTestIgnored(test.name());
+            case SKIPPED -> tcTestIgnored(test.name(), test.skipReason());
         }
         tcTestFinished(test.name(), test.duration());
     }
@@ -218,8 +218,9 @@ public class JTRegTestListener implements Harness.Observer {
                 "message='" + escapeName(message) + "' ]");
     }
 
-    private static void tcTestIgnored(String testName) {
-        System.out.println("##teamcity[testIgnored name='" + escapeName(testName) + "']");
+    private static void tcTestIgnored(String testName, String reason) {
+        System.out.println("##teamcity[testIgnored name='" + escapeName(testName) + "' "
+                + "message='" + escapeName(reason) + "']");
     }
 
     private static void tcTestFinished(String testName, String duration) {
@@ -244,11 +245,11 @@ public class JTRegTestListener implements Harness.Observer {
 
     private static class JUnitResults {
         private record TestMethod(String name, String methodName, Iteration iteration, Result result,
-                                  List<String> stderrLines, String duration) {
+                                  List<String> stderrLines, String duration, String skipReason) {
             enum Result {SUCCESSFUL, SKIPPED, FAILED}
 
             private record Iteration(int num, String name) {
-                private static final Pattern PATTERN = Pattern.compile("'\\[(?<num>\\d+)] (?<name>.*)'");
+                private static final Pattern PATTERN = Pattern.compile("\\[(?<num>\\d+)] (?<name>.*)");
 
                 private static Iteration parse(String iteration) {
                     Matcher m = PATTERN.matcher(iteration);
@@ -269,7 +270,10 @@ public class JTRegTestListener implements Harness.Observer {
         }
 
         private static final Pattern JUNIT_TEST_START = Pattern.compile(
-                "STARTED\\s+(?<class>[A-Za-z0-9._$]+)::(?<method>[A-Za-z0-9._$]+)\\s+(?<rest>.*)");
+                "(?<kind>STARTED|SKIPPED)\\s+(?<class>[A-Za-z0-9._$]+)::(?<method>[A-Za-z0-9._$]+)\\s+'(?<name>[^']+)'(?: (?<reason>.*))?");
+
+        private static final Pattern JUNIT_TEST_END = Pattern.compile(
+                "(?<status>SUCCESSFUL|ABORTED|FAILED)\\s+\\S+ '[^']+' \\[(?<milis>\\d+)ms]");
 
         private static Collection<TestClass> parse(Iterator<String> itt) {
             Map<String, TestClass> classesByName = new HashMap<>();
@@ -285,34 +289,41 @@ public class JTRegTestListener implements Harness.Observer {
                     stdErr.add(line);
                     String className = m.group("class");
                     String methodName = m.group("method");
-                    TestMethod.Iteration iteration = TestMethod.Iteration.parse(m.group("rest"));
+                    TestMethod.Iteration iteration = TestMethod.Iteration.parse(m.group("name"));
                     String displayTestName = methodName + (iteration != null ? " [" + iteration.name() + "]" : "");
 
-                    do {
-                        line = itt.next();
-                        if (line.startsWith("JT Harness has limited the test output")) {
-                            // jtharness truncated the output. Discard this result
-                            // and look for the next one.
-                            continue outer;
-                        }
-                        stdErr.add(line);
-                    } while (!line.contains("SUCCESSFUL") && !line.contains("ABORTED")
-                            && !line.contains("SKIPPED") && !line.contains("FAILED"));
-
                     TestMethod.Result result;
-                    if (line.contains("SKIPPED")) {
-                        result = TestMethod.Result.SKIPPED;
-                    } else if (line.contains("FAILED") || line.contains("ABORTED")) {
-                        result = TestMethod.Result.FAILED;
+                    String duration = null;
+                    String skipReason = null;
+                    String kind = m.group("kind");
+                    if (kind.equals("STARTED")) {
+                        Matcher endMatcher;
+                        do {
+                            line = itt.next();
+                            if (line.startsWith("JT Harness has limited the test output")) {
+                                // jtharness truncated the output. Discard this result
+                                // and look for the next one.
+                                continue outer;
+                            }
+                            stdErr.add(line);
+                            endMatcher = JUNIT_TEST_END.matcher(line);
+                        } while (!endMatcher.find());
+
+                        String status = endMatcher.group("status");
+                        if (status.contains("FAILED") || status.contains("ABORTED")) {
+                            result = TestMethod.Result.FAILED;
+                        } else {
+                            result = TestMethod.Result.SUCCESSFUL;
+                        }
+
+                        duration = endMatcher.group("milis"); // may be null for 'SKIPPED'
                     } else {
-                        result = TestMethod.Result.SUCCESSFUL;
+                        result = TestMethod.Result.SKIPPED;
+                        skipReason = m.group("reason");
                     }
 
-                    String[] lineParts = line.split(" ");
-                    String duration = lineParts[lineParts.length -1]; // e.g. '[64ms]'
-                    duration = duration.substring(1, duration.length() - 3); // drop '[' and 'ms]'
-
-                    TestMethod test = new TestMethod(displayTestName, methodName, iteration, result, stdErr, duration);
+                    TestMethod test = new TestMethod(displayTestName, methodName,
+                            iteration, result, stdErr, duration, skipReason);
                     String[] nestedClasses = dropPackage(className).split("\\$");
                     String classNameForLookup = className.replace('$', '.');
                     TestClass current = classesByName.computeIfAbsent(nestedClasses[0],
