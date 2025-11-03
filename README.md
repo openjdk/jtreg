@@ -12,14 +12,11 @@
 * For details on running JDK tests using the JDK _make test_ framework, see
   [Using "make test" (the run-test framework)][make-test].
 
+* For details on running jtreg tests using the IntelliJ IDE, see
+  [plugins/idea/README.md](plugins/idea/README.md)
+
 [faq]: https://openjdk.org/jtreg/faq.html
 [tagspec]: https://openjdk.org/jtreg/tag-spec.html
 [make-test]: https://github.com/openjdk/jdk/blob/master/doc/testing.md
 
 ## Using IntelliJ IDEA
-
-The `jtreg` repo also contains a plugin for the IntelliJ IDEA IDE.
-This is a convenience plugin which adds `jtreg` capabilities to the IDE.
-With this plugin, OpenJDK developers can write, run, and debug `jtreg` tests
-without leaving their IDE environment.  For more details, see the file
-[plugins/idea/README.md](plugins/idea/README.md) in this repo.
