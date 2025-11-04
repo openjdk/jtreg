@@ -332,9 +332,17 @@ public class ProcessCommand
 
                 timeoutHandlerDone.countDown();
 
-                // JDK 1.8 introduces a Process.waitFor(timeout) method which could
-                // be used here. We need run on 1.5 so using interrupt() instead.
-                victim.interrupt();
+                // unlock the main thread if the process fails
+                // to exit
+                try {
+                    if (!process.waitFor(timeout, TimeUnit.SECONDS)) {
+                        victim.interrupt();
+                    }
+                }
+                catch (InterruptedException e) {
+                    log.println("Interrupted exception: " + e);
+                    victim.interrupt();
+                }
             }
         };
         timeoutHandlerThread.setName("Timeout Handler for " + cmd.get(0));
