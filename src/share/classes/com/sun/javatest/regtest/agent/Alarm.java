@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2023, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -26,11 +26,14 @@
 package com.sun.javatest.regtest.agent;
 
 import java.io.PrintWriter;
+import java.time.ZonedDateTime;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+
+import static com.sun.javatest.regtest.agent.Utils.HOUR_MIN_SEC_MS_FORMAT;
 
 /**
  * Provides a lightweight way of setting up and canceling timeouts.
@@ -141,11 +144,16 @@ public class Alarm  {
      * Shared logic for all Alarms
      */
     protected void run() {
+        ZonedDateTime now = ZonedDateTime.now();
         if (msgOut != null) {
             if (count == 0) {
-                msgOut.println(String.format("Timeout signalled after %d seconds", TimeUnit.SECONDS.convert(delay, delayUnit)));
+                msgOut.println(String.format("[%s] Timeout signalled after %d seconds",
+                        HOUR_MIN_SEC_MS_FORMAT.format(now),
+                        TimeUnit.SECONDS.convert(delay, delayUnit)));
             } else if (count % 100 == 0) {
-                msgOut.println(String.format("Timeout refired %d times", count));
+                msgOut.println(String.format("[%s] Timeout refired %d times",
+                        HOUR_MIN_SEC_MS_FORMAT.format(now),
+                        count));
             }
         }
         count++;
