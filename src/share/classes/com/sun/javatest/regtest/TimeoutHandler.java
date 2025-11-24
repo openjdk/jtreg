@@ -29,11 +29,10 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.concurrent.TimeUnit;
 
 import com.sun.javatest.regtest.agent.Alarm;
-import com.sun.javatest.regtest.exec.Action;
+import static com.sun.javatest.regtest.agent.Utils.HOUR_MIN_SEC_MS_FORMAT;
 
 /**
  * Abstract superclass for timeout handlers.
@@ -43,10 +42,6 @@ import com.sun.javatest.regtest.exec.Action;
  * alternative implementation may be specified on the {@code jtreg} command line.
  */
 public abstract class TimeoutHandler {
-
-    // example "11:12:22.256"
-    private static final DateTimeFormatter HOUR_MIN_SEC_MS_FORMAT =
-            DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
 
     /**
      * The log to which messages should be written.

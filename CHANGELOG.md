@@ -1,7 +1,20 @@
-## [Unreleased](https://git.openjdk.org/jtreg/compare/jtreg-8+2...master)
+## [Unreleased](https://git.openjdk.org/jtreg/compare/jtreg-8.1+1...master)
+
+_nothing noteworthy, yet_
+
+## [8.1](https://git.openjdk.org/jtreg/compare/jtreg-8+2...jtreg-8.1+1)
+
+* Improve time(out)-related logging:
+    * [CODETOOLS-7903816](https://bugs.openjdk.org/browse/CODETOOLS-7903816)
+    * [CODETOOLS-7903894](https://bugs.openjdk.org/browse/CODETOOLS-7903894)
+    * [CODETOOLS-7904067](https://bugs.openjdk.org/browse/CODETOOLS-7904067)
+    * [CODETOOLS-7904088](https://bugs.openjdk.org/browse/CODETOOLS-7904088)
 
 * `XAUTHORITY` environment variable is now preserved when launching tests on Unix-like platforms.
   [CODETOOLS-7904016](https://bugs.openjdk.org/browse/CODETOOLS-7904016)
+
+* Update bundled dependencies:
+    * JUnit 5.13.4 [CODETOOLS-7904070](https://bugs.openjdk.org/browse/CODETOOLS-7904070)
 
 ## [8](https://git.openjdk.org/jtreg/compare/jtreg-7.5.2+1...jtreg-8+2)
 
