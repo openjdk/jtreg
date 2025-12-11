@@ -440,9 +440,12 @@ public class CompileAction extends Action {
             ByteArrayOutputStream toolOutput = new ByteArrayOutputStream();
             ByteArrayOutputStream toolStdout = new ByteArrayOutputStream();
             ByteArrayOutputStream toolStderr = new ByteArrayOutputStream();
-            try {
-                Object tool = createAsmToolInstance(constr, new PrintStream(toolOutput),
-                        new PrintStream(toolStdout), new PrintStream(toolStderr));
+
+            try (var output = new PrintStream(toolOutput);
+                 var stdout = new PrintStream(toolStdout);
+                 var stderr = new PrintStream(toolStderr)) {
+
+                Object tool = createAsmToolInstance(constr, output, stdout, stderr);
                 Method m = toolClass.getMethod("compile", String[].class);
                 Object r = m.invoke(tool, new Object[] { toolArgs.toArray(new String[0]) });
                 if (r instanceof Boolean) {
