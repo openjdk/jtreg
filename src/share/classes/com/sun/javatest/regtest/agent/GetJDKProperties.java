@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -25,9 +25,15 @@
 
 package com.sun.javatest.regtest.agent;
 
+import java.io.BufferedOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -36,12 +42,17 @@ import java.util.concurrent.Callable;
 /**
   * Get properties for the JDK under test.
   * Usage: {@code
-  *   java GetJDKProperties [--system-properties] [--modules] <class-name>*
+  *   java GetJDKProperties --output-file=<file> [--system-properties] [--modules] <class-name>*
   * }
   */
 public class GetJDKProperties {
     public static class ClientCodeException extends Exception {
         private static final long serialVersionUID = 0;
+
+        ClientCodeException(String msg) {
+            super(msg);
+        }
+
         ClientCodeException(String msg, Throwable t) {
             super(msg, t);
         }
@@ -66,13 +77,24 @@ public class GetJDKProperties {
     public static void run(String... args) throws ClientCodeException, IOException {
         boolean needSystemProperties = false;
         String needModulesArg = null;
+        Path outputFile = null;
         Properties p = new Properties();
         for (String arg: args) {
             if (arg.equals("--system-properties")) {
                 needSystemProperties = true;
             } else if (arg.startsWith("--modules=")) {
                 needModulesArg = arg.substring(arg.indexOf("=") + 1);
+            } else if (arg.startsWith("--output-file=")) {
+                String val = arg.substring(arg.indexOf("=") + 1);
+                try {
+                    outputFile = Paths.get(val);
+                } catch (InvalidPathException ipe) {
+                    throw new IOException("invalid output file path: " + val, ipe);
+                }
             } else {
+                if (outputFile == null) {
+                    throw new ClientCodeException("--output-file not specified");
+                }
                 try {
                     @SuppressWarnings("unchecked")
                     Class<Callable<Map<String, String>>> c = (Class<Callable<Map<String, String>>>) Class.forName(arg);
@@ -98,8 +120,11 @@ public class GetJDKProperties {
         if (needSystemProperties) {
             p.putAll(System.getProperties());
         }
-
-        p.store(System.out, "jdk properties");
+        assert outputFile != null : "outputFile is null";
+        try (OutputStream os = Files.newOutputStream(outputFile);
+             BufferedOutputStream bos = new BufferedOutputStream(os)) {
+            p.store(bos, "jdk properties");
+        }
     }
 
     private static int getJDKVersion() {
