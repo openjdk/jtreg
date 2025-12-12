@@ -379,10 +379,18 @@ public class CompileAction extends Action {
             // run jasm and jcod first (if needed) in case the resulting class
             // files will be required when compiling the .java files.
             status = passed("Not yet run");
-            if (status.isPassed() && !jasmArgs.isEmpty())
+            if (status.isPassed() && !jasmArgs.isEmpty()) {
+                if (!jasmArgs.contains("-cv")) {
+                    // use 52.0 (representing Java 8) as the default
+                    // class file version, if the jasm file(s) don't
+                    // have any specific class file version in them
+                    jasmArgs.addAll(List.of("-cv", "52.0"));
+                }
                 status = jasm(jasmArgs);
-            if (status.isPassed() && !jcodArgs.isEmpty())
+            }
+            if (status.isPassed() && !jcodArgs.isEmpty()) {
                 status = jcod(jcodArgs);
+            }
             if (status.isPassed() && runJavac) {
                 javacArgs = getJavacCommandArgs(javacArgs);
                 for (String arg: javacArgs) {
@@ -416,22 +424,22 @@ public class CompileAction extends Action {
 
     //----------internal methods------------------------------------------------
 
-    private Status jasm(List<String> files) {
-        return asmtools("jasm", files);
+    private Status jasm(List<String> jasmArgs) {
+        return asmtools("jasm", jasmArgs);
     }
 
-    private Status jcod(List<String> files) {
-        return asmtools("jcoder", files);
+    private Status jcod(List<String> jcodArgs) {
+        return asmtools("jcoder", jcodArgs);
     }
 
-    private Status asmtools(String toolName, List<String> files) {
-        if (files.isEmpty())
+    private Status asmtools(String toolName, List<String> args) {
+        if (args.isEmpty())
             return Status.passed(toolName + ": no files");
 
         List<String> toolArgs = new ArrayList<>();
         toolArgs.add("-d");
         toolArgs.add(destDir.getPath());
-        toolArgs.addAll(files);
+        toolArgs.addAll(args);
         try {
             String toolClassName = "org.openjdk.asmtools." + toolName + ".Main";
             recorder.asmtools(toolClassName, toolArgs);
