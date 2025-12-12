@@ -41,6 +41,13 @@ $(BUILDTESTDIR)/jasmreporting.ok: \
 	$(GREP) '\---jasm-stdout:' $(@:%.ok=%)/work/JasmUsageTest.jtr > /dev/null
 	$(GREP) '\---jasm-stderr:' $(@:%.ok=%)/work/JasmUsageTest.jtr > /dev/null
 	$(GREP) '\---jasm:' $(@:%.ok=%)/work/JasmUsageTest.jtr > /dev/null
+	# verify that the warning wasn't printed
+	$(GREP) 'Warning: Class file version not specified in file or by -cv parameter' \
+	        $(@:%.ok=%)/work/JasmUsageTest.jtr > /dev/null ; rc=$$?; \
+            if [ "$$rc" -ne 1 ]; then \
+                echo "unexpected content (possibly a warning message) in JasmUsageTest.jtr" ; \
+                exit 1 ; \
+            fi
 
 	echo "$@ test passed at `date`" > $@
 
