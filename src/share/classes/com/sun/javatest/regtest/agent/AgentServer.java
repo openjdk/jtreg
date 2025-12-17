@@ -30,9 +30,11 @@ import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileDescriptor;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.Writer;
@@ -92,6 +94,9 @@ public final class AgentServer implements ActionHelper.OutputHandler {
     public static final byte STATUS = 4;
     public static final byte KEEPALIVE = 5;
     public static final byte CLOSE = 6;
+
+    public static final String PROCESS_OUTPUT_SEPARATOR =
+            "------ This line is the stdout/stderr output separator ------";
 
     /**
      * Send KEEPALIVE bytes periodically to a stream.
@@ -236,6 +241,7 @@ public final class AgentServer implements ActionHelper.OutputHandler {
         try {
             int op;
             while ((op = in.read()) != -1) {
+                writeProcessOutputSeparator();
                 switch (op) {
                     case DO_COMPILE:
                         doCompile();
@@ -252,11 +258,27 @@ public final class AgentServer implements ActionHelper.OutputHandler {
                         throw new Error("Agent.Server: unexpected op: " + op);
                 }
                 out.flush();
+                // signal end of section output for the log writer
+                writeProcessOutputSeparator();
             }
         } finally {
             keepAlive.finished();
             log("Exiting");
             logWriter.close();
+        }
+    }
+
+    private void writeProcessOutputSeparator() {
+        try  {
+            processStdOut.write(PROCESS_OUTPUT_SEPARATOR);
+            processStdOut.write(System.lineSeparator());
+            processStdOut.flush();
+            processStdErr.write(PROCESS_OUTPUT_SEPARATOR);
+            processStdErr.write(System.lineSeparator());
+            processStdErr.flush();
+        }
+        catch (IOException e ){
+            // ignore exception as the agent process may be killed
         }
     }
 
@@ -388,7 +410,8 @@ public final class AgentServer implements ActionHelper.OutputHandler {
     private final PrintWriter logWriter;
     private final int id;
     private final Map<OutputKind, Writer> writers = new EnumMap<>(OutputKind.class);
-
+    private final OutputStreamWriter processStdOut = new FileWriter(FileDescriptor.out);
+    private final OutputStreamWriter processStdErr = new FileWriter(FileDescriptor.err);
     /**
      * Create an output stream for output to be sent back to the client via the server connection.
      * @param kind the kind of stream
