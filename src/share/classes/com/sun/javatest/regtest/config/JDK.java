@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2007, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -30,7 +30,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
@@ -632,19 +631,25 @@ public class JDK {
         jdkOpts.addAll(extraVMOpts);
         jdkOpts.addAll(epd.getVMOpts());
 
-        List<String> cmdArgs = new ArrayList<>();
-        cmdArgs.add(getJavaProg().toString());
-        cmdArgs.addAll(jdkOpts.toList());
-        cmdArgs.add(GetJDKProperties.class.getName());
-
-        cmdArgs.addAll(opts);
-        cmdArgs.addAll(epd.getClasses());
-
         try {
+            List<String> cmdArgs = new ArrayList<>();
+            cmdArgs.add(getJavaProg().toString());
+            cmdArgs.addAll(jdkOpts.toList());
+            cmdArgs.add(GetJDKProperties.class.getName());
+
             File scratchDir = params.getWorkDirectory().getFile("scratch");
             // The scratch directory probably already exists, but just in case,
             // we ensure that it does.
             scratchDir.mkdirs();
+            // create a temporary file into which the properties will be written
+            // by the GetJDKProperties program
+            Path tmpOutputFile = Files.createTempFile(scratchDir.toPath(),
+                    "jtreg-tmp-", ".properties");
+            cmdArgs.add("--output-file=" + tmpOutputFile);
+
+            cmdArgs.addAll(opts);
+            cmdArgs.addAll(epd.getClasses());
+
             final Process p = new ProcessBuilder(cmdArgs)
                     .directory(scratchDir)
                     .start();
@@ -661,8 +666,16 @@ public class JDK {
                 logger.accept(msg);
                 throw new Fault(msg);
             }
-
-            return loadProperties(lines, logger);
+            Properties props = new Properties();
+            props.load(Files.newBufferedReader(tmpOutputFile));
+            // delete the temp file
+            try {
+                Files.delete(tmpOutputFile);
+            } catch (IOException ioe) {
+                // ignore
+                logger.accept("failed to delete temp file: " + tmpOutputFile + ", cause: " + ioe);
+            }
+            return props;
 
         } catch (InterruptedException
                  | IOException e) {
@@ -680,18 +693,6 @@ public class JDK {
             }
         }
         return lines;
-    }
-
-    private Properties loadProperties(List<String> lines, Consumer<String> logger) throws Fault {
-        Properties props = new Properties();
-        try {
-            props.load(new StringReader(String.join("\n", lines)));
-        } catch (IOException e) {
-            logger.accept("Error loading extra property definitions: " + e);
-            lines.forEach(logger::accept);
-            throw new Fault("Error loading extra property definitions: " + e);
-        }
-        return props;
     }
 
     private void asyncCopy(final InputStream in, final Consumer<String> logger) {
