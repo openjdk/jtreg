@@ -133,6 +133,7 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
             }
             LauncherDiscoveryRequest request = LauncherDiscoveryRequestBuilder.request()
                     .selectors(selector)
+                    // force a failure if there are any test discovery issues
                     .configurationParameter(LauncherConstants.CRITICAL_DISCOVERY_ISSUE_SEVERITY_PROPERTY_NAME, DiscoveryIssue.Severity.INFO.name())
                     .configurationParameter(TempDir.DEFAULT_CLEANUP_MODE_PROPERTY_NAME, CleanupMode.NEVER.name())
                     .configurationParameter(TempDir.DEFAULT_FACTORY_PROPERTY_NAME, ScratchAsTemporaryDirectory.class.getName())
