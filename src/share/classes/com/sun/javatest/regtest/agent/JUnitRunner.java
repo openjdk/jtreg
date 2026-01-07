@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2025, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2026, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -30,6 +30,7 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.io.CleanupMode;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.api.io.TempDirFactory;
+import org.junit.platform.engine.DiscoveryIssue;
 import org.junit.platform.engine.DiscoverySelector;
 import org.junit.platform.engine.TestExecutionResult;
 import org.junit.platform.engine.TestSource;
@@ -37,6 +38,7 @@ import org.junit.platform.engine.UniqueId;
 import org.junit.platform.engine.discovery.DiscoverySelectors;
 import org.junit.platform.engine.reporting.ReportEntry;
 import org.junit.platform.engine.support.descriptor.MethodSource;
+import org.junit.platform.launcher.LauncherConstants;
 import org.junit.platform.launcher.LauncherDiscoveryRequest;
 import org.junit.platform.launcher.LauncherSession;
 import org.junit.platform.launcher.TestExecutionListener;
@@ -131,6 +133,8 @@ public class JUnitRunner implements MainActionHelper.TestRunner {
             }
             LauncherDiscoveryRequest request = LauncherDiscoveryRequestBuilder.request()
                     .selectors(selector)
+                    // force a failure if there are any test discovery issues
+                    .configurationParameter(LauncherConstants.CRITICAL_DISCOVERY_ISSUE_SEVERITY_PROPERTY_NAME, DiscoveryIssue.Severity.INFO.name())
                     .configurationParameter(TempDir.DEFAULT_CLEANUP_MODE_PROPERTY_NAME, CleanupMode.NEVER.name())
                     .configurationParameter(TempDir.DEFAULT_FACTORY_PROPERTY_NAME, ScratchAsTemporaryDirectory.class.getName())
                     .build();
