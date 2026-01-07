@@ -1,6 +1,7 @@
 ## [Unreleased](https://git.openjdk.org/jtreg/compare/jtreg-8.1+1...master)
 
-_nothing noteworthy, yet_
+* Update bundled dependencies:
+  * JUnit 5.14.2 [CODETOOLS-7904129](https://bugs.openjdk.org/browse/CODETOOLS-7904129)
 
 ## [8.1](https://git.openjdk.org/jtreg/compare/jtreg-8+2...jtreg-8.1+1)
 
