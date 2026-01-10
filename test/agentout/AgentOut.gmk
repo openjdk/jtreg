@@ -78,6 +78,10 @@ $(BUILDTESTDIR)/AgentOut.othervm.ok: \
 		< $$i \
 		> `dirname $$i`-filtered/`basename $$i` ; \
 	done
+	#
+	echo "run at `date`" > $@
+
+$(BUILDTESTDIR)/AgentOut.agentvm/logs-filtered.ok: $(BUILDTESTDIR)/AgentOut.agentvm.ok
 	# merge direct and stderr from agent CompileTest to match stderr from othervm CompileTest
 	$(CAT) $(BUILDTESTDIR)/AgentOut.agentvm/logs-filtered/CompileTest-direct.log \
 		$(BUILDTESTDIR)/AgentOut.agentvm/logs-filtered/CompileTest-System.err.log \
@@ -85,12 +89,10 @@ $(BUILDTESTDIR)/AgentOut.othervm.ok: \
 	$(MV) $(BUILDTESTDIR)/AgentOut.agentvm/logs-filtered/tmp.log \
 		$(BUILDTESTDIR)/AgentOut.agentvm/logs-filtered/CompileTest-System.err.log
 	$(CAT) < $(DEV_NULL) > $(BUILDTESTDIR)/AgentOut.agentvm/logs-filtered/CompileTest-direct.log
-	#
-	echo "run at `date`" > $@
 
 $(BUILDTESTDIR)/AgentOut.ok: \
-	    $(BUILDTESTDIR)/AgentOut.agentvm.ok \
-	    $(BUILDTESTDIR)/AgentOut.othervm.ok
+	    $(BUILDTESTDIR)/AgentOut.othervm.ok \
+	    $(BUILDTESTDIR)/AgentOut.agentvm/logs-filtered.ok
 	$(DIFF) --strip-trailing-cr --recursive \
 		$(BUILDTESTDIR)/AgentOut.agentvm/logs-filtered \
 		$(BUILDTESTDIR)/AgentOut.othervm/logs-filtered
