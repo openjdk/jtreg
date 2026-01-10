@@ -365,7 +365,7 @@ public class XMLWriter {
         }
 
         @Override
-        public void finishedTest(TestResult tr) {
+        public synchronized void finishedTest(TestResult tr) {
             try {
                 super.finishedTest(tr);
                 new XMLWriter(tr, mustVerify, harnessOut, harnessErr).toXML();
