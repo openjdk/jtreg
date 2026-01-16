@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2017, 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2017, 2026, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -31,7 +31,7 @@ $(BUILDTESTDIR)/TestKeywords.good.ok: \
 		$(JTREG_IMAGEDIR)/bin/jtreg
 	$(MKDIR) $(@:%.ok=%)
 	JTREG_JAVA=$(JDKJAVA) $(JTREG_IMAGEDIR)/bin/jtreg \
-		-jdk:$(JDK8HOME) \
+		-jdk:$(JDKHOME) \
 		-w:$(@:%.ok=%/work) \
 		-r:$(@:%.ok=%/report) \
 		$(TESTDIR)/keywords/good \
@@ -44,7 +44,7 @@ $(BUILDTESTDIR)/TestKeywords.badProps.ok: \
 		$(JTREG_IMAGEDIR)/bin/jtreg
 	$(MKDIR) $(@:%.ok=%)
 	JTREG_JAVA=$(JDKJAVA) $(JTREG_IMAGEDIR)/bin/jtreg \
-		-jdk:$(JDK8HOME) \
+		-jdk:$(JDKHOME) \
 		-w:$(@:%.ok=%/work) \
 		-r:$(@:%.ok=%/report) \
 		$(TESTDIR)/keywords/badProps \
@@ -58,21 +58,20 @@ $(BUILDTESTDIR)/TestKeywords.badTest.ok: \
 		$(JTREG_IMAGEDIR)/bin/jtreg
 	$(MKDIR) $(@:%.ok=%)
 	JTREG_JAVA=$(JDKJAVA) $(JTREG_IMAGEDIR)/bin/jtreg \
-		-jdk:$(JDK8HOME) \
+		-jdk:$(JDKHOME) \
 		-w:$(@:%.ok=%/work) \
 		-r:$(@:%.ok=%/report) \
 		$(TESTDIR)/keywords/badTest \
 		> $(@:%.ok=%/jt.log) 2>&1 || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
-	$(GREP) -s 'Test results: error: 2' $(@:%.ok=%/jt.log)  > /dev/null
+	$(GREP) -s 'Test results: error: 3' $(@:%.ok=%/jt.log)  > /dev/null
 	$(GREP) -s 'test result: Error. Parse Exception: Invalid key: unknown' $(@:%.ok=%/work)/UnknownKeyword.jtr  > /dev/null
 	$(GREP) -s 'test result: Error. Parse Exception: Invalid key: in%valid' $(@:%.ok=%/work)/InvalidKeyword.jtr  > /dev/null
+	$(GREP) -s 'test result: Error. @key may be used at most once in a given test' $(@:%.ok=%/work)/KeyMoreThanOnce.jtr  > /dev/null
 	echo $@ passed at `date` > $@
 
-ifdef JDK8HOME
 TESTS.jtreg += \
 	$(BUILDTESTDIR)/TestKeywords.good.ok \
 	$(BUILDTESTDIR)/TestKeywords.badProps.ok \
 	$(BUILDTESTDIR)/TestKeywords.badTest.ok
-endif
 
