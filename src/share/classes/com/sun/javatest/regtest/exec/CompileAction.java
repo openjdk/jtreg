@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2025, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2026, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -381,10 +381,10 @@ public class CompileAction extends Action {
             status = passed("Not yet run");
             if (status.isPassed() && !jasmArgs.isEmpty()) {
                 if (!jasmArgs.contains("-cv")) {
-                    // use 52.0 (representing Java 8) as the default
+                    // use 45.3 (representing Java 1.1) as the default
                     // class file version, if the jasm file(s) don't
                     // have any specific class file version in them
-                    jasmArgs.addAll(List.of("-cv", "52.0"));
+                    jasmArgs.addAll(List.of("-cv", "45.3"));
                 }
                 status = jasm(jasmArgs);
             }
