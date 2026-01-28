@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2026, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -861,6 +861,11 @@ public final class RegressionTestFinder extends TagTestFinder
      */
     private void processKey(Map<String, String> tagValues, String value)
             throws TestSuite.Fault {
+        // @key is allowed to appear only once in a test definition
+        if (tagValues.containsKey(KEY)) {
+            reportError(tagValues, PARSE_MULTIPLE_KEY_NOT_ALLOWED);
+            return;
+        }
         if (value.trim().length() == 0) {
             parseError(tagValues, PARSE_KEY_EMPTY);
             return;
@@ -1020,6 +1025,7 @@ public final class RegressionTestFinder extends TagTestFinder
         PARSE_BUG_INVALID     = "Invalid or unrecognized bugid: ",
         PARSE_KEY_EMPTY       = "No value provided for `@key'",
         PARSE_KEY_BAD         = "Invalid key: ",
+        PARSE_MULTIPLE_KEY_NOT_ALLOWED = "@key may be used at most once in a given test",
         PARSE_LIB_EMPTY       = "No value provided for `@library'",
         PARSE_LIB_AFTER_RUN   = "`@library' must appear before first action tag",
         PARSE_MODULES_EMPTY   = "No values provided for @modules",

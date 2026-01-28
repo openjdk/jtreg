@@ -1,6 +1,17 @@
-## [Unreleased](https://git.openjdk.org/jtreg/compare/jtreg-8.1+1...master)
+## [Unreleased](https://git.openjdk.org/jtreg/compare/jtreg-8.2+1...master)
 
 _nothing noteworthy, yet_
+
+## [8.2](https://git.openjdk.org/jtreg/compare/jtreg-8.1+1...jtreg-8.2+1)
+
+* Improving handling of JASM files:
+    * Use 45.3 (representing Java 1.1) as the default class file version, if the JASM file(s) don't have any specific class file version in them.
+      [CODETOOLS-7904133](https://bugs.openjdk.org/browse/CODETOOLS-7904133)
+    * Prevent JASM-related log messages on stdout [CODETOOLS-7904121](https://bugs.openjdk.org/browse/CODETOOLS-7904121)
+
+* Update bundled dependencies:
+  * AsmTools 9.1 [CODETOOLS-7904130](https://bugs.openjdk.org/browse/CODETOOLS-7904130)
+  * JUnit 5.14.2 [CODETOOLS-7904129](https://bugs.openjdk.org/browse/CODETOOLS-7904129)
 
 ## [8.1](https://git.openjdk.org/jtreg/compare/jtreg-8+2...jtreg-8.1+1)
 
