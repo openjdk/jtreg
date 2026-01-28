@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2024, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010, 2026, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -192,10 +192,10 @@ public final class AgentServer implements ActionHelper.OutputHandler {
         PrintWriter pw = null;
         if (logFile != null) {
             try {
-                pw = new PrintWriter(new FileWriter(logFile));
+                pw = new PrintWriter(new FileWriter(logFile), true);
             } catch (IOException e) {
                 traceOut.println("Cannot open log writer: " + e);
-                pw = new PrintWriter(System.err) {
+                pw = new PrintWriter(System.err, true) {
                     @Override
                     public void close() {
                         flush();
@@ -378,7 +378,6 @@ public final class AgentServer implements ActionHelper.OutputHandler {
                 AgentServer.logDateFormat.format(new Date()),
                 id,
                 message);
-        logWriter.flush();
     }
 
     private final KeepAlive keepAlive;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2025, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010, 2026, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -667,7 +667,7 @@ public class Agent {
             File logFile = new File(agentLogFileDirectory, "agent.trace");
             PrintWriter out;
             try {
-                out = new PrintWriter(new FileWriter(logFile));
+                out = new PrintWriter(new FileWriter(logFile), true);
             } catch (IOException e) {
                 System.err.println("Cannot open agent log file: " + e);
                 out = new PrintWriter(System.err, true) {

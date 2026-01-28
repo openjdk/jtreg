@@ -99,7 +99,7 @@ public class TestStats {
             }
 
             @Override
-            public void finishedTest(TestResult tr) {
+            public synchronized void finishedTest(TestResult tr) {
                 add(tr);
             }
 
