@@ -1,6 +1,10 @@
-## [Unreleased](https://git.openjdk.org/jtreg/compare/jtreg-8.2+1...master)
+## [Unreleased](https://git.openjdk.org/jtreg/compare/jtreg-8.2.1+1...master)
 
 _nothing noteworthy, yet_
+
+## [8.2.1](https://git.openjdk.org/jtreg/compare/jtreg-8.2+1...jtreg-8.2.1+1)
+
+* Fixup release without any changes compared to [8.2](#82)
 
 ## [8.2](https://git.openjdk.org/jtreg/compare/jtreg-8.1+1...jtreg-8.2+1)
 
