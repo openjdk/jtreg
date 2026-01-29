@@ -27,8 +27,13 @@ package com.sun.javatest.regtest.agent;
 
 import java.io.FileReader;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
   * This class is the wrapper for all main/othervm tests.
@@ -107,6 +112,48 @@ public class MainWrapper
         }
     }
 
+    private static Method findMainMethod(Class<?> cls) throws NoSuchMethodException {
+        List<Method> methods = Stream.of(cls.getDeclaredMethods())
+                .filter(m -> "main".equals(m.getName()))
+                .collect(Collectors.toList()); // no .toList() with --release 8
+
+        // JLA.findMethod(cls, true, "main", String[].class);
+        Method mainMethod = methods.stream()
+                .filter(method -> Modifier.isPublic(method.getModifiers()))
+                .filter(method -> method.getParameterCount() == 1)
+                .filter(method -> method.getParameterTypes()[0] == String[].class)
+                .findAny()
+                .orElse(null);
+
+        if (mainMethod == null) {
+            // JLA.findMethod(cls, false, "main", String[].class);
+            mainMethod = methods.stream()
+                    .filter(method -> method.getParameterCount() == 1)
+                    .filter(method -> method.getParameterTypes()[0] == String[].class)
+                    .findAny()
+                    .orElse(null);
+        }
+
+        if (mainMethod == null || !isValidMainMethod(mainMethod)) {
+            // JLA.findMethod(cls, false, "main");
+            mainMethod = methods.stream()
+                    .filter(method -> method.getParameterCount() == 0)
+                    .findAny()
+                    .orElse(null);
+        }
+
+        if (mainMethod != null && isValidMainMethod(mainMethod)) {
+            return mainMethod;
+        }
+        throw new NoSuchMethodException("main() nor main(String[])");
+    }
+
+    private static boolean isValidMainMethod(Method mainMethodCandidate) {
+        return mainMethodCandidate.getReturnType() == void.class &&
+               !Modifier.isPrivate(mainMethodCandidate.getModifiers());
+
+    }
+
     static class MainTask implements Runnable {
         MainTask(String moduleName, String className, String[] args) {
             this.moduleName = moduleName;
@@ -133,9 +180,40 @@ public class MainWrapper
                 }
 
                 // RUN JAVA PROGRAM
-                Class<?> c = Class.forName(className, false, cl);
-                Method mainMethod = c.getMethod("main", String[].class);
-                mainMethod.invoke(null, (Object) args);
+                Class<?> mainClass = Class.forName(className, false, cl);
+                Method mainMethod = findMainMethod(mainClass);
+
+                boolean isStatic = Modifier.isStatic(mainMethod.getModifiers());
+                Object instance = null;
+
+                // Similar to sun.launcher.LauncherHelper#checkAndLoadMain, including
+                // checks performed in LauncherHelper#validateMainMethod
+                if (!isStatic) {
+                    Constructor<?> constructor;
+                    constructor = mainClass.getDeclaredConstructor();
+                    try {
+                        constructor.setAccessible(true);
+                        instance = constructor.newInstance();
+                    } catch (InstantiationException | IllegalAccessException e) {
+                        e.printStackTrace(System.err);
+                        System.err.println();
+                        System.err.println("JavaTest Message: constructor in class " + className + " not accessible");
+                        System.err.println("JavaTest Message: or cannot instantiate an object for " + className);
+                        System.err.println();
+                        AStatus.error(MAIN_CANT_LOAD_TEST + e).exit();
+                    }
+                }
+
+                // Similar to sun.launcher.LauncherHelper#executeMainClass
+                // but duplicated here to prevent additional launcher frames
+                mainMethod.setAccessible(true);
+                Object receiver = isStatic ? null : instance;
+
+                if (mainMethod.getParameterCount() == 0) {
+                    mainMethod.invoke(receiver);
+                } else {
+                    mainMethod.invoke(receiver, (Object) args);
+                }
 
             } catch (InvocationTargetException e) {
                 Throwable throwable = e.getTargetException();
