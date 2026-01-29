@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2023, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2026, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -112,6 +112,7 @@ public class MainWrapper
         }
     }
 
+    // Similar to jdk.internal.misc.MethodFinder#findMainMethod
     private static Method findMainMethod(Class<?> cls) throws NoSuchMethodException {
         List<Method> methods = Stream.of(cls.getDeclaredMethods())
                 .filter(m -> "main".equals(m.getName()))
@@ -186,25 +187,23 @@ public class MainWrapper
                 boolean isStatic = Modifier.isStatic(mainMethod.getModifiers());
                 Object instance = null;
 
-                // Similar to sun.launcher.LauncherHelper#checkAndLoadMain, including
-                // checks performed in LauncherHelper#validateMainMethod
+                // Similar to sun.launcher.LauncherHelper#checkAndLoadMain
                 if (!isStatic) {
                     Constructor<?> constructor;
                     constructor = mainClass.getDeclaredConstructor();
                     try {
                         constructor.setAccessible(true);
                         instance = constructor.newInstance();
-                    } catch (InstantiationException e) {
+                    } catch (InstantiationException | IllegalAccessException e) {
                         e.printStackTrace(System.err);
                         System.err.println();
-                        System.err.println("JavaTest Message: cannot instantiate an object for " + className);
+                        System.err.println("JavaTest Message: cannot instantiate class " + className);
                         System.err.println();
-                        AStatus.error(MAIN_CANT_LOAD_TEST + e).exit();
+                        AStatus.error(MAIN_CANT_INIT_TEST + e).exit();
                     }
                 }
 
                 // Similar to sun.launcher.LauncherHelper#executeMainClass
-                // but duplicated here to prevent additional launcher frames
                 mainMethod.setAccessible(true);
                 Object receiver = isStatic ? null : instance;
 
@@ -305,6 +304,7 @@ public class MainWrapper
         MAIN_CANT_READ_ARGS   = "JavaTest Error: Can't read main args file.",
         MAIN_THREAD_INTR      = "Thread interrupted: ",
         MAIN_THREW_EXCEPT     = "`main' threw exception: ",
+        MAIN_CANT_INIT_TEST   = "Can't create an instance of: ",
         MAIN_CANT_LOAD_TEST   = "Can't load test: ",
         MAIN_CANT_FIND_MAIN   = "Can't find `main' method",
         MAIN_SKIPPED          = "Skipped: ";
