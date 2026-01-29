@@ -194,11 +194,10 @@ public class MainWrapper
                     try {
                         constructor.setAccessible(true);
                         instance = constructor.newInstance();
-                    } catch (InstantiationException | IllegalAccessException e) {
+                    } catch (InstantiationException e) {
                         e.printStackTrace(System.err);
                         System.err.println();
-                        System.err.println("JavaTest Message: constructor in class " + className + " not accessible");
-                        System.err.println("JavaTest Message: or cannot instantiate an object for " + className);
+                        System.err.println("JavaTest Message: cannot instantiate an object for " + className);
                         System.err.println();
                         AStatus.error(MAIN_CANT_LOAD_TEST + e).exit();
                     }
