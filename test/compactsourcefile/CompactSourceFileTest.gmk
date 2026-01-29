@@ -25,16 +25,19 @@
 
 #----------------------------------------------------------------------
 
+ifdef JDK25HOME
+
 $(BUILDTESTDIR)/CompactSourceFile.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	JTREG_JAVA=$(JDKJAVA) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(JDKHOME) \
+		-jdk:$(JDK25HOME) \
 		$(TESTDIR)/compactsourcefile \
 			> $(@:%.ok=%/jt.log) 2>&1
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += $(BUILDTESTDIR)/CompactSourceFile.ok
 
+endif
