@@ -13,15 +13,17 @@ jobs:
 
     steps:
     - name: 'Check out repository'
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         fetch-depth: 1
 
-    - name: 'Set up Java Development Kit'
-      uses: oracle-actions/setup-java@v1
+    - name: 'Set up Java Development Kits'
+      uses: actions/setup-java@v5
       with:
-        website: oracle.com
-        release: 21
+        distribution: 'oracle'
+        release: |
+          25
+          21
 
     - name: 'Build JTReg'
       shell: bash
@@ -42,15 +44,15 @@ jobs:
       env:
         MAKE_ARGS: test
         HEADLESS: 1
-        JDK25HOME: /opt/hostedtoolcache/Java_jdkfile_jdk/25/x64
       run: |
+        export JDK25HOME=$JAVA_HOME_25_X64
         bash make/build.sh --skip-download
 
   freebsd-x64:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Run tests in FreeBSD
         id: test
         uses: vmactions/freebsd-vm@v1
