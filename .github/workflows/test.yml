@@ -42,7 +42,7 @@ jobs:
       env:
         MAKE_ARGS: test
         HEADLESS: 1
-        JDK25HOME: ${{JAVA_HOME_25_X64}}
+        JDK25HOME: ${{ env.JAVA_HOME_25_X64 }}
       run: |
         bash make/build.sh --skip-download
 
