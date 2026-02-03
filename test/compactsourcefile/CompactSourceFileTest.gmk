@@ -25,9 +25,28 @@
 
 #----------------------------------------------------------------------
 
+ifdef JDK8HOME
+
+$(BUILDTESTDIR)/CompactSourceFile8.ok: \
+	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	$(JTREG_IMAGEDIR)/bin/jtreg
+	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	JTREG_JAVA=$(JDKJAVA) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(JDK8HOME) \
+		$(TESTDIR)/compactsourcefile \
+			> $(@:%.ok=%/jt.log) 2>&1  || \
+		true "non-zero exit code from JavaTest intentionally ignored"
+	$(GREP) -s 'Test results: failed: 4' $(@:%.ok=%/jt.log)  > /dev/null
+	echo "test passed at `date`" > $@
+
+TESTS.jtreg += $(BUILDTESTDIR)/CompactSourceFile8.ok
+
+endif
+
 ifdef JDK25HOME
 
-$(BUILDTESTDIR)/CompactSourceFile.ok: \
+$(BUILDTESTDIR)/CompactSourceFile25.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
@@ -36,8 +55,9 @@ $(BUILDTESTDIR)/CompactSourceFile.ok: \
 		-jdk:$(JDK25HOME) \
 		$(TESTDIR)/compactsourcefile \
 			> $(@:%.ok=%/jt.log) 2>&1
+	$(GREP) -s 'Test results: passed: 4' $(@:%.ok=%/jt.log)  > /dev/null
 	echo "test passed at `date`" > $@
 
-TESTS.jtreg += $(BUILDTESTDIR)/CompactSourceFile.ok
+TESTS.jtreg += $(BUILDTESTDIR)/CompactSourceFile25.ok
 
 endif
