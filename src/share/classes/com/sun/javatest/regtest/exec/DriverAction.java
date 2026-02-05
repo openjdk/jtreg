@@ -95,7 +95,9 @@ public class DriverAction extends MainAction
         int i = 0, n = args.size();
         while (i < n) {
             String arg = args.get(i);
-            if (arg.startsWith("-D")) {
+            if (arg.equals("--enable-preview")) {
+                results.add(arg);
+            } else if (arg.startsWith("-D")) {
                 results.add(arg);
             } else if (i < n - 1) {
                 switch (arg) {
