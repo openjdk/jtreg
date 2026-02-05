@@ -46,11 +46,12 @@ endif
 
 ifdef JDK25HOME
 
-$(BUILDTESTDIR)/CompactSourceFile25.ok: \
+$(BUILDTESTDIR)/CompactSourceFile25.agentvm.ok: \
 	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 	$(JTREG_IMAGEDIR)/bin/jtreg
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	JTREG_JAVA=$(JDKJAVA) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-agentvm \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDK25HOME) \
 		$(TESTDIR)/compactsourcefile \
@@ -58,6 +59,20 @@ $(BUILDTESTDIR)/CompactSourceFile25.ok: \
 	$(GREP) -s 'Test results: passed: 4' $(@:%.ok=%/jt.log)  > /dev/null
 	echo "test passed at `date`" > $@
 
-TESTS.jtreg += $(BUILDTESTDIR)/CompactSourceFile25.ok
+$(BUILDTESTDIR)/CompactSourceFile25.othervm.ok: \
+	$(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	$(JTREG_IMAGEDIR)/bin/jtreg
+	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	JTREG_JAVA=$(JDKJAVA) $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-othervm \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(JDK25HOME) \
+		$(TESTDIR)/compactsourcefile \
+			> $(@:%.ok=%/jt.log) 2>&1
+	$(GREP) -s 'Test results: passed: 4' $(@:%.ok=%/jt.log)  > /dev/null
+	echo "test passed at `date`" > $@
+
+TESTS.jtreg += $(BUILDTESTDIR)/CompactSourceFile25.agentvm.ok
+TESTS.jtreg += $(BUILDTESTDIR)/CompactSourceFile25.othervm.ok
 
 endif
