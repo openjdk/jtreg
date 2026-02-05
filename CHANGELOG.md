@@ -1,6 +1,6 @@
 ## [Unreleased](https://git.openjdk.org/jtreg/compare/jtreg-8.2.1+1...master)
 
-_nothing noteworthy, yet_
+* Support [Compact Source Files and Instance Main Methods](https://openjdk.org/jeps/512) in main tests [CODETOOLS-7904141](https://bugs.openjdk.org/browse/CODETOOLS-7904141)
 
 ## [8.2.1](https://git.openjdk.org/jtreg/compare/jtreg-8.2+1...jtreg-8.2.1+1)
 

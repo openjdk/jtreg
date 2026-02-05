@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2023, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2026, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -27,8 +27,13 @@ package com.sun.javatest.regtest.agent;
 
 import java.io.FileReader;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
   * This class is the wrapper for all main/othervm tests.
@@ -133,6 +138,10 @@ public class MainWrapper
                 }
 
                 // RUN JAVA PROGRAM
+                if (JDK_Version.forThisJVM().compareTo(JDK_Version.V25) >= 0) {
+                    runJavaProgramSupportingCompactSourceFiles(cl);
+                    return;
+                }
                 Class<?> c = Class.forName(className, false, cl);
                 Method mainMethod = c.getMethod("main", String[].class);
                 mainMethod.invoke(null, (Object) args);
@@ -168,6 +177,84 @@ public class MainWrapper
                 AStatus.error(e.toString()).exit();
             }
         } // run
+
+        private void runJavaProgramSupportingCompactSourceFiles(ClassLoader loader) throws
+                ClassNotFoundException,
+                NoSuchMethodException,
+                IllegalAccessException,
+                InvocationTargetException{
+            Class<?> mainClass = Class.forName(className, false, loader);
+            Method mainMethod = findMainMethod(mainClass);
+            boolean isStatic = Modifier.isStatic(mainMethod.getModifiers());
+            Object instance = null;
+            // Similar to sun.launcher.LauncherHelper#checkAndLoadMain
+            if (!isStatic) {
+                Constructor<?> constructor;
+                constructor = mainClass.getDeclaredConstructor();
+                try {
+                    constructor.setAccessible(true);
+                    instance = constructor.newInstance();
+                } catch (InstantiationException | IllegalAccessException e) {
+                    e.printStackTrace(System.err);
+                    System.err.println();
+                    System.err.println("JavaTest Message: cannot instantiate class " + className);
+                    System.err.println();
+                    AStatus.error(MAIN_CANT_INIT_TEST + e).exit();
+                }
+            }
+            // Similar to sun.launcher.LauncherHelper#executeMainClass
+            mainMethod.setAccessible(true);
+            Object receiver = isStatic ? null : instance;
+            if (mainMethod.getParameterCount() == 0) {
+                mainMethod.invoke(receiver);
+            } else {
+                mainMethod.invoke(receiver, (Object) args);
+            }
+        }
+
+        // Similar to jdk.internal.misc.MethodFinder#findMainMethod
+        private static Method findMainMethod(Class<?> cls) throws NoSuchMethodException {
+            List<Method> methods = Stream.of(cls.getDeclaredMethods())
+                    .filter(m -> "main".equals(m.getName()))
+                    .collect(Collectors.toList()); // no .toList() with --release 8
+
+            // JLA.findMethod(cls, true, "main", String[].class);
+            Method mainMethod = methods.stream()
+                    .filter(method -> Modifier.isPublic(method.getModifiers()))
+                    .filter(method -> method.getParameterCount() == 1)
+                    .filter(method -> method.getParameterTypes()[0] == String[].class)
+                    .findAny()
+                    .orElse(null);
+
+            if (mainMethod == null) {
+                // JLA.findMethod(cls, false, "main", String[].class);
+                mainMethod = methods.stream()
+                        .filter(method -> method.getParameterCount() == 1)
+                        .filter(method -> method.getParameterTypes()[0] == String[].class)
+                        .findAny()
+                        .orElse(null);
+            }
+
+            if (mainMethod == null || !isValidMainMethod(mainMethod)) {
+                // JLA.findMethod(cls, false, "main");
+                mainMethod = methods.stream()
+                        .filter(method -> method.getParameterCount() == 0)
+                        .findAny()
+                        .orElse(null);
+            }
+
+            if (mainMethod != null && isValidMainMethod(mainMethod)) {
+                return mainMethod;
+            }
+            throw new NoSuchMethodException("main() nor main(String[])");
+        }
+
+        // Similar to jdk.internal.misc.MethodFinder#isValidMainMethod
+        private static boolean isValidMainMethod(Method mainMethodCandidate) {
+            return mainMethodCandidate.getReturnType() == void.class &&
+                   !Modifier.isPrivate(mainMethodCandidate.getModifiers());
+
+        }
 
         private final String moduleName;
         private final String className;
@@ -228,6 +315,7 @@ public class MainWrapper
         MAIN_CANT_READ_ARGS   = "JavaTest Error: Can't read main args file.",
         MAIN_THREAD_INTR      = "Thread interrupted: ",
         MAIN_THREW_EXCEPT     = "`main' threw exception: ",
+        MAIN_CANT_INIT_TEST   = "Can't create an instance of: ",
         MAIN_CANT_LOAD_TEST   = "Can't load test: ",
         MAIN_CANT_FIND_MAIN   = "Can't find `main' method",
         MAIN_SKIPPED          = "Skipped: ";
