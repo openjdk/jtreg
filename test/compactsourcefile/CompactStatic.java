@@ -24,6 +24,7 @@
 /*
  * @test
  * @run main CompactStatic
+ * @run driver CompactStatic
  */
 static void main() {
     IO.println("CompactStatic");

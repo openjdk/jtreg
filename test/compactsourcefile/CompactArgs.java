@@ -24,6 +24,7 @@
 /*
  * @test
  * @run main CompactArgs
+ * @run driver CompactArgs
  */
 void main(String... args) {
     IO.println("CompactArgs");

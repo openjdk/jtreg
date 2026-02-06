@@ -24,6 +24,7 @@
 /*
  * @test
  * @run main Compact
+ * @run driver Compact
  */
 void main() {
     IO.println("Compact");

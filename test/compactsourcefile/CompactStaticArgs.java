@@ -24,6 +24,7 @@
 /*
  * @test
  * @run main CompactStaticArgs
+ * @run driver CompactStaticArgs
  */
 static void main(String... args) {
     IO.println("CompactStaticArgs");
