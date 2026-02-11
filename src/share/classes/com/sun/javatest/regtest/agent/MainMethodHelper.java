@@ -37,6 +37,11 @@ import java.util.stream.Stream;
  * Java program entry-point finder and runner.
  */
 final class MainMethodHelper {
+    // JEP 512 was introduced with JDK 25
+    static boolean isCompactSourceFileAndInstanceMainMethodSupported() {
+        return JDK_Version.forThisJVM().compareTo(JDK_Version.V25) >= 0;
+    }
+
     // Similar to sun.launcher.LauncherHelper#executeMainClass
     static void executeMainClass(Class<?> mainClass, String[] classArgs) throws
             NoSuchMethodException,

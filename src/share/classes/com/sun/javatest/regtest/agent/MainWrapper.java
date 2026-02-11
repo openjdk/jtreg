@@ -134,7 +134,7 @@ public class MainWrapper
 
                 // RUN JAVA PROGRAM
                 Class<?> c = Class.forName(className, false, cl);
-                if (JDK_Version.forThisJVM().compareTo(JDK_Version.V25) >= 0) {
+                if (MainMethodHelper.isCompactSourceFileAndInstanceMainMethodSupported()) {
                     MainMethodHelper.executeMainClass(c, args);
                     return;
                 }

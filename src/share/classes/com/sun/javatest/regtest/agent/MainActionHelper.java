@@ -187,7 +187,7 @@ public class MainActionHelper extends ActionHelper {
                 methodArgs = new Object[] { classArgsArray };
             }
 
-            Method method = JDK_Version.forThisJVM().compareTo(JDK_Version.V25) >= 0
+            Method method = MainMethodHelper.isCompactSourceFileAndInstanceMainMethodSupported()
                     ? MainMethodHelper.findMainMethod(c)
                     : c.getMethod("main", argTypes);
             Object instance = MainMethodHelper.createMainInstanceOrNull(c, method);
