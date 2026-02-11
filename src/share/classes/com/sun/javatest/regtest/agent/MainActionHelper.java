@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2024, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2026, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -187,7 +187,10 @@ public class MainActionHelper extends ActionHelper {
                 methodArgs = new Object[] { classArgsArray };
             }
 
-            Method method = c.getMethod("main", argTypes);
+            Method method = JDK_Version.forThisJVM().compareTo(JDK_Version.V25) >= 0
+                    ? MainMethodHelper.findMainMethod(c)
+                    : c.getMethod("main", argTypes);
+            Object instance = MainMethodHelper.createMainInstanceOrNull(c, method);
 
             PrintStream realStdErr = System.err;
             AStatus stat = redirectOutput(out, err);
@@ -195,7 +198,7 @@ public class MainActionHelper extends ActionHelper {
                 return stat;
             }
 
-            AgentVMRunnable avmr = new AgentVMRunnable(method, methodArgs, err);
+            AgentVMRunnable avmr = new AgentVMRunnable(method, instance, methodArgs, err);
 
             // Main and Thread are same here
             // RUN JAVA IN ANOTHER THREADGROUP
@@ -322,8 +325,9 @@ public class MainActionHelper extends ActionHelper {
 
     private static class AgentVMRunnable implements Runnable
     {
-        public AgentVMRunnable(Method m, Object[] args, PrintStream out) {
+        public AgentVMRunnable(Method m, Object obj, Object[] args, PrintStream out) {
             method    = m;
+            this.instance = obj;
             this.args = args;
             this.out  = out;
         } // SameVMRunnable()
@@ -332,7 +336,11 @@ public class MainActionHelper extends ActionHelper {
         public void run() {
             try {
                 // RUN JAVA PROGRAM
-                result = method.invoke(null, args);
+                // Similar to sun.launcher.LauncherHelper#executeMainClass
+                method.setAccessible(true);
+                result = method.getParameterCount() == 0
+                    ? method.invoke(instance)
+                    : method.invoke(instance, args);
 
                 out.println();
                 out.println(MSG_PREFIX + "Test complete.");
@@ -359,6 +367,7 @@ public class MainActionHelper extends ActionHelper {
 
         public  Object result;
         private final Method method;
+        private final Object instance; // can be null
         private final Object[] args;
         private final PrintStream out;
 
