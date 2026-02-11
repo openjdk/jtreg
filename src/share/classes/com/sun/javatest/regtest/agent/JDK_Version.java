@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2007, 2026, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -38,6 +38,7 @@ public class JDK_Version implements Comparable<JDK_Version> {
     public static JDK_Version V1_6 = JDK_Version.forName("1.6");
     public static JDK_Version V9 = JDK_Version.forName("9");
     public static JDK_Version V10 = JDK_Version.forName("10");
+    public static JDK_Version V25 = JDK_Version.forName("25");
 
     public static JDK_Version forName(String name) {
         if (name == null)
