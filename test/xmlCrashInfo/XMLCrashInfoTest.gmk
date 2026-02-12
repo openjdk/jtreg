@@ -1,0 +1,25 @@
+#
+# Copyright (c) 2026, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+
+$(BUILDTESTDIR)/XMLCrashInfoTest.ok: \
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	    $(JTREG_IMAGEDIR)/bin/jtreg
+	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(JDKHOME) \
+		-xml:verify \
+		$(TESTDIR)/xmlCrashInfo \
+		> $(@:%.ok=%)/jt.log 2>&1 ; rc=$$? ; \
+	if [ $$rc -ne 2 ]; then \
+		echo "Unexpected exit code: $$rc (expected 2 for test failure)" && exit 1; \
+	fi
+	$(GREP) -q "JVM Crash Details" $(@:%.ok=%)/work/CrashTest.jtr.xml || \
+		(echo "Crash details not found in XML" && exit 1)
+	$(GREP) -q "SIGSEGV" $(@:%.ok=%)/work/CrashTest.jtr.xml || \
+		(echo "SIGSEGV not found in XML" && exit 1)
+	echo "test passed at `date`" > $@
+
+TESTS.jtreg += $(BUILDTESTDIR)/XMLCrashInfoTest.ok

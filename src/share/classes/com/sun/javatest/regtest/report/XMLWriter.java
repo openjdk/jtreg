@@ -181,8 +181,9 @@ public class XMLWriter {
         for (int i = 0; i < titles.length; i++) {
             if (titles[i].equals("main") || titles[i].equals("shell") || titles[i].equals("compile")) {
                 Section s = tr.getSection(i);
-                for (String x : s.getOutputNames()) {
-                    return s.getOutput(name);
+                String output = s.getOutput(name);
+                if (output != null && !output.isEmpty()) {
+                    return output;
                 }
             }
         }
@@ -213,9 +214,50 @@ public class XMLWriter {
         xps.print(XMLWriter.FAILED);
         xps.println("\">");
         xps.sanitize(status.getReason());
+        
+        try {
+            String crashInfo = extractCrashInfo();
+            if (crashInfo != null && !crashInfo.isEmpty()) {
+                xps.println("\n\n--- JVM Crash Details ---");
+                xps.sanitize(crashInfo);
+            }
+        } catch (TestResult.Fault e) {
+            // Ignore if we can't get crash info
+        }
+        
         xps.indent();
         xps.println("");
         xps.println("</failure>");
+    }
+    
+    private String extractCrashInfo() throws TestResult.Fault {
+        String stderr = getOutput("System.err");
+        if (stderr == null || stderr.isEmpty()) {
+            return null;
+        }
+        
+        StringBuilder crash = new StringBuilder();
+        String[] lines = stderr.split("\n");
+        boolean inCrash = false;
+        int linesAdded = 0;
+        
+        for (String line : lines) {
+            if (line.startsWith("#") && (line.contains("SIGSEGV") || line.contains("SIGBUS") || 
+                line.contains("SIGABRT") || line.contains("problematic frame") || 
+                line.contains("Internal Error") || line.contains("fatal error"))) {
+                inCrash = true;
+            }
+            
+            if (inCrash) {
+                crash.append(line).append("\n");
+                linesAdded++;
+                if (linesAdded > 100 || (linesAdded > 20 && line.trim().isEmpty())) {
+                    break;
+                }
+            }
+        }
+        
+        return crash.length() > 0 ? crash.toString() : null;
     }
 
     private void insertTestCase() throws TestResult.Fault {
