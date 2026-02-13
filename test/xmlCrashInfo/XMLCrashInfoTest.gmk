@@ -16,10 +16,14 @@ $(BUILDTESTDIR)/XMLCrashInfoTest.ok: \
 	if [ $$rc -ne 2 ]; then \
 		echo "Unexpected exit code: $$rc (expected 2 for test failure)" && exit 1; \
 	fi
-	$(GREP) -q "JVM Crash Details" $(@:%.ok=%)/work/CrashTest.jtr.xml || \
-		(echo "Crash details not found in XML" && exit 1)
-	$(GREP) -q "SIGSEGV" $(@:%.ok=%)/work/CrashTest.jtr.xml || \
-		(echo "SIGSEGV not found in XML" && exit 1)
+	$(GREP) -q "JVM Crash Details" $(@:%.ok=%)/work/CrashTestStderr.jtr.xml || \
+		(echo "Crash details not found in XML for stderr test" && exit 1)
+	$(GREP) -q "SIGSEGV" $(@:%.ok=%)/work/CrashTestStderr.jtr.xml || \
+		(echo "SIGSEGV not found in XML for stderr test" && exit 1)
+	$(GREP) -q "JVM Crash Details" $(@:%.ok=%)/work/CrashTestStdout.jtr.xml || \
+		(echo "Crash details not found in XML for stdout test" && exit 1)
+	$(GREP) -q "SIGBUS" $(@:%.ok=%)/work/CrashTestStdout.jtr.xml || \
+		(echo "SIGBUS not found in XML for stdout test" && exit 1)
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += $(BUILDTESTDIR)/XMLCrashInfoTest.ok

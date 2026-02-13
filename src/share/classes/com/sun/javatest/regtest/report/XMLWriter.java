@@ -232,12 +232,22 @@ public class XMLWriter {
     
     private String extractCrashInfo() throws TestResult.Fault {
         String stderr = getOutput("System.err");
-        if (stderr == null || stderr.isEmpty()) {
+        String crashFromErr = extractCrashFromOutput(stderr);
+        if (crashFromErr != null) {
+            return crashFromErr;
+        }
+        
+        String stdout = getOutput("System.out");
+        return extractCrashFromOutput(stdout);
+    }
+    
+    private String extractCrashFromOutput(String output) {
+        if (output == null || output.isEmpty()) {
             return null;
         }
         
         StringBuilder crash = new StringBuilder();
-        String[] lines = stderr.split("\n");
+        String[] lines = output.split("\n");
         boolean inCrash = false;
         int linesAdded = 0;
         

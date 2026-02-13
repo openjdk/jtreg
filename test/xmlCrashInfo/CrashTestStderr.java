@@ -1,10 +1,10 @@
 /*
  * @test
- * @summary Test that simulates a JVM crash for XML output verification
- * @run main/othervm CrashTest
+ * @summary Test that simulates a JVM crash with output to stderr
+ * @run main/othervm CrashTestStderr
  */
 
-public class CrashTest {
+public class CrashTestStderr {
     public static void main(String[] args) {
         // Simulate crash output to stderr
         System.err.println("Running test...");
