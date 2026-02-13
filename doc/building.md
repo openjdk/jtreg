@@ -111,7 +111,7 @@ bash build/make.sh $(pwd)/build/test/ControlTest.ok
 ```
 
 Some tests depend on specific versions of JDK being available, specified
-by the following variables: `JDK8HOME`, `JDK9HOME`, `JDK14HOME`, `JDK18HOME`.
+by the following variables: `JDK8HOME`, `JDK9HOME`, `JDK14HOME`, `JDK18HOME`, `JDK21HOME`.
 A test that requires any of these version of JDK will be skipped if the
 variable is not set.
 

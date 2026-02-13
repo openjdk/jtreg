@@ -60,6 +60,10 @@ endif
 ifndef JDK18HOME
 	@echo "Warning: JDK18HOME not set; some tests may not have been executed"
 endif
+ifndef JDK21HOME
+	@echo "Warning: JDK21HOME not set; some tests may not have been executed"
+endif
+
 ifdef HEADLESS
 	@echo "Warning: HEADLESS is set; some tests may not have been executed"
 endif
@@ -109,6 +113,9 @@ ifdef JDK14HOME
 endif
 ifdef JDK18HOME
 	@echo "JDK18HOME           = $(JDK18HOME)"
+endif
+ifdef JDK21HOME
+	@echo "JDK21HOME           = $(JDK21HOME)"
 endif
 	@echo "JDKHOME             = $(JDKHOME)"
 	@echo "JAVATEST_HOME       = $(JAVATEST_HOME)"

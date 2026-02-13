@@ -31,7 +31,7 @@ $(BUILDTESTDIR)/PolicyTest.ok: \
 	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
 	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
-		-jdk:$(JDKHOME) \
+		-jdk:$(JDK21HOME) \
 		-agentvm \
 		-retain:all \
 		$(TESTDIR)/policy/  \
@@ -44,5 +44,6 @@ $(BUILDTESTDIR)/PolicyTest.ok: \
 	$(GREP) 'grant.*testng[^ ]*.jar' $(@:%.ok=%)/work/TestNG/simple.policy_new
 	echo "test passed at `date`" > $@
 
+ifdef JDK21HOME
 TESTS.jtreg += $(BUILDTESTDIR)/PolicyTest.ok
-
+endif
