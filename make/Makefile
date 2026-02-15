@@ -63,7 +63,6 @@ endif
 ifndef JDK21HOME
 	@echo "Warning: JDK21HOME not set; some tests may not have been executed"
 endif
-
 ifndef JDK25HOME
 	@echo "Warning: JDK25HOME not set; some tests may not have been executed"
 endif
