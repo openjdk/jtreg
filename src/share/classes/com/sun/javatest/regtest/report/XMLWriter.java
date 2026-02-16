@@ -214,7 +214,7 @@ public class XMLWriter {
         xps.print(XMLWriter.FAILED);
         xps.println("\">");
         xps.sanitize(status.getReason());
-        
+
         try {
             String crashInfo = extractCrashInfo();
             if (crashInfo != null && !crashInfo.isEmpty()) {
@@ -224,23 +224,23 @@ public class XMLWriter {
         } catch (TestResult.Fault e) {
             // Ignore if we can't get crash info
         }
-        
+
         xps.indent();
         xps.println("");
         xps.println("</failure>");
     }
-    
+
     private String extractCrashInfo() throws TestResult.Fault {
         String stderr = getOutput("System.err");
         String crashFromErr = extractCrashFromOutput(stderr);
         if (crashFromErr != null) {
             return crashFromErr;
         }
-        
+
         String stdout = getOutput("System.out");
         return extractCrashFromOutput(stdout);
     }
-    
+
     private String extractCrashFromOutput(String output) {
         if (output == null || output.isEmpty()) {
             return null;
@@ -250,14 +250,14 @@ public class XMLWriter {
         String[] lines = output.split("\n");
         boolean inCrash = false;
         int linesAdded = 0;
-        
+
         for (String line : lines) {
-            if (line.startsWith("#") && (line.contains("SIGSEGV") || line.contains("SIGBUS") || 
-                line.contains("SIGABRT") || line.contains("problematic frame") || 
+            if (line.startsWith("#") && (line.contains("SIGSEGV") || line.contains("SIGBUS") ||
+                line.contains("SIGABRT") || line.contains("problematic frame") ||
                 line.contains("Internal Error") || line.contains("fatal error"))) {
                 inCrash = true;
             }
-            
+
             if (inCrash) {
                 crash.append(line).append("\n");
                 linesAdded++;
@@ -266,7 +266,7 @@ public class XMLWriter {
                 }
             }
         }
-        
+
         return crash.length() > 0 ? crash.toString() : null;
     }
 

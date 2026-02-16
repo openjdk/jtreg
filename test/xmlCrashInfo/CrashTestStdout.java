@@ -18,7 +18,7 @@ public class CrashTestStdout {
         System.out.println("# Problematic frame:");
         System.out.println("# C  [libc.so.6+0x3a1b]  memcpy+0x1ab");
         System.out.println("#");
-        
+
         // Exit with crash-like code
         System.exit(138); // SIGBUS exit code
     }

@@ -20,7 +20,7 @@ public class CrashTestStderr {
         System.err.println("#");
         System.err.println("# Core dump will be written. Default location: /tmp/core.12345");
         System.err.println("#");
-        
+
         // Exit with crash-like code
         System.exit(139); // SIGSEGV exit code
     }
