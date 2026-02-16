@@ -47,7 +47,6 @@ jobs:
         JDK25HOME: ${{ env.JAVA_HOME_25_X64 }}
         JDK21HOME: ${{ env.JAVA_HOME_21_X64 }}
       run: |
-        export JDK25HOME=$JAVA_HOME_25_X64
         bash make/build.sh --skip-download
 
   freebsd-x64:
