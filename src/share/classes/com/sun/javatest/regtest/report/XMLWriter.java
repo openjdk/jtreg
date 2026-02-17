@@ -181,13 +181,28 @@ public class XMLWriter {
         for (int i = 0; i < titles.length; i++) {
             if (titles[i].equals("main") || titles[i].equals("shell") || titles[i].equals("compile")) {
                 Section s = tr.getSection(i);
-                String output = s.getOutput(name);
-                if (output != null && !output.isEmpty()) {
-                    return output;
+                for (String x : s.getOutputNames()) {
+                    return s.getOutput(name);
                 }
             }
         }
         return "";
+    }
+
+    private String getLastOutput(String name) throws TestResult.Fault {
+        String[] titles = tr.getSectionTitles();
+        String result = "";
+        // Find the last non-empty output from main/shell/compile sections
+        for (int i = 0; i < titles.length; i++) {
+            if (titles[i].equals("main") || titles[i].equals("shell") || titles[i].equals("compile")) {
+                Section s = tr.getSection(i);
+                String output = s.getOutput(name);
+                if (output != null && !output.isEmpty()) {
+                    result = output;
+                }
+            }
+        }
+        return result;
     }
 
     private void insertSystemOut() throws TestResult.Fault {
@@ -231,13 +246,13 @@ public class XMLWriter {
     }
 
     private String extractCrashInfo() throws TestResult.Fault {
-        String stderr = getOutput("System.err");
+        String stderr = getLastOutput("System.err");
         String crashFromErr = extractCrashFromOutput(stderr);
         if (crashFromErr != null) {
             return crashFromErr;
         }
 
-        String stdout = getOutput("System.out");
+        String stdout = getLastOutput("System.out");
         return extractCrashFromOutput(stdout);
     }
 
