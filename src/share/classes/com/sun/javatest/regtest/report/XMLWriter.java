@@ -245,7 +245,7 @@ public class XMLWriter {
         if (output == null || output.isEmpty()) {
             return null;
         }
-        
+
         StringBuilder crash = new StringBuilder();
         String[] lines = output.split("\n");
         boolean inCrash = false;
