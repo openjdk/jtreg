@@ -37,23 +37,22 @@ import java.util.stream.Stream;
  * Java program entry-point finder and runner.
  */
 final class MainMethodHelper {
-    // JEP 512 was introduced with JDK 25
-    static boolean isCompactSourceFileAndInstanceMainMethodSupported() {
+    /// @return {@code true}, if the current VM is capable of running compact
+    /// source files and instance main methods.
+    static boolean isModernMainSupported() {
         return JDK_Version.forThisJVM().compareTo(JDK_Version.V25) >= 0;
     }
 
     // Similar to sun.launcher.LauncherHelper#executeMainClass
-    static void executeMainClass(Class<?> mainClass, String[] classArgs) throws
-            NoSuchMethodException,
-            IllegalAccessException,
-            InvocationTargetException {
+    static void executeModernMainClass(Class<?> mainClass, String[] mainArgs) throws
+            ReflectiveOperationException {
         Method mainMethod = findMainMethod(mainClass);
         mainMethod.setAccessible(true);
         Object mainInstance = createMainInstanceOrNull(mainClass, mainMethod);
         if (mainMethod.getParameterCount() == 0) {
             mainMethod.invoke(mainInstance);
         } else {
-            mainMethod.invoke(mainInstance, (Object) classArgs);
+            mainMethod.invoke(mainInstance, (Object) mainArgs);
         }
     }
 
@@ -89,6 +88,7 @@ final class MainMethodHelper {
         }
 
         if (mainMethod != null && isValidMainMethod(mainMethod)) {
+            mainMethod.setAccessible(true);
             return mainMethod;
         }
         throw new NoSuchMethodException("main() nor main(String[])");
@@ -101,20 +101,15 @@ final class MainMethodHelper {
     }
 
     // Similar to sun.launcher.LauncherHelper#checkAndLoadMain
-    static Object createMainInstanceOrNull(Class<?> mainClass, Method mainMethod)  {
+    static Object createMainInstanceOrNull(Class<?> mainClass, Method mainMethod) throws
+            NoSuchMethodException,
+            InvocationTargetException,
+            InstantiationException,
+            IllegalAccessException {
         boolean isStatic = Modifier.isStatic(mainMethod.getModifiers());
         if (isStatic) return null;
-        try {
-            Constructor<?> constructor = mainClass.getDeclaredConstructor();
-            constructor.setAccessible(true);
-            return constructor.newInstance();
-        } catch (ReflectiveOperationException e) {
-            e.printStackTrace(System.err);
-            System.err.println();
-            System.err.println("JavaTest Message: cannot instantiate class " + mainClass.getName());
-            System.err.println();
-            AStatus.error("Can't create an instance of: " + e).exit();
-            return null; // unreachable
-        }
+        Constructor<?> constructor = mainClass.getDeclaredConstructor();
+        constructor.setAccessible(true);
+        return constructor.newInstance();
     }
 }

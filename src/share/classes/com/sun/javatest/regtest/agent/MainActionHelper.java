@@ -187,7 +187,7 @@ public class MainActionHelper extends ActionHelper {
                 methodArgs = new Object[] { classArgsArray };
             }
 
-            Method method = MainMethodHelper.isCompactSourceFileAndInstanceMainMethodSupported()
+            Method method = MainMethodHelper.isModernMainSupported()
                     ? MainMethodHelper.findMainMethod(c)
                     : c.getMethod("main", argTypes);
             Object instance = MainMethodHelper.createMainInstanceOrNull(c, method);
@@ -282,6 +282,18 @@ public class MainActionHelper extends ActionHelper {
             err.println(MSG_PREFIX + className + " in file " + className + ".java");
             err.println();
             status = error(MAIN_CANT_FIND_MAIN);
+        } catch (InstantiationException e) {
+            e.printStackTrace(err);
+            err.println();
+            err.println(MSG_PREFIX + "instantiating main class failed: " + className);
+            err.println();
+            status = error(MAIN_CANT_CREATE_MAIN_INSTANCE + className);
+        } catch (ReflectiveOperationException e) {
+            e.printStackTrace(err);
+            err.println();
+            err.println(MSG_PREFIX + "can't reflect over main: " + className);
+            err.println();
+            status = error(MAIN_CANT_REFLECT_MAIN_CLASS + className);
         } catch (ModuleHelper.Fault e) {
             if (e.getCause() != null)
                 e.printStackTrace(err);
@@ -307,6 +319,8 @@ public class MainActionHelper extends ActionHelper {
         MAIN_THREW_EXCEPT     = "`main' threw exception: ",
         MAIN_CANT_LOAD_TEST   = "Can't load test: ",
         MAIN_CANT_FIND_MAIN   = "Can't find `main' method",
+        MAIN_CANT_CREATE_MAIN_INSTANCE = "Can't instantiate main class: ",
+        MAIN_CANT_REFLECT_MAIN_CLASS = "Can't reflect main class: ",
         MAIN_CANT_INIT_MODULE_EXPORTS = "Can't init module exports: ",
         MAIN_SKIPPED = "Skipped: ";
 
@@ -327,7 +341,7 @@ public class MainActionHelper extends ActionHelper {
     {
         public AgentVMRunnable(Method m, Object obj, Object[] args, PrintStream out) {
             method    = m;
-            this.instance = obj;
+            this.mainClassInstance = obj;
             this.args = args;
             this.out  = out;
         } // SameVMRunnable()
@@ -336,11 +350,9 @@ public class MainActionHelper extends ActionHelper {
         public void run() {
             try {
                 // RUN JAVA PROGRAM
-                // Similar to sun.launcher.LauncherHelper#executeMainClass
-                method.setAccessible(true);
                 result = method.getParameterCount() == 0
-                    ? method.invoke(instance)
-                    : method.invoke(instance, args);
+                    ? method.invoke(mainClassInstance)
+                    : method.invoke(mainClassInstance, args);
 
                 out.println();
                 out.println(MSG_PREFIX + "Test complete.");
@@ -367,7 +379,7 @@ public class MainActionHelper extends ActionHelper {
 
         public  Object result;
         private final Method method;
-        private final Object instance; // can be null
+        private final Object mainClassInstance; // can be null
         private final Object[] args;
         private final PrintStream out;
 

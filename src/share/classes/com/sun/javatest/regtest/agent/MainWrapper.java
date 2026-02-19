@@ -134,8 +134,8 @@ public class MainWrapper
 
                 // RUN JAVA PROGRAM
                 Class<?> c = Class.forName(className, false, cl);
-                if (MainMethodHelper.isCompactSourceFileAndInstanceMainMethodSupported()) {
-                    MainMethodHelper.executeMainClass(c, args);
+                if (MainMethodHelper.isModernMainSupported()) {
+                    MainMethodHelper.executeModernMainClass(c, args);
                     return;
                 }
                 Method mainMethod = c.getMethod("main", String[].class);
@@ -170,6 +170,18 @@ public class MainWrapper
                 System.err.println("JavaTest Message: declared public (test invoked via reflection)");
                 System.err.println();
                 AStatus.error(e.toString()).exit();
+            } catch (InstantiationException e) {
+                e.printStackTrace(System.err);
+                System.err.println();
+                System.err.println("JavaTest Message: cannot instantiate class " + className);
+                System.err.println();
+                AStatus.error(MAIN_CANT_CREATE_MAIN + e).exit();
+            } catch (ReflectiveOperationException e) {
+                e.printStackTrace(System.err);
+                System.err.println();
+                System.err.println("JavaTest Message: caught reflective operation exception for " + className);
+                System.err.println();
+                AStatus.error(MAIN_CANT_REFLECT_MAIN + e).exit();
             }
         } // run
 
@@ -234,6 +246,8 @@ public class MainWrapper
         MAIN_THREW_EXCEPT     = "`main' threw exception: ",
         MAIN_CANT_LOAD_TEST   = "Can't load test: ",
         MAIN_CANT_FIND_MAIN   = "Can't find `main' method",
+        MAIN_CANT_CREATE_MAIN = "Can't create instance of main class: ",
+        MAIN_CANT_REFLECT_MAIN = "Can't reflect main class: ",
         MAIN_SKIPPED          = "Skipped: ";
     private static final String SKIP_EXCEPTION = "jtreg.SkippedException";
 
