@@ -1850,9 +1850,11 @@ such as file manipulation, executing commands in sub-processes when necessary,
 and analyzing the results of those commands.
 
 jtreg provides a variant of `@run main` that can be useful in such situations:
-`@run driver`. This is the same as `@run main` with the exception that any VM
+`@run driver`. This is the same as `@run main` with the exception that most of VM
 options specified on the command line will not be used when running the specified class.
-Such code can start processes using the standard `java.util.ProcessBuilder` API.
+The only exception are certain VM options required to be compatible with driver class
+compilation setting. Like module access options or preview mode.
+Driver code can start processes using the standard `java.util.ProcessBuilder` API.
 To build up the command line to be invoked, the code may want to reference details
 about the test (such as the class path) or values that were given on the jtreg
 command line (such as the JDK being tested, or the set of any  VM options that
