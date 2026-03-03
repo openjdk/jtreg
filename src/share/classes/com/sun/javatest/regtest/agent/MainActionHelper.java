@@ -177,20 +177,22 @@ public class MainActionHelper extends ActionHelper {
             Class<?>[] argTypes;
             String[] classArgsArray = classArgs.toArray(new String[classArgs.size()]);
             Object[] methodArgs;
+            Method method;
             if (TestRunner.class.isAssignableFrom(c)) {
                 // Marker interface found: use main(ClassLoader, String...)
                 argTypes = new Class<?>[] { ClassLoader.class, String[].class };
                 methodArgs = new Object[] { loader, classArgsArray };
+                method = c.getMethod("main", argTypes);
             } else {
                 // Normal case: marker interface not found; use standard main method
                 argTypes = new Class<?>[] { String[].class };
                 methodArgs = new Object[] { classArgsArray };
+                method = MainMethodHelper.isModernMainSupported()
+                        ? MainMethodHelper.findMainMethod(c)
+                        : c.getMethod("main", argTypes);
             }
 
-            Method method = MainMethodHelper.isModernMainSupported()
-                    ? MainMethodHelper.findMainMethod(c)
-                    : c.getMethod("main", argTypes);
-            Object instance = MainMethodHelper.createMainInstanceOrNull(c, method);
+            Object mainInstance = MainMethodHelper.createMainInstanceOrNull(c, method);
 
             PrintStream realStdErr = System.err;
             AStatus stat = redirectOutput(out, err);
@@ -198,7 +200,7 @@ public class MainActionHelper extends ActionHelper {
                 return stat;
             }
 
-            AgentVMRunnable avmr = new AgentVMRunnable(method, instance, methodArgs, err);
+            AgentVMRunnable avmr = new AgentVMRunnable(method, mainInstance, methodArgs, err);
 
             // Main and Thread are same here
             // RUN JAVA IN ANOTHER THREADGROUP
