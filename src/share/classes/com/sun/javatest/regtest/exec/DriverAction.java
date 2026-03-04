@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014, 2026, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -95,7 +95,9 @@ public class DriverAction extends MainAction
         int i = 0, n = args.size();
         while (i < n) {
             String arg = args.get(i);
-            if (arg.startsWith("-D")) {
+            if (arg.equals("--enable-preview")) {
+                results.add(arg);
+            } else if (arg.startsWith("-D")) {
                 results.add(arg);
             } else if (i < n - 1) {
                 switch (arg) {
