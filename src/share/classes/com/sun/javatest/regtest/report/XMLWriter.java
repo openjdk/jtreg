@@ -189,6 +189,22 @@ public class XMLWriter {
         return "";
     }
 
+    private String getLastOutput(String name) throws TestResult.Fault {
+        String[] titles = tr.getSectionTitles();
+        String result = "";
+        // Find the last non-empty output from main/shell/compile sections
+        for (int i = 0; i < titles.length; i++) {
+            if (titles[i].equals("main") || titles[i].equals("shell") || titles[i].equals("compile")) {
+                Section s = tr.getSection(i);
+                String output = s.getOutput(name);
+                if (output != null && !output.isEmpty()) {
+                    result = output;
+                }
+            }
+        }
+        return result;
+    }
+
     private void insertSystemOut() throws TestResult.Fault {
         xps.indent();
         xps.print("<system-out>");
@@ -213,9 +229,60 @@ public class XMLWriter {
         xps.print(XMLWriter.FAILED);
         xps.println("\">");
         xps.sanitize(status.getReason());
+
+        try {
+            String crashInfo = extractCrashInfo();
+            if (crashInfo != null && !crashInfo.isEmpty()) {
+                xps.println("\n\n--- JVM Crash Details ---");
+                xps.sanitize(crashInfo);
+            }
+        } catch (TestResult.Fault e) {
+            // Ignore if we can't get crash info
+        }
+
         xps.indent();
         xps.println("");
         xps.println("</failure>");
+    }
+
+    private String extractCrashInfo() throws TestResult.Fault {
+        String stderr = getLastOutput("System.err");
+        String crashFromErr = extractCrashFromOutput(stderr);
+        if (crashFromErr != null) {
+            return crashFromErr;
+        }
+
+        String stdout = getLastOutput("System.out");
+        return extractCrashFromOutput(stdout);
+    }
+
+    private String extractCrashFromOutput(String output) {
+        if (output == null || output.isEmpty()) {
+            return null;
+        }
+
+        StringBuilder crash = new StringBuilder();
+        String[] lines = output.split("\n");
+        boolean inCrash = false;
+        int linesAdded = 0;
+
+        for (String line : lines) {
+            if (line.startsWith("#") && (line.contains("SIGSEGV") || line.contains("SIGBUS") ||
+                line.contains("SIGABRT") || line.contains("problematic frame") ||
+                line.contains("Internal Error") || line.contains("fatal error"))) {
+                inCrash = true;
+            }
+
+            if (inCrash) {
+                crash.append(line).append("\n");
+                linesAdded++;
+                if (linesAdded > 100 || (linesAdded > 20 && line.trim().isEmpty())) {
+                    break;
+                }
+            }
+        }
+
+        return crash.length() > 0 ? crash.toString() : null;
     }
 
     private void insertTestCase() throws TestResult.Fault {
