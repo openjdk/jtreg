@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2024, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2026, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -177,17 +177,22 @@ public class MainActionHelper extends ActionHelper {
             Class<?>[] argTypes;
             String[] classArgsArray = classArgs.toArray(new String[classArgs.size()]);
             Object[] methodArgs;
+            Method method;
             if (TestRunner.class.isAssignableFrom(c)) {
                 // Marker interface found: use main(ClassLoader, String...)
                 argTypes = new Class<?>[] { ClassLoader.class, String[].class };
                 methodArgs = new Object[] { loader, classArgsArray };
+                method = c.getMethod("main", argTypes);
             } else {
                 // Normal case: marker interface not found; use standard main method
                 argTypes = new Class<?>[] { String[].class };
                 methodArgs = new Object[] { classArgsArray };
+                method = MainMethodHelper.isModernMainSupported()
+                        ? MainMethodHelper.findMainMethod(c)
+                        : c.getMethod("main", argTypes);
             }
 
-            Method method = c.getMethod("main", argTypes);
+            Object mainInstance = MainMethodHelper.createMainInstanceOrNull(c, method);
 
             PrintStream realStdErr = System.err;
             AStatus stat = redirectOutput(out, err);
@@ -195,7 +200,7 @@ public class MainActionHelper extends ActionHelper {
                 return stat;
             }
 
-            AgentVMRunnable avmr = new AgentVMRunnable(method, methodArgs, err);
+            AgentVMRunnable avmr = new AgentVMRunnable(method, mainInstance, methodArgs, err);
 
             // Main and Thread are same here
             // RUN JAVA IN ANOTHER THREADGROUP
@@ -279,6 +284,18 @@ public class MainActionHelper extends ActionHelper {
             err.println(MSG_PREFIX + className + " in file " + className + ".java");
             err.println();
             status = error(MAIN_CANT_FIND_MAIN);
+        } catch (InstantiationException e) {
+            e.printStackTrace(err);
+            err.println();
+            err.println(MSG_PREFIX + "instantiating main class failed: " + className);
+            err.println();
+            status = error(MAIN_CANT_CREATE_MAIN_INSTANCE + className);
+        } catch (ReflectiveOperationException e) {
+            e.printStackTrace(err);
+            err.println();
+            err.println(MSG_PREFIX + "can't reflect over main: " + className);
+            err.println();
+            status = error(MAIN_CANT_REFLECT_MAIN_CLASS + className);
         } catch (ModuleHelper.Fault e) {
             if (e.getCause() != null)
                 e.printStackTrace(err);
@@ -304,6 +321,8 @@ public class MainActionHelper extends ActionHelper {
         MAIN_THREW_EXCEPT     = "`main' threw exception: ",
         MAIN_CANT_LOAD_TEST   = "Can't load test: ",
         MAIN_CANT_FIND_MAIN   = "Can't find `main' method",
+        MAIN_CANT_CREATE_MAIN_INSTANCE = "Can't instantiate main class: ",
+        MAIN_CANT_REFLECT_MAIN_CLASS = "Can't reflect main class: ",
         MAIN_CANT_INIT_MODULE_EXPORTS = "Can't init module exports: ",
         MAIN_SKIPPED = "Skipped: ";
 
@@ -322,8 +341,9 @@ public class MainActionHelper extends ActionHelper {
 
     private static class AgentVMRunnable implements Runnable
     {
-        public AgentVMRunnable(Method m, Object[] args, PrintStream out) {
+        public AgentVMRunnable(Method m, Object obj, Object[] args, PrintStream out) {
             method    = m;
+            this.mainClassInstance = obj;
             this.args = args;
             this.out  = out;
         } // SameVMRunnable()
@@ -332,7 +352,9 @@ public class MainActionHelper extends ActionHelper {
         public void run() {
             try {
                 // RUN JAVA PROGRAM
-                result = method.invoke(null, args);
+                result = method.getParameterCount() == 0
+                    ? method.invoke(mainClassInstance)
+                    : method.invoke(mainClassInstance, args);
 
                 out.println();
                 out.println(MSG_PREFIX + "Test complete.");
@@ -359,6 +381,7 @@ public class MainActionHelper extends ActionHelper {
 
         public  Object result;
         private final Method method;
+        private final Object mainClassInstance; // can be null
         private final Object[] args;
         private final PrintStream out;
 
