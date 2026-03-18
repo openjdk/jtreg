@@ -174,15 +174,11 @@ public class Basic
         int numPassed = 0, numFailed = 0, numError  = 0;
 
         // action counts
-        int numApplet = 0, numBuild  = 0, numClean  = 0, numCompile = 0,
+        int                numBuild  = 0, numClean  = 0, numCompile = 0,
             numIgnore = 0, numMain   = 0, numShell  = 0, numMisc    = 0;
         int numJUnit  = 0;
         int numTestNG = 0;
         int numDriver = 0;
-
-        // applet
-        numPassed += (isHeadless ? 0 : 2); numFailed += (isHeadless ? 0 : 4); numError  += 11;
-        numApplet += 11 + (isHeadless ? 0 : 6);
 
         // build
         numPassed += 6; numFailed += 0; numError  += 5;
@@ -245,7 +241,6 @@ public class Basic
             numFailed -= 12;
             numError += 0; // no change in error count
         }
-        actionTable.put("applet",  Integer.valueOf(numApplet));
         actionTable.put("build",   Integer.valueOf(numBuild));
         actionTable.put("clean",   Integer.valueOf(numClean));
         actionTable.put("compile", Integer.valueOf(numCompile));
@@ -477,7 +472,7 @@ public class Basic
         REP_ACTION           = "action: ";
 
     private static final String[] actionList = {
-        "applet", "build", "clean", "compile", "driver", "ignore", "junit", "testng", "main", "shell", "misc"
+        "build", "clean", "compile", "driver", "ignore", "junit", "testng", "main", "shell", "misc"
     };
 
     private static final String[] statusList = {

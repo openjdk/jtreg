@@ -37,7 +37,6 @@ $(BUILDTESTDIR)/DisallowedActions.ok: \
 			true "non-zero exit code from jtreg intentionally ignored"
 
 	$(GREP) 'Disallowed test action: shell' $(@:%.ok=%)/work/ShellTest.jtr > /dev/null
-	$(GREP) 'Disallowed test action: applet' $(@:%.ok=%)/work/AppletTest.jtr > /dev/null
 	$(GREP) 'MainTest executed' $(@:%.ok=%)/work/MainTest.jtr > /dev/null
 
 	echo "$@ test passed at `date`" > $@

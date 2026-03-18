@@ -593,7 +593,6 @@ public class RegressionScript extends Script {
     //----------internal methods------------------------------------------------
 
     private void populateActionTable() {
-        addAction(AppletAction.NAME,  AppletAction.class);
         addAction(BuildAction.NAME,   BuildAction.class);
         addAction(CleanAction.NAME,   CleanAction.class);
         addAction(CompileAction.NAME, CompileAction.class);
