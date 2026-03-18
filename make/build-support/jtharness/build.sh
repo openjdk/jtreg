@@ -53,7 +53,7 @@ setup_jtharness_source() {
         get_archive_no_checksum "${CODE_TOOLS_URL_BASE}/jtharness/archive/${BRANCH}.zip" "${JTHARNESS_LOCAL_SRC_ARCHIVE}" "${dir}"
         JTHARNESS_SRC_DIR="${dir}/jtharness-${BRANCH}"
     else
-        get_archive "${CODE_TOOLS_URL_BASE}/jtharness/archive/${JTHARNESS_SRC_TAG}.zip" "${JTHARNESS_LOCAL_SRC_ARCHIVE}" "${dir}" "${JTHARNESS_SRC_ARCHIVE_CHECKSUM}"
+        get_archive "https://github.com/sormuras/jtharness/archive/refs/tags/${JTHARNESS_SRC_TAG}.zip" "${JTHARNESS_LOCAL_SRC_ARCHIVE}" "${dir}" "${JTHARNESS_SRC_ARCHIVE_CHECKSUM}"
         JTHARNESS_SRC_DIR="${dir}/jtharness-${JTHARNESS_SRC_TAG}"
     fi
 }

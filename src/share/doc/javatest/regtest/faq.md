@@ -12,7 +12,7 @@ product tests -- in other words, just about any type of test except a
 conformance test.  (Conformance tests belong in a Technology
 Compatibility Kit (TCK), such as the Java Compatibility Kit (JCK)).
 Tests can often be written as small standalone Java programs, although
-in some cases an applet or a shell-script might be required.
+in some cases a shell-script might be required.
 
 ### What's a regression test?
 
@@ -89,8 +89,7 @@ Send email to `jtreg-discuss(at)openjdk.org`
 
 JUnit and TestNG not around when we started writing tests for JDK.
 And, the test tag specification has been specifically designed for testing
-JDK, with support for testing applets, command-line interfaces,
-and so on, as well as simple API tests.
+JDK, command-line interfaces, and so on, as well as simple API tests.
 
 And by now, there are many thousands of tests written for jtreg,
 so it would not be practical to convert them all to some other test framework.
@@ -820,7 +819,7 @@ and `-Xmx`_value_ to limit the memory usage.
 
 You can specify additional VM options for all JVMs used to execute tests,
 using the `-javaoption` and `-javaoptions` options. These options apply to
-the JVMs used for the `@run main` and `@run applet` actions. (They do _not_
+the JVMs used for the `@run main` and `@run junit` actions. (They do _not_
 apply to the JVMs used for the `@build` and `@compile` actions.)
 
 *   `-javaoption` can be used multiple times and can be used to add an
@@ -1146,11 +1145,10 @@ action (@build, @compile, @run, and so on) in order.  For each action:
     jtreg will attempt to get a suitable JVM from the pool, or create a new
     JVM if necessary.
 
-*   For Java tests (`@run main`, `@run applet`) jtreg will run the action
+*   For Java tests (`@run main`, `@run junit`) jtreg will run the action
     in a newly-created thread group. The action is over when one of the following
     occurs:
     * when the `main` method returns (for `@run main`)
-    * when the user clicks on one of `Pass`, `Fail` or `Done`(for `@run applet`)
     * when any thread in the thread group throws an exception,
       which is detected by using an uncaught exception handler for the thread group
 
@@ -1749,90 +1747,37 @@ workshop or jdb or whatever) you must set up your classpath in just the right
 way.  This makes it difficult to diagnose bugs that are reported against
 specific tests.
 
-### How do I write a test for an AWT bug or a Swing bug?
-
-Bugs in the graphical facilities of the JDK generally require
-manual interaction with applets.  Applet tests are written in much the
-same way as the simple `main` tests described above.  The
-primary differences are that a second "@" tag is given to indicate
-that the test is an applet test, and an appropriate HTML file is
-needed.  For example, an AWT test named `Foo.java` would
-have the form:
-
-~~~~java
-/* @test
- * @bug 9876543
- * @run applet/manual Foo.html
- */
-
-public class Foo extends java.awt.Applet { ... }
-~~~~
-
-or
-
-~~~~java
-public class Foo extends javax.swing.JApplet { ... }
-~~~~
-
-The `@run` tag tells the harness how to run the test.  The first
-argument is the run type, `applet`, followed by an option,
-`/manual`, that flags this test as a manual test requiring user
-interaction.  The remaining arguments to the `@run` tag are passed
-to the program in a manner appropriate to the run type.  In this case, the test
-will be run just as if the `appletviewer` had been invoked on
-`Foo.html`.  Thus `Foo.html` must contain, at least, an
-HTML `applet` tag with any necessary parameters.
-
-### How does the user know what to do for a manual applet test?
-
-When the harness runs a manual applet test, it will display the contents of
-the HTML file that defines the applet.  Include instructions in the HTML file
-so that the person running the test can figure out what to do if any
-interaction is required.
-
 ### Exactly what does the`/manual` option mean?
 
 The `/manual` option indicates to the harness that this is a
 manual test.  This allows the harness to distinguish manual from automatic
 tests, which is important since the latter can be run without user interaction.
 
-There are actually three kinds of applet manual tests: Self-contained tests,
+There are actually three kinds of manual tests: Self-contained tests,
 `yesno` tests, and `done` tests.
 
 * A self-contained manual test handles all user interaction itself.  If the
-    test fails, whether this is determined by the user or by the applet, then the
-    applet must throw an exception.  Self-contained tests specify
-    `applet/manual` for the first `@run` argument.
+    test fails, whether this is determined by the user, then the
+    test must throw an exception.  Self-contained tests specify
+    `main/manual` for the first `@run` argument.
 
 * A `yesno` test requests the harness to ask the user whether the test
     passes or fails.  To do this, the harness will put up `pass` and
     `fail` buttons, and it's up to the user to inspect the screen and
-    click one of the buttons.  The harness will take care of shutting down the applet.
-    The test will also fail if the applet throws an exception.  `Yesno`
-    tests specify `applet/manual=yesno` for the first `@run`
+    click one of the buttons.  
+    The test will also fail if the test throws an exception.  `Yesno`
+    tests specify `main/manual=yesno` for the first `@run`
     argument.
 
 * A `done` test requests the harness to put up a `done`
     button.  After the user has completed whatever actions are required by the
-    test, the user clicks `done` and the harness shuts down the applet.
+    test, the user clicks `done` and the harness shuts down the test.
     The program must itself determine whether the test is to pass or fail, and
     throw an exception in the latter case.  `Done` tests specify
-    `applet/manual=done` for the first `@run` argument.
+    `main/manual=done` for the first `@run` argument.
 
-`main` and `shell` may also specify the `manual` option using `main/manual` and
-`shell/manual` respectively.  These tests must be completely self-contained.
-
-### How does a manual applet test indicate success or failure?
-
-Just as with `main` tests, an applet may throw an exception
-at any time to indicate test failure.  A `done` test applet, for
-example, can check for failure in the `java.applet.Applet.destroy`
-method.  If an applet doesn't throw an exception, and if, in the case of a
-`yesno` test, the user clicks `pass`, then the test is
-considered to have passed.
-
-Be very careful about where failure is checked.  The AWT event thread does
-not propagate exceptions!
+`shell` may also specify the `manual` option using `shell/manual`.
+These tests must be completely self-contained.
 
 ### Can I (and should I) write shell tests?
 
@@ -1963,8 +1908,7 @@ Yes. You may place one or more separate test descriptions near the head
 of a test source file. Each test description should be in its own comment block,
 and begin with `@test`. By convention, the comment blocks should appear
 after any leading legal header, and before any executable code in the
-file. The feature is supported in normal Java tests, in shell tests,
-and in legacy applet tests.
+file. The feature is supported in normal Java tests and in shell tests.
 (It is not supported in JUnit or TestNG tests, which do not use explicit
 test descriptions.)
 
@@ -2258,7 +2202,7 @@ jtreg supports TestNG and Junit tests in two ways.
    These tests should normally be in the unnamed package
    (i.e. no package statement.)
    These tests can be freely intermixed with other tests using
-   `@run main`, `@run shell`, `@run applet` and so on.
+   `@run main`, `@run shell` and so on.
 
    You may place [multiple tests](#multiple-tests) containing such actions
    in a file.
@@ -2443,7 +2387,7 @@ to override any values, use the `-e` option.
 ### How do I set the `CLASSPATH` environment variable for my test?
 
 The harness sets the `CLASSPATH` for the `compile`,
-`main`, and `applet` actions to be the system class path
+and `main` actions to be the system class path
 plus the test's source and classes directory.
 
 It is possible to set the classpath for the `main/othervm` action
@@ -2496,7 +2440,7 @@ approach is that the same number of tests in a testsuite will always be run if
 the same arguments are given to `jtreg` regardless of the particular
 platform.
 
-For tests that are written in Java code (i.e. `applet` and
+For tests that are written in Java code (i.e.
 `main` tests), you may determine the platform via the system
 properties.  The following code fragment may be used to distinguish between
 SunOS sparc, SunOS x86, Windows, etc.
@@ -2537,7 +2481,7 @@ accomplishes the same task as above.
             echo "unrecognized system: $OS" ; exit 1 ;;
     esac
 
-### How can I make `applet` and `main` action tests read from data files?
+### How can I make `main` action tests read from data files?
 
 When jtreg is executed, it `cd`'s into a scratch area to
 ensure that a test can not alter the test suite.  Thus, a direct reference to a
@@ -2604,12 +2548,12 @@ running.
 
 Note that this question indicates that the test itself can not determine
 whether it passed or failed (i.e. it needs human intervention).  Thus, the test
-uses the `manual` option.  The suggestions provided for the [`applet` action](#applet-problems) may apply.
+uses the `manual` option.
 
 ### My test does tricky things that are not supported by `jtreg`. Can I still write a regression test?
 
 Yes.  Most tests can be written using a series of `main`,
-`clean`, `build`, `applet`, and
+`clean`, `build`, and
 `compile` actions.  However, there have been a few tests that need
 to do things like run a specific application or access specific environment
 variables.  The `shell` action allows a user to invoke a Bourne
@@ -2717,48 +2661,11 @@ or for API tests.
 
 ### When do I need to specify the `build` action?
 
-Each `main` and `applet` action contains an
+Each `main` action contains an
 implied `build` action.  The harness will build the class specified by
-the `main` or `applet` actions as needed without any
+the `main` action as needed without any
 prompting.  If the test requires additional class(es), every additional class
 must be associated with an explicit `build` action.
-
-### How do I decide whether my applet test should use the `main` action or the `applet` action?
-
-Ultimately, that decision is left to the person writing the test;
-however, the following should be considered.
-
-Tests which use the `applet` action are <i>not</i>
-necessarily restricted to tests which must run in a browser. Any
-Swing/AWT code which can be written such that it derives from
-`java.applet.Applet` or `javax.swing.JApplet` is
-a potential applet test.
-
-For tests which test graphics functionality, there are three major
-advantages to selecting the `applet` action over the
-`main` action: expanded `manual` support leading to less
-duplicated code per test, thread synchronization, and cleanup.
-
-Frequently, tests which test graphics functionality need some sort of user
-interaction to determine whether the test behaves as expected. The
-`applet` action takes care of providing a user interface which
-contains instructions for the user and the appropriate interface to indicate
-`pass`, `fail`, or `done` as indicated by the
-`manual` option.  User instructions are taken from the
-`.html` file referenced in the `applet` action.  Each
-`main` action which tests graphics functionality must implement
-their own version of this interface.  This path leads to more code needed per
-test and less consistency across tests in the test suite.
-
-A `main` action test is deemed to be completed when the
-`main` method returns. A test which requires multiple threads must
-take care not to allow the main method to return before those other threads
-have completed. The `applet` action handles basic AWT thread
-synchronization.
-
-Finally, the `applet` action handles test cleanup.  If a test can
-not or does not dispose top-level windows or any AWT threads, they will be
-eliminated by the harness after the test completes.
 
 ### I put in an `ignore` tag into my test description but my test wasn't ignored.
  The `ignore` tag should be used for tests that are too
@@ -2772,151 +2679,6 @@ that and any <i>subsequent</i> tags.  Check the location of the
 Yes. The tags may be used for documentation purposes in any file. Only
 those comments whose leading tag is `@test` is considered a test
 description
-
---------
-
-## Applet Problems
-
-### My `/manual` test sends events to `System.out/System.err` so that the user can determine whether the test behaved properly.  How do I write my test if I can't see these  output streams?
-
-The test code should be written to determine whether a test has passed or
-failed based on events generated during a given time-frame. Use the
-`/manual=done` option of the `applet` action to set the
-time frame.  If the user has not generated the expected event before the
-`done` button has been pressed, the test should detect this in the
-`destroy` method and throw an exception.
-
-While this approach takes potentially more time to implement, it avoids user
-error which may occur in checking the event.  This scheme also avoids string
-comparison of events. (A much safer way to determine whether the expected event
-has been received is to check the event type, coordinates, modifiers, etc.)
-
-**Warning!** The AWT event thread does not propagate exceptions!  It is
-recommended that all exceptions indicating failure of the test be thrown from
-one of the methods called by the harness.  (i.e. `init()`,
-`start()`, `stop()`, `destroy()`)
-
-The following simple `applet` test illustrates the recommended
-behavior.
-
-Basic `.html` test description file.
-
-    <html>
-        <body>
-            <!--
-                @test
-                @bug 2997924
-                @summary Sample test that verifies an event
-                @run applet/manual=done SampleTest.html
-            -->
-            <applet code=SampleTest width=200 height=50></applet>
-            Select the "pick me" check box.
-        </body>
-    </html>
-
-The sample test code.
-
-    import java.applet.Applet;
-    import java.awt.Checkbox;
-    import java.awt.FlowLayout;
-    import java.awt.Panel;
-    import java.awt.event.ItemEvent;
-    import java.awt.event.ItemListener;
-
-    // WARNING! The AWT event thread does not propagate exceptions!
-    // It is recommended that all exceptions indicating failure
-    // of the test be thrown from one of the methods called by the harness.
-    // (i.e. init(), start(), stop(), destroy())
-
-    public class SampleTest extends Applet {
-        public void init() {
-            setLayout(new FlowLayout());
-            add(new TestPanel(this));
-        }
-
-        public void destroy() {
-            if (myEvent == null)
-                throw new RuntimeException("no events");
-            else {
-                Checkbox cb = (Checkbox)(myEvent.getItemSelectable());
-                if (!(cb.getLabel().equals("pick me!") &amp;&amp; cb.getState()))
-                    throw new RuntimeException("unexpected last event");
-            }
-        }
-
-        class TestPanel extends Panel {
-            Checkbox pickMe, notMe;
-            Listener listener = new Listener();
-            Applet applet;
-
-            public TestPanel(Applet myApplet) {
-                applet = myApplet;
-                pickMe = new Checkbox("pick me!");
-                notMe  = new Checkbox("not me");
-
-                pickMe.addItemListener(listener);
-                notMe.addItemListener(listener);
-
-                add(pickMe);
-                add(notMe);
-            }
-
-            class Listener implements ItemListener {
-                // Don't throw an exception here.  The awt event thread
-                // will NOT propagate your exception!
-                public void itemStateChanged(ItemEvent event) {
-                    System.out.println("event: " + event);
-                    myEvent = event;
-                }
-            }
-        }
-
-        private ItemEvent myEvent;
-    }
-
-### I threw an exception, the output was sent to `System.err`, but my test still passed.  What happened?
-
-Verify that the exception was not thrown by the event thread.  The event
-thread does not propagate exceptions.  Furthermore, the event thread is in a
-separate thread group and the harness cannot catch exceptions thrown from there.
-It is _strongly_ recommended that all exceptions indicating failure of
-the test be thrown from one of the methods called by the harness.
-(i.e. `init()`, `start()`, `stop()`,
-`destroy()`)
-
-### My `applet` action test didn't run my `main` method!
-
-`applet` action tests do not call `main`. A test
-which uses the `applet` action is run by invoking its
-`init`, `start`, and `setVisible(true)`
-methods. Depending on the value of `manual`, the harness will pause
-either for a few seconds or until the user clicks on the `pass`,
-`fail`, or `done` buttons. Finally, the harness will invoke
-the `stop` and `destroy` methods.
-
-The `main` method of an `applet` action will only be
-used if the test was run directly, outside the harness.
-
-### If I have an applet test, do I put the test description in the `.html` file or the `.java` file?
-
-It doesn't matter. When `jtreg` is run on a test suite or
-directory, the test description will be found regardless of the file
-particulars.  When running a single test, `jtreg` must be invoked on
-the file which contains the test description.
-
-### For my `/manual` tests, how do I provide the user instructions to run the test?
-
-User instructions should be provided in the applet's HTML file.  The
-uninterpreted HTML file will be displayed by the `applet` action in
-a TextArea labelled `html file instructions:`.
-
-### For `/manual` tests, how is the initial size of the running applet determined?
-
-The size of the applet is statically determined by the
-`height` and `width` attributes provided to the HTML
-`applet` tag.  The applet interface provides a way to dynamically
-change the size of the applet by setting the `applet size:` to
-"`variable`".
 
 --------
 
@@ -2974,20 +2736,6 @@ criteria are met:
 * No options to `main` are required
 
 In removing the line, we take advantage of the default action for `.java` files.
-
-### `Error. Parse Exception: 'applet' requires exactly one file argument`
-
-**Answer**: The applet action requires a single argument which should
-be the name of the `.html` file which contains (at minimum) the HTML
-`applet` tag.
-
-### `Error. Parse Exception: 'archive' not supported in file:` &#8230;
-
-**More Symptoms**: The test is an `applet` action test.
-The HTML `applet` tag includes the `archive` attribute.
-
-**Answer**: The regression extensions to the harness do not support the
-`archive` attribute.
 
 ### `test results: no tests selected`
 

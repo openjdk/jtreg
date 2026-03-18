@@ -464,8 +464,7 @@ handle whatever user interaction is necessary.  If "<code>yesno</code>" is given
 harness will ask the user whether the action is to pass or fail.  If "<code>done</code>" is
 given, then the harness will wait until the user indicates that the test has
 completed.  When the harness queries the user it does so in a manner
-appropriate to the action type; e.g., for applet actions it will either display
-"<code>pass</code>" or "<code>fail</code>" buttons or a single "<code>done</code>" button.  In the failure case, some
+appropriate to the action type.  In the failure case, some
 harnesses may provide a way for the user to submit text describing the failure.
 
 <dt>/policy=<var>&lt;file&gt;</var>
@@ -547,7 +546,7 @@ To locate the source files denoted by a wildcard, the harness evaluates the
 wildcard relative to test-source directory and relative to each directory of
 the library path list, taking all matches.  Each discovered class will be
 compiled if its corresponding class file does not exist or is older than its
-source file.  Intended primarily for use before main and applet actions that
+source file.  Intended primarily for use before main actions that
 require more than one class to be compiled.  Passes only if the compiler
 finishes without error, or if none of the specified classes need to be
 compiled.
@@ -710,56 +709,6 @@ and placed alongside other tests using other combinations of actions.
 See <a href="#TESTNG">below</a> for details on how to set up a directory
 containing only standard TestNG tests.
 
-<dt>applet[/fail][/manual[=(yesno|done)]][/othervm][/policy=<var>&lt;file&gt;</var>]
-        [/secure=<var>&lt;class&gt;</var>][/timeout=<var>&lt;sec&gt;</var>] <var>&lt;html-file&gt;</var>
-<dd>
-<p>Run the applet described by the first <code>&lt;applet&gt;</code> HTML tag in the given
-<var>&lt;html-file&gt;</var>, ignoring any other <code>&lt;applet&gt;</code> tags.  The applet action is roughly
-equivalent to "appletviewer <var>&lt;html-file&gt;</var>"; the major difference is that the
-applet is not run in the restricted security environment implemented by the
-appletviewer.  Intended primarily for tests of graphics functionality; tests of
-the appletviewer itself can be written using shell actions.  Passes if the
-applet does not throw any exceptions from any thread and, if the <code>/manual</code> option
-is specified with a value of "<code>yesno</code>", the user indicates that the test passes.
-
-<p>The class named in the <code>&lt;applet&gt;</code> tag will be compiled on demand, just as though
-an "<code>@run</code> build <var>&lt;class&gt;</var>" action had been inserted before this action.  If this
-action requires classes other the class named in the <code>&lt;applet&gt;</code> tag to be
-up to date, insert an appropriate build action before this action.
-
-<p>If <code>/manual</code> is not specified, then the applet will be run by invoking its <code>init</code>,
-<code>start</code>, and <code>setVisible(true)</code> methods (in that order), delaying for a few
-seconds, and then invoking its stop and destroy methods (in that order).
-
-<p>The <code>/manual</code> option may be specified to indicate that the test requires human
-interaction.  In this case the HTML file itself will be displayed; it should
-contain any instructions for the user.  When displaying the HTML file, a
-harness may or may not interpret HTML tags other than the <code>&lt;applet&gt;</code> tag; thus
-the instructions should be written in a way that does not depend upon HTML
-rendering.
-
-<p>If <code>/manual</code> is specified alone, i.e., without any value argument, then the
-applet will be run just as in the non-manual case.  The harness will skip this
-action, and treat it as though it had passed, when instructed to run only
-automatic tests.
-
-<p>If <code>/manual=yesno</code> is specified, then the harness will ask the user whether the
-test passes or fails, typically by displaying "<code>pass</code>" and "<code>fail</code>" buttons.  The
-applet will be run by invoking its <code>init</code>, <code>start</code>, and <code>setVisible(true)</code> methods
-(in that order), waiting for the user to click on "<code>pass</code>" or "<code>fail</code>", and then
-invoking the applet's <code>stop</code> and <code>destroy</code> methods (in that order).
-
-<p>If <code>/manual=done</code> is specified, then the harness will wait for the user to
-indicate that the test is complete, typically by displaying a "<code>done</code>" button.
-The applet will be run by invoking its <code>init</code>, <code>start</code>, and <code>setVisible(true)</code>
-methods (in that order), waiting for the user to click on "<code>done</code>", and then
-invoking the applet's <code>stop</code> and <code>destroy</code> methods (in that order).
-
-<p>The setting of the system properties "<code>java.security.manager</code>" and
-"<code>java.security.policy</code>" in applet/othervm actions is also discouraged; the
-<code>/policy</code> and <code>/secure</code> options should be used instead.
-
-
 <dt>shell[/fail][/manual][/timeout=<var>&lt;seconds&gt;</var>] <var>&lt;script&gt;</var> <var>&lt;arg&gt;*</var>
 <dd>
 <p>Invoke the Bourne shell to run <var>&lt;script&gt;</var> on the given <var>&lt;arg&gt;</var>s.  The <var>&lt;script&gt;</var>
@@ -852,9 +801,9 @@ available to shell-action scripts via the environment variables <code>TESTSRC</c
 trailing separators.
 
 <p>The names of the source and class directories of a test are made available to
-main and applet actions via the system properties "test.src" and
+main actions via the system properties "test.src" and
 "test.classes", respectively.  The directory names do not have trailing
-separators.  Main and applet actions can read data files defined in the test's
+separators.  Main actions can read data files defined in the test's
 source directory using this idiom:
 
 <pre class="example">
@@ -1047,7 +996,6 @@ upon the file's filename extension.
         <td><var>&lt;name&gt;</var> is the name of the file without the ".java" suffix
 
     <tr><td>.sh<td><code>@run shell <var>&lt;file&gt;</var></code><td>
-    <tr><td>.html<td><code>@run applet <var>&lt;file&gt;</var></code><td>
 </table>
 
 
@@ -1100,15 +1048,6 @@ then compile <code>Bar</code>, and finally run <code>Bar</code>, which is expect
    @compile Foo.java
    @compile Bar.java
    @run main/fail Bar
- */
-</pre>
-
-<p>Run the applet described in the file Foo.html, waiting for the user to indicate
-success or failure.
-
-<pre class="example">
-/* @test
- * @run applet/manual=yesno Foo.html
  */
 </pre>
 

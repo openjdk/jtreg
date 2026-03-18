@@ -21,4 +21,4 @@
 # questions.
 #
 
-disallowedActions=shell,applet
+disallowedActions=shell
