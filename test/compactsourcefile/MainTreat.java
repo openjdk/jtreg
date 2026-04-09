@@ -22,7 +22,7 @@
  */
 
 interface MainTreat {
-    static void main() {
+    default void main() {
         IO.println(getClass());
     }
 }
