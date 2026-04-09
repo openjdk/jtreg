@@ -23,8 +23,8 @@
 
 /*
  * @test
- * @build MainTreat
- * @run main MainProgram
- * @run driver MainProgram
+ * @build MainBase
+ * @run main MainBaseTest
+ * @run driver MainBaseTest
  */
-class MainProgram implements MainTreat {}
+class MainBaseTest extends MainBase {}
