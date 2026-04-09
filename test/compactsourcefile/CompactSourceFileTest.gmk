@@ -54,7 +54,7 @@ $(BUILDTESTDIR)/CompactSourceFile25.agentvm.ok: \
 		-jdk:$(JDK25HOME) \
 		$(TESTDIR)/compactsourcefile \
 			> $(@:%.ok=%/jt.log) 2>&1
-	$(GREP) -s 'Test results: passed: 5' $(@:%.ok=%/jt.log)  > /dev/null
+	$(GREP) -s 'Test results: passed: 7' $(@:%.ok=%/jt.log)  > /dev/null
 	echo "test passed at `date`" > $@
 
 $(BUILDTESTDIR)/CompactSourceFile25.othervm.ok: \
@@ -67,7 +67,7 @@ $(BUILDTESTDIR)/CompactSourceFile25.othervm.ok: \
 		-jdk:$(JDK25HOME) \
 		$(TESTDIR)/compactsourcefile \
 			> $(@:%.ok=%/jt.log) 2>&1
-	$(GREP) -s 'Test results: passed: 5' $(@:%.ok=%/jt.log)  > /dev/null
+	$(GREP) -s 'Test results: passed: 7' $(@:%.ok=%/jt.log)  > /dev/null
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += $(BUILDTESTDIR)/CompactSourceFile25.agentvm.ok
