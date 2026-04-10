@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014, 2026, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -23,6 +23,7 @@
 
 /*
  * @test
+ * @bug 7901983 7904172
  * @run main/native NativesOK
  */
 
@@ -47,5 +48,8 @@ public class NativesOK {
         String[] paths = j_l_path.split("\\"+File.pathSeparator);
         if (!Arrays.asList(paths).contains(t_native))
             throw new Error("System property 'test.nativepath' is not part of 'java.library.path'");
+
+        if (!NativesOK.class.getClassLoader().getUnnamedModule().isNativeAccessEnabled())
+            throw new Error("ALL-UNNAMED modules should have native access enabled");
     }
 }
