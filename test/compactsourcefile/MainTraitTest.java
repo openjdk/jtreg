@@ -23,8 +23,8 @@
 
 /*
  * @test
- * @build MainTreat
- * @run main MainTreatTest
- * @run driver MainTreatTest
+ * @build MainTrait
+ * @run main MainTraitTest
+ * @run driver MainTraitTest
  */
-class MainTreatTest implements MainTreat {}
+class MainTraitTest implements MainTrait {}

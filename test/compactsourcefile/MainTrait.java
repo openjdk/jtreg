@@ -21,7 +21,7 @@
  * questions.
  */
 
-interface MainTreat {
+interface MainTrait {
     default void main() {
         IO.println(getClass());
     }
