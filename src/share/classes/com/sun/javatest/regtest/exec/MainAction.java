@@ -237,6 +237,9 @@ public class MainAction extends Action
 
         if (nativeCode && !seenEnableNativeAccess) {
             testJavaArgs.add("--enable-native-access=ALL-UNNAMED");
+            if (!othervm) {
+                othervmOverrideReasons.add("/native test requires --enable-native-access=ALL-UNNAMED");
+            }
         }
 
         if (!script.disablePreview()) { // test with explicit `@enablePreview false` take precedence
