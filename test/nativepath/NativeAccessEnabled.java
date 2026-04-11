@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2026, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -23,29 +23,15 @@
 
 /*
  * @test
- * @run main/native NativesOK
+ * @bug 7904172
+ * @requires jdk.version.major >= 22
+ * @run main/native NativeAccessEnabled
  */
 
-import java.io.File;
-import java.util.Arrays;
-
-public class NativesOK {
+public class NativeAccessEnabled {
     public static void main(String[] args) {
-        String j_l_path = System.getProperty("java.library.path");
-        String t_native = System.getProperty("test.nativepath");
-        String c_native = System.getProperty("correct.nativepath").replace("/", File.separator);
-
-        System.out.println("java.library.path: " + j_l_path);
-        System.out.println("test.nativepath: " + t_native);
-        System.out.println("correct.nativepath: " + c_native);
-
-        if (!t_native.equals(c_native))
-            throw new Error("System property 'test.nativepath' not set correctly");
-        if (j_l_path == null)
-            throw new Error("System property 'java.library.path' not set");
-
-        String[] paths = j_l_path.split("\\"+File.pathSeparator);
-        if (!Arrays.asList(paths).contains(t_native))
-            throw new Error("System property 'test.nativepath' is not part of 'java.library.path'");
+        var module = NativeAccessEnabled.class.getClassLoader().getUnnamedModule();
+        if (!module.isNativeAccessEnabled()) // Module#isNativeAccessEnabled requires Java 22+
+            throw new Error("ALL-UNNAMED modules should have native access enabled");
     }
 }

@@ -236,6 +236,7 @@ public class MainAction extends Action
         }
 
         if (nativeCode && !seenEnableNativeAccess) {
+            // TODO Only add argument on Test JDK 17 or higher
             testJavaArgs.add("--enable-native-access=ALL-UNNAMED");
             if (!othervm) {
                 othervmOverrideReasons.add("/native test requires --enable-native-access=ALL-UNNAMED");
