@@ -148,7 +148,7 @@ $(BUILDTESTDIR)/TestNativeAccessEnabled.ok: \
 
 	cd $(BUILDTESTDIR); $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
 		-jdk:$(JDKHOME) \
-		-nativepath:$(NATIVEPATH) \ \
+		-nativepath:$(NATIVEPATH) \
 		-w:$(@:%.ok=%nativeaccessenabled)/work \
 		-r:$(@:%.ok=%nativeaccessenabled)/report \
 		-verbose:fail \
@@ -160,10 +160,12 @@ TESTS.jtreg += \
     $(BUILDTESTDIR)/TestNativePath.ok \
     $(BUILDTESTDIR)/TestNativePath.agentvm.ok \
     $(BUILDTESTDIR)/TestNativePath.othervm.ok \
-    $(BUILDTESTDIR)/TestRelativeNativePath.ok
+    $(BUILDTESTDIR)/TestRelativeNativePath.ok \
+	$(BUILDTESTDIR)/TestNativeAccessEnabled.ok
 
 testnativepath: \
     $(BUILDTESTDIR)/TestNativePath.ok \
     $(BUILDTESTDIR)/TestNativePath.agentvm.ok \
     $(BUILDTESTDIR)/TestNativePath.othervm.ok \
-    $(BUILDTESTDIR)/TestRelativeNativePath.ok
+    $(BUILDTESTDIR)/TestRelativeNativePath.ok \
+	$(BUILDTESTDIR)/TestNativeAccessEnabled.ok
