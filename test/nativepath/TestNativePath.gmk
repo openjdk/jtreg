@@ -139,6 +139,20 @@ $(BUILDTESTDIR)/TestRelativeNativePath.ok: \
 
 	echo "$@ test passed at `date`" > $@
 
+TESTS.jtreg += \
+    $(BUILDTESTDIR)/TestNativePath.ok \
+    $(BUILDTESTDIR)/TestNativePath.agentvm.ok \
+    $(BUILDTESTDIR)/TestNativePath.othervm.ok \
+    $(BUILDTESTDIR)/TestRelativeNativePath.ok
+
+testnativepath: \
+    $(BUILDTESTDIR)/TestNativePath.ok \
+    $(BUILDTESTDIR)/TestNativePath.agentvm.ok \
+    $(BUILDTESTDIR)/TestNativePath.othervm.ok \
+    $(BUILDTESTDIR)/TestRelativeNativePath.ok
+
+ifdef JDK25HOME
+
 # verify that --enable-native-access=ALL-UNNAMED is added
 # for a test with the /native argument
 $(BUILDTESTDIR)/TestNativeAccessEnabled.ok: \
@@ -156,16 +170,7 @@ $(BUILDTESTDIR)/TestNativeAccessEnabled.ok: \
 
 	echo "$@ test passed at `date`" > $@
 
-TESTS.jtreg += \
-    $(BUILDTESTDIR)/TestNativePath.ok \
-    $(BUILDTESTDIR)/TestNativePath.agentvm.ok \
-    $(BUILDTESTDIR)/TestNativePath.othervm.ok \
-    $(BUILDTESTDIR)/TestRelativeNativePath.ok \
-	$(BUILDTESTDIR)/TestNativeAccessEnabled.ok
+TESTS.jtreg += $(BUILDTESTDIR)/TestNativeAccessEnabled.ok
+testnativepath += $(BUILDTESTDIR)/TestNativeAccessEnabled.ok
 
-testnativepath: \
-    $(BUILDTESTDIR)/TestNativePath.ok \
-    $(BUILDTESTDIR)/TestNativePath.agentvm.ok \
-    $(BUILDTESTDIR)/TestNativePath.othervm.ok \
-    $(BUILDTESTDIR)/TestRelativeNativePath.ok \
-	$(BUILDTESTDIR)/TestNativeAccessEnabled.ok
+endif
