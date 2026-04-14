@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2014, 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2014, 2026, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -150,3 +150,27 @@ testnativepath: \
     $(BUILDTESTDIR)/TestNativePath.agentvm.ok \
     $(BUILDTESTDIR)/TestNativePath.othervm.ok \
     $(BUILDTESTDIR)/TestRelativeNativePath.ok
+
+ifdef JDK25HOME
+
+# verify that --enable-native-access=ALL-UNNAMED is added
+# for a test with the /native argument
+$(BUILDTESTDIR)/TestNativeAccessEnabled.ok: \
+                $(JTREG_IMAGEDIR)/lib/javatest.jar \
+		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
+		$(JTREG_IMAGEDIR)/bin/jtreg
+
+	cd $(BUILDTESTDIR); $(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-jdk:$(JDK25HOME) \
+		-nativepath:$(NATIVEPATH) \
+		-w:$(@:%.ok=%nativeaccessenabled)/work \
+		-r:$(@:%.ok=%nativeaccessenabled)/report \
+		-verbose:fail \
+		$(ABS_TESTDIR)/nativepath/NativeAccessEnabled.java
+
+	echo "$@ test passed at `date`" > $@
+
+TESTS.jtreg += $(BUILDTESTDIR)/TestNativeAccessEnabled.ok
+testnativepath += $(BUILDTESTDIR)/TestNativeAccessEnabled.ok
+
+endif

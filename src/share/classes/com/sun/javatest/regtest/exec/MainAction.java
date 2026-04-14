@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2025, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2026, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -188,6 +188,7 @@ public class MainAction extends Action
             othervmOverrideReasons.add("test or library uses bootclasspath");
         }
 
+        boolean seenEnableNativeAccess = false;
         boolean seenEnablePreview = false;
         // separate the arguments into the options to java, the
         // classname and the parameters to the named class
@@ -195,6 +196,9 @@ public class MainAction extends Action
             String arg = args.get(i);
             if (testClassName == null) {
                 if (arg.startsWith("-")) {
+                    if (arg.startsWith("--enable-native-access")) {
+                        seenEnableNativeAccess = true;
+                    }
                     if (arg.equals("--enable-preview")) {
                         seenEnablePreview = true;
                     }
@@ -229,6 +233,14 @@ public class MainAction extends Action
                 throw new ParseException(PARSE_POLICY_OTHERVM);
             if (secureCN != null)
                 throw new ParseException(PARSE_SECURE_OTHERVM);
+        }
+
+        if (nativeCode && !seenEnableNativeAccess) {
+            // TODO Only add argument on Test JDK 17 or higher
+            testJavaArgs.add("--enable-native-access=ALL-UNNAMED");
+            if (!othervm) {
+                othervmOverrideReasons.add("/native test requires --enable-native-access=ALL-UNNAMED");
+            }
         }
 
         if (!script.disablePreview()) { // test with explicit `@enablePreview false` take precedence
