@@ -58,8 +58,12 @@ final class MainMethodHelper {
 
     // Similar to jdk.internal.misc.MethodFinder#findMainMethod
     static Method findMainMethod(Class<?> cls) throws NoSuchMethodException {
-        List<Method> methods = Stream.of(cls.getDeclaredMethods())
+        List<Method> methods = Stream.concat(
+                    Stream.of(cls.getDeclaredMethods()), // prefer "local" methods
+                    Stream.of(cls.getMethods()) // include public inherited methods
+                )
                 .filter(m -> "main".equals(m.getName()))
+                .distinct()
                 .collect(Collectors.toList()); // no .toList() with --release 8
 
         // JLA.findMethod(cls, true, "main", String[].class);
