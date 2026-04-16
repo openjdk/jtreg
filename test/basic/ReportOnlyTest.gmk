@@ -66,8 +66,8 @@ $(BUILDTESTDIR)/ReportOnlyTest.ok: $(BUILDTESTDIR)/Basic.othervm.ok \
 			EXPECT_FAIL=32 ; \
 		fi ; \
 	fi ; \
-	echo "Expect: Test results: passed: $${EXPECT_PASS}; failed: $${EXPECT_FAIL}; error: 88" ; \
-	$(GREP) -s "Test results: passed: $${EXPECT_PASS}; failed: $${EXPECT_FAIL}; error: 88" $(@:%.ok=%.jt.log)  > /dev/null
+	echo "Expect: Test results: passed: $${EXPECT_PASS}; failed: $${EXPECT_FAIL}; error: 77" ; \
+	$(GREP) -s "Test results: passed: $${EXPECT_PASS}; failed: $${EXPECT_FAIL}; error: 77" $(@:%.ok=%.jt.log)  > /dev/null
 	echo $@ passed at `date` > $@
 
 TESTS.jtreg += $(BUILDTESTDIR)/ReportOnlyTest.ok

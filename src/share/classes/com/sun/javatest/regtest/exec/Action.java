@@ -749,7 +749,7 @@ public abstract class Action extends ActionHelper {
         //LOG_JDK               = "JDK under test: ",
 
         // COMMON
-        // used in:  shell, main, applet
+        // used in:  shell, main
         EXEC_FAIL             = "Execution failed",
         EXEC_FAIL_EXPECT      = "Execution failed as expected",
         EXEC_PASS_UNEXPECT    = "Execution passed unexpectedly",
@@ -761,24 +761,6 @@ public abstract class Action extends ActionHelper {
         AGENTVM_EXCEPTION        = "Agent error: %s; check console log for any additional details",
 
         CANT_FIND_SRC         = "Can't find source file: ",
-
-        // applet
-        APPLET_ONE_ARG_REQ    = "`applet' requires exactly one file argument",
-        APPLET_BAD_VAL_MANUAL = "Bad value for `manual' option: ",
-        APPLET_BAD_OPT        = "Bad option for applet: ",
-        APPLET_CANT_FIND_HTML = "Can't find HTML file: ",
-        APPLET_HTML_READ_PROB = "Problem reading HTML file: ",
-        APPLET_MISS_ENDBODY   = "No </body> tag in ",
-        APPLET_MISS_APPLET    = "No <applet> tag in ",
-        APPLET_MISS_ENDAPPLET = "No </applet> tag in ",
-        APPLET_MISS_REQ_ATTRIB= " missing required attribute ",
-        APPLET_ARCHIVE_USUPP  = "`archive' not supported in file: ",
-        APPLET_MISS_REQ_PARAM = "Missing required name or value for param in <param> tag",
-        APPLET_CANT_WRITE_ARGS= "Can't write `applet' argument file",
-        APPLET_SECMGR_FILEOPS = "Unable to create applet argument file",
-
-        APPLET_USER_EVAL      = ", user evaluated",
-        APPLET_MANUAL_TEST    = "Manual test",
 
         // build
         BUILD_UNEXPECT_OPT    = "Unexpected options for `build'",

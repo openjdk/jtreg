@@ -409,7 +409,7 @@ public class MainAction extends Action
         // CONSTRUCT THE COMMAND LINE
 
         // TAG-SPEC:  "The source and class directories of a test are made
-        // available to main and applet actions via the system properties
+        // available to main actions via the system properties
         // "test.src" and "test.classes", respectively"
         Map<String, String> env = new LinkedHashMap<>();
         env.putAll(getEnvVars(nativeCode));
@@ -608,7 +608,7 @@ public class MainAction extends Action
             showMode(getName(), ExecMode.AGENTVM, section);
 
         // TAG-SPEC:  "The source and class directories of a test are made
-        // available to main and applet actions via the system properties
+        // available to main actions via the system properties
         // "test.src" and "test.classes", respectively"
         Map<String, String> javaProps = script.getTestProperties();
 
