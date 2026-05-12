@@ -25,10 +25,14 @@
 
 package com.sun.javatest.regtest.agent;
 
+import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -45,7 +49,6 @@ final class MainMethodHelper {
     static void executeModernMainClass(Class<?> mainClass, String[] mainArgs) throws
             ReflectiveOperationException {
         Method mainMethod = requireMainMethod(mainClass);
-        mainMethod.setAccessible(true);
         Object mainInstance = createMainInstanceOrNull(mainClass, mainMethod);
         if (mainMethod.getParameterCount() == 0) {
             mainMethod.invoke(mainInstance);
@@ -54,10 +57,28 @@ final class MainMethodHelper {
         }
     }
 
+    // Similar to sun.launcher.LauncherHelper#checkAndLoadMain
+    static Object createMainInstanceOrNull(Class<?> mainClass, Method mainMethod) throws
+            NoSuchMethodException,
+            InvocationTargetException,
+            InstantiationException,
+            IllegalAccessException {
+        boolean isStatic = Modifier.isStatic(mainMethod.getModifiers());
+        if (isStatic) return null;
+        Constructor<?> constructor = mainClass.getDeclaredConstructor();
+        constructor.setAccessible(true);
+        return constructor.newInstance();
+    }
+
     /**
      * Return the first method that meets the requirements of an application main method.
-     * This behaves the same as {@link #findMainMethod(Class)}, except that if any main method
-     * isn't found, then this method throws a {@link NoSuchMethodException}.
+     * This behaves the same as {@link #findMainMethod(Class)}, except that:
+     * <ul>
+     *     <li>If no main method is found, then this method throws
+     *     a {@link NoSuchMethodException}</li>
+     *     <li>If a main method is found, then this method tries to set that method as accessible
+     *     by calling {@link Method#trySetAccessible()} on it</li>
+     * </ul>
      *
      * @param cls the class on which main method is being searched for
      * @return the first method that meets the requirements of an application main method
@@ -67,6 +88,10 @@ final class MainMethodHelper {
     static Method requireMainMethod(Class<?> cls) throws NoSuchMethodException {
         Method mainMethod = findMainMethod(cls);
         if (mainMethod != null) {
+            try {
+                LazyHolder.TRY_SET_ACCESSIBLE_METHOD.invoke(mainMethod);
+            } catch (ReflectiveOperationException ignored) {
+            }
             return mainMethod;
         }
         throw new NoSuchMethodException("No main method found in " + cls);
@@ -82,6 +107,8 @@ final class MainMethodHelper {
      *  <li>have the return type of void</li>
      *  <li>be public, protected or package private</li>
      * </ul>
+     * <p>
+     * This method may be called only if {@link #isModernMainSupported()} returns {@code true}.
      *
      * @param cls the class on which main method is being searched for
      * @return the first method that meets the requirements of an application main method, or null
@@ -90,34 +117,29 @@ final class MainMethodHelper {
     // Similar to jdk.internal.misc.MethodFinder#findMainMethod
     static Method findMainMethod(Class<?> cls) {
         Method mainMethod = null;
-        // first try "public static/non-static void main(String[])"
+        // find the most widely used "public static void main(String[])" first
         try {
             mainMethod = cls.getMethod("main", String[].class);
         } catch (NoSuchMethodException ignored) {
         }
 
         if (mainMethod == null) {
-            // if not public method, try to lookup a non-public one
-            try {
-                mainMethod = cls.getDeclaredMethod("main", String[].class);
-            } catch (NoSuchMethodException ignored) {
-            }
+            // if not public method, try to lookup a non-public one which takes
+            // a String[] parameter
+            mainMethod = findMainMethod(cls, false, String[].class);
         }
 
         if (mainMethod == null || !isValidMainMethod(cls, mainMethod)) {
-            // if not found, then ignore the param types and search for
-            // any public/non-public method named "main"
-            Method[] declaredMethods = cls.getDeclaredMethods();
-            for (Method m : declaredMethods) {
-                if (m.getName().equals("main")) {
-                    mainMethod = m;
-                    break;
-                }
-            }
+            // if not found, then look for public/non-public main method that
+            // doesn't take any parameters
+            mainMethod = findMainMethod(cls, false);
         }
+
         if (mainMethod == null || !isValidMainMethod(cls, mainMethod)) {
+            // no eligible main method found
             return null;
         }
+
         return mainMethod;
     }
 
@@ -138,18 +160,6 @@ final class MainMethodHelper {
                 && c1.getClassLoader() == c2.getClassLoader();
     }
 
-    // Similar to sun.launcher.LauncherHelper#checkAndLoadMain
-    static Object createMainInstanceOrNull(Class<?> mainClass, Method mainMethod) throws
-            NoSuchMethodException,
-            InvocationTargetException,
-            InstantiationException,
-            IllegalAccessException {
-        boolean isStatic = Modifier.isStatic(mainMethod.getModifiers());
-        if (isStatic) return null;
-        Constructor<?> constructor = mainClass.getDeclaredConstructor();
-        constructor.setAccessible(true);
-        return constructor.newInstance();
-    }
 
     private static String getPackageName(final Class<?> klass) {
         try {
@@ -160,26 +170,104 @@ final class MainMethodHelper {
         }
     }
 
-    // Direct reference to Class.getPackageName() isn't possible because
-    // this MainMethodHelper class may run in Java 8 environments where that method isn't available.
-    // This is a convenience holder class which provides reflective access to that method and
-    // delays the reflective lookup to that method until after it's certain that the runtime
+    private static Method findMainMethod(final Class<?> klass, final boolean publicOnly,
+                                         final Class<?>... parameterTypes) {
+        final List<Method> mainMethods = getMainMethodsRecursive(klass, parameterTypes,
+                true, publicOnly);
+        return mainMethods.isEmpty() ? null : mainMethods.get(0);
+    }
+
+    // this implementation is heavily borrowed from the JDK's Class.getMethodsRecursive()
+    private static List<Method> getMainMethodsRecursive(final Class<?> klass,
+                                                        final Class<?>[] parameterTypes,
+                                                        final boolean includeStatic,
+                                                        final boolean publicOnly) {
+        final List<Method> res = new ArrayList<>();
+        // first check declared methods
+        final Method[] methods = getDeclaredMethods(klass, publicOnly);
+        for (final Method m : methods) {
+            if (Modifier.isStatic(m.getModifiers()) && !includeStatic) {
+                // not an eligible method
+                continue;
+            }
+            if (!m.getName().equals("main")) {
+                // not an eligible method
+                continue;
+            }
+            if (!Arrays.equals(m.getParameterTypes(), parameterTypes)) {
+                // not an eligible method
+                continue;
+            }
+            // eligible method
+            res.add(m);
+        }
+        // if there is at least one match among declared methods, we need not
+        // search any further as such match surely overrides matching methods
+        // declared in superclass(es) or interface(s).
+        if (!res.isEmpty()) {
+            return res;
+        }
+
+        // if there was no match among declared methods,
+        // we must consult the superclass (if any) recursively
+        Class<?> superClass = klass.getSuperclass();
+        if (superClass != null) {
+            res.addAll(getMainMethodsRecursive(superClass, parameterTypes,
+                    includeStatic, publicOnly));
+        }
+        // now from directly implemented interfaces excluding static methods
+        for (final Class<?> intf : klass.getInterfaces()) {
+            res.addAll(getMainMethodsRecursive(intf, parameterTypes, false, publicOnly));
+        }
+        return res;
+    }
+
+    private static Method[] getDeclaredMethods(final Class<?> klass, final boolean publicOnly) {
+        final Method[] methods = klass.getDeclaredMethods();
+        if (!publicOnly) {
+            return methods;
+        }
+        final List<Method> publicMethods = new ArrayList<>();
+        for (final Method m : methods) {
+            if (Modifier.isPublic(m.getModifiers())) {
+                publicMethods.add(m);
+            }
+        }
+        return publicMethods.toArray(new Method[0]);
+    }
+
+    // Direct reference to Class.getPackageName() and AccessibleObject.trySetAccessible()
+    // isn't possible because this MainMethodHelper class may run in Java 8 environments where those
+    // methods aren't available.
+    // This is a convenience holder class which provides reflective access to those methods and
+    // delays the reflective lookup to them until after it's certain that the runtime
     // environment is Java 25 or higher (where modern main methods are applicable)
     private static final class LazyHolder {
         // reflective access to Class.getPackageName() method which is only available on Java 9+
         private static final Method PACKAGE_NAME_METHOD;
+        // reflective access to AccessibleObject.trySetAccessible() method which
+        // is only available on Java 9+
+        private static final Method TRY_SET_ACCESSIBLE_METHOD;
 
         static {
-            Method m;
             try {
-                m = Class.class.getMethod("getPackageName");
+                PACKAGE_NAME_METHOD = Class.class.getMethod("getPackageName");
             } catch (NoSuchMethodException e) {
                 // This should never happen because this static initializer will only
                 // be called on Java versions 25 or higher and those versions are
                 // expected to have the Class.getPackageName() method (it's there since Java 9)
                 throw new Error("Missing Class.getPackageName() method");
             }
-            PACKAGE_NAME_METHOD = m;
+
+            try {
+                TRY_SET_ACCESSIBLE_METHOD = AccessibleObject.class.getMethod("trySetAccessible");
+            } catch (NoSuchMethodException e) {
+                // This should never happen because this static initializer will only
+                // be called on Java versions 25 or higher and those versions are
+                // expected to have the AccessibleObject.trySetAccessible() method
+                // (it's there since Java 9)
+                throw new Error("Missing AccessibleObject.trySetAccessible() method");
+            }
         }
     }
 }
