@@ -188,7 +188,7 @@ public class MainActionHelper extends ActionHelper {
                 argTypes = new Class<?>[] { String[].class };
                 methodArgs = new Object[] { classArgsArray };
                 method = MainMethodHelper.isModernMainSupported()
-                        ? MainMethodHelper.findMainMethod(c)
+                        ? MainMethodHelper.requireMainMethod(c)
                         : c.getMethod("main", argTypes);
             }
 
