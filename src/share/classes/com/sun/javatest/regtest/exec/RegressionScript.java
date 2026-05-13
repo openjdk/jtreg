@@ -1182,8 +1182,8 @@ public class RegressionScript extends Script {
             p.put("test.enable.preview", "false");
         }
         File testDefinitionFile = td.getFile();
-        if (properties.isModernMainAllowed(testDefinitionFile)) {
-            p.put("test.allowModernMain", "true");
+        if (!properties.isModernMainAllowed(testDefinitionFile)) {
+            p.put("test.allowModernMain", "false");
         }
         p.put("test.root", getTestRootDir().getPath());
         return Collections.unmodifiableMap(p);

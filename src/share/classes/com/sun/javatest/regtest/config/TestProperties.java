@@ -574,13 +574,13 @@ public class TestProperties {
 
             private boolean initModernMainSupport(Entry parent) {
                 final String val = properties.getProperty("allowCompactSourceInstanceMainMethod");
-                if ("true".equals(val)) {
-                    return true;
+                if ("false".equals(val)) {
+                    return false;
                 }
                 if (parent != null) {
                     return parent.allowModernMain;
                 }
-                return false;
+                return true; // enabled by default
             }
 
             private File toFile(File baseDir, String v) {

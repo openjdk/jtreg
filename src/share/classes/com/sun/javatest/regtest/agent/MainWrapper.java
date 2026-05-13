@@ -134,8 +134,9 @@ public class MainWrapper
 
                 // RUN JAVA PROGRAM
                 Class<?> c = Class.forName(className, false, cl);
-                boolean allowModernMain = Boolean.getBoolean("test.allowModernMain");
-                if (allowModernMain && MainMethodHelper.isModernMainSupported()) {
+                // enabled by default
+                String allowModernMain = System.getProperty("test.allowModernMain", "true");
+                if (Boolean.parseBoolean(allowModernMain) && MainMethodHelper.isModernMainSupported()) {
                     MainMethodHelper.executeModernMainClass(c, args);
                 } else {
                     Method mainMethod = c.getMethod("main", String[].class);

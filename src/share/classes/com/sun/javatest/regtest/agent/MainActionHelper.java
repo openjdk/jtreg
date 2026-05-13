@@ -134,7 +134,7 @@ public class MainActionHelper extends ActionHelper {
         SaveState saved = new SaveState();
 
         Properties p = System.getProperties();
-        boolean allowModernMain = false;
+        boolean allowModernMain = true; // enabled by default
         for (Map.Entry<String, String> e : props.entrySet()) {
             String name = e.getKey();
             String value = e.getValue();

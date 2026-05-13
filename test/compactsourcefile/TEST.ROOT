@@ -1,1 +1,1 @@
-allowCompactSourceInstanceMainMethod=true
+

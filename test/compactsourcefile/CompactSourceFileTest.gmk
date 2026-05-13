@@ -53,8 +53,10 @@ $(BUILDTESTDIR)/CompactSourceFile25.agentvm.ok: \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDK25HOME) \
 		$(TESTDIR)/compactsourcefile \
-			> $(@:%.ok=%/jt.log) 2>&1
+			> $(@:%.ok=%/jt.log) 2>&1 || \
+		true "non-zero exit code from JavaTest intentionally ignored"
 	$(GREP) -s 'Test results: passed: 7' $(@:%.ok=%/jt.log)  > /dev/null
+	$(GREP) -s "test result: Error. Can't find \`main' method" $(@:%.ok=%/work/disabled/InstanceMainNotExpectedToLaunch.jtr)  > /dev/null
 	echo "test passed at `date`" > $@
 
 $(BUILDTESTDIR)/CompactSourceFile25.othervm.ok: \
@@ -66,8 +68,10 @@ $(BUILDTESTDIR)/CompactSourceFile25.othervm.ok: \
 		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
 		-jdk:$(JDK25HOME) \
 		$(TESTDIR)/compactsourcefile \
-			> $(@:%.ok=%/jt.log) 2>&1
+			> $(@:%.ok=%/jt.log) 2>&1 || \
+		true "non-zero exit code from JavaTest intentionally ignored"
 	$(GREP) -s 'Test results: passed: 7' $(@:%.ok=%/jt.log)  > /dev/null
+	$(GREP) -s "test result: Error. Can't find \`main' method" $(@:%.ok=%/work/disabled/InstanceMainNotExpectedToLaunch.jtr)  > /dev/null
 	echo "test passed at `date`" > $@
 
 TESTS.jtreg += $(BUILDTESTDIR)/CompactSourceFile25.agentvm.ok
