@@ -134,12 +134,15 @@ public class MainActionHelper extends ActionHelper {
         SaveState saved = new SaveState();
 
         Properties p = System.getProperties();
+        boolean allowModernMain = false;
         for (Map.Entry<String, String> e : props.entrySet()) {
             String name = e.getKey();
             String value = e.getValue();
             if (name.equals("test.class.path.prefix")) {
                 SearchPath cp = new SearchPath(value, System.getProperty("java.class.path"));
                 p.put("java.class.path", cp.toString());
+            } else if (name.equals("test.allowModernMain")) {
+                allowModernMain = Boolean.parseBoolean(value);
             } else {
                 p.put(e.getKey(), e.getValue());
             }
@@ -187,7 +190,7 @@ public class MainActionHelper extends ActionHelper {
                 // Normal case: marker interface not found; use standard main method
                 argTypes = new Class<?>[] { String[].class };
                 methodArgs = new Object[] { classArgsArray };
-                method = MainMethodHelper.isModernMainSupported()
+                method = allowModernMain && MainMethodHelper.isModernMainSupported()
                         ? MainMethodHelper.requireMainMethod(c)
                         : c.getMethod("main", argTypes);
             }

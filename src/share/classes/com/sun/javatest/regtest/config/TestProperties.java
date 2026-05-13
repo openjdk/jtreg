@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2025, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2026, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -176,6 +176,17 @@ public class TestProperties {
         return getEntry(file).disallowedActions;
     }
 
+    /**
+     * Returns true if compact source and instance main method is allowed
+     * for the given {@code file}, false otherwise.
+     *
+     * @param file the test file
+     * @return true if compact source and instance main method is allowed, false otherwise
+     */
+    public final boolean isModernMainAllowed(File file) {
+        return getEntry(file).allowModernMain;
+    }
+
     boolean getAllowSmartActionArgs(File file) {
         return getEntry(file).allowSmartActionArgs;
     }
@@ -237,6 +248,9 @@ public class TestProperties {
             final boolean enablePreview;
             final Duration defaultTimeout;
             final Set<String> disallowedActions;
+            // whether compact java source files and "modern" instance
+            // main methods, as specified by JEP-512, allowed
+            final boolean allowModernMain;
 
             Entry(Entry parent, File dir) {
                 this.parent = parent;
@@ -301,6 +315,9 @@ public class TestProperties {
 
                     // test actions that aren't allowed in the test definition
                     disallowedActions = initDisallowedActions(parent);
+
+                    // JEP-512 support for "compat source files and instance main methods"
+                    allowModernMain = initModernMainSupport(parent);
                 } else {
                     if (parent == null)
                         throw new IllegalStateException("TEST.ROOT not found");
@@ -322,6 +339,7 @@ public class TestProperties {
                     allowSmartActionArgs = parent.allowSmartActionArgs;
                     enablePreview = parent.enablePreview;
                     this.disallowedActions = parent.disallowedActions;
+                    allowModernMain = parent.allowModernMain;
                 }
 
                 useBootClassPath= initUseBootClassPath(parent, dir);
@@ -551,6 +569,17 @@ public class TestProperties {
                     return parent.shareLibraries;
                 }
 
+                return false;
+            }
+
+            private boolean initModernMainSupport(Entry parent) {
+                final String val = properties.getProperty("allowCompactSourceInstanceMainMethod");
+                if ("true".equals(val)) {
+                    return true;
+                }
+                if (parent != null) {
+                    return parent.allowModernMain;
+                }
                 return false;
             }
 
