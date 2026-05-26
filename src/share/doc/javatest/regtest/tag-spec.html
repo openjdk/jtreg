@@ -1035,6 +1035,13 @@ See <a href="#requires_names">Appendix 1</a>.
 features and that the necessary compile-time and run-time options should be provided automatically.
 The default value can be overridden in individual tests using the <code>@enablePreview</code>
 declarative tag.
+
+<dt id="allowCompactSourceInstanceMainMethod"><code>allowCompactSourceInstanceMainMethod <var>&lt;true|false&gt;</var></code>
+<dd>Specify whether the "main" action tests in this directory and any subdirectories may use compact
+source and instance main methods. If not specified, this property defaults to true. Compact
+source and instance main methods is applicable only in Java 25 and higher versions. Setting this
+property for test JDK versions lesser than Java 25 plays no role in how jtreg determines the main
+method to launch.
 </dl>
 
 
