@@ -13,12 +13,12 @@ jobs:
 
     steps:
     - name: 'Check out repository'
-      uses: actions/checkout@v6
+      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       with:
         fetch-depth: 1
 
     - name: 'Set up Java Development Kits'
-      uses: actions/setup-java@v5
+      uses: actions/setup-java@ad2b38190b15e4d6bdf0c97fb4fca8412226d287 # v5.3.0
       with:
         distribution: 'oracle'
         java-version: |
@@ -53,10 +53,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - name: Run tests in FreeBSD
         id: test
-        uses: vmactions/freebsd-vm@v1
+        uses: vmactions/freebsd-vm@b84ab5559b5a1bb4b8ee2737d2506a16e1737636 # v1.4.8
         with:
           prepare: |
             pkg install -y bash curl git gmake gnugrep openjdk21 zip
