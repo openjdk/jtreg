@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2022, 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022, 2026, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -27,6 +27,11 @@
 #
 # Execute all (6) test methods in the test suite
 
+JUNIT_QUERY_TEST_STDOUT = $$( $(AWK) '/STDOUT:/,/STDERR:/{ print $$0; } { }' $(@:%.ok=%)/jt.log \
+		| $(GREP) -v STD \
+		| $(SED) -e 's/\r$$//' \
+		| xargs $(ECHO) )
+
 $(BUILDTESTDIR)/JUnitQueryTest.all.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
 		$(JTREG_IMAGEDIR)/bin/jtreg
@@ -39,7 +44,7 @@ $(BUILDTESTDIR)/JUnitQueryTest.all.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		-va \
 		$(TESTDIR)/junitQueryTest/ \
 		 > $(@:%.ok=%)/jt.log 2>&1
-	OUT=$$( $(ECHO) $$( $(AWK) '/STDOUT:/,/STDERR:/{ print $0; } { }' $(@:%.ok=%)/jt.log | $(GREP) -v STD ) ) ; \
+	OUT=$(JUNIT_QUERY_TEST_STDOUT) ; \
 	if [ "$$OUT" != "Test1.parameterized Test1.m11 Test1.m12 Test1.m13 Test1.nested Test2.m21 Test2.m22 Test2.m23" ]; then \
 	    echo "unexpected set of tests run: $$OUT"; exit 1 ; \
 	fi
@@ -64,7 +69,7 @@ $(BUILDTESTDIR)/JUnitQueryTest.m12.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		-va \
 		$(TESTDIR)/junitQueryTest/a/b/c/Test1.java?m12 \
 		 > $(@:%.ok=%)/jt.log 2>&1
-	OUT=$$( $(ECHO) $$( $(AWK) '/STDOUT:/,/STDERR:/{ print $0; } { }' $(@:%.ok=%)/jt.log | $(GREP) -v STD ) ) ; \
+	OUT=$(JUNIT_QUERY_TEST_STDOUT) ; \
 	if [ "$$OUT" != "Test1.m12" ]; then \
 	    echo "unexpected set of tests run: $$OUT"; exit 1 ; \
 	fi
@@ -92,7 +97,7 @@ $(BUILDTESTDIR)/JUnitQueryTest.m12.Test2.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar 
 		$(TESTDIR)/junitQueryTest/a/b/c/Test1.java?m12 \
 		$(TESTDIR)/junitQueryTest/a/b/c/Test2.java \
 		 > $(@:%.ok=%)/jt.log 2>&1
-	OUT=$$( $(ECHO) $$( $(AWK) '/STDOUT:/,/STDERR:/{ print $0; } { }' $(@:%.ok=%)/jt.log | $(GREP) -v STD ) ) ; \
+	OUT=$(JUNIT_QUERY_TEST_STDOUT) ; \
 	if [ "$$OUT" != "Test1.m12 Test2.m21 Test2.m22 Test2.m23" ]; then \
 	    echo "unexpected set of tests run: $$OUT"; exit 1 ; \
 	fi
@@ -119,7 +124,7 @@ $(BUILDTESTDIR)/JUnitQueryTest.m13.m12.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(TESTDIR)/junitQueryTest/a/b/c/Test1.java?m13 \
 		$(TESTDIR)/junitQueryTest/a/b/c/Test1.java?m12 \
 		 > $(@:%.ok=%)/jt.log 2>&1
-	OUT=$$( $(ECHO) $$( $(AWK) '/STDOUT:/,/STDERR:/{ print $0; } { }' $(@:%.ok=%)/jt.log | $(GREP) -v STD ) ) ; \
+	OUT=$(JUNIT_QUERY_TEST_STDOUT) ; \
 	if [ "$$OUT" != "Test1.m12" ]; then \
 	    echo "unexpected set of tests run: $$OUT"; exit 1 ; \
 	fi
@@ -146,7 +151,7 @@ $(BUILDTESTDIR)/JUnitQueryTest.m12.m13.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(TESTDIR)/junitQueryTest/a/b/c/Test1.java?m12 \
 		$(TESTDIR)/junitQueryTest/a/b/c/Test1.java?m13 \
 		 > $(@:%.ok=%)/jt.log 2>&1
-	OUT=$$( $(ECHO) $$( $(AWK) '/STDOUT:/,/STDERR:/{ print $0; } { }' $(@:%.ok=%)/jt.log | $(GREP) -v STD ) ) ; \
+	OUT=$(JUNIT_QUERY_TEST_STDOUT) ; \
 	if [ "$$OUT" != "Test1.m13" ]; then \
 	    echo "unexpected set of tests run: $$OUT"; exit 1 ; \
 	fi
@@ -173,7 +178,7 @@ $(BUILDTESTDIR)/JUnitQueryTest.m13.all.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(TESTDIR)/junitQueryTest/a/b/c/Test1.java?m13 \
 		$(TESTDIR)/junitQueryTest/a/b/c/Test1.java \
 		 > $(@:%.ok=%)/jt.log 2>&1
-	OUT=$$( $(ECHO) $$( $(AWK) '/STDOUT:/,/STDERR:/{ print $0; } { }' $(@:%.ok=%)/jt.log | $(GREP) -v STD ) ) ; \
+	OUT=$(JUNIT_QUERY_TEST_STDOUT) ; \
 	if [ "$$OUT" != "Test1.parameterized Test1.m11 Test1.m12 Test1.m13 Test1.nested" ]; then \
 	    echo "unexpected set of tests run: $$OUT"; exit 1 ; \
 	fi
@@ -200,7 +205,7 @@ $(BUILDTESTDIR)/JUnitQueryTest.all.m13.ok: $(JTREG_IMAGEDIR)/lib/javatest.jar \
 		$(TESTDIR)/junitQueryTest/a/b/c/Test1.java \
 		$(TESTDIR)/junitQueryTest/a/b/c/Test1.java?m13 \
 		 > $(@:%.ok=%)/jt.log 2>&1
-	OUT=$$( $(ECHO) $$( $(AWK) '/STDOUT:/,/STDERR:/{ print $0; } { }' $(@:%.ok=%)/jt.log | $(GREP) -v STD ) ) ; \
+	OUT=$(JUNIT_QUERY_TEST_STDOUT) ; \
 	if [ "$$OUT" != "Test1.m13" ]; then \
 	    echo "unexpected set of tests run: $$OUT"; exit 1 ; \
 	fi
@@ -225,7 +230,7 @@ $(BUILDTESTDIR)/JUnitQueryTest.parameterized.ok: $(JTREG_IMAGEDIR)/lib/javatest.
 		-va \
 		"$(TESTDIR)/junitQueryTest/a/b/c/Test1.java?junit-select:method:Test1#parameterized(java.lang.String,Test1\$$NestedClass,boolean,byte,char,short,int,long,float,double,[Ljava.lang.String;,[Z,[B,[C,[S,[I,[J,[F,[D)" \
 		 > $(@:%.ok=%)/jt.log 2>&1
-	OUT=$$( $(ECHO) $$( $(AWK) '/STDOUT:/,/STDERR:/{ print $0; } { }' $(@:%.ok=%)/jt.log | $(GREP) -v STD ) ) ; \
+	OUT=$(JUNIT_QUERY_TEST_STDOUT) ; \
 	if [ "$$OUT" != "Test1.parameterized" ]; then \
 	    echo "unexpected set of tests run: $$OUT"; exit 1 ; \
 	fi
@@ -250,7 +255,7 @@ $(BUILDTESTDIR)/JUnitQueryTest.nested.class.ok: $(JTREG_IMAGEDIR)/lib/javatest.j
 		-va \
 		"$(TESTDIR)/junitQueryTest/a/b/c/Test1.java?junit-select:class:Test1\$$NestedTests" \
 		 > $(@:%.ok=%)/jt.log 2>&1
-	OUT=$$( $(ECHO) $$( $(AWK) '/STDOUT:/,/STDERR:/{ print $0; } { }' $(@:%.ok=%)/jt.log | $(GREP) -v STD ) ) ; \
+	OUT=$(JUNIT_QUERY_TEST_STDOUT) ; \
 	if [ "$$OUT" != "Test1.nested" ]; then \
 	    echo "unexpected set of tests run: $$OUT"; exit 1 ; \
 	fi
@@ -275,7 +280,7 @@ $(BUILDTESTDIR)/JUnitQueryTest.toplevel.class.ok: $(JTREG_IMAGEDIR)/lib/javatest
 		-va \
 		"$(TESTDIR)/junitQueryTest/a/b/c/Test1.java?junit-select:class:Test1" \
 		 > $(@:%.ok=%)/jt.log 2>&1
-	OUT=$$( $(ECHO) $$( $(AWK) '/STDOUT:/,/STDERR:/{ print $0; } { }' $(@:%.ok=%)/jt.log | $(GREP) -v STD ) ) ; \
+	OUT=$(JUNIT_QUERY_TEST_STDOUT) ; \
 	if [ "$$OUT" != "Test1.parameterized Test1.m11 Test1.m12 Test1.m13 Test1.nested" ]; then \
 	    echo "unexpected set of tests run: $$OUT"; exit 1 ; \
 	fi
@@ -301,7 +306,7 @@ $(BUILDTESTDIR)/JUnitQueryTest.invalidQuery.ok: $(JTREG_IMAGEDIR)/lib/javatest.j
 		$(TESTDIR)/junitQueryTest/a/b/c?m13 \
 			> $(@:%.ok=%)/jt.log 2>&1 || \
 		true "non-zero exit code from jtreg intentionally ignored"
-	$(GREP) -s "Error: Invalid use of query component: a/b/c?m13" $(@:%.ok=%)/jt.log
+	$(GREP) -s "Error: Invalid use of query component: .*a[/\\]b[/\\]c?m13" $(@:%.ok=%)/jt.log
 	echo $@ passed at `date` > $@
 
 TESTS.jtreg += $(BUILDTESTDIR)/JUnitQueryTest.invalidQuery.ok

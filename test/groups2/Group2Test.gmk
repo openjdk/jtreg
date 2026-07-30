@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2022, 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022, 2026, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -41,7 +41,7 @@ $(Group2Test.GROUPS:%=$(BUILDTESTDIR)/Group2Test.%.ok): \
 		-jdk:$(JDKHOME) \
 		$(TESTDIR)/groups2:$(@:$(BUILDTESTDIR)/Group2Test.%.ok=%) \
 		1>$(@:%.ok=%)/jt.log 2>&1
-	$(GREP) '^Test results: passed: 3$$' $(@:%.ok=%)/jt.log
+	$(SED) -e 's/\r$$//' $(@:%.ok=%)/jt.log | $(GREP) '^Test results: passed: 3$$'
 	echo $@ passed at `date` > $@
 
 $(Group2Test.GROUPS:%=$(BUILDTESTDIR)/Group2Test.report-files.%.ok): \
@@ -54,7 +54,7 @@ $(Group2Test.GROUPS:%=$(BUILDTESTDIR)/Group2Test.report-files.%.ok): \
 		-report:files \
 		$(TESTDIR)/groups2:$(@:$(BUILDTESTDIR)/Group2Test.report-files.%.ok=%) \
 		1>$(@:%.ok=%)/jt.log 2>&1
-	$(GREP) '^Test results: passed: 3$$' $(@:%.ok=%)/jt.log
+	$(SED) -e 's/\r$$//' $(@:%.ok=%)/jt.log | $(GREP) '^Test results: passed: 3$$'
 	echo $@ passed at `date` > $@
 
 TESTS.jtreg += $(BUILDTESTDIR)/Group2Test.ok

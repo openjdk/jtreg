@@ -50,7 +50,7 @@ $(BUILDTESTDIR)/TestKeywords.badProps.ok: \
 		$(TESTDIR)/keywords/badProps \
 		> $(@:%.ok=%/jt.log) 2>&1 || \
 	    true "non-zero exit code from JavaTest intentionally ignored"
-	$(GREP) -s "Error: .*/test/keywords/badProps/badProps/TEST.properties: bad keyword 'bad%word': invalid character: %" $(@:%.ok=%/jt.log)  > /dev/null
+	$(GREP) -s "Error: .*[/\\]test[/\\]keywords[/\\]badProps[/\\]badProps[/\\]TEST.properties: bad keyword 'bad%word': invalid character: %" $(@:%.ok=%/jt.log)  > /dev/null
 	echo $@ passed at `date` > $@
 
 $(BUILDTESTDIR)/TestKeywords.badTest.ok: \
