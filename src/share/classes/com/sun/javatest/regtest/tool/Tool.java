@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2025, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2026, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -682,6 +682,9 @@ public class Tool {
                 if (isCygwinDetected()) {
                     out.println(i18n.getString("main.warn.wsl.specified.found.cygwin"));
                 }
+                if (isMSysDetected()) {
+                    out.println(i18n.getString("main.warn.wsl.specified.found.msys"));
+                }
                 useWindowsSubsystemForLinux = true;
             }
         },
@@ -1197,7 +1200,7 @@ public class Tool {
             if (useWindowsSubsystemForLinux == null) {
                 // The test for Cygwin is more specific than the test for WSL,
                 // and so we give priority to Cygwin if both are detected.
-                useWindowsSubsystemForLinux = !isCygwinDetected() && isWindowsSubsystemForLinuxDetected();
+                useWindowsSubsystemForLinux = !isCygwinDetected() && !isMSysDetected() && isWindowsSubsystemForLinuxDetected();
             }
         } else {
             useWindowsSubsystemForLinux = false;
@@ -2329,6 +2332,19 @@ public class Tool {
         if (isWindows()) {
             String PATH = System.getenv("PATH");
             return (PATH != null) && PATH.matches("(?i).*;[a-z]:[^;]*\\\\cygwin.*");
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Returns whether MSys is available, by examining whether the
+     * {@code MSYSTEM} environment variable is non-empty.
+     */
+    private boolean isMSysDetected() {
+        if (isWindows()) {
+            String msystem = System.getenv("MSYSTEM");
+            return msystem != null && !msystem.isEmpty();
         } else {
             return false;
         }
