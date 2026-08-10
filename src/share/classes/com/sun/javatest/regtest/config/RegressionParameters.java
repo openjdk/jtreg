@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001, 2024, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2001, 2026, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -350,7 +350,11 @@ public final class RegressionParameters
     }
 
 
-    private static class TestListWithPlatforms {
+    /**
+     * Determines whether a {@linkplain TestDescription test} has been problem listed
+     * for a particular platform.
+     */
+    private static class PlatformProblemListing {
 
         private static Set<String> getPlatforms(OS os) {
 
@@ -395,25 +399,48 @@ public final class RegressionParameters
         private final ExcludeList el;
         private final Set<String> osPlatforms;
 
-        TestListWithPlatforms(ExcludeList el, OS os) {
+        private PlatformProblemListing(ExcludeList el, OS os) {
             this.el = el;
             this.osPlatforms = getPlatforms(os);
         }
 
-        public boolean match(TestDescription td) {
-            ExcludeList.Entry e = el.getEntry(td.getRootRelativeURL());
-            if (e == null) {
-                return false;
+        /**
+         * Returns {@code true} if the {@code test} is problem listed for the {@link OS}
+         * with which this {@code PlatformProblemListing} was
+         * {@linkplain #PlatformProblemListing constructed}. {@code false}, otherwise.
+         */
+        private boolean isProblemListed(final TestDescription test) {
+            final String testURL = test.getRootRelativeURL();
+            // first, check for the presence of a problem list entry using the test root relative
+            // URL. if the test name has an id, then this will look for a "test#id" problem listing
+            // entry.
+            ExcludeList.Entry problemListEntry = el.getEntry(testURL);
+            // if no problem listing entry was found and if the test name has an id,
+            // then look for any problem listing entry without the "#id" part. that should find
+            // any problem listing entry that may have problem listed the entire test.
+            if (problemListEntry == null && test.getId() != null) {
+                final int idx = testURL.lastIndexOf("#");
+                if (idx == -1) {
+                    // this should never happen when TestDescription.getId() has already
+                    // returned non-null
+                    throw new IllegalStateException("missing # in root relative URL of test: "
+                            + testURL);
+                }
+                final String withoutId = testURL.substring(0, idx);
+                problemListEntry = el.getEntry(withoutId);
             }
-            String[] platforms = e.getPlatforms();
-            if (platforms.length == 0 || (platforms.length == 1 && platforms[0].length() == 0)) {
+            if (problemListEntry == null) {
+                return false; // there are no problem listing entries for the test
+            }
+            String[] platforms = problemListEntry.getPlatforms();
+            if (platforms.length == 0 || (platforms.length == 1 && platforms[0].isEmpty())) {
                 // allow for old ProblemList.txt format
-                String[] bugIds = e.getBugIdStrings();
+                String[] bugIds = problemListEntry.getBugIdStrings();
                 if (bugIds.length > 0 && !bugIds[0].matches("0|([1-9][0-9,]*)"))
                     platforms = bugIds;
             }
 
-            if (platforms.length == 0 || (platforms.length == 1 && platforms[0].length() == 0)) {
+            if (platforms.length == 0 || (platforms.length == 1 && platforms[0].isEmpty())) {
                 return true;
             }
 
@@ -452,7 +479,7 @@ public final class RegressionParameters
                         "jtregExcludeListFilter",
                         "Select tests which are not excluded on any exclude list",
                         "Test has been excluded by an exclude list") {
-                    final TestListWithPlatforms list = new TestListWithPlatforms(el, getTestOS());
+                    final PlatformProblemListing list = new PlatformProblemListing(el, getTestOS());
                     @Override
                     protected String getCacheKey(TestDescription td) {
                         return td.getRootRelativeURL();
@@ -460,7 +487,7 @@ public final class RegressionParameters
 
                     @Override
                     public boolean getCacheableValue(TestDescription td) {
-                        return !list.match(td);
+                        return !list.isProblemListed(td);
                     }
                 };
             }
@@ -488,7 +515,7 @@ public final class RegressionParameters
                         "jtregMatchListFilter",
                         "Select tests which are in a match list",
                         "Test is not in a match list") {
-                    final TestListWithPlatforms list = new TestListWithPlatforms(el, getTestOS());
+                    final PlatformProblemListing problemListing = new PlatformProblemListing(el, getTestOS());
                     @Override
                     protected String getCacheKey(TestDescription td) {
                         return td.getRootRelativeURL();
@@ -496,7 +523,7 @@ public final class RegressionParameters
 
                     @Override
                     public boolean getCacheableValue(TestDescription td) {
-                        return list.match(td);
+                        return problemListing.isProblemListed(td);
                     }
                 };
             }

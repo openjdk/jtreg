@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2012, 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2012, 2026, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -45,6 +45,61 @@ $(BUILDTESTDIR)/exclude.agentvm.ok: \
 	    || (cat $(@:%.ok=%/log) ; exit 1)
 	echo $@ passed at `date` > $@
 
-TESTS.jtreg += \
-	$(BUILDTESTDIR)/exclude.othervm.ok \
-	$(BUILDTESTDIR)/exclude.agentvm.ok
+# Verifies that if a problem listing file uses "#" id for a test
+# then it is correctly excluded and the rest of the tests are executed
+# correctly
+$(BUILDTESTDIR)/exclude.specificid.ok: \
+                $(JTREG_IMAGEDIR)/lib/javatest.jar \
+		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
+		$(JTREG_IMAGEDIR)/bin/jtreg
+
+	$(RM) $(@:%.ok=%)
+	$(MKDIR) $(@:%.ok=%)
+	$(ECHO) "p/MultiIdTest.java#id1 12345 generic-all" > $(@:%.ok=%)/SpecificIdProblemListing.txt
+
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-jdk:$(JDKHOME) \
+		-w $(@:%.ok=%)/work/ \
+		-r $(@:%.ok=%)/report/ \
+		-exclude:$(@:%.ok=%)/SpecificIdProblemListing.txt \
+		$(TESTDIR)/exclude/p/MultiIdTest.java > $(@:%.ok=%/jt.log) 2>&1
+
+	$(GREP) 'Test results: passed: 2; excluded: 1' $(@:%.ok=%/jt.log) > /dev/null
+	$(GREP) 'p/MultiIdTest.java#id1 Not run. Test has been excluded by an exclude list' $(@:%.ok=%)/report/text/notRun.txt > /dev/null
+	$(GREP) 'this test always passes' $(@:%.ok=%)/work/p/MultiIdTest_id0.jtr > /dev/null
+	$(GREP) 'this test always passes' $(@:%.ok=%)/work/p/MultiIdTest_custom.jtr > /dev/null
+
+	echo "$@ test passed at `date`" > $@
+
+# Verifies that if a test that has multiple "@test" definitions and if
+# it is problem listed without using the "#" id reference, then all the
+# "@test" definitions in that file are excluded from the test run
+$(BUILDTESTDIR)/exclude.entiretest.ok: \
+                $(JTREG_IMAGEDIR)/lib/javatest.jar \
+		$(JTREG_IMAGEDIR)/lib/jtreg.jar \
+		$(JTREG_IMAGEDIR)/bin/jtreg
+
+	$(RM) $(@:%.ok=%)
+	$(MKDIR) $(@:%.ok=%)
+	$(ECHO) "p/MultiIdTest.java 45678 generic-all" > $(@:%.ok=%)/EntireTestProblemListing.txt
+
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-jdk:$(JDKHOME) \
+		-w $(@:%.ok=%)/work/ \
+		-r $(@:%.ok=%)/report/ \
+		-exclude:$(@:%.ok=%)/EntireTestProblemListing.txt \
+		$(TESTDIR)/exclude/p/MultiIdTest.java > $(@:%.ok=%/jt.log) 2>&1 || \
+			true "non-zero exit code from jtreg intentionally ignored"
+
+	$(GREP) 'Test results: no tests selected' $(@:%.ok=%/jt.log) > /dev/null
+
+	echo "$@ test passed at `date`" > $@
+
+$(BUILDTESTDIR)/exclude.tests.ok: \
+    $(BUILDTESTDIR)/exclude.othervm.ok \
+    $(BUILDTESTDIR)/exclude.agentvm.ok \
+    $(BUILDTESTDIR)/exclude.specificid.ok \
+    $(BUILDTESTDIR)/exclude.entiretest.ok
+
+TESTS.jtreg += $(BUILDTESTDIR)/exclude.tests.ok
+
