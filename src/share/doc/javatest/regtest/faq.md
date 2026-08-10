@@ -2044,10 +2044,13 @@ Example:
 
     MyJavaTest.java#id0   1234567 generic-all This test is broken!
 
+If there are multiple test definitions in a single test file and if all
+the tests in that file should be excluded, then leave out the fragment
+identifier from the exclusion.
 
-_Note:_ It is currently not possible to exclude all the tests in a file
-with a single entry.  See
-[CODETOOLS-7902265](https://bugs.openjdk.org/browse/CODETOOLS-7902265).
+Example:
+
+    MyJavaTest.java   1234567 generic-all
 
 ### Can I run tests differently, depending on the circumstances?
 
