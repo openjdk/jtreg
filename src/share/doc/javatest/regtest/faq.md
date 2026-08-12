@@ -2038,16 +2038,62 @@ Examples:
 
 #### How do I list the tests in an exclude file, such as `ProblemList.txt`? {.unnumbered}
 
-Specify the test names, using the fragment identifier form.
+`jtreg`, when determining whether to execute a test definition, looks into the problem listing
+entries to check if the test needs to be excluded from execution. When looking into the problem
+listing entries, `jtreg` will use the path of the test file relative to the top level directory
+of the test suite.
+
+If a test file has multiple test definitions, `jtreg` will first look into the problem listing
+entries by appending the fragment identifier to the test file path. If that doesn't return any
+problem listing entry, only then `jtreg` will look into the problem listing entries just by the
+test file path.
+
+Imagine a test with multiple test definitions:
+
+```java
+/*
+ * @test
+ * @run ...
+ */
+
+ /*
+  * @test
+  * @run ...
+  */
+public class MyJavaTest {...}
+```
+
+To exclude a specific test definition, specify the test names using
+the fragment identifier form.
 
 Example:
 
     MyJavaTest.java#id0   1234567 generic-all This test is broken!
 
+In the example above, the `MyJavaTest.java#id0` will be excluded from execution
+on all platforms whereas the `MyJavaTest.java#id1` test will execute.
 
-_Note:_ It is currently not possible to exclude all the tests in a file
-with a single entry.  See
-[CODETOOLS-7902265](https://bugs.openjdk.org/browse/CODETOOLS-7902265).
+If all the test definitions in a test file should be excluded, then
+leave out the fragment identifier from the exclusion.
+
+Example:
+
+    MyJavaTest.java   1234567 generic-all
+
+In the example above, both `MyJavaTest.java#id0` and `MyJavaTest.java#id1` will
+be excluded from execution.
+
+Example:
+
+    MyJavaTest.java       4567890 generic-all
+    MyJavaTest.java#id0   1234567 windows-all
+
+In the example above, `MyJavaTest.java#id0` will be excluded from
+execution on Windows platform but it will be executed on all
+other platforms. The rest of the test definitions (i.e. `MyJavaTest.java#id1`)
+will be excluded from execution on all platforms.
+
+Note that the order of the problem listing entries does not matter.
 
 ### Can I run tests differently, depending on the circumstances?
 
