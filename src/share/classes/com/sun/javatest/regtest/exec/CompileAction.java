@@ -729,7 +729,7 @@ public class CompileAction extends Action {
 
     private Status runAgentJVM(List<String> javacArgs) throws TestRunException {
         // TAG-SPEC:  "The source and class directories of a test are made
-        // available to main and applet actions via the system properties
+        // available to main actions via the system properties
         // "test.src" and "test.classes", respectively"
         Map<String, String> javacProps = script.getTestProperties();
 

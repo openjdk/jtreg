@@ -508,9 +508,6 @@ public final class RegressionTestFinder extends TagTestFinder
         } else if (fileName.endsWith(".java")) { // we have a ".java" file
             newTagValues.put("run", Action.REASON_ASSUMED_ACTION + " main "
                              + baseName + LINESEP);
-        } else { // we have a ".html" file
-            newTagValues.put("run", Action.REASON_ASSUMED_ACTION + " applet "
-                             + fileName + LINESEP);
         }
 
         // translate between JDK tags and JavaTest tags; for required

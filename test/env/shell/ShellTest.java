@@ -63,7 +63,7 @@ public class ShellTest {
 
     void check(String name, String value) {
         // The last two clauses reveal inconsistencies between properties
-        // (for @main, @compile, @applet actions) and env vars (for @shell actions.)
+        // (for @main, @compile actions) and env vars (for @shell actions.)
         name = name.toUpperCase().replaceAll("\\.", "")
                 .replace("JDK", "JAVA")
                 .replace("COMPILER", "JAVAC");
