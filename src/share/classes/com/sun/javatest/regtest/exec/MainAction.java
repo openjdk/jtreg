@@ -43,6 +43,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.sun.javatest.Status;
 import com.sun.javatest.regtest.TimeoutHandler;
+import com.sun.javatest.regtest.agent.ActionHelper;
 import com.sun.javatest.regtest.agent.MainActionHelper.TestRunner;
 import com.sun.javatest.regtest.agent.MainWrapper;
 import com.sun.javatest.regtest.agent.SearchPath;
@@ -520,8 +521,8 @@ public class MainAction extends Action
 
         // PASS TO PROCESSCOMMAND
         Status status;
-        try (PrintWriter sysOut = section.createOutput("System.out");
-             PrintWriter sysErr = section.createOutput("System.err")) {
+        try (PrintWriter sysOut = section.createOutput(ActionHelper.OutputHandler.OutputKind.STDOUT.name);
+             PrintWriter sysErr = section.createOutput(ActionHelper.OutputHandler.OutputKind.STDERR.name)) {
 
             if (showMode)
                 showMode(getName(), ExecMode.OTHERVM, section);

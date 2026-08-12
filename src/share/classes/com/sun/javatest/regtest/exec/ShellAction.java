@@ -38,6 +38,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.sun.javatest.Status;
 import com.sun.javatest.regtest.TimeoutHandler;
+import com.sun.javatest.regtest.agent.ActionHelper;
 import com.sun.javatest.regtest.config.Locations;
 import com.sun.javatest.regtest.config.Modules;
 import com.sun.javatest.regtest.config.OS;
@@ -287,8 +288,8 @@ public class ShellAction extends Action
             command.addAll(shellArgs);
 
             // PASS TO PROCESSCOMMAND
-            PrintWriter sysOut = section.createOutput("System.out");
-            PrintWriter sysErr = section.createOutput("System.err");
+            PrintWriter sysOut = section.createOutput(ActionHelper.OutputHandler.OutputKind.STDOUT.name);
+            PrintWriter sysErr = section.createOutput(ActionHelper.OutputHandler.OutputKind.STDERR.name);
             try {
                 if (showCmd)
                     showCmd("shell", command, section);

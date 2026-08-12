@@ -45,6 +45,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.sun.javatest.Status;
 import com.sun.javatest.regtest.TimeoutHandler;
+import com.sun.javatest.regtest.agent.ActionHelper;
 import com.sun.javatest.regtest.agent.AppletWrapper;
 import com.sun.javatest.regtest.agent.SearchPath;
 import com.sun.javatest.regtest.config.JDKOpts;
@@ -286,8 +287,8 @@ public class AppletAction extends Action
         env.putAll(script.getEnvVars());
 
         Status status;
-        try (PrintWriter sysOut = section.createOutput("System.out");
-             PrintWriter sysErr = section.createOutput("System.err")) {
+        try (PrintWriter sysOut = section.createOutput(ActionHelper.OutputHandler.OutputKind.STDOUT.name);
+             PrintWriter sysErr = section.createOutput(ActionHelper.OutputHandler.OutputKind.STDERR.name)) {
 
             if (showCmd)
                 showCmd("applet", command, section);

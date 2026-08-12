@@ -31,6 +31,7 @@ import com.sun.javatest.Harness;
 import com.sun.javatest.Status;
 import com.sun.javatest.TestDescription;
 import com.sun.javatest.TestResult;
+import com.sun.javatest.regtest.agent.ActionHelper;
 
 // TODO: I18N
 
@@ -209,16 +210,12 @@ public class VerboseHandler {
                 String[] outputNames = section.getOutputNames();
                 for (String name : outputNames) {
                     String output = section.getOutput(name);
-                    switch (name) {
-                        case "System.out":
-                            sb.append("STDOUT:").append(LINESEP).append(output);
-                            break;
-                        case "System.err":
-                            sb.append("STDERR:").append(LINESEP).append(output);
-                            break;
-                        default:
-                            sb.append(name).append(":").append(LINESEP).append(output);
-                            break;
+                    if (name.equals(ActionHelper.OutputHandler.OutputKind.STDOUT.name)) {
+                        sb.append("STDOUT:").append(LINESEP).append(output);
+                    } else if (name.equals(ActionHelper.OutputHandler.OutputKind.STDERR.name)) {
+                        sb.append("STDERR:").append(LINESEP).append(output);
+                    } else {
+                        sb.append(name).append(":").append(LINESEP).append(output);
                     }
                 }
             }
