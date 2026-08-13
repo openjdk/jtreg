@@ -177,13 +177,36 @@ public class XMLWriter {
         xps.println("</properties>");
     }
 
-    private String getOutput(String name) throws TestResult.Fault {
+    private String getFirstOutput(String name) throws TestResult.Fault {
+        return getFirstOutput(name, name);
+    }
+
+    private String getLastOutput(String name) throws TestResult.Fault {
+        return getLastOutput(name, name);
+    }
+
+    private String getFirstOutput(String name, String... nonemptyOutputs) throws TestResult.Fault {
+        return getOutput(name, false, nonemptyOutputs);
+    }
+
+    private String getLastOutput(String name, String... nonemptyOutputs) throws TestResult.Fault {
+        return getOutput(name, true, nonemptyOutputs);
+    }
+
+    private String getOutput(String name, boolean revert, String... nonemptyOutputs) throws TestResult.Fault {
         String[] titles = tr.getSectionTitles();
-        // try to find and return first output from the following sequence of title names
-        for (int i = 0; i < titles.length; i++) {
-            if (titles[i].equals("main") || titles[i].equals("shell") || titles[i].equals("compile")) {
+        int start = 0;
+        int end   = titles.length;
+        int step  =  1;
+        if (revert) {
+            start = titles.length - 1;
+            end   = -1;
+            step  = -1;
+        }
+        for (int i = start; i != end; i += step) {
+            if (isSectionAllowed(titles[i])) {
                 Section s = tr.getSection(i);
-                for (String x : s.getOutputNames()) {
+                if (areGivenOutputsNonemptyInSection(s, nonemptyOutputs)) {
                     return s.getOutput(name);
                 }
             }
@@ -191,26 +214,25 @@ public class XMLWriter {
         return "";
     }
 
-    private String getLastOutput(String name) throws TestResult.Fault {
-        String[] titles = tr.getSectionTitles();
-        String result = "";
-        // Find the last non-empty output from main/shell/compile sections
-        for (int i = 0; i < titles.length; i++) {
-            if (titles[i].equals("main") || titles[i].equals("shell") || titles[i].equals("compile")) {
-                Section s = tr.getSection(i);
-                String output = s.getOutput(name);
-                if (output != null && !output.isEmpty()) {
-                    result = output;
-                }
+    private boolean areGivenOutputsNonemptyInSection(Section section, String[] nonemptyOutputs) {
+        for (int i = 0; i < nonemptyOutputs.length; i++) {
+            String output = section.getOutput(nonemptyOutputs[i]);
+            if (output != null && !output.isEmpty()) {
+                return true;
             }
         }
-        return result;
+        return false;
+    }
+
+    private static boolean isSectionAllowed(String title) {
+        return title.equals("main") || title.equals("shell") || title.equals("compile");
     }
 
     private void insertSystemOut() throws TestResult.Fault {
         xps.indent();
         xps.print("<system-out>");
-        xps.sanitize(getOutput(OutputKind.STDOUT.name));
+        xps.sanitize(getFirstOutput(OutputKind.STDOUT.name,
+                OutputKind.STDOUT.name, OutputKind.STDERR.name));
         xps.indent();
         xps.println("</system-out>");
     }
@@ -218,7 +240,8 @@ public class XMLWriter {
     private void insertSystemErr() throws TestResult.Fault {
         xps.indent();
         xps.print("<system-err>");
-        xps.sanitize(getOutput(OutputKind.STDERR.name));
+        xps.sanitize(getFirstOutput(OutputKind.STDERR.name,
+                OutputKind.STDOUT.name, OutputKind.STDERR.name));
         xps.indent();
         xps.println("</system-err>");
     }
