@@ -66,7 +66,6 @@ import com.sun.javatest.Status;
 import com.sun.javatest.TestResult;
 import com.sun.javatest.WorkDirectory;
 import com.sun.javatest.regtest.TimeoutHandler;
-import com.sun.javatest.regtest.agent.ActionHelper;
 import com.sun.javatest.regtest.agent.AgentServer;
 import com.sun.javatest.regtest.agent.Alarm;
 import com.sun.javatest.regtest.agent.Flags;
@@ -77,6 +76,7 @@ import com.sun.javatest.regtest.util.StringUtils;
 
 import static com.sun.javatest.regtest.RStatus.createStatus;
 import static com.sun.javatest.regtest.agent.AgentServer.*;
+import static com.sun.javatest.regtest.agent.ActionHelper.OutputHandler.OutputKind;
 
 public class Agent {
     public static class Fault extends Exception {
@@ -538,7 +538,7 @@ public class Agent {
                     trace("readResults: OUTPUT \'" + name + "\' \'" + data + "\"");
                     PrintWriter pw = streams.get(name);
                     if (pw == null) {
-                        if (name.equals(ActionHelper.OutputHandler.OutputKind.LOG.name))
+                        if (name.equals(OutputKind.LOG.name))
                             pw = trs.getMessageWriter();
                         else
                             pw = trs.createOutput(name);

@@ -74,6 +74,8 @@ import static com.sun.javatest.regtest.RStatus.failed;
 import static com.sun.javatest.regtest.RStatus.normalize;
 import static com.sun.javatest.regtest.RStatus.passed;
 
+import static com.sun.javatest.regtest.agent.ActionHelper.OutputHandler.OutputKind;
+
 /**
  * This class implements the "compile" action as described by the JDK tag
  * specification. It is also invoked implicitly as needed by the "build"
@@ -705,11 +707,11 @@ public class CompileAction extends Action {
 
         status = normalize(cmd.exec());
 
-        try (PrintWriter sysOut = section.createOutput("System.out")) {
+        try (PrintWriter sysOut = section.createOutput(OutputKind.STDOUT.name)) {
             sysOut.write(stdOut.getOutput());
         }
 
-        try (PrintWriter sysErr = section.createOutput("System.err")) {
+        try (PrintWriter sysErr = section.createOutput(OutputKind.STDERR.name)) {
             sysErr.write(stdErr.getOutput());
         }
 

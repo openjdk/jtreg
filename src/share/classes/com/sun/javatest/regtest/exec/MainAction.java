@@ -62,6 +62,8 @@ import static com.sun.javatest.regtest.RStatus.failed;
 import static com.sun.javatest.regtest.RStatus.normalize;
 import static com.sun.javatest.regtest.RStatus.passed;
 
+import static com.sun.javatest.regtest.agent.ActionHelper.OutputHandler.OutputKind;
+
 /**
  * This class implements the "main" action as described by the JDK tag
  * specification.
@@ -520,8 +522,8 @@ public class MainAction extends Action
 
         // PASS TO PROCESSCOMMAND
         Status status;
-        try (PrintWriter sysOut = section.createOutput("System.out");
-             PrintWriter sysErr = section.createOutput("System.err")) {
+        try (PrintWriter sysOut = section.createOutput(OutputKind.STDOUT.name);
+             PrintWriter sysErr = section.createOutput(OutputKind.STDERR.name)) {
 
             if (showMode)
                 showMode(getName(), ExecMode.OTHERVM, section);

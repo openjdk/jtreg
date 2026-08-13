@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2026, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -59,6 +59,8 @@ import com.sun.javatest.Status;
 import com.sun.javatest.TestDescription;
 import com.sun.javatest.TestResult;
 import com.sun.javatest.TestResult.Section;
+
+import static com.sun.javatest.regtest.agent.ActionHelper.OutputHandler.OutputKind;
 
 /**
  * Write out results in JUnit-compatible XML format, for processing by tools
@@ -208,7 +210,7 @@ public class XMLWriter {
     private void insertSystemOut() throws TestResult.Fault {
         xps.indent();
         xps.print("<system-out>");
-        xps.sanitize(getOutput("System.out"));
+        xps.sanitize(getOutput(OutputKind.STDOUT.name));
         xps.indent();
         xps.println("</system-out>");
     }
@@ -216,7 +218,7 @@ public class XMLWriter {
     private void insertSystemErr() throws TestResult.Fault {
         xps.indent();
         xps.print("<system-err>");
-        xps.sanitize(getOutput("System.err"));
+        xps.sanitize(getOutput(OutputKind.STDERR.name));
         xps.indent();
         xps.println("</system-err>");
     }
@@ -246,13 +248,13 @@ public class XMLWriter {
     }
 
     private String extractCrashInfo() throws TestResult.Fault {
-        String stderr = getLastOutput("System.err");
+        String stderr = getLastOutput(OutputKind.STDERR.name);
         String crashFromErr = extractCrashFromOutput(stderr);
         if (crashFromErr != null) {
             return crashFromErr;
         }
 
-        String stdout = getLastOutput("System.out");
+        String stdout = getLastOutput(OutputKind.STDOUT.name);
         return extractCrashFromOutput(stdout);
     }
 

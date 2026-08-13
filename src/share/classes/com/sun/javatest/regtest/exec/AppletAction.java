@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2024, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2026, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -45,6 +45,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.sun.javatest.Status;
 import com.sun.javatest.regtest.TimeoutHandler;
+import static com.sun.javatest.regtest.agent.ActionHelper.OutputHandler.OutputKind;
 import com.sun.javatest.regtest.agent.AppletWrapper;
 import com.sun.javatest.regtest.agent.SearchPath;
 import com.sun.javatest.regtest.config.JDKOpts;
@@ -286,8 +287,8 @@ public class AppletAction extends Action
         env.putAll(script.getEnvVars());
 
         Status status;
-        try (PrintWriter sysOut = section.createOutput("System.out");
-             PrintWriter sysErr = section.createOutput("System.err")) {
+        try (PrintWriter sysOut = section.createOutput(OutputKind.STDOUT.name);
+             PrintWriter sysErr = section.createOutput(OutputKind.STDERR.name)) {
 
             if (showCmd)
                 showCmd("applet", command, section);
