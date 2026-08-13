@@ -55,7 +55,6 @@ import java.util.regex.Pattern;
 import com.sun.javatest.Status;
 import com.sun.javatest.regtest.TimeoutHandler;
 import com.sun.javatest.regtest.agent.AStatus;
-import com.sun.javatest.regtest.agent.ActionHelper;
 import com.sun.javatest.regtest.agent.CompileActionHelper;
 import com.sun.javatest.regtest.agent.JDK_Version;
 import com.sun.javatest.regtest.agent.SearchPath;
@@ -74,6 +73,8 @@ import static com.sun.javatest.regtest.RStatus.error;
 import static com.sun.javatest.regtest.RStatus.failed;
 import static com.sun.javatest.regtest.RStatus.normalize;
 import static com.sun.javatest.regtest.RStatus.passed;
+
+import static com.sun.javatest.regtest.agent.ActionHelper.OutputHandler.OutputKind;
 
 /**
  * This class implements the "compile" action as described by the JDK tag
@@ -706,11 +707,11 @@ public class CompileAction extends Action {
 
         status = normalize(cmd.exec());
 
-        try (PrintWriter sysOut = section.createOutput(ActionHelper.OutputHandler.OutputKind.STDOUT.name)) {
+        try (PrintWriter sysOut = section.createOutput(OutputKind.STDOUT.name)) {
             sysOut.write(stdOut.getOutput());
         }
 
-        try (PrintWriter sysErr = section.createOutput(ActionHelper.OutputHandler.OutputKind.STDERR.name)) {
+        try (PrintWriter sysErr = section.createOutput(OutputKind.STDERR.name)) {
             sysErr.write(stdErr.getOutput());
         }
 

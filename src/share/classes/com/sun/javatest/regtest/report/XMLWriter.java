@@ -59,7 +59,8 @@ import com.sun.javatest.Status;
 import com.sun.javatest.TestDescription;
 import com.sun.javatest.TestResult;
 import com.sun.javatest.TestResult.Section;
-import com.sun.javatest.regtest.agent.ActionHelper;
+
+import static com.sun.javatest.regtest.agent.ActionHelper.OutputHandler.OutputKind;
 
 /**
  * Write out results in JUnit-compatible XML format, for processing by tools
@@ -209,7 +210,7 @@ public class XMLWriter {
     private void insertSystemOut() throws TestResult.Fault {
         xps.indent();
         xps.print("<system-out>");
-        xps.sanitize(getOutput(ActionHelper.OutputHandler.OutputKind.STDOUT.name));
+        xps.sanitize(getOutput(OutputKind.STDOUT.name));
         xps.indent();
         xps.println("</system-out>");
     }
@@ -217,7 +218,7 @@ public class XMLWriter {
     private void insertSystemErr() throws TestResult.Fault {
         xps.indent();
         xps.print("<system-err>");
-        xps.sanitize(getOutput(ActionHelper.OutputHandler.OutputKind.STDERR.name));
+        xps.sanitize(getOutput(OutputKind.STDERR.name));
         xps.indent();
         xps.println("</system-err>");
     }
@@ -247,13 +248,13 @@ public class XMLWriter {
     }
 
     private String extractCrashInfo() throws TestResult.Fault {
-        String stderr = getLastOutput(ActionHelper.OutputHandler.OutputKind.STDERR.name);
+        String stderr = getLastOutput(OutputKind.STDERR.name);
         String crashFromErr = extractCrashFromOutput(stderr);
         if (crashFromErr != null) {
             return crashFromErr;
         }
 
-        String stdout = getLastOutput(ActionHelper.OutputHandler.OutputKind.STDOUT.name);
+        String stdout = getLastOutput(OutputKind.STDOUT.name);
         return extractCrashFromOutput(stdout);
     }
 
