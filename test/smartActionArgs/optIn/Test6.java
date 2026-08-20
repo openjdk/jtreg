@@ -27,6 +27,14 @@
  */
 
 public class Test6 {
+
+    private static final String MESSAGE_ONE = "package one;";
+
+    // the string value is intentionally indented this manner
+    private static final String MESSAGE_TWO ="""
+package two;
+""";
+
     public static void main(String[] vmFlags) {
         System.out.println("Hello package world;");
     }
