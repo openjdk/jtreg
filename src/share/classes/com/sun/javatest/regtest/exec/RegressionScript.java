@@ -1203,17 +1203,44 @@ public class RegressionScript extends Script {
         if (fileNameLength <= 5 || !fileName.endsWith(".java")) {
             return Optional.empty();
         }
-        String className = fileName.substring(0, fileNameLength - 5);
-        // Scan .java file for "package NAME;" without taking comments into account.
+        final String className = fileName.substring(0, fileNameLength - 5);
+        // Determine the package name (if any) from the contents of the java source text
+        final String packageName = getPackageNameFromJavaSource(file);
+        return packageName == null
+                ? Optional.of(className)
+                : Optional.of(packageName + "." + className);
+    }
+
+    /**
+     * Determines the package name from the java source contained in the {@code javaFile}.
+     * Returns null if the package name couldn't be determined or if the {@code javaFile} had
+     * no explicit "package" name declaration.
+     */
+    private static String getPackageNameFromJavaSource(final Path javaFile) {
         try {
             // Assume non-large files in UTF-8 encoding.
-            String charContent = Files.readString(file);
-            Matcher packageMatcher = PACKAGE_NAME_PATTERN.matcher(charContent);
-            String packageName = packageMatcher.find() ? packageMatcher.group(1) + "." : "";
-            return Optional.of(packageName + className);
+            final String content = Files.readString(javaFile);
+            // remove Java language comments from the source text
+            // and trim the result of whitespaces
+            final String source = removeComments(content).trim();
+            // the package name (if any) should be the first line in the trimmed text
+            final Matcher matcher = START_OF_LINE_PACKAGE_NAME_PATTERN.matcher(source);
+            return matcher.find() ? matcher.group(1) : null;
         } catch (IOException ignored) {
-            return Optional.empty();
+            return null;
         }
+    }
+
+    private static String removeComments(final String content) {
+        final StringBuilder sb = new StringBuilder();
+        final Matcher matcher = COMMENT_PATTERN.matcher(content);
+        int start = 0;
+        while (matcher.find()) {
+            sb.append(content, start, matcher.start());
+            start = matcher.end();
+        }
+        sb.append(content.substring(start));
+        return sb.toString();
     }
 
     File getTestRootDir() {
@@ -1354,9 +1381,16 @@ public class RegressionScript extends Script {
         ILLEGAL_ACCESS_INIT   = "Illegal access to init method: ",
         BAD_ACTION            = "Bad action for script: ";
 
-    private static final Pattern
-        SMART_ACTION_NAME_PATTERN = Pattern.compile("\\$\\{([A-Za-z0-9._]+)}"),
-        PACKAGE_NAME_PATTERN = Pattern.compile("package\\s+([\\w.]+);");
+    private static final Pattern SMART_ACTION_NAME_PATTERN =
+            Pattern.compile("\\$\\{([A-Za-z0-9._]+)}");
+
+    // matches lines that begin with "package <packagename>;" pattern
+    private static final Pattern START_OF_LINE_PACKAGE_NAME_PATTERN =
+                Pattern.compile("^package\\s+(((?:\\w+\\.)*)\\w+)\\s*;");
+
+    // matches a Java language comment
+    private static final Pattern COMMENT_PATTERN =
+            Pattern.compile("(?s)(\\s+//.*?\n|/\\*.*?\\*/)");
 
     //----------member variables-----------------------------------------------
 
