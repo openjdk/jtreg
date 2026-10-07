@@ -1,0 +1,82 @@
+#
+# Copyright (c) 2026, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+# Tests for XMLWriter section-output selection logic change introduced by
+# https://bugs.openjdk.org/browse/CODETOOLS-7904206
+#
+# Three scenarios are exercised:
+#
+#   OnlyStdout       - section has stdout only
+#                      -> <system-out> must contain the marker
+#                      -> <system-err> must NOT contain the marker
+#
+#   OnlyStderr       - section has stderr only
+#                      -> <system-err> must contain the marker
+#                      -> the section must NOT be skipped because stdout is empty
+#
+#   SkipEmptySection - explicit @compile action (produces no output) followed by
+#                      @run main (produces stdout+stderr).  The compile section
+#                      must be skipped and the main section must be used.
+#                      -> both markers must appear in their respective elements
+
+$(BUILDTESTDIR)/XMLSectionOutputTest.ok: \
+	    $(JTREG_IMAGEDIR)/lib/jtreg.jar \
+	    $(JTREG_IMAGEDIR)/bin/jtreg
+	$(RM) $(@:%.ok=%) ; $(MKDIR) $(@:%.ok=%)
+	$(JTREG_IMAGEDIR)/bin/jtreg $(JTREG_OPTS) \
+		-w:$(@:%.ok=%)/work -r:$(@:%.ok=%)/report \
+		-jdk:$(JDKHOME) \
+		-xml:verify \
+		$(TESTDIR)/xmlSectionOutput \
+		> $(@:%.ok=%)/jt.log 2>&1 ; rc=$$? ; \
+	if [ $$rc -ne 0 ]; then \
+		echo "Unexpected exit code: $$rc (expected 0 - all three tests should pass)" ; \
+		cat $(@:%.ok=%)/jt.log ; \
+		exit 1 ; \
+	fi
+	# --- OnlyStdout: system-out must contain the stdout marker ---
+	$(GREP) -q "STDOUT_MARKER_ONLY_STDOUT" \
+		$(@:%.ok=%)/work/OnlyStdout.jtr.xml || \
+		(echo "FAIL: stdout marker not found in system-out for OnlyStdout" && exit 1)
+	# --- OnlyStdout: system-err must NOT contain the stdout marker ---
+	$(GREP) -c "STDOUT_MARKER_ONLY_STDOUT" \
+		$(@:%.ok=%)/work/OnlyStdout.jtr.xml | \
+		grep -q "^1$$" || \
+		(echo "FAIL: stdout marker appears more than once (leaked into system-err)" && exit 1)
+	# --- OnlyStderr: system-err must contain the stderr marker ---
+	$(GREP) -q "STDERR_MARKER_ONLY_STDERR" \
+		$(@:%.ok=%)/work/OnlyStderr.jtr.xml || \
+		(echo "FAIL: stderr marker not found in system-err for OnlyStderr" && exit 1)
+	# --- SkipEmptySection: stdout marker must appear (from main section, not empty compile) ---
+	$(GREP) -q "STDOUT_MARKER_SKIP_EMPTY" \
+		$(@:%.ok=%)/work/SkipEmptySection.jtr.xml || \
+		(echo "FAIL: stdout marker not found - empty compile section was not skipped" && exit 1)
+	# --- SkipEmptySection: stderr marker must also appear ---
+	$(GREP) -q "STDERR_MARKER_SKIP_EMPTY" \
+		$(@:%.ok=%)/work/SkipEmptySection.jtr.xml || \
+		(echo "FAIL: stderr marker not found - empty compile section was not skipped" && exit 1)
+	echo "$@ passed at `date`" > $@
+
+TESTS.jtreg += $(BUILDTESTDIR)/XMLSectionOutputTest.ok
