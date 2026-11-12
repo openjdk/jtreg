@@ -47,6 +47,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.DateFormat;
 import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -2352,7 +2353,8 @@ public class Tool {
 
     /**
      * Returns whether Windows Subsystem for Linux may be available,
-     * by examining whether wsl.exe can be found on the path.
+     * by examining whether wsl.exe can be found on the path, and
+     * if there are distributions installed.
      */
     private boolean isWindowsSubsystemForLinuxDetected() {
         if (isWindows()) {
@@ -2360,12 +2362,36 @@ public class Tool {
             if (PATH != null) {
                 for (Path f : new SearchPath(PATH).asList()) {
                     if (Files.exists(f.resolve("wsl.exe"))) {
-                        return true;
+                        return isWindowsSubsystemForLinuxFunctional();
                     }
                 }
             }
         }
         return false;
+    }
+
+    // This code assesses whether wsl encounters errors listing distros.
+    // If there are no distros, or any other errors are encountered,
+    // this command is expected to return a non-0 exit code.
+    // Assumes that wsl.exe is present and located on the path.
+    private boolean isWindowsSubsystemForLinuxFunctional() {
+        Process p = null;
+        try {
+            ProcessBuilder pb = new ProcessBuilder("wsl.exe", "--list", "--quiet");
+            p = pb.start();
+            // This timeout checks for hangs, slowness, and excessive output (which fills the buffer).
+            if (!p.waitFor(30L, TimeUnit.SECONDS)){
+                return false;
+            }
+            return (p.exitValue() == 0);
+        } catch (Exception e) {
+            // Errors are assumed to mean that wsl either doesn't work or cannot be called.
+            return false;
+        } finally {
+            if (p != null && p.isAlive()){
+                p.destroyForcibly();
+            }
+        }
     }
 
     private void error(String msg) {
